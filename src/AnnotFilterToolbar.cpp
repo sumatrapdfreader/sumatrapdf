@@ -483,12 +483,8 @@ static AnnotFilterToolbar* GetOrCreate(MainWindow* win) {
     return f;
 }
 
-static int FilterEditPadL() {
-    return UiEdgeDx();
-}
-
 static int FilterEditPadR() {
-    return FilterEditPadL() + DpiScale(4);
+    return UiEdgeDx() + DpiScale(4);
 }
 
 static bool FrameIsMaxOrFullscreen(MainWindow* win) {
@@ -845,7 +841,7 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
         args.noTheme = true;
         args.selectAllOnFocus = true;
         args.centerTextVert = true;
-        args.marginLeft = FilterEditPadL();
+        args.marginLeft = UiEdgeDx();
         args.marginRight = FilterEditPadR();
         edit = new Edit();
         edit->SetColors(colTxt, colBg);

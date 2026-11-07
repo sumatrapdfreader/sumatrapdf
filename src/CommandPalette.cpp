@@ -175,7 +175,6 @@ static VirtCustom* NewPaletteRule() {
 }
 
 Str CommandPaletteSkipWS(Str s);
-bool CommandPaletteUiRtl();
 TempStr CommandPaletteShortcutTemp(i32 cmdId);
 void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx);
 void ScheduleDeleteAndExecCommand(i32 cmdId = 0);
@@ -208,12 +207,6 @@ static i32 gCommandsNoActivate[] = {
     0,
 };
 // clang-format on
-
-// UI language (and the debug RTL toggle), not the palette hwnd: that window
-// stays LTR so virtual-control coords and clicks are not mirrored (#5956).
-bool CommandPaletteUiRtl() {
-    return IsUIRtl();
-}
 
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 static int gPaletteOpDepth = 0;
@@ -1060,7 +1053,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
     if (!smartTabMode) {
         auto* box = new HBox();
-        box->rtl = CommandPaletteUiRtl();
+        box->rtl = IsUIRtl();
         switchRow = NewHelpRow(box, MainAxisAlign::MainCenter);
         FillSwitchRow();
         vbox->AddChild(new Padding(switchRow, DpiScaledInsets(6, kPaletteInsetDx, 4, kPaletteInsetDx)));
@@ -1116,7 +1109,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     // the footer: the key hints and the count
     {
         auto* box = new HBox();
-        box->rtl = CommandPaletteUiRtl();
+        box->rtl = IsUIRtl();
         helpRow = NewHelpRow(box, MainAxisAlign::MainStart);
         vbox->AddChild(new Padding(helpRow, DpiScaledInsets(5, kPaletteInsetDx)));
         UpdateHelpRow();
@@ -1319,8 +1312,8 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     out.Append(
         fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d annots=%d "
             "annotPage=%d annotsDone=%d ",
-            sel, n, qStart, qEnd, qLen, selectedCmdId, (int)CommandPaletteUiRtl(), (int)wnd->thumbnailMode, thumbPage,
-            rendered, nAnnots, annotPage, annotsDone));
+            sel, n, qStart, qEnd, qLen, selectedCmdId, (int)IsUIRtl(), (int)wnd->thumbnailMode, thumbPage, rendered,
+            nAnnots, annotPage, annotsDone));
     out.Append(fmt("settingHelp=%d selValue=%s selText=%s\n", (int)helpShown, selValue, selText));
     return finish(0);
 }
@@ -1827,7 +1820,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     // hwnd stays LTR so mouse hit-testing and virtual-control coords match
     // (issue #5956). If the DC is still mirrored (nested RTL hwnd), turn it
     // off so Hebrew glyphs are not reversed.
-    bool isRtl = CommandPaletteUiRtl();
+    bool isRtl = IsUIRtl();
     bool hwndRtl = HwndIsRtl(hwndList);
     bool prevMirrored = hwndRtl ? gfx->SetMirrored(false) : false;
 

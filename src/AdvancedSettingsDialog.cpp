@@ -64,10 +64,6 @@ constexpr int kAdvHeaderShiftDy = 4;
 constexpr int kAdvSwatchDx = 12;
 constexpr int kAdvDotDx = 6;
 
-static PlatformFont* UiFont(int px) {
-    return DlgUiFont(px);
-}
-
 struct ListBoxModelSettings : ListBoxModel {
     Vec<SettingItem*>* items = nullptr;       // not owned
     Vec<SettingSection*>* sections = nullptr; // not owned
@@ -315,7 +311,7 @@ static void AdvSettingsItemColumns(const Rect& rc, Rect& rcName, Rect& rcVal) {
 // a header row: the section's name with its comment fainter after it, set
 // low in the row so it reads as the title of the rows under it
 static void DrawSectionRow(Gfx* gfx, Rect rc, SettingSection* sec, Color colMuted, bool isRtl) {
-    PlatformFont* font = UiFont(kAdvMetaFontPx);
+    PlatformFont* font = DlgUiFont(kAdvMetaFontPx);
     int shift = DpiScale(kAdvHeaderShiftDy);
     Rect r = rc;
     r.SubLR(DpiScale(kAdvInsetDx), DpiScale(kAdvInsetDx));
@@ -1054,7 +1050,7 @@ void AdvancedSettingsWnd::UpdateHints() {
     AdvHint hints[kAdvMaxHints];
     int n = AdvSettingsHints(state, hints);
     for (int i = 0; i < n; i++) {
-        hintRow->AddChild(NewKeyHint(UiFont(kAdvHintFontPx), hints[i].key, hints[i].desc, colMuted, colBg));
+        hintRow->AddChild(NewKeyHint(DlgUiFont(kAdvHintFontPx), hints[i].key, hints[i].desc, colMuted, colBg));
     }
     if (hwnd && layout) {
         DoLayout();
@@ -1100,7 +1096,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     if (!hwnd) {
         return false;
     }
-    fontBold = GetBoldPlatformFont(UiFont(kAdvTextFontPx));
+    fontBold = GetBoldPlatformFont(DlgUiFont(kAdvTextFontPx));
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();
@@ -1119,7 +1115,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.isMultiLine = false;
         args.withBorder = false;
         args.cueText = Tr("Filter settings");
-        args.font = UiFont(kAdvQueryFontPx);
+        args.font = DlgUiFont(kAdvQueryFontPx);
         args.isRtl = isRtl;
         auto* c = new Edit();
         c->SetColors(colTxt, colBg);
@@ -1135,7 +1131,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         row->gap = DpiScale(kAdvGapDx);
         row->rtl = isRtl;
         row->AddChild(c, 1);
-        countText = NewVirtText({.s = {}, .font = UiFont(kAdvMetaFontPx), .textColor = colMuted, .isRtl = isRtl});
+        countText = NewVirtText({.s = {}, .font = DlgUiFont(kAdvMetaFontPx), .textColor = colMuted, .isRtl = isRtl});
         row->AddChild(countText);
         vbox->AddChild(new Padding(row, DpiScaledInsets(kAdvQueryPadDy, kAdvPadDx)));
         vbox->AddChild(new VirtLine());
@@ -1144,7 +1140,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     {
         auto* c = new AdvSettingsListBox();
         c->dpi = GetDpi();
-        c->font = UiFont(kAdvTextFontPx);
+        c->font = DlgUiFont(kAdvTextFontPx);
         c->itemDy = DpiScale(kAdvRowDy);
         c->SetColor(kColListText, colTxt);
         c->SetColor(kColListBg, colBg);
@@ -1174,11 +1170,11 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         head->rtl = isRtl;
         helpName = NewVirtText({.s = {}, .font = fontBold, .textColor = colTxt, .isRtl = isRtl, .ellipsis = true});
         head->AddChild(helpName, 1);
-        helpDefault = NewVirtText({.s = {}, .font = UiFont(kAdvMetaFontPx), .textColor = colMuted, .isRtl = isRtl});
+        helpDefault = NewVirtText({.s = {}, .font = DlgUiFont(kAdvMetaFontPx), .textColor = colMuted, .isRtl = isRtl});
         head->AddChild(helpDefault);
 
         auto* c = new VirtFixedLinesText();
-        c->font = UiFont(kAdvTextFontPx);
+        c->font = DlgUiFont(kAdvTextFontPx);
         c->nLines = kAdvHelpLines;
         c->SetColor(kColRichText, colMuted);
         c->SetColor(kColRichLink, colMuted);
@@ -1210,7 +1206,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         row->AddChild(hintRow);
         UpdateHints();
 
-        PlatformFont* btnFont = UiFont(kAdvTextFontPx);
+        PlatformFont* btnFont = DlgUiFont(kAdvTextFontPx);
         btnOpenSettingsFile = NewDlgButton(hwnd, Tr("Open Settings File"), btnFont, DlgButtonStyle::Ghost, false);
         btnOpenSettingsFile->onClick =
             MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnOpenSettingsFile>(this);
@@ -1231,7 +1227,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         unsavedDot->SetFlag(vwfNoHitTest, true);
         unsavedDot->SetIsVisible(false);
         unsaved->AddChild(unsavedDot);
-        unsavedText = NewVirtText({.s = {}, .font = UiFont(kAdvMetaFontPx), .textColor = colTxt, .isRtl = isRtl});
+        unsavedText = NewVirtText({.s = {}, .font = DlgUiFont(kAdvMetaFontPx), .textColor = colTxt, .isRtl = isRtl});
         unsavedText->SetIsVisible(false);
         unsaved->AddChild(unsavedText);
         unsaved->SetVisibility(Visibility::Collapse);
