@@ -299,12 +299,6 @@ void TabsSelect(MainWindow* win, int tabIndex) {
     LoadModelIntoTab(tab);
 }
 
-// clang-format off
-extern bool SaveAnnotationsToExistingFile(WindowTab*);
-extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
-
-// clang-format on
-
 void CloseAllTabs(MainWindow* win) {
     if (!win) {
         return;

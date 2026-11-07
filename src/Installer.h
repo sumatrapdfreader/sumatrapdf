@@ -128,3 +128,5 @@ void LogNonDefaultRegisteredExtensions();
 void CollectNonDefaultRegisteredExtensions(StrVec& out);
 void LaunchDefaultAppDialogForExtension(HWND hwnd, Str ext);
 bool InstallerWmCommand(WPARAM wp, void (*onExit)());
+int RunInstaller();
+int RunUninstaller();

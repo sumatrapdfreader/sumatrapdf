@@ -117,6 +117,8 @@ bool OpenFileExternally(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
 bool MaybeSaveAnnotations(WindowTab* tab);
+bool SaveAnnotationsToExistingFile(WindowTab*);
+bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 enum class UnsavedChangesAction {
     Discard,
     SaveExisting,

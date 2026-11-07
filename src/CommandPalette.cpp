@@ -143,7 +143,7 @@ struct CommandPaletteWnd : WindowBase, PaletteSources {
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
 };
 
-extern CommandPaletteWnd* gCommandPaletteWnd;
+static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 
 // the palette: a query line over a hairline, the mode switches, the rows on
 // an inset with a rounded selection, and the key hints
@@ -209,7 +209,6 @@ static i32 gCommandsNoActivate[] = {
 };
 // clang-format on
 
-CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 static int gPaletteOpDepth = 0;
 static HWND gHwndToActivateOnClose = nullptr;
 static WindowTab* gTabToSelectOnClose = nullptr;

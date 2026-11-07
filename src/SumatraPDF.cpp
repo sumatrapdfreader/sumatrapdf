@@ -15778,12 +15778,6 @@ static void ShowInstallerHelp() {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
-// in Installer.cpp
-extern int RunInstaller();
-
-// in Uninstaller.cpp
-extern int RunUninstaller();
-
 // In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
 // In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.
 // Note: detect_leaks ASAN flag is not (yet?) supported with msvc 16.4

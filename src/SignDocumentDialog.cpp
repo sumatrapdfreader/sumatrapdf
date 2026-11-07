@@ -34,8 +34,6 @@
 #include "shared/PdfToolsCommon.h"
 #include "SignDocumentDialogCommon.h"
 
-extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
-
 // Fills in a signature field with a certificate from a .pfx / .p12 file.
 //
 //   Certificate:          [Krzysztof Kowalczyk          v]
