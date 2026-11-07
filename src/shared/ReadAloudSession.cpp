@@ -460,17 +460,10 @@ bool ReadAloudHasMoreChunks(WindowTab* tab) {
     return tab->readAloudChunkEnd < tab->readAloudText.len;
 }
 
-void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
-    if (!tab) {
-        return;
-    }
-
-    dbgtts("finish-session\n");
-    if (tab->win) {
-        ReadAloudHighlightTimerStop(tab->win);
-        tab->win->RedrawCanvas();
-        ReadAloudPlaybackBarHide(tab->win);
-    }
+// Drops the tab's session: text, position, highlight map, and it stops being
+// the session tab. The one place that knows every per-tab read-aloud field,
+// so finishing and resetting can't drift apart.
+static void ClearTabReadAloudSession(WindowTab* tab) {
     str::Free(tab->readAloudText);
     tab->readAloudText = {};
     tab->readAloudResumePos = -1;
@@ -485,10 +478,24 @@ void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
     tab->readAloudHighlightBase = 0;
     tab->readAloudAutoScroll = false;
     tab->readAloudScope = 0;
-    ReadAloudClearSourceTab();
     if (gReadAloudSessionTab == tab) {
         gReadAloudSessionTab = nullptr;
     }
+}
+
+void ReadAloudFinishSession(WindowTab* tab, MainWindow* win) {
+    if (!tab) {
+        return;
+    }
+
+    dbgtts("finish-session\n");
+    if (tab->win) {
+        ReadAloudHighlightTimerStop(tab->win);
+        tab->win->RedrawCanvas();
+        ReadAloudPlaybackBarHide(tab->win);
+    }
+    ClearTabReadAloudSession(tab);
+    ReadAloudClearSourceTab();
     if (win) {
         ToolbarUpdateStateForWindow(win, true);
     }
@@ -686,26 +693,10 @@ void ResetReadAloudStateForTab(WindowTab* tab) {
         return;
     }
     StopReadAloudIfSourceTab(tab);
-    str::Free(tab->readAloudText);
-    tab->readAloudText = {};
-    tab->readAloudResumePos = -1;
     if (tab->win) {
         ReadAloudHighlightTimerStop(tab->win);
     }
-    if (tab->readAloudHighlight) {
-        ReadAloudHighlightFree(tab->readAloudHighlight);
-        delete tab->readAloudHighlight;
-        tab->readAloudHighlight = nullptr;
-    }
-    tab->readAloudHighlightBase = 0;
-    tab->readAloudChunkStart = 0;
-    tab->readAloudChunkEnd = 0;
-    tab->readAloudQueuedEnd = 0;
-    tab->readAloudAutoScroll = false;
-    tab->readAloudScope = 0;
-    if (gReadAloudSessionTab == tab) {
-        gReadAloudSessionTab = nullptr;
-    }
+    ClearTabReadAloudSession(tab);
     if (tab->win) {
         ReadAloudPlaybackBarHide(tab->win);
     }
