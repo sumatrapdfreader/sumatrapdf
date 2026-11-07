@@ -1258,6 +1258,13 @@ static Str AdvToolTitle() {
 }
 
 // the window's content: the column, with the list taking what is left
+// posted: the window may have been closed since (null still repaints tool windows)
+static void AdvInvalidateLater(MainWindow* win) {
+    if (!win || IsMainWindowValid(win)) {
+        AppShellInvalidate(win);
+    }
+}
+
 static gp::El* AdvToolBuild(MainWindow*, gp::Ctx* cx) {
     if (!gAdv.visible || !gAdv.tw) {
         return nullptr;
@@ -1270,7 +1277,7 @@ static gp::El* AdvToolBuild(MainWindow*, gp::Ctx* cx) {
     gp::El* list = AdvList(cx, viewDy, rowDx)->Flex1()->MinH(kAdvRowDy)->BoundsOut(&gAdv.listBounds);
     if (prevDy <= 0) {
         // the list's height is read back from the first frame
-        uitask::Post(MkFunc0(AppShellInvalidate, gAdv.win), "AdvSettingsListDy");
+        uitask::Post(MkFunc0(AdvInvalidateLater, gAdv.win), "AdvSettingsListDy");
     }
     gp::El* col =
         AdvColumn(cx, gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->PadY(kAdvListPadDy)->Child(list));

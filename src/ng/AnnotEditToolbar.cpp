@@ -368,6 +368,14 @@ void EndAnnotContentsEdit(bool accept) {
 static bool FreeTextInPlaceEditJustEnded();
 static void ClearInPlaceJustEnded();
 
+static void PostedStartContentsEdit(MainWindow* win) {
+    // the window may have been closed since this was posted
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    StartSelectedAnnotContentsEdit(win);
+}
+
 // Contents editor on the property row (openedit after create, Contents chip).
 void StartSelectedAnnotContentsEdit(MainWindow* win) {
     if (!win || !win->gpuiWin) {
@@ -972,7 +980,7 @@ static void OnChipClick(AnnotEditToolbar* tb, int chipIdx) {
             break;
         }
         case AnnotEditKind::Contents:
-            uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, tb->win), "StartAnnotContentsEdit");
+            uitask::Post(MkFunc0(PostedStartContentsEdit, tb->win), "StartAnnotContentsEdit");
             break;
         case AnnotEditKind::Delete:
             // deleting takes the whole row (and this chip) down with it

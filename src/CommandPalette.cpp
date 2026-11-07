@@ -318,6 +318,14 @@ void CommandPaletteSetCurrentSelection(CommandPaletteWnd* wnd, int idx) {
     wnd->OnSelectionChange();
 }
 
+// fav is still one of fs's favorites and fs is still in the file history
+static bool FavoriteIsLive(FileState* fs, Favorite* fav) {
+    if (!gSettings->fileStates || !VecContains(*gSettings->fileStates, fs)) {
+        return false;
+    }
+    return fs->favorites && VecContains(*fs->favorites, fav);
+}
+
 struct RemoveItemOp {
     CommandPaletteWnd* wnd = nullptr;
     WindowTab* tab = nullptr;
@@ -350,10 +358,16 @@ static void ApplyRemoveItem(RemoveItemOp* op) {
         gPaletteOpDepth--;
     };
 
+    // the tab or favorite may be gone by the time this runs
     MainWindow* host = wnd->win;
     if (tab) {
-        CloseTab(tab, false);
+        if (IsWindowTabValid(tab)) {
+            CloseTab(tab, false);
+        }
     } else if (fav && favFs) {
+        if (!FavoriteIsLive(favFs, fav)) {
+            return;
+        }
         DelFavorite(favFs, fav);
     } else if (len(filePath) > 0 && host) {
         ForgetFileFromFrequentlyRead(host, filePath);

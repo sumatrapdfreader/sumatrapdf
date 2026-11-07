@@ -1332,15 +1332,16 @@ static void EndContentsEdit(AnnotEditToolbar* tb, bool accept) {
     }
 }
 
+// posted tasks outlive the window that posted them: check it's still there
 static void PostedAcceptContents(MainWindow* win) {
-    if (!win || !win->annotEditToolbar) {
+    if (!IsMainWindowValid(win) || !win->annotEditToolbar) {
         return;
     }
     EndContentsEdit(win->annotEditToolbar, true);
 }
 
 static void PostedCancelContents(MainWindow* win) {
-    if (!win || !win->annotEditToolbar) {
+    if (!IsMainWindowValid(win) || !win->annotEditToolbar) {
         return;
     }
     EndContentsEdit(win->annotEditToolbar, false);
@@ -1389,7 +1390,7 @@ static bool KeepContentsEditOnKillFocus(AnnotEditToolbar* tb, HWND next) {
 }
 
 static void PostedRefocusContents(MainWindow* win) {
-    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    AnnotEditToolbar* tb = IsMainWindowValidAndNotClosing(win) ? win->annotEditToolbar : nullptr;
     if (!tb || tb->contentsEditClosing || !tb->editingContents || !tb->contentsEdit) {
         return;
     }
@@ -1587,11 +1588,14 @@ void StartSelectedAnnotContentsEdit(MainWindow* win) {
 }
 
 static void PostedStartContentsEdit(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
     StartSelectedAnnotContentsEdit(win);
 }
 
 static void PostedDeleteSelectedAnnotation(MainWindow* win) {
-    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    AnnotEditToolbar* tb = IsMainWindowValidAndNotClosing(win) ? win->annotEditToolbar : nullptr;
     Annotation* annot = LiveToolbarAnnot(tb);
     if (annot) {
         DeleteAnnotationAndUpdateUI(tb->tab, annot);

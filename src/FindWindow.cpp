@@ -195,7 +195,8 @@ struct FindWindowWnd : WindowBase {
 
 static void DeferredGoToFindMatch(DeferredGoToFindMatchData* d) {
     AutoDelete del(d);
-    if (!IsMainWindowValidAndNotClosing(d->win) || !d->findWindow) {
+    // the find window can be closed or replaced while the window lives on
+    if (!IsMainWindowValidAndNotClosing(d->win) || !d->findWindow || d->findWindow != d->win->findWindow) {
         return;
     }
     if (d->epoch != d->findWindow->pendingNavEpoch) {
