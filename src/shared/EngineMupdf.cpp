@@ -3142,7 +3142,7 @@ static void PdfFillInfoFromXmp(fz_context* ctx, pdf_document* doc, pdf_obj* info
 // Note: make sure to only call with docLock
 // PdfLoadAttachment && PdfLoadAttachments must traverse in the same order
 static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
-    pdf_obj* dict;
+    pdf_obj* dict = nullptr;
     fz_var(dict);
     Str res;
 
@@ -3200,7 +3200,7 @@ static Str PdfLoadAnnotationAttachment(fz_context* ctx, pdf_document* doc, int o
 // Note: make sure to only call with docLock
 static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, Str path) {
     fz_outline root{};
-    pdf_obj* dict;
+    pdf_obj* dict = nullptr;
 
     fz_var(root);
     fz_var(dict);
