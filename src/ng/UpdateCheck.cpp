@@ -100,10 +100,6 @@ static bool gUpdateAutoInstall = false;
 // the bottom-left "update available" notification (with the download link)
 static Kind kNotifUpdateAvailable = "notifUpdateAvailable";
 
-static void CurrentFileTime(FILETIME* ft) {
-    GetSystemTimeAsFileTime(ft);
-}
-
 /*
 The format of update information downloaded from the server:
 
@@ -118,22 +114,6 @@ browser should open instead:
 
 DownloadPage: https://www.sumatrapdfreader.org/dlng/mac/14276/SumatraPDF-mac-arm64.zip
 */
-
-static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
-    UpdateCheckFacts f;
-    f.inProgress = gUpdateCheckInProgress;
-    f.userInitiated = updateCheckType == UpdateCheck::UserInitiated;
-    f.hasInternet = HasPermission(Perm::InternetAccess);
-    f.canSavePrefs = HasPermission(Perm::SavePreferences);
-    f.checkForUpdates = gSettings->checkForUpdates;
-    FILETIME never{};
-    f.firstStart = FileTimeEq(gSettings->timeOfLastUpdateCheck, never);
-    f.isPreRelease = gIsPreReleaseBuild;
-    FILETIME currentTimeFt;
-    CurrentFileTime(&currentTimeFt);
-    f.secsSinceLast = FileTimeDiffInSecs(currentTimeFt, gSettings->timeOfLastUpdateCheck);
-    return DecideUpdateCheck(f) == UpdateCheckChoice::Check;
-}
 
 static void OpenWebPage(Str url) {
     logf("UpdateCheck: opening '%s'\n", url);
@@ -670,7 +650,7 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
 // start auto-update check by downloading auto-update information from url
 // on a background thread and processing the retrieved data on ui thread
 void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
-    if (!ShouldCheckForUpdate(updateCheckType)) {
+    if (!ShouldCheckForUpdate(updateCheckType, gUpdateCheckInProgress)) {
         return;
     }
 
@@ -684,7 +664,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
         args.groupId = kNotifUpdateCheckInProgress;
         ShowNotification(args);
     }
-    CurrentFileTime(&gSettings->timeOfLastUpdateCheck);
+    GetSystemTimeAsFileTime(&gSettings->timeOfLastUpdateCheck);
     gUpdateCheckInProgress = true;
 
     // data freed in UpdateCheckFinish()

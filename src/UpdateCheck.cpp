@@ -89,27 +89,6 @@ PortableZip32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prere
 ]
 */
 
-static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
-    UpdateCheckFacts f;
-    f.inProgress = gUpdateCheckInProgress;
-    // when forcing, we download pre-release, which shows a greater version
-    // than our build, so only a user-initiated check may download it
-#ifdef FORCE_AUTO_UPDATE
-    f.forcePreReleaseOnly = true;
-#endif
-    f.userInitiated = updateCheckType == UpdateCheck::UserInitiated;
-    f.hasInternet = HasPermission(Perm::InternetAccess);
-    f.canSavePrefs = HasPermission(Perm::SavePreferences);
-    f.checkForUpdates = gSettings->checkForUpdates;
-    FILETIME never{};
-    f.firstStart = FileTimeEq(gSettings->timeOfLastUpdateCheck, never);
-    f.isPreRelease = gIsPreReleaseBuild;
-    FILETIME currentTimeFt;
-    GetSystemTimeAsFileTime(&currentTimeFt);
-    f.secsSinceLast = FileTimeDiffInSecs(currentTimeFt, gSettings->timeOfLastUpdateCheck);
-    return DecideUpdateCheck(f) == UpdateCheckChoice::Check;
-}
-
 void StartInstallerAutoUpgrade(Str installerPath) {
     TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
     TempStr installerSigner = GetExecutableSignerTemp(installerPath);
@@ -681,7 +660,7 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
 void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
-    if (!ShouldCheckForUpdate(updateCheckType)) {
+    if (!ShouldCheckForUpdate(updateCheckType, gUpdateCheckInProgress)) {
         return;
     }
 

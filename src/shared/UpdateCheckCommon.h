@@ -27,6 +27,7 @@ struct UpdateCheckFacts {
 };
 
 UpdateCheckChoice DecideUpdateCheck(const UpdateCheckFacts& f);
+bool ShouldCheckForUpdate(UpdateCheck updateCheckType, bool inProgress);
 bool ShouldOfferProgramUpdate(Str latestVer, Str myVer, bool isStoreBuild);
 
 enum class UpdateInfoFetch : u8 {
