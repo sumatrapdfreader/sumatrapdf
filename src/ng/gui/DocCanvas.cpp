@@ -1136,6 +1136,7 @@ static void StartOrUpdateSmoothScrollY(MainWindow* win, int targetY) {
     }
     win->scrollAnimY = (double)current;
     win->scrollAnimActive = true;
+    AppShellRequestFastTick(win);
     logf("SmoothScroll: %d -> %d\n", current, targetY);
 }
 
@@ -1887,6 +1888,7 @@ static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted = false) {
 static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y) {
     if (win->mouseAction == MouseAction::None) {
         win->mouseAction = MouseAction::Scrolling;
+        AppShellRequestFastTick(win);
         win->dragStartPending = true;
         // the farther the mouse moves from here, the faster the document scrolls
         win->dragStart = Point(x, y);
