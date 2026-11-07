@@ -106,6 +106,7 @@ extern "C" {
 }
 #include "Annotation.h"
 #include "AnnotEditToolbar.h"
+#include "AnnotEditToolbarCommon.h"
 #include "AnnotPlacement.h"
 #include "AnnotFilterToolbar.h"
 #include "SelectionToolbar.h"
@@ -964,19 +965,7 @@ static Str MarkupTypeName(AnnotationType tp) {
 float CanvasScale(MainWindow* win);
 TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut);
 
-// CvtToScreen is canvas space. Tests post the rect at the frame, and ToDoc
-// subtracts the canvas origin, so the reported point has to include it.
-static Rect FrameScreenRect(MainWindow* win, Rect r) {
-    float s = CanvasScale(win);
-    if (s <= 0.f) {
-        s = 1.f;
-    }
-    r.x += (int)((float)win->canvasRc.x / s + 0.5f);
-    r.y += (int)((float)win->canvasRc.y / s + 0.5f);
-    return r;
-}
-
-// the inverse: a visibility probe hands back the frame point FrameScreenRect reported
+// the inverse: a visibility probe hands back the frame point CanvasToFramePx reported
 static Point FramePointToCanvas(MainWindow* win, Point pt) {
     float s = CanvasScale(win);
     if (s <= 0.f) {
@@ -1062,7 +1051,7 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
         if (isRedact) {
             Vec<RectF> quads = GetQuadPointsAsRect(a);
             RectF r = GetRect(a);
-            Rect screen = FrameScreenRect(win, dm->CvtToScreen(PageNo(a), r));
+            Rect screen = CanvasToFramePx(win, dm->CvtToScreen(PageNo(a), r));
             out.Append(fmt("type=%s page=%d quads=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a),
                            len(quads), r.x, r.y, r.dx, r.dy, screen.x, screen.y, screen.dx, screen.dy));
             for (int i = 0; i < len(quads); i++) {
@@ -1074,7 +1063,7 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
         }
         if (isShape || isStamp || isFileAttachment || isFreeText) {
             RectF r = GetRect(a);
-            Rect screen = FrameScreenRect(win, dm->CvtToScreen(PageNo(a), r));
+            Rect screen = CanvasToFramePx(win, dm->CvtToScreen(PageNo(a), r));
             out.Append(fmt("type=%s page=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a), r.x, r.y, r.dx,
                            r.dy, screen.x, screen.y, screen.dx, screen.dy));
             if (tp == AnnotationType::PolyLine || tp == AnnotationType::Polygon) {
@@ -1125,7 +1114,7 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
         for (int i = 0; i < len(quads); i++) {
             RectF r = quads[i];
             out.Append(fmt("rect=%g,%g,%g,%g\n", r.x, r.y, r.dx, r.dy));
-            Rect screen = FrameScreenRect(win, dm->CvtToScreen(PageNo(a), r));
+            Rect screen = CanvasToFramePx(win, dm->CvtToScreen(PageNo(a), r));
             out.Append(fmt("screen=%d,%d,%d,%d\n", screen.x, screen.y, screen.dx, screen.dy));
         }
         n++;
@@ -2875,7 +2864,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                     // the bars sit outside the viewport, so report the visible page.
                     Rect view(Point(), dm->GetViewPort().Size());
                     Rect vis = pi->pageOnScreen.Intersect(view);
-                    Rect s = FrameScreenRect(win, vis.IsEmpty() ? pi->pageOnScreen : vis);
+                    Rect s = CanvasToFramePx(win, vis.IsEmpty() ? pi->pageOnScreen : vis);
                     out.Append(fmt("page n=%d shown=%d pos=%d,%d,%d,%d screen=%d,%d,%d,%d\n", pageNo,
                                    pi->isShown ? 1 : 0, p.x, p.y, p.dx, p.dy, s.x, s.y, s.dx, s.dy));
                 }

@@ -296,15 +296,8 @@ struct PageGridView {
 
 static gp::Entity<PageGridView> gPageGridView;
 
-static TempStr EditTextTemp(gp::InputState* e) {
-    if (!e) {
-        return {};
-    }
-    return str::DupTemp(FromGpui(gp::InputValue(e)));
-}
-
 static bool ParseEditFloat(gp::InputState* e, float* out) {
-    TempStr s = EditTextTemp(e);
+    TempStr s = InputTextTemp(e);
     if (len(s) == 0) {
         return false;
     }
@@ -616,7 +609,7 @@ void PageGridView::OnColorChanged(PageGridView*, gp::Ctx* cx, const gp::InputEve
         return;
     }
     ParsedColor parsed;
-    ParseColor(parsed, EditTextTemp(gPageGrid.editColor));
+    ParseColor(parsed, InputTextTemp(gPageGrid.editColor));
     if (!parsed.parsedOk || IsSpecialColor(parsed.col)) {
         return;
     }

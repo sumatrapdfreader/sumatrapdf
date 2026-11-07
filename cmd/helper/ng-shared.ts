@@ -446,6 +446,7 @@ export const sharedFiles = [
   "src/shared/gui/UIModels.cpp",
   "src/shared/gui/UIModels.h",
   "src/shared/mupdf/fonts_map.c",
+  "src/shared/mupdf/font_common.h",
   "src/shared/mupdf/load-jxl.cpp",
   "src/shared/mupdf/load-jxl.h",
   "src/shared/mupdf/mupdf_load_system_font.c",

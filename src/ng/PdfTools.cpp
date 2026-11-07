@@ -527,13 +527,6 @@ static Str ToolActionText() {
     }
 }
 
-static TempStr InputTextTemp(gp::InputState* s) {
-    if (!s) {
-        return {};
-    }
-    return str::DupTemp(FromGpui(gp::InputValue(s)));
-}
-
 static TempStr DestPathTemp() {
     return InputTextTemp(gTool.destEdit);
 }

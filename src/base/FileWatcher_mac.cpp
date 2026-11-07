@@ -107,11 +107,7 @@ void FileWatcherUnsubscribe(WatchedFile* file) {
 }
 
 void WatchedFileSetIgnore(WatchedFile* file, bool ignore) {
-    if (!file) {
-        return;
-    }
-    ScopedMutex lock(&gWatcherMutex);
-    file->ignore = ignore;
+    SetIgnoreLocked(file, &gWatcherMutex, ignore);
 }
 
 void FileWatcherWaitForShutdown(void) {

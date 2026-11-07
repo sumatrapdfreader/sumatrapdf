@@ -1975,7 +1975,7 @@ struct SidebarThumbWorker {
     int next = 0; // pages[next] is rendered next
 };
 
-static Pixmap* RenderSidebarThumb(EngineBase* engine, int pageNo, Location loc, int rotation) {
+Pixmap* RenderPageThumb(EngineBase* engine, int pageNo, Location loc, int rotation) {
     int boxPage = loc.IsValid() && engine->isReflowable ? 1 : pageNo;
     RectF pageRect = engine->PageMediabox(boxPage);
     if (pageRect.IsEmpty()) {
@@ -2039,7 +2039,7 @@ static void RenderSidebarThumbs(SidebarThumbWorker* worker) {
         auto* task = new SidebarThumbTask;
         task->cache = cache;
         task->pageNo = worker->pages[i];
-        task->bitmap = RenderSidebarThumb(cache->renderEngine, task->pageNo, worker->locs[i], cache->rotation);
+        task->bitmap = RenderPageThumb(cache->renderEngine, task->pageNo, worker->locs[i], cache->rotation);
         uitask::Post(MkFunc0<SidebarThumbTask>(FinishSidebarThumb, task));
     }
     uitask::Post(MkFunc0<SidebarThumbCache>(FinishSidebarWorker, cache));

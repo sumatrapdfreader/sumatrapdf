@@ -414,6 +414,9 @@
     <ClInclude Include="..\ext\mupdf\source\pdf\pdf-imp.h">
       <Filter>ext\mupdf\source\pdf</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\mupdf\font_common.h">
+      <Filter>src\shared\mupdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\mupdf\load-jxl.h">
       <Filter>src\shared\mupdf</Filter>
     </ClInclude>

@@ -63,12 +63,7 @@ struct FindBarUI {
 };
 
 FindBar::~FindBar() {
-    str::Free(status);
-    if (ui) {
-        ui->ddHistory.Free();
-        str::Free(ui->historyFirst);
-    }
-    delete ui;
+    FindFreeUi(status, ui);
 }
 
 // --- the find box -----------------------------------------------------------
@@ -484,17 +479,6 @@ void FindBarView::OnCmd(FindBarView* self, gp::Ctx* cx, const gp::ClickEvent*, i
     gp::Notify(cx);
 }
 
-// width of the "n / m" status slot, wide enough for the largest count it will
-// show, so the text field next to it doesn't move on every count update
-static float FindStatusDx(int totalHits, bool capped) {
-    int digits = DecimalDigits(std::max(totalHits, 0));
-    int nChars = (2 * digits) + 3; // N, " / ", M
-    if (capped) {
-        nChars++; // the trailing '+' in e.g. "999 / 999+"
-    }
-    return (float)nChars * 7.f;
-}
-
 // tooltip text for the bar's buttons: "Find Next (F3)"
 static TempStr AppendCmdAccel(Str base, int cmd) {
     TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
@@ -609,7 +593,7 @@ gp::El* FindBarBuild(MainWindow* win, gp::Ctx* cx) {
     card->Child(ui->ddHistory.BuildCombo(cx, StrL("find-edit"), edit, (float)FindBarEditDx(bar), false, (float)rowPx,
                                          (float)ui->editFontPx));
 
-    float statusDx = FindStatusDx(bar->statusTotalHits, bar->statusCapped);
+    float statusDx = FindStatusSlotDx(bar->statusTotalHits, bar->statusCapped);
     card->Child(gp::Div(cx->a)->MinW(statusDx)->Child(
         gp::TextEl(cx->a, GpuiDup(cx->a, bar->status))->Font(12)->Fg(th.mutedFg)));
 

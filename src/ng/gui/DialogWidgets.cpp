@@ -204,6 +204,25 @@ void HoverTooltipHide(gp::Ctx* cx) {
     gp::TooltipRequestHide(cx->win);
 }
 
+TempStr InputTextTemp(gp::InputState* e) {
+    if (!e) {
+        return {};
+    }
+    return str::DupTemp(FromGpui(gp::InputValue(e)));
+}
+
+// hides the tooltip of the bar's own window when the event was in it, else the event's window's
+void HoverTooltipHideBar(gp::Window* barFrame, bool hovered, bool inBarWindow, gp::Ctx* cx) {
+    if (hovered) {
+        return;
+    }
+    if (inBarWindow) {
+        HoverTooltipHideIn(barFrame);
+        return;
+    }
+    HoverTooltipHide(cx);
+}
+
 static DialogSelect* OpenCombo();
 
 bool IsTrackedPopupOpen(gp::Ctx* cx) {
@@ -644,7 +663,7 @@ static bool gDlgCues = false;
 
 // Windows underlines the access keys always or only once Alt was pressed
 // ("Underline access keys when available", off by default)
-static bool DlgCuesAlways() {
+bool MenuCuesAlways() {
 #if OS_WIN
     BOOL on = FALSE;
     SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &on, 0);
@@ -787,7 +806,7 @@ static gp::El* FindTextEl(gp::El* el, gp::Str text, gp::Rgba* fg) {
 // element themselves, so the underline is put on that element after the
 // fact, found by the label's address
 gp::El* DlgAccelUnderline(gp::Ctx* cx, gp::El* el, gp::Str text) {
-    if (!gDlgCues && !DlgCuesAlways()) {
+    if (!gDlgCues && !MenuCuesAlways()) {
         return el;
     }
     const DlgAccel* acc = nullptr;

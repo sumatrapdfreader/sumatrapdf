@@ -629,17 +629,6 @@ static uint32_t ActMenuCmd() {
     return id;
 }
 
-// "Underline access keys when available" (off until Alt, by default)
-static bool MenuCuesOn() {
-#if OS_WIN
-    BOOL on = FALSE;
-    SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &on, 0);
-    return on != FALSE;
-#else
-    return false;
-#endif
-}
-
 static void SetMenuCue(gp::Ctx* cx, gpc::PopupMenu* menu, gp::Str label, const MenuAccelText& at, bool disabled) {
     if (at.underlineOff < 0 || menu->items.len == 0) {
         return;
@@ -695,7 +684,7 @@ gp::El* TabsUIMenuButton(MainWindow* win, gp::Ctx* cx) {
     if (win->isMenuBarVisible || AppShellNativeMenu() || !win->menu) {
         return nullptr;
     }
-    gpc::PopupMenu* popup = MenuPopupFromModel(cx, win->menu, StrL("sumatra-menu-btn"), MenuCuesOn());
+    gpc::PopupMenu* popup = MenuPopupFromModel(cx, win->menu, StrL("sumatra-menu-btn"), MenuCuesAlways());
     popup->MinW(160);
     TrackPopup(cx, popup);
 

@@ -227,28 +227,6 @@ static void DeleteThumbnailCache(ThumbnailCache* cache) {
     delete cache;
 }
 
-// orig's RenderPageThumbnail
-static Pixmap* RenderPageThumbnail(EngineBase* engine, int pageNo, Location loc, int rotation) {
-    // reflow docs share one mediabox; don't use a flat pageNo that a clone's
-    // chapter layout may have already shifted
-    int boxPage = loc.IsValid() && engine->isReflowable ? 1 : pageNo;
-    RectF pageRect = engine->PageMediabox(boxPage);
-    if (pageRect.IsEmpty()) {
-        return nullptr;
-    }
-
-    pageRect = engine->Transform(pageRect, boxPage, 1.0f, rotation);
-    if (pageRect.dx <= 0 || pageRect.dy <= 0) {
-        return nullptr;
-    }
-    float zoom = (float)kThumbDx / pageRect.dx;
-    pageRect.dy = std::min(pageRect.dy, (float)kThumbDy / zoom);
-    pageRect = engine->Transform(pageRect, boxPage, 1.0f, rotation, true);
-    RenderPageArgs args(pageNo, zoom, rotation, &pageRect, RenderTarget::View);
-    args.loc = loc;
-    return PixmapToBgr(engine->RenderPage(args));
-}
-
 struct ThumbRenderTask {
     ThumbnailCache* cache = nullptr;
     int pageNo = 0;
@@ -320,7 +298,7 @@ static void RenderThumbsInBackground(ThumbRenderWorker* worker) {
         auto* task = new ThumbRenderTask;
         task->cache = cache;
         task->pageNo = worker->pages[i];
-        task->bitmap = RenderPageThumbnail(engine, worker->pages[i], loc, worker->rotation);
+        task->bitmap = RenderPageThumb(engine, worker->pages[i], loc, worker->rotation);
         uitask::Post(MkFunc0<ThumbRenderTask>(FinishThumbRender, task));
     }
     uitask::Post(MkFunc0<ThumbnailCache>(FinishThumbWorker, cache));

@@ -1320,3 +1320,36 @@ bool ApplyReadAloudVoiceFromSettings() {
     }
     return false;
 }
+
+static Str TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
+    return len(voice.lang) == 0 ? StrL("ffff") : voice.lang;
+}
+
+static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
+    int langCmp = str::CmpI(TtsVoiceLangForSort(a), TtsVoiceLangForSort(b));
+    if (langCmp != 0) {
+        return langCmp < 0;
+    }
+    return str::CmpI(a.name ? a.name : StrL(""), b.name ? b.name : StrL("")) < 0;
+}
+
+void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
+    for (TtsVoiceInfo& voice : voices) {
+        str::Free(voice.id);
+        str::Free(voice.name);
+        str::Free(voice.lang);
+    }
+    VecReset(voices);
+}
+
+void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices) {
+    for (int i = 1; i < len(voices); i++) {
+        TtsVoiceInfo value = voices[i];
+        int j = i - 1;
+        while (j >= 0 && TtsVoiceLess(value, voices[j])) {
+            voices[j + 1] = voices[j];
+            j--;
+        }
+        voices[j + 1] = value;
+    }
+}

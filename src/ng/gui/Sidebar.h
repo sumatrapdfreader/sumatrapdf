@@ -69,3 +69,4 @@ bool SidebarPanelHasFocus(MainWindow*, SidebarSlot);
 bool SidebarHasFocus(MainWindow*);
 bool SidebarMenuOpen(MainWindow*, gpui::Ctx* cx);
 void SidebarFocusPanel(MainWindow*, SidebarSlot);
+Pixmap* RenderPageThumb(EngineBase* engine, int pageNo, Location loc, int rotation);

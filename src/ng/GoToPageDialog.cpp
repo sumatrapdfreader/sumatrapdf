@@ -95,13 +95,6 @@ void CloseGoToPageDialog() {
     AppShellInvalidate(win);
 }
 
-static Str InputTextTemp(gp::InputState* s) {
-    if (!s) {
-        return {};
-    }
-    return str::DupTemp(FromGpui(gp::InputValue(s)));
-}
-
 // orig's GoToPageWnd::OnOk
 static void GoToPageOk(MainWindow* win) {
     if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded() || !win->ctrl) {

@@ -104,11 +104,7 @@ bool IsDirectory(Str path) {
 // also remembered for ~4 minutes so later queries fail fast.
 // Non-Windows: no cache (same as an uncached attribute query).
 DWORD GetCachedAttributes(Str path) {
-    struct stat st;
-    if (!StatPath(path, st)) {
-        return (DWORD)-1; // INVALID_FILE_ATTRIBUTES
-    }
-    return (DWORD)st.st_mode;
+    return file::GetAttributes(path);
 }
 
 TempStr NormalizeTemp(Str path) {

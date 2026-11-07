@@ -336,15 +336,6 @@ Vec<TtsVoiceInfo> TtsGetVoices() {
     return voices;
 }
 
-void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
-    for (TtsVoiceInfo& voice : voices) {
-        str::Free(voice.id);
-        str::Free(voice.name);
-        str::Free(voice.lang);
-    }
-    VecReset(voices);
-}
-
 bool TtsSetVoiceById(Str voiceId) {
     if (len(voiceId) == 0 && len(gTtsVoiceId) > 0) {
         TtsLinuxRelease();

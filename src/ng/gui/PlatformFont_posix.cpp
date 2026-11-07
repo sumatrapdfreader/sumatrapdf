@@ -9,6 +9,28 @@
 
 #include "gui/PlatformFont.h"
 
+PlatformFont* GetScaledPlatformFont(PlatformFont* font, int percent) {
+    if (!font || percent <= 0) {
+        return nullptr;
+    }
+    return GetPlatformFont(font->name, font->sizePt * (float)percent / 100.0f, font->style);
+}
+
+PlatformFont* GetBoldPlatformFont(PlatformFont* font) {
+    if (!font) {
+        return nullptr;
+    }
+    if (font->boldVariant) {
+        return font->boldVariant;
+    }
+    if ((int)font->style & (int)PlatformFontStyle::Bold) {
+        font->boldVariant = font;
+        return font;
+    }
+    font->boldVariant = GetPlatformFont(font->name, font->sizePt, font->style | PlatformFontStyle::Bold);
+    return font->boldVariant ? font->boldVariant : font;
+}
+
 #if OS_LINUX
 #include <pango/pangocairo.h>
 
@@ -95,28 +117,6 @@ PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     }
     float sizePt = (float)size * 72.0f / 96.0f;
     return GetPlatformFont(fontName, sizePt, style);
-}
-
-PlatformFont* GetScaledPlatformFont(PlatformFont* font, int percent) {
-    if (!font || percent <= 0) {
-        return nullptr;
-    }
-    return GetPlatformFont(font->name, font->sizePt * (float)percent / 100.0f, font->style);
-}
-
-PlatformFont* GetBoldPlatformFont(PlatformFont* font) {
-    if (!font) {
-        return nullptr;
-    }
-    if (font->boldVariant) {
-        return font->boldVariant;
-    }
-    if ((int)font->style & (int)PlatformFontStyle::Bold) {
-        font->boldVariant = font;
-        return font;
-    }
-    font->boldVariant = GetPlatformFont(font->name, font->sizePt, font->style | PlatformFontStyle::Bold);
-    return font->boldVariant ? font->boldVariant : font;
 }
 
 #elif OS_DARWIN
@@ -243,28 +243,6 @@ PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     return GetPlatformFont(fontName, (float)size * 72.0f / 96.0f, FontStyle(bold, italic));
 }
 
-PlatformFont* GetScaledPlatformFont(PlatformFont* font, int percent) {
-    if (!font || percent <= 0) {
-        return nullptr;
-    }
-    return GetPlatformFont(font->name, font->sizePt * (float)percent / 100.0f, font->style);
-}
-
-PlatformFont* GetBoldPlatformFont(PlatformFont* font) {
-    if (!font) {
-        return nullptr;
-    }
-    if (font->boldVariant) {
-        return font->boldVariant;
-    }
-    if ((int)font->style & (int)PlatformFontStyle::Bold) {
-        font->boldVariant = font;
-        return font;
-    }
-    font->boldVariant = GetPlatformFont(font->name, font->sizePt, font->style | PlatformFontStyle::Bold);
-    return font->boldVariant ? font->boldVariant : font;
-}
-
 #else
 // same constants StubTextRender uses, so layout and drawing agree
 constexpr float kAvgCharWidthRatio = 0.55f;
@@ -328,31 +306,5 @@ PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
         style = style | PlatformFontStyle::Italic;
     }
     return GetPlatformFont(fontName, (float)size, style);
-}
-
-PlatformFont* GetScaledPlatformFont(PlatformFont* font, int percent) {
-    if (!font || percent <= 0) {
-        return nullptr;
-    }
-    float size = font->sizePt * (float)percent / 100.f;
-    return GetPlatformFont(font->name, size, font->style);
-}
-
-PlatformFont* GetBoldPlatformFont(PlatformFont* f) {
-    if (!f) {
-        return nullptr;
-    }
-    if (f->boldVariant) {
-        return f->boldVariant;
-    }
-    if ((int)f->style & (int)PlatformFontStyle::Bold) {
-        f->boldVariant = f;
-        return f;
-    }
-    f->boldVariant = GetPlatformFont(f->name, f->sizePt, f->style | PlatformFontStyle::Bold);
-    if (!f->boldVariant) {
-        f->boldVariant = f;
-    }
-    return f->boldVariant;
 }
 #endif

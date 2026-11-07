@@ -119,7 +119,6 @@ void TtsProcessEvents() {}
 Vec<TtsVoiceInfo> TtsGetVoices() {
     return Vec<TtsVoiceInfo>();
 }
-void TtsFreeVoices(Vec<TtsVoiceInfo>&) {}
 bool TtsSetVoiceById(Str) {
     return false;
 }
@@ -365,14 +364,7 @@ void ReadAloudPlaybackBarView::OnSpeedMove(ReadAloudPlaybackBarView* self, gp::C
 }
 
 void ReadAloudPlaybackBarView::OnSpeedHover(ReadAloudPlaybackBarView* self, gp::Ctx* cx, const gp::HoverEvent* ev) {
-    if (ev->hovered) {
-        return;
-    }
-    if (BarWindowOf(self->win, cx)) {
-        HoverTooltipHideIn(self->win->gpuiWin);
-        return;
-    }
-    HoverTooltipHide(cx);
+    HoverTooltipHideBar(self->win->gpuiWin, ev->hovered, BarWindowOf(self->win, cx) != nullptr, cx);
 }
 
 // --- orig's popup: the bar in a window of its own ---------------------------

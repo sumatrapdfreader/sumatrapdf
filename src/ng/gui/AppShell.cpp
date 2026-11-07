@@ -1585,18 +1585,6 @@ void AppShellSyncMenu(MainWindow* win) {
     gMenuVis = true;
 }
 
-// Windows underlines the access keys always or only once Alt was pressed
-// ("Underline access keys when available", off by default)
-static bool MenuCuesAlways() {
-#if OS_WIN
-    BOOL on = FALSE;
-    SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &on, 0);
-    return on != FALSE;
-#else
-    return false;
-#endif
-}
-
 // the label with orig's '&' letter underlined
 static gp::El* MenuCueLabel(gp::Ctx* cx, gp::Str label, const MenuAccelText& at, gp::Rgba fg) {
     auto* span = gp::ArenaNew<gp::TextSpan>(cx->a);

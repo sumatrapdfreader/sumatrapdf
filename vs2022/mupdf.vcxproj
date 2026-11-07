@@ -1196,6 +1196,7 @@
     <ClInclude Include="..\ext\mupdf\source\pdf\annotation-icons.h" />
     <ClInclude Include="..\ext\mupdf\source\pdf\pdf-annot-imp.h" />
     <ClInclude Include="..\ext\mupdf\source\pdf\pdf-imp.h" />
+    <ClInclude Include="..\src\shared\mupdf\font_common.h" />
     <ClInclude Include="..\src\shared\mupdf\load-jxl.h" />
     <ClInclude Include="..\src\shared\mupdf\noto_sumatra.h" />
     <ClInclude Include="..\src\shared\mupdf\ofd-crypto.h" />

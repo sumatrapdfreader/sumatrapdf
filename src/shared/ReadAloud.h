@@ -45,6 +45,7 @@ void TtsProcessEvents();
 
 Vec<TtsVoiceInfo> TtsGetVoices();
 void TtsFreeVoices(Vec<TtsVoiceInfo>& voices);
+void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices);
 
 bool TtsSetVoiceById(Str voiceId);
 Str TtsGetVoiceId();

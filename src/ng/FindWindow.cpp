@@ -63,16 +63,6 @@ constexpr int kFindWinPagesDx = 160;
 constexpr int kFindWinRowDy = 20;
 constexpr int kFindWinPageColDx = 40;
 
-// "n / m" slot, wide enough for the full count so the search box stays put
-static float FindStatusSlotDx(int totalHits, bool capped) {
-    int digits = DecimalDigits(std::max(totalHits, 0));
-    int nChars = (2 * digits) + 3;
-    if (capped) {
-        nChars++;
-    }
-    return (float)nChars * 7.f;
-}
-
 struct FindWindowView;
 
 // gpui's Small input font. The DPI probe reports this height.
@@ -91,12 +81,7 @@ struct FindWindowUI {
 };
 
 FindWindowWnd::~FindWindowWnd() {
-    str::Free(status);
-    if (ui) {
-        ui->ddHistory.Free();
-        str::Free(ui->historyFirst);
-    }
-    delete ui;
+    FindFreeUi(status, ui);
 }
 
 static void FindWindowOpenToolWindow(MainWindow* win);

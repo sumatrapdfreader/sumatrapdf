@@ -92,6 +92,17 @@ static bool IsLive(ToolWindow* tw) {
     return tw && VecContains(gToolWindows, tw);
 }
 
+// placing one can run code that opens or closes another
+template <class Fn>
+static void FollowOwned(MainWindow* win, Fn followOne) {
+    Vec<ToolWindow*> wins = gToolWindows;
+    for (ToolWindow* tw : wins) {
+        if (tw->owner == win && IsLive(tw)) {
+            followOne(tw);
+        }
+    }
+}
+
 ToolWindow* ToolWindowFind(Str name) {
     for (ToolWindow* tw : gToolWindows) {
         if (!tw->closing && str::Eq(Str(tw->desc.name), name)) {
@@ -378,13 +389,7 @@ static void FollowOne(ToolWindow* tw) {
 }
 
 void ToolWindowsFollow(MainWindow* win) {
-    // placing one can run code that opens or closes another
-    Vec<ToolWindow*> wins = gToolWindows;
-    for (ToolWindow* tw : wins) {
-        if (tw->owner == win && IsLive(tw)) {
-            FollowOne(tw);
-        }
-    }
+    FollowOwned(win, FollowOne);
 }
 
 Rect ToolWindowDockedBarRect(MainWindow* owner, int marginDip, float barDyDip) {
@@ -971,12 +976,7 @@ static void FollowOne(ToolWindow* tw) {
 }
 
 void ToolWindowsFollow(MainWindow* win) {
-    Vec<ToolWindow*> wins = gToolWindows;
-    for (ToolWindow* tw : wins) {
-        if (tw->owner == win && IsLive(tw)) {
-            FollowOne(tw);
-        }
-    }
+    FollowOwned(win, FollowOne);
 }
 
 Rect ToolWindowDockedBarRect(MainWindow* owner, int marginDip, float barDyDip) {

@@ -165,14 +165,7 @@ void ReadingAutoScrollView::OnSpeedMove(ReadingAutoScrollView* self, gp::Ctx* cx
 }
 
 void ReadingAutoScrollView::OnSpeedHover(ReadingAutoScrollView* self, gp::Ctx* cx, const gp::HoverEvent* ev) {
-    if (ev->hovered) {
-        return;
-    }
-    if (BarWindowOf(self->win, cx)) {
-        HoverTooltipHideIn(self->win->gpuiWin);
-        return;
-    }
-    HoverTooltipHide(cx);
+    HoverTooltipHideBar(self->win->gpuiWin, ev->hovered, BarWindowOf(self->win, cx) != nullptr, cx);
 }
 
 ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
