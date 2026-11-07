@@ -4443,7 +4443,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
 
     UpdateUiForCurrentTab(win);
-    PickAnotherRandomPromotion();
+    PickAnotherRandomTip();
 
     if (win->InPresentation()) {
         SetSidebarVisibility(win, tab->showTocPresentation, gSettings->showFavorites);

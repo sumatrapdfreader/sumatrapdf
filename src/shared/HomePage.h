@@ -30,7 +30,7 @@ void SetHomePageListView(bool listView);
 void SetPromoString(Str s);
 void FreeHomePageTips();
 void HomePageInvalidateLayoutCache();
-void PickAnotherRandomPromotion();
+void PickAnotherRandomTip();
 
 void HomePageFocusSearch(MainWindow* win);
 // the start page's overlay scrollbar (`nTrackPos` for ScrollMsg::ThumbTrack)

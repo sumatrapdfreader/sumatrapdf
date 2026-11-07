@@ -341,6 +341,46 @@ You can [paste an image from the clipboard](Help/Add-an-image-to-a-PDF#insert-an
 You can [translate selected text](Help/Customize-search-translation-services#search-or-translate-the-selection).
 )tips");
 
+static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
+Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
+Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with super powers.
+Try [Sumatra File Manager Web](https://web.sumatrafilemanager.com): file manager for S3, Dropbox and more.
+)promos");
+
+// promotions from the update-check file, shown with the built-in ones
+static Str promoFromServer;
+
+void EnsureTipsParsed() {
+    if (gTipsParsed) {
+        return;
+    }
+    CollectTipsFromString(sumatraTips, &gTipLines);
+    CollectTipsFromString(sumatraPromos, &gPromoLines);
+    if (len(promoFromServer) > 0) {
+        CollectTipsFromString(promoFromServer, &gPromoLines);
+    }
+    gTipsParsed = true;
+    PickRandomTipOrPromo();
+}
+
+void FreeHomePageTips() {
+    if (gTipsParsed) {
+        gTipLines.Reset();
+        gPromoLines.Reset();
+        gTipsParsed = false;
+    }
+    str::Free(promoFromServer);
+    promoFromServer = {};
+    HomePageInvalidateLayoutCache();
+}
+
+void SetPromoString(Str s) {
+    if (len(s) == 0) {
+        return;
+    }
+    str::ReplaceWithCopy(&promoFromServer, s);
+}
+
 // the line under the rows that says this isn't a release build
 Str AboutNoteText() {
 #if defined(PRE_RELEASE_VER)

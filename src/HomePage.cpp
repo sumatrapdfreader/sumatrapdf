@@ -94,35 +94,7 @@ struct TipHookInstaller {
 };
 static TipHookInstaller gTipHookInstaller;
 
-static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
-Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
-Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with super powers.
-Try [Sumatra File Manager Web](https://web.sumatrafilemanager.com): file manager for S3, Dropbox and more.
-)promos");
-
-static Str promoFromServer;
-
-static void EnsureTipsParsed() {
-    if (gTipsParsed) {
-        return;
-    }
-    CollectTipsFromString(sumatraTips, &gTipLines);
-    CollectTipsFromString(sumatraPromos, &gPromoLines);
-    gTipsParsed = true;
-    PickRandomTipOrPromo();
-}
-
 static void ClearHomeLayoutCache(MainWindow*);
-
-void FreeHomePageTips() {
-    if (gTipsParsed) {
-        gTipLines.Reset();
-        gPromoLines.Reset();
-        gTipsParsed = false;
-    }
-    str::Free(promoFromServer);
-    HomePageInvalidateLayoutCache();
-}
 
 // the About box: the brand over the version, the link rows, a note, then a
 // hairline over the copy link and the other software
@@ -222,11 +194,6 @@ struct AboutCtrl : VirtCtrl {
 static void OpenAboutUrl(VirtMouseEvent* ev) {
     auto* link = (VirtLink*)ev->target;
     OpenTipUrl(link->target);
-}
-
-void SetPromoString(Str s) {
-    if (len(s) == 0) return;
-    str::ReplaceWithCopy(&promoFromServer, s);
 }
 
 static TempStr GetAppVersionTemp() {
@@ -1286,10 +1253,6 @@ void HomePageOnDpiChanged(MainWindow* win, int dpi) {
     if (win->hwndCanvas) {
         HwndInvalidate(win->hwndCanvas, true);
     }
-}
-
-void PickAnotherRandomPromotion() {
-    PickAnotherRandomTip();
 }
 
 // --- scroll-friendly layout cache: full LayoutHomePage only when content/size/
@@ -2409,7 +2372,7 @@ static void HomeOpenDocClicked(MainWindow* win, VirtMouseEvent*) {
 
 static void HomeTipBandDoubleClicked(MainWindow* win, VirtMouseEvent* ev) {
     ev->didHandle = true;
-    PickAnotherRandomPromotion();
+    PickAnotherRandomTip();
     // painting reuses the layout, which holds the parsed tip
     HomePageRelayout(win);
     HwndInvalidate(win->hwndCanvas);

@@ -10,7 +10,7 @@ extern int gSelectedTipIdx;
 void CollectTipsFromString(Str src, StrVec* out);
 Str SelectedTipLine();
 void PickRandomTipOrPromo();
-void PickAnotherRandomTip();
+void EnsureTipsParsed();
 TempStr TrimGitTemp(Str s);
 void AboutSourceRow(Str* text, Str* url);
 Str AboutNoteText();

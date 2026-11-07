@@ -55,51 +55,6 @@
 
 #include "SumatraLog.h"
 
-// --- tips and promotions (orig's) -------------------------------------------
-
-static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
-Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
-Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with super powers.
-Try [Sumatra File Manager Web](https://web.sumatrafilemanager.com): file manager for S3, Dropbox and more.
-)promos");
-
-static Str promoFromServer;
-
-static void EnsureTipsParsed() {
-    if (gTipsParsed) {
-        return;
-    }
-    CollectTipsFromString(sumatraTips, &gTipLines);
-    CollectTipsFromString(sumatraPromos, &gPromoLines);
-    if (len(promoFromServer) > 0) {
-        CollectTipsFromString(promoFromServer, &gPromoLines);
-    }
-    gTipsParsed = true;
-    PickRandomTipOrPromo();
-}
-
-void FreeHomePageTips() {
-    if (gTipsParsed) {
-        gTipLines.Reset();
-        gPromoLines.Reset();
-        gTipsParsed = false;
-    }
-    str::Free(promoFromServer);
-    promoFromServer = {};
-    HomePageInvalidateLayoutCache();
-}
-
-void PickAnotherRandomPromotion() {
-    PickAnotherRandomTip();
-}
-
-void SetPromoString(Str s) {
-    if (len(s) == 0) {
-        return;
-    }
-    str::ReplaceWithCopy(&promoFromServer, s);
-}
-
 // --- the About rows (orig's) -------------------------------------------------
 
 constexpr int kInnerPadding = 8;
@@ -890,7 +845,7 @@ void HomeView::OnTipBand(HomeView* self, gp::Ctx* cx, const gp::ClickEvent* ev) 
     if (ev->clickCount < 2) {
         return;
     }
-    PickAnotherRandomPromotion();
+    PickAnotherRandomTip();
     HomeNotify(self->win, cx);
 }
 
