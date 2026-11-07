@@ -22,8 +22,8 @@ bool IsActivelySelecting(MainWindow* win);
 
 void InitButtons(Vec<SelectionToolbarButton>& buttons, MainWindow* win);
 
-// implemented by each app
 void AppendSelectionHandlerButtons(Vec<SelectionToolbarButton>& buttons, const AppCommandCtx& ctx);
+// implemented by each app
 Vec<SelectionToolbarButton>* SelectionToolbarButtons(MainWindow* win);
 Rect SelectionCanvasRect(MainWindow* win, DisplayModel* dm);
 void InvokeSelectionToolbarCommand(MainWindow* win, int cmdId);

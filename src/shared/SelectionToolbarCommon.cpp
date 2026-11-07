@@ -154,6 +154,32 @@ void InitButtons(Vec<SelectionToolbarButton>& buttons, MainWindow* win) {
     NormalizeSelectionToolbarSeparators(buttons);
 }
 
+// selection handlers that asked for a button with SelectToolbarNameOrSvg
+void AppendSelectionHandlerButtons(Vec<SelectionToolbarButton>& buttons, const AppCommandCtx& ctx) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
+    for (CustomCommand* cmd : cmds) {
+        Str s = GetCommandStringArg(cmd, kCmdArgSelectToolbar, {});
+        if (str::IsEmptyOrWhiteSpace(s)) {
+            continue;
+        }
+        CommandVisibility v = GetCommandVisibility(cmd->id, ctx, CommandSurface::Toolbar);
+        if (CommandShouldRemove(v)) {
+            continue;
+        }
+        SelectionToolbarButton b;
+        b.cmdId = cmd->id;
+        if (str::StartsWithI(s, StrL("<svg"))) {
+            b.svgIcon = s;
+            b.userLabel = cmd->name;
+        } else {
+            b.userLabel = s;
+        }
+        b.enabled = !CommandShouldDisable(v);
+        VecAppend(buttons, b);
+    }
+}
+
 Str ButtonLabel(const SelectionToolbarButton& b) {
     return len(b.userLabel) > 0 ? b.userLabel : Tr(b.label);
 }

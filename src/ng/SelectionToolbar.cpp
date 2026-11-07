@@ -54,35 +54,6 @@ struct SelectionToolbar {
     gp::Bounds measured;
 };
 
-// selection handlers that asked for a button with SelectToolbarNameOrSvg
-void AppendSelectionHandlerButtons(Vec<SelectionToolbarButton>& buttons, const AppCommandCtx& ctx) {
-    Vec<CustomCommand*> cmds;
-    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
-    for (CustomCommand* cmd : cmds) {
-        Str s = GetCommandStringArg(cmd, kCmdArgSelectToolbar, {});
-        if (str::IsEmptyOrWhiteSpace(s)) {
-            continue;
-        }
-        CommandVisibility v = GetCommandVisibility(cmd->id, ctx, CommandSurface::Toolbar);
-        if (CommandShouldRemove(v)) {
-            continue;
-        }
-        SelectionToolbarButton b;
-        b.cmdId = cmd->id;
-        if (str::StartsWithI(s, StrL("<svg"))) {
-            b.userLabel = cmd->name;
-            b.svgIcon = s;
-        } else {
-            b.userLabel = s;
-        }
-        b.enabled = !CommandShouldDisable(v);
-        if (len(b.userLabel) == 0) {
-            continue;
-        }
-        VecAppend(buttons, b);
-    }
-}
-
 static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
     if (!win->selectionToolbar) {
         auto* tb = new SelectionToolbar();
