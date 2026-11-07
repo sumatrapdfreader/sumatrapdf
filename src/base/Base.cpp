@@ -2561,7 +2561,7 @@ constexpr char kLF = '\n';
 
 // kCR kLF and a lone kCR become kLF, in place: the result is never longer.
 // Empty lines are preserved.
-// s must own a writeable, nul-terminated buffer.
+// s must be writeable; it may be a view into a larger string.
 int NormalizeNewlinesToLFInPlace(Str& s) {
     if (len(s) == 0) {
         return 0;
@@ -2579,7 +2579,10 @@ int NormalizeNewlinesToLFInPlace(Str& s) {
         }
         s.s[dst++] = c;
     }
-    s.s[dst] = 0;
+    // only when it shrank: s may be a view, and s.s[len] isn't ours to write
+    if (dst < s.len) {
+        s.s[dst] = 0;
+    }
     s.len = dst;
 
     return dst;

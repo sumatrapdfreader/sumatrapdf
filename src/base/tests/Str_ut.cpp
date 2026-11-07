@@ -552,6 +552,21 @@ static void Utf16ToUtf8Test() {
     utassert(len(strconv::Utf16ToUtf8Temp(Str("A", 1), strconv::ByteOrder::LittleEndian)) == 0);
 }
 
+// a view into a larger string: nothing to normalize must not write s.s[len]
+static void StrNormalizeNewlinesViewTest() {
+    char buf[] = "abcXYZ";
+    Str view(buf, 3);
+    str::NormalizeNewlinesToLFInPlace(view);
+    utassert(len(view) == 3);
+    utassert(buf[3] == 'X');
+
+    char buf2[] = "a\r\nbXYZ";
+    Str view2(buf2, 4);
+    str::NormalizeNewlinesToLFInPlace(view2);
+    utassert(str::Eq(view2, StrL("a\nb")));
+    utassert(buf2[4] == 'X');
+}
+
 static void StrNormalizeNewlinesToLFInPlaceTest() {
     // CRLF and lone CR become LF, empty lines survive
     char buf[64];
@@ -1215,6 +1230,7 @@ void StrTest() {
     StrNextLineTest();
     StrTrimWsTest();
     StrNormalizeNewlinesToLFInPlaceTest();
+    StrNormalizeNewlinesViewTest();
     Utf16ToUtf8Test();
     StrLFToCRLFTempTest();
     StrStartsWithTest();
