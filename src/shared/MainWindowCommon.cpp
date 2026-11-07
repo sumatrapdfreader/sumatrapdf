@@ -41,6 +41,7 @@
 #include "CommandAvailability.h"
 #include "HomePage.h"
 #include "MainWindow.h"
+#include "Selection.h"
 #include "MainWindowCommon.h"
 
 Vec<MainWindow*> gWindows;
@@ -446,4 +447,94 @@ void PopulateTabCloseFlags(AppCommandCtx& ctx) {
     int nTabs = ctx.win->TabCount();
     ctx.nTabs = nTabs;
     SetTabCloseFlags(ctx);
+}
+
+AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
+    AppCommandCtx ctx;
+    ctx.win = win;
+    ctx.cursorPos = cursorPos;
+    if (!win) {
+        return ctx;
+    }
+
+    ctx.tab = win->CurrentTab();
+    ctx.isDocLoaded = win->IsDocLoaded();
+    ctx.filePath = ctx.tab ? ctx.tab->filePath : Str();
+    ctx.hasOpenDocuments = HasOpenedDocuments(win);
+    ctx.debugDpiOverrideAvailable = true;
+
+    if (ctx.tab) {
+        ctx.autoScrollOn = ctx.tab->autoScroll.on;
+        ctx.readingBarOn = ctx.tab->readingBar.on;
+        ctx.isChm = ctx.tab->AsChm() || ctx.tab->AsMarkdown();
+        Str currentPath = win->ctrl ? win->ctrl->GetFilePath() : ctx.filePath;
+        ctx.isMarkdown = str::EndsWithI(currentPath, StrL(".md")) || str::EndsWithI(currentPath, StrL(".markdown"));
+        EngineBase* engine = ctx.tab->GetEngine();
+        ctx.isCbx = engine && engine->kind == kindEngineComicBooks;
+        ctx.isImageCollection = engine && engine->isImageCollection;
+        ctx.isEpub = IsEpubDoc(ctx.tab);
+        ctx.isReflowable = engine && engine->isReflowable;
+        ctx.engineKind = ctx.tab->GetEngineType();
+        ctx.engineHasErrors = engine && engine->HasErrors();
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+        ctx.allowsPrinting = !win->AsFixed() || (engine && engine->AllowsPrinting());
+#endif
+        ctx.isPdf = IsPdfDoc(ctx.tab);
+        if (ctx.isPdf && engine) {
+            ctx.isPdfEncrypted = EngineMupdfIsEncrypted(engine);
+        }
+        ctx.canContinueReadAloud = CanContinueReadAloud(ctx.tab);
+        ctx.hideAnnotations = ctx.tab->hideAnnotations;
+        ctx.selectedAnnotation = ctx.tab->selectedAnnotation;
+    }
+
+    ctx.isSpeaking = TtsIsSpeaking();
+    ctx.aiChatAvailable = IsAIChatAvailable();
+    ctx.aiChatSupported = IsAIChatSupportedForTab(ctx.tab);
+    ctx.grokInstalled = IsBackendInstalled(AIChatBackend::Grok);
+    ctx.claudeInstalled = IsBackendInstalled(AIChatBackend::Claude);
+    ctx.codexInstalled = IsBackendInstalled(AIChatBackend::Codex);
+    ctx.antiGravityInstalled = IsBackendInstalled(AIChatBackend::AntiGravity);
+    ctx.hasSelection = ctx.isDocLoaded && ctx.tab && win->showSelection && ctx.tab->selectionOnPage;
+    FillAppCommandCtx(ctx, win);
+
+    if (ctx.isDocLoaded && win->ctrl) {
+        ctx.isSinglePage = IsSingle(win->ctrl->GetDisplayMode());
+        ctx.pageCount = win->ctrl->PageCount();
+        ctx.hasToc = win->ctrl->HasToc();
+    }
+
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        ctx.isFixedPage = true;
+        EngineBase* engine = dm->GetEngine();
+        ctx.hasTextSelection = ctx.hasSelection && len(dm->textSelection->result) > 0;
+        ctx.hasDrawnRectSelection = ctx.hasSelection && IsDrawnRectSelection(win);
+        ctx.supportsAnnots = EngineSupportsAnnotations(engine);
+        ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
+        ctx.hasRedactMarks = EngineHasRedactMarksNoWait(engine);
+        ctx.hasUserRedactMarks = EngineHasUserRedactMarks(engine);
+        ctx.canUndo = EngineMupdfCanUndoNoWait(engine);
+        ctx.canRedo = EngineMupdfCanRedoNoWait(engine);
+        ctx.isCursorOnPage = dm->GetPageNoByPoint(cursorPos) > 0;
+        ctx.annotationUnderCursor = AnnotationUnderCursor(win, dm, cursorPos);
+        IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
+        if (pageEl) {
+            Str value = pageEl->GetValue();
+            ctx.cursorOnLinkTarget = pageEl->Is(kindPageElementDest) && PageDestHasAddress(pageEl->AsLink());
+            ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
+            ctx.cursorOnImage = pageEl->Is(kindPageElementImage);
+        }
+        if (ctx.annotationUnderCursor) {
+            ctx.cursorOnComment = !str::IsEmptyOrWhiteSpace(Contents(ctx.annotationUnderCursor));
+        }
+    }
+
+    if (!CanAccessDisk()) {
+        ctx.supportsAnnots = false;
+        ctx.hasUnsavedAnnotations = false;
+    }
+
+    PopulateTabCloseFlags(ctx);
+    return ctx;
 }
