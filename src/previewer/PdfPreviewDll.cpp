@@ -115,9 +115,14 @@ static Str GetReason(DWORD dwReason) {
     return StrL("Unknown reason");
 }
 
+void UnregisterPreviewWndClass();
+
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void* /*lpReserved*/) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
+    }
+    if (dwReason == DLL_PROCESS_DETACH) {
+        UnregisterPreviewWndClass();
     }
     gLogAppName = StrL("PdfPreview");
     logf("PdfPreview: DllMain %s\n", GetReason(dwReason));

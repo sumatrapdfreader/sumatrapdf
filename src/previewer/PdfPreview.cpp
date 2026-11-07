@@ -270,7 +270,19 @@ class PageRenderer {
         BlitPixmapRegion(bmp, hdc, dst, src);
     }
 
+    // Once pr->thread is null nothing waits for this thread, so the host may
+    // unload the DLL while it still runs: hold a module ref until it exits.
     static DWORD WINAPI RenderThread(LPVOID data) {
+        HMODULE self = nullptr;
+        GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)&RenderThread, &self);
+        RenderThreadBody(data);
+        if (self) {
+            FreeLibraryAndExitThread(self, 0);
+        }
+        return 0;
+    }
+
+    static void RenderThreadBody(LPVOID data) {
         log(StrL("PageRenderer::RenderThread started\n"));
         AutoCoUninitialize comScope; // because the engine reads data from a COM IStream
 
@@ -307,7 +319,6 @@ class PageRenderer {
 
         SafeCloseThreadHandle(&th);
         DestroyTempArena();
-        return 0;
     }
 };
 
@@ -647,6 +658,8 @@ static LRESULT OnDestroy(HWND hwnd) {
     return 0;
 }
 
+static const WCHAR* kPreviewWndClass = L"SumatraPDF_PreviewPane";
+
 static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     PdfPreview* preview = PreviewFromHwnd(hwnd);
     switch (msg) {
@@ -711,6 +724,10 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
+void UnregisterPreviewWndClass() {
+    UnregisterClassW(kPreviewWndClass, GetInstance());
+}
+
 IFACEMETHODIMP PdfPreview::DoPreview() {
     log(StrL("PdfPreview::DoPreview()\n"));
 
@@ -718,12 +735,17 @@ IFACEMETHODIMP PdfPreview::DoPreview() {
     wcex.cbSize = sizeof(wcex);
     wcex.lpfnWndProc = PreviewWndProc;
     wcex.hCursor = GetCachedCursor(IDC_ARROW);
-    wcex.lpszClassName = L"SumatraPDF_PreviewPane";
+    wcex.lpszClassName = kPreviewWndClass;
     wcex.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    RegisterClassEx(&wcex);
+    // owned by this DLL so it can be unregistered when the DLL unloads; a
+    // class left behind would point a reloaded DLL's windows at a stale proc
+    wcex.hInstance = GetInstance();
+    if (!RegisterClassEx(&wcex) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
 
-    m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE, m_rcParent.x, m_rcParent.x,
-                          m_rcParent.dx, m_rcParent.dy, m_hwndParent, nullptr, nullptr, nullptr);
+    m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE, m_rcParent.x, m_rcParent.y,
+                          m_rcParent.dx, m_rcParent.dy, m_hwndParent, nullptr, GetInstance(), nullptr);
     if (!m_hwnd) {
         return HRESULT_FROM_WIN32(GetLastError());
     }
