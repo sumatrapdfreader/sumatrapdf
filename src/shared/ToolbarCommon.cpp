@@ -365,6 +365,13 @@ Str* AnnotPresetColorList(int cmdId) {
     return (cmdId == CmdCreateAnnotInk) ? &a.inkColors : &a.presetColors;
 }
 
+// the color the button's next annotation is made in
+Color AnnotColorForCmd(int cmdId) {
+    ParsedColor* setting = AnnotPresetColorSetting(cmdId);
+    Color col = setting ? GetParsedColor(*setting, kColorUnset) : kColorUnset;
+    return col != kColorUnset ? col : AnnotDefaultColor(cmdId);
+}
+
 void SetAnnotPresetColor(int cmdId, Color col) {
     ParsedColor* setting = AnnotPresetColorSetting(cmdId);
     if (!setting) {

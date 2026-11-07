@@ -238,14 +238,6 @@ static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
                   0);
 }
 
-static LayoutProbeState gLayoutProbe;
-
-static void LayoutProbeAfterLayout(MainWindow* win) {
-    if (gLayoutProbe.active && gLayoutProbe.win == win) {
-        gLayoutProbe.count++;
-    }
-}
-
 static void AppendHwndLayoutRect(str::Builder& out, MainWindow* win, Str name, HWND hwnd) {
     Rect rect;
     if (hwnd) {
@@ -289,7 +281,7 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
         gLayoutProbe.win = win;
         gLayoutProbe.count = 0;
         gLayoutProbe.active = true;
-        gAfterLayout = MkFunc1Void(LayoutProbeAfterLayout);
+        gAfterLayout = MkFunc1Void(LayoutProbeNote);
     } else if (str::EqI(action, StrL("stop"))) {
         if (gLayoutProbe.active) {
             gAfterLayout = {};

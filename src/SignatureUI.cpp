@@ -392,16 +392,18 @@ struct SignatureWnd : WindowBase {
 
 static SignatureWnd* gSignatureWnd = nullptr;
 
-static void OnSignatureWndClose(WindowBase::CloseEvent*) {
+static void ScheduleSignatureDelete() {
     if (gSignatureWnd) {
         gSignatureWnd->ScheduleDelete();
     }
 }
 
+static void OnSignatureWndClose(WindowBase::CloseEvent*) {
+    ScheduleSignatureDelete();
+}
+
 static void OnSignatureWndDestroy(WindowBase::DestroyEvent*) {
-    if (gSignatureWnd) {
-        gSignatureWnd->ScheduleDelete();
-    }
+    ScheduleSignatureDelete();
 }
 
 static void ClearSignatureWnd() {

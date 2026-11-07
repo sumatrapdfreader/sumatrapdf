@@ -378,9 +378,7 @@ void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
 }
 
 static void ReadAloudPlaybackBarOnWindowMoved(ReadAloudPlaybackBar* bar, MainWindow*) {
-    if (HwndIsVisible(bar->hwnd)) {
-        bar->UpdateLayout();
-    }
+    RelayoutIfVisible(bar);
 }
 
 ReadAloudPlaybackBar* ReadAloudPlaybackBarEnsure(MainWindow* win) {

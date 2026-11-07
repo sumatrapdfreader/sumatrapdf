@@ -170,6 +170,9 @@ struct LayoutProbeState {
     bool active = false;
 };
 
+extern LayoutProbeState gLayoutProbe;
+void LayoutProbeNote(MainWindow* win);
+
 ControlRequest* ReadControlRequest(ControlConn h);
 bool WriteControlResponse(ControlConn h, ControlRequest* req);
 

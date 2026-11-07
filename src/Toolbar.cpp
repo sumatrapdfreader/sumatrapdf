@@ -1849,13 +1849,6 @@ static bool IsAnnotColorCmd(int cmdId) {
     return false;
 }
 
-// the color the button's next annotation is made in
-static Color AnnotCurrentColor(int cmdId) {
-    ParsedColor* setting = AnnotPresetColorSetting(cmdId);
-    Color col = setting ? GetParsedColor(*setting, kColorUnset) : kColorUnset;
-    return col != kColorUnset ? col : AnnotDefaultColor(cmdId);
-}
-
 void AnnotPresetColors(int cmdId, Vec<Color>& out) {
     if (Str* list = AnnotPresetColorList(cmdId)) {
         ParseColorList(*list, out, 0);
@@ -1938,7 +1931,7 @@ static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
     auto* args = new ChangeColorsArgs();
     args->win = win;
     args->title = Tr("Annotation Colors");
-    args->color = AnnotCurrentColor(cmdId);
+    args->color = AnnotColorForCmd(cmdId);
     args->withOpacity = true;
     AnnotPresetColors(cmdId, args->colors);
     args->onClose = MkFunc1(AnnotColorsPicked, target);
@@ -2232,7 +2225,7 @@ static void BuildAnnotColorsHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* e
     if (!tb || !setting) {
         return;
     }
-    Color current = AnnotCurrentColor(ev->cmdId);
+    Color current = AnnotColorForCmd(ev->cmdId);
     EnsureAnnotPresetColor(ev->cmdId, current);
     // ink is the one annotation whose width is a choice too
     InkThicknessSlider* slider = nullptr;

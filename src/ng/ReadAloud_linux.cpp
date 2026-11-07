@@ -285,9 +285,7 @@ bool TtsQueueUtf8(Str text) {
 
 bool TtsDidStartQueued() {
     ScopedMutex lock(&gTtsMutex);
-    bool started = gTtsQueuedStarted;
-    gTtsQueuedStarted = false;
-    return started;
+    return TtsTakeFlag(&gTtsQueuedStarted);
 }
 
 void TtsStop() {

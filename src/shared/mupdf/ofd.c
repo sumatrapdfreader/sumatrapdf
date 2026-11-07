@@ -84,13 +84,13 @@ typedef struct {
     float value;
 } ofd_delta;
 
-static int ofd_is(fz_xml* node, const char* name) {
+int ofd_is(fz_xml* node, const char* name) {
     const char* tag = fz_xml_tag(node);
     const char* colon = tag ? strchr(tag, ':') : NULL;
     return tag && !strcmp(colon ? colon + 1 : tag, name);
 }
 
-static fz_xml* ofd_child(fz_xml* node, const char* name) {
+fz_xml* ofd_child(fz_xml* node, const char* name) {
     for (node = fz_xml_down(node); node; node = fz_xml_next(node)) {
         if (ofd_is(node, name)) return node;
     }

@@ -74,7 +74,6 @@ void EnablePdfAnnotationsToolbar(MainWindow*);
 // the colors an annotation drop-down offers (Annotations.PresetColors, or
 // Annotations.InkColors for the ink button); cmdId 0 gets the presets
 void AnnotPresetColors(int cmdId, Vec<Color>& out);
-Color AnnotColorForCmd(int cmdId);
 void SetAnnotPresetColor(int cmdId, Color col);
 
 gpui::El* ToolbarBuild(MainWindow*, gpui::Ctx*);

@@ -125,14 +125,6 @@ extern "C" {
 
 #include "SumatraLog.h"
 
-static LayoutProbeState gLayoutProbe;
-
-void LayoutProbeNote(MainWindow* win) {
-    if (gLayoutProbe.active && gLayoutProbe.win == win) {
-        gLayoutProbe.count++;
-    }
-}
-
 // ng: the channel needs a listener thread, which wasm does not have
 #if !OS_WASM
 

@@ -1563,10 +1563,15 @@ void VirtScroll::OnMouseWheel(VirtMouseEvent* ev) {
 }
 
 // the content follows the finger
-void VirtScroll::OnPan(VirtMouseEvent* ev) {
-    if (ScrollBy(-ev->panDy)) {
+template <typename T>
+static void PanByFinger(T* ctrl, VirtMouseEvent* ev) {
+    if (ctrl->ScrollBy(-ev->panDy)) {
         ev->didHandle = true;
     }
+}
+
+void VirtScroll::OnPan(VirtMouseEvent* ev) {
+    PanByFinger(this, ev);
 }
 
 void VirtScroll::OnVScroll(WPARAM wp) {
@@ -2357,9 +2362,7 @@ void VirtListBox::OnMouseWheel(VirtMouseEvent* ev) {
 
 // the rows follow the finger
 void VirtListBox::OnPan(VirtMouseEvent* ev) {
-    if (ScrollBy(-ev->panDy)) {
-        ev->didHandle = true;
-    }
+    PanByFinger(this, ev);
 }
 
 void VirtListBox::OnDoubleClick(VirtMouseEvent* ev) {
@@ -2928,16 +2931,18 @@ void VirtLink::Paint(VirtPaintCtx& ctx) {
     withUnderline = prevUnderline;
 }
 
-void VirtLink::OnMouseEnter() {
-    if (underlineOnHover) {
-        Invalidate();
+static void RepaintUnderline(VirtLink* link) {
+    if (link->underlineOnHover) {
+        link->Invalidate();
     }
 }
 
+void VirtLink::OnMouseEnter() {
+    RepaintUnderline(this);
+}
+
 void VirtLink::OnMouseLeave() {
-    if (underlineOnHover) {
-        Invalidate();
-    }
+    RepaintUnderline(this);
 }
 
 //--- VirtButton

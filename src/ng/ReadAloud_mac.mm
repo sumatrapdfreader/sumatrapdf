@@ -161,9 +161,7 @@ bool TtsQueueUtf8(Str text) {
 }
 
 bool TtsDidStartQueued() {
-    bool started = gTtsQueuedStarted;
-    gTtsQueuedStarted = false;
-    return started;
+    return TtsTakeFlag(&gTtsQueuedStarted);
 }
 
 void TtsStop() {

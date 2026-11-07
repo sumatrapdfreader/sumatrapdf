@@ -99,21 +99,8 @@ static void mem_add(fz_context* ctx, ofd_mem_archive* arch, const char* name, fz
 
 //--- XML helpers
 
-static int is_tag(fz_xml* node, const char* name) {
-    const char* tag = fz_xml_tag(node);
-    const char* colon = tag ? strchr(tag, ':') : NULL;
-    return tag && !strcmp(colon ? colon + 1 : tag, name);
-}
-
-static fz_xml* child(fz_xml* node, const char* name) {
-    for (node = fz_xml_down(node); node; node = fz_xml_next(node)) {
-        if (is_tag(node, name)) return node;
-    }
-    return NULL;
-}
-
 static const char* child_text(fz_xml* node, const char* name) {
-    const char* text = fz_xml_text(fz_xml_down(child(node, name)));
+    const char* text = fz_xml_text(fz_xml_down(ofd_child(node, name)));
     return text ? text : "";
 }
 
@@ -154,7 +141,7 @@ static fz_xml* parse_entries_map(fz_context* ctx, fz_buffer* map, const unsigned
         fz_try(ctx) {
             xml = fz_parse_xml(ctx, buf, 0);
             fz_xml* root = fz_xml_root(xml);
-            if (!is_tag(root, "EncryptEntries") && !is_tag(root, "Entries")) {
+            if (!ofd_is(root, "EncryptEntries") && !ofd_is(root, "Entries")) {
                 fz_drop_xml(ctx, xml);
                 xml = NULL;
             }
@@ -179,14 +166,14 @@ static int recover_key(fz_context* ctx, fz_xml* seed, fz_buffer* map, const char
     fz_xml* users[64];
     int nusers = 0;
     for (fz_xml* node = fz_xml_down(seed); node && nusers < 64; node = fz_xml_next(node)) {
-        if (is_tag(node, "UserInfo")) users[nusers++] = node;
+        if (ofd_is(node, "UserInfo")) users[nusers++] = node;
         for (fz_xml* sub = fz_xml_down(node); sub && nusers < 64; sub = fz_xml_next(sub)) {
-            if (is_tag(sub, "UserInfo")) users[nusers++] = sub;
+            if (ofd_is(sub, "UserInfo")) users[nusers++] = sub;
         }
     }
     for (int u = 0; u < nusers; ++u) {
         fz_xml* user = users[u];
-        if (child(user, "UserCert")) continue;
+        if (ofd_child(user, "UserCert")) continue;
         fz_buffer* ivb = base64(ctx, child_text(user, "IVValue"));
         fz_buffer* wk = NULL;
         fz_buffer* key = NULL;
@@ -240,7 +227,7 @@ static fz_archive* decrypt_layer(fz_context* ctx, fz_archive* src, const char* p
     fz_var(plain);
     fz_try(ctx) {
         encryptions = fz_parse_xml_archive_entry(ctx, src, "Encryptions.xml", 0);
-        fz_xml* info = child(fz_xml_root(encryptions), "EncryptInfo");
+        fz_xml* info = ofd_child(fz_xml_root(encryptions), "EncryptInfo");
         if (!info) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD Encryptions.xml has no EncryptInfo");
         char seed_path[OFD_DECRYPT_PATH], map_path[OFD_DECRYPT_PATH];
         const char* seed_loc = child_text(info, "DecryptSeedLoc");
@@ -257,7 +244,7 @@ static fz_archive* decrypt_layer(fz_context* ctx, fz_archive* src, const char* p
         fz_xml* entries = fz_xml_root(map_xml);
         // decrypted members under their original names
         for (fz_xml* e = fz_xml_down(entries); e; e = fz_xml_next(e)) {
-            if (!is_tag(e, "EncryptEntry") && !is_tag(e, "Entry")) continue;
+            if (!ofd_is(e, "EncryptEntry") && !ofd_is(e, "Entry")) continue;
             const char* path = fz_xml_att(e, "Path");
             const char* epath = fz_xml_att(e, "EPath");
             if (!path || !epath) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD entries map entry without Path or EPath");

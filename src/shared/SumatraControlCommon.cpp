@@ -59,6 +59,14 @@
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 
+LayoutProbeState gLayoutProbe;
+
+void LayoutProbeNote(MainWindow* win) {
+    if (gLayoutProbe.active && gLayoutProbe.win == win) {
+        gLayoutProbe.count++;
+    }
+}
+
 // Parts of the -dbg-control channel that orig and ng have in common. ng has no
 // listener thread on wasm, so nothing calls them there.
 #if !OS_WASM

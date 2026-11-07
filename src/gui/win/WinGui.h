@@ -445,6 +445,22 @@ void ReapplyEditFont(Edit* edit, PlatformFont* font);
 void PaintBorderedBar(HwndBase* w, HDC hdc, Color colBg, Color colBorder);
 bool ApplyDpiChangedRect(HWND hwnd, WindowBase::DpiChangedEvent* ev, bool ready);
 
+// for a window with `layout` and UpdateDpi(int)
+template <typename T>
+void HandleDpiChanged(T* w, WindowBase::DpiChangedEvent* ev) {
+    if (ApplyDpiChangedRect(w->hwnd, ev, w->layout != nullptr)) {
+        w->UpdateDpi((int)ev->dpiX);
+    }
+}
+
+// for a bar with UpdateLayout()
+template <typename T>
+void RelayoutIfVisible(T* bar) {
+    if (HwndIsVisible(bar->hwnd)) {
+        bar->UpdateLayout();
+    }
+}
+
 bool PreTranslateMessage(MSG& msg);
 
 // Base of the controls that a layout positions: the win32 controls (Static,

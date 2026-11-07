@@ -924,16 +924,18 @@ void SumatraPDFWebWnd::OnOpen(VirtMouseEvent*) {
     StartJob(req);
 }
 
-static void OnClose(WindowBase::CloseEvent*) {
+static void CancelWebWnd() {
     if (gSumatraPDFWebWnd) {
         gSumatraPDFWebWnd->OnCancel();
     }
 }
 
+static void OnClose(WindowBase::CloseEvent*) {
+    CancelWebWnd();
+}
+
 static void OnDestroy(WindowBase::DestroyEvent*) {
-    if (gSumatraPDFWebWnd) {
-        gSumatraPDFWebWnd->OnCancel();
-    }
+    CancelWebWnd();
 }
 
 bool SumatraPDFWebWnd::Create(MainWindow* mainWin) {

@@ -46,6 +46,7 @@ int ZoomHoverCurrentIdx(MainWindow* win, const Vec<ZoomHoverLevel>& levels);
 ParsedColor* AnnotPresetColorSetting(int cmdId);
 Color AnnotDefaultColor(int cmdId);
 Str* AnnotPresetColorList(int cmdId);
+Color AnnotColorForCmd(int cmdId);
 void SetAnnotPresetColor(int cmdId, Color col);
 bool CanCreateAnnotFromSelection(MainWindow* win, int cmdId);
 bool SameColorAndAlpha(Color a, Color b);

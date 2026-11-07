@@ -512,16 +512,18 @@ static void TeardownSelectionTranslateWnd() {
     w->ScheduleDelete();
 }
 
-static void OnSelectionTranslateClose(WindowBase::CloseEvent* ev) {
-    if (gSelectionTranslateWnd == (SelectionTranslateWnd*)ev->e->self) {
+static void TeardownIfCurrent(void* self) {
+    if (gSelectionTranslateWnd == (SelectionTranslateWnd*)self) {
         TeardownSelectionTranslateWnd();
     }
 }
 
+static void OnSelectionTranslateClose(WindowBase::CloseEvent* ev) {
+    TeardownIfCurrent(ev->e->self);
+}
+
 static void OnSelectionTranslateDestroy(WindowBase::DestroyEvent* ev) {
-    if (gSelectionTranslateWnd == (SelectionTranslateWnd*)ev->e->self) {
-        TeardownSelectionTranslateWnd();
-    }
+    TeardownIfCurrent(ev->e->self);
 }
 
 bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {

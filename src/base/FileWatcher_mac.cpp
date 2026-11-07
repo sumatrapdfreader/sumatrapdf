@@ -69,8 +69,7 @@ static bool StartFileWatcher() {
 
 void FileWatcherSetSkipPath(Str path) {
     ScopedMutex lock(&gWatcherMutex);
-    str::Free(gSkipPath);
-    gSkipPath = str::Dup(path);
+    str::ReplacePtr(&gSkipPath, str::Dup(path));
 }
 
 void FileWatcherInit(void) {

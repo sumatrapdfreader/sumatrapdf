@@ -331,9 +331,7 @@ void ReadingAutoScrollBar::OnPaint(WindowBase::PaintEvent* ev) {
 }
 
 static void BarOnWindowMoved(ReadingAutoScrollBar* bar, MainWindow*) {
-    if (HwndIsVisible(bar->hwnd)) {
-        bar->UpdateLayout();
-    }
+    RelayoutIfVisible(bar);
 }
 
 ReadingAutoScrollBar* BarEnsure(MainWindow* win) {

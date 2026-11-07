@@ -118,9 +118,7 @@ Constraints ExpandHeight(int width) {
 }
 
 Constraints ExpandWidth(int height) {
-    Size min{0, height};
-    Size max{Inf, height};
-    return Constraints{min, max};
+    return TightHeight(height);
 }
 
 Constraints Loose(const Size size) {
@@ -352,6 +350,12 @@ void Padding::SetBounds(Rect bounds) {
     child->SetBounds(bounds);
 }
 
+static void DeleteChildLayouts(Vec<boxElementInfo>& children) {
+    for (auto& c : children) {
+        delete c.layout;
+    }
+}
+
 // vbox.go
 
 static Kind kindVBox = "vbox";
@@ -361,9 +365,7 @@ VBox::VBox() {
 }
 
 VBox::~VBox() {
-    for (auto& c : children) {
-        delete c.layout;
-    }
+    DeleteChildLayouts(children);
 }
 
 int VBox::LayoutChildCount() {
@@ -734,9 +736,7 @@ ILayout* HBox::LayoutChildAt(int idx) {
 }
 
 HBox::~HBox() {
-    for (auto& c : children) {
-        delete c.layout;
-    }
+    DeleteChildLayouts(children);
 }
 
 int HBox::ChildrenCount() const {
@@ -1579,9 +1579,7 @@ Wrap::Wrap() {
 }
 
 Wrap::~Wrap() {
-    for (auto& c : children) {
-        delete c.layout;
-    }
+    DeleteChildLayouts(children);
 }
 
 int Wrap::LayoutChildCount() {

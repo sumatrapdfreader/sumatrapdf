@@ -738,9 +738,7 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
 void FindWindowWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
     // Don't apply the suggested rect until Create() finished: it would pin the
     // still-hidden popup to the primary monitor (#5998).
-    if (ApplyDpiChangedRect(hwnd, ev, layout != nullptr)) {
-        UpdateDpi((int)ev->dpiX);
-    }
+    HandleDpiChanged(this, ev);
 }
 
 void FindWindowWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {

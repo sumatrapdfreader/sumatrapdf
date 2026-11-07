@@ -984,9 +984,7 @@ void AnnotFilterWindow::OnTimer(WindowBase::TimerEvent* ev) {
 }
 
 void AnnotFilterWindow::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
-    if (ApplyDpiChangedRect(hwnd, ev, layout != nullptr)) {
-        UpdateDpi((int)ev->dpiX);
-    }
+    HandleDpiChanged(this, ev);
 }
 
 void AnnotFilterWindow::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {

@@ -950,16 +950,18 @@ void AdvancedSettingsWnd::OnKeyDown(KeyEvent* ev) {
 // following WM_DESTROY never reaches onDestroy - leaving gAdvancedSettingsWnd
 // dangling and blocking reopen. CloseEvent::didHandle defaults to true, so
 // returning from here skips that default Destroy().
-static void OnClose(WindowBase::CloseEvent* /*ev*/) {
+static void ScheduleAdvDelete() {
     if (gAdvancedSettingsWnd) {
         gAdvancedSettingsWnd->ScheduleDelete();
     }
 }
 
+static void OnClose(WindowBase::CloseEvent* /*ev*/) {
+    ScheduleAdvDelete();
+}
+
 static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
-    if (gAdvancedSettingsWnd) {
-        gAdvancedSettingsWnd->ScheduleDelete();
-    }
+    ScheduleAdvDelete();
 }
 
 // last client size chosen by the user (or initial layout); reused when the

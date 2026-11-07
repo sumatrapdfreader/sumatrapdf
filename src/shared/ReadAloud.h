@@ -31,6 +31,13 @@ bool TtsIsAvailable();
 bool TtsSpeakUtf8(Str text);
 bool TtsQueueUtf8(Str text);
 bool TtsDidStartQueued();
+
+// reads and clears a flag
+inline bool TtsTakeFlag(bool* flag) {
+    bool v = *flag;
+    *flag = false;
+    return v;
+}
 void TtsStop();
 void TtsRelease();
 
