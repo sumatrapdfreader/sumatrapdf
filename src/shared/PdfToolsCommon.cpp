@@ -436,23 +436,35 @@ bool EstimateSelectionPx(RectF rect, float zoom, int& w, int& h) {
     return w > 0 && h > 0;
 }
 
+const ConvertImageFormat kConvertImageFormats[kConvertImageFormatCount] = {
+    {StrL("PNG"), StrL(".png")},
+    {StrL("JPEG"), StrL(".jpg")},
+    {StrL("BMP"), StrL(".bmp")},
+    {StrL("GIF"), StrL(".gif")},
+};
+constexpr int kConvertImageJpegIdx = 1;
+
+// index into kConvertImageFormats for path's extension, -1 if none
+static int FindConvertImageFormat(Str path) {
+    if (str::EndsWithI(path, StrL(".jpeg"))) {
+        return kConvertImageJpegIdx;
+    }
+    for (int i = 0; i < kConvertImageFormatCount; i++) {
+        if (str::EndsWithI(path, kConvertImageFormats[i].ext)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// index into kConvertImageFormats for path, PNG when the extension is unknown
 int ConvertImageFormatIdxFromPath(Str path) {
-    if (str::EndsWithI(path, StrL(".jpg")) || str::EndsWithI(path, StrL(".jpeg"))) {
-        return 1;
-    }
-    if (str::EndsWithI(path, StrL(".bmp"))) {
-        return 2;
-    }
-    if (str::EndsWithI(path, StrL(".gif"))) {
-        return 3;
-    }
-    return 0; // PNG
+    int idx = FindConvertImageFormat(path);
+    return idx < 0 ? 0 : idx;
 }
 
 bool IsSupportedConvertImageExt(Str path) {
-    return str::EndsWithI(path, StrL(".png")) || str::EndsWithI(path, StrL(".jpg")) ||
-           str::EndsWithI(path, StrL(".jpeg")) || str::EndsWithI(path, StrL(".bmp")) ||
-           str::EndsWithI(path, StrL(".gif"));
+    return FindConvertImageFormat(path) >= 0;
 }
 
 bool PathHasPagePlaceholder(Str path) {

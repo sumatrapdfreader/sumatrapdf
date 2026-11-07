@@ -85,24 +85,19 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     }
 }
 
-// PNG / JPEG / BMP / GIF, same core formats as the Save Image dialog
-struct ConvertImageFormat {
-    Str label;
-    Str ext; // including the dot, e.g. ".png"
+// GDI+ encoder data for kConvertImageFormats, by the same index
+struct ConvertImageEncoder {
     WStr mime;
     WStr defExt; // OPENFILENAME lpstrDefExt, no dot
 };
 
-static const ConvertImageFormat kConvertImageFormats[] = {
-    {StrL("PNG"), StrL(".png"), L"image/png", L"png"},
-    {StrL("JPEG"), StrL(".jpg"), L"image/jpeg", L"jpg"},
-    {StrL("BMP"), StrL(".bmp"), L"image/bmp", L"bmp"},
-    {StrL("GIF"), StrL(".gif"), L"image/gif", L"gif"},
+static const ConvertImageEncoder kConvertImageEncoders[] = {
+    {L"image/png", L"png"},
+    {L"image/jpeg", L"jpg"},
+    {L"image/bmp", L"bmp"},
+    {L"image/gif", L"gif"},
 };
-
-static int ConvertImageFormatCount() {
-    return dimofi(kConvertImageFormats);
-}
+static_assert(dimof(kConvertImageEncoders) == kConvertImageFormatCount);
 
 // Every dialog here has the same shape, drawn like the palette: the lines
 // the user types in (a page range, a password), a hairline, then the files -
@@ -346,7 +341,7 @@ static DropDown* NewFormatDropDown(HWND parent, PlatformFont* font) {
     args.isRtl = IsUIRtl();
     dd->Create(args);
     StrVec items;
-    for (int i = 0; i < ConvertImageFormatCount(); i++) {
+    for (int i = 0; i < kConvertImageFormatCount; i++) {
         items.Append(kConvertImageFormats[i].label);
     }
     dd->SetItems(items);
@@ -452,7 +447,7 @@ int PdfToolDialog::SelectedFormatIdx() const {
         return 0;
     }
     int idx = CbGetCurrentSelection(dropFormat);
-    if (idx < 0 || idx >= ConvertImageFormatCount()) {
+    if (idx < 0 || idx >= kConvertImageFormatCount) {
         return 0;
     }
     return idx;
@@ -1409,7 +1404,7 @@ static bool GetImageEncoderForPath(Str path, CLSID* encOut) {
         return false;
     }
     int idx = ConvertImageFormatIdxFromPath(path);
-    CLSID enc = GetGdiPlusEncoderClsid(kConvertImageFormats[idx].mime);
+    CLSID enc = GetGdiPlusEncoderClsid(kConvertImageEncoders[idx].mime);
     if (enc.Data1 == 0 && enc.Data2 == 0 && enc.Data3 == 0) {
         return false;
     }
@@ -1602,7 +1597,7 @@ void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
     ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0GIF\0*.gif\0All Files\0*.*\0";
     ofn.nFilterIndex = (DWORD)(fmtIdx + 1);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;
+    ofn.lpstrDefExt = kConvertImageEncoders[fmtIdx].defExt.s;
 
     if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         return;
@@ -1615,7 +1610,7 @@ void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
     }
     destEdit->SetText(picked);
     int filterIdx = (int)ofn.nFilterIndex - 1;
-    if (filterIdx >= 0 && filterIdx < ConvertImageFormatCount()) {
+    if (filterIdx >= 0 && filterIdx < kConvertImageFormatCount) {
         syncingFormat = true;
         CbSetCurrentSelection(dropFormat, filterIdx);
         syncingFormat = false;
@@ -1824,7 +1819,7 @@ void SaveSelectionAsImageDialog::OnBrowseDest(VirtMouseEvent*) {
     ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0GIF\0*.gif\0All Files\0*.*\0";
     ofn.nFilterIndex = (DWORD)(fmtIdx + 1);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;
+    ofn.lpstrDefExt = kConvertImageEncoders[fmtIdx].defExt.s;
 
     if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         return;
@@ -1832,7 +1827,7 @@ void SaveSelectionAsImageDialog::OnBrowseDest(VirtMouseEvent*) {
     TempStr picked = ToUtf8Temp(dstFileName);
     destEdit->SetText(picked);
     int filterIdx = (int)ofn.nFilterIndex - 1;
-    if (filterIdx >= 0 && filterIdx < ConvertImageFormatCount()) {
+    if (filterIdx >= 0 && filterIdx < kConvertImageFormatCount) {
         syncingFormat = true;
         CbSetCurrentSelection(dropFormat, filterIdx);
         syncingFormat = false;

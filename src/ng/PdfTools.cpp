@@ -63,24 +63,6 @@
 // --- the image formats the two image dialogs offer --------------------------
 
 // PNG / JPEG / BMP / GIF, same core formats as the Save Image dialog
-// ng: orig also carries the GDI+ mime type and the OPENFILENAME default
-// extension; the encoders here are the portable ones of the image editor
-struct ConvertImageFormat {
-    Str label;
-    Str ext; // including the dot, e.g. ".png"
-};
-
-static const ConvertImageFormat kConvertImageFormats[] = {
-    {StrL("PNG"), StrL(".png")},
-    {StrL("JPEG"), StrL(".jpg")},
-    {StrL("BMP"), StrL(".bmp")},
-    {StrL("GIF"), StrL(".gif")},
-};
-
-static int ConvertImageFormatCount() {
-    return dimofi(kConvertImageFormats);
-}
-
 // ng: orig encodes with GDI+; the image editor's host already writes PNG (via
 // zopfli), JPEG (mupdf) and BMP on every platform, so use that
 bool SavePixmapAsImageFile(Pixmap* px, Str path) {
@@ -533,7 +515,7 @@ static TempStr DestPathTemp() {
 
 static int SelectedFormatIdx() {
     int idx = gTool.ddFormat.sel;
-    if (idx < 0 || idx >= ConvertImageFormatCount()) {
+    if (idx < 0 || idx >= kConvertImageFormatCount) {
         return 0;
     }
     return idx;
@@ -2681,7 +2663,7 @@ static void OnDestPathPicked(PdfToolDlg* tool, SavePathArgs* args) {
     if (HasFormatDropDown() && gTool.win && gTool.win->gpuiWin) {
         // Windows' dialog says which filter was chosen
         int filterIdx = args->filterIndex - 1;
-        if (filterIdx >= 0 && filterIdx < ConvertImageFormatCount()) {
+        if (filterIdx >= 0 && filterIdx < kConvertImageFormatCount) {
             gTool.ddFormat.SetSel(gTool.win->gpuiWin->app, filterIdx);
             SetDestExtFromFormat();
         } else {
@@ -3186,7 +3168,7 @@ static void InitFormatDropDown(MainWindow* win, int sel) {
     gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
     gTool.ddFormat.Init(app);
     StrVec items;
-    for (int i = 0; i < ConvertImageFormatCount(); i++) {
+    for (int i = 0; i < kConvertImageFormatCount; i++) {
         items.Append(kConvertImageFormats[i].label);
     }
     gTool.ddFormat.SetItems(items, sel);
