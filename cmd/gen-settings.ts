@@ -2884,7 +2884,9 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     metadataExterns.push(`extern ${constStr}StructInfo ${infoName};`);
   }
   lines.push(
-    `${metadataStorage(infoName)}${constStr}StructInfo ${infoName} = { sizeof(${struc.StructName}), ${names.length}, ${fieldsName}, "${namesStr}", "${commentsStr}", ${couldBeTemporary} };`,
+    `${metadataStorage(infoName)}${constStr}StructInfo ${infoName} = { sizeof(${struc.StructName}), (u16)dimof(${fieldsName}), ${fieldsName}, "${namesStr}", "${commentsStr}", ${couldBeTemporary} };`,
+    // the field names are walked fieldCount times: they must match the fields
+    `static_assert(dimof(${fieldsName}) == ${names.length});`,
   );
   return lines.join("\n");
 }
