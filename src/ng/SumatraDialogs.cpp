@@ -40,6 +40,7 @@
 #include "SimpleBrowserWindow.h"
 #include "gui/DialogWidgets.h"
 #include "gui/NativeMsgBox.h"
+#include "resource.h"
 #include "SumatraDialogs.h"
 #include "shared/PdfToolsCommon.h"
 
@@ -1366,3 +1367,117 @@ gp::El* DlgFrameCard(gp::Ctx* cx, gp::El* col, Str title, float dx, gp::Listener
                        ->Child(col);
     return gpc::Dialog::New(cx)->Open(true)->Surface(card)->W(dx)->OnClose(onClose)->IntoEl(gp::WindowSize(cx->win));
 }
+
+#if OS_WIN
+// the predefined window class atoms a DLGITEMTEMPLATE can name
+enum {
+    kAtomButton = 0x0080,
+    kAtomStatic = 0x0082,
+    kAtomComboBox = 0x0085,
+};
+
+// ng: orig loads IDD_PROPSHEET_PRINT_ADVANCED from its .rc. This port has no
+// resource compiler, so the DLGTEMPLATE is built in memory: same controls, same
+// ids, same dialog units as orig's resource. It also replaces orig's
+// GetRtLDlgTemplate() hack: for an RTL UI the extended style is simply set here.
+struct PrintAdvancedTemplate {
+    u8 buf[1024];
+    int pos = 0;
+    int nItems = 0;
+
+    void Align() {
+        while (pos & 3) {
+            Write(nullptr, 1);
+        }
+    }
+
+    void Write(const void* data, int n) {
+        ReportIf(pos + n > dimofi(buf));
+        if (pos + n > dimofi(buf)) {
+            return;
+        }
+        if (data) {
+            memcpy(buf + pos, data, (size_t)n);
+        }
+        pos += n;
+    }
+
+    void U16(int v) {
+        u16 v16 = (u16)v;
+        Write(&v16, 2);
+    }
+
+    void U32(u32 v) { Write(&v, 4); }
+
+    void Sz(const WCHAR* s) {
+        int n = s ? (int)wcslen(s) : 0;
+        Write(s, (n + 1) * 2);
+    }
+
+    void Item(u32 style, int x, int y, int cx, int cy, int id, int atom) {
+        Align();
+        U32(style | WS_CHILD | WS_VISIBLE);
+        U32(0);
+        U16(x);
+        U16(y);
+        U16(cx);
+        U16(cy);
+        U16(id);
+        U16(0xFFFF);
+        U16(atom);
+        U16(0); // the text is set in WM_INITDIALOG, as orig does
+        U16(0); // no creation data
+        nItems++;
+    }
+};
+
+static DLGTEMPLATE* BuildPrintAdvancedTemplate() {
+    PrintAdvancedTemplate t;
+    u32 style = DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU;
+    t.U32(style);
+    t.U32(IsUIRtl() ? (WS_EX_LAYOUTRTL | WS_EX_RTLREADING) : 0);
+    int cditPos = t.pos;
+    t.U16(0); // patched with nItems below
+    t.U16(0);
+    t.U16(0);
+    t.U16(292);
+    t.U16(207);
+    t.U16(0); // no menu
+    t.U16(0); // default dialog class
+    t.Sz(L"Advanced");
+    t.U16(8); // DS_SETFONT: point size and typeface
+    t.Sz(L"MS Shell Dlg");
+
+    u32 radio = BS_AUTORADIOBUTTON | WS_TABSTOP;
+    u32 check = BS_AUTOCHECKBOX | WS_TABSTOP;
+    t.Item(BS_GROUPBOX, 7, 7, 278, 52, IDC_SECTION_PRINT_RANGE, kAtomButton);
+    t.Item(radio | WS_GROUP, 14, 18, 264, 9, IDC_PRINT_RANGE_ALL, kAtomButton);
+    t.Item(radio, 14, 31, 264, 9, IDC_PRINT_RANGE_EVEN, kAtomButton);
+    t.Item(radio, 14, 44, 264, 9, IDC_PRINT_RANGE_ODD, kAtomButton);
+    t.Item(BS_GROUPBOX, 7, 62, 278, 65, IDC_SECTION_PRINT_SCALE, kAtomButton);
+    t.Item(radio | WS_GROUP, 14, 74, 264, 9, IDC_PRINT_SCALE_SHRINK, kAtomButton);
+    t.Item(radio, 14, 87, 264, 9, IDC_PRINT_SCALE_FIT, kAtomButton);
+    t.Item(radio, 14, 100, 264, 9, IDC_PRINT_SCALE_NONE, kAtomButton);
+    t.Item(radio, 14, 113, 264, 9, IDC_PRINT_SCALE_STRETCH, kAtomButton);
+    t.Item(check | WS_GROUP, 7, 133, 278, 10, IDC_PRINT_CENTER_HORIZONTALLY, kAtomButton);
+    t.Item(check, 7, 146, 278, 10, IDC_PRINT_PAPER_SOURCE_BY_SIZE, kAtomButton);
+    t.Item(check, 7, 159, 278, 10, IDC_PRINT_PER_PAGE_PAPER_SIZE, kAtomButton);
+    t.Item(check, 7, 172, 278, 10, IDC_PRINT_AUTO_ROTATE, kAtomButton);
+    t.Item(SS_LEFT, 7, 188, 72, 9, IDC_PRINT_ROTATE_LABEL, kAtomStatic);
+    t.Item(CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 82, 186, 90, 60, IDC_PRINT_ROTATE, kAtomComboBox);
+
+    u16 cdit = (u16)t.nItems;
+    memcpy(t.buf + cditPos, &cdit, sizeof(cdit));
+    return (DLGTEMPLATE*)MemDup(nullptr, t.buf, (size_t)t.pos);
+}
+
+void PrintAdvancedInitDlg(HWND) {}
+
+// the template must outlive the property sheet: kept until the next call
+void PrintAdvancedSetPage(PROPSHEETPAGE* psp) {
+    static ScopedMem<DLGTEMPLATE> dlgTemplate;
+    dlgTemplate.Set(BuildPrintAdvancedTemplate());
+    psp->dwFlags |= PSP_DLGINDIRECT;
+    psp->pResource = dlgTemplate.Get();
+}
+#endif

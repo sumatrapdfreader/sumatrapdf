@@ -113,6 +113,7 @@ PaperFormat GetPaperFormatFromSizeApprox(SizeF size) {
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
+#include "resource.h"
 #include "PrintWin11.h"
 
 #include "SumatraLog.h"
@@ -1445,132 +1446,9 @@ static void SetDevModeCopies(HGLOBAL hDevMode, short copies) {
     }
 }
 
-#if defined(SUMATRA_NG)
-// ng: the ids of orig's resource.h; CheckRadioButton() needs each radio group
-// to stay contiguous
-enum {
-    IDC_SECTION_PRINT_RANGE = 1050,
-    IDC_PRINT_RANGE_ALL = 1051,
-    IDC_PRINT_RANGE_EVEN = 1052,
-    IDC_PRINT_RANGE_ODD = 1053,
-    IDC_SECTION_PRINT_SCALE = 1060,
-    IDC_PRINT_SCALE_SHRINK = 1061,
-    IDC_PRINT_SCALE_FIT = 1062,
-    IDC_PRINT_SCALE_NONE = 1063,
-    IDC_PRINT_SCALE_STRETCH = 1064,
-    IDC_PRINT_CENTER_HORIZONTALLY = 1065,
-    IDC_PRINT_PAPER_SOURCE_BY_SIZE = 1066,
-    IDC_PRINT_PER_PAGE_PAPER_SIZE = 1067,
-    IDC_PRINT_ROTATE_LABEL = 1068,
-    IDC_PRINT_ROTATE = 1069,
-    IDC_PRINT_AUTO_ROTATE = 1071,
-};
-
 #ifndef ID_APPLY_NOW
 constexpr int ID_APPLY_NOW = 0x3021;
 #endif
-
-// the predefined window class atoms a DLGITEMTEMPLATE can name
-enum {
-    kAtomButton = 0x0080,
-    kAtomStatic = 0x0082,
-    kAtomComboBox = 0x0085,
-};
-
-// ng: orig loads IDD_PROPSHEET_PRINT_ADVANCED from its .rc. This port has no
-// resource compiler, so the DLGTEMPLATE is built in memory: same controls, same
-// ids, same dialog units as orig's resource. It also replaces orig's
-// GetRtLDlgTemplate() hack: for an RTL UI the extended style is simply set here.
-struct PrintAdvancedTemplate {
-    u8 buf[1024];
-    int pos = 0;
-    int nItems = 0;
-
-    void Align() {
-        while (pos & 3) {
-            Write(nullptr, 1);
-        }
-    }
-
-    void Write(const void* data, int n) {
-        ReportIf(pos + n > dimofi(buf));
-        if (pos + n > dimofi(buf)) {
-            return;
-        }
-        if (data) {
-            memcpy(buf + pos, data, (size_t)n);
-        }
-        pos += n;
-    }
-
-    void U16(int v) {
-        u16 v16 = (u16)v;
-        Write(&v16, 2);
-    }
-
-    void U32(u32 v) { Write(&v, 4); }
-
-    void Sz(const WCHAR* s) {
-        int n = s ? (int)wcslen(s) : 0;
-        Write(s, (n + 1) * 2);
-    }
-
-    void Item(u32 style, int x, int y, int cx, int cy, int id, int atom) {
-        Align();
-        U32(style | WS_CHILD | WS_VISIBLE);
-        U32(0);
-        U16(x);
-        U16(y);
-        U16(cx);
-        U16(cy);
-        U16(id);
-        U16(0xFFFF);
-        U16(atom);
-        U16(0); // the text is set in WM_INITDIALOG, as orig does
-        U16(0); // no creation data
-        nItems++;
-    }
-};
-
-static DLGTEMPLATE* BuildPrintAdvancedTemplate() {
-    PrintAdvancedTemplate t;
-    u32 style = DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU;
-    t.U32(style);
-    t.U32(IsUIRtl() ? (WS_EX_LAYOUTRTL | WS_EX_RTLREADING) : 0);
-    int cditPos = t.pos;
-    t.U16(0); // patched with nItems below
-    t.U16(0);
-    t.U16(0);
-    t.U16(292);
-    t.U16(207);
-    t.U16(0); // no menu
-    t.U16(0); // default dialog class
-    t.Sz(L"Advanced");
-    t.U16(8); // DS_SETFONT: point size and typeface
-    t.Sz(L"MS Shell Dlg");
-
-    u32 radio = BS_AUTORADIOBUTTON | WS_TABSTOP;
-    u32 check = BS_AUTOCHECKBOX | WS_TABSTOP;
-    t.Item(BS_GROUPBOX, 7, 7, 278, 52, IDC_SECTION_PRINT_RANGE, kAtomButton);
-    t.Item(radio | WS_GROUP, 14, 18, 264, 9, IDC_PRINT_RANGE_ALL, kAtomButton);
-    t.Item(radio, 14, 31, 264, 9, IDC_PRINT_RANGE_EVEN, kAtomButton);
-    t.Item(radio, 14, 44, 264, 9, IDC_PRINT_RANGE_ODD, kAtomButton);
-    t.Item(BS_GROUPBOX, 7, 62, 278, 65, IDC_SECTION_PRINT_SCALE, kAtomButton);
-    t.Item(radio | WS_GROUP, 14, 74, 264, 9, IDC_PRINT_SCALE_SHRINK, kAtomButton);
-    t.Item(radio, 14, 87, 264, 9, IDC_PRINT_SCALE_FIT, kAtomButton);
-    t.Item(radio, 14, 100, 264, 9, IDC_PRINT_SCALE_NONE, kAtomButton);
-    t.Item(radio, 14, 113, 264, 9, IDC_PRINT_SCALE_STRETCH, kAtomButton);
-    t.Item(check | WS_GROUP, 7, 133, 278, 10, IDC_PRINT_CENTER_HORIZONTALLY, kAtomButton);
-    t.Item(check, 7, 146, 278, 10, IDC_PRINT_PAPER_SOURCE_BY_SIZE, kAtomButton);
-    t.Item(check, 7, 159, 278, 10, IDC_PRINT_PER_PAGE_PAPER_SIZE, kAtomButton);
-    t.Item(check, 7, 172, 278, 10, IDC_PRINT_AUTO_ROTATE, kAtomButton);
-    t.Item(SS_LEFT, 7, 188, 72, 9, IDC_PRINT_ROTATE_LABEL, kAtomStatic);
-    t.Item(CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 82, 186, 90, 60, IDC_PRINT_ROTATE, kAtomComboBox);
-
-    u16 cdit = (u16)t.nItems;
-    memcpy(t.buf + cditPos, &cdit, sizeof(cdit));
-    return (DLGTEMPLATE*)MemDup(nullptr, t.buf, (size_t)t.pos);
-}
 
 static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Print_Advanced_Data* data;
@@ -1580,6 +1458,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
         case WM_INITDIALOG:
             data = (Print_Advanced_Data*)((PROPSHEETPAGE*)lp)->lParam;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
+            PrintAdvancedInitDlg(hDlg);
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_RANGE, Tr("Print range"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ALL, Tr("&All selected pages"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_EVEN, Tr("&Even pages only"));
@@ -1690,21 +1569,20 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
     return FALSE;
 }
 
-HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate) {
+// the dialog template comes from the app (PrintAdvancedSetPage)
+static HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data) {
     PROPSHEETPAGE psp{};
 
-    dlgTemplate.Set(BuildPrintAdvancedTemplate());
     psp.dwSize = sizeof(PROPSHEETPAGE);
-    psp.dwFlags = PSP_USETITLE | PSP_PREMATURE | PSP_DLGINDIRECT;
-    psp.pResource = dlgTemplate.Get();
+    psp.dwFlags = PSP_USETITLE | PSP_PREMATURE;
     psp.pfnDlgProc = Sheet_Print_Advanced_Proc;
     psp.lParam = (LPARAM)data;
     auto s = Tr("Advanced");
     psp.pszTitle = CWStrTemp(s);
+    PrintAdvancedSetPage(&psp);
 
     return CreatePropertySheetPage(&psp);
 }
-#endif
 
 enum {
     MAXPAGERANGES = 10
@@ -1855,12 +1733,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
     advanced.dpiOverride = gSettings->printerDefaults.printDpi;
     advanced.autoRotate = gSettings->printerDefaults.autoRotate;
-#if defined(SUMATRA_NG)
-    ScopedMem<DLGTEMPLATE> dlgTemplate;
-    HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
-#else
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced);
-#endif
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;
 

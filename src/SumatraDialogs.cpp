@@ -175,149 +175,19 @@ static DLGTEMPLATE* GetRtLDlgTemplateTemp(int dlgId) {
     return res;
 }
 
-#ifndef ID_APPLY_NOW
-constexpr int ID_APPLY_NOW = 0x3021;
-#endif
-
-static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
-    Print_Advanced_Data* data;
-
-    switch (msg) {
-        //[ ACCESSKEY_GROUP Advanced Print Tab
-        case WM_INITDIALOG:
-            data = (Print_Advanced_Data*)((PROPSHEETPAGE*)lp)->lParam;
-            SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-            DarkModeApplyToWindow(hDlg);
-            HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_RANGE, Tr("Print range"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ALL, Tr("&All selected pages"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_EVEN, Tr("&Even pages only"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ODD, Tr("&Odd pages only"));
-            HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_SCALE, Tr("Page scaling"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_SHRINK, Tr("&Shrink pages to printable area"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_FIT, Tr("&Fit pages to printable area"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_STRETCH, Tr("S&tretch pages to fill paper"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, Tr("A&ctual size (1:1)"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, Tr("Center page hori&zontally on the paper"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE, Tr("Choose &paper source by document page size"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE,
-                               Tr("Print each page at its &document page size (mixed sizes)"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_AUTO_ROTATE, Tr("Rotate &wide pages to fit the paper"));
-            HwndSetDlgItemText(hDlg, IDC_PRINT_ROTATE_LABEL, Tr("&Rotate printout:"));
-            {
-                HWND hwndCb = GetDlgItem(hDlg, IDC_PRINT_ROTATE);
-                CbAddString(hwndCb, Tr("None"));
-                CbAddString(hwndCb, StrL("90°"));
-                CbAddString(hwndCb, StrL("180°"));
-                CbAddString(hwndCb, StrL("270°"));
-                int rotIdx = (data->extraRotation / 90) % 4;
-                CbSetCurrentSelection(hwndCb, rotIdx);
-            }
-            HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, Tr("Compatibility"));
-
-            {
-                int rangeId = IDC_PRINT_RANGE_ALL;
-                if (data->range == PrintRangeAdv::Even) {
-                    rangeId = IDC_PRINT_RANGE_EVEN;
-                } else if (data->range == PrintRangeAdv::Odd) {
-                    rangeId = IDC_PRINT_RANGE_ODD;
-                }
-                CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD, rangeId);
-            }
-            {
-                int scaleId = IDC_PRINT_SCALE_NONE;
-                if (data->scale == PrintScaleAdv::Fit) {
-                    scaleId = IDC_PRINT_SCALE_FIT;
-                } else if (data->scale == PrintScaleAdv::Stretch) {
-                    scaleId = IDC_PRINT_SCALE_STRETCH;
-                } else if (data->scale == PrintScaleAdv::Shrink) {
-                    scaleId = IDC_PRINT_SCALE_SHRINK;
-                }
-                CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_STRETCH, scaleId);
-            }
-
-            CheckDlgButton(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, data->centerHorizontally ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE,
-                           data->paperSourceByPageSize ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE, data->perPagePaperSize ? BST_CHECKED : BST_UNCHECKED);
-            CheckDlgButton(hDlg, IDC_PRINT_AUTO_ROTATE, data->autoRotate ? BST_CHECKED : BST_UNCHECKED);
-
-            return FALSE;
-            //] ACCESSKEY_GROUP Advanced Print Tab
-
-        case WM_NOTIFY:
-            if (((LPNMHDR)lp)->code == PSN_APPLY) {
-                data = (Print_Advanced_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_EVEN)) {
-                    data->range = PrintRangeAdv::Even;
-                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_RANGE_ODD)) {
-                    data->range = PrintRangeAdv::Odd;
-                } else {
-                    data->range = PrintRangeAdv::All;
-                }
-                if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_FIT)) {
-                    data->scale = PrintScaleAdv::Fit;
-                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_STRETCH)) {
-                    data->scale = PrintScaleAdv::Stretch;
-                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_SHRINK)) {
-                    data->scale = PrintScaleAdv::Shrink;
-                } else {
-                    data->scale = PrintScaleAdv::None;
-                }
-                data->centerHorizontally = IsDlgButtonChecked(hDlg, IDC_PRINT_CENTER_HORIZONTALLY) != 0;
-                data->paperSourceByPageSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE) != 0;
-                data->perPagePaperSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE) != 0;
-                data->autoRotate = IsDlgButtonChecked(hDlg, IDC_PRINT_AUTO_ROTATE) != 0;
-                int rotIdx = (int)SendDlgItemMessage(hDlg, IDC_PRINT_ROTATE, CB_GETCURSEL, 0, 0);
-                data->extraRotation = rotIdx > 0 ? rotIdx * 90 : 0;
-                return TRUE;
-            }
-            break;
-
-        case WM_COMMAND:
-            switch (LOWORD(wp)) {
-                case IDC_PRINT_RANGE_ALL:
-                case IDC_PRINT_RANGE_EVEN:
-                case IDC_PRINT_RANGE_ODD:
-                case IDC_PRINT_SCALE_SHRINK:
-                case IDC_PRINT_SCALE_FIT:
-                case IDC_PRINT_SCALE_STRETCH:
-                case IDC_PRINT_SCALE_NONE:
-                case IDC_PRINT_CENTER_HORIZONTALLY:
-                case IDC_PRINT_PAPER_SOURCE_BY_SIZE:
-                case IDC_PRINT_PER_PAGE_PAPER_SIZE:
-                case IDC_PRINT_AUTO_ROTATE: {
-                    HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
-                    EnableWindow(hApplyButton, TRUE);
-                } break;
-                case IDC_PRINT_ROTATE:
-                    if (HIWORD(wp) == CBN_SELCHANGE) {
-                        EnableWindow(GetDlgItem(GetParent(hDlg), ID_APPLY_NOW), TRUE);
-                    }
-                    break;
-            }
-    }
-    return FALSE;
+void PrintAdvancedInitDlg(HWND hDlg) {
+    DarkModeApplyToWindow(hDlg);
+    HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, Tr("Compatibility"));
 }
 
 // the RTL dialog template is allocated in the temp arena so the returned page
 // must be used before the temp arena is reset (e.g. inside PrintDlgEx())
-HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data) {
-    PROPSHEETPAGE psp{};
-
-    psp.dwSize = sizeof(PROPSHEETPAGE);
-    psp.dwFlags = PSP_USETITLE | PSP_PREMATURE;
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_PROPSHEET_PRINT_ADVANCED);
-    psp.pfnDlgProc = Sheet_Print_Advanced_Proc;
-    psp.lParam = (LPARAM)data;
-    auto s = Tr("Advanced");
-    psp.pszTitle = CWStrTemp(s);
-
+void PrintAdvancedSetPage(PROPSHEETPAGE* psp) {
+    psp->pszTemplate = MAKEINTRESOURCE(IDD_PROPSHEET_PRINT_ADVANCED);
     if (IsUIRtl()) {
-        psp.pResource = GetRtLDlgTemplateTemp(IDD_PROPSHEET_PRINT_ADVANCED);
-        psp.dwFlags |= PSP_DLGINDIRECT;
+        psp->pResource = GetRtLDlgTemplateTemp(IDD_PROPSHEET_PRINT_ADVANCED);
+        psp->dwFlags |= PSP_DLGINDIRECT;
     }
-
-    return CreatePropertySheetPage(&psp);
 }
 
 // --- the buttons of the redrawn dialogs; here, not in VirtCtrl.cpp, for the

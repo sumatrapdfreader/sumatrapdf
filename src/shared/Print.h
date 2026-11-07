@@ -68,6 +68,12 @@ struct PrintPageLayout {
 PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const Print_Advanced_Data& advanced,
                                          Size paperSize, Rect printable, float dpiX, float dpiY, bool printPortrait,
                                          Str printerName);
+
+// the advanced print page: dialog procedure shared, template per app
+struct _PROPSHEETPAGEW;
+// implemented by each app
+void PrintAdvancedInitDlg(HWND hDlg);
+void PrintAdvancedSetPage(struct _PROPSHEETPAGEW* psp);
 #endif
 
 // result of command-line printing; the numeric values double as the process
