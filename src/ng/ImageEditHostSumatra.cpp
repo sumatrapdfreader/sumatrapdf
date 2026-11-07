@@ -10,6 +10,7 @@
 
 #include "gui/GpuiBridge.h"
 #include "base/File.h"
+#include "PdfDate.h"
 #include "base/Pixmap.h"
 #if OS_WIN
 #include "base/GdiPlusUtil.h"
@@ -51,43 +52,6 @@ static Pixmap* LoadImageFile(Str path) {
     return px;
 }
 
-// PDF date format is "D:YYYYMMDDHHmmSSOHH'mm'" where O is the relationship of
-// local time to UTC (+, - or Z). Used to stamp CreationDate/ModDate (issue #949).
-static TempStr FormatPdfDateTemp() {
-    i64 t = time(nullptr);
-    struct tm lt{};
-#if OS_WIN
-    localtime_s(&lt, (const time_t*)&t);
-#else
-    time_t tt = (time_t)t;
-    localtime_r(&tt, &lt);
-#endif
-    // ng: orig reads the bias out of TIME_ZONE_INFORMATION; mktime of the
-    // broken-down local time against timegm-style arithmetic is portable
-    struct tm gt{};
-#if OS_WIN
-    gmtime_s(&gt, (const time_t*)&t);
-#else
-    gmtime_r(&tt, &gt);
-#endif
-    int off = (lt.tm_hour - gt.tm_hour) * 60 + (lt.tm_min - gt.tm_min);
-    int dayDiff = lt.tm_yday - gt.tm_yday;
-    if (dayDiff == 1 || dayDiff < -1) {
-        off += 24 * 60;
-    } else if (dayDiff == -1 || dayDiff > 1) {
-        off -= 24 * 60;
-    }
-    char sign = '+';
-    if (off < 0) {
-        sign = '-';
-        off = -off;
-    }
-    int offH = off / 60;
-    int offM = off % 60;
-    return fmt("D:%04d%02d%02d%02d%02d%02d%c%02d'%02d'", lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour,
-               lt.tm_min, lt.tm_sec, sign, offH, offM);
-}
-
 // Create a single-page PDF from a bitmap using PdfCreator. The image goes in
 // as PNG (a format PDF can wrap as-is) and is stamped with the current time as
 // CreationDate/ModDate (issue #949).
@@ -98,7 +62,7 @@ static bool SavePixmapAsPdf(Pixmap* px, Str destPath) {
     auto* c = new PdfCreator();
     bool ok = c->AddPageFromPixmap(px, 0);
     if (ok) {
-        TempStr now = FormatPdfDateTemp();
+        TempStr now = FormatPdfDateNowTemp();
         c->SetProperty(DocProp::CreationDate, now);
         c->SetProperty(DocProp::ModificationDate, now);
         c->SetProperty(DocProp::CreatorApp, StrL("SumatraPDF"));

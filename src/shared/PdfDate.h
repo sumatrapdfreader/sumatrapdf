@@ -2,3 +2,4 @@
    License: GPLv3 */
 
 TempStr FormatPdfDateLocalTimeTemp(time_t secs);
+TempStr FormatPdfDateNowTemp();
