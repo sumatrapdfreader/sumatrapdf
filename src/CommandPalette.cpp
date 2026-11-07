@@ -50,6 +50,7 @@
 #include "Accelerators.h"
 #include "FilterHighlightDraw.h"
 #include "Annotation.h"
+#include "CanvasCommon.h"
 #include "AnnotSearch.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotPlacement.h"
@@ -1323,7 +1324,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     bool newIsOn = false;
     switch (cmdId) {
         case CmdToggleInverseSearch: {
-            extern bool gDisableInteractiveInverseSearch;
             isToggle = true;
             newIsOn = !gDisableInteractiveInverseSearch;
         } break;

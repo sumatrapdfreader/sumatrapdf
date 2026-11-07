@@ -116,6 +116,7 @@
 #include "ExternalViewers.h"
 #include "KeyboardHelp.h"
 #include "Annotation.h"
+#include "CanvasCommon.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
 #include "AnnotPlacement.h"
@@ -6329,7 +6330,6 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/5289
             // allow to temporarily disable invoking tex inverse search
             // with left mouse click
-            extern bool gDisableInteractiveInverseSearch;
             gDisableInteractiveInverseSearch = !gDisableInteractiveInverseSearch;
             break;
 

@@ -2056,8 +2056,6 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     }
 }
 
-bool gDisableInteractiveInverseSearch = false;
-
 static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     if (MeasurementOnClick(win, Point{x, y}, (key & MK_CONTROL) != 0)) {
         return;

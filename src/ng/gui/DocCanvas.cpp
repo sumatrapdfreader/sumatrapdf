@@ -2907,7 +2907,6 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
 // the 3rd click of a triple click: select the whole line (issue #694)
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/5289: CmdToggleInverseSearch
 // turns the double-click inverse search off for a session
-bool gDisableInteractiveInverseSearch = false;
 
 // orig's OnMouseLeftButtonDblClk. False when the press was not a double-click
 // action, so the caller can still treat it as an ordinary click.

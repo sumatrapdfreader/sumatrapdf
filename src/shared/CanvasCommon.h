@@ -4,6 +4,7 @@
 // --- shared by CanvasCommon.cpp, orig's Canvas.cpp and ng's gui/DocCanvas.cpp ---
 
 extern bool gLaserPointer;
+extern bool gDisableInteractiveInverseSearch;
 bool IsPointInSelection(MainWindow* win, Point pt);
 int ScrollLineAmount(int configuredAmount);
 bool IsLineEndpointHandle(ResizeHandle handle);
