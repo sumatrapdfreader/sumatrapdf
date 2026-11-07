@@ -4376,6 +4376,39 @@ static TempStr AssemblePdfTemp(const char* const* objs, int nObjs) {
     return ToStrTemp(b);
 }
 
+// GetTextForPage() hands out pointers that word count and search keep across
+// calls; an edit invalidating the page's text must not free them under them
+bool EngineBase_UnitTestTextOutlivesInvalidate() {
+    const char* objs[] = {
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 "
+        "R >>",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        "<< /Length 42 >>\nstream\nBT /F1 24 Tf 72 700 Td (Invalidated) Tj ET\nendstream",
+    };
+    TempStr pdf = AssemblePdfTemp(objs, dimof(objs));
+    EngineBase* engine = CreateEngineMupdfFromData(pdf, StrL("text.pdf"), nullptr);
+    if (!engine) {
+        return false;
+    }
+    Rect* coords = nullptr;
+    int n = 0;
+    Str text = engine->GetTextForPage(1, &n, &coords);
+    TempStr copy = str::DupTemp(text);
+    bool ok = str::Contains(text, StrL("Invalidated")) && n > 0 && coords;
+    Rect firstCoord = ok ? coords[0] : Rect{};
+
+    engine->InvalidateTextForPage(1);
+    ok = ok && str::Eq(text, copy) && coords[0] == firstCoord;
+
+    // the page extracts again after invalidation
+    Str again = engine->GetTextForPage(1);
+    ok = ok && str::Contains(again, StrL("Invalidated"));
+    SafeEngineRelease(&engine);
+    return ok;
+}
+
 // a code point above 255 after "10." is not a digit, and must not reach isdigit()
 bool EngineMupdf_UnitTestDoi() {
     Utf8PageText good = MakeUtf8PageTextTemp(StrL("10.1234/abc def"));

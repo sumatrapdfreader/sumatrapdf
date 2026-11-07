@@ -604,8 +604,15 @@ struct ChapterTextCache {
 
 struct PageTextCache {
     Vec<ChapterTextCache*> chapters; // index = chapter - 1; entries lazily created
+    // invalidated text: callers may still hold its pointers, so it lives as long as the engine
+    Vec<PageText> retired;
 
-    ~PageTextCache() { DeleteVecMembers(chapters); }
+    ~PageTextCache() {
+        DeleteVecMembers(chapters);
+        for (PageText& pt : retired) {
+            FreePageText(&pt);
+        }
+    }
 
     // Existing page entry, without creating or growing its chapter cache.
     TextCacheEntry* Peek(Location loc) {
@@ -1147,7 +1154,10 @@ void EngineBase::InvalidateTextForPage(int pageNo) {
     if (!page) {
         return;
     }
-    FreePageText(&page->data);
+    if (page->data.text || page->data.coords || page->data.quads) {
+        VecAppend(pageTextCache->retired, page->data);
+    }
+    page->data = {};
     page->state = TextExtractionState::NotExtracted;
 }
 
