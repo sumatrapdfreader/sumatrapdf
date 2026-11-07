@@ -1155,7 +1155,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdConvertToPDF,
     },
     {
-        TrN("Convert PDF to Images..."),
+        TrN("Convert to Images..."),
         CmdConvertPdfToImages,
     },
     {

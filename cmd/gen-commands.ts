@@ -294,7 +294,7 @@ const commandsRaw = [
     "CmdInsertImage", "Insert Image...",
     "CmdToggleHighlightFormFields", "Toggle Highlight Form Fields",
     "CmdTogglePageBoxes", "Toggle Page Boxes",
-    "CmdConvertPdfToImages", "Convert PDF to Images...",
+    "CmdConvertPdfToImages", "Convert to Images...",
     "CmdToggleUniformPageWidth", "Toggle Uniform Page Width",
     "CmdToggleTransparencyGrid", "Toggle Transparency Grid",
     "CmdTogglePageGrid", "Toggle Page Grid",

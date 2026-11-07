@@ -293,7 +293,7 @@ const CommandInfo gCommands[] = {
     {CmdInsertImage, "CmdInsertImage\0", StrL("Insert Image...")},
     {CmdToggleHighlightFormFields, "CmdToggleHighlightFormFields\0", StrL("Toggle Highlight Form Fields")},
     {CmdTogglePageBoxes, "CmdTogglePageBoxes\0", StrL("Toggle Page Boxes")},
-    {CmdConvertPdfToImages, "CmdConvertPdfToImages\0", StrL("Convert PDF to Images...")},
+    {CmdConvertPdfToImages, "CmdConvertPdfToImages\0", StrL("Convert to Images...")},
     {CmdToggleUniformPageWidth, "CmdToggleUniformPageWidth\0", StrL("Toggle Uniform Page Width")},
     {CmdToggleTransparencyGrid, "CmdToggleTransparencyGrid\0", StrL("Toggle Transparency Grid")},
     {CmdTogglePageGrid, "CmdTogglePageGrid\0", StrL("Toggle Page Grid")},

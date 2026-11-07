@@ -29,7 +29,7 @@ import {
 } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
-const kTitle = "Convert PDF to Images";
+const kTitle = "Convert to Images";
 const kKeep = "not an image, must survive";
 const kNgWindow = "converttoimages";
 const VK_A = 0x41;

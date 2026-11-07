@@ -712,12 +712,15 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    // OFD pages render to images like PDF pages
-    if (!ctx.isPdf && !(ctx.isOfd && cmdId == CmdConvertPdfToImages)) {
+    // any document with rendered pages converts to images; an ebook as laid out (#6505)
+    if (cmdId == CmdConvertPdfToImages && !ctx.isFixedPage) {
+        return CommandVisibility::Hide;
+    }
+    if (!ctx.isPdf) {
         if (cmdId == CmdPdfShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
-            cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdConvertPdfToImages ||
-            cmdId == CmdToggleEditPDF || cmdId == CmdMergePDF || cmdId == CmdRunPDFScript) {
+            cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdToggleEditPDF ||
+            cmdId == CmdMergePDF || cmdId == CmdRunPDFScript) {
             return CommandVisibility::Hide;
         }
     }

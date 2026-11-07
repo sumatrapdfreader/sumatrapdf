@@ -1628,7 +1628,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
-        MessageBoxWarning(hwnd, StrL("Failed to convert PDF to images."), Tr("Convert PDF to Images"));
+        MessageBoxWarning(hwnd, StrL("Failed to convert to images."), Tr("Convert to Images"));
         return;
     }
 
@@ -1643,7 +1643,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
         return;
     }
     if (!PagesFitDpi(engine, pages, dpi)) {
-        MessageBoxWarning(hwnd, Tr("Too large for this DPI"), Tr("Convert PDF to Images"));
+        MessageBoxWarning(hwnd, Tr("Too large for this DPI"), Tr("Convert to Images"));
         return;
     }
 
@@ -1656,7 +1656,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
 
     if (nOk == 0) {
         str::Free(firstPath);
-        MessageBoxWarning(hwnd, StrL("Failed to convert PDF to images."), Tr("Convert PDF to Images"));
+        MessageBoxWarning(hwnd, StrL("Failed to convert to images."), Tr("Convert to Images"));
         return;
     }
     logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
@@ -1667,7 +1667,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
 }
 
 bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
-    if (!CreateToolDialog(w, tab, Tr("Convert PDF to Images"))) {
+    if (!CreateToolDialog(w, tab, Tr("Convert to Images"))) {
         return false;
     }
     pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
@@ -1722,7 +1722,7 @@ void ShowConvertPdfToImagesDialog(MainWindow* win) {
     if (!tab || len(tab->filePath) == 0) {
         return;
     }
-    if (!IsPdfDoc(tab) && !EngineMupdfIsOfd(tab->GetEngine())) {
+    if (!tab->AsFixed()) {
         return;
     }
     logf("ShowConvertPdfToImagesDialog: opening for '%s'\n", tab->filePath);

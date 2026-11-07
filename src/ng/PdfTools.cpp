@@ -427,7 +427,7 @@ static Str ToolTitleFor(PdfToolKind kind) {
         case PdfToolKind::ConvertToPdf:
             return Tr("Convert to PDF");
         case PdfToolKind::ConvertToImages:
-            return Tr("Convert PDF to Images");
+            return Tr("Convert to Images");
         case PdfToolKind::SaveSelectionAsImage:
             return Tr("Save Selection As Image");
         case PdfToolKind::Merge:
@@ -1032,7 +1032,7 @@ static void ConvertPdfToImagesDoIt() {
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
-        MessageBoxWarning(win, StrL("Failed to convert PDF to images."), Tr("Convert PDF to Images"));
+        MessageBoxWarning(win, StrL("Failed to convert to images."), Tr("Convert to Images"));
         return;
     }
 
@@ -1046,7 +1046,7 @@ static void ConvertPdfToImagesDoIt() {
         return;
     }
     if (!PagesFitDpi(engine, pages, dpi)) {
-        MessageBoxWarning(win, Tr("Too large for this DPI"), Tr("Convert PDF to Images"));
+        MessageBoxWarning(win, Tr("Too large for this DPI"), Tr("Convert to Images"));
         return;
     }
 
@@ -1057,7 +1057,7 @@ static void ConvertPdfToImagesDoIt() {
 
     if (nOk == 0) {
         str::Free(firstPath);
-        MessageBoxWarning(win, StrL("Failed to convert PDF to images."), Tr("Convert PDF to Images"));
+        MessageBoxWarning(win, StrL("Failed to convert to images."), Tr("Convert to Images"));
         return;
     }
     logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
@@ -3176,7 +3176,8 @@ static void InitFormatDropDown(MainWindow* win, int sel) {
 
 void ShowConvertPdfToImagesDialog(MainWindow* win) {
     ToolScope scope;
-    if (!CanShowToolDialog(win, true)) {
+    // any document with rendered pages, as orig (#6505)
+    if (!CanShowToolDialog(win, false) || !win->AsFixed()) {
         return;
     }
     Str srcPath = win->CurrentTab()->filePath;
