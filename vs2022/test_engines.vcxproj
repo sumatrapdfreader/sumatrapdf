@@ -1199,6 +1199,8 @@
     <ClCompile Include="..\src\shared\TextSelection.cpp" />
     <ClCompile Include="..\src\shared\WebpReader.cpp" />
     <ClCompile Include="..\src\shared\gui\UIModels.cpp" />
+    <ClCompile Include="..\src\shared\tools\TestEnginesCommon.cpp" />
+    <ClCompile Include="..\src\shared\tools\ToolLog.cpp" />
     <ClCompile Include="..\src\tools\test_engines.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -100,13 +100,6 @@ TempStr TestDocPathTemp(Str relPath) {
 }
 
 #if OS_WIN
-static void PrintStdout(Str s) {
-    if (str::IsNull(s)) {
-        return;
-    }
-    printf("%.*s", s.len, s.s);
-}
-
 static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* exceptionInfo) {
     printf("test_util crash\n");
     str::Builder s;

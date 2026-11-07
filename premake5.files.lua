@@ -1578,12 +1578,15 @@ function test_engines_files()
     "src/shared/gui/UIModels.cpp",
     "src/shared/gui/UIModels.h",
     "src/tools/test_engines.cpp",
+    "src/shared/tools/TestEnginesCommon.cpp",
+    "src/shared/tools/ToolLog.cpp",
   }
 end
 
 function bench_image_files()
   files {
     "src/tools/bench_image.cpp",
+    "src/shared/tools/ToolLog.cpp",
   }
 end
 
@@ -1596,6 +1599,7 @@ end
 function plugin_test_files()
   files {
     "src/shared/tools/plugin-test.cpp",
+    "src/shared/tools/ToolLog.cpp",
   }
 end
 

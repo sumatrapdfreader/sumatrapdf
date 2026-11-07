@@ -10,6 +10,9 @@
     <Filter Include="shared\gui">
       <UniqueIdentifier>{10D62118-FC8D-6365-6595-3CC1516CFE55}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared\tools">
+      <UniqueIdentifier>{3CB6D7A8-2819-674D-D19E-9F03BDE032D0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
@@ -117,6 +120,12 @@
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\UIModels.cpp">
       <Filter>shared\gui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\tools\TestEnginesCommon.cpp">
+      <Filter>shared\tools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\tools\ToolLog.cpp">
+      <Filter>shared\tools</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tools\test_engines.cpp">
       <Filter>tools</Filter>

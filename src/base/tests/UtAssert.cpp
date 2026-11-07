@@ -42,7 +42,7 @@ static void OutputDebugString(const char* s) {
 }
 
 #if OS_WIN
-static void PrintStdout(Str s) {
+void PrintStdout(Str s) {
     if (str::IsNull(s)) {
         return;
     }

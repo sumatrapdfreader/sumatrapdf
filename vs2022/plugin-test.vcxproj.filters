@@ -10,6 +10,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
+    <ClCompile Include="..\src\shared\tools\ToolLog.cpp">
+      <Filter>shared\tools</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\tools\plugin-test.cpp">
       <Filter>shared\tools</Filter>
     </ClCompile>

@@ -1407,7 +1407,7 @@ export const targets: Target[] = [
     // minimal host for SumatraPDF -plugin mode (orig src/tools/plugin-test.cpp)
     name: "plugin-test",
     kind: "app",
-    sources: ["src/ng/tools/plugin-test.cpp"],
+    sources: ["src/ng/tools/plugin-test.cpp", "src/ng/tools/ToolLog.cpp"],
     includes: ["src/ng"],
     deps: ["base"],
     platforms: ["win"],
@@ -1464,6 +1464,8 @@ export const targets: Target[] = [
     kind: "console",
     sources: [
       "src/ng/tools/test_engines.cpp",
+      "src/ng/tools/TestEnginesCommon.cpp",
+      "src/ng/tools/ToolLog.cpp",
       "src/ng/tools/AppStubs.cpp",
       "src/ng/gui/BrowserViewNoOp.cpp",
       "src/ng/CrashHandlerNoOp.cpp",

@@ -29,13 +29,6 @@ extern "C" {
 #include "jpeglib.h"
 }
 
-void log(Str s) {
-    if (len(s) == 0) {
-        return;
-    }
-    fwrite(s.s, 1, (size_t)s.len, stderr);
-}
-
 void _uploadDebugReport(Str, Str, bool) {}
 
 enum class BenchFormat {

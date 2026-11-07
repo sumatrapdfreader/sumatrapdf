@@ -478,6 +478,9 @@ export const sharedFiles = [
   "src/shared/tests/TextSelection_ut.cpp",
   "src/shared/tools/MakeLzSA.cpp",
   "src/shared/tools/plugin-test.cpp",
+  "src/shared/tools/TestEnginesCommon.cpp",
+  "src/shared/tools/TestEnginesCommon.h",
+  "src/shared/tools/ToolLog.cpp",
 ];
 
 export function sharedPath(path: string): string {

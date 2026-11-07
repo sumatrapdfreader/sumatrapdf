@@ -1183,6 +1183,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\shared\tools\ToolLog.cpp" />
     <ClCompile Include="..\src\tools\bench_image.cpp" />
   </ItemGroup>
   <ItemGroup>
