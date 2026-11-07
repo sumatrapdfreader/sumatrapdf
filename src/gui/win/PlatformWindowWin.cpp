@@ -67,6 +67,12 @@ static LRESULT CALLBACK PlatformWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARA
     if (!window) {
         return DefWindowProcW(hwnd, msg, wp, lp);
     }
+    // destroyed by Windows (e.g. with its owner): the destructor must not destroy a recycled HWND
+    if (msg == WM_NCDESTROY) {
+        window->native = nullptr;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+        return DefWindowProcW(hwnd, msg, wp, lp);
+    }
 
     switch (msg) {
         case WM_ERASEBKGND:

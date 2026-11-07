@@ -2458,6 +2458,17 @@ static void RegisterResizeOverlayClass() {
     registered = true;
 }
 
+// The overlay is owned by the top-level window, which takes it down when it
+// closes: drop a handle that is gone or now belongs to another window.
+static void ForgetDeadOverlay(HWND& overlay, HBRUSH brush) {
+    if (!overlay) {
+        return;
+    }
+    if (!IsWindow(overlay) || GetWindowLongPtrW(overlay, GWLP_USERDATA) != (LONG_PTR)brush) {
+        overlay = nullptr;
+    }
+}
+
 VirtSplitter::VirtSplitter() {
     onMouseDown = MkMethod1<VirtSplitter, VirtMouseEvent*, &VirtSplitter::OnMouseDown>(this);
     onMouseUp = MkMethod1<VirtSplitter, VirtMouseEvent*, &VirtSplitter::OnMouseUp>(this);
@@ -2475,6 +2486,7 @@ VirtSplitter::VirtSplitter() {
 }
 
 VirtSplitter::~VirtSplitter() {
+    ForgetDeadOverlay(overlayHwnd, brush);
     if (overlayHwnd) {
         DestroyWindow(overlayHwnd);
     }
@@ -2483,6 +2495,7 @@ VirtSplitter::~VirtSplitter() {
 }
 
 void VirtSplitter::HideOverlay() {
+    ForgetDeadOverlay(overlayHwnd, brush);
     if (overlayHwnd) {
         ShowWindow(overlayHwnd, SW_HIDE);
     }
@@ -2498,6 +2511,7 @@ void VirtSplitter::UpdateOverlay() {
         bmp = CreateBitmap(8, 8, 1, 1, gDotPatternBmp);
         brush = CreatePatternBrush(bmp);
     }
+    ForgetDeadOverlay(overlayHwnd, brush);
     if (!overlayHwnd) {
         RegisterResizeOverlayClass();
         HWND owner = GetAncestor(hwnd, GA_ROOT);

@@ -80,6 +80,12 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     if (!host) {
         return DefWindowProcW(hwnd, msg, wp, lp);
     }
+    // destroyed by Windows (e.g. with its parent): ~VirtHost must not destroy a recycled HWND
+    if (msg == WM_NCDESTROY) {
+        host->native = nullptr;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+        return DefWindowProcW(hwnd, msg, wp, lp);
+    }
 
     // the host previously relied on whatever dpi the last window left behind
     DpiScope dpiScope(hwnd);
