@@ -15,6 +15,20 @@
 #include "NavFilesInFolder.h"
 #include "NavFilesInFolderCommon.h"
 
+// entry display name without a trailing path separator (dirs use "name\\")
+Str NavEntryBaseName(const NavFileEntry& e) {
+    Str name = e.name;
+    if (!e.isDir || len(name) < 2) {
+        return name;
+    }
+    // a directory's name ends with "\\", which is not a separator off Windows
+    char last = name.s[len(name) - 1];
+    if (last == '\\' || path::IsSep(last)) {
+        return Str(name.s, len(name) - 1);
+    }
+    return name;
+}
+
 void FreeNavEntry(NavFileEntry& e) {
     str::Free(e.name);
     str::Free(e.path);

@@ -38,20 +38,6 @@
 
 // ng: NavFileEntry moved to NavFilesInFolder.h
 
-// entry display name without a trailing path separator (dirs use "name\\")
-Str NavEntryBaseName(const NavFileEntry& e) {
-    Str name = e.name;
-    if (!e.isDir || name.len < 2) {
-        return name;
-    }
-    // ng: the "\\" a directory's name ends with is not a separator off Windows
-    char last = name.s[name.len - 1];
-    if (last == '\\' || path::IsSep(last)) {
-        return Str(name.s, name.len - 1);
-    }
-    return name;
-}
-
 #if !OS_WIN
 // ng: orig's are in base/Win.cpp. Off Windows the "drives" are the root and
 // the user's home directory, and there is no Quick access.

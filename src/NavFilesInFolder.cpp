@@ -200,8 +200,6 @@ static void ScheduleFocusNavListBox() {
     uitask::Post(fn, "FocusNavListBox");
 }
 
-Str NavEntryBaseName(const NavFileEntry& e);
-
 // rebuild the shown entries: all of them without a filter, else those whose
 // name has every filter word (the command palette's matching), without ".."
 static void FilterNavEntries(ListBoxModelNav* m, const StrVec& words) {
@@ -397,15 +395,6 @@ static TempStr NavEntryPathTemp(NavFilesInFolderWnd* wnd, NavFileEntry& e) {
         name = Str(name.s, name.len - 1); // strip the trailing "\\"
     }
     return path::JoinTemp(wnd->currDir, name);
-}
-
-// entry display name without a trailing path separator (dirs use "name\\")
-Str NavEntryBaseName(const NavFileEntry& e) {
-    Str name = e.name;
-    if (e.isDir && name.len > 0 && path::IsSep(name.s[name.len - 1])) {
-        return Str(name.s, name.len - 1);
-    }
-    return name;
 }
 
 // index of selectPath in the listing, or 0 if not found / empty
