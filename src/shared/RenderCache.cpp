@@ -382,6 +382,10 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     }
 
     DisplayModel* dm = req.dm;
+    // runs on the render thread: BuildPagesInfo() on the UI thread must not
+    // free pagesInfo while the page accessors below read it
+    ScopedMutex pagesScope(&dm->pagesInfoLock);
+
     // free an invisible page of the same DisplayModel ...
     for (int i = 0; i < n; i++) {
         auto* entry = rc->cache[i];
