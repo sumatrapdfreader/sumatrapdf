@@ -143,6 +143,10 @@ WStr TeXFilter::ExtractBracedBlock() {
                 m_pPtr++;
                 /* fall through */
             case '"':
+                // a trailing " must not step past the terminating NUL
+                if (!*m_pPtr) {
+                    break;
+                }
                 // TODO: handle more international characters
                 switch (*m_pPtr++) {
                     case 'a':
