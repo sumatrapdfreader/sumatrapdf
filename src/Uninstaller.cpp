@@ -36,33 +36,6 @@ static bool gWasPreviewInstaller = false;
 static PreviewHandlers gOurPreviewHandlers;
 static Str gUninstallerLogPath;
 
-#if 0
-// The following list is used to verify that all the required files have been
-// installed (install flag set) and to know what files are to be removed at
-// uninstallation (all listed files that actually exist).
-// When a file is no longer shipped, just disable the install flag so that the
-// file is still correctly removed when SumatraPDF is eventually uninstalled.
-// clang-format off
-const char* gInstalledFiles[] = {
-    "libsumatrapdf.dll",
-    "PdfFilter.dll",
-    "PdfPreview.dll",
-    // those probably won't delete because in use
-    "SumatraPDF.exe",
-    "RA-MICRO PDF Viewer.exe",
-    // files no longer shipped, to be deleted
-    "libmupdf.dll", // renamed to libsumatrapdf.dll in 3.7
-    "DroidSansFallback.ttf",
-    "uninstall.exe",
-    "UnRar.dll",
-    "UnRar64.dll",
-    // other files we might generate
-    "sumatrapdfprefs.dat",
-    "SumatraPDF-settings.txt",
-};
-// clang-format on
-#endif
-
 static void UninstallerThread() {
     log(StrL("UninstallerThread started\n"));
     // also kill the original uninstaller, if it's just spawned

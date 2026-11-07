@@ -2005,16 +2005,6 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
             break;
         }
 
-#if 0
-        case DISPID_PROGRESSCHANGE:
-        {
-            long current = pDispParams->rgvarg[1].lVal;
-            long maximum = pDispParams->rgvarg[0].lVal;
-            fs->htmlWindow->OnProgressURL(current, maximum);
-            break;
-        }
-#endif
-
         case DISPID_DOCUMENTCOMPLETE: {
             // TODO: there are complexities related to multi-frame documents. This
             // gets called on every frame and we should probably only notify

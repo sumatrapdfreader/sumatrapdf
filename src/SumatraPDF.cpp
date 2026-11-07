@@ -2175,13 +2175,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
     delete prevCtrl;
 
-#ifdef ENABLE_REDRAW_ON_RELOAD
-    // TODO: why is this needed?
-    if (!args->isNewWindow && win->IsDocLoaded()) {
-        win->RedrawAll();
-    }
-#endif
-
     SetFrameTitleForTab(tab, false);
     UpdateUiForCurrentTab(win);
 
@@ -17656,18 +17649,6 @@ Exit:
     DeleteBitmap(gBitmapReloadingCue);
     // all frame/canvas windows are destroyed by now
     DeleteBrush(gWinClassBgBrush);
-
-    // TODO: if needed, I could replace it with AtomicBool gFileExistenceInProgress
-    // alternatively I can set AtomicBool gAppShutdown and have various threads
-    // abort quickly if IsAppShuttingDown()
-#if 0
-    // wait for FileExistenceChecker to terminate
-    // (which should be necessary only very rarely)
-    while (gFileExistenceChecker) {
-        Sleep(10);
-        uitask::DrainQueue();
-    }
-#endif
 
     // must run before uitask::Destroy() (these deletes are queued as ui tasks)
     // and before gRenderCache goes away (the waiting threads use it)
