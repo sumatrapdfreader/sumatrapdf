@@ -21,6 +21,7 @@ SumatraUIAutomationProvider::~SumatraUIAutomationProvider() {
         document = nullptr;
     }
 
+    startpage->DetachRoot();
     startpage->Release();
     startpage = nullptr;
 }

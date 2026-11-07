@@ -5,10 +5,11 @@ class SumatraUIAutomationProvider;
 class SumatraUIAutomationStartPageProvider : public IRawElementProviderFragment, public IRawElementProviderSimple {
     AtomicInt refCount;
     HWND canvasHwnd;
-    SumatraUIAutomationProvider* root;
+    SumatraUIAutomationProvider* root; // not ref-counted; nulled by DetachRoot()
 
   public:
     SumatraUIAutomationStartPageProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root);
+    void DetachRoot();
     ~SumatraUIAutomationStartPageProvider();
 
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);

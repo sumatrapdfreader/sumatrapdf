@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
 #include "uia/Constants.h"
 #include "uia/Provider.h"
 #include "uia/StartPageProvider.h"
@@ -21,6 +22,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(R
                                 QITABENT(SumatraUIAutomationStartPageProvider, IRawElementProviderFragment),
                                 {nullptr}};
     return QISearch(this, qit, riid, ppv);
+}
+
+// clients may keep this provider after the root that owns it is gone
+void SumatraUIAutomationStartPageProvider::DetachRoot() {
+    root = nullptr;
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::AddRef() {
@@ -49,6 +55,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Navigate(enum Na
         direction == NavigateDirection_FirstChild || direction == NavigateDirection_LastChild) {
         return S_OK;
     } else if (direction == NavigateDirection_Parent) {
+        if (!root) {
+            return UIA_E_ELEMENTNOTAVAILABLE;
+        }
         *pRetVal = root;
         (*pRetVal)->AddRef();
         return S_OK;
@@ -94,6 +103,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::SetFocus() {
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_BoundingRectangle(struct UiaRect* pRetVal) {
     // share area with the canvas uia provider
+    if (!root) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
     return root->get_BoundingRectangle(pRetVal);
 }
 
@@ -104,6 +116,9 @@ SumatraUIAutomationStartPageProvider::get_FragmentRoot(IRawElementProviderFragme
     }
 
     *pRetVal = root;
+    if (!root) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
     root->AddRef();
     return S_OK;
 }

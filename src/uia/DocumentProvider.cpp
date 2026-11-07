@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
 
 #include "gui/UIModels.h"
 
@@ -68,6 +69,8 @@ void SumatraUIAutomationDocumentProvider::FreeDocument() {
 
     released = true;
     dm = nullptr;
+    // clients may keep this provider after the root (which doesn't ref-count us) is gone
+    root = nullptr;
 
     SumatraUIAutomationPageProvider* it = child_first;
     while (it) {
@@ -153,9 +156,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum Nav
         } else {
             *pRetVal = child_last;
         }
-        (*pRetVal)->AddRef();
+        // a document with no pages has no children
+        if (*pRetVal) {
+            (*pRetVal)->AddRef();
+        }
         return S_OK;
     } else if (direction == NavigateDirection_Parent) {
+        if (!root) {
+            *pRetVal = nullptr;
+            return UIA_E_ELEMENTNOTAVAILABLE;
+        }
         *pRetVal = root;
         (*pRetVal)->AddRef();
         return S_OK;
@@ -201,6 +211,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::SetFocus() {
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_BoundingRectangle(struct UiaRect* pRetVal) {
     // share area with the canvas uia provider
+    if (!root) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
     return root->get_BoundingRectangle(pRetVal);
 }
 
@@ -212,6 +225,9 @@ SumatraUIAutomationDocumentProvider::get_FragmentRoot(IRawElementProviderFragmen
 
     // return the root node
     *pRetVal = root;
+    if (!root) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
     root->AddRef();
     return S_OK;
 }
