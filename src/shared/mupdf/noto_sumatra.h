@@ -13,6 +13,11 @@ const char* sumatra_lookup_font_url(const char* name);
 int sumatra_font_count(void);
 const char* sumatra_font_at(int i, const char** url, int* size);
 
+#if defined(__linux__) || defined(__APPLE__)
+/* a system font with the character, malloc'ed, or NULL (mupdf_load_system_font*.c) */
+unsigned char* sumatra_system_font_data_for_rune(unsigned int rune, int* size);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

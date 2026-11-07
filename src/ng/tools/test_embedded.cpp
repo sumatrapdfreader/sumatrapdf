@@ -23,6 +23,13 @@ extern "C" const char* sumatra_font_at(int, const char**, int*) {
     return nullptr;
 }
 
+#if OS_LINUX || OS_DARWIN
+extern "C" unsigned char* sumatra_system_font_data_for_rune(unsigned int, int* size) {
+    *size = 0;
+    return nullptr;
+}
+#endif
+
 int main(int argc, char** argv) {
     if (argc != 3) {
         fprintf(stderr, "usage: test_embedded <archive> <staging dir>\n");

@@ -1219,6 +1219,11 @@ void install_load_windows_font_funcs(fz_context* ctx) {
 
 #include <fontconfig/fontconfig.h>
 
+static int linux_match_has_rune(FcPattern* match, unsigned int rune) {
+    FcCharSet* charset = NULL;
+    return FcPatternGetCharSet(match, FC_CHARSET, 0, &charset) == FcResultMatch && FcCharSetHasChar(charset, rune);
+}
+
 static fz_font* load_linux_font_match(fz_context* ctx, const char* name, int bold, int italic, int exact,
                                       unsigned int rune) {
     FcPattern* pattern = FcPatternCreate();
@@ -1247,6 +1252,13 @@ static fz_font* load_linux_font_match(fz_context* ctx, const char* name, int bol
     match = FcFontMatch(NULL, pattern, &result);
     FcPatternDestroy(pattern);
     if (!match) {
+        return NULL;
+    }
+    // fontconfig's best match needn't have the character (DejaVu Sans for
+    // Hangul on a system without a Korean font). Using it would draw boxes
+    // instead of falling back to mupdf's own font
+    if (rune && !linux_match_has_rune(match, rune)) {
+        FcPatternDestroy(match);
         return NULL;
     }
 
@@ -1347,14 +1359,25 @@ static unsigned int fallback_rune(int script) {
         case UCDN_SCRIPT_HAN:
         case UCDN_SCRIPT_BOPOMOFO:
             return 0x4e00;
-        default:
+        case UCDN_SCRIPT_LATIN:
+        case UCDN_SCRIPT_COMMON:
+        case UCDN_SCRIPT_INHERITED:
+        case UCDN_SCRIPT_UNKNOWN:
             return 0x0041;
+        default:
+            // a script we have no sample for: a Latin font wouldn't have it
+            // either, and mupdf's own font for it is better than boxes
+            return 0;
     }
 }
 
 static fz_font* load_linux_fallback_font(fz_context* ctx, int script, int language, int serif, int bold, int italic) {
     (void)language;
-    return load_linux_font_match(ctx, serif ? "serif" : "sans-serif", bold, italic, 0, fallback_rune(script));
+    unsigned int rune = fallback_rune(script);
+    if (!rune) {
+        return NULL;
+    }
+    return load_linux_font_match(ctx, serif ? "serif" : "sans-serif", bold, italic, 0, rune);
 }
 
 void install_load_linux_font_funcs(fz_context* ctx) {
@@ -1362,6 +1385,58 @@ void install_load_linux_font_funcs(fz_context* ctx) {
         return;
     }
     fz_install_load_system_font_funcs(ctx, load_linux_font, load_linux_cjk_font, load_linux_fallback_font);
+}
+
+// The bytes of a system font that has rune, malloc'ed, or NULL. For the
+// built-in font loader (EmbeddedResources.cpp), which hands mupdf the data
+// alone, so only a font that is the file's first face will do.
+unsigned char* sumatra_system_font_data_for_rune(unsigned int rune, int* size) {
+    *size = 0;
+    if (!FcInit()) {
+        return NULL;
+    }
+    FcPattern* pattern = FcPatternCreate();
+    if (!pattern) {
+        return NULL;
+    }
+    FcCharSet* charset = FcCharSetCreate();
+    if (charset) {
+        FcCharSetAddChar(charset, rune);
+        FcPatternAddCharSet(pattern, FC_CHARSET, charset);
+        FcCharSetDestroy(charset);
+    }
+    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+    FcResult result;
+    FcPattern* match = FcFontMatch(NULL, pattern, &result);
+    FcPatternDestroy(pattern);
+    if (!match) {
+        return NULL;
+    }
+
+    unsigned char* data = NULL;
+    FcChar8* path = NULL;
+    int index = 0;
+    FcPatternGetInteger(match, FC_INDEX, 0, &index);
+    if (linux_match_has_rune(match, rune) && index == 0 &&
+        FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
+        FILE* f = fopen((const char*)path, "rb");
+        if (f) {
+            long n = (fseek(f, 0, SEEK_END) == 0) ? ftell(f) : -1;
+            if (n > 0 && fseek(f, 0, SEEK_SET) == 0) {
+                data = (unsigned char*)malloc((size_t)n);
+                if (data && fread(data, 1, (size_t)n, f) == (size_t)n) {
+                    *size = (int)n;
+                } else {
+                    free(data);
+                    data = NULL;
+                }
+            }
+            fclose(f);
+        }
+    }
+    FcPatternDestroy(match);
+    return data;
 }
 
 #endif /* __linux__ */

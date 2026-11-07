@@ -469,54 +469,67 @@ static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
     f->size = len(data);
 }
 
-#if OS_WIN
 // mupdf asks for these fallback fonts directly, without trying system fonts
-// first as it does for scripts. Every Windows 10+ has fonts covering the same
-// blocks (math operators and alphanumerics, music, arrows, emoji), so they're
-// used instead of downloading.
-static const char* kWindowsFontSubstitutes[][2] = {
-    {"NotoSansMath-Regular.otf", "seguisym.ttf"},    {"NotoMusic-Regular.otf", "seguisym.ttf"},
-    {"NotoSansSymbols-Regular.otf", "seguisym.ttf"}, {"NotoSansSymbols2-Regular.otf", "seguisym.ttf"},
-    {"NotoEmoji-Regular.ttf", "seguiemj.ttf"},
+// first as it does for scripts. The system usually has a font covering the
+// same blocks (math, music, symbols, emoji), so it's used instead of
+// downloading: on Windows a font every Windows 10+ has, elsewhere whatever
+// system font has the sample character.
+struct SystemFontSubstitute {
+    const char* name;
+    const char* winFile;
+    u32 sample;
 };
 
-// the Windows font file used for a built-in font, or null
-static const char* WindowsSubstituteFor(Str name) {
-    for (auto& sub : kWindowsFontSubstitutes) {
-        if (str::Eq(name, Str(sub[0]))) {
-            return sub[1];
+static const SystemFontSubstitute kSystemFontSubstitutes[] = {
+    {"NotoSansMath-Regular.otf", "seguisym.ttf", 0x1d400},    // math bold A
+    {"NotoMusic-Regular.otf", "seguisym.ttf", 0x1d11e},       // G clef
+    {"NotoSansSymbols-Regular.otf", "seguisym.ttf", 0x2600},  // sun
+    {"NotoSansSymbols2-Regular.otf", "seguisym.ttf", 0x2800}, // braille
+    {"NotoEmoji-Regular.ttf", "seguiemj.ttf", 0x1f600},       // grinning face
+};
+
+static const SystemFontSubstitute* FindSystemSubstitute(Str name) {
+    for (auto& sub : kSystemFontSubstitutes) {
+        if (str::Eq(name, Str(sub.name))) {
+            return &sub;
         }
     }
     return nullptr;
 }
 
-static void LoadWindowsSubstitute(Str name, EmbeddedFont* f) {
-    const char* file = WindowsSubstituteFor(name);
-    if (!file) {
+static void LoadSystemSubstitute(Str name, EmbeddedFont* f) {
+    const SystemFontSubstitute* sub = FindSystemSubstitute(name);
+    if (!sub) {
         return;
     }
+#if OS_WIN
     WCHAR winDir[MAX_PATH];
     UINT n = GetWindowsDirectoryW(winDir, dimof(winDir));
     if (n == 0 || n >= dimof(winDir)) {
         return;
     }
-    TempStr path = path::JoinTemp(ToUtf8Temp(WStr(winDir)), StrL("Fonts"), Str(file));
+    TempStr path = path::JoinTemp(ToUtf8Temp(WStr(winDir)), StrL("Fonts"), Str(sub->winFile));
     Str data = file::ReadFile(path);
     if (len(data) == 0) {
         return;
     }
-    logf("font '%s': using Windows' %s\n", name, Str(file));
+    logf("font '%s': using Windows' %s\n", name, Str(sub->winFile));
     f->data = (u8*)data.s;
     f->size = len(data);
-}
-#else
-static const char* WindowsSubstituteFor(Str) {
-    return nullptr;
-}
+#elif OS_LINUX || OS_DARWIN
+    int size = 0;
+    u8* data = sumatra_system_font_data_for_rune(sub->sample, &size);
+    if (!data) {
+        return;
+    }
+    logf("font '%s': using a system font with U+%04X\n", name, (int)sub->sample);
+    f->data = data;
+    f->size = size;
 #endif
+}
 
 // mupdf's built-in fonts (src/mupdf/noto_sumatra.c). Each is loaded once.
-// From the embedded archive, else a Windows font covering the same glyphs,
+// From the embedded archive, else a system font covering the same glyphs,
 // else the font cache or a download.
 static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     Str name(fileName);
@@ -530,11 +543,9 @@ static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     EmbeddedFont* f = AllocStruct<EmbeddedFont>();
     f->name = str::Dup(name);
     f->data = GetEmbeddedFileData(fmt("fonts\\%s", name), &f->size);
-#if OS_WIN
     if (!f->data) {
-        LoadWindowsSubstitute(name, f);
+        LoadSystemSubstitute(name, f);
     }
-#endif
     if (!f->data) {
         LoadFontFromCacheOrNet(name, f);
     }
@@ -610,8 +621,8 @@ TempStr DownloadedFontsReportTemp() {
             status = StrL("downloaded");
             nDownloaded++;
             downloadedSize += size;
-        } else if (WindowsSubstituteFor(name)) {
-            status = fmt("Windows' %s", Str(WindowsSubstituteFor(name)));
+        } else if (OS_WIN && FindSystemSubstitute(name)) {
+            status = fmt("Windows' %s", Str(FindSystemSubstitute(name)->winFile));
         } else if (FontFailedThisSession(name)) {
             status = StrL("download failed");
         }

@@ -1,18 +1,23 @@
-// Fallback fonts that aren't embedded come from Windows before a download:
-// - math, music, symbols and emoji, which mupdf asks for directly, from
-//   Segoe UI Symbol / Segoe UI Emoji (src/shared/EmbeddedResources.cpp)
-// - CJK text in a non-embedded PDF font, from the CJK UI font every Windows has
-//   (Malgun Gothic for Korean) when the classic one (Batang) isn't installed
-//   (src/shared/mupdf/mupdf_load_system_font.c)
-// A local server stands in for R2 (SUMATRA_FONT_URL_BASE): it must get no request.
+// Fallback fonts that aren't embedded come from the system before a download:
+// - math, music, symbols and emoji, which mupdf asks for directly: on Windows
+//   Segoe UI Symbol / Emoji, elsewhere a system font with the character
+//   (src/shared/EmbeddedResources.cpp)
+// - CJK text in a non-embedded PDF font: on Windows the CJK UI font every
+//   install has (Malgun Gothic for Korean) when the classic one (Batang) isn't
+//   installed (src/shared/mupdf/mupdf_load_system_font.c). On Linux / macOS a
+//   system font only counts when it has the character: without a Korean font
+//   the text must fall back to mupdf's downloaded font, not draw boxes.
+// A local server stands in for R2 (SUMATRA_FONT_URL_BASE) and logs requests.
+// For ng on Linux pass -exe out/linux/dbg/SumatraPDF.
 //
 // Run: bun tests/font-windows-substitutes.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { IS_MAC, IS_WIN } from "./host.ts";
 import { assemblePdf, EXE, makeZip, runStandalone, tmpPath, type ZipEntry } from "./util.ts";
 
-const name = "font-windows-substitutes";
+const name = "font-system-substitutes";
 
 // one paragraph in the default EPUB font, which has none of these characters
 function makeEpub(text: string): Buffer {
@@ -70,11 +75,13 @@ async function extractText(path: string, fontUrlBase: string, cache: string): Pr
   return out + err;
 }
 
+// whether fontconfig has a font for the language (Linux)
+function linuxHasFontFor(lang: string): boolean {
+  const p = Bun.spawnSync(["fc-list", `:lang=${lang}`]);
+  return p.exitCode === 0 && p.stdout.toString().trim().length > 0;
+}
+
 export async function testit(): Promise<void> {
-  if (process.platform !== "win32") {
-    console.log(`${name}: skipped, Windows only`);
-    return;
-  }
   const dir = tmpPath(name);
   rmSync(dir, { recursive: true, force: true });
   const cache = join(dir, "cache");
@@ -97,20 +104,32 @@ export async function testit(): Promise<void> {
     writeFileSync(epub, makeEpub(symbols));
     const out = await extractText(epub, base, cache);
     // Segoe UI Symbol, the first fallback asked for, covers all four
-    if (!out.includes("using Windows' seguisym.ttf")) {
-      throw new Error(`${name}: symbols didn't use Windows' fonts:\n${out.slice(-1200)}`);
+    const want = IS_WIN ? "using Windows' seguisym.ttf" : "using a system font with U+";
+    if (!out.includes(want)) {
+      throw new Error(`${name}: symbols didn't use a system font:\n${out.slice(-1200)}`);
     }
+    const symbolRequests = requests.splice(0);
 
     const pdf = join(dir, "korean.pdf");
     writeFileSync(pdf, makeKoreanPdf(), "latin1");
     const outPdf = await extractText(pdf, base, cache);
-    // 한국 as UTF-8 hex, as -extract-text prints it
-    if (!outPdf.includes("ed 95 9c ea b5 ad")) {
+
+    // Windows has Malgun Gothic, macOS Apple SD Gothic Neo; Linux maybe nothing
+    const haveKoreanFont = IS_WIN || IS_MAC || linuxHasFontFor("ko");
+    const droid = requests.some((r) => r.startsWith("DroidSansFallbackFull"));
+    if (haveKoreanFont && droid) {
+      throw new Error(`${name}: downloaded a CJK font although the system has one: ${requests.join(", ")}`);
+    }
+    if (!haveKoreanFont && !droid) {
+      throw new Error(`${name}: no Korean system font and no CJK download: ${requests.join(", ")}`);
+    }
+    // 한국 as UTF-8 hex, as -extract-text prints it. Without a Korean font the
+    // download fails (the server has no fonts), so nothing lays the text out
+    if (haveKoreanFont && !outPdf.includes("ed 95 9c ea b5 ad")) {
       throw new Error(`${name}: Korean text wasn't extracted:\n${outPdf.slice(-1200)}`);
     }
-
-    if (requests.length > 0) {
-      throw new Error(`${name}: expected no font downloads, requests: ${requests.join(", ")}`);
+    if (IS_WIN && symbolRequests.length > 0) {
+      throw new Error(`${name}: expected no symbol font downloads, requests: ${symbolRequests.join(", ")}`);
     }
   } finally {
     server.stop(true);
