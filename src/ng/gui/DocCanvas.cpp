@@ -105,7 +105,12 @@ struct DocCanvasUI {
     // OnWindowContextMenu), and the popup that shows it
     MenuModel* ctxMenu = nullptr;
     gp::Entity<gp::PopupMenuState> ctxPopup;
+    // a copy of the clicked JavaScript menu link (Altium, KiCad) the popup shows
+    PageDestinationJsMenu* jsMenu = nullptr;
 };
+
+// a JavaScript menu item's command id: past every command, custom ones included
+constexpr int kJsMenuItemCmdFirst = 0x40000000;
 
 static DocCanvasUI* Ui(MainWindow* win) {
     if (!win->docCanvas) {
@@ -117,6 +122,7 @@ static DocCanvasUI* Ui(MainWindow* win) {
 void DocCanvasDelete(MainWindow* win) {
     if (win->docCanvas) {
         DeleteMenuModel(win->docCanvas->ctxMenu);
+        delete win->docCanvas->jsMenu;
     }
     delete win->docCanvas;
     win->docCanvas = nullptr;
@@ -3011,9 +3017,57 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     return true;
 }
 
+// orig's LinkHandler::GotoLink shows a JavaScript menu link's items in a popup
+// at the cursor; picking one runs RunJsMenuItem()
+static void OpenJsMenuPopup(MainWindow* win, gp::Ctx* cx, int x, int y, PageDestinationJsMenu* dest) {
+    DocCanvasUI* ui = Ui(win);
+    delete ui->jsMenu;
+    ui->jsMenu = new PageDestinationJsMenu();
+    ui->jsMenu->items = dest->items;
+    ui->jsMenu->returns = dest->returns;
+
+    DeleteMenuModel(ui->ctxMenu);
+    auto* model = new MenuModel();
+    for (int i = 0; i < len(dest->items); i++) {
+        MenuItemModel it;
+        Str item = dest->items[i];
+        if (str::Eq(item, StrL("-"))) {
+            it.separator = true;
+        } else {
+            // && keeps a & from becoming an access-key marker
+            it.title = str::Dup(str::ReplaceTemp(item, StrL("&"), StrL("&&")));
+            it.titleOwned = true;
+            it.cmdId = kJsMenuItemCmdFirst + i;
+        }
+        VecAppend(model->items, it);
+    }
+    ui->ctxMenu = model;
+    AppShellInvalidate(win);
+    float k = CanvasScale(win);
+    OpenPopupMenuAt(cx, ui->ctxPopup, (float)x * k, (float)y * k);
+}
+
+// item cmdId - kJsMenuItemCmdFirst of the JavaScript menu was picked: launch its
+// URL or go to its page. false for any other command
+static bool RunJsMenuItem(MainWindow* win, int cmdId) {
+    PageDestinationJsMenu* menu = Ui(win)->jsMenu;
+    int i = cmdId - kJsMenuItemCmdFirst;
+    if (!menu || i < 0 || i >= len(menu->items)) {
+        return false;
+    }
+    JsMenuAction action = GetJsMenuAction(menu, i);
+    if (len(action.url) > 0) {
+        win->linkHandler->LaunchURL(action.url);
+    } else if (action.pageNo > 0 && win->ctrl && win->ctrl->ValidPageNo(action.pageNo)) {
+        win->ctrl->GoToPage(action.pageNo, true);
+    }
+    return true;
+}
+
 // orig's OnMouseLeftButtonUp, minus the annotation, touch, presentation and
-// forward-search branches
-static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
+// forward-search branches. cx is null for a click from -dbg-control, which then
+// can't show a JavaScript menu
+static void OnMouseLeftButtonUp(MainWindow* win, gp::Ctx* cx, int x, int y) {
     if (ReadingBarOnLeftUp(win)) {
         return;
     }
@@ -3212,6 +3266,14 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
             return;
         }
 
+        if (kindDestinationJsMenu == kind) {
+            auto* menu = (PageDestinationJsMenu*)dest;
+            if (cx && len(menu->items) > 0) {
+                OpenJsMenuPopup(win, cx, x, y, menu);
+            }
+            return;
+        }
+
         win->ctrl->HandleLink(dest, win->linkHandler);
         AppShellInvalidate(win);
         return;
@@ -3278,7 +3340,7 @@ void DocCanvasMouseUp(MainWindow* win, int x, int y) {
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
         return;
     }
-    OnMouseLeftButtonUp(win, x, y);
+    OnMouseLeftButtonUp(win, nullptr, x, y);
 }
 
 // a click in canvas pixels: down and up at the same point, so it is not a drag
@@ -3871,7 +3933,7 @@ void DocCanvasView::OnUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEven
     } else if (IsContextClick(ev->button, ev->modifiers)) {
         OnMouseRightButtonUp(win, cx, pt.x, pt.y, ev->modifiers.control, ev->modifiers.shift);
     } else if (ev->button == gp::MouseButton::Left) {
-        OnMouseLeftButtonUp(win, pt.x, pt.y);
+        OnMouseLeftButtonUp(win, cx, pt.x, pt.y);
     }
     gp::Notify(cx);
 }
@@ -4052,7 +4114,7 @@ struct CanvasMenuCmd {
 };
 
 static void RunCanvasMenuCmd(CanvasMenuCmd* c) {
-    if (IsMainWindowValidAndNotClosing(c->win)) {
+    if (IsMainWindowValidAndNotClosing(c->win) && !RunJsMenuItem(c->win, c->cmdId)) {
         WindowContextMenuCommand(c->win, c->cmdId);
     }
     delete c;

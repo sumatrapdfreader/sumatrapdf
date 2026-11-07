@@ -4,7 +4,9 @@
 // parser only looked for popUpMenu itself, so those links weren't clickable.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
-import { EXE, runStandalone, tmpPath } from "./util";
+import { EXE, runStandalone, tmpPath, USE_NG } from "./util";
+import { sleep, VK_DOWN, VK_RETURN } from "./winapi";
+import { killAndWait, launchControlled } from "./win-automation";
 
 function pdfString(s: string): string {
   let out = "(";
@@ -31,7 +33,14 @@ const MENU_JS =
 // same shape, but Other() isn't a document function that shows a menu
 const NOT_MENU_JS = 'Other([["Reference = U2"]]);';
 
-function makePdf(): Buffer {
+const MENU_RECT = "72 700 172 740";
+// covers the whole page, so a click in the middle of the canvas hits it
+const PAGE_RECT = "0 0 612 792";
+// Down selects the first item, so "Sheet = Power", the 4th, takes 4
+const SHEET_ITEM_DOWNS = 4;
+const POPUP_MS = 3000;
+
+function makePdf(menuRect: string, withNotMenu: boolean): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
   const body: Record<number, Buffer> = {};
   body[1] = enc("<< /Type /Catalog /Pages 2 0 R /Names 8 0 R >>");
@@ -41,13 +50,13 @@ function makePdf(): Buffer {
   body[7] = enc(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
 
   body[4] = enc(
-    `<< /Type /Annot /Subtype /Link /Rect [72 700 172 740] /Border [0 0 1] /A << /Type /Action /S /JavaScript /JS ${pdfString(MENU_JS)} >> >>`,
+    `<< /Type /Annot /Subtype /Link /Rect [${menuRect}] /Border [0 0 1] /A << /Type /Action /S /JavaScript /JS ${pdfString(MENU_JS)} >> >>`,
   );
   body[5] = enc(
     `<< /Type /Annot /Subtype /Link /Rect [72 600 172 640] /Border [0 0 1] /A << /Type /Action /S /JavaScript /JS ${pdfString(NOT_MENU_JS)} >> >>`,
   );
   body[3] = enc(
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R 5 0 R] ` +
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [${withNotMenu ? "4 0 R 5 0 R" : "4 0 R"}] ` +
       `/Resources << /Font << /F1 6 0 R >> >> /Contents 7 0 R >>`,
   );
   body[11] = enc(
@@ -77,9 +86,51 @@ function makePdf(): Buffer {
   return Buffer.concat(parts);
 }
 
+async function uiState(client: ControlClient): Promise<string> {
+  return String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
+}
+
+async function waitForUi(client: ControlClient, re: RegExp, what: string): Promise<void> {
+  const deadline = Date.now() + POPUP_MS;
+  while (!re.test(await uiState(client))) {
+    if (Date.now() > deadline) {
+      throw new Error(`issue-6503: ${what}`);
+    }
+    await sleep(40);
+  }
+}
+
+// ng shows the menu in a gpui popup: clicking the link opens it, picking the
+// "#1" item goes to page 2. orig's TrackPopupMenu can't be driven from here.
+async function testNgPopup(): Promise<void> {
+  const pdf = tmpPath("issue-6503-page.pdf");
+  writeFileSync(pdf, makePdf(PAGE_RECT, false));
+  const { proc, client } = await launchControlled([pdf]);
+  try {
+    await client.waitForRenderIdle();
+    const m = /canvas=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(await uiState(client));
+    if (!m) {
+      throw new Error("issue-6503: no canvas rect");
+    }
+    const x = +m[1]! + Math.floor(+m[3]! / 2);
+    const y = +m[2]! + Math.floor(+m[4]! / 2);
+    await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+    await waitForUi(client, / popup=1/, "clicking the link didn't open its menu");
+
+    await client.waitForRenderIdle();
+    for (let i = 0; i < SHEET_ITEM_DOWNS; i++) {
+      await client.request(ControlCommand.TestInput, ["key", VK_DOWN, 0, 0, 0]);
+    }
+    await client.request(ControlCommand.TestInput, ["key", VK_RETURN, 0, 0, 0]);
+    await waitForUi(client, / page=2 /, "picking 'Sheet = Power' (#1) didn't go to page 2");
+  } finally {
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-6503.pdf");
-  writeFileSync(pdf, makePdf());
+  writeFileSync(pdf, makePdf(MENU_RECT, true));
 
   await withControlledSumatra(EXE, async (client: ControlClient) => {
     const res = await client.request(ControlCommand.TestPageLinks, [pdf, 1]);
@@ -108,6 +159,10 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6503: expected '${want}':\n${menu}`);
     }
   });
+
+  if (USE_NG) {
+    await testNgPopup();
+  }
 }
 
 if (import.meta.main) {

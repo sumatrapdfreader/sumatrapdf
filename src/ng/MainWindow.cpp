@@ -235,7 +235,7 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         // embedded files
         return;
     }
-    // ng: kindDestinationJsMenu needs a popup menu at the cursor.
+    // ng: DocCanvas shows a kindDestinationJsMenu link's popup, which needs the click's gpui context
     logf("LinkHandler::GotoLink: unhandled kind %s\n", Str(kind));
 }
 
