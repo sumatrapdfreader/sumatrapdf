@@ -2673,6 +2673,13 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool sho
 
 bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     DdeExecuteBegin();
+    // a copy: cmd is often a TempStr, and opening a window can render and reset
+    // the temp arena while the handlers still parse the rest of it
+    Str ownedCmd = str::Dup(cmd);
+    defer {
+        str::Free(ownedCmd);
+    };
+    cmd = ownedCmd;
 
     bool didHandle = false;
     while (cmd) {

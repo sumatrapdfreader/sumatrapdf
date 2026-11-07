@@ -485,7 +485,11 @@ Str HandleOpenCmd(Str cmd, bool* ack) {
     if (!open.parsed) {
         return {};
     }
-    TempStr filePath = open.filePath;
+    // not a TempStr: creating a window below renders, and rendering resets the temp arena
+    Str filePath = str::Dup(open.filePath);
+    defer {
+        str::Free(filePath);
+    };
     int newWindow = open.newWindow;
     int setFocus = open.setFocus;
     int forceRefresh = open.forceRefresh;
