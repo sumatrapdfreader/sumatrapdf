@@ -57,6 +57,7 @@ TempStr SerializeColorList(const Vec<Color>&);
 
 TempStr ZoomLevelStr(float zoom);
 TempStr ZoomLevelStrExact(float zoom);
+float ParseZoomText(Str text, const Vec<float>& levels, float fallback);
 // the command for each level the zoom buttons step through, in that order
 Vec<int>* GetZoomStepCmdIds();
 void CollectZoomLevels(Vec<float>& out, bool forChm);

@@ -169,14 +169,7 @@ float SettingsWnd::SelectedZoom() {
         return z == 0 ? startZoom : z;
     }
     TempStr text = dropZoom ? dropZoom->GetTextTemp() : Str{};
-    if (len(text) == 0) {
-        return startZoom;
-    }
-    float zoom = (float)atof(CStrTemp(text));
-    if (zoom == 0) {
-        return startZoom;
-    }
-    return limitValue(zoom, kZoomMin, kZoomMax);
+    return ParseZoomText(text, zoomLevels, startZoom);
 }
 
 void SettingsWnd::OnRememberOpenedChanged() {

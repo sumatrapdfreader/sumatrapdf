@@ -1304,6 +1304,24 @@ TempStr ZoomLevelStr(float zoom) {
     return fmt("%.f%%", zoom);
 }
 
+// A zoom edit's text: one of levels by name, or a typed number clamped to the
+// zoom range. Empty, unreadable or a 0 level gives fallback.
+float ParseZoomText(Str text, const Vec<float>& levels, float fallback) {
+    for (float z : levels) {
+        if (str::EqI(text, ZoomLevelStrExact(z))) {
+            return z == 0 ? fallback : z;
+        }
+    }
+    if (len(text) == 0) {
+        return fallback;
+    }
+    float zoom = (float)atof(CStrTemp(text));
+    if (zoom == 0) {
+        return fallback;
+    }
+    return limitValue(zoom, kZoomMin, kZoomMax);
+}
+
 // A level as a list of them should offer it: a fit mode by name, a percentage
 // exactly. ZoomLevelStr() rounds, which is right for "Zoom: 137%" in the corner
 // of the window but turns the 12.5% level into a row saying "12%".

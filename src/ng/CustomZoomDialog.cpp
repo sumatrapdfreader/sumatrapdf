@@ -142,20 +142,7 @@ static void FillZoom() {
 
 // orig's CustomZoomWnd::SelectedZoom
 static float SelectedZoom() {
-    TempStr text = EditTextTemp();
-    for (int i = 0; i < len(gCustomZoom.zoomLevels); i++) {
-        if (str::EqI(text, ZoomLevelStrExact(gCustomZoom.zoomLevels[i]))) {
-            return gCustomZoom.zoomLevels[i];
-        }
-    }
-    if (len(text) == 0) {
-        return gCustomZoom.startZoom;
-    }
-    float zoom = (float)atof(CStrTemp(text));
-    if (zoom == 0) {
-        return gCustomZoom.startZoom;
-    }
-    return limitValue(zoom, kZoomMin, kZoomMax);
+    return ParseZoomText(EditTextTemp(), gCustomZoom.zoomLevels, gCustomZoom.startZoom);
 }
 
 // orig's MoveSelection: Up / Down move the list and the field follows; they

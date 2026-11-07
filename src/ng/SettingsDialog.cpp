@@ -158,20 +158,7 @@ static void FillInverse() {
 // orig's SettingsWnd::SelectedZoom: the list entry, or a typed number
 static float SelectedZoom() {
     TempStr text = str::DupTemp(FromGpui(gp::InputValue(gSettingsDlg.editZoom)));
-    for (int i = 0; i < len(gSettingsDlg.zoomLevels); i++) {
-        if (str::EqI(text, ZoomLevelStrExact(gSettingsDlg.zoomLevels[i]))) {
-            float z = gSettingsDlg.zoomLevels[i];
-            return z == 0 ? gSettingsDlg.startZoom : z;
-        }
-    }
-    if (len(text) == 0) {
-        return gSettingsDlg.startZoom;
-    }
-    float zoom = (float)atof(CStrTemp(text));
-    if (zoom == 0) {
-        return gSettingsDlg.startZoom;
-    }
-    return limitValue(zoom, kZoomMin, kZoomMax);
+    return ParseZoomText(text, gSettingsDlg.zoomLevels, gSettingsDlg.startZoom);
 }
 
 static Str SettingsDlgTitle() {
