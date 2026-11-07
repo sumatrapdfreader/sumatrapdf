@@ -1,6 +1,6 @@
 // Stages the in-app manual under .work/docs: the markdown pages (from the
 // sumatra-website repo) reachable from SumatraPDF-documentation.md, a
-// manifest, the concatenated all-docs.md and the static files the on-demand
+// manifest, all-docs.json (the pages full-text search reads) and the static files the on-demand
 // renderer (docs/gen_docs.render.js) needs. The build's prebuild packs that dir into IDR_EMBEDDED_PAK.
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -15,7 +15,7 @@ const manualOutDir = join(".work", "docs");
 const mdDir = websiteDocsDir;
 
 const kMainPage = "SumatraPDF-documentation.md";
-const kAllDocsFile = "all-docs.md";
+const kAllDocsFile = "all-docs.json";
 const kScriptExamplesPage = "Tool-run-javascript-examples.md";
 // hosted on the website, not in this repo
 const kExcludeFromAllDocs = new Set(["SumatraPDF-all-docs-for-llm-ai.md"]);
@@ -103,21 +103,20 @@ function collectPages(): string[] {
   return pages;
 }
 
-function genAllDocsMd(outDir: string): void {
+// The pages full-text search reads, in order: the main page and the pages it
+// links to. Only their names: the search fetches the pages themselves, so the
+// manual doesn't carry a second, concatenated copy of them.
+function genAllDocsList(outDir: string): void {
   const src = readFileSync(join(mdDir, kMainPage), "utf-8");
-  const files = [kMainPage, ...extractMdLinksInOrder(src).filter((f) => f !== kMainPage)];
-  const parts: string[] = [];
-  for (const fileName of files) {
-    const path = join(mdDir, fileName);
-    if (!existsSync(path)) {
-      throw new Error(`all-docs: '${fileName}' not found`);
-    }
-    // ```svg diagrams are markup, noise for the full-text search
-    const content = readFileSync(path, "utf-8").replace(/^```svg[ \t]*\r?\n[\s\S]*?^```[ \t]*\r?$\n?/gm, "");
-    parts.push(`::${fileName}\n${content}`);
+  const linked = [kMainPage, ...extractMdLinksInOrder(src).filter((f) => f !== kMainPage)];
+  // pages left out of the manual (e.g. its misc section) can't be shown in-app
+  const files = linked.filter((f) => existsSync(join(outDir, f)));
+  const skipped = linked.filter((f) => !files.includes(f));
+  if (skipped.length > 0) {
+    console.log(`all-docs: skipped pages not in the manual: ${skipped.join(", ")}`);
   }
   const outPath = join(outDir, kAllDocsFile);
-  writeFileSync(outPath, parts.join("\n"));
+  writeFileSync(outPath, JSON.stringify(files));
   console.log(`wrote '${outPath}' (${files.length} files)`);
 }
 
@@ -201,7 +200,7 @@ function writeManualPakFiles(pages: string[]): void {
 
   copyScriptExamples(outDir, pages);
 
-  genAllDocsMd(outDir);
+  genAllDocsList(outDir);
 
   for (const name of kManualStaticFiles) {
     if (name === "gen_docs.render.js") {

@@ -20,7 +20,7 @@
     perplexity: "https://www.perplexity.ai/search?q=",
     copilot: "https://www.bing.com/copilotsearch?q=",
   };
-  const kAllDocsFile = "all-docs.md";
+  const kAllDocsFile = "all-docs.json";
   const kMaxResults = 32;
   let allDocsFiles = null;
   let allDocsLoadPromise = null;
@@ -72,17 +72,37 @@
     return files;
   }
 
+  // ```svg diagrams are markup, noise for the search
+  const kSvgFenceRe = /^```svg[ \t]*\r?\n[\s\S]*?^```[ \t]*\r?$\n?/gm;
+
+  // the pages as one text in the "::file" format parseAllDocs reads
+  function assembleAllDocs(names, pages) {
+    const parts = pages.map(function (page, i) {
+      return "::" + names[i] + "\n" + page.replace(kSvgFenceRe, "");
+    });
+    return parts.join("\n");
+  }
+
+  function fetchText(url) {
+    return fetch(url).then(function (r) {
+      if (!r.ok) {
+        throw new Error("failed to load " + url);
+      }
+      return r.text();
+    });
+  }
+
   function ensureAllDocsLoaded() {
     if (allDocsFiles) {
       return Promise.resolve(allDocsFiles);
     }
     if (!allDocsLoadPromise) {
-      allDocsLoadPromise = fetch(kAllDocsFile)
-        .then(function (r) {
-          if (!r.ok) {
-            throw new Error("failed to load " + kAllDocsFile);
-          }
-          return r.text();
+      allDocsLoadPromise = fetchText(kAllDocsFile)
+        .then(function (text) {
+          const names = JSON.parse(text);
+          return Promise.all(names.map(fetchText)).then(function (pages) {
+            return assembleAllDocs(names, pages);
+          });
         })
         .then(function (text) {
           allDocsFiles = parseAllDocs(text);
