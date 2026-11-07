@@ -1905,6 +1905,8 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
                 }
                 cev.mouseWindow = ptW;
                 onContextMenu.Call(&cev);
+                // DefWindowProc would pass it to the parent, which shows its own menu
+                return 0;
             }
             break;
         }
