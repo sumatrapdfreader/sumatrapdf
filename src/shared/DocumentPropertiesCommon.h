@@ -18,12 +18,10 @@ void AlignPropertiesText(str::Builder& text);
 TempStr AddTimeZone(TempStr s, int timeZone);
 void GetPropsText(DocController* ctrl, str::Builder& out);
 
-// implemented by each app
 void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate);
 
 #if OS_WIN
 void AppendCertsText(str::Builder& out, PdfSigCert* certs);
-// implemented by each app
 TempStr FileTimeLocalTemp(const FILETIME& ft);
 #endif
 
