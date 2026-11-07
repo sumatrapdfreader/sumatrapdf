@@ -6880,6 +6880,13 @@ El* El::Flex1Rel() {
     style.flexBasisPercent = true;
     return this;
 }
+El* El::FlexAuto() {
+    style.flexGrow = 1;
+    style.flexShrink = 1;
+    style.flexBasis = kAuto;
+    style.flexBasisPercent = false;
+    return this;
+}
 El* El::FlexNone() {
     style.flexGrow = 0;
     style.flexShrink = 0;
@@ -8355,6 +8362,10 @@ El* El::Selectable() {
     selectable = true;
     return this;
 }
+El* El::GlyphSelection() {
+    glyphSelection = true;
+    return this;
+}
 El* El::BlockPluginSelection(Str plain) {
     selectable = true;
     selBlockPlugin = true;
@@ -8489,9 +8500,32 @@ El* El::Group() {
     return this;
 }
 
+El* El::Group(Str name) {
+    if (len(name) == 0) return this;
+    EnsureStyleStates()->groupName = ArenaStrDup(arena, name);
+    return this;
+}
+
+El* El::GroupHover(const StateStyle& s, Str name) {
+
+    if (!s.set || len(name) == 0) return this;
+    ElStyleStates* states = EnsureStyleStates();
+    states->groupHover = {};
+    states->groupHoverSet = 0;
+    StyleApplyFields(&states->groupHover, s.style, s.set);
+    states->groupHoverSet = s.set;
+    states->groupHoverName = ArenaStrDup(arena, name);
+    return this;
+}
+
 El* El::GroupHoverBg(Background c) {
     style.groupHoverBg = c;
     style.hasGroupHoverBg = true;
+    return this;
+}
+El* El::GroupHoverBorder(Rgba c) {
+    style.groupHoverBorder = true;
+    style.groupHoverBg.color = c;
     return this;
 }
 El* El::GroupHoverVisible() {
@@ -9480,7 +9514,7 @@ int TextGlyphBoxes(TextLayout* layout, Str text, Vec<TextGlyphBox>* out) {
         return 0;
     }
 
-    Vec<float> rowTops;
+    float lineH = 0;
     for (int at = 0; at < len(text);) {
         uint32_t cp = 0;
         int bytes = Utf8At(text, at, &cp);
@@ -9489,27 +9523,20 @@ int TextGlyphBoxes(TextLayout* layout, Str text, Vec<TextGlyphBox>* out) {
         int n = TextLayoutRangeRects(layout, text, at, at + bytes, &rect, 1);
         if (n < 1 || rect.w <= 0) {
 
-            if (len(*out) > before) {
+            bool lineBreak = cp == '\n' || cp == '\r';
+            if (!lineBreak && len(*out) > before) {
                 (*out)[len(*out) - 1].hi = at + bytes;
             }
             at += bytes;
             continue;
         }
-        int row = -1;
-        for (int r = 0; r < len(rowTops); r++) {
-            if (fabsf(rowTops[r] - rect.y) < 0.5f) {
-                row = r;
-                break;
-            }
-        }
-        if (row < 0) {
-            row = len(rowTops);
-            VecAppend(rowTops, rect.y);
+        if (!(lineH > 0) && rect.h > 0) {
+            lineH = rect.h;
         }
         TextGlyphBox g;
         g.lo = at;
         g.hi = at + bytes;
-        g.row = row;
+        g.row = 0;
         g.left = rect.x;
         g.right = rect.x + rect.w;
         g.top = rect.y;
@@ -9517,16 +9544,10 @@ int TextGlyphBoxes(TextLayout* layout, Str text, Vec<TextGlyphBox>* out) {
         VecAppend(*out, g);
         at += bytes;
     }
-
-    int nRows = len(rowTops);
-    for (int i = before; i < len(*out); i++) {
-        int below = 0;
-        for (int r = 0; r < nRows; r++) {
-            if (rowTops[r] < (*out)[i].top - 0.5f) {
-                below++;
-            }
+    if (lineH > 0) {
+        for (int i = before; i < len(*out); i++) {
+            (*out)[i].row = (int)floorf(((*out)[i].top / lineH) + 0.5f);
         }
-        (*out)[i].row = below;
     }
     return len(*out) - before;
 }
@@ -9620,6 +9641,25 @@ static LayoutCache gMeasureCache;
 
 static int gMeasureDepth = 0;
 
+static int gLayoutDepth = 0;
+
+static uint64_t MixGroupPath(uint64_t path, int index) {
+    uint64_t mixed =
+        path ^ ((uint64_t)(uint32_t)index + 1) * 0x9E3779B185EBCA87ull;
+    mixed *= 1099511628211ull;
+    return mixed ? mixed : 1;
+}
+
+static uint32_t GroupIdHash(Str id) {
+    if (!id.s || len(id) == 0) return 0;
+    uint32_t h = 2166136261u;
+    for (int i = 0; i < len(id); i++) {
+        h ^= (uint8_t)id.s[i];
+        h *= 16777619u;
+    }
+    return h ? h : 1;
+}
+
 bool LayoutInScratchPass() {
     return gMeasureDepth > 0;
 }
@@ -9662,9 +9702,30 @@ static Size ImageNaturalSize(PaintCtx* ctx, El* e) {
     return {};
 }
 
+Size InlineImageExtent(Size intrinsic, float lineH, float wrapW) {
+    if (intrinsic.w <= 0 || intrinsic.h <= 0) {
+        float side = lineH * 0.75f;
+        if (side < 1.f) {
+            side = 1.f;
+        }
+        return {side, side};
+    }
+    float w = intrinsic.w;
+    float h = intrinsic.h;
+    if (wrapW > 0 && w > wrapW) {
+        h *= wrapW / w;
+        w = wrapW;
+    }
+    return {w, h};
+}
+
 static Size LayoutImageSize(PaintCtx* ctx, El* e, float wSpec, float hSpec,
                             float availW, float font) {
     Size px = ImageNaturalSize(ctx, e);
+    if (wSpec <= 0 && hSpec <= 0 && e->imageUnsized) {
+        float lineH = font > 0 ? font * kLineHeight : 0;
+        return InlineImageExtent(px, lineH, availW);
+    }
     if (px.w <= 0 || px.h <= 0) {
         if (e->imageLoadState == ImageLoadState::Loading) {
             return {wSpec > 0 ? wSpec : 0, hSpec > 0 ? hSpec : 0};
@@ -9975,9 +10036,12 @@ static taffy::SizeF LayoutMeasureSize(taffy::SizeFOpt known,
                     taffy::UnwrapOr(known.h, 8.0f)};
         case ElKind::Image: {
             float availW = avail.width.IsDefinite() ? avail.width.value : 0.0f;
-            Size sz =
-                LayoutImageSize(ctx, e, taffy::UnwrapOr(known.w, 0.0f),
-                                taffy::UnwrapOr(known.h, 0.0f), availW, font);
+
+            float wSpec =
+                e->imageUnsized ? 0.0f : taffy::UnwrapOr(known.w, 0.0f);
+            float hSpec =
+                e->imageUnsized ? 0.0f : taffy::UnwrapOr(known.h, 0.0f);
+            Size sz = LayoutImageSize(ctx, e, wSpec, hSpec, availW, font);
             return {sz.w, sz.h};
         }
         default:
@@ -10014,6 +10078,14 @@ static bool ElIsMeasured(const El* e) {
 
 static void ResolveImageStyle(PaintCtx* ctx, El* e) {
     Size px = ImageNaturalSize(ctx, e);
+
+    if (e->imageUnsized && e->style.width == kAuto &&
+        e->style.height == kAuto) {
+        if (px.w > 0 && px.h > 0) {
+            e->style.aspect = px.w / px.h;
+        }
+        return;
+    }
     if (px.w <= 0 || px.h <= 0) {
         return;
     }
@@ -10052,7 +10124,8 @@ static void ResolveImageReplacement(PaintCtx* ctx, El* e) {
     }
 }
 
-static void PrepareEl(PaintCtx* ctx, El* e, float inheritFont, Rgba inheritFg) {
+static void PrepareEl(PaintCtx* ctx, El* e, float inheritFont, Rgba inheritFg,
+                      uint64_t path, bool groups) {
 
     ElStyleStates* states = e->StyleStates();
     if (states && states->refineSet) {
@@ -10078,6 +10151,38 @@ static void PrepareEl(PaintCtx* ctx, El* e, float inheritFont, Rgba inheritFg) {
                     ctx->dragKind)) {
         StyleApplyFields(&e->style, states->dragOver, states->dragOverSet);
     }
+
+    int namedMark = ctx ? ctx->namedGroupDepth : 0;
+    if (groups && states && ctx && ctx->window) {
+        Str hoverName = ArenaStrGet(e->arena, states->groupHoverName);
+        if (states->groupHoverSet && len(hoverName)) {
+            for (int i = ctx->namedGroupDepth - 1; i >= 0; i--) {
+                if (!StrEq(ctx->namedGroups[i].name, hoverName)) continue;
+                if (ctx->namedGroups[i].hovered) {
+                    StyleApplyFields(&e->style, states->groupHover,
+                                     states->groupHoverSet);
+                }
+                break;
+            }
+        }
+        Str groupName = ArenaStrGet(e->arena, states->groupName);
+        if (len(groupName) && ctx->namedGroupDepth < kNamedGroupCap) {
+            Window* win = ctx->window;
+            uint32_t idHash = GroupIdHash(e->id);
+            bool hovered = false;
+            for (int i = 0; i < win->prevNamedGroupCount; i++) {
+                const NamedGroupBound& was = win->prevNamedGroups[i];
+                bool same = idHash ? was.idHash == idHash
+                                   : was.idHash == 0 && was.path == path;
+                if (!same) continue;
+                Bounds box = {was.x, was.y, was.w, was.h};
+                hovered = box.w > 0 && box.h > 0 &&
+                          box.Contains({ctx->mouseX, ctx->mouseY});
+                break;
+            }
+            ctx->namedGroups[ctx->namedGroupDepth++] = {groupName, hovered};
+        }
+    }
     StyleOverrideApply(e);
     if (e->lifecycle && e->lifecycle->prepareStyle) {
         e->lifecycle->prepareStyle(ctx, e, inheritFg, e->lifecycle->user);
@@ -10100,6 +10205,17 @@ static void PrepareEl(PaintCtx* ctx, El* e, float inheritFont, Rgba inheritFg) {
 
     e->style.color = fg;
     e->style.hasColor = true;
+
+    if (e->input && e->kind == ElKind::Text) {
+        uint16_t word = ElTextWeight(e);
+        e->input->cascadeFontWord = word;
+        if (e->input->lastFontWord != word) {
+            e->input->lastFontWord = word;
+            if (ctx && ctx->window) {
+                WindowRequestAnimationFrame(ctx->window);
+            }
+        }
+    }
 
     if (e->style.fontMono) {
         for (El* c = e->first; c; c = c->next) {
@@ -10192,9 +10308,11 @@ static void PrepareEl(PaintCtx* ctx, El* e, float inheritFont, Rgba inheritFg) {
     if (pushed) {
         VecAppend(ctx->window->imageCacheStack, e->imageCache);
     }
-    for (El* c = e->first; c; c = c->next) {
-        PrepareEl(ctx, c, font, fg);
+    int childIndex = 0;
+    for (El* c = e->first; c; c = c->next, childIndex++) {
+        PrepareEl(ctx, c, font, fg, MixGroupPath(path, childIndex), groups);
     }
+    if (ctx) ctx->namedGroupDepth = namedMark;
     if (pushed) {
         ctx->window->imageCacheStack.len--;
     }
@@ -10981,12 +11099,34 @@ static void PlaceAnchored(El* e, float viewW, float viewH, Edges frame) {
     }
 }
 
+static void RecordNamedGroups(Window* win, El* e, uint64_t path) {
+    if (!win || !e) return;
+    const ElStyleStates* states = e->StyleStates();
+    if (states && len(ArenaStrGet(e->arena, states->groupName)) &&
+        win->namedGroupCount < kNamedGroupCap) {
+        NamedGroupBound& bound = win->namedGroups[win->namedGroupCount++];
+        bound.path = path;
+        bound.idHash = GroupIdHash(e->id);
+        bound.x = e->x;
+        bound.y = e->y;
+        bound.w = e->w;
+        bound.h = e->h;
+    }
+    int childIndex = 0;
+    for (El* c = e->first; c; c = c->next, childIndex++) {
+        RecordNamedGroups(win, c, MixGroupPath(path, childIndex));
+    }
+}
+
 static void LayoutElIn(LayoutCache* lc, PaintCtx* ctx, El* e, float x, float y,
                        float availW, float availH, bool minContent,
                        float inheritFont, Rgba inheritFg) {
     if (!e || !lc) {
         return;
     }
+    gLayoutDepth++;
+    bool outer = gLayoutDepth == 1 && gMeasureDepth == 0;
+    if (outer && ctx) ctx->namedGroupDepth = 0;
     if (!lc->ready) {
         lc->tree.Init(256);
 
@@ -11000,7 +11140,7 @@ static void LayoutElIn(LayoutCache* lc, PaintCtx* ctx, El* e, float x, float y,
     lc->stats = LayoutCacheStats{};
     lc->tree.allocs = 0;
 
-    PrepareEl(ctx, e, inheritFont, inheritFg);
+    PrepareEl(ctx, e, inheritFont, inheritFg, 1, !minContent);
 
     LayoutSyncCtx sc = {lc, ctx, availW, availH};
 
@@ -11098,7 +11238,17 @@ static void LayoutElIn(LayoutCache* lc, PaintCtx* ctx, El* e, float x, float y,
         }
     }
     PlaceAnchored(e, ctx ? ctx->viewW : 0.f, ctx ? ctx->viewH : 0.f, frame);
+    if (outer && !minContent && ctx && ctx->window) {
+        Window* win = ctx->window;
+        win->namedGroupCount = 0;
+        RecordNamedGroups(win, e, 1);
+        win->prevNamedGroupCount = win->namedGroupCount;
+        for (int i = 0; i < win->namedGroupCount; i++) {
+            win->prevNamedGroups[i] = win->namedGroups[i];
+        }
+    }
     lc->stats.allocs = lc->tree.allocs;
+    gLayoutDepth--;
 }
 
 void LayoutEl(PaintCtx* ctx, El* e, float x, float y, float availW,
@@ -12966,6 +13116,10 @@ static bool PaintRoundEdgeBorder(PaintCtx* ctx, El* e) {
 }
 
 static void PaintElBorder(PaintCtx* ctx, El* e) {
+    Rgba savedBorder = e->style.borderColor;
+    if (e->style.groupHoverBorder && ctx->groupHovered) {
+        e->style.borderColor = e->style.groupHoverBg.color;
+    }
     if (e->style.border > 0) {
         if (e->style.borderDashed) {
 
@@ -13005,6 +13159,7 @@ static void PaintElBorder(PaintCtx* ctx, El* e) {
         }
     }
     if (e->style.border <= 0 && PaintRoundEdgeBorder(ctx, e)) {
+        e->style.borderColor = savedBorder;
         return;
     }
 
@@ -13028,6 +13183,7 @@ static void PaintElBorder(PaintCtx* ctx, El* e) {
         DrawLine(ctx, x, e->y, x, e->y + e->h, e->style.borderR,
                  e->style.borderColor);
     }
+    e->style.borderColor = savedBorder;
 }
 
 static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay);
@@ -13118,6 +13274,33 @@ static void PaintElNode(PaintCtx* ctx, El* e, bool skipOverlay) {
     }
     ctx->groupHovered = prevGroup;
     scene::ContextPop(ctx, parentContext);
+}
+
+static void InputNoteImeAnchor(InputState* s, El* e, Window* win) {
+    if (!s || !e || !win) {
+        return;
+    }
+    if (!s->focused || s->focusWin != win) {
+        s->imeAnchorValid = false;
+        return;
+    }
+    float ox = e->x;
+    float oy = e->y;
+    float cx = s->caretWinX;
+    float cy = s->caretWinY;
+    float rel = s->caretX;
+    bool moved = !s->imeAnchorValid || s->imeAnchorOriginX != ox ||
+                 s->imeAnchorOriginY != oy || s->imeAnchorCaretX != cx ||
+                 s->imeAnchorCaretY != cy || s->imeAnchorCaretRelX != rel;
+    s->imeAnchorValid = true;
+    s->imeAnchorOriginX = ox;
+    s->imeAnchorOriginY = oy;
+    s->imeAnchorCaretX = cx;
+    s->imeAnchorCaretY = cy;
+    s->imeAnchorCaretRelX = rel;
+    if (moved) {
+        WindowInvalidateCharacterCoordinates(win);
+    }
 }
 
 static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
@@ -13337,6 +13520,11 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
     if (clipBox.h < 0) clipBox.h = 0;
     if (clip) {
         CanvasPushClip(ctx, clipBox.x, clipBox.y, clipBox.w, clipBox.h);
+        if (e->style.overflowX == Overflow::Scroll ||
+            e->style.overflowY == Overflow::Scroll) {
+            scene::RecScroll(ctx, clipBox.x, clipBox.y, clipBox.w, clipBox.h,
+                             e->scrollX, e->scrollY);
+        }
     }
 
     Bounds previousHitMask = ctx->hitMask;
@@ -13531,10 +13719,12 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
             }
         }
         if (lo >= 0 && hi > lo) {
-            PaintTextRange(ctx, e->text, font,
-                           e->laidMaxW > 0 ? e->laidMaxW : e->w, e->style.wrap,
-                           ElTextWeight(e), e->style.lineHeight, e->x, e->y, lo,
-                           hi, e->selColor, ElTextAlign(e));
+
+            auto paintSel =
+                e->glyphSelection ? &PaintTextRangeBoxes : &PaintTextRange;
+            paintSel(ctx, e->text, font, e->laidMaxW > 0 ? e->laidMaxW : e->w,
+                     e->style.wrap, ElTextWeight(e), e->style.lineHeight, e->x,
+                     e->y, lo, hi, e->selColor, ElTextAlign(e));
         }
 
         for (int i = 0; i < e->nExtraSels; i++) {
@@ -13764,6 +13954,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
 
     if (recordedInput) {
         InputRequestReveal(e->input, ctx->window);
+        InputNoteImeAnchor(e->input, e, ctx->window);
     }
     if (pushed) {
         ctx->window->imageCacheStack.len--;
@@ -13923,6 +14114,18 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         }
         float thumbX = e->x + e->w - thumbW - inset;
         float thumbY = geometry.Start(e->scrollY);
+
+        if (e->input && e->input->overviewDecorations) {
+            float padTop = e->input->editorPaddingsSet
+                               ? e->input->editorPaddings.top
+                               : e->style.pad.top;
+            float viewport = e->input->viewH > 0.f ? e->input->viewH : e->h;
+            float contentHeight = e->input->contentH + e->h - viewport;
+            float lineH =
+                e->input->lastLineH > 0.f ? e->input->lastLineH : 20.f;
+            InputPaintOverviewRuler(e->input, ctx, e->x + e->w - trackW, e->y,
+                                    trackW, e->h, contentHeight, padTop, lineH);
+        }
 
         FillBackground(ctx, e->x + e->w - trackW + barSlide, e->y, trackW, e->h,
                        0, nullptr,
@@ -14532,6 +14735,13 @@ static int CopyTextHitsFiltered(PaintCtx* ctx, int a, int b, int scope,
                     sep = false;
                 }
                 if (src && want) {
+
+                    Str prevSurface = blk ? blk->surfacePre : Str{};
+                    if (len(want->surfacePre) > 0 &&
+                        (want->surfacePre.s != prevSurface.s ||
+                         len(want->surfacePre) != len(prevSurface))) {
+                        CopyPut(&o, want->surfacePre);
+                    }
                     CopyPut(&o, want->pre);
                 }
                 blk = want;
@@ -14833,16 +15043,14 @@ bool WindowDispatchKeyCaptureEvent(Window* win, KeyEvent* ev) {
     return false;
 }
 
-uint32_t WindowResolveKeyAction(Window* win, int vk, bool shift, bool ctrl,
-                                bool alt, bool platform, bool function,
-                                int64_t* arg, bool* pending) {
-    if (arg) {
-        *arg = 0;
-    }
+int WindowResolveKeyActions(Window* win, int vk, bool shift, bool ctrl,
+                            bool alt, bool platform, bool function,
+                            uint32_t* actions, int64_t* args, int max,
+                            bool* pending) {
     if (pending) {
         *pending = false;
     }
-    if (!win || !vk) {
+    if (!win || !vk || !actions || max <= 0) {
         return 0;
     }
     int ix = DispatchAnchor(win);
@@ -14864,18 +15072,40 @@ uint32_t WindowResolveKeyAction(Window* win, int vk, bool shift, bool ctrl,
     chord.alt = alt;
     chord.platform = platform;
     chord.function = function;
-    KeyMatch m = KeymapMatch(chord, contexts, nContexts);
-    if (m.pending) {
+    KeyMatchList matched = KeymapMatchAll(chord, contexts, nContexts);
+    if (matched.pending) {
 
         if (pending) {
             *pending = true;
         }
         return 0;
     }
-    if (arg) {
-        *arg = m.arg;
+    int n = matched.n < max ? matched.n : max;
+    for (int i = 0; i < n; i++) {
+        actions[i] = matched.action[i];
+        if (args) {
+            args[i] = matched.arg[i];
+        }
     }
-    return m.action;
+    return n;
+}
+
+uint32_t WindowResolveKeyAction(Window* win, int vk, bool shift, bool ctrl,
+                                bool alt, bool platform, bool function,
+                                int64_t* arg, bool* pending) {
+    if (arg) {
+        *arg = 0;
+    }
+    uint32_t action = 0;
+    int64_t one = 0;
+    if (WindowResolveKeyActions(win, vk, shift, ctrl, alt, platform, function,
+                                &action, &one, 1, pending) <= 0) {
+        return 0;
+    }
+    if (arg) {
+        *arg = one;
+    }
+    return action;
 }
 
 bool WindowDispatchKeyAction(Window* win, int vk, bool shift, bool ctrl,
@@ -17214,16 +17444,27 @@ static uint32_t MatchIn(const CtxLevel* levels, int n, const CtxLevel* all,
     return 0;
 }
 
-static uint32_t MatchStack(const CtxLevel* levels, int n, bool* pending,
-                           int64_t* arg) {
-    for (int lvl = 0; lvl < n; lvl++) {
-        uint32_t action =
-            MatchIn(levels + lvl, n - lvl, levels, n, pending, arg);
-        if (action) {
-            return action;
+static bool MatchListed(const KeyMatchList& list, uint32_t action,
+                        int64_t arg) {
+    for (int i = 0; i < list.n; i++) {
+        if (list.action[i] == action && list.arg[i] == arg) {
+            return true;
         }
     }
-    return MatchIn(nullptr, 0, levels, n, pending, arg);
+    return false;
+}
+
+static void MatchRecord(KeyMatchList* list, const CtxLevel* levels, int n,
+                        const CtxLevel* all, int nAll, bool* pending) {
+    int64_t arg = 0;
+    uint32_t action = MatchIn(levels, n, all, nAll, pending, &arg);
+    if (!action || list->n >= kMaxKeyMatches ||
+        MatchListed(*list, action, arg)) {
+        return;
+    }
+    list->action[list->n] = action;
+    list->arg[list->n] = arg;
+    list->n++;
 }
 
 static bool BindingNames(const BoundKey& b, uint32_t action,
@@ -17298,8 +17539,8 @@ bool KeymapAnyBindingForActionArg(uint32_t action, int64_t arg, KeyChord* out) {
     return false;
 }
 
-KeyMatch KeymapMatch(const KeyChord& chord, const uint32_t* contexts,
-                     int nContexts) {
+KeyMatchList KeymapMatchAll(const KeyChord& chord, const uint32_t* contexts,
+                            int nContexts) {
     if (gNPending >= kMaxStrokes) {
         gNPending = 0;
     }
@@ -17313,16 +17554,32 @@ KeyMatch KeymapMatch(const KeyChord& chord, const uint32_t* contexts,
         levels[i] = ResolveContext(contexts[i]);
     }
 
-    KeyMatch m;
+    KeyMatchList list;
     bool pending = false;
-    m.action = MatchStack(levels, nContexts, &pending, &m.arg);
-    if (!m.action && pending) {
+    for (int lvl = 0; lvl < nContexts; lvl++) {
+        MatchRecord(&list, levels + lvl, nContexts - lvl, levels, nContexts,
+                    &pending);
+    }
+    MatchRecord(&list, nullptr, 0, levels, nContexts, &pending);
+    if (list.n == 0 && pending) {
 
-        m.pending = true;
-        return m;
+        list.pending = true;
+        return list;
     }
 
     gNPending = 0;
+    return list;
+}
+
+KeyMatch KeymapMatch(const KeyChord& chord, const uint32_t* contexts,
+                     int nContexts) {
+    KeyMatchList all = KeymapMatchAll(chord, contexts, nContexts);
+    KeyMatch m;
+    m.pending = all.pending;
+    if (all.n > 0) {
+        m.action = all.action[0];
+        m.arg = all.arg[0];
+    }
     return m;
 }
 
@@ -17358,6 +17615,41 @@ bool SceneTakeArg(Str arg) {
     return true;
 }
 
+static int gScrollLayers = -1;
+
+static bool ScrollEnvOff(const char* value) {
+    if (!value || !value[0]) {
+        return false;
+    }
+    if (value[0] == '0' && value[1] == 0) {
+        return true;
+    }
+    return (value[0] == 'o' || value[0] == 'O') &&
+           (value[1] == 'f' || value[1] == 'F') &&
+           (value[2] == 'f' || value[2] == 'F') && value[3] == 0;
+}
+
+static bool ScrollLayersOn() {
+    if (gScrollLayers < 0) {
+        gScrollLayers = ScrollEnvOff(getenv("GPUI_SCROLL_LAYERS")) ? 0 : 1;
+    }
+    return gScrollLayers == 1 && SceneLevelOn() >= kSceneReplay;
+}
+
+bool ScrollLayersTakeArg(Str arg) {
+    const Str prefix = StrL("__scroll_layers=");
+    if (!base::StrStartsWith(arg, prefix)) {
+        return false;
+    }
+    Str value(arg.s + len(prefix), len(arg) - len(prefix));
+    if (base::StrEqI(value, "off") || base::StrEqI(value, "0")) {
+        gScrollLayers = 0;
+    } else if (base::StrEqI(value, "on") || base::StrEqI(value, "1")) {
+        gScrollLayers = 1;
+    }
+    return true;
+}
+
 namespace scene {
 
 enum PrimKind : uint8_t {
@@ -17374,7 +17666,9 @@ enum PrimKind : uint8_t {
     kPPathStrokeGradient,
     kPImage,
     kPText,
-    kPTextSpans
+    kPTextSpans,
+
+    kPScroll
 };
 
 enum PrimFlag : uint8_t {
@@ -17457,6 +17751,33 @@ struct HashBag {
     int mask = 0;
 };
 
+static const int kScrollCap = 1024;
+static const int kChromeCap = 96;
+static const int kScrollDamageCap = 8;
+
+struct ScrollSnap {
+    bool valid = false;
+    Bounds clip = {};
+    float scrollX = 0;
+    float scrollY = 0;
+    uint64_t outsideHash = 0;
+    int contentN = 0;
+    int chromeN = 0;
+    uint64_t contentH[kScrollCap] = {};
+    Bounds contentB[kScrollCap] = {};
+    uint64_t chromeH[kChromeCap] = {};
+    Bounds chromeB[kChromeCap] = {};
+};
+
+struct ScrollPlan {
+    bool want = false;
+    Bounds clip = {};
+    float shiftX = 0;
+    float shiftY = 0;
+    int n = 0;
+    Bounds rects[kScrollDamageCap] = {};
+};
+
 struct TextRec {
     Str text;
     TextSpan* spans = nullptr;
@@ -17508,6 +17829,10 @@ struct State {
     int maskBytes = 0;
     HashBag bagA;
     HashBag bagB;
+
+    ScrollSnap scrollSnaps[3] = {};
+    int scrollSnapAt = 0;
+    ScrollPlan scrollPlan = {};
 };
 
 static State* gActive = nullptr;
@@ -18099,6 +18424,26 @@ void RecImageDraw(PaintCtx* ctx, RenderImage* img, Bounds bounds,
     p->resourceGeneration = RenderImageGeneration(img);
 }
 
+void RecScroll(PaintCtx* ctx, float x, float y, float w, float h, float scrollX,
+               float scrollY) {
+    if (!Recording() || !ctx || ctx->sceneState != gActive) {
+        return;
+    }
+    if (w <= 0 || h <= 0) {
+        return;
+    }
+    Prim* p = gpui_scene_Emit(ctx, kPScroll, Bounds{x, y, w, h});
+    if (!p) {
+        return;
+    }
+    p->g0 = scrollX;
+    p->g1 = scrollY;
+    p->g2 = w;
+    p->g3 = h;
+    p->mask = Bounds{x, y, w, h};
+    p->bbox = Bounds{x, y, w, h};
+}
+
 void RecTextDraw(PaintCtx* ctx, TextLayout* tl, float x, float y, Rgba c,
                  bool clip, float clipW) {
     Size sz = TextLayoutSize(tl);
@@ -18314,7 +18659,10 @@ void Invalidate(PaintCtx* ctx) {
     s->prevFrameHash = 0;
     for (int i = 0; i < kBufferDepth; i++) {
         s->damageRing[i] = Bounds{};
+        s->scrollSnaps[i] = ScrollSnap{};
     }
+    s->scrollSnapAt = 0;
+    s->scrollPlan = ScrollPlan{};
 }
 
 void Reset(PaintCtx* ctx) {
@@ -18717,6 +19065,317 @@ static bool BagTake(HashBag& b, uint64_t hash) {
     return false;
 }
 
+static bool ScrollSameClip(Bounds a, Bounds b) {
+    return fabsf(a.x - b.x) < 0.5f && fabsf(a.y - b.y) < 0.5f &&
+           fabsf(a.w - b.w) < 0.5f && fabsf(a.h - b.h) < 0.5f;
+}
+
+static bool ScrollMaskInside(Bounds clip, Bounds mask) {
+    return mask.w > 0.5f && mask.h > 0.5f && mask.x >= clip.x - 0.75f &&
+           mask.y >= clip.y - 0.75f && mask.Right() <= clip.Right() + 0.75f &&
+           mask.Bottom() <= clip.Bottom() + 0.75f;
+}
+
+static bool ScrollHits(Bounds a, Bounds b) {
+    Bounds i = Intersect(a, b);
+    return i.w > 0.5f && i.h > 0.5f;
+}
+
+static uint64_t ScrollContentHash(const Prim& src, float scrollX,
+                                  float scrollY) {
+    Prim p = src;
+    switch (p.kind) {
+        case kPLine:
+            p.g0 += scrollX;
+            p.g1 += scrollY;
+            p.g2 += scrollX;
+            p.g3 += scrollY;
+            break;
+        case kPEllipse:
+            p.g0 += scrollX;
+            p.g1 += scrollY;
+            break;
+        case kPPathStrokeGradient:
+            p.e0 += scrollX;
+            p.e1 += scrollY;
+            p.e2 += scrollX;
+            p.e3 += scrollY;
+            break;
+        case kPImage:
+            p.g0 += scrollX;
+            p.g1 += scrollY;
+            p.imageBounds.x += scrollX;
+            p.imageBounds.y += scrollY;
+            break;
+        default:
+            p.g0 += scrollX;
+            p.g1 += scrollY;
+            break;
+    }
+    p.mask = {};
+    return HashPrim(p);
+}
+
+static bool ScrollFind(const uint64_t* hashes, int n, uint8_t* used,
+                       uint64_t want) {
+    for (int i = 0; i < n; i++) {
+        if (!used[i] && hashes[i] == want) {
+            used[i] = 1;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool ScrollAddRect(ScrollPlan* plan, Bounds r) {
+    if (r.w <= 0.5f || r.h <= 0.5f) {
+        return true;
+    }
+    if (plan->n >= kScrollDamageCap) {
+        return false;
+    }
+    plan->rects[plan->n++] = r;
+    return true;
+}
+
+static Bounds ScrollKept(Bounds clip, float shiftX, float shiftY) {
+    float x = clip.x;
+    float y = clip.y;
+    float w = clip.w;
+    float h = clip.h;
+    if (shiftX < 0) {
+        w += shiftX;
+    } else if (shiftX > 0) {
+        x += shiftX;
+        w -= shiftX;
+    }
+    if (shiftY < 0) {
+        h += shiftY;
+    } else if (shiftY > 0) {
+        y += shiftY;
+        h -= shiftY;
+    }
+    if (w < 0) {
+        w = 0;
+    }
+    if (h < 0) {
+        h = 0;
+    }
+    return Bounds{x, y, w, h};
+}
+
+static bool ScrollMark(Bounds* clip, float* scrollX, float* scrollY) {
+    int best = -1;
+    float bestArea = 0;
+    for (int i = 0; i < gCur.len; i++) {
+        const Prim& p = gCur[i];
+        if (p.kind != kPScroll) {
+            continue;
+        }
+        float area = p.g2 * p.g3;
+        if (area > bestArea) {
+            bestArea = area;
+            best = i;
+        }
+    }
+    if (best < 0) {
+        return false;
+    }
+    const Prim& p = gCur[best];
+    *clip = p.mask;
+    *scrollX = p.g0;
+    *scrollY = p.g1;
+    return clip->w > 1.f && clip->h > 1.f;
+}
+
+static ScrollSnap ScrollCapture() {
+    ScrollSnap snap;
+    Bounds clip = {};
+    float scrollX = 0, scrollY = 0;
+    if (!ScrollMark(&clip, &scrollX, &scrollY)) {
+        return snap;
+    }
+    uint64_t outside = kHashSeed;
+    int outsideN = 0;
+    bool overflow = false;
+    for (int i = 0; i < gCur.len; i++) {
+        const Prim& p = gCur[i];
+        if (p.kind == kPScroll || p.kind == kPClear) {
+            continue;
+        }
+        if (p.bbox.w <= 0 || p.bbox.h <= 0) {
+            continue;
+        }
+        if (ScrollMaskInside(clip, p.mask)) {
+            if (snap.contentN >= kScrollCap) {
+                overflow = true;
+                break;
+            }
+            snap.contentH[snap.contentN] =
+                ScrollContentHash(p, scrollX, scrollY);
+            snap.contentB[snap.contentN] = p.bbox;
+            snap.contentN++;
+            continue;
+        }
+        if (ScrollHits(p.bbox, clip)) {
+            if (snap.chromeN >= kChromeCap) {
+                overflow = true;
+                break;
+            }
+            snap.chromeH[snap.chromeN] = p.hash;
+            snap.chromeB[snap.chromeN] = p.bbox;
+            snap.chromeN++;
+            continue;
+        }
+        outside = gpui_scene_HashBytes(outside, &p.hash, 8);
+        outsideN++;
+    }
+    if (overflow || snap.contentN == 0) {
+        return ScrollSnap{};
+    }
+    outside = gpui_scene_HashBytes(outside, &outsideN, 4);
+    snap.valid = true;
+    snap.clip = clip;
+    snap.scrollX = scrollX;
+    snap.scrollY = scrollY;
+    snap.outsideHash = outside;
+    return snap;
+}
+
+static ScrollPlan ScrollMakePlan(const ScrollSnap& oldSnap,
+                                 const ScrollSnap& now) {
+    ScrollPlan plan;
+    if (!oldSnap.valid || !now.valid ||
+        !ScrollSameClip(oldSnap.clip, now.clip)) {
+        return plan;
+    }
+    if (oldSnap.outsideHash != now.outsideHash) {
+        return plan;
+    }
+    float shiftX = -(now.scrollX - oldSnap.scrollX);
+    float shiftY = -(now.scrollY - oldSnap.scrollY);
+    if (fabsf(shiftX) < 0.5f && fabsf(shiftY) < 0.5f) {
+        return plan;
+    }
+    if (fabsf(shiftX) >= now.clip.w || fabsf(shiftY) >= now.clip.h) {
+        return plan;
+    }
+    Bounds clip = now.clip;
+    if (shiftY < 0) {
+        if (!ScrollAddRect(&plan, Bounds{clip.x, clip.Bottom() + shiftY, clip.w,
+                                         -shiftY})) {
+            return ScrollPlan{};
+        }
+    } else if (shiftY > 0) {
+        if (!ScrollAddRect(&plan, Bounds{clip.x, clip.y, clip.w, shiftY})) {
+            return ScrollPlan{};
+        }
+    }
+    if (shiftX < 0) {
+        if (!ScrollAddRect(&plan, Bounds{clip.Right() + shiftX, clip.y, -shiftX,
+                                         clip.h})) {
+            return ScrollPlan{};
+        }
+    } else if (shiftX > 0) {
+        if (!ScrollAddRect(&plan, Bounds{clip.x, clip.y, shiftX, clip.h})) {
+            return ScrollPlan{};
+        }
+    }
+    Bounds kept = ScrollKept(clip, shiftX, shiftY);
+    uint8_t used[kScrollCap] = {};
+    float extra = 0;
+    for (int i = 0; i < now.contentN; i++) {
+        if (ScrollFind(oldSnap.contentH, oldSnap.contentN, used,
+                       now.contentH[i])) {
+            continue;
+        }
+        Bounds overlap = Intersect(now.contentB[i], kept);
+        if (overlap.w > 1.f && overlap.h > 1.f) {
+            extra += overlap.w * overlap.h;
+            if (!ScrollAddRect(&plan, Intersect(now.contentB[i], clip))) {
+                return ScrollPlan{};
+            }
+        }
+    }
+    for (int i = 0; i < oldSnap.contentN; i++) {
+        if (used[i]) {
+            continue;
+        }
+        Bounds moved = oldSnap.contentB[i];
+        moved.x += shiftX;
+        moved.y += shiftY;
+        Bounds overlap = Intersect(moved, kept);
+        if (overlap.w > 1.f && overlap.h > 1.f) {
+            extra += overlap.w * overlap.h;
+            if (!ScrollAddRect(&plan, overlap)) {
+                return ScrollPlan{};
+            }
+        }
+    }
+    uint8_t chromeUsed[kChromeCap] = {};
+    for (int i = 0; i < now.chromeN; i++) {
+        if (ScrollFind(oldSnap.chromeH, oldSnap.chromeN, chromeUsed,
+                       now.chromeH[i])) {
+            continue;
+        }
+        Bounds r = Intersect(now.chromeB[i], clip);
+        extra += r.w * r.h;
+        if (!ScrollAddRect(&plan, r)) {
+            return ScrollPlan{};
+        }
+    }
+    for (int i = 0; i < oldSnap.chromeN; i++) {
+        if (chromeUsed[i]) {
+            continue;
+        }
+        Bounds moved = oldSnap.chromeB[i];
+        moved.x += shiftX;
+        moved.y += shiftY;
+        Bounds r = Intersect(moved, clip);
+        extra += r.w * r.h;
+        if (!ScrollAddRect(&plan, r)) {
+            return ScrollPlan{};
+        }
+    }
+    float clipArea = clip.w * clip.h;
+    if (clipArea > 0 && extra > clipArea * 0.20f) {
+        return ScrollPlan{};
+    }
+    if (plan.n <= 0) {
+        return ScrollPlan{};
+    }
+    plan.want = true;
+    plan.clip = clip;
+    plan.shiftX = shiftX;
+    plan.shiftY = shiftY;
+    return plan;
+}
+
+static void ScrollCommit() {
+    if (!gActive) {
+        return;
+    }
+    ScrollSnap now;
+    ScrollPlan plan;
+    if (ScrollLayersOn()) {
+        now = ScrollCapture();
+        plan = ScrollMakePlan(gActive->scrollSnaps[gActive->scrollSnapAt], now);
+        if (now.valid && gActive->scrollSnaps[gActive->scrollSnapAt].valid &&
+            ScrollSameClip(now.clip, gActive->scrollSnaps[gActive->scrollSnapAt]
+                                         .clip) &&
+            (fabsf(now.scrollX - gActive->scrollSnaps[gActive->scrollSnapAt]
+                                     .scrollX) >= 0.5f ||
+             fabsf(now.scrollY - gActive->scrollSnaps[gActive->scrollSnapAt]
+                                     .scrollY) >= 0.5f) &&
+            !plan.want) {
+            gStats.scrollRejects++;
+        }
+    }
+    gActive->scrollSnaps[gActive->scrollSnapAt] = now;
+    gActive->scrollSnapAt = (gActive->scrollSnapAt + 1) % 3;
+    gActive->scrollPlan = plan;
+}
+
 bool FrameEnd(PaintCtx* ctx, Bounds* damage) {
     State* s = StateFor(ctx, false);
     if (!s) {
@@ -18817,6 +19476,21 @@ bool FrameEnd(PaintCtx* ctx, Bounds* damage) {
         gStats.damageFracSum += area > 0 ? (dmg.w * dmg.h) / area : 1.f;
     }
 
+    if (!skip) {
+        ScrollCommit();
+    } else {
+
+        ScrollPlan* plan = &gActive->scrollPlan;
+        plan->want = false;
+        plan->clip = {};
+        plan->shiftX = 0;
+        plan->shiftY = 0;
+        plan->n = 0;
+        for (int i = 0; i < kScrollDamageCap; i++) {
+            plan->rects[i] = {};
+        }
+    }
+
     VecClear(gPrev);
     for (int i = 0; i < gCur.len; i++) {
         Prim previous = gCur[i];
@@ -18858,6 +19532,9 @@ void Replay(PaintCtx* ctx, const Bounds* damage) {
     gStats.maskChanges = 0;
     for (int i = 0; i < gCur.len; i++) {
         const Prim& p = gCur[i];
+        if (p.kind == kPScroll) {
+            continue;
+        }
         if (p.bbox.w <= 0 || p.bbox.h <= 0) {
 
             if (p.kind != kPClear) {
@@ -18986,6 +19663,102 @@ void Replay(PaintCtx* ctx, const Bounds* damage) {
         if (gMasks[i].image) gStats.maskCacheLive++;
     }
     ctx->opacity = saved;
+}
+
+static bool ScrollVerifyOn() {
+    static int on = -1;
+    if (on < 0) {
+        const char* value = getenv("GPUI_SCROLL_VERIFY");
+        on = value && value[0] == '1' && value[1] == 0 ? 1 : 0;
+    }
+    return on == 1;
+}
+
+static void ScrollVerify(PaintCtx* ctx, Bounds clip) {
+    if (!ScrollVerifyOn() || !gActive) {
+        return;
+    }
+    int cap = (int)(clip.w * clip.h * 4.f) + 64;
+    if (cap < 64) {
+        return;
+    }
+
+    if (cap > 16000000) {
+        cap = 16000000;
+    } else {
+        cap *= 9;
+    }
+    uint8_t* before = (uint8_t*)base::Alloc(nullptr, cap);
+    uint8_t* after = (uint8_t*)base::Alloc(nullptr, cap);
+    int bw = 0, bh = 0, aw = 0, ah = 0;
+    bool gotBefore = before && CanvasReadPixels(ctx, clip.x, clip.y, clip.w,
+                                                clip.h, before, cap, &bw, &bh);
+    Replay(ctx, nullptr);
+    bool gotAfter = after && gotBefore &&
+                    CanvasReadPixels(ctx, clip.x, clip.y, clip.w, clip.h, after,
+                                     cap, &aw, &ah);
+    static int reported = 0;
+    if (!gotBefore || !gotAfter || bw != aw || bh != ah || bw <= 0 || bh <= 0) {
+        if (reported++ == 0) {
+            logf(
+                "scroll-verify readback failed before=%d after=%d %dx%d vs "
+                "%dx%d",
+                gotBefore ? 1 : 0, gotAfter ? 1 : 0, bw, bh, aw, ah);
+        }
+    } else {
+        int bad = 0;
+        int maxDelta = 0;
+        int n = bw * bh;
+        for (int i = 0; i < n; i++) {
+            int delta = 0;
+            for (int c = 0; c < 4; c++) {
+                int d = (int)before[i * 4 + c] - (int)after[i * 4 + c];
+                if (d < 0) {
+                    d = -d;
+                }
+                if (d > delta) {
+                    delta = d;
+                }
+            }
+            if (delta > maxDelta) {
+                maxDelta = delta;
+            }
+            if (delta > 16) {
+                bad++;
+            }
+        }
+        if (reported++ == 0 || bad > n / 200) {
+            logf("scroll-verify bad=%d/%d max=%d", bad, n, maxDelta);
+        }
+        if (bad > n / 200) {
+            logf("scroll-verify mismatch; layers off");
+            gScrollLayers = 0;
+            gStats.scrollRejects++;
+        }
+    }
+    base::Free(nullptr, before);
+    base::Free(nullptr, after);
+}
+
+bool ReplayScroll(PaintCtx* ctx) {
+    State* s = StateFor(ctx, false);
+    if (!s || !s->scrollPlan.want) {
+        return false;
+    }
+    gActive = s;
+    ScrollPlan plan = s->scrollPlan;
+    s->scrollPlan.want = false;
+    if (!CanvasScrollRect(ctx, plan.clip.x, plan.clip.y, plan.clip.w,
+                          plan.clip.h, plan.shiftX, plan.shiftY)) {
+        gStats.scrollRejects++;
+        return false;
+    }
+    for (int i = 0; i < plan.n; i++) {
+        Replay(ctx, &plan.rects[i]);
+    }
+    gStats.scrollBlits++;
+    ScrollVerify(ctx, plan.clip);
+    return true;
 }
 
 }
@@ -20821,6 +21594,10 @@ void TestDraw(Window* win) {
     WindowDrawFrameHeadless(win, win->paint.viewW, win->paint.viewH);
 }
 
+int TestSimulateNextFrame(Window* win) {
+    return WindowFlushImeCoordinates(win);
+}
+
 static bool DrawDirty(App* app) {
     bool drew = false;
     for (int i = 0; i < app->windows.len; i++) {
@@ -21350,6 +22127,8 @@ static void FrameBenchTick(Window* win, float secs) {
             sc.framesUnchanged, sc.frames, sc.framesPartial,
             sc.framesPartial ? 100.0 * sc.damageFracSum / sc.framesPartial
                              : 0.0);
+        logf("frame-bench scene scroll blits=%d rejects=%d", sc.scrollBlits,
+             sc.scrollRejects);
     }
     want = 0;
     PlatSetTimer(win, 0);
@@ -21490,11 +22269,39 @@ static void HitChain(Window* win, float x, float y, Vec<int>* out);
 
 static void NoteScrollbarOcclusion(Window* win);
 
+static void (*gImePositionUpdate)(Window* win) = nullptr;
+
+void PlatInstallImePositionUpdate(void (*update)(Window* win)) {
+    gImePositionUpdate = update;
+}
+
+void WindowInvalidateCharacterCoordinates(Window* win) {
+    if (!win) {
+        return;
+    }
+    win->imeCoordinateCallbacks++;
+    WindowRequestAnimationFrame(win);
+}
+
+int WindowFlushImeCoordinates(Window* win) {
+    if (!win) {
+        return 0;
+    }
+    int n = win->imeCoordinateCallbacks;
+    win->imeCoordinateCallbacks = 0;
+    if (n > 0 && gImePositionUpdate) {
+        gImePositionUpdate(win);
+    }
+    return n;
+}
+
 static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
                       float dipH, bool headless) {
     if (!win) {
         return;
     }
+
+    WindowFlushImeCoordinates(win);
     double drawStart = TimeNow();
 
     win->frameNow = drawStart;
@@ -21752,6 +22559,9 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
     bool presented =
         !headless && !(SceneOn() && scene::SkipPresent(&win->paint));
     timing.presentAt = presented ? drawEnd : -1;
+    timing.buildSecs = (float)gFrameBuildSecs;
+    timing.layoutSecs = (float)gFrameLayoutSecs;
+    timing.paintSecs = (float)gFramePaintSecs;
     win->frameTrace[win->frameSeq % (uint64_t)kFrameTraceCap] = timing;
     win->lastDrawTime = drawEnd;
     InteractionBenchRecord(win, timing);
@@ -21945,13 +22755,17 @@ static bool WindowKeyDownDispatch(Window* win, int key, bool shift, bool ctrl,
     win->eatChar = false;
     bool eaten = false;
 
-    int64_t actionArg = 0;
+    int64_t actionArgs[kMaxKeyMatches] = {};
+    uint32_t actions[kMaxKeyMatches] = {};
+    int nActions = 0;
     bool actionPending = false;
-    uint32_t action = 0;
     if (!held) {
-        action = WindowResolveKeyAction(win, key, shift, ctrl, alt, platform,
-                                        function, &actionArg, &actionPending);
+        nActions = WindowResolveKeyActions(win, key, shift, ctrl, alt, platform,
+                                           function, actions, actionArgs,
+                                           kMaxKeyMatches, &actionPending);
     }
+    uint32_t action = nActions > 0 ? actions[0] : 0;
+    int64_t actionArg = nActions > 0 ? actionArgs[0] : 0;
     if (actionPending) {
 
         win->eatChar = true;
@@ -21987,7 +22801,9 @@ static bool WindowKeyDownDispatch(Window* win, int key, bool shift, bool ctrl,
             act == InputAction::Enter ? InputEnterShift(actionArg) : shift;
         eaten = InputPerform(win->input, win->app, win, act, sh);
         if (eaten) {
+
             action = 0;
+            nActions = 0;
         }
     }
 
@@ -22026,12 +22842,21 @@ static bool WindowKeyDownDispatch(Window* win, int key, bool shift, bool ctrl,
         }
     }
 
-    if (!eaten && action && WindowDispatchAction(win, action, actionArg)) {
+    if (!eaten) {
+        for (int i = 0; i < nActions; i++) {
 
-        win->eatChar = true;
-        win->eatReturn = false;
-        AppInvalidate(win);
-        return true;
+            if (actions[i] == action::NoAction()) {
+                break;
+            }
+            if (!WindowDispatchAction(win, actions[i], actionArgs[i])) {
+                continue;
+            }
+
+            win->eatChar = true;
+            win->eatReturn = false;
+            AppInvalidate(win);
+            return true;
+        }
     }
 
     if (!eaten && key == KeyTab) {
@@ -22430,6 +23255,15 @@ static void InputPress(Window* win, const MouseDownEvent& in) {
     if (foldLine >= 0) {
         InputToggleFold(s, win->app, win, foldLine);
         return;
+    }
+
+    if (in.button == MouseButton::Left) {
+        int placeholder = InputFoldPlaceholderAt(s, in.x, in.y);
+        if (placeholder >= 0) {
+            FoldMapSetFolded(&s->folds, placeholder, false);
+            AppInvalidate(win);
+            return;
+        }
     }
 
     if (in.button == MouseButton::Left && BaseIsTouchPress(win->app) &&
@@ -22832,23 +23666,18 @@ static bool SliderKeyStep(Window* win, int key, bool ctrl, bool alt) {
     if (ctrl || alt || !win->focusId) {
         return false;
     }
-    int dir = 0;
-    if (key == KeyRight || key == KeyUp) {
-        dir = 1;
-    } else if (key == KeyLeft || key == KeyDown) {
-        dir = -1;
-    }
-    if (dir == 0) {
-        return false;
-    }
     for (int i = 0; i < win->paint.hits.len; i++) {
         const HitRect& hr = win->paint.hits[i];
         if (hr.id != win->focusId || !hr.slider) {
             continue;
         }
-        if (SliderStepBy(hr.slider, dir,
-                         hr.slider->value.range && hr.slider->dragStart)) {
-            SliderEmit(win, hr.slider, SliderEventKind::Change);
+        SliderState* s = hr.slider;
+        SliderValue before = s->value;
+        if (!SliderKeyMove(s, key, s->value.range && s->dragStart)) {
+            return false;
+        }
+        if (s->value.lo != before.lo || s->value.hi != before.hi) {
+            SliderEmit(win, s, SliderEventKind::Change);
         }
 
         AppInvalidate(win);
@@ -23688,6 +24517,11 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
             continue;
         }
         if (s.maskAxes & 3) {
+
+            if ((s.maskAxes & 1) != 0 && (s.maskAxes & 2) == 0 &&
+                in.deltaY != 0 && s.contentW <= ScrollViewportW(s)) {
+                continue;
+            }
 
             if (!ScrollMaskIsTopmost(win, s, in.x, in.y)) {
                 AppInvalidate(win);
@@ -25150,6 +25984,9 @@ int GpuiTakeRuntimeArgs(int argc, char** argv) {
             continue;
         }
         if (i > 0 && argument && SceneTakeArg(argument)) {
+            continue;
+        }
+        if (i > 0 && argument && ScrollLayersTakeArg(argument)) {
             continue;
         }
         if (i > 0 && argument && LayoutReuseTakeArg(argument)) {
@@ -28088,19 +28925,56 @@ bool TableMoveColumn(TableState* s, int from, int to) {
     return true;
 }
 
-int TableDragGapAt(const Bounds* colBounds, int n, float x, int dragCol,
-                   int fixedCount) {
-    fixedCount = ClampI(fixedCount, 0, n);
+static void ScrollableSpan(const TableState* s, int* first, int* end) {
+    int n = s->colCount;
+    int left = s->fixedCols;
+    if (left < 0) {
+        left = 0;
+    }
+    if (left > n) {
+        left = n;
+    }
+    int right = s->rightCols;
+    if (right < 0) {
+        right = 0;
+    }
+    if (right > n - left) {
+        right = n - left;
+    }
+    *first = left;
+    *end = n - right;
+}
 
-    bool dragInFixed = dragCol < fixedCount;
-    bool pointerInFixed = fixedCount > 0 && x < colBounds[fixedCount - 1]
-                                                    .Right();
-    if (dragInFixed != pointerInFixed) {
+int TableDragGapAt(const Bounds* colBounds, int n, float x, int dragCol,
+                   int fixedCount, int rightCount) {
+    fixedCount = ClampI(fixedCount, 0, n);
+    rightCount = ClampI(rightCount, 0, n - fixedCount);
+
+    int dragSide = 0;
+    if (dragCol < fixedCount) {
+        dragSide = -1;
+    } else if (rightCount > 0 && dragCol >= n - rightCount) {
+        dragSide = 1;
+    }
+    int pointerSide = 0;
+    if (fixedCount > 0 && x < colBounds[fixedCount - 1].Right()) {
+        pointerSide = -1;
+    } else if (rightCount > 0 && x >= colBounds[n - rightCount].x) {
+        pointerSide = 1;
+    }
+    if (dragSide != pointerSide) {
         return -1;
     }
 
-    int first = pointerInFixed ? 0 : fixedCount;
-    int end = pointerInFixed ? fixedCount : n;
+    int first = fixedCount;
+    int end = n - rightCount;
+    if (pointerSide < 0) {
+        first = 0;
+        end = fixedCount;
+    } else if (pointerSide > 0) {
+        first = n - rightCount;
+        end = n;
+    }
 
     int gap = first;
     for (int i = first; i < end; i++) {
@@ -28151,9 +29025,10 @@ bool TableVisibleColsChanged(TableState* s, int first, int end, int items) {
 }
 
 void TableVisibleCols(const TableState* s, int* first, int* end) {
-    int nFixed = s->fixedCols, nCols = s->colCount;
+    int nFixed = 0, nEnd = 0;
+    ScrollableSpan(s, &nFixed, &nEnd);
 
-    int nScroll = nCols - nFixed;
+    int nScroll = nEnd - nFixed;
 
     float w = s->bodyBounds.w;
     if (w <= 0 || nScroll <= 0) {
@@ -28205,26 +29080,32 @@ void TableScrollToRow(TableState* s, int row, ScrollStrategy strategy) {
 }
 
 void TableScrollToCol(TableState* s, int col, ScrollStrategy strategy) {
-    float viewport = s->bodyBounds.w;
-    if (viewport <= 0) {
-        return;
-    }
     int d = TableDisplayOfCol(s, col);
     if (d < 0) {
         return;
     }
+    int first = 0, end = 0;
+    ScrollableSpan(s, &first, &end);
 
-    d -= s->fixedCols;
+    if (d >= end) {
+        return;
+    }
+    float viewport = s->bodyBounds.w;
+    if (viewport <= 0) {
+        return;
+    }
+
+    d -= first;
     if (d < 0) {
         d = 0;
     }
-    int n = s->colCount - s->fixedCols;
+    int n = end - first;
     if (n <= 0) {
         return;
     }
 
     Vec<float> w;
-    for (int i = s->fixedCols; i < s->colCount; i++) {
+    for (int i = first; i < end; i++) {
         int c = TableColAt(s, i);
         VecAppend(w, c < s->colWidth.len ? s->colWidth[c] : 0);
     }
@@ -28259,11 +29140,13 @@ void TableState::OnResizeDrag(TableState* self, Ctx* cx,
         return;
     }
     TableEnsureCols(self, col + 1);
-    self->resizingCol = col;
 
-    float boundary = ev->drag.data ? ev->el.x : ev->el.Right();
-    float left = boundary - self->colWidth[col];
-    TableResizeCol(self, cx, col, ev->event.x - kTableResizeHandleW - left);
+    if (!self->hasResizeOrigin || col >= self->colWidth.len) {
+        return;
+    }
+    self->resizingCol = col;
+    TableResizeCol(self, cx, col,
+                   self->resizeOriginW + (ev->event.x - self->resizeOriginX));
 }
 
 void TableState::OnResizeMouseDown(TableState* self, Ctx* cx,
@@ -28272,6 +29155,12 @@ void TableState::OnResizeMouseDown(TableState* self, Ctx* cx,
         return;
     }
     int ix = (int)col;
+    if (ix >= 0 && ix < self->colCount) {
+        TableEnsureCols(self, ix + 1);
+        self->resizeOriginX = ev->x;
+        self->resizeOriginW = ix < self->colWidth.len ? self->colWidth[ix] : 0;
+        self->hasResizeOrigin = true;
+    }
     if (ev->clickCount == 1) {
         self->fittedCol = -1;
     } else if (ev->clickCount == 2 && TableFitCol(self, cx, ix)) {
@@ -28280,6 +29169,7 @@ void TableState::OnResizeMouseDown(TableState* self, Ctx* cx,
 }
 
 void TableState::OnResizeEnd(TableState* self, Ctx* cx, const MouseUpEvent*) {
+    self->hasResizeOrigin = false;
     if (self->resizingCol < 0) {
         return;
     }
@@ -28319,7 +29209,7 @@ void TableState::OnColDragMove(TableState* self, Ctx* cx,
     TableEnsureCols(self, self->colCount);
     int n = self->colCount;
     int gap = TableDragGapAt(self->colBounds.els, n, ev->event.x, ev->drag.ix,
-                             self->fixedCols);
+                             self->fixedCols, self->rightCols);
     if (self->draggingCol == ev->drag.ix && self->dropGap == gap) {
         return;
     }
@@ -28335,7 +29225,7 @@ void TableState::OnColDrop(TableState* self, Ctx* cx, const DropEvent* ev) {
     TableEnsureCols(self, self->colCount);
     int n = self->colCount;
     int gap = TableDragGapAt(self->colBounds.els, n, ev->x, ev->drag.ix,
-                             self->fixedCols);
+                             self->fixedCols, self->rightCols);
     self->draggingCol = -1;
     self->dropGap = -1;
     if (gap >= 0) {
@@ -28832,6 +29722,13 @@ static void DialogAnchorControlActions(El* el, FocusHandle anchor) {
     for (El* child = el->first; child; child = child->next) {
         DialogAnchorControlActions(child, anchor);
     }
+}
+
+Dialog* Dialog::AccessibilityLabel(Str label) {
+    if (root) {
+        root->AriaLabel(label);
+    }
+    return this;
 }
 
 Dialog* Dialog::Popup(El* popup) {
@@ -32705,6 +33602,1913 @@ bool BaseIsInDeferredContext(App* app) {
 
 }
 
+#line 1 "src/base/grid_layout.cpp"
+
+namespace gpui {
+
+static int AtLeastOne(int value) {
+    return value < 1 ? 1 : value;
+}
+
+static int ClampTo(int value, int low, int high) {
+    if (low > high) {
+        low = high;
+    }
+    if (value < low) {
+        return low;
+    }
+    if (value > high) {
+        return high;
+    }
+    return value;
+}
+
+struct GridRect {
+    int col = 0;
+    int row = 0;
+    int colSpan = 1;
+    int rowSpan = 1;
+
+    bool Overlaps(const GridRect& other) const {
+        return col < other.col + other.colSpan && other.col < col + colSpan &&
+               row < other.row + other.rowSpan && other.row < row + rowSpan;
+    }
+};
+
+static GridRect AreaRect(const GridArea& area) {
+    GridRect rect;
+    rect.col = area.col;
+    rect.row = area.row;
+    rect.colSpan = area.colSpan;
+    rect.rowSpan = area.rowSpan;
+    return rect;
+}
+
+static bool ReadingBefore(const GridArea& a, const GridArea& b,
+                          bool horizontal) {
+    if (horizontal) {
+        if (a.col != b.col) {
+            return a.col < b.col;
+        }
+        return a.row < b.row;
+    }
+    if (a.row != b.row) {
+        return a.row < b.row;
+    }
+    return a.col < b.col;
+}
+
+static void SortIndices(int* order, int n, const GridArea* items,
+                        bool horizontal) {
+    for (int i = 1; i < n; i++) {
+        int key = order[i];
+        int j = i;
+        while (j > 0 &&
+               ReadingBefore(items[key], items[order[j - 1]], horizontal)) {
+            order[j] = order[j - 1];
+            j--;
+        }
+        order[j] = key;
+    }
+}
+
+static void IndicesOf(const GridArea* items, int n, bool horizontal,
+                      Vec<int>* order) {
+    VecClear(*order);
+    for (int i = 0; i < n; i++) {
+        VecAppend(*order, i);
+    }
+    if (n > 1) {
+        SortIndices(order->els, n, items, horizontal);
+    }
+}
+
+static int FindId(const GridArea* items, int n, Str id) {
+    for (int i = 0; i < n; i++) {
+        if (StrEq(items[i].id, id)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static bool ContainsIndex(const Vec<int>& values, int ix) {
+    for (int i = 0; i < len(values); i++) {
+        if (values[i] == ix) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static int FirstCollision(const GridArea* items, const int* among, int nAmong,
+                          GridRect rect, int skip) {
+    for (int i = 0; i < nAmong; i++) {
+        int other = among[i];
+        if (other != skip && rect.Overlaps(AreaRect(items[other]))) {
+            return other;
+        }
+    }
+    return -1;
+}
+
+static bool AnyCollision(const GridArea* items, int n, GridRect rect,
+                         int skip) {
+    for (int other = 0; other < n; other++) {
+        if (other != skip && rect.Overlaps(AreaRect(items[other]))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void Collisions(const GridArea* items, const Vec<int>& order, int ix,
+                       Vec<int>* hit) {
+    VecClear(*hit);
+    GridRect rect = AreaRect(items[ix]);
+    for (int i = 0; i < len(order); i++) {
+        int other = order[i];
+        if (other != ix && rect.Overlaps(AreaRect(items[other]))) {
+            VecAppend(*hit, other);
+        }
+    }
+}
+
+struct GridPush {
+    GridLayoutRules rules;
+    Vec<uint8_t> moved;
+
+    void MoveElement(GridArea* items, int n, int ix, bool hasX, int x,
+                     bool hasY, int y, bool userAction);
+    void Away(GridArea* items, int n, int obstacle, int mover, bool userAction);
+};
+
+void GridPush::MoveElement(GridArea* items, int n, int ix, bool hasX, int x,
+                           bool hasY, int y, bool userAction) {
+    if (items[ix].locked) {
+        return;
+    }
+    int oldX = items[ix].col;
+    int oldY = items[ix].row;
+    if (!hasX) {
+        x = oldX;
+    }
+    if (!hasY) {
+        y = oldY;
+    }
+    if (x == oldX && y == oldY) {
+        return;
+    }
+    items[ix].col = x;
+    items[ix].row = y;
+    moved[ix] = 1;
+
+    Vec<int> order;
+    bool horizontal =
+        rules.hasCompaction && rules.compaction == Axis::Horizontal;
+    IndicesOf(items, n, horizontal, &order);
+    bool movingBack = horizontal ? oldX >= x : oldY >= y;
+    if (movingBack) {
+        for (int i = 0, j = len(order) - 1; i < j; i++, j--) {
+            int tmp = order[i];
+            order[i] = order[j];
+            order[j] = tmp;
+        }
+    }
+    Vec<int> hit;
+    Collisions(items, order, ix, &hit);
+    for (int i = 0; i < len(hit); i++) {
+        int other = hit[i];
+        if (moved[other]) {
+            continue;
+        }
+        if (items[other].locked) {
+            Away(items, n, other, ix, userAction);
+        } else {
+            Away(items, n, ix, other, userAction);
+        }
+    }
+}
+
+void GridPush::Away(GridArea* items, int n, int obstacle, int mover,
+                    bool userAction) {
+    bool horizontal =
+        rules.hasCompaction && rules.compaction == Axis::Horizontal;
+    if (userAction) {
+        const GridArea& o = items[obstacle];
+        const GridArea& m = items[mover];
+        GridRect probe;
+        probe.colSpan = m.colSpan;
+        probe.rowSpan = m.rowSpan;
+        if (horizontal) {
+            probe.col = o.col > m.colSpan ? o.col - m.colSpan : 0;
+            probe.row = m.row;
+        } else {
+            probe.col = m.col;
+            probe.row = o.row > m.rowSpan ? o.row - m.rowSpan : 0;
+        }
+        int blocker = -1;
+        for (int other = 0; other < n; other++) {
+            if (other != mover && other != obstacle &&
+                probe.Overlaps(AreaRect(items[other]))) {
+                blocker = other;
+                break;
+            }
+        }
+        if (blocker < 0 && !probe.Overlaps(AreaRect(o))) {
+            if (horizontal) {
+                MoveElement(items, n, mover, true, probe.col, false, 0, false);
+            } else {
+                MoveElement(items, n, mover, false, 0, true, probe.row, false);
+            }
+            return;
+        }
+    }
+    if (horizontal) {
+        MoveElement(items, n, mover, true, items[obstacle].ColEnd(), false, 0,
+                    false);
+    } else {
+        MoveElement(items, n, mover, false, 0, true, items[obstacle].RowEnd(),
+                    false);
+    }
+}
+
+static void CompactItem(GridArea* items, const Vec<int>& placed, int ix,
+                        Axis axis, int columns) {
+    if (axis == Axis::Vertical) {
+        int floor = 0;
+        for (int i = 0; i < len(placed); i++) {
+            int end = items[placed[i]].RowEnd();
+            if (end > floor) {
+                floor = end;
+            }
+        }
+        if (items[ix].row > floor) {
+            items[ix].row = floor;
+        }
+        for (;;) {
+            while (items[ix].row > 0) {
+                GridRect probe = AreaRect(items[ix]);
+                probe.row -= 1;
+                if (FirstCollision(items, placed.els, len(placed), probe, ix) >=
+                    0) {
+                    break;
+                }
+                items[ix].row -= 1;
+            }
+            int other = FirstCollision(items, placed.els, len(placed),
+                                       AreaRect(items[ix]), ix);
+            if (other < 0) {
+                break;
+            }
+            items[ix].row = items[other].RowEnd();
+        }
+        return;
+    }
+    for (;;) {
+        while (items[ix].col > 0) {
+            GridRect probe = AreaRect(items[ix]);
+            probe.col -= 1;
+            if (FirstCollision(items, placed.els, len(placed), probe, ix) >=
+                0) {
+                break;
+            }
+            items[ix].col -= 1;
+        }
+        if (items[ix].ColEnd() > columns) {
+            items[ix].col = 0;
+            items[ix].row += 1;
+            continue;
+        }
+        int other = FirstCollision(items, placed.els, len(placed),
+                                   AreaRect(items[ix]), ix);
+        if (other < 0) {
+            break;
+        }
+        items[ix].col = items[other].ColEnd();
+        if (items[ix].ColEnd() > columns) {
+            items[ix].col = 0;
+            items[ix].row += 1;
+        }
+    }
+}
+
+static void Settle(GridArea* items, int n, GridLayoutRules rules,
+                   int priority) {
+    if (rules.hasCompaction) {
+        GridCompact(items, n, rules);
+        return;
+    }
+    Vec<int> placed;
+    for (int ix = 0; ix < n; ix++) {
+        if (items[ix].locked) {
+            VecAppend(placed, ix);
+        }
+    }
+    if (priority >= 0 && !items[priority].locked) {
+        VecAppend(placed, priority);
+    }
+    Vec<int> order;
+    IndicesOf(items, n, false, &order);
+    for (int i = 0; i < len(order); i++) {
+        int ix = order[i];
+        if (ContainsIndex(placed, ix)) {
+            continue;
+        }
+        for (;;) {
+            int other = FirstCollision(items, placed.els, len(placed),
+                                       AreaRect(items[ix]), ix);
+            if (other < 0) {
+                break;
+            }
+            items[ix].row = items[other].RowEnd();
+        }
+        VecAppend(placed, ix);
+    }
+}
+
+GridArea GridArea::New(Str id) {
+    GridArea area;
+    area.id = id;
+    return area;
+}
+GridArea GridArea::Col(int value) const {
+    GridArea out = *this;
+    out.col = value;
+    return out;
+}
+GridArea GridArea::Row(int value) const {
+    GridArea out = *this;
+    out.row = value;
+    return out;
+}
+GridArea GridArea::ColSpan(int value) const {
+    GridArea out = *this;
+    out.colSpan = AtLeastOne(value);
+    return out;
+}
+GridArea GridArea::RowSpan(int value) const {
+    GridArea out = *this;
+    out.rowSpan = AtLeastOne(value);
+    return out;
+}
+GridArea GridArea::MinSpan(int colSpanValue, int rowSpanValue) const {
+    GridArea out = *this;
+    out.minColSpan = AtLeastOne(colSpanValue);
+    out.minRowSpan = AtLeastOne(rowSpanValue);
+    return out;
+}
+GridArea GridArea::MaxSpan(int colSpanValue, int rowSpanValue) const {
+    GridArea out = *this;
+    out.maxColSpan = AtLeastOne(colSpanValue);
+    out.maxRowSpan = AtLeastOne(rowSpanValue);
+    return out;
+}
+GridArea GridArea::Locked(bool value) const {
+    GridArea out = *this;
+    out.locked = value;
+    return out;
+}
+
+static void ClampSize(const GridArea& area, int w, int h, int columns,
+                      int* outW, int* outH) {
+    int room = columns > area.col ? columns - area.col : 0;
+    int maxCol = area.maxColSpan > 0 ? area.maxColSpan : 0x7fffffff;
+    if (maxCol > room) {
+        maxCol = room;
+    }
+    if (maxCol < 1) {
+        maxCol = 1;
+    }
+    int maxRow = area.maxRowSpan > 0 ? area.maxRowSpan : 0x7fffffff;
+    if (maxRow < 1) {
+        maxRow = 1;
+    }
+    *outW = ClampTo(w, area.minColSpan, maxCol);
+    *outH = ClampTo(h, area.minRowSpan, maxRow);
+}
+
+int GridRows(const GridArea* items, int n) {
+    int rows = 0;
+    for (int i = 0; i < n; i++) {
+        int end = items[i].RowEnd();
+        if (end > rows) {
+            rows = end;
+        }
+    }
+    return rows;
+}
+
+void GridNormalize(GridArea* items, int n, GridLayoutRules rules) {
+    int columns = rules.columns < 1 ? 1 : rules.columns;
+    for (int i = 0; i < n; i++) {
+        GridArea* item = &items[i];
+        int maxCol = item->maxColSpan > 0 ? item->maxColSpan : 0x7fffffff;
+        int maxRow = item->maxRowSpan > 0 ? item->maxRowSpan : 0x7fffffff;
+        if (maxCol < 1) {
+            maxCol = 1;
+        }
+        if (maxRow < 1) {
+            maxRow = 1;
+        }
+        item->colSpan = ClampTo(item->colSpan, item->minColSpan, maxCol);
+        item->rowSpan = ClampTo(item->rowSpan, item->minRowSpan, maxRow);
+        item->colSpan = ClampTo(item->colSpan, 1, columns);
+        if (item->rowSpan < 1) {
+            item->rowSpan = 1;
+        }
+        if (item->ColEnd() > columns) {
+            item->col = columns - item->colSpan;
+        }
+    }
+
+    Vec<int> order;
+    bool horizontal =
+        rules.hasCompaction && rules.compaction == Axis::Horizontal;
+    IndicesOf(items, n, horizontal, &order);
+    Vec<int> locked;
+    for (int i = 0; i < len(order); i++) {
+        if (items[order[i]].locked) {
+            VecAppend(locked, order[i]);
+        }
+    }
+    for (int nLocked = 0; nLocked < len(locked); nLocked++) {
+        int ix = locked[nLocked];
+        for (;;) {
+            int other = FirstCollision(items, locked.els, nLocked,
+                                       AreaRect(items[ix]), ix);
+            if (other < 0) {
+                break;
+            }
+            items[ix].row = items[other].RowEnd();
+        }
+    }
+    Settle(items, n, rules, -1);
+}
+
+void GridCompact(GridArea* items, int n, GridLayoutRules rules) {
+    if (!rules.hasCompaction) {
+        return;
+    }
+    int columns = rules.columns < 1 ? 1 : rules.columns;
+    Vec<int> placed;
+    for (int ix = 0; ix < n; ix++) {
+        if (items[ix].locked) {
+            VecAppend(placed, ix);
+        }
+    }
+    Vec<int> order;
+    bool horizontal = rules.compaction == Axis::Horizontal;
+    IndicesOf(items, n, horizontal, &order);
+    for (int i = 0; i < len(order); i++) {
+        int ix = order[i];
+        if (items[ix].locked) {
+            continue;
+        }
+        CompactItem(items, placed, ix, rules.compaction, columns);
+        VecAppend(placed, ix);
+    }
+}
+
+void GridReflowed(const GridArea* items, int n, int columns,
+                  Vec<GridArea>* out) {
+    VecClear(*out);
+    for (int i = 0; i < n; i++) {
+        VecAppend(*out, items[i]);
+    }
+    for (int i = 1; i < len(*out); i++) {
+        GridArea key = (*out)[i];
+        int j = i;
+        while (j > 0 && ReadingBefore(key, (*out)[j - 1], false)) {
+            (*out)[j] = (*out)[j - 1];
+            j--;
+        }
+        (*out)[j] = key;
+    }
+    for (int i = 0; i < len(*out); i++) {
+        (*out)[i].locked = false;
+    }
+    GridLayoutRules rules;
+    rules.columns = columns;
+    rules.hasCompaction = true;
+    rules.compaction = Axis::Vertical;
+    rules.preventCollision = false;
+    if (len(*out) > 0) {
+        GridNormalize(out->els, len(*out), rules);
+    }
+}
+
+bool GridMoveItem(const GridArea* items, int n, Str id, int x, int y,
+                  GridLayoutRules rules, Vec<GridArea>* out) {
+    int ix = FindId(items, n, id);
+    if (ix < 0 || items[ix].locked) {
+        return false;
+    }
+    Vec<GridArea> next;
+    for (int i = 0; i < n; i++) {
+        VecAppend(next, items[i]);
+    }
+    int room =
+        rules.columns > next[ix].colSpan ? rules.columns - next[ix].colSpan : 0;
+    if (x > room) {
+        x = room;
+    }
+    if (x < 0) {
+        x = 0;
+    }
+    if (rules.preventCollision) {
+        GridRect probe = AreaRect(next[ix]);
+        probe.col = x;
+        probe.row = y;
+        if (AnyCollision(next.els, n, probe, ix)) {
+            return false;
+        }
+    }
+    GridPush push;
+    push.rules = rules;
+    for (int i = 0; i < n; i++) {
+        VecAppend(push.moved, (uint8_t)0);
+    }
+    push.MoveElement(next.els, n, ix, true, x, true, y, true);
+    Settle(next.els, n, rules, ix);
+    VecClear(*out);
+    for (int i = 0; i < n; i++) {
+        VecAppend(*out, next[i]);
+    }
+    return true;
+}
+
+static bool ResizeFitsLocked(const GridArea* items, int n, int ix, int col,
+                             int row, int w, int h) {
+    GridRect probe;
+    probe.col = col;
+    probe.row = row;
+    probe.colSpan = w;
+    probe.rowSpan = h;
+    for (int other = 0; other < n; other++) {
+        if (other != ix && items[other].locked &&
+            probe.Overlaps(AreaRect(items[other]))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool GridResizeItem(const GridArea* items, int n, Str id, int w, int h,
+                    GridLayoutRules rules, Vec<GridArea>* out) {
+    int ix = FindId(items, n, id);
+    if (ix < 0 || items[ix].locked) {
+        return false;
+    }
+    Vec<GridArea> next;
+    for (int i = 0; i < n; i++) {
+        VecAppend(next, items[i]);
+    }
+    int clampedW = w;
+    int clampedH = h;
+    ClampSize(next[ix], w, h, rules.columns, &clampedW, &clampedH);
+    int startColSpan = next[ix].colSpan;
+    int startRowSpan = next[ix].rowSpan;
+    int startCol = next[ix].col;
+    int startRow = next[ix].row;
+    int tries[3][2] = {
+        {clampedW, clampedH},
+        {clampedW, startRowSpan},
+        {startColSpan, clampedH},
+    };
+    int chosen = -1;
+    for (int i = 0; i < 3; i++) {
+        if (ResizeFitsLocked(next.els, n, ix, startCol, startRow, tries[i][0],
+                             tries[i][1])) {
+            chosen = i;
+            break;
+        }
+    }
+    if (chosen < 0) {
+        return false;
+    }
+    next[ix].colSpan = tries[chosen][0];
+    next[ix].rowSpan = tries[chosen][1];
+    if (rules.preventCollision &&
+        AnyCollision(next.els, n, AreaRect(next[ix]), ix)) {
+        return false;
+    }
+    GridPush push;
+    push.rules = rules;
+    for (int i = 0; i < n; i++) {
+        VecAppend(push.moved, (uint8_t)0);
+    }
+    push.moved[ix] = 1;
+    Vec<int> order;
+    bool horizontal =
+        rules.hasCompaction && rules.compaction == Axis::Horizontal;
+    IndicesOf(next.els, n, horizontal, &order);
+    Vec<int> hit;
+    Collisions(next.els, order, ix, &hit);
+    for (int i = 0; i < len(hit); i++) {
+        int below = next[ix].RowEnd();
+        push.MoveElement(next.els, n, hit[i], false, 0, true, below, false);
+    }
+    Settle(next.els, n, rules, ix);
+    VecClear(*out);
+    for (int i = 0; i < n; i++) {
+        VecAppend(*out, next[i]);
+    }
+    return true;
+}
+
+bool GridAreaFromJson(const JsonValue* value, GridArea* out) {
+    if (!value || value->kind != JsonKind::Object || !out) {
+        return false;
+    }
+    GridArea area = GridArea::New(JsonString(JsonGet(value, "id")));
+    area.col = (int)JsonNumber(JsonGet(value, "col"), 0);
+    area.row = (int)JsonNumber(JsonGet(value, "row"), 0);
+    const JsonValue* colSpan = JsonGet(value, "col_span");
+    const JsonValue* rowSpan = JsonGet(value, "row_span");
+    area.colSpan = colSpan ? AtLeastOne((int)JsonNumber(colSpan, 1)) : 1;
+    area.rowSpan = rowSpan ? AtLeastOne((int)JsonNumber(rowSpan, 1)) : 1;
+    const JsonValue* minCol = JsonGet(value, "min_col_span");
+    const JsonValue* minRow = JsonGet(value, "min_row_span");
+    area.minColSpan = minCol ? (int)JsonNumber(minCol, 1) : 1;
+    area.minRowSpan = minRow ? (int)JsonNumber(minRow, 1) : 1;
+    const JsonValue* maxCol = JsonGet(value, "max_col_span");
+    const JsonValue* maxRow = JsonGet(value, "max_row_span");
+    area.maxColSpan = maxCol && maxCol->kind == JsonKind::Number
+                          ? (int)JsonNumber(maxCol, 0)
+                          : 0;
+    area.maxRowSpan = maxRow && maxRow->kind == JsonKind::Number
+                          ? (int)JsonNumber(maxRow, 0)
+                          : 0;
+    const JsonValue* locked = JsonGet(value, "locked");
+    area.locked = locked ? JsonBool(locked, false) : false;
+    *out = area;
+    return area.id.s != nullptr;
+}
+
+void GridAreaWriteJson(JsonWriter* writer, const GridArea& area) {
+    if (!writer) {
+        return;
+    }
+    writer->BeginObject();
+    writer->String("id", area.id);
+    writer->Number("col", area.col);
+    writer->Number("row", area.row);
+    writer->Number("col_span", area.colSpan);
+    writer->Number("row_span", area.rowSpan);
+    writer->Number("min_col_span", area.minColSpan);
+    writer->Number("min_row_span", area.minRowSpan);
+    if (area.maxColSpan > 0) {
+        writer->Number("max_col_span", area.maxColSpan);
+    } else {
+        writer->Null("max_col_span");
+    }
+    if (area.maxRowSpan > 0) {
+        writer->Number("max_row_span", area.maxRowSpan);
+    } else {
+        writer->Null("max_row_span");
+    }
+    writer->Bool("locked", area.locked);
+    writer->EndObject();
+}
+
+static int Snap(float length, float step) {
+    if (step <= 0) {
+        return 0;
+    }
+    float rounded = roundf(length / step);
+    if (rounded < 0) {
+        return 0;
+    }
+    return (int)rounded;
+}
+
+static float AtLeastZero(float value) {
+    return value < 0 ? 0 : value;
+}
+
+GridMetrics GridMetrics::New(float width, int columns, float rowHeight,
+                             float gapWidth, float gapHeight) {
+    float cols = (float)(columns < 1 ? 1 : columns);
+    GridMetrics metrics;
+    metrics.width = width;
+    metrics.columnWidth = AtLeastZero((width - gapWidth * (cols - 1.f)) / cols);
+    metrics.rowHeight = rowHeight;
+    metrics.gapWidth = gapWidth;
+    metrics.gapHeight = gapHeight;
+    return metrics;
+}
+
+float GridMetrics::Left(int col) const {
+    return (columnWidth + gapWidth) * (float)col;
+}
+float GridMetrics::Top(int row) const {
+    return (rowHeight + gapHeight) * (float)row;
+}
+float GridMetrics::SpanWidth(int colSpan) const {
+    float gaps = colSpan > 0 ? (float)(colSpan - 1) : 0;
+    return AtLeastZero(columnWidth * (float)colSpan + gapWidth * gaps);
+}
+float GridMetrics::SpanHeight(int rowSpan) const {
+    float gaps = rowSpan > 0 ? (float)(rowSpan - 1) : 0;
+    return AtLeastZero(rowHeight * (float)rowSpan + gapHeight * gaps);
+}
+int GridMetrics::ColumnAt(float left) const {
+    return Snap(left, columnWidth + gapWidth);
+}
+int GridMetrics::RowAt(float top) const {
+    return Snap(top, rowHeight + gapHeight);
+}
+int GridMetrics::ColumnsSpanning(float span) const {
+    int n = Snap(span + gapWidth, columnWidth + gapWidth);
+    return n < 1 ? 1 : n;
+}
+int GridMetrics::RowsSpanning(float span) const {
+    int n = Snap(span + gapHeight, rowHeight + gapHeight);
+    return n < 1 ? 1 : n;
+}
+
+static bool AddSigned(int value, int delta, int* out) {
+    int64_t sum = (int64_t)value + (int64_t)delta;
+    if (sum < 0 || sum > 0x7fffffff) {
+        return false;
+    }
+    *out = (int)sum;
+    return true;
+}
+
+static bool SameLayout(const Vec<GridArea>& a, const Vec<GridArea>& b) {
+    if (len(a) != len(b)) {
+        return false;
+    }
+    for (int i = 0; i < len(a); i++) {
+        const GridArea& x = a[i];
+        const GridArea& y = b[i];
+        if (!StrEq(x.id, y.id) || x.col != y.col || x.row != y.row ||
+            x.colSpan != y.colSpan || x.rowSpan != y.rowSpan ||
+            x.minColSpan != y.minColSpan || x.minRowSpan != y.minRowSpan ||
+            x.maxColSpan != y.maxColSpan || x.maxRowSpan != y.maxRowSpan ||
+            x.locked != y.locked) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static const GridArea* FindArea(const GridArea* items, int n, Str id) {
+    for (int i = 0; i < n; i++) {
+        if (StrEq(items[i].id, id)) {
+            return &items[i];
+        }
+    }
+    return nullptr;
+}
+
+GridLayoutState::GridLayoutState() {
+    focus = FocusHandleNew((App*)nullptr);
+}
+
+GridLayoutState::~GridLayoutState() {
+    if (ids) {
+        ArenaDelete(ids);
+    }
+}
+
+GridLayoutRules GridLayoutState::Rules() const {
+    GridLayoutRules rules;
+    rules.columns = columns;
+    rules.hasCompaction = hasCompaction;
+    rules.compaction = compaction;
+    rules.preventCollision = preventCollision;
+    return rules;
+}
+
+void GridLayoutState::Normalize() {
+    if (len(areas) <= 0) {
+        return;
+    }
+    GridNormalize(areas.els, len(areas), Rules());
+}
+
+void GridLayoutState::Adopt(const GridArea* items, int n) {
+    Arena* fresh = ArenaNew();
+    Vec<GridArea> next;
+    for (int i = 0; i < n; i++) {
+        GridArea area = items[i];
+        area.id = StrDup(fresh, area.id);
+        VecAppend(next, area);
+    }
+    Str keep = {};
+    bool found = false;
+    if (hasSelected) {
+        for (int i = 0; i < len(next); i++) {
+            if (StrEq(next[i].id, selected)) {
+                keep = next[i].id;
+                found = true;
+                break;
+            }
+        }
+    }
+    areas = next;
+    if (ids) {
+        ArenaDelete(ids);
+    }
+    ids = fresh;
+    selected = keep;
+    hasSelected = found;
+}
+
+GridLayoutState* GridLayoutState::Cols(int cols) {
+    columns = cols < 1 ? 1 : cols;
+    Normalize();
+    return this;
+}
+GridLayoutState* GridLayoutState::Compaction(bool has, Axis axis) {
+    hasCompaction = has;
+    compaction = axis;
+    Normalize();
+    return this;
+}
+GridLayoutState* GridLayoutState::PreventCollision(bool prevent) {
+    preventCollision = prevent;
+    return this;
+}
+GridLayoutState* GridLayoutState::Draggable(bool value) {
+    draggable = value;
+    return this;
+}
+GridLayoutState* GridLayoutState::Resizable(bool value) {
+    resizable = value;
+    return this;
+}
+GridLayoutState* GridLayoutState::DefaultAreas(const GridArea* items, int n) {
+    Adopt(items, n < 0 ? 0 : n);
+    Normalize();
+    return this;
+}
+
+const GridArea* GridLayoutState::Areas(int* n) const {
+    if (n) {
+        *n = len(areas);
+    }
+    return areas.els;
+}
+const GridArea* GridLayoutState::Area(Str id) const {
+    return FindArea(areas.els, len(areas), id);
+}
+bool GridLayoutState::SelectedItem(Str* out) const {
+    if (!hasSelected) {
+        return false;
+    }
+    if (out) {
+        *out = selected;
+    }
+    return true;
+}
+bool GridLayoutState::ActiveItem(Str* out) const {
+    if (!hasDrag) {
+        return false;
+    }
+    if (out) {
+        *out = drag.item;
+    }
+    return true;
+}
+
+void GridLayoutState::SetAreas(Ctx* cx, const GridArea* items, int n) {
+    hasDrag = false;
+    VecClear(drag.start);
+    VecClear(drag.preview);
+    Adopt(items, n < 0 ? 0 : n);
+    Normalize();
+    if (cx) {
+        Notify(cx);
+    }
+}
+void GridLayoutState::SetCols(Ctx* cx, int cols) {
+    columns = cols < 1 ? 1 : cols;
+    hasDrag = false;
+    VecClear(drag.start);
+    VecClear(drag.preview);
+    Normalize();
+    if (cx) {
+        Notify(cx);
+    }
+}
+void GridLayoutState::SetCompaction(Ctx* cx, bool has, Axis axis) {
+    hasCompaction = has;
+    compaction = axis;
+    hasDrag = false;
+    VecClear(drag.start);
+    VecClear(drag.preview);
+    Normalize();
+    if (cx) {
+        Notify(cx);
+    }
+}
+void GridLayoutState::SetPreventCollision(Ctx* cx, bool prevent) {
+    preventCollision = prevent;
+    if (cx) {
+        Notify(cx);
+    }
+}
+void GridLayoutState::SetDraggable(Ctx* cx, bool value) {
+    draggable = value;
+    if (cx) {
+        Notify(cx);
+    }
+}
+void GridLayoutState::SetResizable(Ctx* cx, bool value) {
+    resizable = value;
+    if (cx) {
+        Notify(cx);
+    }
+}
+void GridLayoutState::SetSelectedItem(Ctx* cx, bool has, Str id) {
+    Str next = {};
+    bool hasNext = false;
+    if (has) {
+        const GridArea* area = Area(id);
+        if (area) {
+            next = area->id;
+            hasNext = true;
+        }
+    }
+    if (hasSelected == hasNext && StrEq(selected, next)) {
+        return;
+    }
+    hasSelected = hasNext;
+    selected = next;
+    if (cx) {
+        Notify(cx);
+    }
+}
+
+bool GridLayoutState::Commit(Ctx* cx, const Vec<GridArea>* next) {
+    if (!next || SameLayout(areas, *next)) {
+        return false;
+    }
+    areas = *next;
+    GridLayoutEvent ev;
+    ev.kind = GridLayoutEventKind::Change;
+    ev.areas = areas.els;
+    ev.nAreas = len(areas);
+    EntityEmit(cx ? cx->app : nullptr, cx ? cx->win : nullptr, self, &ev);
+    if (cx) {
+        Notify(cx);
+    }
+    return true;
+}
+
+bool GridLayoutState::MoveItem(Ctx* cx, Str id, int col, int row) {
+    Vec<GridArea> next;
+    if (!GridMoveItem(areas.els, len(areas), id, col, row, Rules(), &next)) {
+        return false;
+    }
+    return Commit(cx, &next);
+}
+
+bool GridLayoutState::ResizeItem(Ctx* cx, Str id, int colSpan, int rowSpan) {
+    Vec<GridArea> next;
+    if (!GridResizeItem(areas.els, len(areas), id, colSpan, rowSpan, Rules(),
+                        &next)) {
+        return false;
+    }
+    return Commit(cx, &next);
+}
+
+bool GridLayoutState::IsGestureAllowed(Str id, GridGesture gesture) const {
+    bool allowed = gesture == GridGesture::Move ? draggable : resizable;
+    const GridArea* area = Area(id);
+    return allowed && area && !area->locked;
+}
+
+bool GridLayoutState::SelectedArea(GridArea* out) const {
+    if (!hasSelected || !out) {
+        return false;
+    }
+    const GridArea* area = Area(selected);
+    if (!area) {
+        return false;
+    }
+    *out = *area;
+    return true;
+}
+
+bool GridLayoutState::NudgeSelected(Ctx* cx, int cols, int rows) {
+    GridArea area;
+    if (!SelectedArea(&area) || !IsGestureAllowed(area.id, GridGesture::Move)) {
+        return false;
+    }
+    int col = 0;
+    int row = 0;
+    if (!AddSigned(area.col, cols, &col) || !AddSigned(area.row, rows, &row)) {
+        return false;
+    }
+    keyboardActive = true;
+    bool moved = MoveItem(cx, area.id, col, row);
+    if (cx) {
+        Notify(cx);
+    }
+    return moved;
+}
+
+bool GridLayoutState::ResizeSelected(Ctx* cx, int cols, int rows) {
+    GridArea area;
+    if (!SelectedArea(&area) ||
+        !IsGestureAllowed(area.id, GridGesture::Resize)) {
+        return false;
+    }
+    int colSpan = 0;
+    int rowSpan = 0;
+    if (!AddSigned(area.colSpan, cols, &colSpan) ||
+        !AddSigned(area.rowSpan, rows, &rowSpan)) {
+        return false;
+    }
+    keyboardActive = true;
+    bool resized = ResizeItem(cx, area.id, colSpan, rowSpan);
+    if (cx) {
+        Notify(cx);
+    }
+    return resized;
+}
+
+void GridLayoutState::Select(Ctx* cx, bool has, Str id) {
+    Str next = {};
+    bool hasNext = false;
+    if (has) {
+        const GridArea* area = Area(id);
+        if (area) {
+            next = area->id;
+            hasNext = true;
+        }
+    }
+    if (hasSelected == hasNext && StrEq(selected, next)) {
+        return;
+    }
+    hasSelected = hasNext;
+    selected = next;
+    GridLayoutEvent ev;
+    ev.kind = GridLayoutEventKind::Select;
+    ev.hasId = hasNext;
+    ev.id = next;
+    EntityEmit(cx ? cx->app : nullptr, cx ? cx->win : nullptr, self, &ev);
+}
+
+bool GridLayoutState::SelectAdjacent(Ctx* cx, bool forward) {
+    Vec<int> order;
+    IndicesOf(areas.els, len(areas), false, &order);
+    if (len(order) == 0) {
+        return false;
+    }
+    int current = -1;
+    if (hasSelected) {
+        for (int i = 0; i < len(order); i++) {
+            if (StrEq(areas[order[i]].id, selected)) {
+                current = i;
+                break;
+            }
+        }
+    }
+    int next = -1;
+    if (current < 0) {
+        next = forward ? 0 : len(order) - 1;
+    } else if (forward && current + 1 < len(order)) {
+        next = current + 1;
+    } else if (!forward && current > 0) {
+        next = current - 1;
+    } else {
+        return false;
+    }
+    keyboardActive = true;
+    Select(cx, true, areas[order[next]].id);
+    if (cx) {
+        Notify(cx);
+    }
+    return true;
+}
+
+void GridLayoutState::Press(Ctx* cx, Str id, float x, float y) {
+    hasPress = true;
+    pressX = x;
+    pressY = y;
+    keyboardActive = false;
+    Select(cx, true, id);
+    if (cx && cx->win) {
+        WindowSetFocusId(cx->win, focus.id);
+    }
+    if (cx) {
+        Notify(cx);
+    }
+}
+
+void GridLayoutState::BeginDrag(Ctx* cx, Str id, GridGesture gesture) {
+    float originX = pressX;
+    float originY = pressY;
+    if (!hasPress && cx && cx->win) {
+        originX = cx->win->mouseX;
+        originY = cx->win->mouseY;
+    }
+    hasPress = false;
+    Select(cx, true, id);
+    hasDrag = true;
+    drag.gesture = gesture;
+    drag.originX = originX;
+    drag.originY = originY;
+    drag.deltaX = 0;
+    drag.deltaY = 0;
+    drag.hasMetrics = false;
+    VecClear(drag.start);
+    VecClear(drag.preview);
+    for (int i = 0; i < len(areas); i++) {
+        VecAppend(drag.start, areas[i]);
+        VecAppend(drag.preview, areas[i]);
+    }
+    const GridArea* area = FindArea(drag.start.els, len(drag.start), id);
+    drag.item = area ? area->id : Str{};
+    if (cx) {
+        Notify(cx);
+    }
+}
+
+void GridLayoutState::DragTo(Ctx* cx, float x, float y, Bounds bounds,
+                             float rowHeight, float gapWidth, float gapHeight) {
+    if (!hasDrag) {
+        return;
+    }
+    GridMetrics metrics =
+        GridMetrics::New(bounds.w, columns, rowHeight, gapWidth, gapHeight);
+    const GridArea* start =
+        FindArea(drag.start.els, len(drag.start), drag.item);
+    if (!start) {
+        return;
+    }
+    GridArea origin = *start;
+    drag.deltaX = x - drag.originX;
+    drag.deltaY = y - drag.originY;
+    drag.metrics = metrics;
+    drag.hasMetrics = true;
+    Vec<GridArea> next;
+    bool ok = false;
+    if (drag.gesture == GridGesture::Move) {
+        float left = metrics.Left(origin.col) + drag.deltaX;
+        float top = metrics.Top(origin.row) + drag.deltaY;
+        int room = columns > origin.colSpan ? columns - origin.colSpan : 0;
+        int col = metrics.ColumnAt(left);
+        if (col > room) {
+            col = room;
+        }
+        ok = GridMoveItem(drag.start.els, len(drag.start), origin.id, col,
+                          metrics.RowAt(top), Rules(), &next);
+    } else {
+        int colSpan = metrics.ColumnsSpanning(
+            metrics.SpanWidth(origin.colSpan) + drag.deltaX);
+        int rowSpan = metrics.RowsSpanning(metrics.SpanHeight(origin.rowSpan) +
+                                           drag.deltaY);
+        ok = GridResizeItem(drag.start.els, len(drag.start), origin.id, colSpan,
+                            rowSpan, Rules(), &next);
+    }
+    if (ok) {
+        drag.preview = next;
+    }
+    if (cx) {
+        Notify(cx);
+    }
+}
+
+void GridLayoutState::EndDrag(Ctx* cx) {
+    hasPress = false;
+    if (!hasDrag) {
+        return;
+    }
+    Vec<GridArea> preview = drag.preview;
+    hasDrag = false;
+    VecClear(drag.start);
+    VecClear(drag.preview);
+    if (cx) {
+        Notify(cx);
+    }
+    Commit(cx, &preview);
+}
+
+bool GridLayoutState::CancelDrag(Ctx* cx) {
+    if (!hasDrag) {
+        return false;
+    }
+    hasDrag = false;
+    VecClear(drag.start);
+    VecClear(drag.preview);
+    if (cx && cx->win) {
+        cx->win->activeDrag = {};
+    }
+    if (cx) {
+        Notify(cx);
+    }
+    return true;
+}
+
+const GridArea* GridLayoutState::DisplayedAreas(Ctx* cx, int* n) const {
+    if (hasDrag && WindowActiveDrag(cx)) {
+        if (n) {
+            *n = len(drag.preview);
+        }
+        return drag.preview.els;
+    }
+    if (n) {
+        *n = len(areas);
+    }
+    return areas.els;
+}
+
+namespace grid_layout {
+
+#define GPUI_ACTION(fn, name)          \
+    uint32_t fn() {                    \
+        static uint32_t id = 0;        \
+        if (!id) {                     \
+            id = ActionOf(StrL(name)); \
+        }                              \
+        return id;                     \
+    }
+
+GPUI_ACTION(MoveLeft, "grid_layout::MoveLeft")
+GPUI_ACTION(MoveRight, "grid_layout::MoveRight")
+GPUI_ACTION(MoveUp, "grid_layout::MoveUp")
+GPUI_ACTION(MoveDown, "grid_layout::MoveDown")
+GPUI_ACTION(ShrinkWidth, "grid_layout::ShrinkWidth")
+GPUI_ACTION(GrowWidth, "grid_layout::GrowWidth")
+GPUI_ACTION(ShrinkHeight, "grid_layout::ShrinkHeight")
+GPUI_ACTION(GrowHeight, "grid_layout::GrowHeight")
+GPUI_ACTION(SelectNextItem, "grid_layout::SelectNextItem")
+GPUI_ACTION(SelectPreviousItem, "grid_layout::SelectPreviousItem")
+
+#undef GPUI_ACTION
+
+const char* Context() {
+    return "GridLayout";
+}
+
+}
+
+void GridLayoutInitKeys() {
+    static uint32_t bound = 0;
+    if (bound == KeymapGeneration()) {
+        return;
+    }
+    bound = KeymapGeneration();
+    const char* ctx = grid_layout::Context();
+    KeyBinding bindings[] = {
+        {"left", grid_layout::MoveLeft(), ctx},
+        {"right", grid_layout::MoveRight(), ctx},
+        {"up", grid_layout::MoveUp(), ctx},
+        {"down", grid_layout::MoveDown(), ctx},
+        {"shift-left", grid_layout::ShrinkWidth(), ctx},
+        {"shift-right", grid_layout::GrowWidth(), ctx},
+        {"shift-up", grid_layout::ShrinkHeight(), ctx},
+        {"shift-down", grid_layout::GrowHeight(), ctx},
+        {"tab", grid_layout::SelectNextItem(), ctx},
+        {"shift-tab", grid_layout::SelectPreviousItem(), ctx},
+        {"escape", action::Cancel(), ctx},
+    };
+    KeymapBind(bindings, (int)(sizeof(bindings) / sizeof(bindings[0])));
+}
+
+bool GridLayoutHandleAction(GridLayoutState* state, Ctx* cx, uint32_t action) {
+    if (!state) {
+        return false;
+    }
+    if (action == grid_layout::MoveLeft()) {
+        return state->NudgeSelected(cx, -1, 0);
+    }
+    if (action == grid_layout::MoveRight()) {
+        return state->NudgeSelected(cx, 1, 0);
+    }
+    if (action == grid_layout::MoveUp()) {
+        return state->NudgeSelected(cx, 0, -1);
+    }
+    if (action == grid_layout::MoveDown()) {
+        return state->NudgeSelected(cx, 0, 1);
+    }
+    if (action == grid_layout::ShrinkWidth()) {
+        return state->ResizeSelected(cx, -1, 0);
+    }
+    if (action == grid_layout::GrowWidth()) {
+        return state->ResizeSelected(cx, 1, 0);
+    }
+    if (action == grid_layout::ShrinkHeight()) {
+        return state->ResizeSelected(cx, 0, -1);
+    }
+    if (action == grid_layout::GrowHeight()) {
+        return state->ResizeSelected(cx, 0, 1);
+    }
+    if (action == grid_layout::SelectNextItem()) {
+        return state->SelectAdjacent(cx, true);
+    }
+    if (action == grid_layout::SelectPreviousItem()) {
+        return state->SelectAdjacent(cx, false);
+    }
+    if (action == action::Cancel()) {
+        return state->CancelDrag(cx);
+    }
+    return false;
+}
+
+static const char* kGridDragKind = "grid-layout";
+
+struct ItemFrame {
+    float left = 0;
+    float width = 0;
+    float top = 0;
+    float height = 0;
+};
+
+static ItemFrame FrameOf(const GridArea& area, int columns, float rowHeight,
+                         float gapH) {
+    float cols = (float)(columns < 1 ? 1 : columns);
+    ItemFrame frame;
+    frame.left = (float)area.col / cols;
+    frame.width = (float)area.colSpan / cols;
+    frame.top = (rowHeight + gapH) * (float)area.row;
+    float gaps = area.rowSpan > 0 ? (float)(area.rowSpan - 1) : 0;
+    float height = rowHeight * (float)area.rowSpan + gapH * gaps;
+    frame.height = height < 0 ? 0 : height;
+    return frame;
+}
+
+static bool FollowingFrame(const GridDrag& drag, const GridMetrics& metrics,
+                           int columns, ItemFrame* out) {
+    const GridArea* start =
+        FindArea(drag.start.els, len(drag.start), drag.item);
+    if (!start || !out) {
+        return false;
+    }
+    float track = metrics.width + metrics.gapWidth;
+    if (!(track > 0)) {
+        return false;
+    }
+    float left = metrics.Left(start->col);
+    float top = metrics.Top(start->row);
+    float width = metrics.SpanWidth(start->colSpan);
+    float height = metrics.SpanHeight(start->rowSpan);
+    if (drag.gesture == GridGesture::Move) {
+        float room = metrics.width - width;
+        if (room < 0) {
+            room = 0;
+        }
+        left = left + drag.deltaX;
+        if (left < 0) {
+            left = 0;
+        }
+        if (left > room) {
+            left = room;
+        }
+        top = top + drag.deltaY;
+        if (top < 0) {
+            top = 0;
+        }
+    } else {
+        int minCols = 1;
+        int minRows = 1;
+        int maxCols = 1;
+        int unused = 1;
+        ClampSize(*start, 1, 1, columns, &minCols, &minRows);
+        ClampSize(*start, 0x7fffffff, 1, columns, &maxCols, &unused);
+        width = width + drag.deltaX;
+        float minW = metrics.SpanWidth(minCols);
+        float maxW = metrics.SpanWidth(maxCols);
+        if (width < minW) {
+            width = minW;
+        }
+        if (width > maxW) {
+            width = maxW;
+        }
+        height = height + drag.deltaY;
+        float minH = metrics.SpanHeight(minRows);
+        if (height < minH) {
+            height = minH;
+        }
+        if (start->maxRowSpan > 0) {
+            float maxH = metrics.SpanHeight(start->maxRowSpan);
+            if (height > maxH) {
+                height = maxH;
+            }
+        }
+    }
+    out->left = left / track;
+    out->width = (width + metrics.gapWidth) / track;
+    out->top = top;
+    out->height = height;
+    return true;
+}
+
+static El* PlaceItem(El* element, ItemFrame frame, float gapW) {
+    return element->Absolute()
+        ->LeftRel(frame.left)
+        ->WFrac(frame.width)
+        ->Top(frame.top)
+        ->H(frame.height)
+        ->PadR(gapW);
+}
+
+static uint32_t FrameChannel(const GridLayoutState* state, Str item,
+                             const char* channel) {
+    char buf[160];
+    int n =
+        snprintf(buf, sizeof(buf), "grid:%d:%u:",
+                 state && state->self.id.IsValid() ? state->self.id.index : -1,
+                 state ? state->self.id.gen : 0);
+    if (n < 0) {
+        n = 0;
+    }
+    int room = (int)sizeof(buf) - n - 1;
+    int copy = len(item);
+    if (copy > room) {
+        copy = room;
+    }
+    if (copy > 0 && item.s && n < (int)sizeof(buf)) {
+        memcpy(buf + n, item.s, (size_t)copy);
+        n += copy;
+    }
+    if (n >= (int)sizeof(buf)) {
+        n = (int)sizeof(buf) - 1;
+    }
+    buf[n] = 0;
+    return MotionId(Str(buf, n), Str(channel));
+}
+
+static ItemFrame AnimateFrame(Ctx* cx, const GridLayoutState* state, Str item,
+                              ItemFrame target, const Motion& policy) {
+    ItemFrame frame;
+    frame.left = motion::transition(
+        cx, motion::TransitionId(FrameChannel(state, item, "left")),
+        target.left, policy);
+    frame.width = motion::transition(
+        cx, motion::TransitionId(FrameChannel(state, item, "width")),
+        target.width, policy);
+    frame.top = motion::transition(
+        cx, motion::TransitionId(FrameChannel(state, item, "top")), target.top,
+        policy);
+    frame.height = motion::transition(
+        cx, motion::TransitionId(FrameChannel(state, item, "height")),
+        target.height, policy);
+    return frame;
+}
+
+static int AreaIndexOf(const GridLayoutState* state, Str id) {
+    if (!state) {
+        return -1;
+    }
+    for (int i = 0; i < len(state->areas); i++) {
+        if (StrEq(state->areas[i].id, id)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static const int64_t kGridHandleOnly = (int64_t)1 << 32;
+
+static void BeginAt(GridLayoutState* self, Ctx* cx, const MouseDownEvent* ev,
+                    int ix, bool begin, GridGesture gesture) {
+    if (!self || ix < 0 || ix >= len(self->areas)) {
+        return;
+    }
+    Str id = self->areas[ix].id;
+    float x = ev ? ev->x : 0;
+    float y = ev ? ev->y : 0;
+    self->Press(cx, id, x, y);
+    if (begin && !self->paintReadOnly && self->IsGestureAllowed(id, gesture)) {
+        self->BeginDrag(cx, id, gesture);
+    }
+}
+
+static void OnGridItemDown(GridLayoutState* self, Ctx* cx,
+                           const MouseDownEvent* ev, int64_t arg) {
+    bool handleOnly = (arg & kGridHandleOnly) != 0;
+    int ix = (int)(arg & 0xffffffff);
+    BeginAt(self, cx, ev, ix, !handleOnly, GridGesture::Move);
+}
+
+static void OnGridResizeDown(GridLayoutState* self, Ctx* cx,
+                             const MouseDownEvent* ev, int64_t arg) {
+    WindowStopPropagation(cx);
+    BeginAt(self, cx, ev, (int)arg, true, GridGesture::Resize);
+}
+
+static void OnGridHandleDown(GridLayoutState* self, Ctx* cx,
+                             const MouseDownEvent* ev, int64_t arg) {
+    BeginAt(self, cx, ev, (int)arg, true, GridGesture::Move);
+}
+
+static void OnGridSurfaceDrag(GridLayoutState* self, Ctx* cx,
+                              const DragMoveEvent* ev) {
+    if (!self || !ev || self->paintReadOnly || !self->hasDrag) {
+        return;
+    }
+    self->DragTo(cx, ev->event.x, ev->event.y, ev->el, self->paintRowHeight,
+                 self->paintGapW, self->paintGapH);
+}
+
+static void OnGridSurfaceUp(GridLayoutState* self, Ctx* cx,
+                            const MouseUpEvent*) {
+    if (self) {
+        self->EndDrag(cx);
+    }
+}
+
+static bool GridMoveAction(uint32_t action) {
+    return action == grid_layout::MoveLeft() ||
+           action == grid_layout::MoveRight() ||
+           action == grid_layout::MoveUp() ||
+           action == grid_layout::MoveDown() ||
+           action == grid_layout::ShrinkWidth() ||
+           action == grid_layout::GrowWidth() ||
+           action == grid_layout::ShrinkHeight() ||
+           action == grid_layout::GrowHeight();
+}
+
+static void OnGridAction(GridLayoutState* self, Ctx* cx,
+                         const ActionEvent* ev) {
+    if (!self || !ev) {
+        return;
+    }
+    if (self->paintReadOnly && GridMoveAction(ev->action)) {
+        const_cast<ActionEvent*>(ev)->propagate = true;
+        return;
+    }
+    if (!GridLayoutHandleAction(self, cx, ev->action)) {
+        const_cast<ActionEvent*>(ev)->propagate = true;
+    }
+}
+
+static void BindGridAction(El* surface, Entity<GridLayoutState> state,
+                           uint32_t action) {
+    surface->OnAction(action, ListenTo(state, &OnGridAction));
+}
+
+GridItem* GridItem::New(Ctx* cx, Str id) {
+    GridItem* item = ArenaNew<GridItem>(cx->a);
+    item->arena = cx->a;
+    item->id = id;
+    return item;
+}
+
+GridItem* GridItem::Label(Str text) {
+    label = text;
+    hasLabel = text.s != nullptr;
+    return this;
+}
+
+GridItem* GridItem::DragHandleOnly(bool value) {
+    handleOnly = value;
+    return this;
+}
+
+GridItem* GridItem::Radius(float v) {
+    style.Radius(v);
+    return this;
+}
+
+GridItem* GridItem::Pad(float x, float y) {
+    style.Pad(x, y);
+    return this;
+}
+
+GridItem* GridItem::Child(El* el) {
+    if (!el || !arena) {
+        return this;
+    }
+    GridItemChild* node = ArenaNew<GridItemChild>(arena);
+    node->el = el;
+    if (lastChild) {
+        lastChild->next = node;
+    } else {
+        children = node;
+    }
+    lastChild = node;
+    return this;
+}
+
+El* GridDragHandle(Ctx* cx, Entity<GridLayoutState> state, Str item) {
+    El* handle = Div(cx->a)->PathClick(StrL("grid-drag-handle"));
+    GridLayoutState* grid = state.Get(cx);
+    int ix = AreaIndexOf(grid, item);
+    if (ix >= 0) {
+        handle->OnMouseDown(ListenTo(state, &OnGridHandleDown, ix))
+            ->OnDrag(Str(kGridDragKind), (int)GridGesture::Move);
+    }
+    return handle;
+}
+
+GridLayout* GridLayout::New(Ctx* cx, Str id, Entity<GridLayoutState> state) {
+    GridLayout* grid = ArenaNew<GridLayout>(cx->a);
+    grid->cx = cx;
+    grid->arena = cx->a;
+    grid->id = id;
+    grid->state = state;
+    return grid;
+}
+
+GridLayout* GridLayout::Label(Str text) {
+    label = text;
+    return this;
+}
+
+GridLayout* GridLayout::Item(GridItem* item) {
+    if (!item || !arena) {
+        return this;
+    }
+    GridItemNode* node = ArenaNew<GridItemNode>(arena);
+    node->item = *item;
+    if (lastItem) {
+        lastItem->next = node;
+    } else {
+        items = node;
+    }
+    lastItem = node;
+    nItems++;
+    return this;
+}
+
+GridLayout* GridLayout::RowHeight(float rems) {
+    rowHeightRems = rems;
+    return this;
+}
+
+GridLayout* GridLayout::Gap(float px) {
+    gapX = px;
+    gapY = px;
+    return this;
+}
+
+GridLayout* GridLayout::GapX(float px) {
+    gapX = px;
+    return this;
+}
+
+GridLayout* GridLayout::GapY(float px) {
+    gapY = px;
+    return this;
+}
+
+GridLayout* GridLayout::Transition(Motion transition) {
+    settle = transition;
+    return this;
+}
+
+GridLayout* GridLayout::DraggingItem(const StateStyle& next) {
+    draggingItem = next;
+    return this;
+}
+
+GridLayout* GridLayout::SelectedItem(const StateStyle& next) {
+    selectedItem = next;
+    return this;
+}
+
+GridLayout* GridLayout::FocusedItem(const StateStyle& next) {
+    focusedItem = next;
+    return this;
+}
+
+GridLayout* GridLayout::Reflow(int cols) {
+    hasReflow = true;
+    reflowCols = cols < 1 ? 1 : cols;
+    return this;
+}
+
+GridLayout* GridLayout::Placeholder(GridPartFn fn, void* data) {
+    placeholder = fn;
+    placeholderData = data;
+    return this;
+}
+
+GridLayout* GridLayout::ResizeHandle(GridPartFn fn, void* data) {
+    resizeHandle = fn;
+    resizeHandleData = data;
+    return this;
+}
+
+void GridLayout::ResolvedGap(float remSize, float* x, float* y) const {
+    (void)remSize;
+    float gx = gapX < 0 ? 0 : gapX;
+    float gy = gapY < 0 ? 0 : gapY;
+    if (x) {
+        *x = gx;
+    }
+    if (y) {
+        *y = gy;
+    }
+}
+
+El* GridLayout::IntoEl() {
+    Arena* a = arena ? arena : (cx ? cx->a : nullptr);
+    if (!a) {
+        return nullptr;
+    }
+    GridLayoutState* grid = state.Get(cx);
+    if (!grid) {
+        return Div(a);
+    }
+    grid->self = state;
+
+    float gapW = 0;
+    float gapH = 0;
+    ResolvedGap(WindowRemSize(cx ? cx->win : nullptr), &gapW, &gapH);
+    float rowH = Rems(cx, rowHeightRems);
+    int columns = hasReflow ? reflowCols : grid->ColumnCount();
+    if (columns < 1) {
+        columns = 1;
+    }
+    grid->paintRowHeight = rowH;
+    grid->paintGapW = gapW;
+    grid->paintGapH = gapH;
+    grid->paintColumns = columns;
+    grid->paintReadOnly = hasReflow;
+
+    Vec<GridArea> reflowed;
+    const GridArea* displayed = nullptr;
+    int nDisplayed = 0;
+    if (hasReflow) {
+        int nAreas = 0;
+        const GridArea* stored = grid->Areas(&nAreas);
+        GridReflowed(stored, nAreas, columns, &reflowed);
+        displayed = reflowed.els;
+        nDisplayed = len(reflowed);
+    } else {
+        displayed = grid->DisplayedAreas(cx, &nDisplayed);
+    }
+
+    bool showDrag = !hasReflow && grid->hasDrag && WindowActiveDrag(cx);
+    Str activeId = {};
+    bool hasActive = showDrag && grid->ActiveItem(&activeId);
+    ItemFrame following;
+    bool hasFollowing = false;
+    if (hasActive && grid->drag.hasMetrics) {
+        hasFollowing =
+            FollowingFrame(grid->drag, grid->drag.metrics, columns, &following);
+    }
+    bool focusVisible =
+        grid->keyboardActive &&
+        FocusHandleIsFocused(cx ? cx->win : nullptr, grid->focus);
+    Str selected = {};
+    bool hasSelected = grid->SelectedItem(&selected);
+
+    int rows = GridRows(displayed, nDisplayed);
+    float height = rowH * (float)rows;
+    if (rows > 0) {
+        height += gapH * (float)(rows - 1);
+    }
+    if (height < 0) {
+        height = 0;
+    }
+
+    El* surface = Div(a)
+                      ->PathId(StrL("grid-layout-surface"))
+                      ->Role(AccessibilityRole::Group)
+                      ->AriaLabel(label.s ? label : StrL("Grid layout"))
+                      ->KeyContext(Str(grid_layout::Context()))
+                      ->TrackFocus(grid->focus)
+                      ->TabStop(true)
+                      ->W(kFill)
+                      ->H(height)
+                      ->OnDragMove(ListenTo(state, &OnGridSurfaceDrag))
+                      ->OnMouseUp(ListenTo(state, &OnGridSurfaceUp),
+                                  DispatchPhase::Capture)
+                      ->OnMouseUpOut(ListenTo(state, &OnGridSurfaceUp));
+    uint32_t actions[] = {
+        grid_layout::MoveLeft(),
+        grid_layout::MoveRight(),
+        grid_layout::MoveUp(),
+        grid_layout::MoveDown(),
+        grid_layout::ShrinkWidth(),
+        grid_layout::GrowWidth(),
+        grid_layout::ShrinkHeight(),
+        grid_layout::GrowHeight(),
+        grid_layout::SelectNextItem(),
+        grid_layout::SelectPreviousItem(),
+        action::Cancel(),
+    };
+    for (int i = 0; i < (int)(sizeof(actions) / sizeof(actions[0])); i++) {
+        BindGridAction(surface, state, actions[i]);
+    }
+
+    El* track = Div(a)->Absolute()->Top(0)->Left(0)->Bottom(0)->Right(-gapW);
+    if (placeholder && hasActive && displayed) {
+        const GridArea* mark = FindArea(displayed, nDisplayed, activeId);
+        if (mark) {
+            El* painted = placeholder(cx, placeholderData);
+            El* box =
+                PlaceItem(Div(a), FrameOf(*mark, columns, rowH, gapH), gapW);
+            if (painted) {
+                box->Child(Div(a)->SizeFull()->Child(painted));
+            }
+            track->Child(box);
+        }
+    }
+
+    Vec<GridItemNode*> order;
+    for (GridItemNode* node = items; node; node = node->next) {
+        if (!hasActive || !StrEq(node->item.id, activeId)) {
+            VecAppend(order, node);
+        }
+    }
+    if (hasActive) {
+        for (GridItemNode* node = items; node; node = node->next) {
+            if (StrEq(node->item.id, activeId)) {
+                VecAppend(order, node);
+            }
+        }
+    }
+
+    for (int i = 0; i < len(order); i++) {
+        const GridItem& item = order[i]->item;
+        const GridArea* area =
+            displayed ? FindArea(displayed, nDisplayed, item.id) : nullptr;
+        if (!area) {
+            continue;
+        }
+        bool active = hasActive && StrEq(item.id, activeId);
+        ItemFrame target = (active && hasFollowing)
+                               ? following
+                               : FrameOf(*area, columns, rowH, gapH);
+        Motion policy = active ? MotionNew(0) : settle;
+        ItemFrame frame = AnimateFrame(cx, grid, item.id, target, policy);
+        bool selectedHere = hasSelected && StrEq(selected, area->id);
+        int ix = AreaIndexOf(grid, item.id);
+        int64_t arg = ix;
+        if (item.handleOnly) {
+            arg |= kGridHandleOnly;
+        }
+        bool movable = !hasReflow && !item.handleOnly &&
+                       grid->IsGestureAllowed(item.id, GridGesture::Move);
+        bool resizable =
+            !hasReflow && grid->IsGestureAllowed(item.id, GridGesture::Resize);
+
+        StateStyle look = item.style;
+        if (selectedHere) {
+            StateStyleRefine(&look, selectedItem);
+            if (focusVisible) {
+                StateStyleRefine(&look, focusedItem);
+            }
+        }
+        if (active) {
+            StateStyleRefine(&look, draggingItem);
+        }
+
+        El* placed = PlaceItem(Div(a)->PathClick(item.id), frame, gapW);
+        placed->Role(AccessibilityRole::Group)->AriaSelected(selectedHere);
+        if (item.hasLabel) {
+            placed->AriaLabel(item.label);
+        }
+        if (ix >= 0) {
+            placed->OnMouseDown(ListenTo(state, &OnGridItemDown, arg));
+        }
+        if (movable) {
+            placed->OnDrag(Str(kGridDragKind), (int)GridGesture::Move);
+        }
+        El* inner = Div(a)->SizeFull();
+        StyleApplyFields(&inner->style, look.style, look.set);
+        for (GridItemChild* child = item.children; child; child = child->next) {
+            inner->Child(child->el);
+        }
+        if (resizable && ix >= 0) {
+            El* corner =
+                Div(a)
+                    ->PathClick(StrL("grid-layout-resize"))
+                    ->Absolute()
+                    ->Right(0)
+                    ->Bottom(0)
+                    ->W(kGridResizeHandle)
+                    ->H(kGridResizeHandle)
+                    ->Cursor(CursorKind::ResizeUpLeftDownRight)
+                    ->OnMouseDown(ListenTo(state, &OnGridResizeDown, ix))
+                    ->OnDrag(Str(kGridDragKind), (int)GridGesture::Resize);
+            if (resizeHandle) {
+                El* grip = resizeHandle(cx, resizeHandleData);
+                if (grip) {
+                    corner->Child(grip);
+                }
+            }
+            inner->Child(corner);
+        }
+        placed->Child(inner);
+        track->Child(placed);
+    }
+    surface->Child(track);
+
+    El* outer = Div(a)->PathId(id)->W(kFill);
+    if (gapX != 0 || gapY != 0) {
+        outer->GapX(gapX)->GapY(gapY);
+    }
+    if (gridStyle.set) {
+        ElRefine(outer, gridStyle);
+    }
+    return outer->Child(surface);
+}
+
+}
+
 #line 1 "src/base/history.cpp"
 
 #line 1 "src/base/hover_card.cpp"
@@ -34447,6 +37251,15 @@ int InputRangeDecorations(const InputState* s, const Selection* ranges,
         .Intersecting(ranges, nRanges, out, cap);
 }
 
+static void GutterDecorationsReleaseOwner(InputState* s);
+static void OverviewDecorationsReleaseOwner(InputState* s);
+static void GutterDecorationsAdjust(GutterDecorationsState* state,
+                                    Selection editedRange, int insertedLen);
+static void OverviewDecorationsAdjust(OverviewRulerDecorationsState* state,
+                                      Selection editedRange, int insertedLen);
+static void GutterDecorationsClear(GutterDecorationsState* state);
+static void OverviewDecorationsClear(OverviewRulerDecorationsState* state);
+
 void InputDecorationsFree(InputState* s) {
     if (!s) {
         return;
@@ -34458,18 +37271,19 @@ void InputDecorationsFree(InputState* s) {
         DecorationsRelease(text);
         s->textDecorations = nullptr;
     }
-    if (!s->rangeDecorations) {
-        return;
-    }
-    RangeDecorationsState* state = s->rangeDecorations;
-    state->ownerAlive = false;
-    state->input = nullptr;
+    if (s->rangeDecorations) {
+        RangeDecorationsState* state = s->rangeDecorations;
+        state->ownerAlive = false;
+        state->input = nullptr;
 
-    while (len(state->collections.entries) > 0) {
-        state->collections.Remove(state->collections.entries[0]->id);
+        while (len(state->collections.entries) > 0) {
+            state->collections.Remove(state->collections.entries[0]->id);
+        }
+        RangeDecorationsRelease(state);
+        s->rangeDecorations = nullptr;
     }
-    RangeDecorationsRelease(state);
-    s->rangeDecorations = nullptr;
+    GutterDecorationsReleaseOwner(s);
+    OverviewDecorationsReleaseOwner(s);
 }
 
 void InputDecorationsAdjustForEdit(InputState* s, Selection editedRange,
@@ -34481,6 +37295,13 @@ void InputDecorationsAdjustForEdit(InputState* s, Selection editedRange,
         s->rangeDecorations->collections
             .AdjustForEdit(editedRange, insertedLen);
     }
+    if (s && s->gutterDecorations) {
+        GutterDecorationsAdjust(s->gutterDecorations, editedRange, insertedLen);
+    }
+    if (s && s->overviewDecorations) {
+        OverviewDecorationsAdjust(s->overviewDecorations, editedRange,
+                                  insertedLen);
+    }
 }
 
 void InputDecorationsReset(InputState* s) {
@@ -34490,6 +37311,1136 @@ void InputDecorationsReset(InputState* s) {
     if (s && s->rangeDecorations) {
         s->rangeDecorations->collections.Clear();
     }
+    if (s && s->gutterDecorations) {
+        GutterDecorationsClear(s->gutterDecorations);
+    }
+    if (s && s->overviewDecorations) {
+        OverviewDecorationsClear(s->overviewDecorations);
+    }
+}
+
+static const float kGutterDecorationGap = 4.f;
+static const float kGutterBoundaryMarkHeight = 8.f;
+static const float kMinOverviewRulerMarkHeight = 6.f;
+
+static int AdjustPointForEdit(int offset, Selection edit, int insertedLen) {
+    if (offset <= edit.start) {
+        return offset;
+    }
+    if (offset >= edit.end) {
+        int64_t removed = (int64_t)edit.end - (int64_t)edit.start;
+        if (removed < 0) {
+            removed = 0;
+        }
+        int64_t shifted = (int64_t)offset + insertedLen - removed;
+        if (shifted < 0) {
+            shifted = 0;
+        }
+        if (shifted > 0x7fffffff) {
+            shifted = 0x7fffffff;
+        }
+        return (int)shifted;
+    }
+    return edit.start;
+}
+
+template <typename T>
+struct MarkEntries {
+    uint64_t id = 0;
+    Vec<T> decorations;
+    Vec<int> indices;
+    Vec<int> maxEnds;
+};
+
+template <typename T>
+static int MarkBuild(MarkEntries<T>* entry, int lo, int hi) {
+    if (!entry || hi <= lo) {
+        return 0;
+    }
+    int mid = lo + (hi - lo) / 2;
+    int end = entry->decorations[entry->indices[mid]].range.end;
+    end = std::max(end, MarkBuild(entry, lo, mid));
+    end = std::max(end, MarkBuild(entry, mid + 1, hi));
+    entry->maxEnds[mid] = end;
+    return end;
+}
+
+template <typename T>
+static void MarkReindex(MarkEntries<T>* entry) {
+    VecClear(entry->indices);
+    VecClear(entry->maxEnds);
+    int n = len(entry->decorations);
+    if (n <= 0) {
+        return;
+    }
+    VecResize(entry->indices, n);
+    VecResize(entry->maxEnds, n);
+    for (int i = 0; i < n; i++) {
+        entry->indices[i] = i;
+        entry->maxEnds[i] = 0;
+    }
+    const T* decorations = entry->decorations.els;
+    std::sort(entry->indices.els, entry->indices.els + n,
+              [decorations](int a, int b) {
+                  int sa = decorations[a].range.start;
+                  int sb = decorations[b].range.start;
+                  return sa < sb || (sa == sb && a < b);
+              });
+    MarkBuild(entry, 0, n);
+}
+
+template <typename T>
+static int MarkQuery(const MarkEntries<T>* entry, int lo, int hi,
+                     Selection range, Vec<int>* matches) {
+    if (!entry || hi <= lo || range.start >= range.end) {
+        return 0;
+    }
+
+    auto touches = [&](int end, bool empty) {
+        return end > range.start || (empty && end == range.start);
+    };
+    int mid = lo + (hi - lo) / 2;
+    if (!touches(entry->maxEnds[mid], true)) {
+        return 1;
+    }
+    int visited = 1 + MarkQuery(entry, lo, mid, range, matches);
+    int ix = entry->indices[mid];
+    Selection candidate = entry->decorations[ix].range;
+    if (candidate.start < range.end) {
+        if (touches(candidate.end, candidate.IsEmpty())) {
+            VecAppend(*matches, ix);
+        }
+        visited += MarkQuery(entry, mid + 1, hi, range, matches);
+    }
+    return visited;
+}
+
+template <typename T>
+struct MarkCollections {
+    uint64_t nextId = 0;
+    uint64_t revision = 0;
+    Vec<MarkEntries<T>*> entries;
+
+    MarkCollections() = default;
+    MarkCollections(const MarkCollections&) = delete;
+    MarkCollections& operator=(const MarkCollections&) = delete;
+    ~MarkCollections() {
+        for (int i = 0; i < len(entries); i++) {
+            delete entries[i];
+        }
+    }
+
+    bool HasAny() const { return len(entries) > 0; }
+
+    MarkEntries<T>* Find(uint64_t id) const {
+        for (int i = 0; i < len(entries); i++) {
+            if (entries[i]->id == id) {
+                return entries[i];
+            }
+        }
+        return nullptr;
+    }
+
+    uint64_t Create(const T* decorations, int n) {
+        MarkEntries<T>* entry = new MarkEntries<T>();
+        entry->id = nextId++;
+        for (int i = 0; decorations && i < n; i++) {
+            VecAppend(entry->decorations, decorations[i]);
+        }
+        MarkReindex(entry);
+        VecAppend(entries, entry);
+        revision++;
+        return entry->id;
+    }
+
+    bool Set(uint64_t id, const T* decorations, int n) {
+        MarkEntries<T>* entry = Find(id);
+        if (!entry) {
+            return false;
+        }
+        VecClear(entry->decorations);
+        for (int i = 0; decorations && i < n; i++) {
+            VecAppend(entry->decorations, decorations[i]);
+        }
+        MarkReindex(entry);
+        revision++;
+        return true;
+    }
+
+    bool Append(uint64_t id, const T* decorations, int n) {
+        MarkEntries<T>* entry = Find(id);
+        if (!entry) {
+            return false;
+        }
+        for (int i = 0; decorations && i < n; i++) {
+            VecAppend(entry->decorations, decorations[i]);
+        }
+        MarkReindex(entry);
+        revision++;
+        return true;
+    }
+
+    bool Remove(uint64_t id) {
+        for (int i = 0; i < len(entries); i++) {
+            if (entries[i]->id == id) {
+                delete entries[i];
+                for (int k = i; k + 1 < len(entries); k++) {
+                    entries[k] = entries[k + 1];
+                }
+                entries.len--;
+                revision++;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void Clear() {
+        for (int i = 0; i < len(entries); i++) {
+            VecClear(entries[i]->decorations);
+            MarkReindex(entries[i]);
+        }
+        revision++;
+    }
+
+    void Adjust(Selection editedRange, int insertedLen) {
+        for (int e = 0; e < len(entries); e++) {
+            MarkEntries<T>* entry = entries[e];
+            int n = len(entry->decorations);
+            if (n == 0 || entry->maxEnds[n / 2] <= editedRange.start) {
+                continue;
+            }
+            Vec<int> remap;
+            VecResize(remap, n);
+            int retained = 0;
+            for (int i = 0; i < n; i++) {
+                T d = entry->decorations[i];
+                if (d.range.IsEmpty()) {
+                    int at = AdjustPointForEdit(d.range.start, editedRange,
+                                                insertedLen);
+                    d.range = {at, at};
+                } else {
+                    d.range = AdjustDecorationRange(d.range, editedRange,
+                                                    insertedLen);
+                }
+                remap[i] = retained;
+                entry->decorations[retained++] = d;
+            }
+            VecResize(entry->decorations, retained);
+            Vec<int>& indices = entry->indices;
+            int write = 0;
+            for (int i = 0; i < len(indices); i++) {
+                int ix = indices[i];
+                if (ix >= 0 && ix < n) {
+                    indices[write++] = remap[ix];
+                }
+            }
+            VecResize(indices, write);
+            bool sorted = true;
+            for (int i = 1; i < len(indices); i++) {
+                int a = indices[i - 1];
+                int b = indices[i];
+                int sa = entry->decorations[a].range.start;
+                int sb = entry->decorations[b].range.start;
+                if (sa > sb || (sa == sb && a > b)) {
+                    sorted = false;
+                    break;
+                }
+            }
+            if (!sorted) {
+                const T* decorations = entry->decorations.els;
+                std::sort(indices.els, indices.els + len(indices),
+                          [decorations](int a, int b) {
+                              int sa = decorations[a].range.start;
+                              int sb = decorations[b].range.start;
+                              return sa < sb || (sa == sb && a < b);
+                          });
+            }
+            VecResize(entry->maxEnds, retained);
+            for (int i = 0; i < retained; i++) {
+                entry->maxEnds[i] = 0;
+            }
+            MarkBuild(entry, 0, retained);
+        }
+    }
+
+    int Intersecting(Selection range, const T** out, int cap) const {
+        int count = 0;
+        Vec<int> matches;
+        for (int e = 0; e < len(entries); e++) {
+            const MarkEntries<T>* entry = entries[e];
+            VecClear(matches);
+            MarkQuery(entry, 0, len(entry->decorations), range, &matches);
+            std::sort(matches.els, matches.els + len(matches));
+            int prev = -1;
+            for (int i = 0; i < len(matches); i++) {
+                if (matches[i] == prev) {
+                    continue;
+                }
+                prev = matches[i];
+                if (out && count < cap) {
+                    out[count] = &entry->decorations[matches[i]];
+                }
+                count++;
+            }
+        }
+        return count;
+    }
+};
+
+template <typename T>
+static int MarkNormalize(Str text, const T* in, int n, Vec<T>* out) {
+    int added = 0;
+    int textLen = len(text);
+    for (int i = 0; in && i < n; i++) {
+        Selection range = in[i].range;
+
+        if (range.start > range.end || range.start > textLen) {
+            continue;
+        }
+        int start = RopeClipOffset(text, range.start, Bias::Left);
+        if (range.IsEmpty()) {
+            range = {start, start};
+        } else {
+            int end = RopeClipOffset(text, range.end, Bias::Right);
+            range = {start, end};
+            if (range.IsEmpty()) {
+                continue;
+            }
+        }
+        T d = in[i];
+        d.range = range;
+        VecAppend(*out, d);
+        added++;
+    }
+    return added;
+}
+
+struct GutterDecorationsState {
+    int refs = 1;
+    bool ownerAlive = true;
+    InputState* input = nullptr;
+    MarkCollections<GutterDecoration> collections;
+};
+
+struct OverviewCachedRow {
+    OverviewRulerLane lane = OverviewRulerLane::Center;
+    Rgba color = {};
+    bool hasColor = false;
+    int start = 0;
+    int end = 0;
+};
+
+struct OverviewRulerDecorationsState {
+    int refs = 1;
+    bool ownerAlive = true;
+    InputState* input = nullptr;
+    MarkCollections<OverviewRulerDecoration> collections;
+    bool cacheValid = false;
+    uint64_t cacheDecorations = 0;
+    uint64_t cacheDocument = 0;
+    int cacheWrapRows = 0;
+    int cacheDisplayRows = 0;
+    float cacheWrapWidth = -1.f;
+    uint64_t cacheFolds = 0;
+    Vec<OverviewCachedRow> cacheRows;
+};
+
+static void GutterDecorationsRetain(GutterDecorationsState* state) {
+    if (state) {
+        state->refs++;
+    }
+}
+
+static void GutterDecorationsRelease(GutterDecorationsState* state) {
+    if (state && --state->refs <= 0) {
+        delete state;
+    }
+}
+
+static void OverviewDecorationsRetain(OverviewRulerDecorationsState* state) {
+    if (state) {
+        state->refs++;
+    }
+}
+
+static void OverviewDecorationsRelease(OverviewRulerDecorationsState* state) {
+    if (state && --state->refs <= 0) {
+        delete state;
+    }
+}
+
+static MarkCollections<GutterDecoration>* GutterLive(
+    GutterDecorationsState* state) {
+    return state && state->ownerAlive && state->input ? &state->collections
+                                                      : nullptr;
+}
+
+static MarkCollections<OverviewRulerDecoration>* OverviewLive(
+    OverviewRulerDecorationsState* state) {
+    return state && state->ownerAlive && state->input ? &state->collections
+                                                      : nullptr;
+}
+
+static void GutterDecorationsReleaseOwner(InputState* s) {
+    if (!s || !s->gutterDecorations) {
+        return;
+    }
+    GutterDecorationsState* state = s->gutterDecorations;
+    state->ownerAlive = false;
+    state->input = nullptr;
+    while (len(state->collections.entries) > 0) {
+        state->collections.Remove(state->collections.entries[0]->id);
+    }
+    GutterDecorationsRelease(state);
+    s->gutterDecorations = nullptr;
+}
+
+static void OverviewDecorationsReleaseOwner(InputState* s) {
+    if (!s || !s->overviewDecorations) {
+        return;
+    }
+    OverviewRulerDecorationsState* state = s->overviewDecorations;
+    state->ownerAlive = false;
+    state->input = nullptr;
+    while (len(state->collections.entries) > 0) {
+        state->collections.Remove(state->collections.entries[0]->id);
+    }
+    OverviewDecorationsRelease(state);
+    s->overviewDecorations = nullptr;
+}
+
+static void GutterDecorationsAdjust(GutterDecorationsState* state,
+                                    Selection editedRange, int insertedLen) {
+    if (MarkCollections<GutterDecoration>* live = GutterLive(state)) {
+        live->Adjust(editedRange, insertedLen);
+    }
+}
+
+static void OverviewDecorationsAdjust(OverviewRulerDecorationsState* state,
+                                      Selection editedRange, int insertedLen) {
+    if (MarkCollections<OverviewRulerDecoration>* live = OverviewLive(state)) {
+        live->Adjust(editedRange, insertedLen);
+    }
+}
+
+static void GutterDecorationsClear(GutterDecorationsState* state) {
+    if (MarkCollections<GutterDecoration>* live = GutterLive(state)) {
+        live->Clear();
+    }
+}
+
+static void OverviewDecorationsClear(OverviewRulerDecorationsState* state) {
+    if (MarkCollections<OverviewRulerDecoration>* live = OverviewLive(state)) {
+        live->Clear();
+    }
+}
+
+GutterDecoration GutterDecoration::New(Selection range) {
+    GutterDecoration d;
+    d.range = range;
+    return d;
+}
+
+bool GutterDecoration::Color(Rgba* out) const {
+    if (!hasColor || !out) {
+        return false;
+    }
+    *out = color;
+    return true;
+}
+
+bool GutterDecoration::FoldedColor(Rgba* out) const {
+    if (!hasFoldedColor || !out) {
+        return false;
+    }
+    *out = foldedColor;
+    return true;
+}
+
+GutterDecoration GutterDecoration::WithColor(Rgba value) const {
+    GutterDecoration out = *this;
+    out.color = value;
+    out.hasColor = true;
+    return out;
+}
+
+GutterDecoration GutterDecoration::WithFoldedColor(Rgba value) const {
+    GutterDecoration out = *this;
+    out.foldedColor = value;
+    out.hasFoldedColor = true;
+    return out;
+}
+
+OverviewRulerDecoration OverviewRulerDecoration::New(Selection range) {
+    OverviewRulerDecoration d;
+    d.range = range;
+    return d;
+}
+
+bool OverviewRulerDecoration::Color(Rgba* out) const {
+    if (!hasColor || !out) {
+        return false;
+    }
+    *out = color;
+    return true;
+}
+
+OverviewRulerDecoration OverviewRulerDecoration::WithLane(
+    OverviewRulerLane value) const {
+    OverviewRulerDecoration out = *this;
+    out.lane = value;
+    return out;
+}
+
+OverviewRulerDecoration OverviewRulerDecoration::WithColor(Rgba value) const {
+    OverviewRulerDecoration out = *this;
+    out.color = value;
+    out.hasColor = true;
+    return out;
+}
+
+GutterDecorationCollection::GutterDecorationCollection(
+    const GutterDecorationCollection& other)
+    : state(other.state), id(other.id) {
+    GutterDecorationsRetain(state);
+}
+
+GutterDecorationCollection& GutterDecorationCollection::operator=(
+    const GutterDecorationCollection& other) {
+    if (this == &other) {
+        return *this;
+    }
+    GutterDecorationsRetain(other.state);
+    GutterDecorationsRelease(state);
+    state = other.state;
+    id = other.id;
+    return *this;
+}
+
+GutterDecorationCollection::~GutterDecorationCollection() {
+    GutterDecorationsRelease(state);
+}
+
+void GutterDecorationCollection::Set(const GutterDecoration* decorations,
+                                     int n) {
+    MarkCollections<GutterDecoration>* live = GutterLive(state);
+    if (!live) {
+        return;
+    }
+    Vec<GutterDecoration> normalized;
+    MarkNormalize(InputValue(state->input), decorations, n, &normalized);
+    live->Set(id, normalized.els, len(normalized));
+}
+
+void GutterDecorationCollection::Append(const GutterDecoration* decorations,
+                                        int n) {
+    MarkCollections<GutterDecoration>* live = GutterLive(state);
+    if (!live) {
+        return;
+    }
+    Vec<GutterDecoration> normalized;
+    MarkNormalize(InputValue(state->input), decorations, n, &normalized);
+    live->Append(id, normalized.els, len(normalized));
+}
+
+void GutterDecorationCollection::Clear() {
+    Set(nullptr, 0);
+}
+
+void GutterDecorationCollection::Dispose() {
+    if (MarkCollections<GutterDecoration>* live = GutterLive(state)) {
+        live->Remove(id);
+    }
+}
+
+int GutterDecorationCollection::GetRanges(Selection* out, int cap) const {
+    MarkCollections<GutterDecoration>* live = GutterLive(state);
+    MarkEntries<GutterDecoration>* entry = live ? live->Find(id) : nullptr;
+    if (!entry) {
+        return 0;
+    }
+    for (int i = 0; out && i < len(entry->decorations) && i < cap; i++) {
+        out[i] = entry->decorations[i].range;
+    }
+    return len(entry->decorations);
+}
+
+OverviewRulerDecorationCollection::OverviewRulerDecorationCollection(
+    const OverviewRulerDecorationCollection& other)
+    : state(other.state), id(other.id) {
+    OverviewDecorationsRetain(state);
+}
+
+OverviewRulerDecorationCollection& OverviewRulerDecorationCollection::operator=(
+    const OverviewRulerDecorationCollection& other) {
+    if (this == &other) {
+        return *this;
+    }
+    OverviewDecorationsRetain(other.state);
+    OverviewDecorationsRelease(state);
+    state = other.state;
+    id = other.id;
+    return *this;
+}
+
+OverviewRulerDecorationCollection::~OverviewRulerDecorationCollection() {
+    OverviewDecorationsRelease(state);
+}
+
+void OverviewRulerDecorationCollection::Set(
+    const OverviewRulerDecoration* decorations, int n) {
+    MarkCollections<OverviewRulerDecoration>* live = OverviewLive(state);
+    if (!live) {
+        return;
+    }
+    Vec<OverviewRulerDecoration> normalized;
+    MarkNormalize(InputValue(state->input), decorations, n, &normalized);
+    live->Set(id, normalized.els, len(normalized));
+    state->cacheValid = false;
+}
+
+void OverviewRulerDecorationCollection::Append(
+    const OverviewRulerDecoration* decorations, int n) {
+    MarkCollections<OverviewRulerDecoration>* live = OverviewLive(state);
+    if (!live) {
+        return;
+    }
+    Vec<OverviewRulerDecoration> normalized;
+    MarkNormalize(InputValue(state->input), decorations, n, &normalized);
+    live->Append(id, normalized.els, len(normalized));
+    state->cacheValid = false;
+}
+
+void OverviewRulerDecorationCollection::Clear() {
+    Set(nullptr, 0);
+}
+
+void OverviewRulerDecorationCollection::Dispose() {
+    if (MarkCollections<OverviewRulerDecoration>* live = OverviewLive(state)) {
+        live->Remove(id);
+        state->cacheValid = false;
+    }
+}
+
+int OverviewRulerDecorationCollection::GetRanges(Selection* out,
+                                                 int cap) const {
+    MarkCollections<OverviewRulerDecoration>* live = OverviewLive(state);
+    MarkEntries<OverviewRulerDecoration>* entry =
+        live ? live->Find(id) : nullptr;
+    if (!entry) {
+        return 0;
+    }
+    for (int i = 0; out && i < len(entry->decorations) && i < cap; i++) {
+        out[i] = entry->decorations[i].range;
+    }
+    return len(entry->decorations);
+}
+
+static GutterDecorationsState* GutterEnsure(InputState* s) {
+    if (!s) {
+        return nullptr;
+    }
+    if (!s->gutterDecorations) {
+        s->gutterDecorations = new GutterDecorationsState();
+        s->gutterDecorations->input = s;
+    }
+    return s->gutterDecorations;
+}
+
+static OverviewRulerDecorationsState* OverviewEnsure(InputState* s) {
+    if (!s) {
+        return nullptr;
+    }
+    if (!s->overviewDecorations) {
+        s->overviewDecorations = new OverviewRulerDecorationsState();
+        s->overviewDecorations->input = s;
+    }
+    return s->overviewDecorations;
+}
+
+GutterDecorationCollection InputCreateGutterDecorationsCollection(
+    InputState* s, const GutterDecoration* decorations, int n) {
+    GutterDecorationCollection result;
+    GutterDecorationsState* state = GutterEnsure(s);
+    if (!state) {
+        return result;
+    }
+    Vec<GutterDecoration> normalized;
+    MarkNormalize(InputValue(s), decorations, n, &normalized);
+    result.state = state;
+    result.id = state->collections.Create(normalized.els, len(normalized));
+    GutterDecorationsRetain(result.state);
+    return result;
+}
+
+OverviewRulerDecorationCollection InputCreateOverviewRulerDecorationsCollection(
+    InputState* s, const OverviewRulerDecoration* decorations, int n) {
+    OverviewRulerDecorationCollection result;
+    OverviewRulerDecorationsState* state = OverviewEnsure(s);
+    if (!state) {
+        return result;
+    }
+    Vec<OverviewRulerDecoration> normalized;
+    MarkNormalize(InputValue(s), decorations, n, &normalized);
+    result.state = state;
+    result.id = state->collections.Create(normalized.els, len(normalized));
+    state->cacheValid = false;
+    OverviewDecorationsRetain(result.state);
+    return result;
+}
+
+void InputSetGutterDecorationsWidth(InputState* s, float width) {
+    if (!s || s->gutterDecorationsWidth == width) {
+        return;
+    }
+    s->gutterDecorationsWidth = width;
+}
+
+float InputGutterStripWidth(const InputState* s) {
+    if (!s || !s->gutterDecorations || !s->gutterDecorations->ownerAlive ||
+        !s->gutterDecorations->collections.HasAny()) {
+        return 0.f;
+    }
+    float w = s->gutterDecorationsWidth;
+    if (w < 0.f) {
+        w = 0.f;
+    }
+    return w + kGutterDecorationGap;
+}
+
+int InputGutterDecorations(const InputState* s, Selection range,
+                           const GutterDecoration** out, int cap) {
+    if (!s || !s->gutterDecorations || !s->gutterDecorations->ownerAlive) {
+        return 0;
+    }
+    return s->gutterDecorations->collections.Intersecting(range, out, cap);
+}
+
+uint64_t InputOverviewRulerRevision(const InputState* s) {
+    if (!s || !s->overviewDecorations || !s->overviewDecorations->ownerAlive) {
+        return 0;
+    }
+    return s->overviewDecorations->collections.revision;
+}
+
+static int WrapRowsOf(const InputState* s, int line) {
+    if (!s || !s->wrap.valid || line < 0 || line >= s->wrap.tree.LineCount()) {
+        return 1;
+    }
+    const InputWrapLine* item = s->wrap.tree.Line(line);
+    if (!item || item->nRows < 1) {
+        return 1;
+    }
+    return item->nRows;
+}
+
+static int RowsBeforeLine(const InputState* s, int line) {
+    if (!s || line <= 0) {
+        return 0;
+    }
+    FoldMapRebuild((FoldMap*)&s->folds, InputLinesLen(s));
+    bool wrapped = s->softWrap && s->wrap.valid && s->wrap.width > 0;
+    bool folded = len(s->folds.folded) > 0;
+    if (!wrapped && !folded) {
+        return line;
+    }
+    if (!folded && wrapped && line <= s->wrap.tree.LineCount()) {
+        if (line < s->wrap.tree.LineCount()) {
+            return s->wrap.tree.RowsAbove(line);
+        }
+        return s->wrap.totalRows;
+    }
+    int n = 0;
+    int lines = InputLinesLen(s);
+    if (line > lines) {
+        line = lines;
+    }
+    for (int i = 0; i < line; i++) {
+        if (FoldMapLineHidden(&s->folds, i)) {
+            continue;
+        }
+        int rows = wrapped ? WrapRowsOf(s, i) : 1;
+        if (rows < 1) {
+            rows = 1;
+        }
+        n += rows;
+    }
+    return n;
+}
+
+static int RowsOnLine(const InputState* s, int line) {
+    if (!s) {
+        return 1;
+    }
+    FoldMapRebuild((FoldMap*)&s->folds, InputLinesLen(s));
+    if (FoldMapLineHidden(&s->folds, line)) {
+        return 0;
+    }
+    if (!(s->softWrap && s->wrap.valid && s->wrap.width > 0)) {
+        return 1;
+    }
+    int rows = WrapRowsOf(s, line);
+    return rows < 1 ? 1 : rows;
+}
+
+static Selection DisplayRangeOfLine(const InputState* s, int line) {
+    if (RowsOnLine(s, line) <= 0) {
+        return {-1, -1};
+    }
+    int start = RowsBeforeLine(s, line);
+    return {start, start + RowsOnLine(s, line)};
+}
+
+static int DisplayRowOfLine(const InputState* s, int line) {
+    Selection rows = DisplayRangeOfLine(s, line);
+    if (rows.start >= 0) {
+        return rows.start;
+    }
+    int visible = FoldMapNearestVisibleLine(&s->folds, line);
+    Selection header = DisplayRangeOfLine(s, visible);
+    return header.start < 0 ? 0 : header.start;
+}
+
+static int DisplayRowCountOf(const InputState* s) {
+    return s ? RowsBeforeLine(s, InputLinesLen(s)) : 0;
+}
+
+static int BufferLineAtDisplay(const InputState* s, int displayRow) {
+    if (!s) {
+        return 0;
+    }
+    int lines = InputLinesLen(s);
+    bool wrapped = s->softWrap && s->wrap.valid && s->wrap.width > 0;
+    bool folded = len(s->folds.folded) > 0;
+    if (!wrapped && !folded) {
+        if (displayRow < 0) {
+            return 0;
+        }
+        return displayRow < lines ? displayRow : (lines > 0 ? lines - 1 : 0);
+    }
+    if (!folded && wrapped) {
+        int line = s->wrap.tree.LineAtRow(displayRow);
+        if (line < 0) {
+            line = 0;
+        }
+        return line;
+    }
+    int at = 0;
+    for (int i = 0; i < lines; i++) {
+        if (FoldMapLineHidden(&s->folds, i)) {
+            continue;
+        }
+        int rows = wrapped ? WrapRowsOf(s, i) : 1;
+        if (rows < 1) {
+            rows = 1;
+        }
+        if (displayRow < at + rows) {
+            return i;
+        }
+        at += rows;
+    }
+    return lines > 0 ? lines - 1 : 0;
+}
+
+DecorationRows InputDecorationRows(const InputState* s, Selection range) {
+    DecorationRows out;
+    if (!s) {
+        return out;
+    }
+    Str text = InputValue(s);
+    FoldMapRebuild((FoldMap*)&s->folds, InputLinesLen(s));
+    int startLine = RopeOffsetToPoint(text, range.start).row;
+    bool foldedStart = FoldMapLineHidden(&s->folds, startLine);
+    int start = DisplayRowOfLine(s, startLine);
+    if (range.IsEmpty() && !foldedStart) {
+        Selection rows = DisplayRangeOfLine(s, startLine);
+        int boundary = RopeLineStartOffset(text, startLine) == range.start
+                           ? rows.start
+                           : rows.end;
+        if (rows.start < 0) {
+            boundary = start;
+        }
+        out.boundary = true;
+        out.start = boundary;
+        out.end = boundary;
+        return out;
+    }
+    int endLine = RopeOffsetToPoint(text, range.end).row;
+    if (endLine > startLine && RopeLineStartOffset(text, endLine) == range
+                                                                         .end) {
+        endLine -= 1;
+    }
+    Selection endRows = DisplayRangeOfLine(s, endLine);
+    int end =
+        endRows.start >= 0 ? endRows.end : DisplayRowOfLine(s, endLine) + 1;
+    if (end < start + 1) {
+        end = start + 1;
+    }
+    out.foldedStart = foldedStart;
+    out.start = start;
+    out.end = end;
+    return out;
+}
+
+Selection InputVisibleDecorationSpan(const InputState* s,
+                                     Selection visibleLines) {
+    if (!s || visibleLines.end <= visibleLines.start) {
+        return {};
+    }
+    Str text = InputValue(s);
+    FoldMapRebuild((FoldMap*)&s->folds, InputLinesLen(s));
+    int last = visibleLines.end - 1;
+    int lastRow = DisplayRowOfLine(s, last);
+    int end = len(text);
+    if (lastRow + 1 < DisplayRowCountOf(s)) {
+        int line = BufferLineAtDisplay(s, lastRow + 1);
+        end = RopeLineStartOffset(text, line);
+    }
+    int startLine = visibleLines.start;
+    if (startLine < 0) {
+        startLine = 0;
+    }
+    return {RopeLineStartOffset(text, startLine), end};
+}
+
+static Rgba MarkColor(const InputState* s, bool has, Rgba color) {
+    return has ? color : (s ? s->editorForeground : Rgba{});
+}
+
+int InputLayoutGutterMarks(const InputState* s, float originX, float originY,
+                           float lineH, float viewTop, float viewBottom,
+                           GutterMark* out, int cap) {
+    if (!s || !s->gutterDecorations || !s->gutterDecorations->ownerAlive ||
+        !s->gutterDecorations->collections.HasAny() || lineH <= 0) {
+        return 0;
+    }
+    float width = s->gutterDecorationsWidth;
+    if (width < 0.f) {
+        width = 0.f;
+    }
+    Str text = InputValue(s);
+    Selection span = {0, len(text)};
+    bool clip = viewBottom >= viewTop;
+    if (clip) {
+        int first = (int)((viewTop - originY) / lineH);
+        int last = (int)((viewBottom - originY) / lineH) + 1;
+        if (first < 0) {
+            first = 0;
+        }
+        int lines = InputLinesLen(s);
+        if (last < first) {
+            last = first;
+        }
+        if (last > lines) {
+            last = lines;
+        }
+        if (last <= first) {
+            last = first + 1;
+        }
+        span = InputVisibleDecorationSpan(s, {first, last});
+    }
+    Selection query = {span.start, span.end + 1};
+    int n = s->gutterDecorations->collections.Intersecting(query, nullptr, 0);
+    Vec<const GutterDecoration*> found;
+    if (n > 0) {
+        VecResize(found, n);
+        s->gutterDecorations->collections.Intersecting(query, found.els, n);
+    }
+    int count = 0;
+    auto push = [&](float y, float h, Rgba color, bool pill) {
+        if (clip && (y + h < viewTop || y > viewBottom)) {
+            return;
+        }
+        if (out && count < cap) {
+            out[count] = {originX, y, width, h, color, pill};
+        }
+        count++;
+    };
+    for (int i = 0; i < n; i++) {
+        const GutterDecoration* d = found[i];
+        Rgba color = MarkColor(s, d->hasColor, d->color);
+        DecorationRows rows = InputDecorationRows(s, d->range);
+        auto top = [&](int row) { return originY + lineH * (float)row; };
+        if (rows.boundary) {
+            push(top(rows.start) - kGutterBoundaryMarkHeight * 0.5f,
+                 kGutterBoundaryMarkHeight, color, true);
+            continue;
+        }
+        auto bar = [&](int from, int to, Rgba c) {
+            int last = to - 1;
+            if (last < from) {
+                last = from;
+            }
+            float y = top(from);
+            float bottom = top(last) + lineH;
+            push(y, bottom - y, c, false);
+        };
+        if (!rows.foldedStart) {
+            bar(rows.start, rows.end, color);
+            continue;
+        }
+        Rgba folded = d->hasFoldedColor ? d->foldedColor : color;
+        bar(rows.start, rows.start + 1, folded);
+        if (rows.end > rows.start + 1) {
+            bar(rows.start + 1, rows.end, color);
+        }
+    }
+    return count;
+}
+
+static uint64_t FoldSignature(const InputState* s) {
+    uint64_t hash = 1469598103934665603ull;
+    if (!s) {
+        return hash;
+    }
+    for (int i = 0; i < len(s->folds.folded); i++) {
+        hash ^= (uint64_t)(uint32_t)s->folds.folded[i].startLine;
+        hash *= 1099511628211ull;
+        hash ^= (uint64_t)(uint32_t)s->folds.folded[i].endLine;
+        hash *= 1099511628211ull;
+    }
+    return hash;
+}
+
+static int LaneIndex(OverviewRulerLane lane) {
+    return (int)lane;
+}
+
+int InputLayoutOverviewRuler(InputState* s, float trackX, float trackY,
+                             float trackW, float trackH, float contentHeight,
+                             float paddingTop, float lineH,
+                             OverviewRulerMark* out, int cap) {
+    if (!s || !s->overviewDecorations || !s->overviewDecorations->ownerAlive ||
+        contentHeight <= 0.f || trackH <= 0.f || lineH <= 0.f) {
+        return 0;
+    }
+    OverviewRulerDecorationsState* store = s->overviewDecorations;
+    int wrapRows = s->softWrap && s->wrap.valid ? s->wrap.totalRows : 0;
+    int displayRows = DisplayRowCountOf(s);
+    float wrapWidth = s->wrap.measuredWidth;
+    uint64_t folds = FoldSignature(s);
+    bool same = store->cacheValid &&
+                store->cacheDecorations == store->collections.revision &&
+                store->cacheDocument == s->docVersion &&
+                store->cacheWrapRows == wrapRows &&
+                store->cacheDisplayRows == displayRows &&
+                store->cacheWrapWidth == wrapWidth &&
+                store->cacheFolds == folds;
+    if (!same) {
+        Vec<OverviewCachedRow> rows;
+        MarkCollections<OverviewRulerDecoration>& cols = store->collections;
+        for (int e = 0; e < len(cols.entries); e++) {
+            const MarkEntries<OverviewRulerDecoration>* entry = cols.entries[e];
+            for (int i = 0; i < len(entry->decorations); i++) {
+                const OverviewRulerDecoration& d = entry->decorations[i];
+                DecorationRows placed = InputDecorationRows(s, d.range);
+                OverviewCachedRow row;
+                row.lane = d.lane;
+                row.hasColor = d.hasColor;
+                row.color = d.color;
+                if (placed.boundary) {
+                    row.start = placed.start;
+                    row.end = placed.start;
+                } else {
+                    row.start = placed.start;
+                    row.end = placed.end;
+                }
+                VecAppend(rows, row);
+            }
+        }
+        std::sort(rows.els, rows.els + len(rows),
+                  [](const OverviewCachedRow& a, const OverviewCachedRow& b) {
+                      int la = LaneIndex(a.lane);
+                      int lb = LaneIndex(b.lane);
+                      return la < lb || (la == lb && a.start < b.start);
+                  });
+        store->cacheRows = rows;
+        store->cacheValid = true;
+        store->cacheDecorations = cols.revision;
+        store->cacheDocument = s->docVersion;
+        store->cacheWrapRows = wrapRows;
+        store->cacheDisplayRows = displayRows;
+        store->cacheWrapWidth = wrapWidth;
+        store->cacheFolds = folds;
+    }
+    if (len(store->cacheRows) == 0) {
+        return 0;
+    }
+    float scale = trackH / contentHeight;
+    struct Merged {
+        OverviewRulerLane lane;
+        Rgba color;
+        float top;
+        float bottom;
+    };
+    Vec<Merged> merged;
+    for (int i = 0; i < len(store->cacheRows); i++) {
+        const OverviewCachedRow& row = store->cacheRows[i];
+        float y0 = trackY + (paddingTop + lineH * (float)row.start) * scale;
+        float y1 = trackY + (paddingTop + lineH * (float)row.end) * scale;
+        float height = y1 - y0;
+        if (height < kMinOverviewRulerMarkHeight) {
+            height = kMinOverviewRulerMarkHeight;
+        }
+        float top = y0 + (y1 - y0 - height) * 0.5f;
+        float limit = trackY + trackH - height;
+        if (limit < trackY) {
+            limit = trackY;
+        }
+        if (top < trackY) {
+            top = trackY;
+        }
+        if (top > limit) {
+            top = limit;
+        }
+        Rgba color = MarkColor(s, row.hasColor, row.color);
+        if (len(merged) > 0) {
+            Merged& last = merged[len(merged) - 1];
+            if (last.lane == row.lane && RgbaEq(last.color, color) &&
+                top <= last.bottom + 1.f) {
+                float bottom = top + height;
+                if (bottom > last.bottom) {
+                    last.bottom = bottom;
+                }
+                continue;
+            }
+        }
+        VecAppend(merged, Merged{row.lane, color, top, top + height});
+    }
+    float third = trackW / 3.f;
+    int count = len(merged);
+    for (int i = 0; i < count; i++) {
+        float x = trackX;
+        float w = third;
+        switch (merged[i].lane) {
+            case OverviewRulerLane::Left:
+                x = trackX;
+                w = third;
+                break;
+            case OverviewRulerLane::Center:
+                x = trackX + third;
+                w = third;
+                break;
+            case OverviewRulerLane::Right:
+                x = trackX + third * 2.f;
+                w = third;
+                break;
+            case OverviewRulerLane::Full:
+                x = trackX;
+                w = trackW;
+                break;
+        }
+        if (out && i < cap) {
+            out[i] = {merged[i].lane,
+                      merged[i].color,
+                      x,
+                      merged[i].top,
+                      w,
+                      merged[i].bottom - merged[i].top};
+        }
+    }
+    return count;
 }
 
 int FrameOutlinePoints(const RangeCorners* corners, int n, Vec<Point>* out) {
@@ -38788,6 +42739,16 @@ static uint16_t InputFontWord(const InputEditorStyle& style) {
                       FontFamilyBits(style.fontFamily));
 }
 
+static uint16_t InputFontWordCascaded(const InputEditorStyle& style,
+                                      uint16_t cascaded) {
+    uint16_t own = InputFontWord(style);
+    uint16_t w = (uint16_t)((cascaded & ~kFontFamilyMask) | own);
+    if (!style.fontFamily) {
+        w |= (uint16_t)(cascaded & kFontFamilyMask);
+    }
+    return w;
+}
+
 static void EmitTokenTextRun(El* row, Arena* a, const InputEditorStyle& style,
                              float font, float lineMult, Str slice,
                              int docStart, const Selection& sel, bool caret,
@@ -38874,7 +42835,8 @@ El* Input::New(Ctx* cx, InputState* state, const InputEditorStyle& projected) {
     float lineH = InputLineH(cx);
     float lineMult = InputLineMult(cx, lineH, font);
     state->lastLineH = lineH;
-    state->lastFontWord = InputFontWord(style);
+    state->lastFontWord = InputFontWordCascaded(style, state->cascadeFontWord);
+    state->editorForeground = style.foreground;
     Str text = InputValue(state);
     bool masked = style.mask || state->masked;
     bool showSel = state->HasSelectionFocus(cx->win);
@@ -39026,20 +42988,22 @@ static El* FoldChevron(Arena* a, InputState* state,
 
 int InputComposeSpans(TextSpan* spans, int n, const TextSpan* decs, int nDecs,
                       int cap, TextSpan* tmp) {
-
-    int m = 0;
-    int i = 0;
-    for (int d = 0; d < nDecs && m < cap; d++) {
+    if (!spans || !tmp || cap <= 0) return 0;
+    int count = n < cap ? n : cap;
+    if (nDecs <= 0 || !decs) return count;
+    for (int d = 0; d < nDecs; d++) {
         const TextSpan& dec = decs[d];
-        for (; i < n && m < cap; i++) {
+        if (dec.hi <= dec.lo) continue;
+        int m = 0;
+        int i = 0;
+        for (; i < count && m < cap; i++) {
             TextSpan sp = spans[i];
+            if (sp.hi <= sp.lo) continue;
             if (sp.hi <= dec.lo) {
                 tmp[m++] = sp;
                 continue;
             }
-            if (sp.lo >= dec.hi) {
-                break;
-            }
+            if (sp.lo >= dec.hi) break;
 
             if (sp.lo < dec.lo && m < cap) {
                 TextSpan head = sp;
@@ -39051,17 +43015,14 @@ int InputComposeSpans(TextSpan* spans, int n, const TextSpan* decs, int nDecs,
                 break;
             }
         }
-        if (m < cap) {
-            tmp[m++] = dec;
+        if (m < cap) tmp[m++] = dec;
+        for (; i < count && m < cap; i++) {
+            if (spans[i].hi > spans[i].lo) tmp[m++] = spans[i];
         }
+        for (int k = 0; k < m; k++) spans[k] = tmp[k];
+        count = m;
     }
-    for (; i < n && m < cap; i++) {
-        tmp[m++] = spans[i];
-    }
-    for (int k = 0; k < m; k++) {
-        spans[k] = tmp[k];
-    }
-    return m;
+    return count;
 }
 
 struct RangeDecorationRow {
@@ -39302,6 +43263,10 @@ struct EditorUnderlay {
     Ctx cx = {};
     InputEditorStyle projected = {};
     bool lineNumbers = false;
+
+    El* foldBands[64] = {};
+    int nFoldBands = 0;
+    Rgba foldColor = {};
 };
 
 static void RewrapEditorColumn(PaintCtx* ctx, El* e, void* user) {
@@ -39341,6 +43306,20 @@ static void PaintEditorUnderlay(PaintCtx* ctx, El* e, void* user) {
     if (s && s->softWrap && e->w > 0 && e->w != s->wrap.measuredWidth &&
         ctx->window) {
         AppInvalidate(ctx->window);
+    }
+    if (u->nFoldBands > 0 && u->foldColor.a != 0) {
+        for (int i = 0; i < u->nFoldBands; i++) {
+            const El* band = u->foldBands[i];
+            if (!band || band->w <= 0 || band->h <= 0) {
+                continue;
+            }
+            FillRound(ctx, band->x, band->y, band->w, band->h, 0,
+                      PaintFade(ctx, u->foldColor));
+            if (s && !s->lastFoldBackgroundSet) {
+                s->lastFoldBackground = {band->x, band->y, band->w, band->h};
+                s->lastFoldBackgroundSet = true;
+            }
+        }
     }
     if (u->activeLine && u->activeColor.a != 0) {
         const El* band = u->activeLine;
@@ -39494,7 +43473,8 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                       : InputLineH(cx);
     float lineMult = InputLineMult(cx, lineH, font);
     state->lastLineH = lineH;
-    state->lastFontWord = InputFontWord(style);
+    state->lastFontWord = InputFontWordCascaded(style, state->cascadeFontWord);
+    state->editorForeground = style.foreground;
     Str text = InputValue(state);
     bool caret =
         state->focused && !state->disabled && BlinkVisible(cx, state->blink);
@@ -39576,8 +43556,10 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
     bool wrap = false;
     {
         float colW = state->contentBox.w;
+
+        float strip = InputGutterStripWidth(state);
         float gutterW =
-            lineNumbers ? numW + kLineNumberRightMargin + foldW : 0.f;
+            (lineNumbers ? numW + kLineNumberRightMargin + foldW : 0.f) + strip;
         float textW = 0;
         if (colW > 0) {
             textW = colW - gutterW - kEditorRightMargin;
@@ -39601,8 +43583,14 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
 
     bool gutterHover = folding && GutterHovered(state, cx->win);
     VecClear(state->foldIcons);
+    VecClear(state->foldPlaceholders);
+    state->lastFoldBackgroundSet = false;
     if (folding) {
         VecReserve(state->foldIcons, state->folds.candidates.len);
+        if (state->foldPlaceholder.render) {
+            int slots = state->folds.candidates.len;
+            VecReserve(state->foldPlaceholders, slots > 0 ? slots : 1);
+        }
     }
 
     int caretRow = -1;
@@ -40226,7 +44214,66 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
         if (!el) {
             continue;
         }
+
+        bool foldedLine = folding && FoldMapIsFolded(&state->folds, row);
+        if (foldedLine && state->foldPlaceholder.render && nVis > 0) {
+            int segLo = wrapStarts[nVis - 1];
+            Str lastText = Str(lineText.s + segLo, len(lineText) - segLo);
+            TabShown lastShown = ShowTabs(
+                a, cx->win ? &cx->win->paint : nullptr, state, lastText);
+            float end =
+                MeasureText(cx->win ? &cx->win->paint : nullptr, lastShown.text,
+                            font, 0, false, InputFontWord(style))
+                    .w;
+            float indent = nVis > 1 ? wrapIndent : 0;
+            if (state->align != 0 && state->contentBox.w > 0) {
+                float gutterW = 0;
+                if (lineNumbers) {
+                    gutterW = numW + kLineNumberRightMargin + foldW;
+                }
+                gutterW += InputGutterStripWidth(state);
+                float slack = state->contentBox.w - gutterW - end;
+                if (slack > 0) {
+                    indent += state->align == 1 ? slack * 0.5f : slack;
+                }
+            }
+            El* mark = state->foldPlaceholder
+                           .render(state->foldPlaceholder.data, cx, row);
+            if (mark) {
+                El* slot = Div(a)
+                               ->Absolute()
+                               ->Left(indent + end)
+                               ->Top((nVis - 1) * lineH)
+                               ->H(lineH)
+                               ->FlexRow()
+                               ->ItemsCenter()
+                               ->Child(mark);
+                if (state->foldPlaceholders.len < state->foldPlaceholders.cap) {
+                    FoldIconBox box;
+                    box.line = row;
+                    VecAppend(state->foldPlaceholders, box);
+                    mark->BoundsOut(
+                        &state
+                             ->foldPlaceholders[state->foldPlaceholders.len - 1]
+                             .bounds);
+                }
+                if (lineEl) {
+                    lineEl->Child(slot);
+                } else {
+                    el = Div(a)->W(kFill)->Child(el)->Child(slot);
+                }
+            }
+        }
         if (!lineNumbers) {
+            if (InputGutterStripWidth(state) > 0) {
+                el->PadL(InputGutterStripWidth(state));
+            }
+            if (underlay && foldedLine && state->hasFoldBackground &&
+                underlay->nFoldBands < (int)(sizeof(underlay->foldBands) /
+                                             sizeof(underlay->foldBands[0]))) {
+                underlay->foldBands[underlay->nFoldBands++] = el;
+                underlay->foldColor = state->foldBackground;
+            }
             col->Child(el);
             continue;
         }
@@ -40237,9 +44284,19 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                        ->Gap(kLineNumberRightMargin)
                        ->H((float)nVis * lineH)
                        ->ItemsStart();
+        float strip = InputGutterStripWidth(state);
+        if (strip > 0) {
+            band->PadL(strip);
+        }
 
         if (row == caretRow && style.activeLine.a != 0 && underlay) {
             underlay->activeLine = band;
+        }
+        if (underlay && foldedLine && state->hasFoldBackground &&
+            underlay->nFoldBands < (int)(sizeof(underlay->foldBands) /
+                                         sizeof(underlay->foldBands[0]))) {
+            underlay->foldBands[underlay->nFoldBands++] = band;
+            underlay->foldColor = state->foldBackground;
         }
 
         El* num =
@@ -40291,6 +44348,7 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
             if (lineNumbers) {
                 gutter = numW + kLineNumberRightMargin + foldW;
             }
+            gutter += InputGutterStripWidth(state);
 
             col->MinW(state->longestLineW + gutter + kEditorRightMargin);
         }
@@ -40304,6 +44362,7 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
         if (lineNumbers) {
             textLeft = numW + kLineNumberRightMargin + (folding ? foldW : 0.f);
         }
+        textLeft += InputGutterStripWidth(state);
 
         float gx = state->caretWinX - state->contentBox.x;
         float gy = state->caretWinY - state->contentBox.y - lineH;
@@ -40332,6 +44391,40 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
             }
             if (nl < 0) {
                 break;
+            }
+        }
+    }
+
+    if (InputGutterStripWidth(state) > 0.f && lineH > 0.f) {
+        float viewTop = state->scrollY;
+
+        float viewH = state->viewH;
+        if (viewH <= 0.f && cx->win && cx->win->paint.viewH > 0.f) {
+            viewH = cx->win->paint.viewH;
+        }
+        float viewBottom = viewH > 0.f ? viewTop + viewH : viewTop - 1.f;
+        int nMarks = InputLayoutGutterMarks(state, 0, 0, lineH, viewTop,
+                                            viewBottom, nullptr, 0);
+        if (nMarks > 0) {
+            GutterMark* marks =
+                (GutterMark*)Alloc(a, (int)sizeof(GutterMark) * nMarks);
+            if (marks) {
+                nMarks = InputLayoutGutterMarks(state, 0, 0, lineH, viewTop,
+                                                viewBottom, marks, nMarks);
+                float markW = state->gutterDecorationsWidth;
+                for (int i = 0; i < nMarks; i++) {
+                    El* mark = Div(a)
+                                   ->Absolute()
+                                   ->Left(marks[i].x)
+                                   ->Top(marks[i].y)
+                                   ->W(markW)
+                                   ->H(marks[i].h)
+                                   ->Bg(marks[i].color);
+                    if (marks[i].pill && markW > 0.f) {
+                        mark->Radius(markW * 0.5f);
+                    }
+                    col->Child(mark);
+                }
             }
         }
     }
@@ -40457,12 +44550,16 @@ InputState::~InputState() {
         }
     }
     StrFree(placeholder);
+    StrFree(imeOriginal);
     MaskPatternFree(&maskPattern);
     VecReset(autoClosed);
     InlineTokenStoreFree(tokens);
     tokens = nullptr;
     if (highlighter.drop) {
         highlighter.drop(highlighter.data);
+    }
+    if (foldPlaceholder.drop) {
+        foldPlaceholder.drop(foldPlaceholder.data);
     }
     delete overscroll;
     overscroll = nullptr;
@@ -40677,6 +44774,67 @@ int LayoutModeMinRows(const LayoutMode& m) {
 
 bool LayoutModeIsFolding(const LayoutMode& m) {
     return m.kind == LayoutModeKind::CodeEditor && m.folding;
+}
+
+int InputFoldPlaceholderAt(const InputState* s, float x, float y) {
+    if (!s) {
+        return -1;
+    }
+    for (int i = 0; i < s->foldPlaceholders.len; i++) {
+        const Bounds& b = s->foldPlaceholders[i].bounds;
+        if (b.w <= 0 || b.h <= 0) {
+            continue;
+        }
+        if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) {
+            return s->foldPlaceholders[i].line;
+        }
+    }
+    return -1;
+}
+
+bool InputLastFoldBackground(const InputState* s, Bounds* out) {
+    if (!s || !s->lastFoldBackgroundSet) {
+        return false;
+    }
+    if (out) {
+        *out = s->lastFoldBackground;
+    }
+    return true;
+}
+
+void InputSetFoldPlaceholderRenderer(InputState* s,
+                                     FoldPlaceholderRenderer renderer) {
+    if (!s) {
+        return;
+    }
+    if (s->foldPlaceholder.drop && s->foldPlaceholder.data &&
+        s->foldPlaceholder.data != renderer.data) {
+        s->foldPlaceholder.drop(s->foldPlaceholder.data);
+    }
+    if (!renderer.render) {
+        renderer.data = nullptr;
+        renderer.drop = nullptr;
+    }
+    s->foldPlaceholder = renderer;
+    if (s->focusWin) {
+        AppInvalidate(s->focusWin);
+    }
+}
+
+void InputSetFoldBackground(InputState* s, const Rgba* color) {
+    if (!s) {
+        return;
+    }
+    if (!color) {
+        s->hasFoldBackground = false;
+        s->foldBackground = {};
+    } else {
+        s->hasFoldBackground = true;
+        s->foldBackground = *color;
+    }
+    if (s->focusWin) {
+        AppInvalidate(s->focusWin);
+    }
 }
 
 int InputFoldIconAt(const InputState* s, float x, float y) {
@@ -41246,6 +45404,71 @@ static void base_input_Emit(InputState* s, App* app, Window* win, InputEvent ev)
     ListenerCall(app, win, s->onChange, &ev);
 }
 
+static void EditBatchClear(InputState* s) {
+    VecClear(s->lastInputEdits);
+    VecClear(s->lastInputEditBytes);
+}
+
+static void EditBatchPush(InputState* s, InputEdit edit) {
+    if (!s->emitEvents && !s->holdEditBatch) {
+        return;
+    }
+    Str text = InputValue(s);
+    InputEditSnapshot snap;
+    snap.edit = edit;
+    snap.textOff = len(s->lastInputEditBytes);
+    snap.textLen = len(text);
+    if (snap.textLen > 0) {
+        VecAppendN(s->lastInputEditBytes, text.s, snap.textLen);
+    }
+    VecAppend(s->lastInputEditBytes, '\0');
+    VecAppend(s->lastInputEdits, snap);
+}
+
+static void EmitEditsAndChange(InputState* s, App* app, Window* win) {
+    if (!s->emitEvents) {
+        return;
+    }
+    if (s->imeHaveOriginal) {
+        Str original = s->imeOriginal;
+        s->imeOriginal = {};
+        s->imeHaveOriginal = false;
+        Str old = original.s ? original : StrL("");
+        InputEdit full =
+            InputEdit::New(old, Selection{0, len(old)}, InputValue(s));
+        StrFree(original);
+        EditBatchClear(s);
+        EditBatchPush(s, full);
+    }
+    if (s->onEdits.IsValid()) {
+        InputEditsEvent ev;
+        ev.edits = s->lastInputEdits.els;
+        ev.count = len(s->lastInputEdits);
+        ev.bytes = s->lastInputEditBytes.els;
+        ListenerCall(app, win, s->onEdits, &ev);
+    }
+    base_input_Emit(s, app, win, InputEvent{InputEventKind::Change});
+}
+
+int InputLastEditCount(const InputState* s) {
+    return s ? len(s->lastInputEdits) : 0;
+}
+
+const InputEditSnapshot* InputLastEditAt(const InputState* s, int index) {
+    if (!s || index < 0 || index >= len(s->lastInputEdits)) {
+        return nullptr;
+    }
+    return &s->lastInputEdits[index];
+}
+
+Str InputLastEditText(const InputState* s, int index) {
+    const InputEditSnapshot* snap = InputLastEditAt(s, index);
+    if (!snap || !s->lastInputEditBytes.els) {
+        return {};
+    }
+    return Str(s->lastInputEditBytes.els + snap->textOff, snap->textLen);
+}
+
 static void PauseBlink(InputState* s, App* app, Window* win) {
     if (win) {
         BlinkPause(app, win, &s->blink);
@@ -41681,12 +45904,17 @@ bool InputOnScrollWheel(InputState* s, App* app, Window* win, float dx,
             Notify(app, win);
         }
     } else {
+
+        double now = TimeNow();
+        if (s->overscroll || phase != TouchPhase::Moved) {
+            InputOverscrollGet(s)->TouchPhase(phase, now);
+        }
         if ((phase == TouchPhase::Ended || phase == TouchPhase::Cancelled) &&
             s->overscroll && s->overscroll->Offset() != 0) {
             InputScrollUser user = {s, app, win, 0};
             float extent = s->viewH > 1.f ? s->viewH : 1.f;
             s->overscroll
-                ->Packet(0, phase, extent, TimeNow(), InputScrollRust, &user);
+                ->Packet(0, phase, extent, now, InputScrollRust, &user);
             Notify(app, win);
         }
         Point want = {oldX - dx, oldY - dy};
@@ -41781,6 +46009,33 @@ void EditorScrollbarPrePaint(PaintCtx* ctx, El* e, void*) {
     El* bar = s->scrollbarRenderer(s->scrollbarRendererUser, &presented, &cx);
     if (!bar) return;
     e->Child(bar);
+}
+
+void InputPaintOverviewRuler(InputState* s, PaintCtx* ctx, float trackX,
+                             float trackY, float trackW, float trackH,
+                             float contentHeight, float paddingTop,
+                             float lineHeight) {
+    if (!s || !ctx || trackW <= 0.f || trackH <= 0.f) {
+        return;
+    }
+    int n = InputLayoutOverviewRuler(s, trackX, trackY, trackW, trackH,
+                                     contentHeight, paddingTop, lineHeight,
+                                     nullptr, 0);
+    if (n <= 0) {
+        return;
+    }
+    OverviewRulerMark* marks = (OverviewRulerMark*)Alloc(
+        GetTempArena(), (int)sizeof(OverviewRulerMark) * n);
+    if (!marks) {
+        return;
+    }
+    n = InputLayoutOverviewRuler(s, trackX, trackY, trackW, trackH,
+                                 contentHeight, paddingTop, lineHeight, marks,
+                                 n);
+    for (int i = 0; i < n; i++) {
+        FillRound(ctx, marks[i].x, marks[i].y, marks[i].w, marks[i].h, 0,
+                  marks[i].color);
+    }
 }
 
 void InputSetScrollBounce(InputState* s, bool on) {
@@ -41892,18 +46147,79 @@ void InputUnselect(InputState* s, App* app, Window* win) {
     Notify(app, win);
 }
 
-void InputSetSelectedRange(InputState* s, App* app, Window* win, int a, int b) {
+bool InputIsSelectionReversed(const InputState* s) {
+    return s && !s->selectedRange.IsEmpty() && s->selectionReversed;
+}
+
+void InputSetSelectedRangeWithDirection(InputState* s, App* app, Window* win,
+                                        int a, int b, bool reversed) {
+    if (!s) {
+        return;
+    }
+
+    if (a > b) {
+        b = a;
+    }
     Str t = InputValue(s);
     s->cursorLineEndAffinity = false;
     InputNormalizeTokenRange(s, &a, &b);
+    if (a > b) {
+        b = a;
+    }
 
     Bias endBias = a == b ? Bias::Left : Bias::Right;
     int start = RopeClipOffset(t, a, Bias::Left);
     int end = RopeClipOffset(t, b, endBias);
-    InputMoveTo(s, app, win, start);
+    int anchor = reversed && start != end ? end : start;
+    int head = reversed && start != end ? start : end;
+    InputMoveTo(s, app, win, anchor);
     s->selectionReversed = false;
     s->hasSelectedWordRange = false;
-    InputSelectTo(s, app, win, end);
+    InputSelectTo(s, app, win, head);
+}
+
+void InputSetSelectedRange(InputState* s, App* app, Window* win, int a, int b) {
+    InputSetSelectedRangeWithDirection(s, app, win, a, b, false);
+}
+
+void InputSetSelectedTextRangeUtf16(InputState* s, App* app, Window* win,
+                                    int startUtf16, int endUtf16) {
+    if (!s) {
+        return;
+    }
+    if (startUtf16 < 0) {
+        startUtf16 = 0;
+    }
+    if (endUtf16 < 0) {
+        endUtf16 = 0;
+    }
+    Str text = InputValue(s);
+    Selection previous = s->selectedRange;
+    bool wasReversed = s->selectionReversed;
+    int a = RopeOffsetUtf16ToOffset(text, startUtf16);
+    int b = RopeOffsetUtf16ToOffset(text, endUtf16);
+    if (b < a) {
+        int swap = a;
+        a = b;
+        b = swap;
+    }
+    InputSetSelectedRange(s, app, win, a, b);
+    Selection range = s->selectedRange;
+    bool same = range.start == previous.start && range.end == previous.end;
+    bool reversed = false;
+    if (same) {
+        reversed = wasReversed;
+    } else if (!range.IsEmpty() && range.end == previous.start) {
+        reversed = true;
+    } else if (!range.IsEmpty() && range.start == previous.end) {
+        reversed = false;
+    } else {
+        reversed = !range.IsEmpty() && range.start != previous.start &&
+                   range.end == previous.end;
+    }
+    s->selectionReversed = reversed;
+    InputScrollToCursor(s, InputMoveDir::None);
+    Notify(app, win);
 }
 
 void InputSelectWord(InputState* s, App* app, Window* win, int offset) {
@@ -42970,7 +47286,19 @@ bool InputReplaceTextInRange(InputState* s, App* app, Window* win,
         s->scrollX = wasX;
     }
     highlightChange.Finish();
-    base_input_Emit(s, app, win, InputEvent{InputEventKind::Change});
+    if (!s->holdEditBatch) {
+        EditBatchClear(s);
+    }
+    if (!s->imeHaveOriginal) {
+        InputEdit edit = maskChanged
+                             ? InputEdit::New(oldAll, Selection{0, len(oldAll)},
+                                              InputValue(s))
+                             : InputEdit::New(oldAll, r, text);
+        EditBatchPush(s, edit);
+    }
+    if (!s->holdEditBatch) {
+        EmitEditsAndChange(s, app, win);
+    }
     Notify(app, win);
     return true;
 }
@@ -43061,6 +47389,11 @@ bool InputReplaceTextInRanges(InputState* s, App* app, Window* win,
     if (group) {
         UndoBeginTransaction(&s->undo);
     }
+    bool ownBatch = !s->holdEditBatch;
+    if (ownBatch) {
+        s->holdEditBatch = true;
+        EditBatchClear(s);
+    }
     bool ok = true;
     for (int k = 0; k < n; k++) {
         int i = desc[k];
@@ -43097,6 +47430,12 @@ bool InputReplaceTextInRanges(InputState* s, App* app, Window* win,
         CursorSelection* after = AllCursors(a, s, &nAfter);
         UndoRecordSelections(&s->undo, before, nBefore, after, nAfter);
         UndoCommitTransaction(&s->undo);
+    }
+    if (ownBatch) {
+        s->holdEditBatch = false;
+        if (InputLastEditCount(s) > 0) {
+            EmitEditsAndChange(s, app, win);
+        }
     }
     Notify(app, win);
     return ok;
@@ -43186,6 +47525,12 @@ void InputReplaceAndMarkText(InputState* s, App* app, Window* win,
     }
     Str oldAll = StrDup(tmp, before);
 
+    EditBatchClear(s);
+    if (!s->imeHaveOriginal) {
+        s->imeOriginal = StrDup(before);
+        s->imeHaveOriginal = true;
+    }
+
     int nPairsBefore = 0;
     AutoClosedPairRange* pairsBefore = nullptr;
     if (!UndoIsIgnoring(&s->undo)) {
@@ -43199,6 +47544,9 @@ void InputReplaceAndMarkText(InputState* s, App* app, Window* win,
             TextSet(s, oldAll);
             free(pairsBefore);
             if (startsComposition) {
+                StrFree(s->imeOriginal);
+                s->imeOriginal = {};
+                s->imeHaveOriginal = false;
                 UndoCommitTransaction(&s->undo);
             }
             return;
@@ -43311,6 +47659,11 @@ void InputSetValue(InputState* s, Str value) {
     ReplaceText(s, app, win, value);
     UndoSetIgnoring(&s->undo, false);
     s->emitEvents = true;
+
+    EditBatchClear(s);
+    StrFree(s->imeOriginal);
+    s->imeOriginal = {};
+    s->imeHaveOriginal = false;
     VecClear(s->autoClosed);
     base_input_ResetSelection(s);
     UndoClear(&s->undo);
@@ -48574,6 +52927,7 @@ void BaseInit(App* app) {
     TimeFieldInitKeys();
     InputInitKeys();
     TreeInitKeys();
+    GridLayoutInitKeys();
 
     PopoverInitKeys();
     SheetInitKeys();
@@ -49377,11 +53731,16 @@ float Easing::Sample(float progress) const {
                     offset = 1.f;
                     break;
             }
+
+            if (jumps == 0.f) {
+                return progress;
+            }
             float step = floorf(progress * steps) + offset;
             step = ClampF(step, 0.f, jumps);
-            return jumps > 0.f ? step / jumps : 0.f;
+            return step / jumps;
         }
         case EasingKind::LinearStops: {
+
             if (!stops || stopsLen <= 0) {
                 return progress;
             }
@@ -52557,10 +56916,15 @@ void PopoverSetOpenFocused(PopoverState* s, Ctx* cx, bool open) {
             s->trackedFocus.IsValid() ? s->trackedFocus : s->focus;
         FocusHandleFocus(cx->win, take);
     } else {
-        if (s->previousFocus.IsValid() &&
-            (FocusHandleContainsFocused(cx->win, s->focus) ||
-             FocusHandleContainsFocused(cx->win, s->trackedFocus))) {
-            FocusHandleRestore(cx->win, s->previousFocus);
+
+        bool inside = FocusHandleContainsFocused(cx->win, s->focus) ||
+                      FocusHandleContainsFocused(cx->win, s->trackedFocus);
+        if (inside) {
+            if (s->previousFocus.IsValid()) {
+                FocusHandleRestore(cx->win, s->previousFocus);
+            } else {
+                WindowSetFocusId(cx->win, 0);
+            }
         }
         s->previousFocus = {};
     }
@@ -57339,9 +61703,22 @@ ScrollOverscroll::~ScrollOverscroll() {
 
 static void OverscrollStartGesture(ScrollOverscroll* self) {
     self->spent = false;
+    self->touched = false;
     self->velocity = 0;
     VecClear(self->moveDy);
     VecClear(self->moveAt);
+}
+
+static void OverscrollFollow(ScrollOverscroll* self, double now) {
+    bool inGesture =
+        self->hasLastPacket && now - self->lastPacketAt < kOverscrollGestureGap;
+    self->lastPacketAt = now;
+    self->hasLastPacket = true;
+
+    if (!inGesture && !self->physics.IsDragging()) {
+        OverscrollStartGesture(self);
+        self->hasMoved = false;
+    }
 }
 
 static void OverscrollSample(ScrollOverscroll* self, float dy, double now) {
@@ -57379,23 +61756,16 @@ static void OverscrollSample(ScrollOverscroll* self, float dy, double now) {
     self->hasMoved = true;
 }
 
-bool ScrollOverscroll::Packet(float dy, TouchPhase phase, float extent,
+bool ScrollOverscroll::Packet(float dy, gpui::TouchPhase phase, float extent,
                               double now, float (*scroll)(void*, float),
                               void* user) {
     float before = Offset();
     bool thrown = false;
-    bool inGesture = false;
-    if (hasLastPacket && now - lastPacketAt < kOverscrollGestureGap) {
-        inGesture = true;
-    }
-    lastPacketAt = now;
-    hasLastPacket = true;
-    if (!inGesture && !physics.IsDragging()) {
-        OverscrollStartGesture(this);
-        hasMoved = false;
-    }
+    OverscrollFollow(this, now);
     OverscrollSample(this, dy, now);
-    if (phase == TouchPhase::Started) {
+
+    if (phase != gpui::TouchPhase::Moved) touched = true;
+    if (phase == gpui::TouchPhase::Started) {
         physics.Begin(extent);
         spent = false;
         resting = dy == 0;
@@ -57418,7 +61788,8 @@ bool ScrollOverscroll::Packet(float dy, TouchPhase phase, float extent,
             float unused = rest - scroll(user, rest);
             if (fabsf(unused) > kOverscrollRounding) physics.Pull(unused);
         }
-        if (phase == TouchPhase::Ended || phase == TouchPhase::Cancelled) {
+        if (phase == gpui::TouchPhase::Ended ||
+            phase == gpui::TouchPhase::Cancelled) {
             bool moving = hasMoved && now - movedAt < kOverscrollStill;
 
             float speed = moving && Offset() != 0 ? velocity : 0;
@@ -57426,7 +61797,7 @@ bool ScrollOverscroll::Packet(float dy, TouchPhase phase, float extent,
             thrown = true;
             spent = Offset() != 0;
         }
-    } else if (spent) {
+    } else if (spent || (base::PlatOverscrollPhaselessStops() && !touched)) {
 
         if (scroll) scroll(user, dy);
     } else if (scroll) {
@@ -57443,6 +61814,12 @@ bool ScrollOverscroll::Packet(float dy, TouchPhase phase, float extent,
         hasSampled = true;
     }
     return changed;
+}
+
+void ScrollOverscroll::TouchPhase(gpui::TouchPhase phase, double now) {
+    if (phase == gpui::TouchPhase::Moved) return;
+    OverscrollFollow(this, now);
+    touched = true;
 }
 
 bool ScrollOverscroll::Step(double now) {
@@ -57470,6 +61847,7 @@ void ScrollOverscroll::Reset() {
     hasMoved = false;
     resting = false;
     spent = false;
+    touched = false;
 }
 
 static Bounds PositiveViewport(void* user) {
@@ -57730,7 +62108,8 @@ bool ScrollBounceOwnedWheel(ScrollOverscroll* over, OngoingScroll* lock,
     Point delta = {ev->deltaX, ev->deltaY};
     if (lock) lock->Filter(&delta, ev->phase);
     if (fabsf(delta.x) > fabsf(delta.y)) {
-        over->Reset();
+
+        over->TouchPhase(ev->phase, TimeNow());
         return false;
     }
     float before = handle.Offset().y;
@@ -59040,14 +63419,24 @@ float SliderValueToPct(const SliderState* s, float value) {
     return ClampF(::logf(value / s->min) / logBase, 0.f, 1.f);
 }
 
+static float BoundThumb(float value, float min, float max) {
+    if (value > max) {
+        value = max;
+    }
+    if (value < min) {
+        value = min;
+    }
+    return value;
+}
+
 void SliderUpdateThumbPos(SliderState* s) {
     if (!s->value.range) {
         s->pctLo = 0;
-        s->pctHi = SliderValueToPct(s, ClampF(s->value.hi, s->min, s->max));
+        s->pctHi = SliderValueToPct(s, BoundThumb(s->value.hi, s->min, s->max));
         return;
     }
-    s->pctLo = SliderValueToPct(s, ClampF(s->value.lo, s->min, s->max));
-    s->pctHi = SliderValueToPct(s, ClampF(s->value.hi, s->min, s->max));
+    s->pctLo = SliderValueToPct(s, BoundThumb(s->value.lo, s->min, s->max));
+    s->pctHi = SliderValueToPct(s, BoundThumb(s->value.hi, s->min, s->max));
 }
 
 static float PctAt(const SliderState* s, Axis axis, Point pos) {
@@ -59068,6 +63457,14 @@ bool SliderIsStartAt(const SliderState* s, Axis axis, Point pos) {
     return PctAt(s, axis, pos) < center;
 }
 
+float SliderSnapToStep(float value, float min, float max, float step) {
+    if (!(step > 0.f && isfinite(step))) {
+        return value;
+    }
+    float snapped = min + roundf((value - min) / step) * step;
+    return BoundThumb(snapped, min, max);
+}
+
 bool SliderUpdateByPosition(SliderState* s, Axis axis, Point pos,
                             bool isStart) {
     s->dragging = true;
@@ -59075,18 +63472,16 @@ bool SliderUpdateByPosition(SliderState* s, Axis axis, Point pos,
     pct = isStart ? ClampF(pct, 0.f, s->pctHi) : ClampF(pct, s->pctLo, 1.f);
 
     float value = SliderPctToValue(s, pct);
-    if (s->step > 0) {
-        value = roundf(value / s->step) * s->step;
-    }
+    value = SliderSnapToStep(value, s->min, s->max, s->step);
 
     SliderValue before = s->value;
     if (isStart) {
-        s->pctLo = pct;
         SliderValueSetStart(&s->value, value);
     } else {
-        s->pctHi = pct;
         SliderValueSetEnd(&s->value, value);
     }
+
+    SliderUpdateThumbPos(s);
     return s->value.lo != before.lo || s->value.hi != before.hi;
 }
 
@@ -59100,7 +63495,14 @@ bool SliderStepBy(SliderState* s, int dir, bool isStart) {
         return false;
     }
     float from = isStart ? s->value.Start() : s->value.End();
-    float want = from + step * (float)dir;
+    return SliderMoveTo(s, from + step * (float)dir, isStart);
+}
+
+bool SliderMoveTo(SliderState* s, float want, bool isStart) {
+    if (!s) {
+        return false;
+    }
+    float from = isStart ? s->value.Start() : s->value.End();
 
     float lo = isStart ? s->min : SliderPctToValue(s, s->pctLo);
     float hi = isStart ? SliderPctToValue(s, s->pctHi) : s->max;
@@ -59115,6 +63517,38 @@ bool SliderStepBy(SliderState* s, int dir, bool isStart) {
     }
     SliderUpdateThumbPos(s);
     return true;
+}
+
+bool SliderKeyMove(SliderState* s, int key, bool isStart) {
+    if (!s) {
+        return false;
+    }
+    float from = isStart ? s->value.Start() : s->value.End();
+    float page = (s->max - s->min) / 10.f;
+    switch (key) {
+        case KeyRight:
+        case KeyUp:
+            SliderStepBy(s, 1, isStart);
+            return true;
+        case KeyLeft:
+        case KeyDown:
+            SliderStepBy(s, -1, isStart);
+            return true;
+        case KeyPageUp:
+            SliderMoveTo(s, from + page, isStart);
+            return true;
+        case KeyPageDown:
+            SliderMoveTo(s, from - page, isStart);
+            return true;
+        case KeyHome:
+            SliderMoveTo(s, s->min, isStart);
+            return true;
+        case KeyEnd:
+            SliderMoveTo(s, s->max, isStart);
+            return true;
+        default:
+            return false;
+    }
 }
 
 bool SliderHandleRelease(SliderState* s) {
@@ -59164,6 +63598,28 @@ El* SliderIndicator::New(Ctx* cx, SliderState* state) {
 El* SliderThumb::New(Ctx* cx) {
     Arena* a = cx->a;
     return Div(a);
+}
+
+SliderThumb* SliderThumb::New(Ctx* cx, SliderState* state) {
+    SliderThumb* t = ArenaNew<SliderThumb>(cx->a);
+    t->cx = cx;
+    t->state = state;
+    return t;
+}
+
+SliderThumb* SliderThumb::Disabled(bool value) {
+    disabled = value;
+    return this;
+}
+
+El* SliderThumb::IntoEl() {
+
+    El* e = Div(cx->a);
+    if (disabled) {
+        e->AriaDisabled(true);
+    }
+    (void)state;
+    return e;
 }
 }
 
@@ -59249,6 +63705,13 @@ StateStyle& StateStyle::Opacity(float v) {
     return *this;
 }
 
+StateStyle& StateStyle::Shadows(const BoxShadow* values, int count) {
+    style.shadows = values;
+    style.shadowCount = count < 0 ? 0 : count;
+    set |= StateFieldShadow;
+    return *this;
+}
+
 void StateStyleRefine(StateStyle* into, const StateStyle& over) {
     if (over.Has(StateFieldPad)) {
         into->style.pad = over.style.pad;
@@ -59289,6 +63752,9 @@ void StateStyleRefine(StateStyle* into, const StateStyle& over) {
     }
     if (over.Has(StateFieldOpacity)) {
         into->Opacity(over.style.opacity);
+    }
+    if (over.Has(StateFieldShadow)) {
+        into->Shadows(over.style.shadows, over.style.shadowCount);
     }
 }
 
@@ -62215,7 +66681,8 @@ bool MarkdownExtensions::HasSameParserConfiguration(
         blockParsers.len != other.blockParsers.len ||
         blockRenderers.len != other.blockRenderers.len ||
         inlineParsers.len != other.inlineParsers.len ||
-        inlineRenderers.len != other.inlineRenderers.len) {
+        inlineRenderers.len != other.inlineRenderers.len ||
+        blockSurfaces.len != other.blockSurfaces.len) {
         return false;
     }
 
@@ -62226,6 +66693,12 @@ bool MarkdownExtensions::HasSameParserConfiguration(
     }
     for (int i = 0; i < inlineRenderers.len; i++) {
         if (!other.InlineRenderer(inlineRenderers[i].name)) {
+            return false;
+        }
+    }
+
+    for (int i = 0; i < blockSurfaces.len; i++) {
+        if (!other.BlockSurfaceOf(blockSurfaces[i].name)) {
             return false;
         }
     }
@@ -62240,6 +66713,7 @@ uint64_t MarkdownExtensions::ParserFingerprint() const {
     h = h * 1099511628211ull + (uint64_t)blockRenderers.len;
     h = h * 1099511628211ull + (uint64_t)inlineParsers.len;
     h = h * 1099511628211ull + (uint64_t)inlineRenderers.len;
+    h = h * 1099511628211ull + (uint64_t)blockSurfaces.len;
 
     uint64_t names = 0;
     for (int i = 0; i < blockRenderers.len; i++) {
@@ -62258,7 +66732,103 @@ uint64_t MarkdownExtensions::ParserFingerprint() const {
         }
         names += one;
     }
+    for (int i = 0; i < blockSurfaces.len; i++) {
+        uint64_t one = 1469598103934665603ull;
+        Str name = blockSurfaces[i].name;
+        for (int at = 0; at < len(name); at++) {
+            one = (one ^ (uint64_t)(uint8_t)name.s[at]) * 1099511628211ull;
+        }
+        names += one;
+    }
     return h * 1099511628211ull + names;
+}
+
+static bool AsciiEqFold(Str a, Str b) {
+    if (len(a) != len(b)) {
+        return false;
+    }
+    for (int i = 0; i < len(a); i++) {
+        unsigned char ca = (unsigned char)a.s[i];
+        unsigned char cb = (unsigned char)b.s[i];
+        if (ca >= 'A' && ca <= 'Z') {
+            ca = (unsigned char)(ca - 'A' + 'a');
+        }
+        if (cb >= 'A' && cb <= 'Z') {
+            cb = (unsigned char)(cb - 'A' + 'a');
+        }
+        if (ca != cb) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static Str AsciiLowerDup(Arena* a, Str name) {
+    bool upper = false;
+    for (int i = 0; i < len(name); i++) {
+        unsigned char c = (unsigned char)name.s[i];
+        if (c >= 'A' && c <= 'Z') {
+            upper = true;
+            break;
+        }
+    }
+    if (!upper || !a) {
+        return name;
+    }
+    char* buf = (char*)Alloc(a, len(name) + 1);
+    if (!buf) {
+        return name;
+    }
+    for (int i = 0; i < len(name); i++) {
+        unsigned char c = (unsigned char)name.s[i];
+        buf[i] = (c >= 'A' && c <= 'Z') ? (char)(c - 'A' + 'a') : (char)c;
+    }
+    buf[len(name)] = 0;
+    return Str(buf, len(name));
+}
+
+MarkdownExtensions& MarkdownExtensions::BlockSurface(Arena* a, Str name,
+                                                     MarkdownBlockSurfaceFn fn,
+                                                     void* data) {
+    if (fn && len(name) > 0) {
+        Str key = AsciiLowerDup(a, name);
+        for (int i = 0; i < blockSurfaces.len; i++) {
+            if (base::StrEq(blockSurfaces[i].name, key)) {
+                blockSurfaces[i] = {key, fn, data};
+                revision = NextMarkdownExtensionsRevision();
+                return *this;
+            }
+        }
+        blockSurfaces.Append(a, {key, fn, data});
+        revision = NextMarkdownExtensionsRevision();
+    }
+    return *this;
+}
+
+Str MarkdownExtensions::BlockSurfaceName(Str written) const {
+    for (int i = 0; i < blockSurfaces.len; i++) {
+        if (AsciiEqFold(blockSurfaces[i].name, written)) {
+            return blockSurfaces[i].name;
+        }
+    }
+    return {};
+}
+
+const MarkdownBlockSurface* MarkdownExtensions::BlockSurfaceOf(Str name) const {
+    for (int i = 0; i < blockSurfaces.len; i++) {
+        if (base::StrEq(blockSurfaces[i].name, name)) {
+            return &blockSurfaces[i];
+        }
+    }
+    return nullptr;
+}
+
+El* MarkdownExtensions::RenderBlockSurface(Str name, Ctx* cx) const {
+    const MarkdownBlockSurface* surface = BlockSurfaceOf(name);
+    if (!surface || !surface->fn) {
+        return nullptr;
+    }
+    return surface->fn(cx, surface->data);
 }
 
 const MarkdownBlockRenderer* MarkdownExtensions::Renderer(Str name) const {
@@ -62470,6 +67040,12 @@ TextViewStyle& TextViewStyle::WithDark(bool value) {
     return *this;
 }
 
+TextViewStyle& TextViewStyle::WithTableRowHover(Rgba color) {
+    tableRowHover = color;
+    hasTableRowHover = true;
+    return *this;
+}
+
 static bool TextRgbaEq(Rgba a, Rgba b) {
     return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
 }
@@ -62518,6 +67094,9 @@ TextViewStyle TextViewStyle::OnTextColor(Rgba color) const {
 
     style.tableBackground = Rgba{0, 0, 0, 0};
     style.hasTableBackground = true;
+    if (style.hasTableRowHover) {
+        style.tableRowHover = RgbaOpacity(color, 0.08f);
+    }
     return style;
 }
 
@@ -62603,6 +67182,8 @@ bool TextViewStyle::Equals(const TextViewStyle& other) const {
         hasTableBackground != other.hasTableBackground ||
         (hasTableBackground &&
          !TextRgbaEq(tableBackground, other.tableBackground)) ||
+        hasTableRowHover != other.hasTableRowHover ||
+        (hasTableRowHover && !TextRgbaEq(tableRowHover, other.tableRowHover)) ||
         !StyleFieldsEqual(codeBlock, other.codeBlock, codeBlockFields) ||
         !StyleFieldsEqual(table, other.table, tableFields) ||
         !StyleFieldsEqual(tableHead, other.tableHead, tableHeadFields) ||
@@ -64315,6 +68896,156 @@ static void MdTable(MdBuild* b, const md::Node* n) {
     base_text_Pop(b);
 }
 
+static void MdDropFirstChildren(Arena* a, md::Node* parent, int count) {
+    if (!a || !parent || count <= 0 || !parent->lastKid.IsSet()) {
+        return;
+    }
+    md::Node* last = md::NodeLastChild(a, parent);
+    md::Node* at = md::NodeFirstChild(a, parent);
+    for (int i = 0; i < count; i++) {
+        if (!at) {
+            parent->lastKid = {};
+            return;
+        }
+        if (at == last) {
+            parent->lastKid = {};
+            return;
+        }
+        at = md::ArenaPtrGet(a, at->sibling);
+    }
+    if (!at) {
+        parent->lastKid = {};
+        return;
+    }
+    last->sibling = ArenaPtrOf(a, at);
+}
+
+static void MdSetSpanStart(MdBuild* b, const md::Node* n, int32_t start) {
+    if (!b->positions || !n) {
+        return;
+    }
+
+    md::NodePositions* positions = const_cast<md::NodePositions*>(b->positions);
+    for (int i = 0; i < positions->spans.len; i++) {
+        if (positions->spans[i].node == n) {
+            positions->spans[i].start = start;
+            return;
+        }
+    }
+}
+
+static Str MdTrimStartSpace(Str s) {
+    int i = 0;
+    while (i < len(s) && (s.s[i] == ' ' || s.s[i] == '\t')) {
+        i++;
+    }
+    return Str((char*)s.s + i, len(s) - i);
+}
+
+static Str TakeSurfaceMarker(MdBuild* b, md::Node* quote) {
+    if (!b->extensions || !b->extensions->HasBlockSurfaces() || !b->cur ||
+        b->cur->kind != MdKind::Doc) {
+        return {};
+    }
+    md::Node* paragraph = md::NodeFirstChild(b->a, quote);
+    if (!paragraph || paragraph->kind != md::NodeKind::Paragraph) {
+        return {};
+    }
+    md::Node* text = md::NodeFirstChild(b->a, paragraph);
+    if (!text || text->kind != md::NodeKind::Text) {
+        return {};
+    }
+    Str value = md::NodeGetStr(b->a, text, md::NodeStrKind::Value);
+    int nl = -1;
+    for (int i = 0; i < len(value); i++) {
+        if (value.s[i] == '\n') {
+            nl = i;
+            break;
+        }
+    }
+    Str line = value;
+    bool hasRest = false;
+    Str rest = {};
+    if (nl >= 0) {
+        int lineEnd = nl;
+        if (lineEnd > 0 && value.s[lineEnd - 1] == '\r') {
+            lineEnd--;
+        }
+        line = Str((char*)value.s, lineEnd);
+        hasRest = true;
+        rest = Str((char*)value.s + nl + 1, len(value) - nl - 1);
+    }
+    int32_t start = 0;
+    int32_t end = 0;
+    if (!md::NodePosition(b->positions, text, &start, &end)) {
+        return {};
+    }
+    Str parsed = b->parsed;
+    if (start < 0 || start > len(parsed)) {
+        return {};
+    }
+    if (start > 0 && parsed.s[start - 1] == '\\') {
+        return {};
+    }
+    if (len(line) > len(parsed) - start ||
+        memcmp(parsed.s + start, line.s, (size_t)len(line)) != 0) {
+        return {};
+    }
+    if (len(line) < 4 || line.s[0] != '[' || line.s[1] != '!' ||
+        line.s[len(line) - 1] != ']') {
+        return {};
+    }
+    Str written((char*)line.s + 2, len(line) - 3);
+    Str name = b->extensions->BlockSurfaceName(written);
+    if (len(name) == 0) {
+        return {};
+    }
+    if (hasRest) {
+        int nlAt = -1;
+        for (int i = start; i < len(parsed); i++) {
+            if (parsed.s[i] == '\n') {
+                nlAt = i;
+                break;
+            }
+        }
+        if (nlAt < 0) {
+            return {};
+        }
+        Str tail((char*)parsed.s + nlAt + 1, len(parsed) - (nlAt + 1));
+        Str content = MdTrimStartSpace(tail);
+        if (len(content) > 0 && content.s[0] == '>') {
+            content = Str((char*)content.s + 1, len(content) - 1);
+            content = MdTrimStartSpace(content);
+        }
+        MdSetSpanStart(b, text, len(parsed) - len(content));
+        md::NodeSetStr(b->a, text, md::NodeStrKind::Value, rest);
+        if (len(rest) == 0) {
+            MdDropFirstChildren(b->a, paragraph, 1);
+        }
+    } else {
+        md::Node* second = md::NodeChild(b->a, paragraph, 1);
+        if (!second) {
+            MdDropFirstChildren(b->a, paragraph,
+                                md::NodeChildCount(b->a, paragraph));
+        } else if (second->kind == md::NodeKind::Break) {
+            MdDropFirstChildren(b->a, paragraph, 2);
+        } else {
+            return {};
+        }
+    }
+    md::Node* first = md::NodeFirstChild(b->a, paragraph);
+    if (first) {
+        int32_t childStart = 0;
+        int32_t childEnd = 0;
+        if (md::NodePosition(b->positions, first, &childStart, &childEnd)) {
+            MdSetSpanStart(b, paragraph, childStart);
+        }
+    } else {
+        MdDropFirstChildren(b->a, quote, 1);
+    }
+    return name;
+}
+
 static void MdBlockNode(MdBuild* b, const md::Node* n) {
     if (b->extensions) {
         MarkdownParseContext context;
@@ -64353,11 +69084,21 @@ static void MdBlockNode(MdBuild* b, const md::Node* n) {
             base_text_Pop(b);
             break;
         }
-        case md::NodeKind::Blockquote:
+        case md::NodeKind::Blockquote: {
+
+            Str surface = TakeSurfaceMarker(b, const_cast<md::Node*>(n));
+            if (len(surface) > 0) {
+                MdNode* node = base_text_Push(b, MdKind::Surface);
+                node->surfaceName = StrDup(b->a, surface);
+                MdBlockChildren(b, n);
+                base_text_Pop(b);
+                break;
+            }
             base_text_Push(b, MdKind::Quote);
             MdBlockChildren(b, n);
             base_text_Pop(b);
             break;
+        }
         case md::NodeKind::List: {
             MdNode* l = base_text_Push(b, MdKind::List);
             l->ordered = n->Has(md::NodeOrdered);
@@ -64372,6 +69113,50 @@ static void MdBlockNode(MdBuild* b, const md::Node* n) {
 
             item->hasCheck = n->Has(md::NodeHasChecked);
             item->checked = n->Has(md::NodeChecked);
+
+            Span itemSpan;
+            if (MdNodeSpan(b, n, &itemSpan)) {
+                item->itemStart = itemSpan.start;
+                item->itemEnd = itemSpan.end;
+                if (item->hasCheck) {
+                    int from = itemSpan.start - b->posShift;
+                    bool marker = true;
+                    for (const md::Node* child : md::NodeKids(b->a, n)) {
+                        if (child->kind == md::NodeKind::Paragraph) {
+                            break;
+                        }
+                        Span childSpan;
+                        if (!MdNodeSpan(b, child, &childSpan)) {
+                            marker = false;
+                            break;
+                        }
+                        from = childSpan.end - b->posShift;
+                    }
+                    Str bytes = b->parsed;
+                    int open = -1;
+                    int close = -1;
+                    if (marker && from >= 0 && from <= len(bytes)) {
+                        for (int i = from; i < len(bytes); i++) {
+                            if ((unsigned char)bytes.s[i] == '[') {
+                                open = i;
+                                break;
+                            }
+                        }
+                        if (open >= 0) {
+                            for (int i = open; i < len(bytes); i++) {
+                                if ((unsigned char)bytes.s[i] == ']') {
+                                    close = i;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (open >= 0 && close >= open) {
+                        item->markerStart = b->posShift + open;
+                        item->markerEnd = b->posShift + close + 1;
+                    }
+                }
+            }
             MdBlockChildren(b, n);
             base_text_Pop(b);
             break;
@@ -64608,6 +69393,226 @@ MdNode* MdParseCachedForTest(Ctx* cx, Arena* frame, Str source,
     return MdParseCached(cx, frame, source, false, extensions);
 }
 
+static bool MdIsTrimSpace(char c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+static Str MdTrimCopy(Arena* a, Str s) {
+    int b = 0;
+    int e = len(s);
+    while (b < e && MdIsTrimSpace(s.s[b])) {
+        b++;
+    }
+    while (e > b && MdIsTrimSpace(s.s[e - 1])) {
+        e--;
+    }
+    if (b == 0 && e == len(s)) {
+        return s;
+    }
+    return StrDup(a, Str((char*)s.s + b, e - b));
+}
+
+static void MdAppendRuns(Arena* a, const MdNode* n, StrBuilder& out) {
+    for (const MdRun* r = n->runFirst; r; r = r->next) {
+        if (len(r->imgSrc) > 0) {
+            out.Append(StrL("!["));
+            out.Append(r->text);
+            out.Append(StrL("]("));
+            out.Append(r->imgSrc);
+            if (len(r->imgTitle) > 0) {
+                out.Append(StrL(" \""));
+                out.Append(r->imgTitle);
+                out.AppendChar('"');
+            }
+            out.AppendChar(')');
+            continue;
+        }
+        if (r->hasCustom) {
+            out.Append(r->custom.ToMarkdown());
+            continue;
+        }
+        Str text = r->text;
+        auto wrap = [&](Str pre, Str post) {
+            StrBuilder wrapped(a);
+            wrapped.Append(pre);
+            wrapped.Append(text);
+            wrapped.Append(post);
+            text = wrapped.TakeStr();
+        };
+        if (r->marks & MdCode) {
+            wrap(StrL("`"), StrL("`"));
+        }
+        if (r->marks & MdItalic) {
+            wrap(StrL("*"), StrL("*"));
+        }
+        if (r->marks & MdBold) {
+            wrap(StrL("**"), StrL("**"));
+        }
+        if (r->marks & MdDel) {
+            wrap(StrL("~~"), StrL("~~"));
+        }
+        if ((r->marks & MdLink) && len(r->href) > 0) {
+            StrBuilder linked(a);
+            linked.AppendChar('[');
+            linked.Append(text);
+            linked.Append(StrL("]("));
+            linked.Append(r->href);
+            linked.AppendChar(')');
+            text = linked.TakeStr();
+        }
+        out.Append(text);
+    }
+}
+
+static void MdAppendQuoteLines(StrBuilder& out, Str content, bool bareEmpty) {
+    if (len(content) == 0) {
+        return;
+    }
+    int i = 0;
+    bool first = true;
+    while (i <= len(content)) {
+        if (!first) {
+            out.AppendChar('\n');
+        }
+        first = false;
+        int start = i;
+        while (i < len(content) && content.s[i] != '\n') {
+            i++;
+        }
+        int n = i - start;
+        if (n > 0 && content.s[start + n - 1] == '\r') {
+            n--;
+        }
+        if (n == 0 && bareEmpty) {
+            out.AppendChar('>');
+        } else {
+            out.Append(StrL("> "));
+            if (n > 0) {
+                out.Append(Str((char*)content.s + start, n));
+            }
+        }
+        if (i >= len(content)) {
+            break;
+        }
+        i++;
+    }
+}
+
+static void MdAppendRaw(Arena* a, const MdNode* n, StrBuilder& out);
+
+Str MdToMarkdown(Arena* a, const MdNode* n) {
+    StrBuilder raw(a);
+    MdAppendRaw(a, n, raw);
+    return MdTrimCopy(a, raw.TakeStr());
+}
+
+static void MdAppendJoined(Arena* a, const MdNode* n, StrBuilder& out,
+                           const char* sep) {
+    bool any = false;
+    for (const MdNode* c = n ? n->first : nullptr; c; c = c->next) {
+        if (any) {
+            out.Append(Str(sep));
+        }
+        out.Append(MdToMarkdown(a, c));
+        any = true;
+    }
+}
+
+static void MdAppendRaw(Arena* a, const MdNode* n, StrBuilder& out) {
+    if (!n) {
+        return;
+    }
+    switch (n->kind) {
+        case MdKind::Doc:
+        case MdKind::Group:
+        case MdKind::Html:
+            MdAppendJoined(a, n, out, "\n\n");
+            break;
+        case MdKind::Paragraph:
+            MdAppendRuns(a, n, out);
+            out.Append(StrL("\n\n"));
+            break;
+        case MdKind::Heading: {
+            int level = n->level > 0 && n->level < 8 ? n->level : 1;
+            for (int i = 0; i < level; i++) {
+                out.AppendChar('#');
+            }
+            out.AppendChar(' ');
+            MdAppendRuns(a, n, out);
+            break;
+        }
+        case MdKind::Quote: {
+            StrBuilder inner(a);
+            MdAppendJoined(a, n, inner, "\n\n");
+            MdAppendQuoteLines(out, inner.TakeStr(), false);
+            break;
+        }
+        case MdKind::Surface: {
+            StrBuilder inner(a);
+            MdAppendJoined(a, n, inner, "\n\n");
+            Str content = inner.TakeStr();
+            StrBuilder logical(a);
+            logical.Append(StrL("[!"));
+            logical.Append(n->surfaceName);
+            logical.AppendChar(']');
+            if (len(content) > 0) {
+                logical.AppendChar('\n');
+                logical.Append(content);
+            }
+            MdAppendQuoteLines(out, logical.TakeStr(), true);
+            break;
+        }
+        case MdKind::List: {
+            int ix = 0;
+            for (const MdNode* c = n->first; c; c = c->next) {
+                if (c->kind != MdKind::Item) {
+                    continue;
+                }
+                if (ix > 0) {
+                    out.AppendChar('\n');
+                }
+                if (n->ordered) {
+                    out.Append(StrDup(
+                        a, fmt("%u. ", OrderedListOrdinal((uint32_t)n->start,
+                                                          (uint32_t)ix))));
+                } else {
+                    out.Append(StrL("- "));
+                }
+                out.Append(MdToMarkdown(a, c));
+                ix++;
+            }
+            break;
+        }
+        case MdKind::Item: {
+            if (n->hasCheck) {
+                out.Append(n->checked ? StrL("[x] ") : StrL("[ ] "));
+            }
+            MdAppendJoined(a, n, out, "\n");
+            break;
+        }
+        case MdKind::Code:
+            out.Append(StrL("```"));
+            out.Append(n->lang);
+            out.AppendChar('\n');
+            MdAppendRuns(a, n, out);
+            out.Append(StrL("\n```"));
+            break;
+        case MdKind::Rule:
+            out.Append(StrL("---"));
+            break;
+        case MdKind::Definition:
+            out.AppendChar('[');
+            out.Append(n->raw);
+            out.Append(StrL("]:"));
+            break;
+        case MdKind::Table:
+        case MdKind::Row:
+        case MdKind::Cell:
+        case MdKind::Custom:
+            break;
+    }
+}
+
 static void MdOpenHref(char* href) {
     if (href) {
         OpenUrl(Str(href));
@@ -64690,20 +69695,42 @@ static Str Bullet(int depth) {
     }
 }
 
-int OrderedListOrdinal(int start, int ix) {
+uint32_t OrderedListOrdinal(uint32_t start, uint32_t ix) {
+    if (ix > 0xffffffffu - start) {
+        return 0xffffffffu;
+    }
     return start + ix;
 }
 
-Str ListItemPrefix(Arena* a, int ix, int start, bool ordered, int depth) {
+static Str AlphaListPrefix(Arena* a, uint32_t ordinal, char first) {
+    char rev[8];
+    int n = 0;
+    uint32_t remaining = ordinal;
+    while (remaining > 0 && n < 7) {
+        remaining -= 1;
+        rev[n++] = (char)(first + (remaining % 26));
+        remaining /= 26;
+    }
+    char letters[12];
+    for (int i = 0; i < n; i++) {
+        letters[i] = rev[n - 1 - i];
+    }
+    letters[n] = '.';
+    letters[n + 1] = ' ';
+    letters[n + 2] = 0;
+    return StrDup(a, Str(letters));
+}
+
+Str ListItemPrefix(Arena* a, uint32_t ix, uint32_t start, bool ordered,
+                   int depth) {
     if (!ordered) {
         return Bullet(depth);
     }
-    int ordinal = OrderedListOrdinal(start, ix);
+    uint32_t ordinal = OrderedListOrdinal(start, ix);
     if (depth == 0 || start == 0) {
-        return StrDup(a, fmt("%d. ", ordinal));
+        return StrDup(a, fmt("%u. ", ordinal));
     }
-    int alpha = (ordinal > 0 ? ordinal - 1 : 0) % 26;
-    return StrDup(a, fmt("%c. ", (depth == 1 ? 'A' : 'a') + alpha));
+    return AlphaListPrefix(a, ordinal, depth == 1 ? 'A' : 'a');
 }
 
 static Str SrcCat(Arena* a, Str p0, Str p1 = {}, Str p2 = {}, Str p3 = {},
@@ -64819,6 +69846,7 @@ const SelBlock* TextView::SrcOpen(Str marker, Str post, bool join) {
     b->post = post;
     b->linePre = srcLinePre;
     b->join = join;
+    b->surfacePre = srcSurfacePre;
     srcBlock = b;
     srcLineStart = true;
     srcRunLast = nullptr;
@@ -64931,7 +69959,41 @@ El* TextView::SrcImage(El* e, MdRun* r) {
 }
 
 static const Rgba kMarkBg = {0xfe, 0xf0, 0x8a, 0xff};
-static const Rgba kMarkFg = {0x0a, 0x0a, 0x0a, 0xff};
+
+static float MarkSrgbChannel(float value) {
+    return value <= 0.04045f ? value / 12.92f
+                             : powf((value + 0.055f) / 1.055f, 2.4f);
+}
+
+Rgba MarkTextColor(Rgba highlight, Rgba background) {
+    Rgba rgb = RgbaBlend(background, highlight);
+    float lum = 0.2126f * MarkSrgbChannel((float)rgb.r / 255.f) +
+                0.7152f * MarkSrgbChannel((float)rgb.g / 255.f) +
+                0.0722f * MarkSrgbChannel((float)rgb.b / 255.f);
+
+    if ((lum + 0.05f) * (lum + 0.05f) > 0.0525f) {
+        return Rgba{0, 0, 0, 255};
+    }
+    return Rgba{255, 255, 255, 255};
+}
+
+static Rgba MarkedRunColor(const TextView* view, Rgba color, uint8_t marks,
+                           Rgba highlight, bool hasHighlight) {
+    Rgba c = color;
+    if (marks & MdHighlight) {
+        Rgba markBg = hasHighlight ? highlight : kMarkBg;
+        if (markBg.a > 0) {
+            App* app = view->cx ? view->cx->app : nullptr;
+            Rgba surface = base_theme::Theme::Global(app)
+                               .tokens.colors.background;
+            c = MarkTextColor(markBg, surface);
+        }
+    }
+    if (marks & MdLink) {
+        c = view->textViewStyle.link;
+    }
+    return c;
+}
 
 static float FontLen(const Ctx* cx, float v) {
     return Rems(cx, v / 16.f);
@@ -64947,7 +70009,9 @@ El* TextView::ImageRun(MdRun* r, float font, Rgba color, bool inFlow) {
     float h = r->imgH;
 
     if (inFlow && w <= 0 && h <= 0) {
-        h = FontLen(cx, font * kLineHeight * 0.75f);
+        e->imageUnsized = true;
+
+        e->SelfStart();
     }
 
     if ((w > 0) != (h > 0)) {
@@ -64984,15 +70048,9 @@ El* TextView::ImageRun(MdRun* r, float font, Rgba color, bool inFlow) {
 
 El* TextView::Word(Str w, float font, Rgba color, uint8_t marks, int weight,
                    Str href, Rgba highlight, bool hasHighlight) {
-    Rgba c = color;
-    Rgba markBg = hasHighlight ? highlight : kMarkBg;
-    if (marks & MdLink) {
 
-        c = textViewStyle.link;
-    }
-    if ((marks & MdHighlight) && RgbaEq(markBg, kMarkBg)) {
-        c = kMarkFg;
-    }
+    Rgba c = MarkedRunColor(this, color, marks, highlight, hasHighlight);
+    Rgba markBg = hasHighlight ? highlight : kMarkBg;
     El* t = TextEl(a, w)->Font(font);
     if (c.a) {
         t->Fg(c);
@@ -65074,7 +70132,7 @@ El* TextView::Word(Str w, float font, Rgba color, uint8_t marks, int weight,
         }
     }
     if (selectable) {
-        t->Selectable();
+        t->Selectable()->GlyphSelection();
     }
     SrcMark(t, marks, href);
     if ((marks & MdLink) && len(href) > 0) {
@@ -65306,6 +70364,183 @@ static void EditorHostWatch(Arena* a, El* el, MdNode* n) {
     el->customUser = key;
 }
 
+static bool base_text_Utf8Boundary(Str text, int i) {
+    if (i < 0 || i > len(text)) {
+        return false;
+    }
+    if (i == 0 || i == len(text)) {
+        return true;
+    }
+    return ((unsigned char)text.s[i] & 0xC0) != 0x80;
+}
+
+struct ClippedFg {
+    int start = 0;
+    int end = 0;
+    Rgba color = {};
+};
+
+static const ForegroundRange* LeafRanges(const TextView* view, const MdNode* n,
+                                         int* nOut) {
+    *nOut = 0;
+    if (!view || !n || !n->hasEditorKey || !view->hostForegrounds) {
+        return nullptr;
+    }
+    for (int i = 0; i < view->nHostForegrounds; i++) {
+        if (view->hostForegrounds[i].key == n->editorKey) {
+            *nOut = view->hostForegrounds[i].n;
+            return view->hostForegrounds[i].ranges;
+        }
+    }
+    return nullptr;
+}
+
+static void ApplyTextForeground(Arena* a, El* t, Str text, int leafOffset,
+                                const ForegroundRange* ranges, int n) {
+    if (!a || !t || !text.s || n <= 0) {
+        return;
+    }
+    ClippedFg* clipped = (ClippedFg*)Alloc(a, n * (int)sizeof(ClippedFg));
+    if (!clipped) {
+        return;
+    }
+    int textLen = len(text);
+    int nc = 0;
+    for (int i = 0; i < n; i++) {
+        int start = ranges[i].start - leafOffset;
+        int end = ranges[i].end - leafOffset;
+        if (start < 0) {
+            start = 0;
+        }
+        if (end > textLen) {
+            end = textLen;
+        }
+        if (end < 0) {
+            end = 0;
+        }
+        if (start < end && base_text_Utf8Boundary(text, start) &&
+            base_text_Utf8Boundary(text, end)) {
+            clipped[nc].start = start;
+            clipped[nc].end = end;
+            clipped[nc].color = ranges[i].color;
+            nc++;
+        }
+    }
+    if (nc == 0) {
+        return;
+    }
+    TextSpan* spans = (TextSpan*)Alloc(a, nc * 2 * (int)sizeof(TextSpan));
+    if (!spans) {
+        return;
+    }
+    int ns = 0;
+    int at = 0;
+    while (at < textLen && ns < nc * 2) {
+        int win = -1;
+        for (int i = 0; i < nc; i++) {
+            if (clipped[i].start <= at && at < clipped[i].end) {
+                win = i;
+            }
+        }
+        int hi = textLen;
+        if (win >= 0) {
+            hi = clipped[win].end;
+        }
+        for (int i = 0; i < nc; i++) {
+            if (clipped[i].start > at && clipped[i].start < hi) {
+                hi = clipped[i].start;
+            }
+        }
+        if (hi <= at) {
+            break;
+        }
+        if (win >= 0) {
+            spans[ns].lo = at;
+            spans[ns].hi = hi;
+            spans[ns].color = clipped[win].color;
+            ns++;
+        }
+        at = hi;
+    }
+    if (ns > 0) {
+        t->Spans(spans, ns);
+    }
+}
+
+static bool ObjectForeground(const ForegroundRange* ranges, int n, int offset,
+                             Rgba* out) {
+    if (!ranges || n <= 0 || !out) {
+        return false;
+    }
+    int end = offset + 3;
+    bool found = false;
+    for (int i = 0; i < n; i++) {
+        if (ranges[i].start <= offset && end <= ranges[i].end) {
+            *out = ranges[i].color;
+            found = true;
+        }
+    }
+    return found;
+}
+
+RenderContext RenderContextWithForegroundRanges(Arena* a, RenderContext rcx,
+                                                uint64_t key,
+                                                const ForegroundRange* ranges,
+                                                int n) {
+    if (!a) {
+        return rcx;
+    }
+    if (n < 0) {
+        n = 0;
+    }
+    ForegroundRange* copy = nullptr;
+    if (n > 0 && ranges) {
+        copy = (ForegroundRange*)Alloc(a, n * (int)sizeof(ForegroundRange));
+        if (!copy) {
+            return rcx;
+        }
+        memcpy(copy, ranges, (size_t)n * sizeof(ForegroundRange));
+    } else {
+        n = 0;
+    }
+    bool replace = false;
+    for (int i = 0; i < rcx.nForegrounds; i++) {
+        if (rcx.foregrounds[i].key == key) {
+            replace = true;
+        }
+    }
+    int nOut = replace ? rcx.nForegrounds : rcx.nForegrounds + 1;
+    if (nOut <= 0) {
+        nOut = 1;
+    }
+    LeafForeground* rows =
+        (LeafForeground*)Alloc(a, nOut * (int)sizeof(LeafForeground));
+    if (!rows) {
+        return rcx;
+    }
+    int w = 0;
+    bool wrote = false;
+    for (int i = 0; i < rcx.nForegrounds; i++) {
+        if (rcx.foregrounds[i].key == key) {
+            rows[w].key = key;
+            rows[w].ranges = copy;
+            rows[w].n = n;
+            wrote = true;
+        } else {
+            rows[w] = rcx.foregrounds[i];
+        }
+        w++;
+    }
+    if (!wrote) {
+        rows[w].key = key;
+        rows[w].ranges = copy;
+        rows[w].n = n;
+    }
+    rcx.foregrounds = rows;
+    rcx.nForegrounds = nOut;
+    return rcx;
+}
+
 El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
                      uint8_t align) {
 
@@ -65326,7 +70561,7 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
         }
         ApplyWeight(t, weight);
         if (selectable) {
-            t->Selectable();
+            t->Selectable()->GlyphSelection();
             SrcMark(t, 0);
             SrcMap(t, n->runFirst->segments, n->runFirst->segmentCount, 0);
         }
@@ -65336,13 +70571,16 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             RevealMark(t, 0, reveal);
         }
 
-        if (align == MdAlignCenter) {
-            t->TextCenter();
-        } else if (align == MdAlignRight) {
-            t->TextRight();
+        if (align == MdAlignCenter || align == MdAlignRight) {
+            t->MaxWFrac(1.f);
+        } else {
+            t->W(kFill);
         }
-        t->W(kFill)->ReportLineSpan(FontLen(cx, font * kLineHeight));
+        t->ReportLineSpan(FontLen(cx, font * kLineHeight));
         EditorHostWatch(a, t, n);
+        int nRanges = 0;
+        const ForegroundRange* ranges = LeafRanges(this, n, &nRanges);
+        ApplyTextForeground(a, t, t->text, 0, ranges, nRanges);
         return t;
     }
 
@@ -65371,6 +70609,11 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
     MdRun* wordRun = nullptr;
     int wordStart = 0;
 
+    int wordLeaf = 0;
+    int leafAt = 0;
+    int nRanges = 0;
+    const ForegroundRange* ranges = LeafRanges(this, n, &nRanges);
+
     int runOffset = 0;
     int nextRunOffset = 0;
     int revealOffset = 0;
@@ -65396,6 +70639,7 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             lastWord = w;
             lastWordLo = runOffset + wordStart;
         }
+        ApplyTextForeground(a, w, w->text, wordLeaf, ranges, nRanges);
         row->Child(w);
         wordLen = 0;
     };
@@ -65416,7 +70660,13 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             context.remSize = 16;
             context.textStyle.fontSize = font;
             context.textStyle.lineHeight = kLineHeight;
-            context.textStyle.color = color;
+            context.textStyle.color =
+                MarkedRunColor(this, color, marks, highlight, hasHighlight);
+            Rgba objColor = {};
+            bool objFg = ObjectForeground(ranges, nRanges, leafAt, &objColor);
+            if (objFg) {
+                context.textStyle.color = objColor;
+            }
             int inheritedWeight =
                 (marks & MdBold) ? (weight > 2 ? weight : 2) : weight;
             context.textStyle.fontBold = inheritedWeight >= 3;
@@ -65427,9 +70677,6 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             context.textStyle
                 .underline = (marks & MdUnderline) || (marks & MdLink);
             context.textStyle.strike = (marks & MdDel) != 0;
-            if (marks & MdLink) {
-                context.textStyle.color = textViewStyle.link;
-            }
             InlineElement rendered;
             if (renderer) {
                 if (renderer->renderInline) {
@@ -65441,6 +70688,9 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
                 }
             }
             if (rendered.element) {
+                if (objFg) {
+                    rendered.element->Fg(objColor);
+                }
                 if (rendered.hasBaseline) {
                     rendered.element->MarginT(std::max(
                         0.f, context.lineHeight * 0.75f - rendered.baseline));
@@ -65449,6 +70699,9 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             } else if (r->custom.text) {
                 El* w = Word(r->custom.text, font, color, marks, weight, href,
                              highlight, hasHighlight);
+                if (objFg) {
+                    w->Fg(objColor);
+                }
 
                 SourceSegment* whole = nullptr;
                 if (r->custom.hasSpan) {
@@ -65461,10 +70714,12 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
                 }
                 row->Child(SrcMap(w, whole, whole ? 1 : 0, 0, true));
             }
+            leafAt += 3;
             continue;
         }
         if (len(r->imgSrc) > 0) {
             row->Child(SrcImage(ImageRun(r, font, color, inFlow), r));
+            leafAt += 3;
             continue;
         }
         wordRun = r;
@@ -65479,12 +70734,14 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             }
             if (wordLen == 0) {
                 wordStart = i;
+                wordLeaf = leafAt + i;
             }
             word[wordLen++] = c;
             if (c == ' ') {
                 flush();
             }
         }
+        leafAt += len(r->text);
     }
     flush();
 
@@ -65737,7 +70994,7 @@ El* TextView::CodeBlock(MdNode* n) {
                     ->Fg(textViewStyle.foreground)
                     ->Mono();
         if (selectable) {
-            t->Selectable();
+            t->Selectable()->GlyphSelection();
             SrcMark(t, 0);
             SrcMap(t, segments, segmentCount, 0);
         }
@@ -65830,7 +71087,7 @@ El* TextView::CodeLines(Str code, const ArenaVec<CodeHighlight>& spans,
                     ->Fg(color)
                     ->Mono();
         if (selectable) {
-            t->Selectable();
+            t->Selectable()->GlyphSelection();
             SrcMark(t, 0);
             SrcMap(t, segments, segmentCount, pieceStart);
         }
@@ -66270,6 +71527,12 @@ void TextView::AppendTableCells(El* row, MdNode* r, const float* maxW,
                        ->PadX(12)
                        ->PadY(7);
         cell->selTableCell = true;
+
+        if (align == MdAlignCenter) {
+            cell->FlexCol()->ItemsCenter();
+        } else if (align == MdAlignRight) {
+            cell->FlexCol()->ItemsEnd();
+        }
         if (tv->textViewStyle.tableCellFields) {
             cell->Refine(tv->textViewStyle.tableCell, tv->textViewStyle
                                                           .tableCellFields);
@@ -66344,6 +71607,11 @@ El* TextView::ScrollTable(MdNode* n) {
             }
         }
 
+        row->PathClick(ElementIdNamed(a, StrL("row"), (uint64_t)rowIx));
+        if (textViewStyle.hasTableRowHover && rowIx > 0) {
+            row->HoverBg(textViewStyle.tableRowHover);
+        }
+
         RoundTableRow(row, textViewStyle, rowIx == 0, r->next == nullptr);
         AppendTableCells(row, r, maxW, minW, nCols, colAlign);
         track->Child(row);
@@ -66364,8 +71632,10 @@ El* TextView::ScrollTable(MdNode* n) {
     if (textViewStyle.tableFields) {
         scroller->Refine(textViewStyle.table, textViewStyle.tableFields);
     }
+
     scroller->ScrollId((int)key)
         ->OnScroll(ListenTo(ent, &OnMdTableScroll))
+        ->PathClick(ElementIdNamed(a, StrL("table"), (uint64_t)tableIx))
         ->Child(track);
 
     scroller = HorizontalScrollArea(cx, StrL("md-table"), scroller);
@@ -66409,8 +71679,16 @@ El* TextView::Table(MdNode* n) {
         minW[i] = cols[i].minW;
     }
 
-    El* table = Div(a)->FlexCol()->W(kFill)->ClipX()->Bg(surface)->Border(
-        1, textViewStyle.border);
+    tableIx++;
+
+    El* table =
+        Div(a)
+            ->FlexCol()
+            ->W(kFill)
+            ->ClipX()
+            ->Bg(surface)
+            ->Border(1, textViewStyle.border)
+            ->PathClick(ElementIdNamed(a, StrL("table"), (uint64_t)tableIx));
     if (textViewStyle.tableFields) {
         table->Refine(textViewStyle.table, textViewStyle.tableFields);
     }
@@ -66426,6 +71704,10 @@ El* TextView::Table(MdNode* n) {
                 row->Refine(textViewStyle.tableHead, textViewStyle
                                                          .tableHeadFields);
             }
+        }
+        row->PathClick(ElementIdNamed(a, StrL("row"), (uint64_t)rowIx));
+        if (textViewStyle.hasTableRowHover && rowIx > 0) {
+            row->HoverBg(textViewStyle.tableRowHover);
         }
         RoundTableRow(row, textViewStyle, rowIx == 0, r->next == nullptr);
         AppendTableCells(row, r, maxW, minW, nCols, colAlign);
@@ -66479,7 +71761,8 @@ static El* TaskBox(const Ctx* cx, Arena* a, const TextViewStyle& style,
 }
 
 El* TextView::Item(MdNode* n, Str marker, int depth) {
-    El* content = Div(a)->FlexCol()->Flex1()->MinW(0)->ClipX();
+
+    El* content = Div(a)->FlexCol()->FlexAuto()->MinW(0)->ClipX();
 
     Str savedPre = srcLinePre;
     Str md = srcItemMarker;
@@ -66509,8 +71792,26 @@ El* TextView::Item(MdNode* n, Str marker, int depth) {
     }
     El* row = Div(a)->FlexRow()->W(kFill)->ItemsStart();
     if (n->hasCheck) {
-        row->Child(TaskBox(cx, a, textViewStyle,
-                           FontLen(cx, baseFont * kLineHeight), n->checked));
+        El* box = TaskBox(cx, a, textViewStyle,
+                          FontLen(cx, baseFont * kLineHeight), n->checked);
+
+        TextViewState* managed = state.Get(cx);
+        if (box && managed && onTaskToggle.IsValid() && n->markerStart >= 0 &&
+            n->itemStart >= 0) {
+            TaskToggleEvent ev;
+            ev.checked = !n->checked;
+            ev.itemStart = n->itemStart;
+            ev.itemEnd = n->itemEnd;
+            ev.markerStart = n->markerStart;
+            ev.markerEnd = n->markerEnd;
+            int ix = len(managed->taskToggles);
+            VecAppend(managed->taskToggles, ev);
+            box->PathClick(ElementIdNamed(a, StrL("task-toggle"),
+                                          (uint64_t)n->itemStart))
+                ->OnClick(ListenTo(state, &TextViewState::OnTaskClick, ix))
+                ->StopClick();
+        }
+        row->Child(box);
     } else if (len(marker) > 0) {
 
         float indent = baseFont * 1.4f;
@@ -66626,6 +71927,12 @@ struct RenderedLeafSpan {
     int rowSourceEnd = -1;
 };
 
+struct SurfaceCustomSpan {
+    int renderedStart = 0;
+    int renderedEnd = 0;
+    int sourceStart = 0;
+};
+
 struct RenderedIndex {
     Str text = {};
 
@@ -66633,6 +71940,7 @@ struct RenderedIndex {
 
     Vec<RenderedLeafSpan> leaves;
     Vec<Span> objects;
+    Vec<SurfaceCustomSpan> surfaceCustoms;
 
     Vec<Span> blocks;
 
@@ -66744,7 +72052,7 @@ struct RenderedIndexBuilder {
         }
     }
 
-    void PushBlock(const MdNode* n) {
+    void PushBlock(const MdNode* n, bool inSurface) {
         int start = len(text);
         switch (n->kind) {
             case MdKind::Doc:
@@ -66752,13 +72060,19 @@ struct RenderedIndexBuilder {
             case MdKind::Html:
             case MdKind::Group:
                 for (const MdNode* c = n->first; c; c = c->next) {
-                    PushBlock(c);
+                    PushBlock(c, inSurface);
                 }
                 break;
+            case MdKind::Surface:
+
+                for (const MdNode* c = n->first; c; c = c->next) {
+                    PushBlock(c, true);
+                }
+                return;
             case MdKind::List:
             case MdKind::Item:
                 for (const MdNode* c = n->first; c; c = c->next) {
-                    PushBlock(c);
+                    PushBlock(c, inSurface);
                 }
                 return;
             case MdKind::Paragraph:
@@ -66772,6 +72086,13 @@ struct RenderedIndexBuilder {
                 PushTable(n);
                 break;
             case MdKind::Custom:
+                if (inSurface && n->custom.hasSpan) {
+                    SurfaceCustomSpan custom;
+                    custom.renderedStart = len(text);
+                    custom.renderedEnd = len(text) + len(n->custom.text);
+                    custom.sourceStart = n->custom.span.start;
+                    VecAppend(index->surfaceCustoms, custom);
+                }
                 PushObjectSource(len(text), n->custom.text, n->custom);
                 text.Append(n->custom.text);
                 break;
@@ -66793,7 +72114,7 @@ RenderedIndex* RenderedIndexNew(const MdNode* doc, Str source) {
     builder.index = index;
     for (const MdNode* c = doc ? doc->first : nullptr; c; c = c->next) {
         int start = len(builder.text);
-        builder.PushBlock(c);
+        builder.PushBlock(c, false);
         VecAppend(index->blocks, Span{start, len(builder.text)});
     }
     index->text = builder.text.TakeStr();
@@ -67216,6 +72537,16 @@ bool RenderedIndexLocate(const RenderedIndex* index, Span range,
         out->offset = nearText;
         return true;
     }
+
+    for (int i = 0; i < len(index->surfaceCustoms); i++) {
+        const SurfaceCustomSpan& custom = index->surfaceCustoms[i];
+        if (custom.renderedStart < range.end &&
+            custom.renderedEnd > range.start) {
+            out->key = TextLeafKey{custom.sourceStart, 0};
+            out->offset = 0;
+            return true;
+        }
+    }
     out->block = true;
     out->blockIx = blockIx;
     return true;
@@ -67355,6 +72686,10 @@ static MarkdownExtensions CopyParserExtensions(Arena* a,
     for (auto renderer : src.inlineRenderers) {
         renderer.name = StrDup(a, renderer.name);
         copy.inlineRenderers.Append(a, renderer);
+    }
+    for (auto surface : src.blockSurfaces) {
+        surface.name = StrDup(a, surface.name);
+        copy.blockSurfaces.Append(a, surface);
     }
     return copy;
 }
@@ -67980,6 +73315,55 @@ void TextView::RevealMark(El* t, int lo, int offset) {
     revealOut = nullptr;
 }
 
+static bool MdRunDraws(const MdRun* run) {
+    if (!run) {
+        return false;
+    }
+    if (len(run->imgSrc) > 0 || run->hasCustom) {
+        return true;
+    }
+    for (int i = 0; i < len(run->text); i++) {
+        char c = run->text.s[i];
+        if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool MdDrawsNothing(const MdNode* n) {
+    if (!n) {
+        return true;
+    }
+    switch (n->kind) {
+        case MdKind::Definition:
+            return true;
+        case MdKind::Paragraph: {
+            if (!n->runFirst) {
+                return true;
+            }
+            for (const MdRun* run = n->runFirst; run; run = run->next) {
+                if (MdRunDraws(run)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case MdKind::Doc:
+        case MdKind::Quote:
+        case MdKind::Surface:
+        case MdKind::Group:
+            for (const MdNode* c = n->first; c; c = c->next) {
+                if (!MdDrawsNothing(c)) {
+                    return false;
+                }
+            }
+            return true;
+        default:
+            return false;
+    }
+}
+
 El* TextView::Blocks(El* into, MdNode* n, int depth, bool inList) {
     bool outer = blockDepth++ == 0;
     if (outer) {
@@ -67987,7 +73371,18 @@ El* TextView::Blocks(El* into, MdNode* n, int depth, bool inList) {
     }
     int blockIx = 0;
     for (MdNode* c = n->first; c; c = c->next, blockIx++) {
-        El* e = Block(c, depth, inList, c->next == nullptr);
+
+        bool last = c->next == nullptr;
+        if (n->kind == MdKind::Surface) {
+            last = true;
+            for (MdNode* rest = c->next; rest; rest = rest->next) {
+                if (!MdDrawsNothing(rest)) {
+                    last = false;
+                    break;
+                }
+            }
+        }
+        El* e = Block(c, depth, inList, last);
         if (e && c->kind != MdKind::Heading && c->kind != MdKind::Rule) {
             flowPrev = 3;
         }
@@ -68080,6 +73475,44 @@ El* TextView::PluginBlock(MdNode* n) {
     return nullptr;
 }
 
+static void SurfaceCustomPainted(PaintCtx* ctx, El* element, void* data) {
+    TextView* view = (TextView*)data;
+    TextViewState* managed = view && ctx ? view->state.Get(ctx->app) : nullptr;
+    if (!managed || !managed->reveal.pending || !element) {
+        return;
+    }
+    Bounds bounds = element->Bounds();
+    WinSize size = ctx->window ? WindowSize(ctx->window) : WinSize{};
+    Bounds visible = managed->reveal.hasMask ? managed->reveal.mask
+                     : ctx->hasHitMask ? ctx->hitMask
+                                       : Bounds{0, 0, size.dipW, size.dipH};
+    float slack = 0.5f;
+    bool inside = bounds.y >= visible.y - slack &&
+                  bounds.y + bounds.h <= visible.y + visible.h + slack;
+    bool fills = bounds.y <= visible.y + slack &&
+                 bounds.y + bounds.h >= visible.y + visible.h - slack;
+    managed->reveal.line = bounds;
+    if (inside || fills) {
+        managed->reveal.pending = false;
+    }
+}
+
+static void HookSurfaceCustom(TextView* view, El* element, const MdNode* n) {
+    if (!view || !element || !n || !n->custom.hasSpan || !view->revealTarget ||
+        view->revealTarget->block || !view->revealOut) {
+        return;
+    }
+    if (!(view->revealTarget->key == TextLeafKey{n->custom.span.start, 0})) {
+        return;
+    }
+    element->BoundsOut(view->revealOut);
+    element->lifecycle = ArenaNew<ElLifecycle>(view->a);
+    if (element->lifecycle) {
+        element->lifecycle->afterPaint = &SurfaceCustomPainted;
+        element->lifecycle->user = view;
+    }
+}
+
 El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
 
     float gap = Rems(cx, paragraphGap / 16.f);
@@ -68094,12 +73527,15 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
             content =
                 MarkBlockPlugin(content, n->custom.text, n->custom.markdown,
                                 n->custom.hasSpan, n->custom.span);
+            if (surfaceDepth > 0) {
+                HookSurfaceCustom(this, content, n);
+            }
         }
         if (!content && n->custom.text.s) {
             SrcOpen({}, {});
             content = TextEl(a, n->custom.text)->Font(baseFont)->Wrap();
             if (selectable) {
-                content->Selectable();
+                content->Selectable()->GlyphSelection();
                 SrcMark(content, 0);
             }
         }
@@ -68195,6 +73631,76 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
                 ->PadB(isLast ? 0.f : space)
                 ->Child(Div(a)->H(1)->W(kFill)->Bg(textViewStyle.border));
         }
+        case MdKind::Surface: {
+            if (MdDrawsNothing(n)) {
+
+                return nullptr;
+            }
+            El* container = markdownExtensions
+                                .RenderBlockSurface(n->surfaceName, cx);
+            if (!container) {
+                container = Div(a);
+            }
+
+            if (container->style.width == kAuto && container->style
+                                                           .widthFrac == 0) {
+                container->W(kFill);
+            }
+            if (container->style.minW == kAuto) {
+                container->MinW(0);
+            }
+
+            gpui::Style savedQuote = quoteStyle;
+            uint32_t savedQuoteFields = quoteFields;
+            bool savedQuoteOn = quoteOn;
+            quoteStyle = {};
+            quoteFields = 0;
+            if (container->style.fontSize > 0) {
+                quoteStyle.fontSize = container->style.fontSize;
+                quoteFields |= StyleFieldFontSize;
+            }
+            if (container->style.fontWeight || container->style.fontBold ||
+                container->style.fontSemibold || container->style.fontMedium) {
+                quoteStyle.fontWeight = container->style.fontWeight;
+                quoteStyle.fontBold = container->style.fontBold;
+                quoteStyle.fontSemibold = container->style.fontSemibold;
+                quoteStyle.fontMedium = container->style.fontMedium;
+                quoteFields |= StyleFieldFontWeight;
+            }
+            if (container->style.fontMono) {
+                quoteStyle.fontMono = true;
+                quoteFields |= StyleFieldFontMono;
+            }
+            if (container->style.fontFamily) {
+                quoteStyle.fontFamily = container->style.fontFamily;
+                quoteFields |= StyleFieldFontFamily;
+            }
+            quoteOn = quoteFields != 0;
+            Str savedPre = srcLinePre;
+            Str savedSurface = srcSurfacePre;
+            srcLinePre = SrcCat(a, srcLinePre, StrL("> "));
+
+            {
+                StrBuilder marker(a);
+                marker.Append(savedPre);
+                marker.Append(StrL("> [!"));
+                marker.Append(n->surfaceName);
+                marker.Append(StrL("]\n"));
+                srcSurfacePre = marker.TakeStr();
+            }
+            uint8_t savedPrev = flowPrev;
+            flowPrev = 0;
+            surfaceDepth++;
+            Blocks(container, n, depth, false);
+            surfaceDepth--;
+            flowPrev = savedPrev;
+            srcLinePre = savedPre;
+            srcSurfacePre = savedSurface;
+            quoteStyle = savedQuote;
+            quoteFields = savedQuoteFields;
+            quoteOn = savedQuoteOn;
+            return Div(a)->W(kFill)->PadB(mb)->Child(container);
+        }
         case MdKind::Quote: {
             Rgba quoteFg = textViewStyle.mutedForeground;
             if (textViewStyle.blockquoteStyleFields & StyleFieldColor) {
@@ -68246,11 +73752,14 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
                 if (c->kind != MdKind::Item) {
                     continue;
                 }
-                Str marker = ListItemPrefix(a, ix, n->start, n->ordered, depth);
+                Str marker = ListItemPrefix(a, (uint32_t)ix, (uint32_t)n->start,
+                                            n->ordered, depth);
 
-                Str src = n->ordered ? StrDup(a, fmt("%d. ", OrderedListOrdinal(
-                                                                 n->start, ix)))
-                                     : StrL("- ");
+                Str src = n->ordered
+                              ? StrDup(a, fmt("%u. ", OrderedListOrdinal(
+                                                          (uint32_t)n->start,
+                                                          (uint32_t)ix)))
+                              : StrL("- ");
                 srcItemPad = src;
                 if (c->hasCheck) {
 
@@ -68322,6 +73831,12 @@ void TextView::PrepareInheritedColor(PaintCtx*, El* element, Rgba inherited,
     element->style.color = resolved->style.color;
     element->style.hasColor = resolved->style.hasColor;
     element->lifecycle = resolved->lifecycle;
+}
+
+TextView* TextView::HostForegrounds(const RenderContext& rcx) {
+    hostForegrounds = rcx.foregrounds;
+    nHostForegrounds = rcx.nForegrounds;
+    return this;
 }
 
 El* TextView::RenderDocument(MdNode* doc) {
@@ -68410,6 +73925,8 @@ El* TextView::IntoEl() {
         source = managed->text;
         html = managed->format == TextViewFormat::Html;
         managed->selectable = selectable;
+        managed->onTaskToggle = onTaskToggle;
+        VecClear(managed->taskToggles);
         managed->selectionFormat = selFormat;
         managed->scrollable = scrollable;
         managed->maxLines = scrollable ? -1 : maxLines;
@@ -68661,6 +74178,29 @@ TextView* TextView::OnLink(Listener fn) {
     return this;
 }
 
+TextView* TextView::OnTaskToggle(Listener fn) {
+    onTaskToggle = fn;
+    return this;
+}
+
+void TextViewState::OnTaskClick(TextViewState* self, Ctx* cx, const ClickEvent*,
+                                int64_t arg) {
+    if (!self || !cx) {
+        return;
+    }
+    int ix = (int)arg;
+    if (ix < 0 || ix >= len(self->taskToggles)) {
+        return;
+    }
+    TaskToggleEvent ev = self->taskToggles[ix];
+
+    TextSelection::End(cx->win, cx->app);
+    WindowStopPropagation(cx);
+    if (self->onTaskToggle.IsValid()) {
+        ListenerCall(cx->app, cx->win, self->onTaskToggle, &ev);
+    }
+}
+
 TextView* TextView::OnLinkWithContext(Listener fn, int64_t context) {
     onLink = fn;
     onLinkContext = context;
@@ -68778,6 +74318,9 @@ TextView* TextView::MarkdownExtensionsSet(
     for (int i = 0; i < extensions.inlineRenderers.len; i++) {
         markdownExtensions.inlineRenderers
             .Append(a, extensions.inlineRenderers[i]);
+    }
+    for (int i = 0; i < extensions.blockSurfaces.len; i++) {
+        markdownExtensions.blockSurfaces.Append(a, extensions.blockSurfaces[i]);
     }
     return this;
 }
@@ -69467,7 +75010,13 @@ TimeField* TimeField::New(Ctx* cx, Str id, Entity<TimeFieldState> state) {
     f->cx = cx;
     f->id = id;
     f->state = state;
+    f->separator = StrL(":");
     return f;
+}
+
+TimeField* TimeField::Separator(Str value) {
+    separator = value;
+    return this;
 }
 
 TimeField* TimeField::Disabled(bool v) {
@@ -69539,7 +75088,7 @@ El* TimeField::IntoEl() {
     for (int ix = 0; ix < n; ix++) {
         TimeSegment s = all[ix];
         if (ix > 0 && s != TimeSegment::Period) {
-            root->Child(Div(a)->Child(TextEl(a, StrL(":"))));
+            root->Child(Div(a)->Child(TextEl(a, separator)));
         }
         TimeFieldSegmentState segmentState;
         segmentState.segment = s;
@@ -69982,18 +75531,35 @@ bool ToolbarMoveFocus(Window* win, FocusHandle container, bool forward) {
         return false;
     }
 
+    Vec<int> visited;
+    VecAppend(visited, start);
     int at = start;
-    for (int hop = 0; hop <= kToolbarMaxFocusAttempts; hop++) {
-        at = FocusNextFrom(win, at, 0, !forward);
-        if (at != start && WindowFocusContains(win, container.id, at)) {
-            WindowSetFocusId(win, at);
-            return true;
-        }
-        if (at == start) {
+    bool moved = false;
+    for (;;) {
+        int next = FocusNextFrom(win, at, 0, !forward);
+        if (!next) {
             break;
         }
+        bool seen = false;
+        for (int i = 0; i < len(visited); i++) {
+            if (visited[i] == next) {
+                seen = true;
+                break;
+            }
+        }
+        if (seen) {
+            break;
+        }
+        if (WindowFocusContains(win, container.id, next)) {
+            WindowSetFocusId(win, next);
+            moved = true;
+            break;
+        }
+        VecAppend(visited, next);
+        at = next;
     }
-    return false;
+    VecReset(visited);
+    return moved;
 }
 
 void ToolbarState::OnKeyDown(ToolbarState* self, Ctx* cx, const KeyEvent* ev) {
@@ -70001,10 +75567,13 @@ void ToolbarState::OnKeyDown(ToolbarState* self, Ctx* cx, const KeyEvent* ev) {
     if (self->disabled || !ev) {
         return;
     }
+
+    int back = self->axis == Axis::Vertical ? KeyUp : KeyLeft;
+    int forwardKey = self->axis == Axis::Vertical ? KeyDown : KeyRight;
     bool forward = false;
-    if (ev->vk == KeyLeft) {
+    if (ev->vk == back) {
         forward = false;
-    } else if (ev->vk == KeyRight) {
+    } else if (ev->vk == forwardKey) {
         forward = true;
     } else {
         return;
@@ -70031,6 +75600,11 @@ Toolbar* Toolbar::Disabled(bool value) {
     return this;
 }
 
+Toolbar* Toolbar::Axis(enum Axis value) {
+    axis = value;
+    return this;
+}
+
 Toolbar* Toolbar::Child(El* child) {
     if (child) {
         root->Child(child);
@@ -70047,10 +75621,14 @@ El* Toolbar::IntoEl() {
             s->focus = FocusHandleNew(cx);
         }
         s->disabled = disabled;
+        s->axis = axis;
         root->TrackFocus(s->focus)->TabStop(false);
     }
+    AccessibilityOrientation orient =
+        axis == Axis::Vertical ? AccessibilityOrientation::Vertical
+                               : AccessibilityOrientation::Horizontal;
     return root->Role(AccessibilityRole::Toolbar)
-        ->AriaOrientation(AccessibilityOrientation::Horizontal)
+        ->AriaOrientation(orient)
         ->OnKeyDown(ListenTo(state, &ToolbarState::OnKeyDown))
         ->OnMouseDown(ListenTo(state, &ToolbarState::OnMouseDown));
 }
@@ -71815,9 +77393,67 @@ static void VirtualListPrePaint(PaintCtx* ctx, El* e, void* user) {
     }
 }
 
+static float VirtualListInferLength(float specified, float content,
+                                    bool infer) {
+    if (specified > 0) {
+        return specified;
+    }
+    if (infer && specified == kAuto) {
+        return content;
+    }
+    return kFill;
+}
+
+static void VirtualListInferContent(Ctx* cx, const VirtualListOpts& o,
+                                    float* main, float* cross) {
+    *main = 0;
+    *cross = 0;
+    if (!cx || o.count <= 0 || !o.row) {
+        return;
+    }
+    int ix = o.itemToMeasure;
+    if (ix < 0) {
+        ix = 0;
+    }
+    if (ix >= o.count) {
+        ix = o.count - 1;
+    }
+    El* sample = o.row(o.user, cx, ix);
+    PaintCtx paint = {};
+    paint.app = cx->app;
+    paint.window = cx->win;
+    Size got = MeasureEl(&paint, sample, 0);
+    float crossSize = o.layoutAxis == Axis::Horizontal ? got.h : got.w;
+    ItemSizeLayout layout;
+    ItemSizeLayoutBuild(&layout, o.layoutAxis, o.sizes, o.count, o.rowH, o.gap,
+                        crossSize);
+    if (o.layoutAxis == Axis::Horizontal) {
+        *main = layout.contentSize.w;
+        *cross = layout.contentSize.h;
+    } else {
+        *main = layout.contentSize.h;
+        *cross = layout.contentSize.w;
+    }
+}
+
 El* VirtualList::New(Ctx* cx, Str id, const VirtualListOpts& o) {
     Arena* a = cx->a;
-    float viewport = o.layoutAxis == Axis::Horizontal ? o.viewW : o.viewH;
+    bool infer = o.sizingBehavior == ListSizingBehavior::Infer;
+    float inferMain = 0;
+    float inferCross = 0;
+    if (infer) {
+        VirtualListInferContent(cx, o, &inferMain, &inferCross);
+    }
+    float along = o.layoutAxis == Axis::Horizontal ? o.viewW : o.viewH;
+    float crossSpec = o.layoutAxis == Axis::Horizontal ? o.viewH : o.viewW;
+    float viewport = VirtualListInferLength(along, inferMain, infer);
+    if (viewport == kFill) {
+        viewport = 0;
+    }
+    float cross = VirtualListInferLength(crossSpec, inferCross, infer);
+    if (cross == kFill) {
+        cross = 0;
+    }
     float offset = o.layoutAxis == Axis::Horizontal ? o.scrollX : o.scrollY;
     if (o.logicalScroll) {
         offset =
@@ -71826,7 +77462,6 @@ El* VirtualList::New(Ctx* cx, Str id, const VirtualListOpts& o) {
     if (o.handle && viewport > 0 && !o.needsMeasure) {
         o.handle->axis = o.layoutAxis;
         ItemSizeLayout layout;
-        float cross = o.layoutAxis == Axis::Horizontal ? o.viewH : o.viewW;
         ItemSizeLayoutBuild(&layout, o.layoutAxis, o.sizes, o.count, o.rowH,
                             o.gap, cross);
         const float* sizes = layout.sizes.len ? layout.sizes.els : nullptr;
@@ -71841,26 +77476,23 @@ El* VirtualList::New(Ctx* cx, Str id, const VirtualListOpts& o) {
     paint->app = cx->app;
     paint->win = cx->win;
     El* e = New(cx, id)->ClipY()->ClipX();
+
     if (o.layoutAxis == Axis::Horizontal) {
         e->ScrollX(offset)->ScrollY(o.scrollY);
-        if (o.viewW > 0)
-            e->W(o.viewW + o.pad * 2);
-        else
-            e->W(kFill);
-        if (o.viewH > 0)
-            e->H(o.viewH);
-        else
-            e->H(kFill);
+        float w = VirtualListInferLength(o.viewW, inferMain, infer);
+        float h = VirtualListInferLength(o.viewH, inferCross, infer);
+        if (o.viewW > 0) {
+            w += o.pad * 2;
+        }
+        e->W(w)->H(h);
     } else {
         e->ScrollY(offset)->ScrollX(o.scrollX);
-        if (o.viewH > 0)
-            e->H(o.viewH + o.pad * 2);
-        else
-            e->H(kFill);
-        if (o.viewW > 0)
-            e->W(o.viewW);
-        else
-            e->W(kFill);
+        float h = VirtualListInferLength(o.viewH, inferMain, infer);
+        float w = VirtualListInferLength(o.viewW, inferCross, infer);
+        if (o.viewH > 0) {
+            h += o.pad * 2;
+        }
+        e->H(h)->W(w);
     }
     if (o.pad > 0) {
         e->Pad(o.pad);
@@ -74900,6 +80532,8 @@ El* Button::IntoEl() {
     }
     if (tooltip.s) {
         e->Tip(tooltip);
+
+        e->AriaDescription(tooltip);
         if (tooltipPlacement >= 0) {
             e->TipPlacement(tooltipPlacement);
         }
@@ -74991,6 +80625,10 @@ Toggle* Toggle::Checked(bool value) {
     checked = value;
     return this;
 }
+Toggle* Toggle::W(float value) {
+    width = value;
+    return this;
+}
 Toggle* Toggle::OnClick(Listener value) {
     onClick = value;
     return this;
@@ -75073,6 +80711,8 @@ El* Toggle::IntoEl() {
     root->MinW(h)->H(h)->PadX(pad)->Corners(
         cornerTL ? th.radius : 0.f, cornerTR ? th.radius : 0.f,
         cornerBR ? th.radius : 0.f, cornerBL ? th.radius : 0.f);
+    if (width != kAuto) root->W(width);
+
     if (!disabled && !checked) {
         root->HoverBg(th.tokens.accent)->HoverFg(th.accentFg);
     }
@@ -75121,6 +80761,10 @@ ToggleGroup* ToggleGroup::Segmented(bool value) {
     segmented = value;
     return this;
 }
+ToggleGroup* ToggleGroup::Single(bool value) {
+    single = value;
+    return this;
+}
 ToggleGroup* ToggleGroup::WithSize(UiSize value) {
     size = value;
     return this;
@@ -75143,13 +80787,21 @@ ToggleGroup* ToggleGroup::Disabled(bool value) {
 struct ToggleGroupState {
     Vec<bool> checked;
     Listener onClick = {};
+    bool single = false;
 
     ~ToggleGroupState() { VecReset(checked); }
 
     static void OnChildClick(ToggleGroupState* self, Ctx* cx, const ClickEvent*,
                              int64_t ix) {
         if (ix < 0 || ix >= len(self->checked)) return;
-        self->checked[(int)ix] = !self->checked[(int)ix];
+
+        bool was = self->checked[(int)ix];
+        if (self->single) {
+            for (int i = 0; i < len(self->checked); i++) {
+                self->checked[i] = false;
+            }
+        }
+        self->checked[(int)ix] = !was;
         ToggleGroupEvent event{self->checked.els, len(self->checked)};
         ListenerCall(cx->app, cx->win, self->onClick, &event);
     }
@@ -75167,6 +80819,7 @@ El* ToggleGroup::IntoEl() {
             for (Toggle* item : items)
                 VecAppend(stored->checked, item->checked);
             stored->onClick = onClick;
+            stored->single = single;
         }
     }
 
@@ -78290,6 +83943,12 @@ PieChart* PieChart::OuterRadius(float r) {
 }
 PieChart* PieChart::InnerRadius(float r) {
     innerRadius = r;
+    innerRadiusIsRatio = false;
+    return this;
+}
+PieChart* PieChart::InnerRadiusRatio(float ratio) {
+    innerRadius = ratio;
+    innerRadiusIsRatio = true;
     return this;
 }
 PieChart* PieChart::PadAngle(float radians) {
@@ -78307,6 +83966,16 @@ PieChart* PieChart::Id(Str name) {
 
 float PieChart::ResolveOuterRadius(float height) const {
     return outerRadius > 0 ? outerRadius : height * 0.4f;
+}
+
+float PieChart::ResolveInnerRadius(float ring) const {
+    if (!innerRadiusIsRatio) return innerRadius;
+
+    float ratio = innerRadius;
+    if (ratio != ratio) return 0;
+    if (ratio < 0) ratio = 0;
+    if (ratio > 1) ratio = 1;
+    return ring * ratio;
 }
 
 static const float kPieTextSize = 10.f;
@@ -78461,8 +84130,9 @@ static void PaintPieLabels(PaintCtx* ctx, PieChart* p, float cx, float cy,
             edgeR = labelR;
         }
         PieLabelLayout item;
-        item.arcX = cosf(mid) * ((p->innerRadius + edgeR) * 0.5f);
-        item.arcY = sinf(mid) * ((p->innerRadius + edgeR) * 0.5f);
+        float hole = p->ResolveInnerRadius(ring);
+        item.arcX = cosf(mid) * ((hole + edgeR) * 0.5f);
+        item.arcY = sinf(mid) * ((hole + edgeR) * 0.5f);
         item.labelX = cosf(mid) * labelR;
         item.y = sinf(mid) * labelR;
         item.text = s.label;
@@ -78533,7 +84203,7 @@ static void PaintPie(PaintCtx* ctx, El* e, void* user) {
             ad.padAngle = p->padAngle;
 
             plot::Arc hit = plot::Arc::New();
-            hit.InnerRadius(p->innerRadius)
+            hit.InnerRadius(p->ResolveInnerRadius(ring))
                 ->OuterRadius(ring - p->slices[i].outerInset);
             if (hit.Contains(ad, local, bounds)) {
                 hoverIndex = i;
@@ -78576,7 +84246,7 @@ static void PaintPie(PaintCtx* ctx, El* e, void* user) {
         }
         float lift = PieSliceLift(ctx, p, i, hoverIndex, focus);
         float ro = ring - s.outerInset + kPieHoverLift * lift;
-        float ri = p->innerRadius;
+        float ri = p->ResolveInnerRadius(ring);
         float a0 = angle, a1 = angle + sweep;
         Rgba color = s.color;
         if (hoverIndex >= 0 && i != hoverIndex) {
@@ -80070,16 +85740,33 @@ namespace gpui {
 
 namespace component {
 
-static bool SameSelection(const Vec<int>& a, const Vec<int>& b) {
+static Str ItemValueAt(const SearchableListState& st, int ix) {
+    if (!st.items || ix < 0 || ix >= st.nItems) {
+        return {};
+    }
+    return st.items[ix].value;
+}
+
+static bool SameSelectionValues(const SearchableListState& st,
+                                const Vec<int>& a, const Vec<int>& b) {
     if (len(a) != len(b)) {
         return false;
     }
     for (int i = 0; i < len(a); i++) {
-        if (a[i] != b[i]) {
+        if (!base::StrEq(ItemValueAt(st, a[i]), ItemValueAt(st, b[i]))) {
             return false;
         }
     }
     return true;
+}
+
+static bool SelectionHasValue(const SearchableListState& st, Str value) {
+    for (int i = 0; i < st.selected.len; i++) {
+        if (base::StrEq(ItemValueAt(st, st.selected[i]), value)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int ComboboxTriggerContext::SelectionCount() const {
@@ -80290,13 +85977,17 @@ void ComboboxState::OnListChange(ComboboxState* self, Ctx* cx,
     if (!self || !event || event->kind != ListEventKind::Confirm) {
         return;
     }
-    bool changed =
-        !SameSelection(self->selectionSnapshot, self->state.selected);
+
+    bool changed = !SameSelectionValues(self->state, self->selectionSnapshot,
+                                        self->state.selected);
+    bool picked =
+        SelectionHasValue(self->state, ItemValueAt(self->state, event->index));
+    bool shouldClose = !self->multiple && (changed || picked);
     self->SyncSnapshot();
     if (changed) {
         self->Emit(cx, ComboboxEventKind::Change);
     }
-    if (changed && !self->multiple) {
+    if (shouldClose) {
         if (self->state.hasDelegate) {
             int flat = event->index;
             int section = flat >= 0 && flat < self->state.nItems
@@ -80312,7 +86003,7 @@ void ComboboxState::OnListChange(ComboboxState* self, Ctx* cx,
         self->Emit(cx, ComboboxEventKind::Confirm);
         self->SetOpen(false, cx);
         self->Focus(cx->win);
-    } else if (!changed && !self->multiple && !self->state.open) {
+    } else if (!self->multiple && !self->state.open) {
 
         self->state.open = true;
         FocusHandleFocus(cx->win, self->state.contentFocus);
@@ -81346,14 +87037,18 @@ static El* BuildCommandRow(Ctx* cx, CommandState* s, int rowIx,
     El* line = Div(a)
                    ->Role(AccessibilityRole::ListBoxOption)
                    ->AriaSelected(selected)
-                   ->AriaDisabled(disabled)
-                   ->FlexRow()
-                   ->W(kFill)
-                   ->ItemsCenter()
-                   ->Gap(Rems(cx, 0.5f))
-                   ->PadX(Rems(cx, 0.5f))
-                   ->PadY(Rems(cx, 0.375f))
-                   ->Radius(itemRadius >= 0 ? itemRadius : th.radius);
+                   ->AriaDisabled(disabled);
+
+    if (len(item->label) > 0) {
+        line->AriaLabel(item->label);
+    }
+    line->FlexRow()
+        ->W(kFill)
+        ->ItemsCenter()
+        ->Gap(Rems(cx, 0.5f))
+        ->PadX(Rems(cx, 0.5f))
+        ->PadY(Rems(cx, 0.375f))
+        ->Radius(itemRadius >= 0 ? itemRadius : th.radius);
     if (selected) {
         line->Bg(th.tokens.accent);
     }
@@ -81561,8 +87256,7 @@ El* Command::IntoEl() {
         ->OnAction(action::Cancel(), onAction)
         ->OnAction(input::MoveUp(), onAction)
         ->OnAction(input::MoveDown(), onAction)
-        ->OnAction(input::Enter(), onAction)
-        ->OnAction(input::Escape(), onAction);
+        ->OnAction(input::Enter(), onAction);
     return box;
 }
 
@@ -87691,6 +93385,80 @@ void UiGlobalStateInit(App* app) {
 }
 }
 
+#line 1 "src/ui/grid_layout.cpp"
+
+namespace gpui {
+namespace component {
+
+static const float kGridFocusRingWidth = 3.f;
+static const float kGridFocusRingOpacity = 0.5f;
+
+static BoxShadow* DragShadow() {
+    static BoxShadow shadows[2] = {
+        {0, 10, 15, -3, RgbaHsla(0, 0, 0, 0.1f), false},
+        {0, 4, 6, -4, RgbaHsla(0, 0, 0, 0.1f), false},
+    };
+    return shadows;
+}
+
+static El* GridPlaceholder(Ctx* cx, void*) {
+    const Theme& th = ThemeNow(cx->app);
+    return Div(cx->a)
+        ->SizeFull()
+        ->Radius(th.radiusLg)
+        ->Bg(RgbaOpacity(th.primary, 0.08f))
+        ->Border(1, RgbaOpacity(th.primary, 0.5f))
+        ->Dashed();
+}
+
+static El* GridResizeGrip(Ctx* cx, void*) {
+    const Theme& th = ThemeNow(cx->app);
+    Rgba color = th.mutedFg;
+    El* mark = Div(cx->a)
+                   ->Absolute()
+                   ->Right(3)
+                   ->Bottom(3)
+                   ->W(6)
+                   ->H(6)
+                   ->BorderR(2, RgbaOpacity(color, 0.35f))
+                   ->BorderB(2, RgbaOpacity(color, 0.35f))
+                   ->GroupHoverBorder(RgbaOpacity(color, 0.9f));
+    return Div(cx->a)->Group()->SizeFull()->Child(mark);
+}
+
+GridLayout* grid_layout(Ctx* cx, Str id, Entity<GridLayoutState> state) {
+    const Theme& th = ThemeNow(cx->app);
+    const SemanticThemeTokens& tokens = BaseThemeGlobal(cx->app)->tokens;
+    GridLayoutState* held = state.Get(cx);
+    bool editable = held && (held->IsDraggable() || held->IsResizable());
+    bool ringOn = ThemeFocusRing(cx->app);
+    BoxShadow* selected = ArenaNew<BoxShadow>(cx->a);
+    *selected = {0, 0, 0, 2.f, th.primary, false};
+    BoxShadow* ring = ArenaNew<BoxShadow>(cx->a);
+    *ring = {0,
+             0,
+             0,
+             ringOn ? kGridFocusRingWidth : 1.f,
+             ringOn ? RgbaOpacity(th.ring, kGridFocusRingOpacity) : th.ring,
+             false};
+    Motion settle = MotionNew(th.motion.durationNormalMs)
+                        .Ease(th.motion.easingMove);
+    GridLayout* grid = GridLayout::New(cx, id, state);
+    grid->Gap(tokens.spacing.md);
+    grid->Transition(settle);
+    grid->DraggingItem(StateStyle().Shadows(DragShadow(), 2));
+    if (editable) {
+        grid->SelectedItem(StateStyle().Shadows(selected, 1));
+    }
+    grid->FocusedItem(StateStyle().Shadows(ring, 1));
+    grid->Placeholder(GridPlaceholder, nullptr);
+    grid->ResizeHandle(GridResizeGrip, nullptr);
+    return grid;
+}
+
+}
+}
+
 #line 1 "src/ui/group_box.cpp"
 
 namespace gpui {
@@ -88937,6 +94705,71 @@ static bool SynHlResolveStyle(void* data, Str name, TextSpan* out) {
     return true;
 }
 
+static int HexNibble(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+    return -1;
+}
+
+static bool ParseHighlightHex(Str s, Rgba* out) {
+    if (!out || !s.s || s.s[0] != '#') {
+        return false;
+    }
+    int n = len(s);
+    if (n != 7 && n != 9) {
+        return false;
+    }
+    int v[8];
+    for (int i = 0; i < n - 1; i++) {
+        v[i] = HexNibble(s.s[i + 1]);
+        if (v[i] < 0) {
+            return false;
+        }
+    }
+    if (n == 7) {
+        *out = Rgb((uint8_t)(v[0] * 16 + v[1]), (uint8_t)(v[2] * 16 + v[3]),
+                   (uint8_t)(v[4] * 16 + v[5]));
+        return true;
+    }
+    *out = Rgba8((uint8_t)(v[0] * 16 + v[1]), (uint8_t)(v[2] * 16 + v[3]),
+                 (uint8_t)(v[4] * 16 + v[5]), (uint8_t)(v[6] * 16 + v[7]));
+    return true;
+}
+
+static Rgba HighlightStatus(const App* app, const char* key, Rgba fallback) {
+    if (!app) {
+        return fallback;
+    }
+    const ThemeConfig* cfg =
+        ThemeRegistryFind(app, ThemeRegistryActive(app, ThemeGet(app)));
+    const JsonValue* value =
+        cfg && cfg->highlight ? JsonGet(cfg->highlight, key) : nullptr;
+    Rgba parsed;
+    if (value && ParseHighlightHex(JsonString(value), &parsed)) {
+        return parsed;
+    }
+    return fallback;
+}
+
+Rgba HighlightStatusCreated(const App* app) {
+    return HighlightStatus(app, "created", ThemeNow(app).success);
+}
+
+Rgba HighlightStatusModified(const App* app) {
+    return HighlightStatus(app, "modified", ThemeNow(app).warning);
+}
+
+Rgba HighlightStatusDeleted(const App* app) {
+    return HighlightStatus(app, "deleted", ThemeNow(app).danger);
+}
+
 static bool SemanticTokColor(Ctx* cx, Str name, Rgba* out) {
     const Theme& th = ThemeNow(cx->app);
     return HighlightNameColor(name, ThemeGet(cx->app), th.foreground, out);
@@ -89821,6 +95654,25 @@ static void BindInputContextMenu(Ctx* cx, El* e, Str id, InputState* state,
     menu->selection = selection.id;
 }
 
+struct NativeTouchSelectionFlag {
+    bool enabled = false;
+};
+
+void SetNativeTouchSelection(App* app, bool enabled) {
+    NativeTouchSelectionFlag* flag =
+        AppGlobalEnsure<NativeTouchSelectionFlag>(app);
+    if (flag) {
+        flag->enabled = enabled;
+    }
+    AppRefreshWindows(app);
+}
+
+static bool NativeTouchSelectionOn(const App* app) {
+    NativeTouchSelectionFlag* flag =
+        AppGlobalGet<NativeTouchSelectionFlag>(app);
+    return flag && flag->enabled;
+}
+
 struct InputTouchSelectionState {
     InputState* state = nullptr;
 
@@ -89917,6 +95769,10 @@ static void PaintInputTouchHandles(PaintCtx* ctx, El*, void* user) {
 
 static void InputTouchSelectionLayer(Ctx* cx, El* e, Str id,
                                      InputState* state) {
+
+    if (NativeTouchSelectionOn(cx->app)) {
+        return;
+    }
     TouchSelectionSnapshot snap = {};
     if (!state || !cx->win || !InputTouchSelection(state, cx->win, &snap)) {
         return;
@@ -93303,6 +99159,10 @@ El* ListItem::IntoEl(Str id, Listener onClick, Listener onMouseDown) {
             ListActiveStyleOf(ListSettingsNow(cx->app), th.tokens.listActive,
                               th.listActiveBorder, th.tokens.accent, true);
         row->Bg(st.bg);
+
+        if (!ListSettingsNow(cx->app).activeHighlight) {
+            row->Fg(th.accentFg);
+        }
     }
 
     El* content =
@@ -93793,117 +99653,132 @@ namespace gpui {
 
 namespace component {
 
-extern const char* const kLocaleNames[] = {"en",    "pt-BR", "zh-CN", "zh-HK",
-                                           "zh-TW", "it",    "fr"};
-extern const int kLocaleCount = 7;
+extern const char* const kLocaleNames[] = {"en",    "pt-BR", "ru", "zh-CN",
+                                           "zh-HK", "zh-TW", "it", "fr"};
+extern const int kLocaleCount = 8;
 
 static const char* const kV_Attachment_Remove[] = {
-    "Remove", "Remover", "移除", "移除", "移除", nullptr, nullptr};
+    "Remove", "Remover", "Удалить", "移除", "移除", "移除", nullptr, nullptr};
 static const char* const kV_Attachment_Retry[] = {
-    "Retry", "Tentar de novo", "重试", "重試", "重試", nullptr, nullptr};
+    "Retry", "Tentar de novo", "Повторить", "重试",
+    "重試",  "重試",           nullptr,     nullptr};
 static const char* const kV_Calendar_month_April[] = {
-    "April", "Abril", "四月", "四月", "四月", "Aprile", "Avril"};
+    "April", "Abril", "Апрель", "四月", "四月", "四月", "Aprile", "Avril"};
 static const char* const kV_Calendar_month_August[] = {
-    "August", "Agosto", "八月", "八月", "八月", "Agosto", "Août"};
+    "August", "Agosto", "Август", "八月", "八月", "八月", "Agosto", "Août"};
 static const char* const kV_Calendar_month_December[] = {
-    "December", "Dezembro", "十二月",  "十二月",
-    "十二月",   "Dicembre", "Décembre"};
+    "December", "Dezembro", "Декабрь",  "十二月",
+    "十二月",   "十二月",   "Dicembre", "Décembre"};
 static const char* const kV_Calendar_month_February[] = {
-    "February", "Fevereiro", "二月", "二月", "二月", "Febbraio", "Février"};
+    "February", "Fevereiro", "Февраль",  "二月",
+    "二月",     "二月",      "Febbraio", "Février"};
 static const char* const kV_Calendar_month_January[] = {
-    "January", "Janeiro", "一月", "一月", "一月", "Gennaio", "Janvier"};
+    "January", "Janeiro", "Январь",  "一月",
+    "一月",    "一月",    "Gennaio", "Janvier"};
 static const char* const kV_Calendar_month_July[] = {
-    "July", "Julho", "七月", "七月", "七月", "Luglio", "Juillet"};
+    "July", "Julho", "Июль", "七月", "七月", "七月", "Luglio", "Juillet"};
 static const char* const kV_Calendar_month_June[] = {
-    "June", "Junho", "六月", "六月", "六月", "Giugno", "Juin"};
+    "June", "Junho", "Июнь", "六月", "六月", "六月", "Giugno", "Juin"};
 static const char* const kV_Calendar_month_March[] = {
-    "March", "Março", "三月", "三月", "三月", "Marzo", "Mars"};
+    "March", "Março", "Март", "三月", "三月", "三月", "Marzo", "Mars"};
 static const char* const kV_Calendar_month_May[] = {
-    "May", "Maio", "五月", "五月", "五月", "Maggio", "Mai"};
+    "May", "Maio", "Май", "五月", "五月", "五月", "Maggio", "Mai"};
 static const char* const kV_Calendar_month_November[] = {
-    "November", "Novembro", "十一月",  "十一月",
-    "十一月",   "Novembre", "Novembre"};
+    "November", "Novembro", "Ноябрь",   "十一月",
+    "十一月",   "十一月",   "Novembre", "Novembre"};
 static const char* const kV_Calendar_month_October[] = {
-    "October", "Outubro", "十月", "十月", "十月", "Ottobre", "Octobre"};
+    "October", "Outubro", "Октябрь", "十月",
+    "十月",    "十月",    "Ottobre", "Octobre"};
 static const char* const kV_Calendar_month_September[] = {
-    "September", "Setembro", "九月", "九月", "九月", "Settembre", "Septembre"};
-static const char* const kV_Calendar_week_0[] = {"Su", "Do", "日", "日",
-                                                 "日", "Do", "Di"};
-static const char* const kV_Calendar_week_1[] = {"Mo", "Se", "一", "一",
-                                                 "一", "Lu", "Lu"};
-static const char* const kV_Calendar_week_2[] = {"Tu", "Te", "二", "二",
-                                                 "二", "Ma", "Ma"};
-static const char* const kV_Calendar_week_3[] = {"We", "Qa", "三", "三",
-                                                 "三", "Me", "Me"};
-static const char* const kV_Calendar_week_4[] = {"Th", "Qi", "四", "四",
-                                                 "四", "Gi", "Je"};
-static const char* const kV_Calendar_week_5[] = {"Fr", "Sx", "五", "五",
-                                                 "五", "Ve", "Ve"};
-static const char* const kV_Calendar_week_6[] = {"Sa", "Sá", "六", "六",
-                                                 "六", "Sa", "Sa"};
+    "September", "Setembro", "Сентябрь",  "九月",
+    "九月",      "九月",     "Settembre", "Septembre"};
+static const char* const kV_Calendar_week_0[] = {"Su", "Do", "Вс", "日",
+                                                 "日", "日", "Do", "Di"};
+static const char* const kV_Calendar_week_1[] = {"Mo", "Se", "Пн", "一",
+                                                 "一", "一", "Lu", "Lu"};
+static const char* const kV_Calendar_week_2[] = {"Tu", "Te", "Вт", "二",
+                                                 "二", "二", "Ma", "Ma"};
+static const char* const kV_Calendar_week_3[] = {"We", "Qa", "Ср", "三",
+                                                 "三", "三", "Me", "Me"};
+static const char* const kV_Calendar_week_4[] = {"Th", "Qi", "Чт", "四",
+                                                 "四", "四", "Gi", "Je"};
+static const char* const kV_Calendar_week_5[] = {"Fr", "Sx", "Пт", "五",
+                                                 "五", "五", "Ve", "Ve"};
+static const char* const kV_Calendar_week_6[] = {"Sa", "Sá", "Сб", "六",
+                                                 "六", "六", "Sa", "Sa"};
 static const char* const kV_Carousel_go_to_slide[] = {
     "Go to slide %{current}",
     "Ir para o slide %{current}",
+    "Перейти к слайду %{current}",
     "前往第 %{current} 张",
     "前往第 %{current} 張",
     "前往第 %{current} 張",
     nullptr,
     nullptr};
 static const char* const kV_Carousel_label[] = {
-    "Carousel", "Carrossel", "轮播", "輪播", "輪播", nullptr, nullptr};
+    "Carousel", "Carrossel", "Карусель", "轮播",
+    "輪播",     "輪播",      nullptr,    nullptr};
 static const char* const kV_Carousel_next[] = {
-    "Next slide", "Próximo slide", "下一张", "下一張",
-    "下一張",     nullptr,         nullptr};
+    "Next slide", "Próximo slide", "Следующий слайд", "下一张",
+    "下一張",     "下一張",        nullptr,           nullptr};
 static const char* const kV_Carousel_pagination[] = {"Carousel pagination",
                                                      "Páginas do carrossel",
+                                                     "Страницы карусели",
                                                      "轮播分页",
                                                      "輪播分頁",
                                                      "輪播分頁",
                                                      nullptr,
                                                      nullptr};
 static const char* const kV_Carousel_previous[] = {
-    "Previous slide", "Slide anterior", "上一张", "上一張",
-    "上一張",         nullptr,          nullptr};
+    "Previous slide", "Slide anterior", "Предыдущий слайд",
+    "上一张",         "上一張",         "上一張",
+    nullptr,          nullptr};
 static const char* const kV_Carousel_slide[] = {
     "Slide %{current} of %{total}",
     "Slide %{current} de %{total}",
+    "Слайд %{current} из %{total}",
     "第 %{current} 张，共 %{total} 张",
     "第 %{current} 張，共 %{total} 張",
     "第 %{current} 張，共 %{total} 張",
     nullptr,
     nullptr};
-static const char* const kV_Chart_close[] = {
-    "Close", "Fechamento", "收盘", "收市", "收盤", nullptr, nullptr};
-static const char* const kV_Chart_high[] = {"High", "Máxima", "最高", "最高",
-                                            "最高", nullptr,  nullptr};
-static const char* const kV_Chart_low[] = {"Low",  "Mínima", "最低", "最低",
-                                           "最低", nullptr,  nullptr};
-static const char* const kV_Chart_open[] = {"Open", "Abertura", "开盘", "開市",
-                                            "開盤", nullptr,    nullptr};
+static const char* const kV_Chart_close[] = {"Close", "Fechamento", "Закрытие",
+                                             "收盘",  "收市",       "收盤",
+                                             nullptr, nullptr};
+static const char* const kV_Chart_high[] = {
+    "High", "Máxima", "Максимум", "最高", "最高", "最高", nullptr, nullptr};
+static const char* const kV_Chart_low[] = {
+    "Low", "Mínima", "Минимум", "最低", "最低", "最低", nullptr, nullptr};
+static const char* const kV_Chart_open[] = {
+    "Open", "Abertura", "Открытие", "开盘", "開市", "開盤", nullptr, nullptr};
 static const char* const kV_ColorPicker_Alpha[] = {
-    "Alpha", "Opacidade", "透明度", "透明度", "透明度", "Alfa", nullptr};
+    "Alpha",  "Opacidade", "Непрозрачность", "透明度",
+    "透明度", "透明度",    "Alfa",           nullptr};
 static const char* const kV_ColorPicker_HSLA[] = {
-    "HSLA", "HSLA", "HSLA", "HSLA", "HSLA", "HSLA", nullptr};
+    "HSLA", "HSLA", "HSLA", "HSLA", "HSLA", "HSLA", "HSLA", nullptr};
 static const char* const kV_ColorPicker_Hue[] = {
-    "Hue", "Matiz", "色相", "色相", "色相", "Tonalità", nullptr};
+    "Hue", "Matiz", "Оттенок", "色相", "色相", "色相", "Tonalità", nullptr};
 static const char* const kV_ColorPicker_Lightness[] = {
-    "Lightness", "Luminosidade", "亮度", "亮度", "亮度", "Luminosità", nullptr};
+    "Lightness", "Luminosidade", "Светлота",   "亮度",
+    "亮度",      "亮度",         "Luminosità", nullptr};
 static const char* const kV_ColorPicker_Palette[] = {
-    "Palette", "Paleta", "调色板", "調色板", "調色盤", "Tavolozza", nullptr};
+    "Palette", "Paleta", "Палитра",   "调色板",
+    "調色板",  "調色盤", "Tavolozza", nullptr};
 static const char* const kV_ColorPicker_Saturation[] = {
-    "Saturation", "Saturação",   "饱和度", "飽和度",
-    "飽和度",     "Saturazione", nullptr};
+    "Saturation", "Saturação", "Насыщенность", "饱和度",
+    "飽和度",     "飽和度",    "Saturazione",  nullptr};
 static const char* const kV_ComboBox_empty[] = {
-    "No results", "Nada encontrado",  "暂无数据", "暫無數據",
-    "沒有結果",   "Nessun risultato", nullptr};
+    "No results", "Nada encontrado", "Ничего не найдено", "暂无数据",
+    "暫無數據",   "沒有結果",        "Nessun risultato",  nullptr};
 static const char* const kV_ComboBox_placeholder[] = {
-    "Please select", "Escolha",   "请选择", "請選擇",
-    "請選擇",        "Seleziona", nullptr};
+    "Please select", "Escolha", "Выберите",  "请选择",
+    "請選擇",        "請選擇",  "Seleziona", nullptr};
 static const char* const kV_ComboBox_search_placeholder[] = {
-    "Search...", "Buscar…",  "搜索...", "搜索...",
-    "搜尋...",   "Cerca...", nullptr};
+    "Search...", "Buscar…", "Поиск…",   "搜索...",
+    "搜索...",   "搜尋...", "Cerca...", nullptr};
 static const char* const kV_Command_empty[] = {"No results found.",
                                                "Nada encontrado.",
+                                               "Ничего не найдено.",
                                                "未找到结果。",
                                                "未找到結果。",
                                                "未找到結果。",
@@ -93912,33 +99787,32 @@ static const char* const kV_Command_empty[] = {"No results found.",
 static const char* const kV_Command_placeholder[] = {
     "Type a command or search...",
     "Digite um comando ou busque…",
+    "Введите команду или запрос…",
     "输入命令或搜索...",
     "輸入命令或搜尋...",
     "輸入命令或搜尋...",
     "Digita un comando o cerca...",
     nullptr};
 static const char* const kV_DatePicker_placeholder[] = {
-    "Select date",
-    "Escolha uma data",
-    "选择日期",
-    "選擇日期",
-    "選取日期",
-    "Seleziona data",
-    "Sélectionner une date"};
+    "Select date",    "Escolha uma data",
+    "Выберите дату",  "选择日期",
+    "選擇日期",       "選取日期",
+    "Seleziona data", "Sélectionner une date"};
 static const char* const kV_DatePicker_time[] = {
-    "Time", "Hora", "时间", "時間", nullptr, nullptr, nullptr};
+    "Time", "Hora", "Время", "时间", "時間", nullptr, nullptr, nullptr};
 static const char* const kV_Dialog_cancel[] = {
-    "Cancel", "Cancelar", "取消", "取消", "取消", "Annulla", nullptr};
-static const char* const kV_Dialog_ok[] = {"OK",   "OK", "确定", "確定",
-                                           "確定", "OK", nullptr};
+    "Cancel", "Cancelar", "Отмена", "取消", "取消", "取消", "Annulla", nullptr};
+static const char* const kV_Dialog_ok[] = {"OK",   "OK",   "ОК", "确定",
+                                           "確定", "確定", "OK", nullptr};
 static const char* const kV_Diff_AcceptBoth[] = {
-    "Accept Both", "Aceitar as duas", "保留双方更改", "保留雙方變更",
-    nullptr,       nullptr,           nullptr};
+    "Accept Both",  "Aceitar as duas", "Принять оба", "保留双方更改",
+    "保留雙方變更", nullptr,           nullptr,       nullptr};
 static const char* const kV_Diff_AcceptCurrent[] = {
-    "Accept Current", "Aceitar a atual", "采用当前更改", "採用目前變更",
-    nullptr,          nullptr,           nullptr};
+    "Accept Current", "Aceitar a atual", "Принять текущее", "采用当前更改",
+    "採用目前變更",   nullptr,           nullptr,           nullptr};
 static const char* const kV_Diff_AcceptIncoming[] = {"Accept Incoming",
                                                      "Aceitar a que chega",
+                                                     "Принять входящее",
                                                      "采用传入的更改",
                                                      "採用傳入的變更",
                                                      nullptr,
@@ -93946,21 +99820,25 @@ static const char* const kV_Diff_AcceptIncoming[] = {"Accept Incoming",
                                                      nullptr};
 static const char* const kV_Diff_AcceptedBoth[] = {"Accepted both changes",
                                                    "As duas aceitas",
+                                                   "Приняты оба изменения",
                                                    "已保留双方更改",
                                                    "已保留雙方變更",
                                                    nullptr,
                                                    nullptr,
                                                    nullptr};
-static const char* const kV_Diff_AcceptedCurrent[] = {"Accepted current change",
-                                                      "Atual aceita",
-                                                      "已采用当前更改",
-                                                      "已採用目前變更",
-                                                      nullptr,
-                                                      nullptr,
-                                                      nullptr};
+static const char* const kV_Diff_AcceptedCurrent[] = {
+    "Accepted current change",
+    "Atual aceita",
+    "Принято текущее изменение",
+    "已采用当前更改",
+    "已採用目前變更",
+    nullptr,
+    nullptr,
+    nullptr};
 static const char* const kV_Diff_AcceptedIncoming[] = {
     "Accepted incoming change",
     "A que chega foi aceita",
+    "Принято входящее изменение",
     "已采用传入的更改",
     "已採用傳入的變更",
     nullptr,
@@ -93969,27 +99847,30 @@ static const char* const kV_Diff_AcceptedIncoming[] = {
 static const char* const kV_Diff_AddAnnotation[] = {
     "Add annotation to line %{line}",
     "Anotar a linha %{line}",
+    "Добавить примечание к строке %{line}",
     "为第 %{line} 行添加批注",
     "為第 %{line} 行新增批註",
     nullptr,
     nullptr,
     nullptr};
 static const char* const kV_Diff_AddedFile[] = {
-    "Added file", "Arquivo novo", "新增文件", "新增檔案",
-    nullptr,      nullptr,        nullptr};
+    "Added file", "Arquivo novo", "Файл добавлен", "新增文件",
+    "新增檔案",   nullptr,        nullptr,         nullptr};
 static const char* const kV_Diff_AddedLine[] = {
     "%{side} line %{line}, added",
     "%{side} linha %{line}, adicionada",
+    "%{side} строка %{line}, добавлена",
     "%{side}第 %{line} 行，新增",
     "%{side}第 %{line} 行，新增",
     nullptr,
     nullptr,
     nullptr};
 static const char* const kV_Diff_BaseChange[] = {
-    "Common ancestor", "Ancestral comum", "共同祖先", "共同祖先",
-    nullptr,           nullptr,           nullptr};
+    "Common ancestor", "Ancestral comum", "Общий предок", "共同祖先",
+    "共同祖先",        nullptr,           nullptr,        nullptr};
 static const char* const kV_Diff_BinaryChanges[] = {"Binary file changed",
                                                     "Arquivo binário alterado",
+                                                    "Двоичный файл изменён",
                                                     "二进制文件已变更",
                                                     "二進位檔案已變更",
                                                     nullptr,
@@ -93997,27 +99878,36 @@ static const char* const kV_Diff_BinaryChanges[] = {"Binary file changed",
                                                     nullptr};
 static const char* const kV_Diff_CollapseFile[] = {"Collapse %{name}",
                                                    "Recolher %{name}",
+                                                   "Свернуть %{name}",
                                                    "收起 %{name}",
                                                    "收起 %{name}",
                                                    nullptr,
                                                    nullptr,
                                                    nullptr};
 static const char* const kV_Diff_ConflictedFile[] = {
-    "Conflicts", "Conflitos", "有冲突", "有衝突", nullptr, nullptr, nullptr};
+    "Conflicts", "Conflitos", "Конфликты", "有冲突",
+    "有衝突",    nullptr,     nullptr,     nullptr};
 static const char* const kV_Diff_CopiedFile[] = {
-    "Copied", "Copiado", "已复制", "已複製", nullptr, nullptr, nullptr};
-static const char* const kV_Diff_CurrentChange[] = {
-    "Current change", "Alteração atual", "当前更改", "目前變更",
-    nullptr,          nullptr,           nullptr};
+    "Copied", "Copiado", "Скопирован", "已复制",
+    "已複製", nullptr,   nullptr,      nullptr};
+static const char* const kV_Diff_CurrentChange[] = {"Current change",
+                                                    "Alteração atual",
+                                                    "Текущее изменение",
+                                                    "当前更改",
+                                                    "目前變更",
+                                                    nullptr,
+                                                    nullptr,
+                                                    nullptr};
 static const char* const kV_Diff_DeletedFile[] = {
-    "Deleted file", "Arquivo apagado", "已删除文件", "已刪除檔案",
-    nullptr,        nullptr,           nullptr};
+    "Deleted file", "Arquivo apagado", "Файл удалён", "已删除文件",
+    "已刪除檔案",   nullptr,           nullptr,       nullptr};
 static const char* const kV_Diff_EmptyFile[] = {
-    "Empty file", "Arquivo vazio", "空文件", "空檔案",
-    nullptr,      nullptr,         nullptr};
+    "Empty file", "Arquivo vazio", "Пустой файл", "空文件",
+    "空檔案",     nullptr,         nullptr,       nullptr};
 static const char* const kV_Diff_ExpandAbove[] = {
     "Show %{count} lines above",
     "Mostrar %{count} linhas acima",
+    "Показать строки выше: %{count}",
     "显示上方 %{count} 行",
     "顯示上方 %{count} 行",
     nullptr,
@@ -94026,19 +99916,24 @@ static const char* const kV_Diff_ExpandAbove[] = {
 static const char* const kV_Diff_ExpandBelow[] = {
     "Show %{count} lines below",
     "Mostrar %{count} linhas abaixo",
+    "Показать строки ниже: %{count}",
     "显示下方 %{count} 行",
     "顯示下方 %{count} 行",
     nullptr,
     nullptr,
     nullptr};
-static const char* const kV_Diff_ExpandFile[] = {
-    "Expand %{name}", "Expandir %{name}",
-    "展开 %{name}",   "展開 %{name}",
-    nullptr,          nullptr,
-    nullptr};
+static const char* const kV_Diff_ExpandFile[] = {"Expand %{name}",
+                                                 "Expandir %{name}",
+                                                 "Развернуть %{name}",
+                                                 "展开 %{name}",
+                                                 "展開 %{name}",
+                                                 nullptr,
+                                                 nullptr,
+                                                 nullptr};
 static const char* const kV_Diff_ExpandLines[] = {
     "Expand %{count} unchanged lines",
     "Expandir %{count} linhas sem mudança",
+    "Развернуть неизменённые строки: %{count}",
     "展开 %{count} 行未变更内容",
     "展開 %{count} 行未變更內容",
     nullptr,
@@ -94047,6 +99942,7 @@ static const char* const kV_Diff_ExpandLines[] = {
 static const char* const kV_Diff_HiddenLines[] = {
     "%{count} lines not in patch",
     "%{count} linhas fora do patch",
+    "Строк вне патча: %{count}",
     "patch 中未包含 %{count} 行",
     "patch 中未包含 %{count} 行",
     nullptr,
@@ -94054,19 +99950,22 @@ static const char* const kV_Diff_HiddenLines[] = {
     nullptr};
 static const char* const kV_Diff_IncomingChange[] = {"Incoming change",
                                                      "Alteração que chega",
+                                                     "Входящее изменение",
                                                      "传入的更改",
                                                      "傳入的變更",
                                                      nullptr,
                                                      nullptr,
                                                      nullptr};
 static const char* const kV_Diff_Modified[] = {
-    "Modified", "Alterado", "新版", "新版", nullptr, nullptr, nullptr};
+    "Modified", "Alterado", "Изменённая", "新版",
+    "新版",     nullptr,    nullptr,      nullptr};
 static const char* const kV_Diff_NoChanges[] = {
-    "No changes", "Sem alterações", "没有变更", "沒有變更",
-    nullptr,      nullptr,          nullptr};
+    "No changes", "Sem alterações", "Изменений нет", "没有变更",
+    "沒有變更",   nullptr,          nullptr,         nullptr};
 static const char* const kV_Diff_NoNewline[] = {
     "No newline at end of file",
     "Sem quebra de linha no fim do arquivo",
+    "Нет перевода строки в конце файла",
     "文件末尾没有换行",
     "檔案末尾沒有換行",
     nullptr,
@@ -94075,27 +99974,31 @@ static const char* const kV_Diff_NoNewline[] = {
 static const char* const kV_Diff_NoTextChanges[] = {
     "No text changes in this patch",
     "Nenhuma mudança de texto neste patch",
+    "В этом патче нет изменений текста",
     "此 patch 没有文本变更",
     "此 patch 沒有文字變更",
     nullptr,
     nullptr,
     nullptr};
 static const char* const kV_Diff_Original[] = {
-    "Original", "Original", "原版", "原版", nullptr, nullptr, nullptr};
+    "Original", "Original", "Исходная", "原版",
+    "原版",     nullptr,    nullptr,    nullptr};
 static const char* const kV_Diff_RemovedLine[] = {
     "%{side} line %{line}, removed",
     "%{side} linha %{line}, removida",
+    "%{side} строка %{line}, удалена",
     "%{side}第 %{line} 行，删除",
     "%{side}第 %{line} 行，刪除",
     nullptr,
     nullptr,
     nullptr};
 static const char* const kV_Diff_RenamedFile[] = {
-    "Renamed", "Renomeado", "已重命名", "已重新命名",
-    nullptr,   nullptr,     nullptr};
+    "Renamed",    "Renomeado", "Переименован", "已重命名",
+    "已重新命名", nullptr,     nullptr,        nullptr};
 static const char* const kV_Diff_SelectLine[] = {
     "Select %{side} line %{line}",
     "Selecionar %{side} linha %{line}",
+    "Выбрать: %{side} строка %{line}",
     "选择%{side}第 %{line} 行",
     "選擇%{side}第 %{line} 行",
     nullptr,
@@ -94103,6 +100006,7 @@ static const char* const kV_Diff_SelectLine[] = {
     nullptr};
 static const char* const kV_Diff_SourceLine[] = {"%{side} line %{line}",
                                                  "%{side} linha %{line}",
+                                                 "%{side} строка %{line}",
                                                  "%{side}第 %{line} 行",
                                                  "%{side}第 %{line} 行",
                                                  nullptr,
@@ -94111,100 +100015,119 @@ static const char* const kV_Diff_SourceLine[] = {"%{side} line %{line}",
 static const char* const kV_Diff_UnchangedLines[] = {
     "%{count} unchanged lines",
     "%{count} linhas sem mudança",
+    "Неизменённых строк: %{count}",
     "%{count} 行未变更内容",
     "%{count} 行未變更內容",
     nullptr,
     nullptr,
     nullptr};
 static const char* const kV_Diff_UndoResolution[] = {
-    "Undo", "Desfazer", "撤销", "復原", nullptr, nullptr, nullptr};
+    "Undo", "Desfazer", "Отменить", "撤销", "復原", nullptr, nullptr, nullptr};
 static const char* const kV_Diff_Viewer[] = {"Diff for %{name}",
                                              "Diff de %{name}",
+                                             "Изменения в %{name}",
                                              "%{name} 的差异",
                                              "%{name} 的差異",
                                              nullptr,
                                              nullptr,
                                              nullptr};
-static const char* const kV_Diff_ViewerFiles[] = {"Diff for %{count} files",
-                                                  "Diff de %{count} arquivos",
-                                                  "%{count} 个文件的差异",
-                                                  "%{count} 個檔案的差異",
-                                                  nullptr,
-                                                  nullptr,
-                                                  nullptr};
-static const char* const kV_Dock_Close[] = {"Close", "Fechar", "关闭", "關閉",
-                                            "關閉",  "Chiudi", nullptr};
+static const char* const kV_Diff_ViewerFiles[] = {
+    "Diff for %{count} files",
+    "Diff de %{count} arquivos",
+    "Изменения в файлах: %{count}",
+    "%{count} 个文件的差异",
+    "%{count} 個檔案的差異",
+    nullptr,
+    nullptr,
+    nullptr};
+static const char* const kV_Dock_Close[] = {
+    "Close", "Fechar", "Закрыть", "关闭", "關閉", "關閉", "Chiudi", nullptr};
 static const char* const kV_Dock_Collapse[] = {
-    "Collapse", "Recolher", "隐藏", "隱藏", "收合", "Nascondi", nullptr};
+    "Collapse", "Recolher", "Свернуть", "隐藏",
+    "隱藏",     "收合",     "Nascondi", nullptr};
 static const char* const kV_Dock_Expand[] = {
-    "Expand", "Expandir", "展开", "展開", "展開", "Espandi", nullptr};
+    "Expand", "Expandir", "Развернуть", "展开",
+    "展開",   "展開",     "Espandi",    nullptr};
 static const char* const kV_Dock_Unavailable_Panel[] = {
     "This panel isn’t available in this version.",
     "Este painel não está disponível nesta versão.",
+    "Эта панель недоступна в текущей версии.",
     "当前版本无法显示该面板。",
     "目前版本無法顯示此面板。",
     "目前版本無法顯示此面板。",
     "Questo pannello non è disponibile in questa versione.",
     nullptr};
 static const char* const kV_Dock_Unnamed[] = {
-    "Unnamed", "Sem nome", "未命名", "未命名", "未命名", "Senza nome", nullptr};
-static const char* const kV_Dock_Zoom_In[] = {
-    "Zoom In", "Ampliar", "放大", "放大", "放大", "Zoom In", nullptr};
+    "Unnamed", "Sem nome", "Без названия", "未命名",
+    "未命名",  "未命名",   "Senza nome",   nullptr};
+static const char* const kV_Dock_Zoom_In[] = {"Zoom In", "Ampliar", "Увеличить",
+                                              "放大",    "放大",    "放大",
+                                              "Zoom In", nullptr};
 static const char* const kV_Dock_Zoom_Out[] = {
-    "Zoom Out", "Reduzir", "缩小", "縮小", "縮小", "Zoom Out", nullptr};
+    "Zoom Out", "Reduzir", "Уменьшить", "缩小",
+    "縮小",     "縮小",    "Zoom Out",  nullptr};
 static const char* const kV_DropdownButton_more_options[] = {
-    "More options", "Mais opções", "更多选项", "更多選項",
-    "更多選項",     nullptr,       nullptr};
-static const char* const kV_Input_Clear[] = {"Clear", "Limpar", "清除", "清除",
-                                             "清除",  nullptr,  nullptr};
-static const char* const kV_Input_Copy[] = {"Copy", "Copiar", "复制", "複製",
-                                            "複製", nullptr,  nullptr};
-static const char* const kV_Input_Cut[] = {"Cut",  "Recortar", "剪切", "剪切",
-                                           "剪下", nullptr,    nullptr};
+    "More options", "Mais opções", "Другие действия", "更多选项",
+    "更多選項",     "更多選項",    nullptr,           nullptr};
+static const char* const kV_Input_Clear[] = {
+    "Clear", "Limpar", "Очистить", "清除", "清除", "清除", nullptr, nullptr};
+static const char* const kV_Input_Copy[] = {
+    "Copy", "Copiar", "Скопировать", "复制", "複製", "複製", nullptr, nullptr};
+static const char* const kV_Input_Cut[] = {
+    "Cut", "Recortar", "Вырезать", "剪切", "剪切", "剪下", nullptr, nullptr};
 static const char* const kV_Input_Decrement[] = {
-    "Decrement", "Diminuir", "减少", "減少", "減少", nullptr, nullptr};
+    "Decrement", "Diminuir", "Уменьшить", "减少",
+    "減少",      "減少",     nullptr,     nullptr};
 static const char* const kV_Input_Go_to_Definition[] = {"Go to Definition",
                                                         "Ir para a definição",
+                                                        "Перейти к определению",
                                                         "跳转到定义",
                                                         "跳轉到定義",
                                                         "前往定義",
                                                         nullptr,
                                                         nullptr};
 static const char* const kV_Input_Hide_Password[] = {
-    "Hide password", "Esconder senha", "隐藏密码", "隱藏密碼",
-    "隱藏密碼",      nullptr,          nullptr};
+    "Hide password", "Esconder senha", "Скрыть пароль", "隐藏密码",
+    "隱藏密碼",      "隱藏密碼",       nullptr,         nullptr};
 static const char* const kV_Input_Increment[] = {
-    "Increment", "Aumentar", "增加", "增加", "增加", nullptr, nullptr};
-static const char* const kV_Input_Paste[] = {"Paste", "Colar", "粘贴", "貼上",
-                                             "貼上",  nullptr, nullptr};
+    "Increment", "Aumentar", "Увеличить", "增加",
+    "增加",      "增加",     nullptr,     nullptr};
+static const char* const kV_Input_Paste[] = {
+    "Paste", "Colar", "Вставить", "粘贴", "貼上", "貼上", nullptr, nullptr};
 static const char* const kV_Input_Replace[] = {
-    "Replace", "Substituir", "替换", "替換", "取代", nullptr, nullptr};
+    "Replace", "Substituir", "Заменить", "替换",
+    "替換",    "取代",       nullptr,    nullptr};
 static const char* const kV_Input_Replace_All[] = {
-    "Replace All", "Substituir tudo", "全部替换", "全部替換",
-    "全部取代",    nullptr,           nullptr};
+    "Replace All", "Substituir tudo", "Заменить все", "全部替换",
+    "全部替換",    "全部取代",        nullptr,        nullptr};
 static const char* const kV_Input_Select_All[] = {
-    "Select All", "Selecionar tudo", "全选", "全選", "全選", nullptr, nullptr};
+    "Select All", "Selecionar tudo", "Выбрать все", "全选", "全選",
+    "全選",       nullptr,           nullptr};
 static const char* const kV_Input_Show_Code_Actions[] = {
     "Show Code Actions",
     "Mostrar ações de código",
+    "Показать действия с кодом",
     "显示代码操作",
     "顯示代碼操作",
     "顯示程式碼動作",
     nullptr,
     nullptr};
 static const char* const kV_Input_Show_Password[] = {
-    "Show password", "Mostrar senha", "显示密码", "顯示密碼",
-    "顯示密碼",      nullptr,         nullptr};
+    "Show password", "Mostrar senha", "Показать пароль", "显示密码",
+    "顯示密碼",      "顯示密碼",      nullptr,           nullptr};
 static const char* const kV_List_search_placeholder[] = {
-    "Search...", "Buscar…",    "搜索...", "搜索...",
-    "搜尋...",   "Ricerca...", nullptr};
-static const char* const kV_Pagination_next[] = {
-    "Next", "Próxima", "下一页", "下一頁", "下一頁", nullptr, nullptr};
+    "Search...", "Buscar…", "Поиск…",     "搜索...",
+    "搜索...",   "搜尋...", "Ricerca...", nullptr};
+static const char* const kV_Pagination_next[] = {"Next",   "Próxima", "Вперёд",
+                                                 "下一页", "下一頁",  "下一頁",
+                                                 nullptr,  nullptr};
 static const char* const kV_Pagination_previous[] = {
-    "Previous", "Anterior", "上一页", "上一頁", "上一頁", nullptr, nullptr};
+    "Previous", "Anterior", "Назад", "上一页",
+    "上一頁",   "上一頁",   nullptr, nullptr};
 static const char* const kV_Questionnaire_error_optional[] = {
     "Choose an answer or skip this question.",
     "Escolha uma resposta ou pule esta pergunta.",
+    "Выберите ответ или пропустите этот вопрос.",
     "请选择一个答案，或跳过此题。",
     "請選擇一個答案，或跳過此題。",
     "請選擇一個答案，或跳過此題。",
@@ -94213,36 +100136,40 @@ static const char* const kV_Questionnaire_error_optional[] = {
 static const char* const kV_Questionnaire_error_required[] = {
     "Choose an answer to continue.",
     "Escolha uma resposta para continuar.",
+    "Выберите ответ, чтобы продолжить.",
     "请选择一个答案后继续。",
     "請選擇一個答案後繼續。",
     "請選擇一個答案後繼續。",
     nullptr,
     nullptr};
 static const char* const kV_Questionnaire_next[] = {
-    "Next", "Próxima", "下一题", "下一題", "下一題", nullptr, nullptr};
+    "Next", "Próxima", "Далее", "下一题", "下一題", "下一題", nullptr, nullptr};
 static const char* const kV_Questionnaire_previous[] = {
-    "Previous", "Anterior", "上一题", "上一題", "上一題", nullptr, nullptr};
+    "Previous", "Anterior", "Назад", "上一题",
+    "上一題",   "上一題",   nullptr, nullptr};
 static const char* const kV_Questionnaire_progress[] = {
     "Question %{current} of %{total}",
     "Pergunta %{current} de %{total}",
+    "Вопрос %{current} из %{total}",
     "第 %{current} 题，共 %{total} 题",
     "第 %{current} 題，共 %{total} 題",
     "第 %{current} 題，共 %{total} 題",
     nullptr,
     nullptr};
 static const char* const kV_Questionnaire_skip[] = {
-    "Skip", "Pular", "跳过", "跳過", "跳過", nullptr, nullptr};
+    "Skip", "Pular", "Пропустить", "跳过", "跳過", "跳過", nullptr, nullptr};
 static const char* const kV_Questionnaire_submit[] = {
-    "Submit", "Enviar", "提交", "提交", "提交", nullptr, nullptr};
+    "Submit", "Enviar", "Отправить", "提交", "提交", "提交", nullptr, nullptr};
 static const char* const kV_Select_placeholder[] = {
-    "Please select", "Escolha",   "请选择", "請選擇",
-    "請選擇",        "Seleziona", nullptr};
+    "Please select", "Escolha", "Выберите",  "请选择",
+    "請選擇",        "請選擇",  "Seleziona", nullptr};
 static const char* const kV_Settings_Reset_All[] = {
-    "Reset All", "Restaurar tudo", "重置全部", "重置全部",
-    "全部重設",  "Resetta Tutto",  nullptr};
+    "Reset All", "Restaurar tudo", "Сбросить все",  "重置全部",
+    "重置全部",  "全部重設",       "Resetta Tutto", nullptr};
 static const char* const kV_Settings_no_results[] = {
     "No matching settings",
     "Nenhuma configuração encontrada",
+    "Подходящих настроек нет",
     "没有匹配的设置",
     "沒有相符的設定",
     "沒有相符的設定",
@@ -94251,21 +100178,25 @@ static const char* const kV_Settings_no_results[] = {
 static const char* const kV_Settings_no_results_description[] = {
     "Try a different keyword.",
     "Tente outra palavra-chave.",
+    "Попробуйте другое ключевое слово.",
     "请尝试其他关键词。",
     "請嘗試其他關鍵字。",
     "請嘗試其他關鍵字。",
     "Prova con un'altra parola chiave.",
     nullptr};
 static const char* const kV_Settings_search_placeholder[] = {
-    "Search...", "Buscar…",    "搜索...", "搜索...",
-    "搜尋...",   "Ricerca...", nullptr};
+    "Search...", "Buscar…", "Поиск…",     "搜索...",
+    "搜索...",   "搜尋...", "Ricerca...", nullptr};
 static const char* const kV_Speech_Start[] = {
-    "Dictate", "Ditar", "语音输入", "語音輸入", "語音輸入", nullptr, nullptr};
+    "Dictate",  "Ditar",    "Диктовать", "语音输入",
+    "語音輸入", "語音輸入", nullptr,     nullptr};
 static const char* const kV_Speech_Stop[] = {
-    "Stop dictation", "Parar o ditado", "停止语音输入", "停止語音輸入",
-    "停止語音輸入",   nullptr,          nullptr};
+    "Stop dictation", "Parar o ditado", "Остановить диктовку",
+    "停止语音输入",   "停止語音輸入",   "停止語音輸入",
+    nullptr,          nullptr};
 static const char* const kV_Speech_Unavailable[] = {"Dictation unavailable",
                                                     "Ditado indisponível",
+                                                    "Диктовка недоступна",
                                                     "语音输入不可用",
                                                     "語音輸入不可用",
                                                     "語音輸入不可用",
@@ -94273,6 +100204,7 @@ static const char* const kV_Speech_Unavailable[] = {"Dictation unavailable",
                                                     nullptr};
 static const char* const kV_Table_SortBy[] = {"Sort by %{column}",
                                               "Ordenar por %{column}",
+                                              "Сортировать по: %{column}",
                                               "按 %{column} 排序",
                                               "按 %{column} 排序",
                                               "依 %{column} 排序",
@@ -94824,6 +100756,7 @@ PopupMenu* PopupMenu::MenuWithCheck(Str label, bool checked) {
     if (it) {
         it->label = label;
         it->checked = checked;
+        it->checkable = true;
     }
     return this;
 }
@@ -94986,6 +100919,111 @@ static void OnPopupLinkClick(PopupMenuState* state, Ctx* cx, const ClickEvent*,
     PopupMenuDismissAll(state, cx);
 }
 
+static float PopupMenuWidth(Ctx* cx, PopupMenu* menu) {
+    if (!menu) {
+        return 0;
+    }
+    bool leftGutter = false;
+    for (const MenuItem& it : menu->items) {
+        if (it.icon != IconName::None ||
+            (SideIsLeft(menu->checkSide) && it.checked)) {
+            leftGutter = true;
+        }
+    }
+    float menuW = menu->minW > 0 ? menu->minW : Rems(cx, 8.f);
+    float icon = UiIconPx(cx, UiSize::XSmall);
+    float gap = Rems(cx, 0.25f);
+    float kbdPadX = Rems(cx, 0.25f);
+    float kbdMinW = Rems(cx, 1.25f);
+    if (cx->win) {
+        for (const MenuItem& it : menu->items) {
+            if (!it.label.s || it.kind == MenuItemKind::Separator) {
+                continue;
+            }
+
+            Size label =
+                MeasureText(&cx->win->paint, it.label, Rems(cx, 0.875f), 0);
+            float need = 2 + Rems(cx, 0.5f) + Rems(cx, 1.f) + label.w;
+            if (leftGutter) {
+                need += icon + gap;
+            }
+            if (it.kbd.s) {
+                Size key =
+                    MeasureText(&cx->win->paint, it.kbd, Rems(cx, 0.75f), 0);
+                float kbdW = key.w + kbdPadX * 2;
+                need += (kbdW > kbdMinW ? kbdW : kbdMinW) + gap;
+            }
+            if ((!SideIsLeft(menu->checkSide) && it.checked) || it.submenu ||
+                (it.isLink && menu->externalLinkIcon)) {
+                need += icon + gap;
+            }
+            if (need > menuW) {
+                menuW = need;
+            }
+        }
+    }
+
+    float maxW = Rems(cx, 31.25f);
+    if (menuW > maxW) {
+        menuW = maxW;
+    }
+    return menuW;
+}
+
+static void PopupMenuWidthChanged(PaintCtx* ctx, El* e, void* user) {
+    PopupMenuState* s = (PopupMenuState*)user;
+    if (!s || !ctx || !ctx->window || !s->parent.IsValid()) {
+        return;
+    }
+    if (s->bounds.w != e->w) {
+        WindowRequestAnimationFrame(ctx->window);
+    }
+}
+
+static void PopupMenuScrollToChecked(PopupMenuState* s, Ctx* cx,
+                                     const ArenaVec<MenuItem>& items) {
+    if (!s || s->scrollToCheckedFrames == 0) {
+        return;
+    }
+    int ix = -1;
+    for (int i = 0; i < items.len; i++) {
+        if (items[i].checked) {
+            ix = i;
+            break;
+        }
+    }
+    if (ix <= 0) {
+        s->scrollToCheckedFrames = 0;
+        return;
+    }
+    bool ready = ix < s->itemBounds.len && s->itemBounds.els[0].h > 0 &&
+                 s->itemBounds.els[ix].h > 0 && s->scrollBounds.h > 0;
+    if (!ready) {
+        s->scrollToCheckedFrames--;
+        if (cx && cx->win) {
+            AppInvalidate(cx->win);
+        }
+        return;
+    }
+    float delta = s->itemBounds.els[ix].y - s->itemBounds.els[0].y;
+    int last = s->itemBounds.len - 1;
+    float topPad = s->itemBounds.els[0].y - s->scrollBounds.y;
+    float contentH = s->itemBounds.els[last].y + s->itemBounds.els[last].h +
+                     topPad - s->scrollBounds.y;
+    float maxScroll = contentH - s->scrollBounds.h;
+    if (maxScroll < 0) {
+        maxScroll = 0;
+    }
+    if (delta < 0) {
+        delta = 0;
+    }
+    if (delta > maxScroll) {
+        delta = maxScroll;
+    }
+    s->scrollY = delta;
+    s->scrollToCheckedFrames = 0;
+}
+
 El* PopupMenu::IntoEl() {
     const Theme& th = ThemeNow(cx->app);
     PopupMenuState* s = state.Get(cx);
@@ -95004,44 +101042,27 @@ El* PopupMenu::IntoEl() {
         }
     }
 
-    float menuW = minW > 0 ? minW : Rems(cx, 8.f);
-
+    float menuW = PopupMenuWidth(cx, this);
     float icon = UiIconPx(cx, UiSize::XSmall);
     float gap = Rems(cx, 0.25f);
     float kbdPadX = Rems(cx, 0.25f);
     float kbdMinW = Rems(cx, 1.25f);
-    if (cx->win) {
-        for (const MenuItem& it : items) {
-            if (!it.label.s || it.kind == MenuItemKind::Separator) {
-                continue;
-            }
 
-            Size label =
-                MeasureText(&cx->win->paint, it.label, Rems(cx, 0.875f), 0);
-
-            float need = 2 + Rems(cx, 0.5f) + 16 + label.w;
-            if (leftGutter) {
-                need += icon + gap;
-            }
-            if (it.kbd.s) {
-                Size key =
-                    MeasureText(&cx->win->paint, it.kbd, Rems(cx, 0.75f), 0);
-                float kbdW = key.w + kbdPadX * 2;
-                need += (kbdW > kbdMinW ? kbdW : kbdMinW) + gap;
-            }
-            if ((!SideIsLeft(checkSide) && it.checked) || it.submenu ||
-                (it.isLink && externalLinkIcon)) {
-                need += icon + gap;
-            }
-            if (need > menuW) {
-                menuW = need;
+    if (s && cx->win) {
+        float selfW = s->bounds.w > 0 ? s->bounds.w : menuW;
+        float subW = selfW;
+        int ix = s->selected >= 0 ? s->selected : s->openSubmenu;
+        if (ix >= 0 && ix < items.len && items[ix].submenu) {
+            float childW = PopupMenuWidth(cx, items[ix].submenu);
+            if (childW > 0) {
+                subW = childW;
             }
         }
+        float winW = WindowSize(cx->win).dipW;
+        s->side = (s->bounds.Right() + subW > winW) ? Side::Left : Side::Right;
     }
-    if (menuW > 500) {
-        menuW = 500;
-    }
-    float itemH = size == UiSize::Small ? 20.f : 26.f;
+
+    float itemH = Rems(cx, size == UiSize::Small ? 1.25f : 1.625f);
     float radius = size == UiSize::Small ? th.radius * 0.5f : th.radius;
 
     El* root = PopoverSurface(
@@ -95060,6 +101081,8 @@ El* PopupMenu::IntoEl() {
 
         root->BoundsOut(&s->bounds)
             ->OnMouseUpOut(ListenTo(state, &PopupMenuState::OnPressOutside));
+        root->prePaint = PopupMenuWidthChanged;
+        root->customUser = s;
     }
 
     bool focusedHere = cx->win && FocusHandleContainsFocused(cx->win, focus);
@@ -95114,11 +101137,28 @@ El* PopupMenu::IntoEl() {
                    ->Pad(Rems(cx, 0.25f))
                    ->Gap(Rems(cx, 0.125f));
     if (scrollable) {
+
+        float heightCap = maxH > 0 ? maxH : Rems(cx, 28.125f);
+        PopupMenuScrollToChecked(s, cx, items);
+        int nRendered = 0;
+        for (int k = 0; k < items.len; k++) {
+            if (items[k].kind == MenuItemKind::Separator && k + 1 == items
+                                                                         .len) {
+                continue;
+            }
+            nRendered++;
+        }
+        if (s && s->itemBounds.len != nRendered) {
+            VecResize(s->itemBounds, nRendered);
+        }
         rows->ClipY()
-            ->MaxH(maxH)
+            ->MaxH(heightCap)
             ->ScrollY(s ? s->scrollY : 0)
             ->ScrollFromPath()
             ->OnScroll(ListenTo(state, &PopupMenuState::OnScroll));
+        if (s) {
+            rows->BoundsOut(&s->scrollBounds);
+        }
     }
     Listener click = ListenTo(state, &PopupMenuState::OnItemClick, 0);
     Listener linkClick = ListenTo(state, &OnPopupLinkClick, 0);
@@ -95126,6 +101166,7 @@ El* PopupMenu::IntoEl() {
     Listener submenuClick = ListenTo(state, &PopupMenuState::OnSubmenuClick, 0);
     Listener submenuHover = ListenTo(state, &PopupMenuState::OnSubmenuHover, 0);
     int i = -1;
+    int rendered = 0;
     for (const MenuItem& it : items) {
         i++;
         if (it.kind == MenuItemKind::Separator) {
@@ -95133,10 +101174,15 @@ El* PopupMenu::IntoEl() {
                 continue;
             }
 
-            rows->Child(Div(a)
-                            ->W(kFill)
-                            ->PadY(Rems(cx, 0.125f))
-                            ->Child(Div(a)->W(kFill)->H(1)->Bg(th.border)));
+            El* rule = Div(a)
+                           ->W(kFill)
+                           ->PadY(Rems(cx, 0.125f))
+                           ->Child(Div(a)->W(kFill)->H(1)->Bg(th.border));
+            if (scrollable && s && rendered < s->itemBounds.len) {
+                rule->BoundsOut(&s->itemBounds.els[rendered]);
+            }
+            rendered++;
+            rows->Child(rule);
             continue;
         }
         bool lit =
@@ -95147,10 +101193,14 @@ El* PopupMenu::IntoEl() {
                 ->AriaLabel(it.label)
                 ->AriaSelected(lit)
                 ->AriaDisabled(it.disabled || it.kind == MenuItemKind::Label)
+                ->AriaToggled((it.checked || it.checkable)
+                                  ? (it.checked ? AccessibilityToggled::True
+                                                : AccessibilityToggled::False)
+                                  : AccessibilityToggled::Unset)
                 ->FlexRow()
                 ->W(kFill)
                 ->MinH(itemH)
-                ->PadX(8)
+                ->PadX(Rems(cx, 0.5f))
                 ->Gap(gap)
                 ->ItemsCenter()
                 ->JustifyBetween()
@@ -95272,14 +101322,19 @@ El* PopupMenu::IntoEl() {
                 s->submenuFocus = subState->focus;
             }
             sub->Absolute()->Top(-Rems(cx, 0.25f));
+
             if (s && SideIsLeft(s->side)) {
-                sub->Right(menuW - 8);
+                sub->Right(menuW + Rems(cx, 1.f));
             } else {
-                sub->Left(menuW - 8);
+                sub->Left(menuW - Rems(cx, 0.5f));
             }
             sub->Deferred();
             row->Child(sub);
         }
+        if (scrollable && s && rendered < s->itemBounds.len) {
+            row->BoundsOut(&s->itemBounds.els[rendered]);
+        }
+        rendered++;
         rows->Child(row);
     }
     root->Child(rows);
@@ -97945,6 +104000,7 @@ El* NotificationList::IntoEl() {
                                   ->Ghost()
                                   ->WithSize(UiSize::XSmall)
                                   ->Icon(IconName::X)
+                                  ->AccessibilityLabel(StrL("Close"))
                                   ->OnClick(close)
                                   ->IntoEl()
                                   ->StopClick();
@@ -101498,14 +107554,20 @@ El* SearchableListItemElement::IntoEl() {
             ->ItemsCenter()
             ->JustifyBetween();
     UiListSize(cx, row, size);
-    if (!disabled && !selected) {
-        row->HoverBg(BackgroundOpacity(th.tokens.accent, 0.7f));
-    }
-    if (selected) {
-        row->Bg(th.tokens.accent);
-    }
+
     if (styleSet) {
         row->Refine(style, styleSet);
+    }
+    if (!disabled && !selected) {
+        row->HoverBg(BackgroundOpacity(th.tokens.accent, 0.7f))
+            ->HoverFg(th.accentFg);
+    }
+    if (selected) {
+        row->Bg(th.tokens.accent)->Fg(th.accentFg);
+    }
+
+    if (disabled) {
+        row->Fg(th.mutedFg);
     }
 
     El* left =
@@ -101521,9 +107583,8 @@ El* SearchableListItemElement::IntoEl() {
                     ->ItemsCenter()
                     ->JustifyBetween()
                     ->Child(left);
-    El* check = IconEl(a, checkIcon, UiIconPx(cx, UiSize::XSmall))
-                    ->Shrink0()
-                    ->Fg(th.foreground);
+
+    El* check = IconEl(a, checkIcon, UiIconPx(cx, UiSize::XSmall))->Shrink0();
     if (!checked) {
         check->Opacity(0);
     }
@@ -103443,6 +109504,19 @@ void SettingsState::OnSearchFocus(SettingsState* self, Ctx* cx,
     Notify(cx);
 }
 
+void SettingsState::OnSearchEscape(SettingsState* self, Ctx* cx,
+                                   const ActionEvent* ev) {
+    if (!self || !ev) {
+        return;
+    }
+
+    if (len(InputValue(&self->search)) == 0 || !PlatCleanOnEscape()) {
+        const_cast<ActionEvent*>(ev)->propagate = true;
+        return;
+    }
+    InputClean(&self->search, cx->app, cx->win);
+}
+
 Settings* Settings::New(Ctx* cx, Str id, Entity<SettingsState> state) {
     Arena* a = cx->a;
     Settings* s = ArenaNew<Settings>(a);
@@ -104153,6 +110227,13 @@ static El* SettingsNoResults(Ctx* cx) {
 
 El* Settings::IntoEl() {
     SettingsState* st = state.Get(cx);
+    if (st) {
+
+        Str placeholder = Tr("Settings.search_placeholder");
+        if (!StrEq(st->search.placeholder, placeholder)) {
+            InputSetPlaceholder(&st->search, placeholder);
+        }
+    }
     Str query = st ? InputValue(&st->search) : Str{};
 
     if (st) {
@@ -104188,7 +110269,13 @@ El* Settings::IntoEl() {
                 ->Prefix(IconEl(a, IconName::Search))
                 ->OnFocus(ListenTo(state, &SettingsState::OnSearchFocus))
                 ->IntoEl();
-        sidebar->Header(Div(a)->W(kFill)->Child(search));
+
+        sidebar->Header(
+            Div(a)
+                ->W(kFill)
+                ->OnAction(input::Escape(),
+                           ListenTo(state, &SettingsState::OnSearchEscape))
+                ->Child(search));
         if (st->search.focused) {
             cx->win->input = &st->search;
         }
@@ -104473,6 +110560,7 @@ El* Sheet::IntoEl(WinSize win) {
                     ->Ghost()
                     ->WithSize(UiSize::Small)
                     ->Icon(IconName::X)
+                    ->AccessibilityLabel(StrL("Close"))
                     ->OnClick(onClose)
                     ->IntoEl());
     surface->Child(head);
@@ -106479,6 +112567,7 @@ static void End(SpeechState* s, Ctx* cx, SpeechEvent* ev) {
     DropSession(s);
     s->status = SpeechStatus::Idle;
     s->meter = LevelMeter{};
+    s->surfaces.Free();
     ui_speech_Emit(s, cx, ev);
     ui_speech_NotifySelf(s, cx);
 }
@@ -106674,6 +112763,7 @@ SpeechState::~SpeechState() {
     }
     StrFree(committed);
     StrFree(hypothesis);
+    surfaces.Free();
     delete systemRecognizer;
 }
 
@@ -106732,6 +112822,14 @@ TempStr SpeechState::TranscriptTemp() const {
     return fmt("%s%s", committed, hypothesis);
 }
 
+void SpeechState::AdvanceSurface(double now, float width) {
+    surfaces.Advance(now, width, &meter);
+}
+
+const float* SpeechState::SurfaceHeights(float width, int* outN) const {
+    return surfaces.Heights(width, outN);
+}
+
 void SpeechState::Start(Ctx* cx) {
     if (SpeechStatusIsActive(status)) {
         return;
@@ -106771,6 +112869,7 @@ void SpeechState::Start(Ctx* cx) {
     ui_speech_SetOwned(&committed, {});
     ui_speech_SetOwned(&hypothesis, {});
     meter.Reset(format.sampleRate, format.channels);
+    surfaces.Free();
     hasSession = true;
     sessionId = id;
     capture = capturing;
@@ -106870,6 +112969,28 @@ SpeechButton* SpeechButton::Refine(const Style& refinement, uint32_t fields) {
     return this;
 }
 
+static float SpeechButtonCapturingSide(const Ctx* cx, UiSize buttonSize,
+                                       UiSize* iconSize) {
+    if (buttonSize.kind == UiSize::Kind::Size) {
+        *iconSize = UiSize::Custom(buttonSize.pixels * 0.75f);
+        return buttonSize.pixels;
+    }
+    if (buttonSize == UiSize::XSmall) {
+        *iconSize = UiSize::XSmall;
+        return Rems(cx, 1.25f);
+    }
+    if (buttonSize == UiSize::Small) {
+        *iconSize = UiSize::Small;
+        return Rems(cx, 1.5f);
+    }
+    *iconSize = buttonSize;
+    return Rems(cx, 2.f);
+}
+
+struct SpeechButtonFocus {
+    FocusHandle handle = {};
+};
+
 El* SpeechButton::IntoEl() {
     const SpeechState* s = state.Get(cx->app);
     SpeechStatus status = s ? s->Status() : SpeechStatus::Idle;
@@ -106881,16 +113002,41 @@ El* SpeechButton::IntoEl() {
     bool available =
         SpeechStatusIsActive(status) || (s && s->IsAvailable(cx->app));
     bool capturing = SpeechStatusIsCapturing(status);
+    bool stopping = status == SpeechStatus::Stopping;
     Str label = !available  ? Tr("Speech.Unavailable")
                 : capturing ? Tr("Speech.Stop")
                             : Tr("Speech.Start");
 
-    El* e = Button::New(cx, id)
-                ->Ghost()
-                ->WithSize(size)
-                ->Icon(capturing ? IconName::Square : IconName::Mic)
-                ->Selected(capturing)
-                ->Loading(status == SpeechStatus::Stopping)
+    bool keyboardFocused = false;
+    FocusHandle focus = {};
+    if (cx->win) {
+        SpeechButtonFocus* slot =
+            ElementState<SpeechButtonFocus>(cx, id, StrL("focus"));
+        if (!slot->handle.IsValid()) {
+            slot->handle = FocusHandleNew(cx);
+        }
+        focus = slot->handle;
+        keyboardFocused = FocusHandleIsFocused(cx->win, focus) &&
+                          WindowLastInputWasKeyboard(cx->win);
+    }
+
+    Button* button = Button::New(cx, id)->Ghost()->WithSize(size);
+    if (focus.IsValid()) {
+        button->TrackFocus(focus);
+    }
+
+    if (capturing && !keyboardFocused) {
+        UiSize iconSize = size;
+        float side = SpeechButtonCapturingSide(cx, size, &iconSize);
+        button->Size(side)->Child(
+            SpeechIndicator::New(cx, state)->WithSize(iconSize)->IntoEl());
+    } else {
+        button
+            ->Icon((capturing || stopping) ? IconName::Square : IconName::Mic);
+    }
+
+    El* e = button->Selected(capturing)
+                ->Loading(stopping)
                 ->Disabled(disabled || !available)
                 ->Tooltip(label)
                 ->AccessibilityLabel(label)
@@ -106902,9 +113048,466 @@ El* SpeechButton::IntoEl() {
     return e;
 }
 
+static const float kSpeechIndicatorWeights[kSpeechIndicatorBars] = {
+    0.65f, 1.f, 0.85f, 0.55f};
+
+static const float kSpeechIndicatorLags[kSpeechIndicatorBars] = {1.f, 0.f, 0.5f,
+                                                                 1.5f};
+
+static const float kSpeechIndicatorStill[kSpeechIndicatorBars] = {0.4f, 0.7f,
+                                                                  0.55f, 0.35f};
+
+static const float kSpeechIndicatorBreath = 0.12f;
+
+static const float kSpeechIndicatorBreathRate = 2.4f;
+static const float kSpeechIndicatorBreathSpread = 0.9f;
+
+static const float kSpeechIndicatorBarRatio = 0.085f;
+static const float kSpeechIndicatorGapRatio = 0.075f;
+static const float kSpeechIndicatorHeightRatio = 0.46f;
+
+SpeechIndicator* SpeechIndicator::New(Ctx* cx, Entity<SpeechState> state) {
+    SpeechIndicator* indicator = ArenaNew<SpeechIndicator>(cx->a);
+    indicator->a = cx->a;
+    indicator->cx = cx;
+    indicator->state = state;
+    return indicator;
+}
+
+SpeechIndicator* SpeechIndicator::WithSize(UiSize s) {
+    size = s;
+    return this;
+}
+
+static float SpeechIndicatorSample(const float* levels, int last,
+                                   float position) {
+    float lastF = (float)last;
+    if (position < 0.f) {
+        position = 0.f;
+    } else if (position > lastF) {
+        position = lastF;
+    }
+    int below = (int)floorf(position);
+    int above = below + 1;
+    if (above > last) {
+        above = last;
+    }
+    float fraction = position - (float)below;
+    return levels[below] + (levels[above] - levels[below]) * fraction;
+}
+
+void SpeechIndicatorBarHeights(const float* levels, int nLevels,
+                               uint64_t recorded, bool hasLead, float lead,
+                               float* out) {
+    for (int i = 0; i < kSpeechIndicatorBars; i++) {
+        out[i] = 0.f;
+    }
+
+    if (!hasLead || nLevels <= 0 || !levels) {
+        return;
+    }
+    int last = nLevels - 1;
+
+    float playhead = (float)last - lead;
+
+    float seconds =
+        ((float)recorded - lead) * ((float)kSpeechLevelIntervalMs / 1000.f);
+    float atPlayhead = SpeechIndicatorSample(levels, last, playhead);
+    float loud = atPlayhead * 4.f;
+    if (loud > 1.f) {
+        loud = 1.f;
+    }
+    float quiet = 1.f - loud;
+    for (int i = 0; i < kSpeechIndicatorBars; i++) {
+        float voice = SpeechIndicatorSample(
+                          levels, last, playhead - kSpeechIndicatorLags[i]) *
+                      kSpeechIndicatorWeights[i];
+        float phase = seconds * kSpeechIndicatorBreathRate +
+                      (float)i * kSpeechIndicatorBreathSpread;
+        float breath =
+            kSpeechIndicatorBreath * (0.5f + 0.5f * sinf(phase)) * quiet;
+        float height = voice > breath ? voice : breath;
+        if (height < 0.f) {
+            height = 0.f;
+        } else if (height > 1.f) {
+            height = 1.f;
+        }
+        out[i] = height;
+    }
+}
+
+void SpeechIndicatorBarRects(Bounds bounds, const float* heights, Bounds* out) {
+    float side = bounds.w < bounds.h ? bounds.w : bounds.h;
+    float bar = side * kSpeechIndicatorBarRatio;
+    float gap = side * kSpeechIndicatorGapRatio;
+    float full = side * kSpeechIndicatorHeightRatio;
+    float total = bar * (float)kSpeechIndicatorBars +
+                  gap * (float)(kSpeechIndicatorBars - 1);
+    float left = bounds.x + bounds.w / 2.f - total / 2.f;
+    float middle = bounds.y + bounds.h / 2.f;
+    for (int i = 0; i < kSpeechIndicatorBars; i++) {
+        float h = heights ? heights[i] : 0.f;
+        float height = bar + (full - bar) * h;
+        out[i] = Bounds{left + (bar + gap) * (float)i, middle - height / 2.f,
+                        bar, height};
+    }
+}
+
+struct IndicatorPaint {
+    float heights[kSpeechIndicatorBars] = {};
+};
+
+static void PaintIndicator(PaintCtx* ctx, El* e, void* user) {
+
+    if (ctx->groupHovered) {
+        return;
+    }
+    const IndicatorPaint* paint = (const IndicatorPaint*)user;
+    Bounds rects[kSpeechIndicatorBars];
+    SpeechIndicatorBarRects(e->Bounds(), paint->heights, rects);
+    Rgba color = PaintFade(ctx, e->style.color);
+    for (int i = 0; i < kSpeechIndicatorBars; i++) {
+        float radius = rects[i].w < rects[i].h ? rects[i].w : rects[i].h;
+        FillRound(ctx, rects[i].x, rects[i].y, rects[i].w, rects[i].h,
+                  radius / 2.f, color);
+    }
+}
+
+El* SpeechIndicator::IntoEl() {
+    const SpeechState* s = state.Get(cx->app);
+    bool reduced = MotionReduced();
+    IndicatorPaint* paint = ArenaNew<IndicatorPaint>(a);
+    if (reduced) {
+        for (int i = 0; i < kSpeechIndicatorBars; i++) {
+            paint->heights[i] = kSpeechIndicatorStill[i];
+        }
+    } else if (s) {
+        int n = s->LevelsLen();
+        float levels[kSpeechLevelHistory];
+        if (n > kSpeechLevelHistory) {
+            n = kSpeechLevelHistory;
+        }
+        for (int i = 0; i < n; i++) {
+            levels[i] = s->LevelAt(i);
+        }
+        float lead = 0.f;
+        bool hasLead = s->LevelLeadAt(TimeNow(), &lead);
+        SpeechIndicatorBarHeights(levels, n, s->LevelsRecorded(), hasLead, lead,
+                                  paint->heights);
+    }
+    if (s && SpeechStatusIsCapturing(s->Status()) && !reduced && cx->win) {
+        WindowRequestAnimationFrame(cx->win);
+    }
+
+    El* canvas = Div(a)->SizeFull();
+    canvas->customPaint = &PaintIndicator;
+    canvas->customUser = paint;
+    El* bars =
+        Div(a)->Absolute()->Left(0)->Top(0)->Right(0)->Bottom(0)->Child(canvas);
+    El* stop =
+        Div(a)
+            ->Absolute()
+            ->Left(0)
+            ->Top(0)
+            ->Right(0)
+            ->Bottom(0)
+            ->Flex()
+            ->ItemsCenter()
+            ->JustifyCenter()
+            ->GroupHoverVisible()
+            ->Child(Icon::New(cx, IconName::Square)->Size(size)->IntoEl());
+    return Div(a)->SizeFull()->Group()->Child(bars)->Child(stop);
+}
+
+static const float kLiquidNodeSpacing = 3.f;
+static const int kLiquidMinNodes = 16;
+static const float kLiquidStep = 1.f / 240.f;
+static const float kLiquidMaxFrame = 0.05f;
+static const float kLiquidStiffness = 2600.f;
+static const float kLiquidRestoring = 4.f;
+static const float kLiquidDamping = 2.4f;
+static const float kLiquidSourceFrequency = 3.2f;
+static const float kLiquidSourceAmplitude = 0.9f;
+static const float kLiquidSourcePull = 0.35f;
+static const float kLiquidSourceResponse = 0.05f;
+static const float kLiquidDropLevel = 0.18f;
+static const float kLiquidDropRelease = 0.09f;
+static const float kLiquidDropRise = 0.15f;
+static const float kLiquidDropStrength = 9.f;
+static const int kLiquidDropReach = 4;
+static const float kLiquidStaleAfter = 0.5f;
+static const float kTau = 6.283185307179586f;
+
+static int LiquidNodeCount(float width) {
+    int n = (int)(width / kLiquidNodeSpacing);
+    return n > kLiquidMinNodes ? n : kLiquidMinNodes;
+}
+
+void LiquidSurface::Free() {
+    delete[] heights;
+    delete[] velocities;
+    heights = nullptr;
+    velocities = nullptr;
+    n = 0;
+}
+
+static void LiquidResize(LiquidSurface* s, int nodes) {
+    if (s->n == nodes) {
+        return;
+    }
+    delete[] s->heights;
+    delete[] s->velocities;
+    s->heights = new float[nodes]();
+    s->velocities = new float[nodes]();
+    s->n = nodes;
+}
+
+static void LiquidDrop(LiquidSurface* s, float level) {
+    uint32_t seed = s->seed;
+    seed ^= seed << 13;
+    seed ^= seed >> 17;
+    seed ^= seed << 5;
+    s->seed = seed;
+    float place = 0.12f + 0.76f * ((float)seed / (float)0xffffffffu);
+    int last = s->n - 1;
+    int center = (int)(place * (float)last);
+    for (int offset = -kLiquidDropReach; offset <= kLiquidDropReach; offset++) {
+        int ix = center + offset;
+        if (ix > 0 && ix < last) {
+            float falloff = expf(-(float)(offset * offset) / 5.f);
+            s->velocities[ix] -= level * kLiquidDropStrength * falloff;
+        }
+    }
+}
+
+static void LiquidDropSyllables(LiquidSurface* s, const LevelMeter* meter) {
+    if (!meter) {
+        return;
+    }
+    uint64_t recorded = meter->recorded;
+    uint64_t fresh = recorded >= s->seen ? recorded - s->seen : 0;
+    s->seen = recorded;
+    int nLevels = meter->LevelsLen();
+
+    int skip = fresh < (uint64_t)nLevels ? nLevels - (int)fresh : 0;
+    for (int i = skip; i < nLevels; i++) {
+        float level = meter->LevelAt(i);
+        if (level < kLiquidDropRelease) {
+            s->sounding = false;
+        } else if (level >= kLiquidDropLevel &&
+                   (!s->sounding || level >= s->previous + kLiquidDropRise)) {
+            s->sounding = true;
+            LiquidDrop(s, level);
+        }
+        s->previous = level;
+    }
+}
+
+static void LiquidStep(LiquidSurface* s, float dt) {
+    int last = s->n - 1;
+    if (last < 1) {
+        return;
+    }
+    s->phase = fmodf(s->phase + dt * kTau * kLiquidSourceFrequency, kTau);
+    if (s->phase < 0.f) {
+        s->phase += kTau;
+    }
+    float source = s->level * kLiquidSourceAmplitude * sinf(s->phase);
+    int middle = s->n / 2;
+    for (int offset = -2; offset <= 2; offset++) {
+        int ix = middle + offset;
+        if (ix <= 0 || ix >= last) {
+            continue;
+        }
+        float target = source * expf(-(float)(offset * offset) / 2.f);
+        s->heights[ix] += (target - s->heights[ix]) * kLiquidSourcePull;
+    }
+    float damping = expf(-kLiquidDamping * dt);
+    for (int ix = 1; ix < last; ix++) {
+        float curvature =
+            s->heights[ix - 1] + s->heights[ix + 1] - 2.f * s->heights[ix];
+        s->velocities[ix] +=
+            (kLiquidStiffness * curvature - kLiquidRestoring * s->heights[ix]) *
+            dt;
+        s->velocities[ix] *= damping;
+    }
+    for (int ix = 1; ix < last; ix++) {
+        s->heights[ix] += s->velocities[ix] * dt;
+    }
+    s->heights[0] = 0.f;
+    s->heights[last] = 0.f;
+}
+
+void LiquidSurface::Advance(double now, float width, const LevelMeter* meter) {
+    LiquidResize(this, LiquidNodeCount(width));
+    float elapsed = 0.f;
+    if (advanced >= 0 && now >= advanced) {
+        elapsed = (float)(now - advanced);
+        if (elapsed > kLiquidMaxFrame) {
+            elapsed = kLiquidMaxFrame;
+        }
+    }
+    advanced = now;
+    LiquidDropSyllables(this, meter);
+    float raw = 0.f;
+    if (meter && meter->LevelsLen() > 0) {
+        raw = meter->LevelAt(meter->LevelsLen() - 1);
+    }
+    float follow = 1.f - expf(-elapsed / kLiquidSourceResponse);
+    level += (raw - level) * follow;
+    int steps = elapsed > 0.f ? (int)ceilf(elapsed / kLiquidStep) : 0;
+    float dt = steps > 0 ? elapsed / (float)steps : 0.f;
+    for (int i = 0; i < steps; i++) {
+        LiquidStep(this, dt);
+    }
+}
+
+void LiquidSurfaces::Free() {
+    for (int i = 0; i < n; i++) {
+        items[i]->Free();
+        delete items[i];
+    }
+    delete[] items;
+    items = nullptr;
+    n = 0;
+    cap = 0;
+}
+
+void LiquidSurfaces::Advance(double now, float width, const LevelMeter* meter) {
+    int nodes = LiquidNodeCount(width);
+    int kept = 0;
+    for (int i = 0; i < n; i++) {
+        LiquidSurface* s = items[i];
+        bool same = s->n == nodes;
+        bool fresh = s->advanced < 0 || now < s->advanced ||
+                     (now - s->advanced) < (double)kLiquidStaleAfter;
+        if (same || fresh) {
+            items[kept++] = s;
+        } else {
+            s->Free();
+            delete s;
+        }
+    }
+    n = kept;
+    int ix = -1;
+    for (int i = 0; i < n; i++) {
+        if (items[i]->n == nodes) {
+            ix = i;
+            break;
+        }
+    }
+    if (ix < 0) {
+        if (n == cap) {
+            int ncap = cap < 4 ? 4 : cap * 2;
+            LiquidSurface** next = new LiquidSurface*[ncap];
+            for (int i = 0; i < n; i++) {
+                next[i] = items[i];
+            }
+            delete[] items;
+            items = next;
+            cap = ncap;
+        }
+        items[n] = new LiquidSurface();
+        ix = n;
+        n++;
+    }
+    items[ix]->Advance(now, width, meter);
+}
+
+const float* LiquidSurfaces::Heights(float width, int* outN) const {
+    int nodes = LiquidNodeCount(width);
+    for (int i = 0; i < n; i++) {
+        if (items[i]->n == nodes && items[i]->heights) {
+            if (outN) {
+                *outN = items[i]->n;
+            }
+            return items[i]->heights;
+        }
+    }
+    if (outN) {
+        *outN = 0;
+    }
+    return nullptr;
+}
+
+void SpeechStillHeights(float level, float* out) {
+    const int points = kSpeechStillPoints;
+    for (int ix = 0; ix < points; ix++) {
+        float fromMiddle = (float)ix / (float)(points - 1) - 0.5f;
+        float envelope = expf(-powf(fromMiddle / 0.3f, 2.f));
+        out[ix] = level * kLiquidSourceAmplitude *
+                  cosf(kTau * 2.5f * fromMiddle) * envelope;
+    }
+}
+
+float SpeechEdgeTaper(float t) {
+    if (t < 0.f) {
+        t = 0.f;
+    } else if (t > 1.f) {
+        t = 1.f;
+    }
+    float s = sinf(kPi * t);
+    if (s < 0.f) {
+        s = 0.f;
+    }
+    return powf(s, 0.35f);
+}
+
+static const float kCrestRatio = 0.42f;
+static const float kCrestSoftness = 1.4f;
+static const float kLineTaper = 0.25f;
+static const int kMinSurfacePoints = 32;
+static const float kWaterOpacity = 0.16f;
+
+int SpeechSurfacePoints(Bounds bounds, const float* heights, int nHeights,
+                        Point* out, int cap) {
+    int count = (!heights || nHeights <= 0) ? kMinSurfacePoints
+                                            : (nHeights < 2 ? 2 : nHeights);
+    int write = count < cap ? count : cap;
+    float middle = bounds.y + bounds.h / 2.f;
+    float crest = bounds.h * kCrestRatio;
+    for (int ix = 0; ix < write; ix++) {
+        float t = count <= 1 ? 0.f : (float)ix / (float)(count - 1);
+        float height = (heights && ix < nHeights) ? heights[ix] : 0.f;
+        float rise = tanhf(height * kCrestSoftness) * SpeechEdgeTaper(t);
+        out[ix] = Point{bounds.x + bounds.w * t, middle + crest * rise};
+    }
+    return write;
+}
+
+void SpeechSurfaceRibbon(const Point* points, int n, float width, Point* top,
+                         Point* bottom) {
+    int last = n > 1 ? n - 1 : 1;
+    for (int ix = 0; ix < n; ix++) {
+        Point before = points[ix > 0 ? ix - 1 : 0];
+        Point after = points[ix + 1 < n ? ix + 1 : n - 1];
+        float dx = after.x - before.x;
+        float dy = after.y - before.y;
+        float length = sqrtf(dx * dx + dy * dy);
+        if (length < 1e-20f) {
+            length = 1e-20f;
+        }
+        float swell = sinf(kPi * (float)ix / (float)last);
+        if (swell < 0.f) {
+            swell = 0.f;
+        }
+        float half = width * (kLineTaper + (1.f - kLineTaper) * swell) / 2.f;
+        float ox = half * (-dy / length);
+        float oy = half * (dx / length);
+        Point at = points[ix];
+        top[ix] = Point{at.x - ox, at.y - oy};
+        bottom[ix] = Point{at.x + ox, at.y + oy};
+    }
+}
+
 static const float kWaveformDefaultWidth = 96.f;
 
 static const float kWaveformGapRatio = 2.5f;
+
+SpeechWaveform* SpeechWaveform::Liquid() {
+    liquid = true;
+    return this;
+}
 
 SpeechWaveform* SpeechWaveform::New(Ctx* cx, Entity<SpeechState> state) {
     SpeechWaveform* w = ArenaNew<SpeechWaveform>(cx->a);
@@ -106990,6 +113593,119 @@ struct WaveformPaint {
     Rgba color = {};
 };
 
+struct LiquidPaint {
+    Entity<SpeechState> state = {};
+    bool animate = false;
+    bool reduced = false;
+    float line = 2;
+    Rgba color = {};
+    const float* heights = nullptr;
+    int nHeights = 0;
+};
+
+static void CopyHeights(Arena* arena, LiquidPaint* paint, const float* src,
+                        int n) {
+    if (n <= 0 || !src) {
+        paint->heights = nullptr;
+        paint->nHeights = 0;
+        return;
+    }
+    float* copy = (float*)Alloc(arena, n * (int)sizeof(float));
+    for (int i = 0; i < n; i++) {
+        copy[i] = src[i];
+    }
+    paint->heights = copy;
+    paint->nHeights = n;
+}
+
+static void PrepareLiquid(PaintCtx* ctx, El* e, void* user) {
+    LiquidPaint* paint = (LiquidPaint*)user;
+    SpeechState* s = paint->state.Get(ctx->app);
+    if (paint->reduced) {
+        float still[kSpeechStillPoints];
+        float level = 0.f;
+        if (s && s->LevelsLen() > 0) {
+            level = s->LevelAt(s->LevelsLen() - 1);
+        }
+        SpeechStillHeights(level, still);
+        CopyHeights(e->arena, paint, still, kSpeechStillPoints);
+        return;
+    }
+    if (s && paint->animate) {
+        s->AdvanceSurface(TimeNow(), e->w);
+    }
+    int n = 0;
+    const float* heights = s ? s->SurfaceHeights(e->w, &n) : nullptr;
+    CopyHeights(e->arena, paint, heights, n);
+}
+
+static void PathQuadTo(Path* path, float x0, float y0, float cx, float cy,
+                       float x, float y) {
+    PathCubicTo(path, x0 + (2.f / 3.f) * (cx - x0),
+                y0 + (2.f / 3.f) * (cy - y0), x + (2.f / 3.f) * (cx - x),
+                y + (2.f / 3.f) * (cy - y), x, y);
+}
+
+static void PathFollow(Path* path, const Point* points, int n) {
+    if (n <= 0) {
+        return;
+    }
+    float x = points[0].x;
+    float y = points[0].y;
+    for (int i = 1; i + 1 < n; i++) {
+        float mx = (points[i].x + points[i + 1].x) / 2.f;
+        float my = (points[i].y + points[i + 1].y) / 2.f;
+        PathQuadTo(path, x, y, points[i].x, points[i].y, mx, my);
+        x = mx;
+        y = my;
+    }
+    PathLineTo(path, points[n - 1].x, points[n - 1].y);
+}
+
+static void PaintLiquid(PaintCtx* ctx, El* e, void* user) {
+    const LiquidPaint* paint = (const LiquidPaint*)user;
+    Bounds box = e->Bounds();
+    int cap = paint->nHeights > kMinSurfacePoints ? paint->nHeights
+                                                  : kMinSurfacePoints;
+    if (cap < 2) {
+        cap = 2;
+    }
+    Point* points = (Point*)Alloc(e->arena, cap * (int)sizeof(Point));
+    int n =
+        SpeechSurfacePoints(box, paint->heights, paint->nHeights, points, cap);
+    if (n < 2) {
+        return;
+    }
+    Point* top = (Point*)Alloc(e->arena, n * (int)sizeof(Point));
+    Point* bottom = (Point*)Alloc(e->arena, n * (int)sizeof(Point));
+    Point* reversed = (Point*)Alloc(e->arena, n * (int)sizeof(Point));
+    SpeechSurfaceRibbon(points, n, paint->line, top, bottom);
+    for (int i = 0; i < n; i++) {
+        reversed[i] = bottom[n - 1 - i];
+    }
+    Rgba color = PaintFade(ctx, paint->color);
+    Rgba water = PaintFade(ctx, RgbaOpacity(paint->color, kWaterOpacity));
+    Rgba clear = PaintFade(ctx, RgbaOpacity(paint->color, 0.f));
+    CanvasPushClip(ctx, box.x, box.y, box.w, box.h);
+    Path* fill = PathNew(ctx, true);
+    PathMoveTo(fill, points[0].x, points[0].y);
+    PathFollow(fill, points, n);
+    PathLineTo(fill, box.x + box.w, box.y + box.h);
+    PathLineTo(fill, box.x, box.y + box.h);
+    PathClose(fill);
+    PathFillGradientV(ctx, fill, box.y, box.y + box.h, water, clear);
+    PathFree(fill);
+    Path* line = PathNew(ctx, true);
+    PathMoveTo(line, top[0].x, top[0].y);
+    PathFollow(line, top, n);
+    PathLineTo(line, bottom[n - 1].x, bottom[n - 1].y);
+    PathFollow(line, reversed, n);
+    PathClose(line);
+    PathFill(ctx, line, color);
+    PathFree(line);
+    CanvasPopClip(ctx);
+}
+
 static void PaintWaveform(PaintCtx* ctx, El* e, void* user) {
     const WaveformPaint* w = (const WaveformPaint*)user;
     Bounds rects[kSpeechLevelHistory + 4];
@@ -107039,8 +113755,21 @@ El* SpeechWaveform::IntoEl() {
     }
 
     El* canvas = Div(a)->SizeFull();
-    canvas->customPaint = &PaintWaveform;
-    canvas->customUser = paint;
+    if (liquid) {
+        LiquidPaint* water = ArenaNew<LiquidPaint>(a);
+        water->state = state;
+        water->animate = animate;
+        water->reduced = MotionReduced();
+        float line = height * 0.1f;
+        water->line = line < 2.f ? 2.f : line;
+        water->color = paint->color;
+        canvas->prePaint = &PrepareLiquid;
+        canvas->customPaint = &PaintLiquid;
+        canvas->customUser = water;
+    } else {
+        canvas->customPaint = &PaintWaveform;
+        canvas->customUser = paint;
+    }
     El* e = Div(a)->H(height)->W(kWaveformDefaultWidth)->Shrink0();
     if (styleSet) {
         e->Refine(style, styleSet);
@@ -109434,7 +116163,9 @@ El* TabBar::IntoEl() {
         }
         if (item.icon != IconName::None) {
 
-            inner->W(innerH * 1.25f)
+            float iconW = innerH * 1.25f;
+            inner->W(iconW)
+                ->MinW(iconW)
                 ->Child(IconEl(a, item.icon, UiIconPx(cx, size))->Fg(st.fg));
         } else {
             if (padX > 0) {
@@ -109678,6 +116409,10 @@ TableColumn TableColumn::Fixed(ColumnFixed value) const {
 
 TableColumn TableColumn::FixedLeft() const {
     return Fixed(ColumnFixed::Left);
+}
+
+TableColumn TableColumn::FixedRight() const {
+    return Fixed(ColumnFixed::Right);
 }
 
 TableColumn TableColumn::Resizable(bool value) const {
@@ -109997,7 +116732,17 @@ DataTable* DataTable::New(Ctx* cx, Str id, Entity<TableState> state) {
     return t;
 }
 DataTable* DataTable::Columns(const TableColumn* cols, int n) {
-    columns = cols;
+
+    if (!cols || n <= 0) {
+        columns = nullptr;
+        nColumns = 0;
+        return this;
+    }
+    auto* copy = (TableColumn*)Alloc(a, n * (int)sizeof(TableColumn));
+    for (int i = 0; i < n; i++) {
+        copy[i] = cols[i];
+    }
+    columns = copy;
     nColumns = n;
     return this;
 }
@@ -110011,6 +116756,7 @@ DataTable* DataTable::Delegate(const TableDelegate& value) {
     visibleColsChanged = value.visibleColumnsChanged;
     cellText = value.cellText;
     cellLabel = value.cellLabel;
+    rowLabel = value.rowLabel;
     return this;
 }
 DataTable* DataTable::Rows(int n, void* d,
@@ -110030,6 +116776,11 @@ DataTable* DataTable::Bordered(bool v) {
 }
 DataTable* DataTable::FocusRing(bool v) {
     focusRingEnabled = v;
+    return this;
+}
+
+DataTable* DataTable::AccessibilityLabel(Str s) {
+    accessibilityLabel = s;
     return this;
 }
 DataTable* DataTable::FixedColsBorder(bool v) {
@@ -110086,9 +116837,41 @@ DataTable* DataTable::CellLabel(Str (*fn)(Ctx*, void*, int, int)) {
     cellLabel = fn;
     return this;
 }
+DataTable* DataTable::RowLabel(Str (*fn)(Ctx*, void*, int)) {
+    rowLabel = fn;
+    return this;
+}
 DataTable* DataTable::FitColumn(bool (*fn)(Ctx*, void*, int, float*)) {
     fitColumn = fn;
     return this;
+}
+
+static Str JoinedCellLabels(Arena* a, Ctx* cx, void* data,
+                            Str (*cellLabel)(Ctx*, void*, int, int), int row,
+                            int nCols) {
+    if (!a || !cellLabel || nCols <= 0) {
+        return {};
+    }
+    StrBuilder built;
+    bool any = false;
+    for (int c = 0; c < nCols; c++) {
+        Str text = cellLabel(cx, data, row, c);
+        if (!text.s || len(text) == 0) {
+            continue;
+        }
+        if (any) {
+            built.Append(StrL(", "));
+        }
+        built.Append(text);
+        any = true;
+    }
+    if (!any) {
+        return {};
+    }
+    Str owned = built.TakeStr();
+    Str copied = StrDup(a, owned);
+    StrFree(owned);
+    return copied;
 }
 
 static Str TableColumnLabel(const TableColumn& column) {
@@ -110147,8 +116930,13 @@ void DataTable::Dump(Vec<Str>* heads, Vec<Str>* cells) {
     DumpRange(0, nRows, heads, cells);
 }
 DataTable* DataTable::GroupHeader(const TableGroupCell* cells, int n) {
+
     if (cells && n > 0) {
-        groupHeaders.Append(a, TableGroupHeader{cells, n});
+        auto* copy = (TableGroupCell*)Alloc(a, n * (int)sizeof(TableGroupCell));
+        for (int i = 0; i < n; i++) {
+            copy[i] = cells[i];
+        }
+        groupHeaders.Append(a, TableGroupHeader{copy, n});
     }
     return this;
 }
@@ -110225,9 +117013,13 @@ static El* LeadingResizeHandle(Ctx* cx, Str id, int prevCol,
         ->W(kTableResizeHandlePadding);
 }
 
-static El* RenderFixedColsBorder(Ctx* cx, float height) {
-    El* e = Div(cx->a)->Absolute()->Top(0)->Right(0)->W(0)->Shrink0()->BorderR(
-        1, ThemeNow(cx->app).border);
+static El* RenderFixedColsBorder(Ctx* cx, float height, bool onRight) {
+    El* e = Div(cx->a)->Absolute()->Top(0)->W(0)->Shrink0();
+    if (onRight) {
+        e->Left(0)->BorderL(1, ThemeNow(cx->app).border);
+    } else {
+        e->Right(0)->BorderR(1, ThemeNow(cx->app).border);
+    }
     if (height > 0) {
         e->H(height);
     } else {
@@ -110236,18 +117028,35 @@ static El* RenderFixedColsBorder(Ctx* cx, float height) {
     return e;
 }
 
-static int FixedColCount(const DataTable* t, const TableState* s) {
-    if (!s || !s->colFixed) {
-        return 0;
+static void FixedSideCounts(const DataTable* t, const TableState* s, int* left,
+                            int* right) {
+    *left = 0;
+    *right = 0;
+    if (!s || !s->colFixed || !t) {
+        return;
     }
-    int n = 0;
+    int nLeft = 0;
+    int nRight = 0;
     for (int d = 0; d < t->nColumns; d++) {
-        if (!t->columns[TableColAt(s, d)].fixed) {
-            break;
+        const TableColumn& col = t->columns[TableColAt(s, d)];
+        if (!col.fixed) {
+            continue;
         }
-        n++;
+        if (col.fixedSide == ColumnFixed::Right) {
+            nRight++;
+        } else {
+            nLeft++;
+        }
     }
-    return n;
+    int total = t->nColumns;
+    if (nLeft > total) {
+        nLeft = total;
+    }
+    if (nRight > total - nLeft) {
+        nRight = total - nLeft;
+    }
+    *left = nLeft;
+    *right = nRight;
 }
 
 static El* GroupBand(Ctx* cx, Str label, float w, bool last) {
@@ -110419,6 +117228,7 @@ El* DataTable::BuildEl() {
         visibleColsChanged = delegate.visibleColumnsChanged;
         cellText = delegate.cellText;
         cellLabel = delegate.cellLabel;
+        rowLabel = delegate.rowLabel;
         if (delegate.groupHeaders) {
             delegate.groupHeaders(cx, data, this);
         }
@@ -110426,6 +117236,10 @@ El* DataTable::BuildEl() {
     TableState* s = state.Get(cx);
     if (s) {
         s->self = state;
+
+        if (!s->focus.IsValid()) {
+            s->focus = FocusHandleNew(cx);
+        }
 
         s->rowCount = nRows;
         s->colCount = nColumns;
@@ -110464,14 +117278,28 @@ El* DataTable::BuildEl() {
             }
         }
     }
-    int nFixed = FixedColCount(this, s);
+    int nFixed = 0;
+    int nRight = 0;
+    FixedSideCounts(this, s, &nFixed, &nRight);
     if (s) {
 
         s->fixedCols = nFixed;
+        s->rightCols = nRight;
     }
     float scrollX = s ? s->scrollX : 0;
 
-    El* box = Div(a)->PathClick(id)->FlexCol()->W(kFill);
+    bool grid = !s || s->rowSelectable || s->cellSelectable;
+    El* box =
+        Div(a)
+            ->PathClick(id)
+            ->Role(grid ? AccessibilityRole::Grid : AccessibilityRole::Table)
+            ->AriaRowCount(nRows + 1)
+            ->AriaColumnCount(nColumns)
+            ->FlexCol()
+            ->W(kFill);
+    if (len(accessibilityLabel) > 0) {
+        box->AriaLabel(accessibilityLabel);
+    }
     if (bordered) {
         box->Radius(th.radius)->Border(1, th.border);
     }
@@ -110504,24 +117332,20 @@ El* DataTable::BuildEl() {
         box->OnMouseDownOut(ListenTo(state, &TableState::OnRightClickOutside));
     }
 
-    bool grid = !s || s->rowSelectable || s->cellSelectable;
     El* main =
-        Div(a)
-            ->Id(StrL("table-inner"))
-            ->Role(grid ? AccessibilityRole::Grid : AccessibilityRole::Table)
-            ->AriaRowCount(nRows + 1)
-            ->AriaColumnCount(nColumns)
-            ->FlexRow()
-            ->W(kFill)
-            ->ItemsStart();
+        Div(a)->Id(StrL("table-inner"))->FlexRow()->W(kFill)->ItemsStart();
     El* fixedPane = Div(a)->FlexCol()->Shrink0();
     El* scrollPane = Div(a)->FlexCol()->Flex1()->ClipX();
+    El* rightPane = Div(a)->FlexCol()->Shrink0();
 
     bool rowHeaderOn = s && s->cellSelectable && s->rowHeader;
     if (nFixed > 0 || rowHeaderOn) {
         main->Child(fixedPane);
     }
     main->Child(scrollPane);
+    if (nRight > 0) {
+        main->Child(rightPane);
+    }
     if (s) {
 
         scrollPane->BoundsOut(&s->bodyBounds);
@@ -110543,6 +117367,8 @@ El* DataTable::BuildEl() {
             Div(a)->FlexRow()->W(kFill)->H(headerH)->BorderB(1, th.border));
         El* gs = Div(a)->FlexRow()->Shrink0();
         gsWrap->Child(gs);
+        El* gr =
+            Div(a)->FlexRow()->Shrink0()->H(headerH)->BorderB(1, th.border);
         int col = 0;
         const TableGroupCell* cells = groupHeaders[g].cells;
         for (int i = 0; i < groupHeaders[g].n; i++) {
@@ -110564,6 +117390,8 @@ El* DataTable::BuildEl() {
             }
             if (col + span <= nFixed) {
                 gf->Child(band);
+            } else if (nRight > 0 && col >= nColumns - nRight) {
+                gr->Child(band);
             } else {
                 gs->Child(band);
             }
@@ -110571,12 +117399,24 @@ El* DataTable::BuildEl() {
         }
         fixedPane->Child(gf);
         scrollPane->Child(gsWrap);
+        if (nRight > 0) {
+            rightPane->Child(gr);
+        }
     }
 
     Listener headClick = ListenTo(state, &TableState::OnHeadClick, 0);
     Listener sortClick = ListenTo(state, &TableState::OnSortClick, 0);
 
     El* headFixed = gpui::TableHeader::New(cx, StrL("head-fixed"))
+                        ->Role(AccessibilityRole::Row)
+                        ->AriaRowIndex(0)
+                        ->FlexRow()
+                        ->Shrink0()
+                        ->H(headerH)
+                        ->Bg(th.tokens.tableHead)
+                        ->Fg(th.tableHeadFg)
+                        ->BorderB(1, th.border);
+    El* headRight = gpui::TableHeader::New(cx, StrL("head-right"))
                         ->Role(AccessibilityRole::Row)
                         ->AriaRowIndex(0)
                         ->FlexRow()
@@ -110694,21 +117534,38 @@ El* DataTable::BuildEl() {
 
         if (s && s->colResizable && d > 0) {
             int prev = TableColAt(s, d - 1);
-            if (columns[prev].resizable) {
+            bool fixedRight = s->colFixed && columns[c].fixed &&
+                              columns[c].fixedSide == ColumnFixed::Right;
+            bool prevFixedRight = s->colFixed && columns[prev].fixed &&
+                                  columns[prev].fixedSide == ColumnFixed::Right;
+            if (columns[prev].resizable && !(fixedRight && !prevFixedRight)) {
                 th_->Child(LeadingResizeHandle(
                     cx, StrDup(a, fmt("resizable-handle-leading-%d", c)), prev,
                     state));
             }
         }
-        (d < nFixed ? headFixed : headScroll)->Child(th_);
+        El* headDest = headScroll;
+        if (d < nFixed) {
+            headDest = headFixed;
+        } else if (nRight > 0 && d >= nColumns - nRight) {
+            headDest = headRight;
+        }
+        headDest->Child(th_);
     }
     headScroll->Child(LastEmptyColEl(cx, lastEmptyCol, data));
     fixedPane->Child(headFixed);
     scrollPane->Child(headWrap);
+    if (nRight > 0) {
+        rightPane->Child(headRight);
+    }
 
     bool drawFixedBorder = nFixed > 0 && fixedColsBorder;
+    bool drawRightBorder = nRight > 0 && fixedColsBorder;
     if (drawFixedBorder) {
-        fixedPane->Child(RenderFixedColsBorder(cx, headsH));
+        fixedPane->Child(RenderFixedColsBorder(cx, headsH, false));
+    }
+    if (drawRightBorder) {
+        rightPane->Child(RenderFixedColsBorder(cx, headsH, true));
     }
 
     if (nRows == 0) {
@@ -110740,6 +117597,8 @@ El* DataTable::BuildEl() {
         gpui::TableBody::New(cx, StrL("body-fixed"))->FlexCol()->Shrink0();
     El* bodyScroll =
         gpui::TableBody::New(cx, StrL("body"))->FlexCol()->W(kFill);
+    El* bodyRight =
+        gpui::TableBody::New(cx, StrL("body-right"))->FlexCol()->Shrink0();
 
     VirtualRange range = {0, nRows};
     if (s && viewH > 0) {
@@ -110763,6 +117622,9 @@ El* DataTable::BuildEl() {
         bodyFixed->H(bodyH)->ClipY()->ScrollY(s->scrollY)->ScrollFromPath();
         bodyFixed->OnScroll(ListenTo(state, &TableState::OnScroll));
         bodyFixed->noScrollbar = true;
+        bodyRight->H(bodyH)->ClipY()->ScrollY(s->scrollY)->ScrollFromPath();
+        bodyRight->OnScroll(ListenTo(state, &TableState::OnScroll));
+        bodyRight->noScrollbar = true;
         bodyScroll->H(bodyH)
             ->ClipY()
             ->ScrollY(s->scrollY)
@@ -110779,12 +117641,14 @@ El* DataTable::BuildEl() {
                                        : scrollBounce == 1;
         Listener bounceWheel = ListenTo(state, &TableState::OnBounceWheel);
         bodyFixed->OnScrollWheel(bounceWheel);
+        bodyRight->OnScrollWheel(bounceWheel);
         bodyScroll->OnScrollWheel(bounceWheel);
         bodyScroll->noScrollbarY = !scrollbarV;
         bodyScroll->noScrollbarX = !scrollbarH;
         if (range.first > 0) {
             float pad = (float)range.first * s->rowH;
             bodyFixed->Child(Div(a)->H(pad));
+            bodyRight->Child(Div(a)->H(pad));
             bodyScroll->Child(Div(a)->W(kFill)->H(pad));
         }
     }
@@ -110797,7 +117661,7 @@ El* DataTable::BuildEl() {
         }
         int cFirst = 0, cEnd = 0;
         TableVisibleCols(s, &cFirst, &cEnd);
-        int nScroll = s->colCount - s->fixedCols;
+        int nScroll = s->colCount - s->fixedCols - s->rightCols;
         if (nScroll < 0) {
             nScroll = 0;
         }
@@ -110813,6 +117677,14 @@ El* DataTable::BuildEl() {
                 ->FlexRow()
                 ->Shrink0()
                 ->BorderB(1, th.tableRowBorder);
+        El* rowRight = nullptr;
+        if (nRight > 0) {
+            rowRight = gpui::TableRow::New(
+                           cx, StrDup(a, fmt("row-right-%d", r)), r + 1)
+                           ->FlexRow()
+                           ->Shrink0()
+                           ->BorderB(1, th.tableRowBorder);
+        }
         El* rowScroll = hasDelegate && delegate.renderTr
                             ? delegate.renderTr(cx, data, r)
                             : nullptr;
@@ -110826,8 +117698,22 @@ El* DataTable::BuildEl() {
             ->FlexRow()
             ->Shrink0()
             ->BorderB(1, th.tableRowBorder);
-        El* rows[2] = {rowFixed, rowScroll};
+
+        Str rowName =
+            rowLabel ? rowLabel(cx, data, r)
+                     : JoinedCellLabels(a, cx, data, cellLabel, r, nColumns);
+        if (rowName.s && len(rowName) > 0) {
+            rowScroll->AriaLabel(rowName);
+            rowFixed->AriaLabel(rowName);
+            if (rowRight) {
+                rowRight->AriaLabel(rowName);
+            }
+        }
+        El* rows[3] = {rowFixed, rowScroll, rowRight};
         for (El* row : rows) {
+            if (!row) {
+                continue;
+            }
             if (s && viewH > 0) {
 
                 row->H(s->rowH);
@@ -110844,6 +117730,11 @@ El* DataTable::BuildEl() {
             } else if (s && s->rightClickedRow == r) {
                 row->Bg(BackgroundOpacity(th.tokens.accent, 0.5f));
             }
+        }
+
+        if (s && TableSelectedRow(s) == r &&
+            FocusHandleIsFocused(cx->win, s->focus)) {
+            rowScroll->AriaActiveDescendant();
         }
         if (rowHeaderOn) {
             rowFixed->Child(RowHeaderCell(cx, state, r, false));
@@ -110892,6 +117783,10 @@ El* DataTable::BuildEl() {
                 bool selected = TableSelectedCell(s, &selRow, &selCol) &&
                                 selRow == r && selCol == c;
                 td->Role(AccessibilityRole::GridCell)->AriaSelected(selected);
+
+                if (selected && FocusHandleIsFocused(cx->win, s->focus)) {
+                    td->AriaActiveDescendant();
+                }
             }
             if (cellLabel) {
                 Str label = cellLabel(cx, data, r, c);
@@ -110916,12 +117811,21 @@ El* DataTable::BuildEl() {
                 cellEl->Flex1()->MaxW(inner > 1 ? inner : 1)->Truncate();
                 td->Child(cellEl);
             }
-            (d < nFixed ? rowFixed : rowScroll)->Child(td);
+            El* rowDest = rowScroll;
+            if (d < nFixed) {
+                rowDest = rowFixed;
+            } else if (rowRight && d >= nColumns - nRight) {
+                rowDest = rowRight;
+            }
+            rowDest->Child(td);
         }
         rowScroll->Child(LastEmptyColEl(cx, lastEmptyCol, data));
 
         if (drawFixedBorder) {
-            rowFixed->Child(RenderFixedColsBorder(cx, 0));
+            rowFixed->Child(RenderFixedColsBorder(cx, 0, false));
+        }
+        if (drawRightBorder && rowRight) {
+            rowRight->Child(RenderFixedColsBorder(cx, 0, true));
         }
         if (s && s->rowSelectable && !s->cellSelectable) {
             BindPathClick(rowScroll,
@@ -110931,13 +117835,22 @@ El* DataTable::BuildEl() {
             BindPathClick(rowFixed, StrDup(a, fmt("row-fixed-%d", r)),
                           ListenerArg(rowClick, r));
             rowFixed->OnMouseDown(ListenerArg(rowDown, r));
+            if (rowRight) {
+                BindPathClick(rowRight, StrDup(a, fmt("row-right-%d", r)),
+                              ListenerArg(rowClick, r));
+                rowRight->OnMouseDown(ListenerArg(rowDown, r));
+            }
         }
         bodyFixed->Child(rowFixed);
         bodyScroll->Child(rowScroll);
+        if (rowRight) {
+            bodyRight->Child(rowRight);
+        }
     }
     if (s && viewH > 0 && range.end < nRows) {
         float pad = (float)(nRows - range.end) * s->rowH;
         bodyFixed->Child(Div(a)->H(pad));
+        bodyRight->Child(Div(a)->H(pad));
         bodyScroll->Child(Div(a)->W(kFill)->H(pad));
     }
 
@@ -110946,7 +117859,8 @@ El* DataTable::BuildEl() {
             ? TableExtraRowsNeeded(viewH, (float)nRows * s->rowH, s->rowH)
             : 0;
     float colsW = 0;
-    for (int d = nFixed; extraRows > 0 && d < nColumns; d++) {
+    int scrollEnd = nColumns - nRight;
+    for (int d = nFixed; extraRows > 0 && d < scrollEnd; d++) {
         colsW += ColWidth(s, TableColAt(s, d));
     }
     for (int r = nRows; r < nRows + extraRows; r++) {
@@ -110970,21 +117884,46 @@ El* DataTable::BuildEl() {
             fillScroll->Bg(th.tokens.tableEven);
         }
 
+        El* fillRight = nullptr;
+        if (nRight > 0) {
+            fillRight = Div(a)
+                            ->Id(StrDup(a, fmt("row-right-%d", r)))
+                            ->FlexRow()
+                            ->W(kFill)
+                            ->Shrink0()
+                            ->H(s->rowH)
+                            ->BorderB(1, th.tableRowBorder);
+            if (r % 2 == 1) {
+                fillRight->Bg(th.tokens.tableEven);
+            }
+        }
         if (drawFixedBorder) {
-            fillFixed->Child(RenderFixedColsBorder(cx, 0));
+            fillFixed->Child(RenderFixedColsBorder(cx, 0, false));
+        }
+        if (drawRightBorder && fillRight) {
+            fillRight->Child(RenderFixedColsBorder(cx, 0, true));
         }
         bodyFixed->Child(fillFixed);
         bodyScroll->Child(fillScroll);
+        if (fillRight) {
+            bodyRight->Child(fillRight);
+        }
     }
 
     if (s && viewH > 0) {
         El* fixedRows = Div(a)->FlexCol()->W(kFill);
+        El* rightRows = Div(a)->FlexCol()->W(kFill);
         El* scrollRows = Div(a)->FlexCol()->W(kFill);
         fixedRows->first = bodyFixed->first;
         fixedRows->last = bodyFixed->last;
         bodyFixed->first = nullptr;
         bodyFixed->last = nullptr;
         bodyFixed->Child(fixedRows);
+        rightRows->first = bodyRight->first;
+        rightRows->last = bodyRight->last;
+        bodyRight->first = nullptr;
+        bodyRight->last = nullptr;
+        bodyRight->Child(rightRows);
         scrollRows->first = bodyScroll->first;
         scrollRows->last = bodyScroll->last;
         bodyScroll->first = nullptr;
@@ -110996,11 +117935,15 @@ El* DataTable::BuildEl() {
                                                 s->bounceOn, maxExtent);
         if (stretch != 0) {
             fixedRows->PaintOffset(0, stretch);
+            rightRows->PaintOffset(0, stretch);
             scrollRows->PaintOffset(0, stretch);
         }
     }
     fixedPane->Child(bodyFixed);
     scrollPane->Child(bodyScroll);
+    if (nRight > 0) {
+        rightPane->Child(bodyRight);
+    }
 
     if (s && TableShouldLoadMore(s, range.end)) {
         if (s->delegateLoadMore) {
@@ -111476,6 +118419,7 @@ TextViewStyle UiTextViewStyle(const Theme& theme) {
     head.bg = Background(theme.tokens.tableHead);
     head.color = theme.tableHeadFg;
     style.WithTableHead(head, StyleFieldBg | StyleFieldColor);
+    style.WithTableRowHover(theme.tableHover);
 
     gpui::Style inlineCode = {};
     inlineCode.bg = Background(theme.accent);
@@ -111729,10 +118673,11 @@ const char* const kDefaultThemeJson =
     "        \"editor.active_line_number\": \"#000000\",\n"
     "        \"editor.invisible\": \"#73737366\",\n"
     "        \"conflict\": \"#C5060B\",\n"
-    "        \"created\": \"#1642FF\",\n"
+    "        \"created\": \"#16a34a\",\n"
+    "        \"deleted\": \"#dc2626\",\n"
     "        \"hidden\": \"#6D6D6D\",\n"
     "        \"hint\": \"#9e5dff\",\n"
-    "        \"modified\": \"#9e7008\",\n"
+    "        \"modified\": \"#ca8a04\",\n"
     "        \"predictive\": \"#A4ABB6\",\n"
     "        \"warning\": \"#C99401\",\n"
     "        \"syntax\": {\n"
@@ -111930,8 +118875,9 @@ const char* const kDefaultThemeJson =
     "        \"editor.active_line_number\": \"#DDDDDD\",\n"
     "        \"editor.invisible\": \"#73737366\",\n"
     "        \"conflict\": \"#D2602D\",\n"
-    "        \"created\": \"#3f72e2\",\n"
+    "        \"created\": \"#4ade80\",\n"
     "        \"created.background\": \"#0C4619\",\n"
+    "        \"deleted\": \"#f87171\",\n"
     "        \"deleted.background\": \"#46190C\",\n"
     "        \"error.background\": \"#46190C\",\n"
     "        \"error.border\": \"#E44A4F\",\n"
@@ -111941,7 +118887,7 @@ const char* const kDefaultThemeJson =
     "        \"hint.border\": \"#3f0891\",\n"
     "        \"info.background\": \"#0059D1\",\n"
     "        \"info.border\": \"#0059D1\",\n"
-    "        \"modified\": \"#B0A878\",\n"
+    "        \"modified\": \"#facc15\",\n"
     "        \"modified.background\": \"#3A310E\",\n"
     "        \"predictive\": \"#5D5945\",\n"
     "        \"success.background\": \"#0C4619\",\n"
@@ -117404,14 +124350,21 @@ El* WindowBorder::IntoEl() {
             cx->win->paint.clientInset = 0;
             cx->win->clientInset = 0;
         }
-        return child ? child : Div(a)->SizeFull();
+        El* backdrop = Div(a)->PathId(StrL("window-backdrop"))->SizeFull();
+        if (child) backdrop->Child(child);
+        return backdrop;
     }
 
     float visualShadow = effectiveTiling.AllTiled() ? 0.f : shadowSize;
     Edges insets = WindowBorderInsets(visualShadow, effectiveTiling);
 
-    El* backdrop =
-        Div(a)->FlexCol()->SizeFull()->ClipX()->ClipY()->Bg(Rgba8(0, 0, 0, 0));
+    El* backdrop = Div(a)
+                       ->PathId(StrL("window-backdrop"))
+                       ->FlexCol()
+                       ->SizeFull()
+                       ->ClipX()
+                       ->ClipY()
+                       ->Bg(Rgba8(0, 0, 0, 0));
     if (insets.top > 0) {
         backdrop->PadT(insets.top);
     }
@@ -119374,7 +126327,7 @@ struct ChangeHost {
     }
 };
 
-static int ClampCount(double value) {
+static int component_shell_carousel_ClampCount(double value) {
     return value > 2147483647.0 ? 2147483647 : (int)value;
 }
 
@@ -119393,7 +126346,7 @@ static bool component_shell_carousel_NonemptyId(const ComponentArgument& argumen
            len(StrTrim(argument.string)) != 0;
 }
 
-static Entity<CarouselState> StateOf(MaterializeRequest* request,
+static Entity<CarouselState> component_shell_carousel_StateOf(MaterializeRequest* request,
                                      const ComponentArgument& argument) {
     EntityState<CarouselState>* state =
         request->StateAs<EntityState<CarouselState>>(argument, "CarouselState");
@@ -119482,7 +126435,7 @@ static El* component_shell_carousel_Materialize(MaterializeRequest* request) {
         return FinishTypedChildren(request, pagination, "CarouselPagination",
                                    kAllowed);
     }
-    Entity<CarouselState> state = StateOf(request, payload->state);
+    Entity<CarouselState> state = component_shell_carousel_StateOf(request, payload->state);
     if (!state.IsValid()) return nullptr;
     switch (payload->kind) {
         case Payload::Root:
@@ -119534,7 +126487,7 @@ static El* component_shell_carousel_Materialize(MaterializeRequest* request) {
     }
 }
 
-static bool RequireEntity(PayloadBuild* build,
+static bool component_shell_carousel_RequireEntity(PayloadBuild* build,
                           const ComponentArgument& argument,
                           const char* component) {
     if (argument.kind == shell::ComponentArgumentKind::Entity) return true;
@@ -119551,14 +126504,14 @@ static bool StateConstruct(PayloadBuild* build, const ComponentArgument* args,
     if (count != 1)
         return build->Fail(
             fmt("%s(state) expects one CarouselState entity", Str(component)));
-    if (!RequireEntity(build, args[0], component)) return false;
+    if (!component_shell_carousel_RequireEntity(build, args[0], component)) return false;
     Payload* payload = build->New<Payload>();
     payload->kind = K;
     payload->state = args[0];
     return true;
 }
 
-static bool RootConstruct(PayloadBuild* build, const ComponentArgument* args,
+static bool component_shell_carousel_RootConstruct(PayloadBuild* build, const ComponentArgument* args,
                           int count) {
     if (count != 2)
         return build
@@ -119566,7 +126519,7 @@ static bool RootConstruct(PayloadBuild* build, const ComponentArgument* args,
                         "CarouselState entity"));
     if (!component_shell_carousel_NonemptyId(args[0]))
         return build->Fail(StrL("Carousel expects a nonempty string id"));
-    if (!RequireEntity(build, args[1], "Carousel")) return false;
+    if (!component_shell_carousel_RequireEntity(build, args[1], "Carousel")) return false;
     Payload* payload = build->New<Payload>();
     payload->kind = Payload::Root;
     payload->id = args[0].string;
@@ -119593,11 +126546,11 @@ static bool IndexedConstruct(PayloadBuild* build, const ComponentArgument* args,
             ->Fail(fmt("%s(id, index, state) expects a nonnegative "
                        "integer",
                        Str(component)));
-    if (!RequireEntity(build, args[2], component)) return false;
+    if (!component_shell_carousel_RequireEntity(build, args[2], component)) return false;
     Payload* payload = build->New<Payload>();
     payload->kind = K;
     payload->id = args[0].string;
-    payload->index = ClampCount(index);
+    payload->index = component_shell_carousel_ClampCount(index);
     payload->state = args[2];
     return true;
 }
@@ -119671,7 +126624,7 @@ static bool RecordUsize(PayloadBuild* build, const ComponentArgument* args,
                        Str(name)));
     Op* op = build->New<Op>();
     op->kind = K;
-    op->count = ClampCount(value);
+    op->count = component_shell_carousel_ClampCount(value);
     return true;
 }
 
@@ -119749,10 +126702,10 @@ static bool component_shell_carousel_NewState(shell::StateBuild* build, const Co
                                             ->New<EntityState<CarouselState>>();
     state->app = build->app;
     state->entity =
-        component::CarouselStateNew(build->app, ClampCount(itemCount));
+        component::CarouselStateNew(build->app, component_shell_carousel_ClampCount(itemCount));
     if (CarouselState* native = state->entity.Get(build->app)) {
         native->WithAxis(axis).WithLooping(looping);
-        if (hasIndex) native->WithSelectedIndex(ClampCount(index));
+        if (hasIndex) native->WithSelectedIndex(component_shell_carousel_ClampCount(index));
     }
     return true;
 }
@@ -119777,7 +126730,7 @@ static constexpr shell::StateDescriptor kCarouselState = {
 
 static constexpr ArgumentDescriptor kStateOnlyArgs[] = {
     {"state", SchemaEntity("CarouselState")}};
-static constexpr ArgumentDescriptor kIdStateArgs[] = {
+static constexpr ArgumentDescriptor component_shell_carousel_kIdStateArgs[] = {
     {"id", SchemaString()},
     {"state", SchemaEntity("CarouselState")}};
 static constexpr ArgumentDescriptor kIndexedArgs[] = {
@@ -119795,12 +126748,12 @@ static constexpr ArgumentDescriptor component_shell_carousel_kOnChangeArgs[] = {
 static constexpr ArgumentDescriptor component_shell_carousel_kSizeArgs[] = {
     {"size", SchemaEnum(kSizeLiterals)}};
 
-static constexpr const char* kLabelDoc =
+static constexpr const char* component_shell_carousel_kLabelDoc =
     "Sets the name announced by accessibility clients.";
 static constexpr const char* component_shell_carousel_kSizeDoc = "Sets the semantic control size.";
 
 static constexpr MethodDescriptor kCarouselMethods[] = {
-    {"accessibility_label", component_shell_carousel_kLabelArgs, kLabelDoc,
+    {"accessibility_label", component_shell_carousel_kLabelArgs, component_shell_carousel_kLabelDoc,
      &component_shell_carousel_RecordAccessibilityLabel<Part::Carousel>},
     {"focus_ring", component_shell_carousel_kFocusRingArgs,
      "Controls whether keyboard focus draws a focus ring.", &RecordFocusRing},
@@ -119815,31 +126768,31 @@ static constexpr MethodDescriptor kCarouselMethods[] = {
      "Reports the newly selected zero-based item index.", &component_shell_carousel_RecordOnChange},
 };
 static constexpr MethodDescriptor component_shell_carousel_kItemMethods[] = {
-    {"accessibility_label", component_shell_carousel_kLabelArgs, kLabelDoc,
+    {"accessibility_label", component_shell_carousel_kLabelArgs, component_shell_carousel_kLabelDoc,
      &component_shell_carousel_RecordAccessibilityLabel<Part::Item>},
 };
 static constexpr MethodDescriptor kPreviousMethods[] = {
-    {"accessibility_label", component_shell_carousel_kLabelArgs, kLabelDoc,
+    {"accessibility_label", component_shell_carousel_kLabelArgs, component_shell_carousel_kLabelDoc,
      &component_shell_carousel_RecordAccessibilityLabel<Part::Previous>},
     {"size", component_shell_carousel_kSizeArgs, component_shell_carousel_kSizeDoc, &component_shell_carousel_RecordSize<Part::Previous>},
 };
 static constexpr MethodDescriptor kNextMethods[] = {
-    {"accessibility_label", component_shell_carousel_kLabelArgs, kLabelDoc,
+    {"accessibility_label", component_shell_carousel_kLabelArgs, component_shell_carousel_kLabelDoc,
      &component_shell_carousel_RecordAccessibilityLabel<Part::Next>},
     {"size", component_shell_carousel_kSizeArgs, component_shell_carousel_kSizeDoc, &component_shell_carousel_RecordSize<Part::Next>},
 };
 static constexpr MethodDescriptor kPaginationMethods[] = {
-    {"accessibility_label", component_shell_carousel_kLabelArgs, kLabelDoc,
+    {"accessibility_label", component_shell_carousel_kLabelArgs, component_shell_carousel_kLabelDoc,
      &component_shell_carousel_RecordAccessibilityLabel<Part::Pagination>},
 };
 static constexpr MethodDescriptor kPaginationItemMethods[] = {
-    {"accessibility_label", component_shell_carousel_kLabelArgs, kLabelDoc,
+    {"accessibility_label", component_shell_carousel_kLabelArgs, component_shell_carousel_kLabelDoc,
      &component_shell_carousel_RecordAccessibilityLabel<Part::PaginationItem>},
     {"size", component_shell_carousel_kSizeArgs, component_shell_carousel_kSizeDoc, &component_shell_carousel_RecordSize<Part::PaginationItem>},
 };
 
 static constexpr ConstructorDescriptor kCarouselConstructors[] = {
-    {"Carousel", kIdStateArgs, &RootConstruct}};
+    {"Carousel", component_shell_carousel_kIdStateArgs, &component_shell_carousel_RootConstruct}};
 static constexpr ConstructorDescriptor component_shell_carousel_kContentConstructors[] = {
     {"CarouselContent", kStateOnlyArgs, &StateConstruct<Payload::Content>}};
 static constexpr ConstructorDescriptor component_shell_carousel_kItemConstructors[] = {
@@ -120858,6 +127811,44 @@ static bool RowNumber(const shell::ComponentDataValue* value, int* out) {
     return true;
 }
 
+static constexpr uint64_t kMaxMessageRows = 1000000;
+
+static constexpr double kUsizeMaxAsF64 = 18446744073709551616.0;
+
+static bool WholeRowCount(double n, uint64_t* out) {
+    if (!isfinite(n) || n != floor(n) || n < 0.0 || n > kUsizeMaxAsF64)
+        return false;
+    if (n >= kUsizeMaxAsF64) {
+        *out = UINT64_MAX;
+        return true;
+    }
+
+    if (n >= 9223372036854775808.0) {
+        *out = (uint64_t)(n - 9223372036854775808.0) + 9223372036854775808ull;
+        return true;
+    }
+    *out = (uint64_t)n;
+    return true;
+}
+
+static bool RowCountArg(const shell::ComponentDataValue* value, uint64_t* out) {
+    if (!value || value->kind != shell::DataKind::Number) return false;
+    return WholeRowCount(value->number, out);
+}
+
+static uint64_t component_shell_chat_SaturatingAdd(uint64_t a, uint64_t b) {
+    return a > UINT64_MAX - b ? UINT64_MAX : a + b;
+}
+
+static bool CheckRowTotal(shell::StateCall* call, uint64_t total,
+                          const char* context) {
+    if (total <= kMaxMessageRows) return true;
+    return call
+        ->Fail(fmt("%s would leave %llu rows; a transcript holds at "
+                   "most 1000000",
+                   Str(context), (unsigned long long)total));
+}
+
 static bool ItemRange(const shell::ComponentDataValue* value, int* start,
                       int* end) {
     if (!value || value->kind != shell::DataKind::Object) return false;
@@ -120944,55 +127935,76 @@ static bool LogicalScrollTop(shell::StateCall* call, void* state,
 
 static bool ResetCount(shell::StateCall* call, void* state,
                        const shell::ComponentDataValue* args, int count) {
-    int n = 0;
-    if (!OneRow(call, args, count, &n, "MessageScrollerState.reset"))
-        return false;
+    uint64_t n = 0;
+    if (count != 1 || !RowCountArg(args, &n)) {
+        return call->Fail(
+            StrL("MessageScrollerState.reset expects a non-negative integer"));
+    }
+    if (!CheckRowTotal(call, n, "MessageScrollerState.reset")) return false;
     component::MessageScrollerState* s = ScrollerOf(state);
     if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
     Ctx cx = CallCtx(call);
-    s->Reset(&cx, n);
+    s->Reset(&cx, (int)n);
     call->out = shell::ComponentDataValue::Null();
     return true;
 }
 
 static bool SpliceRows(shell::StateCall* call, void* state,
                        const shell::ComponentDataValue* args, int count) {
-    int start = 0, end = 0, n = 0;
+    int start = 0, end = 0;
+    uint64_t n = 0;
     if (count != 2 || !ItemRange(args, &start, &end) ||
-        !RowNumber(args + 1, &n)) {
+        !RowCountArg(args + 1, &n)) {
         return call->Fail(
             StrL("MessageScrollerState.splice expects an ItemRange and a "
                  "non-negative integer count"));
     }
     component::MessageScrollerState* s = ScrollerOf(state);
     if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    uint64_t current = (uint64_t)s->ItemCount();
+    uint64_t removedEnd = (uint64_t)end < current ? (uint64_t)end : current;
+    uint64_t removed =
+        removedEnd > (uint64_t)start ? removedEnd - (uint64_t)start : 0;
+    if (!CheckRowTotal(call, component_shell_chat_SaturatingAdd(current - removed, n),
+                       "MessageScrollerState.splice"))
+        return false;
     Ctx cx = CallCtx(call);
     call->out =
-        shell::ComponentDataValue::Boolean(s->Splice(&cx, start, end, n));
+        shell::ComponentDataValue::Boolean(s->Splice(&cx, start, end, (int)n));
     return true;
 }
 
 static bool AppendRows(shell::StateCall* call, void* state,
                        const shell::ComponentDataValue* args, int count) {
-    int n = 0;
-    if (!OneRow(call, args, count, &n, "MessageScrollerState.append"))
-        return false;
+    uint64_t n = 0;
+    if (count != 1 || !RowCountArg(args, &n)) {
+        return call->Fail(
+            StrL("MessageScrollerState.append expects a non-negative integer"));
+    }
     component::MessageScrollerState* s = ScrollerOf(state);
     if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    if (!CheckRowTotal(call, component_shell_chat_SaturatingAdd((uint64_t)s->ItemCount(), n),
+                       "MessageScrollerState.append"))
+        return false;
     Ctx cx = CallCtx(call);
-    call->out = shell::ComponentDataValue::Boolean(s->Append(&cx, n));
+    call->out = shell::ComponentDataValue::Boolean(s->Append(&cx, (int)n));
     return true;
 }
 
 static bool PrependRows(shell::StateCall* call, void* state,
                         const shell::ComponentDataValue* args, int count) {
-    int n = 0;
-    if (!OneRow(call, args, count, &n, "MessageScrollerState.prepend"))
-        return false;
+    uint64_t n = 0;
+    if (count != 1 || !RowCountArg(args, &n)) {
+        return call->Fail(StrL(
+            "MessageScrollerState.prepend expects a non-negative integer"));
+    }
     component::MessageScrollerState* s = ScrollerOf(state);
     if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    if (!CheckRowTotal(call, component_shell_chat_SaturatingAdd((uint64_t)s->ItemCount(), n),
+                       "MessageScrollerState.prepend"))
+        return false;
     Ctx cx = CallCtx(call);
-    call->out = shell::ComponentDataValue::Boolean(s->Prepend(&cx, n));
+    call->out = shell::ComponentDataValue::Boolean(s->Prepend(&cx, (int)n));
     return true;
 }
 
@@ -121052,9 +128064,10 @@ static bool NewMessageScrollerState(shell::StateBuild* build,
 
     if (count != 1 || args[0].kind != shell::ComponentArgumentKind::Number ||
         !isfinite(args[0].number) || args[0].number != floor(args[0].number) ||
-        args[0].number < 0.0 || args[0].number > (double)INT_MAX) {
-        return build->Fail(StrL(
-            "MessageScrollerState expects a non-negative integer item_count"));
+        args[0].number < 0.0 || args[0].number > (double)kMaxMessageRows) {
+        return build->Fail(
+            StrL("MessageScrollerState expects an integer item_count from 0 to "
+                 "1000000"));
     }
     EntityState<component::MessageScrollerState>* state =
         build->New<EntityState<component::MessageScrollerState>>();
@@ -122720,7 +129733,7 @@ static bool component_shell_compound_pagination_Construct(PayloadBuild* build, c
     return true;
 }
 
-static bool Positive(const ComponentArgument& argument, const char* label,
+static bool component_shell_compound_pagination_Positive(const ComponentArgument& argument, const char* label,
                      uint64_t* out, Str* error) {
     TempStr callable = fmt("Pagination.%s(%s)", Str(label), Str(label));
     if (argument.kind != shell::ComponentArgumentKind::Number) {
@@ -122744,7 +129757,7 @@ static bool RecordNumeric(PayloadBuild* build, const ComponentArgument* args,
                                                    : "visible_pages";
     uint64_t value = 0;
     Str error;
-    if (!Positive(args[0], label, &value, &error)) return build->Fail(error);
+    if (!component_shell_compound_pagination_Positive(args[0], label, &value, &error)) return build->Fail(error);
     PaginationOp* op = build->New<PaginationOp>();
     op->kind = K;
     op->value = value;
@@ -123965,6 +130978,10 @@ static bool RecordMasked(PayloadBuild* build, const ComponentArgument* args,
 
 static bool RecordHref(PayloadBuild* build, const ComponentArgument* args,
                        int) {
+    if (!IsOpenableUrl(args[0].string)) {
+        return build->Fail(
+            StrL("Link.href(url) expects an absolute HTTP(S) URL with a host"));
+    }
     build->New<LinkOp>()->href = args[0].string;
     return true;
 }
@@ -124095,7 +131112,7 @@ static constexpr ConstructorDescriptor kLinkConstructors[] = {
 static constexpr MethodDescriptor kLinkMethods[] = {
     kOnClickMethod,
     kDisabledMethod,
-    {"href", kHrefArgs, "Sets the external URL opened when activated.",
+    {"href", kHrefArgs, "Sets the absolute HTTP(S) URL opened when activated.",
      &RecordHref},
 };
 static constexpr ComponentDescriptor kLink = {
@@ -125841,7 +132858,7 @@ static bool RatingCount(PayloadBuild* build, double value, const char* name) {
 }
 
 template <RatingOp::Kind K>
-static bool RecordCount(PayloadBuild* build, const ComponentArgument* args,
+static bool component_shell_display_rating_RecordCount(PayloadBuild* build, const ComponentArgument* args,
                         int) {
     const char* name = K == RatingOp::Value ? "value" : "max";
     if (!RatingCount(build, args[0].number, name)) return false;
@@ -125966,9 +132983,9 @@ static constexpr ConstructorDescriptor component_shell_display_rating_kConstruct
 static constexpr MethodDescriptor component_shell_display_rating_kMethods[] = {
     kDisabledMethod,
     {"value", component_shell_display_rating_kValueArgs, "Sets the current number of active stars.",
-     &RecordCount<RatingOp::Value>},
+     &component_shell_display_rating_RecordCount<RatingOp::Value>},
     {"max", component_shell_display_rating_kMaxArgs, "Sets the maximum number of stars.",
-     &RecordCount<RatingOp::Max>},
+     &component_shell_display_rating_RecordCount<RatingOp::Max>},
     {"on_change", component_shell_display_rating_kChangeArgs,
      "Reports the star the reader clicked, so the script can drive `value`.",
      &component_shell_display_rating_RecordChange},
@@ -126450,6 +133467,975 @@ bool RegisterEmpty(shell::ComponentRegistry* registry,
                    shell::RegistryError* error) {
     for (const ComponentDescriptor& part : empty::component_shell_empty_kParts) {
         if (!registry->Register(&part, error)) return false;
+    }
+    return true;
+}
+
+}
+
+#line 1 "src/component_shell/grid_layout.cpp"
+
+namespace gpui::component_shell::grid_layout {
+
+using component::grid_layout;
+using shell::ComponentArgument;
+using shell::ComponentArgumentKind;
+using shell::ComponentDataValue;
+using shell::SpecOp;
+using shell::SpecOpKind;
+
+const char* kKind = "GridLayoutState";
+
+enum class Kind : uint8_t {
+    Root,
+    Item,
+    Handle
+};
+
+struct Payload {
+    Kind kind = Kind::Root;
+    Str id = {};
+    ComponentArgument state = {};
+};
+
+enum class OpKind : uint8_t {
+    AccessibilityLabel,
+    Cols,
+    Compaction,
+    RowHeight,
+    PreventCollision,
+    Draggable,
+    Resizable,
+    Reflow,
+    OnChange,
+    OnSelect,
+    Col,
+    Row,
+    ColSpan,
+    RowSpan,
+    MinSpan,
+    MaxSpan,
+    Locked,
+    DragHandleOnly,
+};
+
+struct Op {
+    OpKind kind = OpKind::AccessibilityLabel;
+    Str text = {};
+    bool flag = false;
+    bool hasCompaction = false;
+    Axis axis = Axis::Vertical;
+    int count = 0;
+    int count2 = 0;
+    float length = 0;
+    ComponentArgument callback = {};
+};
+
+struct DeclaredItem {
+    GridItem* item = nullptr;
+    GridArea seed = {};
+};
+
+struct Rules {
+    bool hasCols = false;
+    int cols = 0;
+    bool hasCompaction = false;
+    bool compactionOn = false;
+    Axis axis = Axis::Vertical;
+    bool hasPrevent = false;
+    bool prevent = false;
+    bool hasDraggable = false;
+    bool draggable = false;
+    bool hasResizable = false;
+    bool resizable = false;
+};
+
+struct Callbacks {
+    ShellRuntime* runtime = nullptr;
+    shell::ComponentCallback onChange = {};
+    shell::ComponentCallback onSelect = {};
+};
+
+struct EventHost {
+    Callbacks callbacks = {};
+    bool subscribed = false;
+
+    static void OnEvent(EventHost* self, Ctx* cx, const GridLayoutEvent* ev) {
+        if (!self || !ev || !cx) return;
+        if (ev->kind == GridLayoutEventKind::Change && self->callbacks.onChange
+                                                           .IsSet()) {
+            ComponentDataValue layout =
+                GridLayoutLayoutArgument(cx->a, ev->areas, ev->nAreas);
+            self->callbacks.onChange.InvokeAndReport(
+                self->callbacks.runtime, "GridLayout.on_change callback failed",
+                &layout, 1, cx->win, cx->app);
+        } else if (ev->kind == GridLayoutEventKind::Select && ev->hasId &&
+                   self->callbacks.onSelect.IsSet()) {
+            ComponentDataValue id = ComponentDataValue::String(ev->id);
+            self->callbacks.onSelect.InvokeAndReport(
+                self->callbacks.runtime, "GridLayout.on_select callback failed",
+                &id, 1, cx->win, cx->app);
+        }
+    }
+};
+
+static int component_shell_grid_layout_ClampCount(double value) {
+    if (value > 2147483647.0) return 2147483647;
+    return (int)value;
+}
+
+static bool Nonnegative(const ComponentArgument& argument, double* out) {
+    if (argument.kind != ComponentArgumentKind::Number) return false;
+    double value = argument.number;
+    if (!isfinite(value) || value < 0. || value != floor(value) ||
+        value >= 18446744073709551616.0)
+        return false;
+    *out = value;
+    return true;
+}
+
+static bool component_shell_grid_layout_Positive(const ComponentArgument& argument, double* out) {
+    double value = 0;
+    if (!Nonnegative(argument, &value) || value == 0) return false;
+    *out = value;
+    return true;
+}
+
+static bool PositiveLength(const ComponentArgument& argument, float* out) {
+    if (argument.kind != ComponentArgumentKind::Number) return false;
+    double value = argument.number;
+    if (!isfinite(value) || value <= 0) return false;
+    *out = (float)value;
+    return true;
+}
+
+static bool Nonempty(const ComponentArgument& argument) {
+    return argument.kind == ComponentArgumentKind::String &&
+           len(StrTrim(argument.string)) != 0;
+}
+
+static bool IsEntity(const ComponentArgument& argument) {
+    return argument.kind == ComponentArgumentKind::Entity;
+}
+
+enum class Compaction : uint8_t {
+    Unknown,
+    None,
+    Vertical,
+    Horizontal
+};
+
+static Compaction CompactionOf(Str value) {
+    if (StrEq(value, StrL("vertical"))) return Compaction::Vertical;
+    if (StrEq(value, StrL("horizontal"))) return Compaction::Horizontal;
+    if (StrEq(value, StrL("none"))) return Compaction::None;
+    return Compaction::Unknown;
+}
+
+static bool SameScript(const GridArea& a, const GridArea& b) {
+    return StrEq(a.id, b.id) && a.minColSpan == b.minColSpan &&
+           a.minRowSpan == b.minRowSpan && a.maxColSpan == b.maxColSpan &&
+           a.maxRowSpan == b.maxRowSpan && a.locked == b.locked;
+}
+
+static bool Reconcile(const GridArea* current, int nCurrent,
+                      const GridArea* seeds, int nSeeds, Vec<GridArea>* next) {
+    if (!next) return false;
+    Vec<GridArea> built;
+    for (int i = 0; i < nSeeds; i++) {
+        GridArea kept = seeds[i];
+        for (int j = 0; j < nCurrent; j++) {
+            if (!StrEq(current[j].id, seeds[i].id)) continue;
+            kept.col = current[j].col;
+            kept.row = current[j].row;
+            kept.colSpan = current[j].colSpan;
+            kept.rowSpan = current[j].rowSpan;
+            break;
+        }
+        VecAppend(built, kept);
+    }
+    bool unchanged = len(built) == nCurrent;
+    if (unchanged) {
+        for (int i = 0; i < len(built); i++) {
+            bool found = false;
+            for (int j = 0; j < nCurrent; j++) {
+                if (SameScript(current[j], built[i])) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                unchanged = false;
+                break;
+            }
+        }
+    }
+    if (unchanged) {
+        VecReset(built);
+        return false;
+    }
+    VecReset(*next);
+    *next = built;
+    return true;
+}
+
+static ComponentDataValue LayoutArgument(Arena* a, const GridArea* areas,
+                                         int n) {
+    ComponentDataValue* rows = nullptr;
+    if (n > 0)
+        rows =
+            (ComponentDataValue*)Alloc(a, n * (int)sizeof(ComponentDataValue));
+    for (int i = 0; i < n; i++) {
+        ComponentDataValue* cells =
+            (ComponentDataValue*)Alloc(a, 5 * (int)sizeof(ComponentDataValue));
+        cells[0] = ComponentDataValue::String(areas[i].id);
+        cells[1] = ComponentDataValue::Number((double)areas[i].col);
+        cells[2] = ComponentDataValue::Number((double)areas[i].row);
+        cells[3] = ComponentDataValue::Number((double)areas[i].colSpan);
+        cells[4] = ComponentDataValue::Number((double)areas[i].rowSpan);
+        rows[i] = ComponentDataValue::Array(cells, 5);
+    }
+    return ComponentDataValue::Array(rows, n);
+}
+
+static Entity<GridLayoutState> component_shell_grid_layout_StateOf(MaterializeRequest* request,
+                                       const ComponentArgument& argument) {
+    EntityState<GridLayoutState>* state =
+        request->StateAs<EntityState<GridLayoutState>>(argument, kKind);
+    return state ? state->entity : Entity<GridLayoutState>{};
+}
+
+static void NamedGaps(const MaterializeRequest* request, bool* x, bool* y) {
+    *x = false;
+    *y = false;
+    if (!request->node) return;
+    for (const SpecOp& op : request->node->ops) {
+        if (op.kind != SpecOpKind::NullaryStyle &&
+            op.kind != SpecOpKind::ParamStyle)
+            continue;
+        if (StrStartsWith(op.name, StrL("gap_x")))
+            *x = true;
+        else if (StrStartsWith(op.name, StrL("gap_y")))
+            *y = true;
+        else if (StrStartsWith(op.name, StrL("gap"))) {
+            *x = true;
+            *y = true;
+        }
+    }
+}
+
+static void ApplyScriptGap(GridLayout* grid, El* probe, bool x, bool y) {
+    if (!grid || !probe) return;
+    if (x) {
+        float v = (probe->style.relLengths & (uint16_t)kRelGapX) != 0
+                      ? 0
+                      : probe->style.gapX;
+        grid->GapX(v);
+    }
+    if (y) {
+        float v = (probe->style.relLengths & (uint16_t)kRelGapY) != 0
+                      ? 0
+                      : probe->style.gapY;
+        grid->GapY(v);
+    }
+}
+
+static void ApplyItemStyle(GridItem* item, MaterializeRequest* request) {
+    uint32_t fields = 0;
+    if (request->node) {
+        for (const SpecOp& op : request->node->ops) {
+            if (op.kind != SpecOpKind::NullaryStyle &&
+                op.kind != SpecOpKind::ParamStyle)
+                continue;
+            fields |= shell::StyleFieldsOf(op.name);
+        }
+    }
+    ElRefiner refiner = request->TakeStyle();
+    if (fields == 0) return;
+    El* probe = Div(request->cx->a);
+    refiner.Apply(probe);
+    item->style.style = probe->style;
+    item->style.set = fields;
+}
+
+static bool CompactionSame(const GridLayoutState* state, bool on, Axis axis) {
+    if (!on) return !state->HasCompaction();
+    return state->HasCompaction() && state->CompactionAxis() == axis;
+}
+
+static El* component_shell_grid_layout_MaterializeRoot(MaterializeRequest* request, const Payload* payload,
+                           Entity<GridLayoutState> state) {
+    Ctx* cx = request->cx;
+    Rules rules;
+    const ComponentArgument* onChange = nullptr;
+    const ComponentArgument* onSelect = nullptr;
+    Str label = {};
+    bool hasLabel = false;
+    bool hasRow = false;
+    float rowHeight = 0;
+    bool hasReflow = false;
+    int reflow = 0;
+    EachMethod<Op>(request, [&](const Op& op) {
+        switch (op.kind) {
+            case OpKind::AccessibilityLabel:
+                label = op.text;
+                hasLabel = true;
+                break;
+            case OpKind::RowHeight:
+                hasRow = true;
+                rowHeight = op.length;
+                break;
+            case OpKind::Reflow:
+                hasReflow = true;
+                reflow = op.count;
+                break;
+            case OpKind::Cols:
+                rules.hasCols = true;
+                rules.cols = op.count;
+                break;
+            case OpKind::Compaction:
+                rules.hasCompaction = true;
+                rules.compactionOn = op.hasCompaction;
+                rules.axis = op.axis;
+                break;
+            case OpKind::PreventCollision:
+                rules.hasPrevent = true;
+                rules.prevent = op.flag;
+                break;
+            case OpKind::Draggable:
+                rules.hasDraggable = true;
+                rules.draggable = op.flag;
+                break;
+            case OpKind::Resizable:
+                rules.hasResizable = true;
+                rules.resizable = op.flag;
+                break;
+            case OpKind::OnChange:
+                onChange = &op.callback;
+                break;
+            case OpKind::OnSelect:
+                onSelect = &op.callback;
+                break;
+            default:
+                break;
+        }
+    });
+    shell::ComponentCallback change = {};
+    shell::ComponentCallback select = {};
+    if (onChange) {
+        change = request->ResolveCallback(*onChange);
+        if (!change.IsSet())
+            return request->Fail(StrL("component argument is not a callback"));
+    }
+    if (onSelect) {
+        select = request->ResolveCallback(*onSelect);
+        if (!select.IsSet())
+            return request->Fail(StrL("component argument is not a callback"));
+    }
+
+    GridLayout* grid = grid_layout(cx, payload->id, state);
+    if (hasLabel) grid->Label(label);
+    if (hasRow) grid->RowHeight(rowHeight);
+    if (hasReflow) grid->Reflow(reflow);
+
+    GridLayoutState* held = state.Get(cx);
+    if (held) {
+        Ctx stateCx = *cx;
+        stateCx.self = state.id;
+        if (rules.hasCols && held->ColumnCount() != rules.cols)
+            held->SetCols(&stateCx, rules.cols);
+        if (rules.hasCompaction &&
+            !CompactionSame(held, rules.compactionOn, rules.axis))
+            held->SetCompaction(&stateCx, rules.compactionOn, rules.axis);
+        if (rules.hasPrevent && held->IsCollisionPrevented() != rules.prevent)
+            held->SetPreventCollision(&stateCx, rules.prevent);
+        if (rules.hasDraggable && held->IsDraggable() != rules.draggable)
+            held->SetDraggable(&stateCx, rules.draggable);
+        if (rules.hasResizable && held->IsResizable() != rules.resizable)
+            held->SetResizable(&stateCx, rules.resizable);
+    }
+
+    static constexpr const char* kAllowed[] = {"GridItem"};
+    shell::ComponentChild* children = nullptr;
+    int count = 0;
+    if (!request->TakeTypedChildren(&children, &count)) return nullptr;
+    for (int i = 0; i < count; i++) {
+        if (!RequireChild(request, "GridLayout", children[i].componentName,
+                          kAllowed))
+            return nullptr;
+    }
+    Vec<GridArea> seeds;
+    for (int i = 0; i < count; i++) {
+        El* child = request->MaterializeChild(&children[i]);
+        if (!child) {
+            VecReset(seeds);
+            return nullptr;
+        }
+        DeclaredItem* declared =
+            TakeCarriedAs<DeclaredItem>(request, child, "GridItem");
+        if (!declared) {
+            VecReset(seeds);
+            return nullptr;
+        }
+        for (int j = 0; j < len(seeds); j++) {
+            if (StrEq(seeds[j].id, declared->seed.id)) {
+                VecReset(seeds);
+                return request
+                    ->Fail(fmt("GridLayout has two items with the id `%s`",
+                               declared->seed.id));
+            }
+        }
+        VecAppend(seeds, declared->seed);
+        grid->Item(declared->item);
+    }
+    if (held) {
+        int nCurrent = 0;
+        const GridArea* current = held->Areas(&nCurrent);
+        Vec<GridArea> next;
+        if (Reconcile(current, nCurrent, seeds.els, len(seeds), &next)) {
+            Ctx stateCx = *cx;
+            stateCx.self = state.id;
+            held->SetAreas(&stateCx, next.els, len(next));
+            VecReset(next);
+        }
+    }
+    VecReset(seeds);
+
+    bool gapX = false, gapY = false;
+    NamedGaps(request, &gapX, &gapY);
+    ElRefiner refiner = request->TakeStyle();
+    if (gapX || gapY) {
+        El* probe = Div(cx->a);
+        refiner.Apply(probe);
+        ApplyScriptGap(grid, probe, gapX, gapY);
+    }
+    El* surface = grid->IntoEl();
+    refiner.Apply(surface);
+
+    Str key = StrDup(cx->a, fmt("shell-grid-layout:%s:%d:%u", payload->id,
+                                state.id.index, state.id.gen));
+    Entity<EventHost> host =
+        UseKeyedState<EventHost>(cx, key, StrL("shell-grid-layout"));
+    if (EventHost* events = host.Get(cx)) {
+        if (!events->subscribed) {
+            events->subscribed = true;
+            SubscribeTo(cx->app, state, host, &EventHost::OnEvent);
+        }
+        events->callbacks.runtime = request->runtime;
+        events->callbacks.onChange = change;
+        events->callbacks.onSelect = select;
+    }
+    return surface;
+}
+
+static El* component_shell_grid_layout_MaterializeItem(MaterializeRequest* request,
+                           const Payload* payload) {
+    Ctx* cx = request->cx;
+    GridItem* item = GridItem::New(cx, payload->id);
+    GridArea seed = GridArea::New(payload->id);
+    EachMethod<Op>(request, [&](const Op& op) {
+        switch (op.kind) {
+            case OpKind::AccessibilityLabel:
+                item->Label(op.text);
+                break;
+            case OpKind::DragHandleOnly:
+                item->DragHandleOnly(op.flag);
+                break;
+            case OpKind::Col:
+                seed = seed.Col(op.count);
+                break;
+            case OpKind::Row:
+                seed = seed.Row(op.count);
+                break;
+            case OpKind::ColSpan:
+                seed = seed.ColSpan(op.count);
+                break;
+            case OpKind::RowSpan:
+                seed = seed.RowSpan(op.count);
+                break;
+            case OpKind::MinSpan:
+                seed = seed.MinSpan(op.count, op.count2);
+                break;
+            case OpKind::MaxSpan:
+                seed = seed.MaxSpan(op.count, op.count2);
+                break;
+            case OpKind::Locked:
+                seed = seed.Locked(op.flag);
+                break;
+            default:
+                break;
+        }
+    });
+    ApplyItemStyle(item, request);
+    El** children = nullptr;
+    int count = 0;
+    if (!request->TakeChildren(&children, &count)) return nullptr;
+    for (int i = 0; i < count; i++) {
+        if (children[i]) item->Child(children[i]);
+    }
+    DeclaredItem* declared = ArenaNew<DeclaredItem>(cx->a);
+    declared->item = item;
+    declared->seed = seed;
+    return CarrierOf(cx, declared);
+}
+
+static El* component_shell_grid_layout_Materialize(MaterializeRequest* request) {
+    const Payload* payload = request->PayloadAs<Payload>();
+    if (!payload)
+        return request->Fail(
+            StrL("GridLayout component received an incompatible payload"));
+    if (payload->kind == Kind::Item) return component_shell_grid_layout_MaterializeItem(request, payload);
+    Entity<GridLayoutState> state = component_shell_grid_layout_StateOf(request, payload->state);
+    if (!state.IsValid()) return nullptr;
+    if (payload->kind == Kind::Handle)
+        return request->Finish(GridDragHandle(request->cx, state, payload->id));
+    return component_shell_grid_layout_MaterializeRoot(request, payload, state);
+}
+
+static bool component_shell_grid_layout_RequireEntity(PayloadBuild* build,
+                          const ComponentArgument& argument,
+                          const char* component) {
+    if (IsEntity(argument)) return true;
+    return build
+        ->Fail(fmt("%s expects a GridLayoutState entity", Str(component)));
+}
+
+static bool component_shell_grid_layout_RootConstruct(PayloadBuild* build, const ComponentArgument* args,
+                          int count) {
+    if (count != 2)
+        return build
+            ->Fail(StrL("GridLayout(id, state) expects a nonempty id and "
+                        "GridLayoutState entity"));
+    if (!Nonempty(args[0]))
+        return build->Fail(StrL("GridLayout expects a nonempty string id"));
+    if (!component_shell_grid_layout_RequireEntity(build, args[1], "GridLayout")) return false;
+    Payload* payload = build->New<Payload>();
+    payload->kind = Kind::Root;
+    payload->id = args[0].string;
+    payload->state = args[1];
+    return true;
+}
+
+static bool ItemConstruct(PayloadBuild* build, const ComponentArgument* args,
+                          int count) {
+    if (count != 1)
+        return build->Fail(StrL("GridItem(id) expects a nonempty id"));
+    if (!Nonempty(args[0]))
+        return build->Fail(StrL("GridItem expects a nonempty string id"));
+    Payload* payload = build->New<Payload>();
+    payload->kind = Kind::Item;
+    payload->id = args[0].string;
+    return true;
+}
+
+static bool HandleConstruct(PayloadBuild* build, const ComponentArgument* args,
+                            int count) {
+    if (count != 2)
+        return build
+            ->Fail(StrL("GridDragHandle(state, item) expects a GridLayoutState "
+                        "entity and an item id"));
+    if (!component_shell_grid_layout_RequireEntity(build, args[0], "GridDragHandle")) return false;
+    if (!Nonempty(args[1]))
+        return build->Fail(StrL("GridDragHandle expects a nonempty string id"));
+    Payload* payload = build->New<Payload>();
+    payload->kind = Kind::Handle;
+    payload->state = args[0];
+    payload->id = args[1].string;
+    return true;
+}
+
+static bool RecordLabelFor(PayloadBuild* build, const ComponentArgument* args,
+                           int count, const char* component) {
+    if (count != 1 || args[0].kind != ComponentArgumentKind::String)
+        return build->Fail(
+            fmt("%s.accessibility_label expects one string", Str(component)));
+    Op* op = build->New<Op>();
+    op->kind = OpKind::AccessibilityLabel;
+    op->text = args[0].string;
+    return true;
+}
+
+static bool RecordGridLabel(PayloadBuild* build, const ComponentArgument* args,
+                            int count) {
+    return RecordLabelFor(build, args, count, "GridLayout");
+}
+
+static bool RecordItemLabel(PayloadBuild* build, const ComponentArgument* args,
+                            int count) {
+    return RecordLabelFor(build, args, count, "GridItem");
+}
+
+template <OpKind K>
+static bool component_shell_grid_layout_RecordBool(PayloadBuild* build, const ComponentArgument* args,
+                       int count) {
+    const char* component = "GridLayout";
+    const char* name = "prevent_collision";
+    if constexpr (K == OpKind::Draggable) name = "draggable";
+    if constexpr (K == OpKind::Resizable) name = "resizable";
+    if constexpr (K == OpKind::Locked) {
+        component = "GridItem";
+        name = "locked";
+    }
+    if constexpr (K == OpKind::DragHandleOnly) {
+        component = "GridItem";
+        name = "drag_handle_only";
+    }
+    if (count != 1 || args[0].kind != ComponentArgumentKind::Boolean)
+        return build
+            ->Fail(fmt("%s.%s expects one boolean", Str(component), Str(name)));
+    Op* op = build->New<Op>();
+    op->kind = K;
+    op->flag = args[0].boolean;
+    return true;
+}
+
+template <OpKind K, bool kPositive>
+static bool component_shell_grid_layout_RecordCount(PayloadBuild* build, const ComponentArgument* args,
+                        int count) {
+    const char* component = "GridLayout";
+    const char* name = "cols";
+    if constexpr (K == OpKind::RowHeight) name = "row_height";
+    if constexpr (K == OpKind::Reflow) name = "reflow";
+    if constexpr (K == OpKind::Col) {
+        component = "GridItem";
+        name = "col";
+    }
+    if constexpr (K == OpKind::Row) {
+        component = "GridItem";
+        name = "row";
+    }
+    if constexpr (K == OpKind::ColSpan) {
+        component = "GridItem";
+        name = "col_span";
+    }
+    if constexpr (K == OpKind::RowSpan) {
+        component = "GridItem";
+        name = "row_span";
+    }
+    if (count != 1)
+        return build->Fail(
+            fmt("%s.%s(value) expects one number", Str(component), Str(name)));
+    if constexpr (K == OpKind::RowHeight) {
+        float length = 0;
+        if (!PositiveLength(args[0], &length))
+            return build->Fail(fmt("%s.%s(value) expects a positive number",
+                                   Str(component), Str(name)));
+        Op* op = build->New<Op>();
+        op->kind = K;
+        op->length = length;
+        return true;
+    } else {
+        double value = 0;
+        bool ok = false;
+        if constexpr (kPositive)
+            ok = component_shell_grid_layout_Positive(args[0], &value);
+        else
+            ok = Nonnegative(args[0], &value);
+        if (!ok) {
+            const char* bound = "nonnegative";
+            if constexpr (kPositive) bound = "positive";
+            return build->Fail(fmt("%s.%s(value) expects a %s integer",
+                                   Str(component), Str(name), Str(bound)));
+        }
+        Op* op = build->New<Op>();
+        op->kind = K;
+        op->count = component_shell_grid_layout_ClampCount(value);
+        return true;
+    }
+}
+
+template <OpKind K>
+static bool RecordSpan(PayloadBuild* build, const ComponentArgument* args,
+                       int count) {
+    const char* name = "max_span";
+    if constexpr (K == OpKind::MinSpan) name = "min_span";
+    if (count != 2)
+        return build
+            ->Fail(fmt("GridItem.%s(col_span, row_span) expects two "
+                       "numbers",
+                       Str(name)));
+    TempStr callable = fmt("GridItem.%s(col_span, row_span)", Str(name));
+    double cols = 0, rows = 0;
+    if (!component_shell_grid_layout_Positive(args[0], &cols) || !component_shell_grid_layout_Positive(args[1], &rows))
+        return build->Fail(fmt("%s expects a positive integer", callable));
+    Op* op = build->New<Op>();
+    op->kind = K;
+    op->count = component_shell_grid_layout_ClampCount(cols);
+    op->count2 = component_shell_grid_layout_ClampCount(rows);
+    return true;
+}
+
+static bool RecordCompaction(PayloadBuild* build, const ComponentArgument* args,
+                             int count) {
+    if (count != 1 || args[0].kind != ComponentArgumentKind::Enum)
+        return build->Fail(
+            StrL("GridLayout.compaction(compaction) expects one direction"));
+    Compaction which = CompactionOf(args[0].string);
+    if (which == Compaction::Unknown)
+        return build->Fail(
+            StrL("GridLayout.compaction expects vertical, horizontal, none"));
+    Op* op = build->New<Op>();
+    op->kind = OpKind::Compaction;
+    op->hasCompaction = which != Compaction::None;
+    op->axis =
+        which == Compaction::Horizontal ? Axis::Horizontal : Axis::Vertical;
+    return true;
+}
+
+template <OpKind K>
+static bool component_shell_grid_layout_RecordCallback(PayloadBuild* build, const ComponentArgument* args,
+                           int count) {
+    const char* name = "on_select";
+    if constexpr (K == OpKind::OnChange) name = "on_change";
+    if (count != 1 || args[0].kind != ComponentArgumentKind::Callback)
+        return build->Fail(
+            fmt("GridLayout.%s(callback) expects one callback", Str(name)));
+    Op* op = build->New<Op>();
+    op->kind = K;
+    op->callback = args[0];
+    return true;
+}
+
+static bool component_shell_grid_layout_NewState(shell::StateBuild* build, const ComponentArgument* args,
+                     int count) {
+    if (count != 2)
+        return build->Fail(StrL("GridLayoutState expects cols and compaction"));
+    int cols = 12;
+    if (args[0].kind != ComponentArgumentKind::Optional)
+        return build->Fail(StrL("GridLayoutState cols must be optional"));
+    if (const ComponentArgument* some = args[0].Some()) {
+        double value = 0;
+        if (!component_shell_grid_layout_Positive(*some, &value))
+            return build->Fail(
+                StrL("GridLayoutState(cols) expects a positive integer"));
+        cols = component_shell_grid_layout_ClampCount(value);
+    }
+    if (args[1].kind != ComponentArgumentKind::Optional)
+        return build->Fail(StrL("GridLayoutState compaction must be optional"));
+    bool compactionOn = true;
+    Axis axis = Axis::Vertical;
+    if (const ComponentArgument* some = args[1].Some()) {
+        if (some->kind != ComponentArgumentKind::Enum)
+            return build->Fail(StrL(
+                "GridLayoutState compaction expects vertical, horizontal or "
+                "none"));
+        Compaction which = CompactionOf(some->string);
+        if (which == Compaction::Unknown)
+            return build->Fail(StrL(
+                "GridLayoutState compaction expects vertical, horizontal or "
+                "none"));
+        compactionOn = which != Compaction::None;
+        axis =
+            which == Compaction::Horizontal ? Axis::Horizontal : Axis::Vertical;
+    }
+    EntityState<GridLayoutState>* held =
+        build->New<EntityState<GridLayoutState>>();
+    held->app = build->app;
+    held->entity = EntityNewState<GridLayoutState>(build->app);
+    if (GridLayoutState* native = held->entity.Get(build->app))
+        native->Cols(cols)->Compaction(compactionOn, axis);
+    return true;
+}
+
+static constexpr ArgumentSchema kNumber = SchemaNumber();
+static constexpr const char* kCompactionLiterals[] = {"vertical", "horizontal",
+                                                      "none"};
+static constexpr ArgumentSchema kCompactionSchema =
+    SchemaEnum(kCompactionLiterals);
+static constexpr ArgumentDescriptor component_shell_grid_layout_kStateArgs[] = {
+    {"cols", SchemaOptional(&kNumber)},
+    {"compaction", SchemaOptional(&kCompactionSchema)},
+};
+static constexpr shell::StateDescriptor component_shell_grid_layout_kState = {
+    "GridLayoutState",
+    "GridLayoutState",
+    component_shell_grid_layout_kStateArgs,
+    "Retained GridLayout areas, rules, selection, and drag state. Items join "
+    "it with the placement their GridItem declares and keep the place the "
+    "user gives them.",
+    &component_shell_grid_layout_NewState,
+    {}};
+
+static constexpr ArgumentDescriptor component_shell_grid_layout_kIdStateArgs[] = {
+    {"id", SchemaString()},
+    {"state", SchemaEntity("GridLayoutState")}};
+static constexpr ArgumentDescriptor component_shell_grid_layout_kIdArgs[] = {{"id", SchemaString()}};
+static constexpr ArgumentDescriptor kHandleArgs[] = {
+    {"state", SchemaEntity("GridLayoutState")},
+    {"item", SchemaString()}};
+static constexpr ArgumentDescriptor component_shell_grid_layout_kLabelArgs[] = {
+    {"accessibility_label", SchemaString()}};
+static constexpr ArgumentDescriptor component_shell_grid_layout_kValueArgs[] = {{"value", SchemaNumber()}};
+static constexpr ArgumentDescriptor kPreventArgs[] = {
+    {"prevent_collision", SchemaBoolean()}};
+static constexpr ArgumentDescriptor kDraggableArgs[] = {
+    {"draggable", SchemaBoolean()}};
+static constexpr ArgumentDescriptor kResizableArgs[] = {
+    {"resizable", SchemaBoolean()}};
+static constexpr ArgumentDescriptor kLockedArgs[] = {
+    {"locked", SchemaBoolean()}};
+static constexpr ArgumentDescriptor kHandleOnlyArgs[] = {
+    {"drag_handle_only", SchemaBoolean()}};
+static constexpr ArgumentDescriptor kCompactionArgs[] = {
+    {"compaction", kCompactionSchema}};
+static constexpr ArgumentDescriptor component_shell_grid_layout_kSpanArgs[] = {
+    {"col_span", SchemaNumber()},
+    {"row_span", SchemaNumber()}};
+static constexpr ArgumentDescriptor component_shell_grid_layout_kChangeArgs[] = {
+    {"callback",
+     SchemaCallback("(layout: [id: string, col: number, row: number, col_span: "
+                    "number, row_span: number][], cx: Context) => void")}};
+static constexpr ArgumentDescriptor kSelectArgs[] = {
+    {"callback", SchemaCallback("(id: string, cx: Context) => void")}};
+
+static constexpr const char* component_shell_grid_layout_kLabelDoc =
+    "Sets the name announced by accessibility clients.";
+
+static constexpr MethodDescriptor kGridMethods[] = {
+    {"accessibility_label", component_shell_grid_layout_kLabelArgs, component_shell_grid_layout_kLabelDoc, &RecordGridLabel},
+    {"cols", component_shell_grid_layout_kValueArgs,
+     "Sets the number of equal columns the width is divided into.",
+     &component_shell_grid_layout_RecordCount<OpKind::Cols, true>},
+    {"compaction", kCompactionArgs,
+     "Sets the direction items float toward when space opens up, or none to "
+     "leave them where they are put.",
+     &RecordCompaction},
+    {"row_height", component_shell_grid_layout_kValueArgs,
+     "Sets the height of one row in rems, so rows follow the application's "
+     "zoom.",
+     &component_shell_grid_layout_RecordCount<OpKind::RowHeight, true>},
+    {"prevent_collision", kPreventArgs,
+     "Refuses a move or resize that would overlap another item instead of "
+     "pushing it.",
+     &component_shell_grid_layout_RecordBool<OpKind::PreventCollision>},
+    {"draggable", kDraggableArgs, "Controls whether items can be moved.",
+     &component_shell_grid_layout_RecordBool<OpKind::Draggable>},
+    {"resizable", kResizableArgs, "Controls whether items can be resized.",
+     &component_shell_grid_layout_RecordBool<OpKind::Resizable>},
+    {"reflow", component_shell_grid_layout_kValueArgs,
+     "Shows the items over this many columns without changing the stored "
+     "layout \u2014 a one-column stack for a narrow window. The grid is "
+     "read-only while reflowed.",
+     &component_shell_grid_layout_RecordCount<OpKind::Reflow, true>},
+    {"on_change", component_shell_grid_layout_kChangeArgs,
+     "Reports the whole layout, one [id, col, row, col_span, row_span] entry "
+     "per item, after the user moves or resizes an item.",
+     &component_shell_grid_layout_RecordCallback<OpKind::OnChange>},
+    {"on_select", kSelectArgs,
+     "Reports the item the user selects, by pressing it or with Tab, once per "
+     "change.",
+     &component_shell_grid_layout_RecordCallback<OpKind::OnSelect>},
+};
+static constexpr MethodDescriptor component_shell_grid_layout_kItemMethods[] = {
+    {"accessibility_label", component_shell_grid_layout_kLabelArgs, component_shell_grid_layout_kLabelDoc, &RecordItemLabel},
+    {"col", component_shell_grid_layout_kValueArgs,
+     "Sets the leading column, from zero, the item takes when it first joins "
+     "the grid.",
+     &component_shell_grid_layout_RecordCount<OpKind::Col, false>},
+    {"row", component_shell_grid_layout_kValueArgs,
+     "Sets the top row, from zero, the item takes when it first joins the "
+     "grid.",
+     &component_shell_grid_layout_RecordCount<OpKind::Row, false>},
+    {"col_span", component_shell_grid_layout_kValueArgs,
+     "Sets how many columns the item covers when it first joins the grid.",
+     &component_shell_grid_layout_RecordCount<OpKind::ColSpan, true>},
+    {"row_span", component_shell_grid_layout_kValueArgs,
+     "Sets how many rows the item covers when it first joins the grid.",
+     &component_shell_grid_layout_RecordCount<OpKind::RowSpan, true>},
+    {"min_span", component_shell_grid_layout_kSpanArgs,
+     "Sets the fewest columns and rows a resize may leave the item.",
+     &RecordSpan<OpKind::MinSpan>},
+    {"max_span", component_shell_grid_layout_kSpanArgs,
+     "Sets the most columns and rows a resize may give the item.",
+     &RecordSpan<OpKind::MaxSpan>},
+    {"locked", kLockedArgs,
+     "Locks the item in place; other items flow around it.",
+     &component_shell_grid_layout_RecordBool<OpKind::Locked>},
+    {"drag_handle_only", kHandleOnlyArgs,
+     "Moves the item only from a GridDragHandle inside it.",
+     &component_shell_grid_layout_RecordBool<OpKind::DragHandleOnly>},
+};
+
+static constexpr ConstructorDescriptor kGridCtors[] = {
+    {"GridLayout", component_shell_grid_layout_kIdStateArgs, &component_shell_grid_layout_RootConstruct}};
+static constexpr ConstructorDescriptor kItemCtors[] = {
+    {"GridItem", component_shell_grid_layout_kIdArgs, &ItemConstruct}};
+static constexpr ConstructorDescriptor kHandleCtors[] = {
+    {"GridDragHandle", kHandleArgs, &HandleConstruct}};
+
+static constexpr ComponentDescriptor component_shell_grid_layout_kDescriptors[] = {
+    {"GridLayout", kGridCtors, kGridMethods,
+     "A grid whose items the user drags and resizes; accepts only GridItem "
+     "children. Style its gaps with gap, gap_x and gap_y.",
+     &component_shell_grid_layout_Materialize},
+    {"GridItem", kItemCtors, component_shell_grid_layout_kItemMethods,
+     "One GridLayout item that accepts ordinary content children.",
+     &component_shell_grid_layout_Materialize},
+    {"GridDragHandle",
+     kHandleCtors,
+     {},
+     "The part of a GridItem the pointer moves it by, for an item set to "
+     "drag_handle_only.",
+     &component_shell_grid_layout_Materialize},
+};
+
+}
+
+namespace gpui::component_shell {
+
+bool GridLayoutNonnegativeUsize(const shell::ComponentArgument& argument,
+                                double* out) {
+    double value = 0;
+    if (!grid_layout::Nonnegative(argument, &value)) return false;
+    if (out) *out = value;
+    return true;
+}
+bool GridLayoutPositiveUsize(const shell::ComponentArgument& argument,
+                             double* out) {
+    double value = 0;
+    if (!grid_layout::component_shell_grid_layout_Positive(argument, &value)) return false;
+    if (out) *out = value;
+    return true;
+}
+bool GridLayoutPositiveLength(const shell::ComponentArgument& argument,
+                              float* out) {
+    float value = 0;
+    if (!grid_layout::PositiveLength(argument, &value)) return false;
+    if (out) *out = value;
+    return true;
+}
+bool GridLayoutNonemptyId(const shell::ComponentArgument& argument) {
+    return grid_layout::Nonempty(argument);
+}
+int GridLayoutCompactionCode(Str value) {
+    switch (grid_layout::CompactionOf(value)) {
+        case grid_layout::Compaction::None:
+            return 1;
+        case grid_layout::Compaction::Vertical:
+            return 2;
+        case grid_layout::Compaction::Horizontal:
+            return 3;
+        default:
+            return 0;
+    }
+}
+bool GridLayoutReconcile(const GridArea* current, int nCurrent,
+                         const GridArea* seeds, int nSeeds,
+                         Vec<GridArea>* next) {
+    return grid_layout::Reconcile(current, nCurrent, seeds, nSeeds, next);
+}
+shell::ComponentDataValue GridLayoutLayoutArgument(Arena* a,
+                                                   const GridArea* areas,
+                                                   int n) {
+    return grid_layout::LayoutArgument(a, areas, n);
+}
+
+bool RegisterGridLayout(shell::ComponentRegistry* registry,
+                        shell::RegistryError* error) {
+    if (!registry->RegisterState(&grid_layout::component_shell_grid_layout_kState, error)) return false;
+    for (const shell::ComponentDescriptor& descriptor :
+         grid_layout::component_shell_grid_layout_kDescriptors) {
+        if (!registry->Register(&descriptor, error)) return false;
     }
     return true;
 }
@@ -128052,6 +136038,7 @@ static const RegisterFamily component_shell_lib_kFamilies[] = {
     &RegisterBasic,
     &RegisterChart,
     &RegisterCarousel,
+    &RegisterGridLayout,
     &RegisterQuestionnaire,
 };
 
@@ -129130,8 +137117,7 @@ namespace gpui::component_shell::media::webview {
 constexpr int kEventQueue = 1024;
 constexpr int kMessageLimit = 1024 * 1024;
 
-bool WebDocumentNavigable(Str url) {
-    if (StrStartsWith(url, "about:")) return true;
+static bool IsWebUrl(Str url) {
     int colon = -1;
     for (int i = 0; i < len(url); i++) {
         char c = url.s[i];
@@ -129168,6 +137154,31 @@ bool WebDocumentNavigable(Str url) {
     return end > host;
 }
 
+bool MayLoadDocument(const Capabilities& capabilities, Str url) {
+    return StrStartsWith(url, "about:") || capabilities.MayGet(url);
+}
+
+bool WebUrlAccepted(const Capabilities& capabilities, Str url,
+                    const char* context, Str* error) {
+    if (!(StrStartsWith(url, "about:") || IsWebUrl(url))) {
+        if (error) {
+            *error = fmt("%s expects an http or https URL, got `%s`",
+                         Str(context), url);
+        }
+        return false;
+    }
+    if (!MayLoadDocument(capabilities, url)) {
+        if (error) {
+            *error =
+                fmt("%s cannot load `%s`; grant GET for it in "
+                    "capabilities.network.hosts or capabilities.network.http",
+                    Str(context), url);
+        }
+        return false;
+    }
+    return true;
+}
+
 enum class PageTheme : uint8_t {
     Light,
     Dark,
@@ -129192,6 +137203,8 @@ struct Bridge {
     ShellRuntime* runtime = nullptr;
     shell::ComponentCallback message = {};
     shell::ComponentCallback load = {};
+
+    const Capabilities* capabilities = nullptr;
     Vec<PageEvent> queue;
 
     ~Bridge() {
@@ -129205,6 +137218,8 @@ struct ShellWebView {
     App* app = nullptr;
     Entity<WebView> view;
     Entity<Bridge> bridge;
+
+    Capabilities capabilities;
     bool followApp = true;
     PageTheme chosen = PageTheme::Light;
     bool hasApplied = false;
@@ -129236,22 +137251,37 @@ static void Enqueue(Bridge* self, uint8_t kind, Str text) {
     PostDrain(self);
 }
 
-static void OnIpc(void* ctx, Str, Str body) {
+static void OnIpc(void* ctx, Str url, Str body) {
+    Bridge* bridge = (Bridge*)ctx;
+
+    if (!bridge || bridge->dead || !bridge->capabilities ||
+        !bridge->capabilities->MayGet(url)) {
+        logf("dropped a WebView message from `%s`; it is not granted\n", url);
+        return;
+    }
     if (len(body) > kMessageLimit) {
         logf("dropped a %d byte WebView message; the limit is %d\n", len(body),
              kMessageLimit);
         return;
     }
-    Enqueue((Bridge*)ctx, 0, body);
+    Enqueue(bridge, 0, body);
 }
 
 static void OnPageLoad(void* ctx, wry::PageLoadEvent event, Str url) {
-    if (event != wry::PageLoadEvent::Finished) return;
-    Enqueue((Bridge*)ctx, 1, url);
+    Bridge* bridge = (Bridge*)ctx;
+    if (event != wry::PageLoadEvent::Finished || !bridge || bridge->dead ||
+        !bridge->capabilities || !MayLoadDocument(*bridge->capabilities, url)) {
+        return;
+    }
+    Enqueue(bridge, 1, url);
 }
 
-static bool OnNavigate(void*, Str url) {
-    return WebDocumentNavigable(url);
+static bool OnNavigate(void* ctx, Str url) {
+    Bridge* bridge = (Bridge*)ctx;
+    if (!bridge || bridge->dead || !bridge->capabilities) return false;
+    if (MayLoadDocument(*bridge->capabilities, url)) return true;
+    logf("blocked a WebView navigation to `%s`; it is not granted\n", url);
+    return false;
 }
 
 static void Deliver(Bridge* self, Ctx* cx, const PageEvent& event) {
@@ -129357,15 +137387,19 @@ static bool NewWebViewState(shell::StateBuild* build,
         return build->Fail(StrL("WebViewState expects one http or https URL"));
     }
     Str url = args[0].string;
-    if (!WebDocumentNavigable(url)) {
-        return build->Fail(
-            fmt("WebViewState expects an http or https URL, got `%s`", url));
+
+    const Capabilities& grant = CurrentCapabilities();
+    Str refusal;
+    if (!WebUrlAccepted(grant, url, "WebViewState", &refusal)) {
+        return build->Fail(refusal);
     }
     ShellWebView* state = build->New<ShellWebView>();
     state->app = build->app;
+    state->capabilities = grant;
     state->bridge = EntityNewState<Bridge>(build->app);
     Bridge* bridge = state->bridge.Get(build->app);
     if (!bridge) return CreationFailed(build);
+    bridge->capabilities = &state->capabilities;
     bridge->window = build->window;
     bridge->app = build->app;
     bridge->selfId = state->bridge.id;
@@ -129404,18 +137438,17 @@ static bool OneString(shell::StateCall* call,
     return call->Fail(fmt("%s expects one string", Str(context)));
 }
 
-static bool RequireUrl(shell::StateCall* call, Str url, const char* context) {
-    if (WebDocumentNavigable(url)) return true;
-    return call->Fail(
-        fmt("%s expects an http or https URL, got `%s`", Str(context), url));
-}
-
 static bool LoadUrl(shell::StateCall* call, void* state,
                     const shell::ComponentDataValue* args, int count) {
     Str url;
-    if (!OneString(call, args, count, "WebViewState.load_url", &url) ||
-        !RequireUrl(call, url, "WebViewState.load_url"))
+    ShellWebView* self = (ShellWebView*)state;
+    Str refusal;
+    if (!OneString(call, args, count, "WebViewState.load_url", &url) || !self ||
+        !WebUrlAccepted(self->capabilities, url, "WebViewState.load_url",
+                        &refusal)) {
+        if (refusal.s) return call->Fail(refusal);
         return false;
+    }
     wry::WebView* raw = WebViewRaw(PageOf(state));
     if (!raw || !wry::WebViewLoadUrl(raw, url)) {
         return call->Fail(StrL("WebViewState.load_url could not navigate"));
@@ -129532,8 +137565,16 @@ static bool EvaluateScript(shell::StateCall* call, void* state,
     Str script;
     if (!OneString(call, args, count, "WebViewState.evaluate_script", &script))
         return false;
+    ShellWebView* self = (ShellWebView*)state;
     wry::WebView* raw = WebViewRaw(PageOf(state));
-    if (!raw || !wry::WebViewEval(raw, script)) {
+    Str page = raw ? wry::WebViewUrlTemp(raw) : Str{};
+    if (!raw || !self || !MayLoadDocument(self->capabilities, page)) {
+        return call->Fail(
+            fmt("WebViewState.evaluate_script cannot run in `%s`; it is not "
+                "granted",
+                page));
+    }
+    if (!wry::WebViewEval(raw, script)) {
         return call->Fail(StrL("WebViewState.evaluate_script could not run"));
     }
     call->out = shell::ComponentDataValue::Null();
@@ -129631,8 +137672,10 @@ static constexpr shell::StateDescriptor component_shell_media_webview_kState = {
     "WebViewState",
     "WebViewState",
     component_shell_media_webview_kStateArgs,
-    "A retained native web page loaded from an http or https URL. The page "
-    "posts text to the script with `window.ipc.postMessage(text)`.",
+    "A retained native web page loaded from an http or https URL. The "
+    "application needs the network grant `fetch` would need to GET each page "
+    "it shows. The page posts text to the script with "
+    "`window.ipc.postMessage(text)`.",
     &NewWebViewState,
     component_shell_media_webview_kStateMethods,
 };
@@ -160924,21 +168967,124 @@ static bool PlaceholderName(Str text, int at, int* nameLen) {
     return i < len(text) && text.s[i] == '@';
 }
 
-static Str ScriptValue(const BundleScriptValues& values, Str name) {
-    if (StrEq(name, StrL("ID"))) return values.id;
-    if (StrEq(name, StrL("NAME"))) return values.name;
-    if (StrEq(name, StrL("COMMAND"))) return values.command;
-    if (StrEq(name, StrL("APP_VERSION"))) return values.appVersion;
-    if (StrEq(name, StrL("RUNTIME_VERSION"))) return values.runtimeVersion;
-    if (StrEq(name, StrL("ICON_SIZE"))) return values.iconSize;
-    if (StrEq(name, StrL("ARCHIVE"))) return values.archive;
-    if (StrEq(name, StrL("ARCHIVE_SHA256"))) return values.archiveSha256;
-    if (StrEq(name, StrL("DOWNLOAD_URL"))) return values.downloadUrl;
-    if (StrEq(name, StrL("STEM"))) return values.stem;
-    return {};
+struct ScriptPlaceholder {
+    const char* name;
+    const char* source;
+    Str value;
+};
+
+static void ScriptPlaceholders(const BundleScriptValues& values,
+                               ScriptPlaceholder out[10]) {
+    out[0] = {"ID", "`id`", values.id};
+    out[1] = {"NAME", "`name`", values.name};
+    out[2] = {"COMMAND", "the command name", values.command};
+    out[3] = {"APP_VERSION", "`version`", values.appVersion};
+    out[4] = {"RUNTIME_VERSION", "the runtime version", values.runtimeVersion};
+    out[5] = {"ICON_SIZE", "the icon size", values.iconSize};
+    out[6] = {"ARCHIVE", "the archive name", values.archive};
+    out[7] = {"ARCHIVE_SHA256", "the archive checksum", values.archiveSha256};
+    out[8] = {"DOWNLOAD_URL", "`--download-url`", values.downloadUrl};
+    out[9] = {"STEM", "the archive directory", values.stem};
 }
 
-Str BundleShellScript(Str templ, const BundleScriptValues& values) {
+static bool ScriptValue(const BundleScriptValues& values, Str name, Str* out) {
+    ScriptPlaceholder slots[10];
+    ScriptPlaceholders(values, slots);
+    for (int i = 0; i < 10; i++) {
+        if (!StrEq(name, Str(slots[i].name))) continue;
+        *out = slots[i].value;
+        return true;
+    }
+    return false;
+}
+
+static uint32_t DecodeScalar(Str text, int i, int* n) {
+    uint8_t c = (uint8_t)text.s[i];
+    int want = c < 0x80         ? 1
+               : (c >> 5) == 6  ? 2
+               : (c >> 4) == 14 ? 3
+               : (c >> 3) == 30 ? 4
+                                : 0;
+    if (want <= 1 || i + want > len(text)) {
+        *n = 1;
+        return c;
+    }
+    uint32_t cp = c & (0x7F >> want);
+    for (int k = 1; k < want; k++) {
+        uint8_t b = (uint8_t)text.s[i + k];
+        if ((b & 0xC0) != 0x80) {
+            *n = 1;
+            return c;
+        }
+        cp = (cp << 6) | (b & 0x3F);
+    }
+    *n = want;
+    return cp;
+}
+
+static bool IsControlOrLineSeparator(uint32_t cp) {
+    return cp <= 0x1F || (cp >= 0x7F && cp <= 0x9F) || cp == 0x2028 ||
+           cp == 0x2029;
+}
+
+static void AppendRustDebug(StrBuilder& out, Str value) {
+    out.AppendChar('"');
+    for (int i = 0; value.s && i < len(value);) {
+        int n = 1;
+        uint32_t cp = DecodeScalar(value, i, &n);
+        if (cp == '"')
+            out.Append(StrL("\\\""));
+        else if (cp == '\\')
+            out.Append(StrL("\\\\"));
+        else if (cp == '\n')
+            out.Append(StrL("\\n"));
+        else if (cp == '\r')
+            out.Append(StrL("\\r"));
+        else if (cp == '\t')
+            out.Append(StrL("\\t"));
+        else if (IsControlOrLineSeparator(cp))
+            out.Append(fmt("\\u{%x}", cp));
+        else if (cp < 0x80)
+            out.AppendChar((char)cp);
+        else
+            out.Append(Str(value.s + i, n));
+        i += n;
+    }
+    out.AppendChar('"');
+}
+
+static bool ScriptsCanHold(const BundleScriptValues& values, Str* error) {
+    ScriptPlaceholder slots[10];
+    ScriptPlaceholders(values, slots);
+    for (int i = 0; i < 10; i++) {
+        Str value = slots[i].value;
+        bool bad = false;
+        for (int at = 0; value.s && at < len(value);) {
+            int n = 1;
+            if (IsControlOrLineSeparator(DecodeScalar(value, at, &n))) {
+                bad = true;
+                break;
+            }
+            at += n;
+        }
+        if (!bad) continue;
+        StrBuilder message;
+        message.Append(Str(slots[i].source));
+        message.AppendChar(' ');
+        AppendRustDebug(message, value);
+        message.Append(StrL(
+            " contains a line break or another control character, which the "
+            "bundle's scripts cannot hold"));
+        if (error) {
+            StrFree(*error);
+            *error = message.TakeStr();
+        }
+        return false;
+    }
+    return true;
+}
+
+static Str FillShellScript(Str templ, const BundleScriptValues& values) {
     StrBuilder out;
     int i = 0;
     while (i < len(templ)) {
@@ -160955,36 +169101,18 @@ Str BundleShellScript(Str templ, const BundleScriptValues& values) {
         }
         Str name = Str(templ.s + i + 1, nameLen);
         if (StrEq(name, StrL("RUNTIME_FUNCTIONS"))) {
-            Str nested = BundleShellScript(Str(kBundleRuntimeSh), values);
+            Str nested = FillShellScript(Str(kBundleRuntimeSh), values);
             out.Append(nested);
             StrFree(nested);
             i += nameLen + 2;
             continue;
         }
-        Str raw = ScriptValue(values, name);
-        if (!raw.s && len(raw) == 0 && !StrEq(name, StrL("ICON_SIZE")) &&
-            !StrEq(name, StrL("ARCHIVE")) &&
-            !StrEq(name, StrL("DOWNLOAD_URL")) &&
-            !StrEq(name, StrL("ARCHIVE_SHA256"))) {
+        Str raw;
+        if (!ScriptValue(values, name, &raw)) {
 
-            bool known = false;
-            const char* keys[] = {"ID",
-                                  "NAME",
-                                  "COMMAND",
-                                  "APP_VERSION",
-                                  "RUNTIME_VERSION",
-                                  "ICON_SIZE",
-                                  "ARCHIVE",
-                                  "ARCHIVE_SHA256",
-                                  "DOWNLOAD_URL",
-                                  "STEM"};
-            for (const char* key : keys)
-                if (StrEq(name, Str(key))) known = true;
-            if (!known) {
-                out.AppendChar('@');
-                i++;
-                continue;
-            }
+            out.AppendChar('@');
+            i++;
+            continue;
         }
         Str quoted = ShellQuote(raw.s ? raw : Str{});
         out.Append(quoted);
@@ -160992,6 +169120,13 @@ Str BundleShellScript(Str templ, const BundleScriptValues& values) {
         i += nameLen + 2;
     }
     return out.TakeStr();
+}
+
+bool BundleShellScript(Str templ, const BundleScriptValues& values, Str* out,
+                       Str* error) {
+    if (!ScriptsCanHold(values, error)) return false;
+    if (out) *out = FillShellScript(templ, values);
+    return true;
 }
 
 static uint32_t Crc32Bytes(const uint8_t* data, int n) {
@@ -162045,7 +170180,25 @@ bool ShellBundle(Str directory, const Invocation& invocation, Str* report,
         Str plistPath = StrDup(fmt("%s/Info.plist", contents));
         Str pkgPath = StrDup(fmt("%s/PkgInfo", contents));
         Str exePath = StrDup(fmt("%s/MacOS/%s", contents, names.display));
-        Str launcher = BundleShellScript(Str(kBundleMacosLauncherSh), values);
+        Str launcher;
+        Str scriptError = {};
+        if (!BundleShellScript(Str(kBundleMacosLauncherSh), values, &launcher,
+                               &scriptError)) {
+            StrFree(plist);
+            StrFree(plistPath);
+            StrFree(pkgPath);
+            StrFree(exePath);
+            StrFree(contents);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            bool failed = BundleFail(error, scriptError);
+            StrFree(scriptError);
+            return failed;
+        }
         tree.Add(plistPath, plist, false, false);
         tree.Add(pkgPath, StrDup(StrL("APPL????")), false, false);
         tree.Add(exePath, launcher, true, false);
@@ -162172,7 +170325,21 @@ bool ShellBundle(Str directory, const Invocation& invocation, Str* report,
             StrFree(iconPath);
             values.iconSize = StrDup(fmt("%d", size));
         }
-        Str launcher = BundleShellScript(Str(kBundleLinuxLauncherSh), values);
+        Str launcher;
+        Str scriptError = {};
+        if (!BundleShellScript(Str(kBundleLinuxLauncherSh), values, &launcher,
+                               &scriptError)) {
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(values.iconSize);
+            StrFree(exclude);
+            StrFree(out);
+            bool failed = BundleFail(error, scriptError);
+            StrFree(scriptError);
+            return failed;
+        }
         Str launcherPath =
             StrDup(fmt("%s/%s", names.archiveStem, names.command));
         tree.Add(launcherPath, launcher, true, false);
@@ -162231,8 +170398,24 @@ bool ShellBundle(Str directory, const Invocation& invocation, Str* report,
         values.archive = StrDup(fmt("%s.tar.gz", names.archiveStem));
         values.archiveSha256 = Sha256Hex(archiveBytes);
         StrFree(archiveBytes);
-        Str installerText =
-            BundleShellScript(Str(kBundleLinuxInstallSh), values);
+        Str installerText;
+        scriptError = {};
+        if (!BundleShellScript(Str(kBundleLinuxInstallSh), values,
+                               &installerText, &scriptError)) {
+            StrFree(archive);
+            StrFree(values.archive);
+            StrFree(values.archiveSha256);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(values.iconSize);
+            StrFree(exclude);
+            StrFree(out);
+            bool failed = BundleFail(error, scriptError);
+            StrFree(scriptError);
+            return failed;
+        }
         Str installer = JoinDisk(out, StrL("install.sh"));
         bool installOk = ReplaceFile(installer, installerText, error) &&
                          PlatMakeExecutable(installer.s);
@@ -162912,9 +171095,7 @@ static const char* const kDefaultEnvNames[] = {
     "XDG_CURRENT_DESKTOP",
     "XDG_SESSION_TYPE",
     "DESKTOP_SESSION",
-    "HTTP_PROXY",
-    "HTTPS_PROXY",
-    "ALL_PROXY",
+
     "NO_PROXY",
     "TMPDIR",
     "TEMP",
@@ -163002,6 +171183,44 @@ bool Capabilities::MayRequest(Str scheme, Str host, uint16_t port, bool hasPort,
             return true;
     }
     return false;
+}
+
+static Str NormalizeUrlPath(Arena* arena, Str path) {
+    Vec<Str> parts;
+    int i = 0;
+    if (len(path) > 0 && path.s[0] == '/') i = 1;
+    while (i <= len(path)) {
+        int end = i;
+        while (end < len(path) && path.s[end] != '/') end++;
+        Str part(path.s + i, end - i);
+        if (len(part) == 0 || StrEq(part, StrL("."))) {
+        } else if (StrEq(part, StrL(".."))) {
+            if (len(parts) > 0) parts.len--;
+        } else {
+            VecAppend(parts, part);
+        }
+        if (end >= len(path)) break;
+        i = end + 1;
+    }
+    StrBuilder out(arena);
+    out.AppendChar('/');
+    for (int s = 0; s < len(parts); s++) {
+        if (s > 0) out.AppendChar('/');
+        out.Append(parts[s]);
+    }
+    VecReset(parts);
+    return Str(out.els, out.len);
+}
+
+bool Capabilities::MayGet(Str url) const {
+    shell::FetchParsedUrl parsed;
+    if (!shell::FetchParseUrl(url, &parsed)) return false;
+    Arena* arena = ArenaNew();
+    Str path = NormalizeUrlPath(arena, parsed.path);
+    bool allowed = MayRequest(parsed.scheme, parsed.host, parsed.port,
+                              parsed.hasPort, StrL("GET"), path);
+    ArenaDelete(arena);
+    return allowed;
 }
 
 static bool shell_capability_IsSeparator(char c) {
@@ -165014,9 +173233,10 @@ bool GitDependencyStore::Materialize(Str name, const GitDependency& dependency,
         } else {
             reference = StrDup(fmt("refs/tags/%s", dependency.tag));
         }
-        Str args[6] = {StrL("fetch"), StrL("--force"), StrL("--depth"),
-                       StrL("1"),     StrL("origin"),  reference};
-        ok = RunGit(name, StrL("fetch"), args, 6, mirror, nullptr, error);
+        Str args[7] = {StrL("fetch"), StrL("--force"), StrL("--depth"),
+                       StrL("1"),     StrL("--"),      StrL("origin"),
+                       reference};
+        ok = RunGit(name, StrL("fetch"), args, 7, mirror, nullptr, error);
     }
     if (ok) {
         Str args[2] = {StrL("rev-parse"), StrL("FETCH_HEAD")};
@@ -166620,6 +174840,19 @@ bool FetchIsHttpMethod(Str method) {
                      c == '*' || c == '+' || c == '-' || c == '.' || c == '^' ||
                      c == '_' || c == '`' || c == '|' || c == '~';
         if (!token) return false;
+    }
+    return true;
+}
+
+bool FetchParseUrl(Str url, FetchParsedUrl* out) {
+    FetchUrl parsed;
+    if (!ParseFetchUrl(url, &parsed, nullptr)) return false;
+    if (out) {
+        out->scheme = parsed.scheme;
+        out->host = parsed.host;
+        out->path = parsed.path;
+        out->port = parsed.port;
+        out->hasPort = parsed.hasPort;
     }
     return true;
 }
@@ -170191,6 +178424,31 @@ static void ApplyStateNode(Ctx* cx, const shell::SpecNode* state, El* target,
         target->Focus(style);
 }
 
+static void ApplyGroupStyles(Ctx* cx, const shell::SpecArena* specs,
+                             const shell::SpecNode* owner, El* target,
+                             ShellError* error) {
+    if (!owner || !target) return;
+    Str group = {};
+    const shell::SpecOp* hover = nullptr;
+    for (const shell::SpecOp& op : owner->ops) {
+        if (op.kind == shell::SpecOpKind::Method &&
+            StrEq(op.name, StrL("group"))) {
+            group = AsString(op, 0);
+        } else if (op.kind == shell::SpecOpKind::GroupHover) {
+            hover = &op;
+        }
+    }
+    if (len(group)) target->Group(group);
+    if (!hover || !specs) return;
+    El* resolved = Div(cx->a);
+    uint32_t fields = 0;
+    ApplyStyleNode(cx->a, specs->Node(hover->node), resolved, &fields, error);
+    StateStyle style;
+    style.style = resolved->style;
+    style.set = fields;
+    target->GroupHover(style, hover->name);
+}
+
 static void ApplyStateStyles(Ctx* cx, const shell::SpecArena* specs,
                              const shell::SpecNode* owner, El* target,
                              ShellError* error) {
@@ -170200,6 +178458,7 @@ static void ApplyStateStyles(Ctx* cx, const shell::SpecArena* specs,
                    StrL("active"), error);
     ApplyStateNode(cx, StateNode(specs, owner, StrL("focus")), target,
                    StrL("focus"), error);
+    ApplyGroupStyles(cx, specs, owner, target, error);
 }
 
 struct MaterialPath {
@@ -171255,6 +179514,7 @@ static El* DockAreaElement(Ctx* cx, ShellRuntime* runtime,
     entry->dockSkin->hooks = &entry->dockHooks;
     entry->dockSkin->dock = node->component.handle;
 
+    NestingGuard nesting(entry->dock.id, kDockAreaLevels);
     return Div(cx->a)->SizeFull()->Child(DockArea::New(
         cx, entry->dockSkin->id, entry->dock, entry->dockSkin->Renderer()));
 }
@@ -172725,7 +180985,7 @@ RuntimeMetrics RuntimeMetrics::Since(const RuntimeMetrics& earlier) const {
 
 namespace shell {
 
-static uint64_t SaturatingAdd(uint64_t left, uint64_t right) {
+static uint64_t shell_metrics_SaturatingAdd(uint64_t left, uint64_t right) {
     return UINT64_MAX - left < right ? UINT64_MAX : left + right;
 }
 
@@ -172736,24 +180996,24 @@ void MetricsAdd(Metrics* metrics, MetricsTimerKind kind, uint64_t nanos) {
     RuntimeMetrics& value = metrics->value;
     switch (kind) {
         case MetricsTimerKind::ScriptRender:
-            value.scriptRenders = SaturatingAdd(value.scriptRenders, 1);
+            value.scriptRenders = shell_metrics_SaturatingAdd(value.scriptRenders, 1);
             value.scriptRenderNanos =
-                SaturatingAdd(value.scriptRenderNanos, nanos);
+                shell_metrics_SaturatingAdd(value.scriptRenderNanos, nanos);
             value.slowestScriptRenderNanos =
                 std::max(value.slowestScriptRenderNanos, nanos);
             break;
         case MetricsTimerKind::Native:
-            value.nativeNanos = SaturatingAdd(value.nativeNanos, nanos);
+            value.nativeNanos = shell_metrics_SaturatingAdd(value.nativeNanos, nanos);
             break;
         case MetricsTimerKind::FrameScript:
-            value.frameScriptCalls = SaturatingAdd(value.frameScriptCalls, 1);
+            value.frameScriptCalls = shell_metrics_SaturatingAdd(value.frameScriptCalls, 1);
             value.materializeNanos =
-                SaturatingAdd(value.materializeNanos, nanos);
+                shell_metrics_SaturatingAdd(value.materializeNanos, nanos);
             break;
         case MetricsTimerKind::Materialize:
-            value.materializations = SaturatingAdd(value.materializations, 1);
+            value.materializations = shell_metrics_SaturatingAdd(value.materializations, 1);
             value.materializeNanos =
-                SaturatingAdd(value.materializeNanos, nanos);
+                shell_metrics_SaturatingAdd(value.materializeNanos, nanos);
             break;
     }
 }
@@ -172779,7 +181039,7 @@ void MetricsRecordStructure(Metrics* metrics, bool repeated) {
     if (!metrics) return;
     uint64_t& counter = repeated ? metrics->value.structureRepeats
                                  : metrics->value.structureChanges;
-    counter = SaturatingAdd(counter, 1);
+    counter = shell_metrics_SaturatingAdd(counter, 1);
 }
 
 RuntimeMetrics MetricsRead(const Metrics* metrics) {
@@ -173006,7 +181266,9 @@ static bool ValidGitRefName(Str reference) {
     if (!reference || StrEq(reference, StrL("@"))) return false;
     char first = reference.s[0];
     char last = reference.s[len(reference) - 1];
-    if (first == '.' || first == '/' || last == '.' || last == '/')
+
+    if (first == '.' || first == '/' || first == '-' || last == '.' ||
+        last == '/')
         return false;
     if (StrContains(reference, StrL("..")) ||
         StrContains(reference, StrL("@{")) ||
@@ -173323,8 +181585,17 @@ static bool ParseCapabilities(const JsonValue* value, PluginManifest* out,
                                   StrL("capabilities.fs.write"), error))
             return false;
         const JsonValue* execute = JsonGet(fs, "execute");
-        if (execute && execute->kind == JsonKind::String &&
-            StrEq(execute->str, StrL("*"))) {
+
+        if (execute && execute->kind == JsonKind::String) {
+            if (!StrEq(execute->str, StrL("*"))) {
+                shell_plugin_SetError(
+                    error,
+                    fmt("capabilities.fs.execute must be \"*\" or an array of "
+                        "command names, not \"%s\"; write [\"%s\"] to allow "
+                        "only that command",
+                        execute->str, execute->str));
+                return false;
+            }
             out->executeUnrestricted = true;
         } else if (execute &&
                    !ParseStringArray(out->arena, execute, &out->execute,
@@ -173655,7 +181926,10 @@ void PluginManifestSchema(StrBuilder* out) {
         "\"string\"},"
         "\"entry\":{\"type\":\"string\"},\"dependencies\":{\"type\":\"object\"}"
         ","
-        "\"capabilities\":{\"type\":\"object\"},"
+        "\"capabilities\":{\"type\":\"object\",\"properties\":{\"fs\":{"
+        "\"type\":\"object\",\"properties\":{\"execute\":{\"anyOf\":["
+        "{\"type\":\"array\",\"items\":{\"type\":\"string\"}},"
+        "{\"type\":\"string\",\"const\":\"*\"}]}}}}},"
         "\"window\":{\"type\":\"object\",\"additionalProperties\":false,"
         "\"required\":[\"width\",\"height\"],\"properties\":{"
         "\"width\":{\"type\":\"number\"},\"height\":{\"type\":\"number\"}}}}"
@@ -178051,6 +186325,44 @@ static JSValue NativeState(JSContext* ctx, JSValueConst, int argc,
     return JS_NewUint32(ctx, state);
 }
 
+static JSValue NativeGroupHover(JSContext* ctx, JSValueConst, int argc,
+                                JSValueConst* argv) {
+    ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
+    shell::SpecId owner = 0;
+    if (!impl || argc < 2 || !JsSpecId(ctx, argv[0], &owner)) {
+        return JS_ThrowTypeError(
+            ctx,
+            "group_hover(group, declare) expects the group's name first, as "
+            "a non-empty string");
+    }
+    Arena* arena = ArenaNew();
+    Str group;
+    if (!JsString(ctx, argv[1], arena, &group) || len(group) == 0) {
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(
+            ctx,
+            "group_hover(group, declare) expects the group's name first, as "
+            "a non-empty string");
+    }
+    shell::Component component = {};
+    shell::SpecId state = impl->scratch->Push(component);
+    shell::SpecError failure = {};
+    if (!impl->scratch->Claim(state, &failure)) {
+        ArenaDelete(arena);
+        return SpecFailure(ctx, failure);
+    }
+    shell::SpecOp op = {};
+    op.kind = shell::SpecOpKind::GroupHover;
+    op.name = group;
+    op.node = state;
+    if (!impl->scratch->PushOp(owner, op, &failure)) {
+        ArenaDelete(arena);
+        return SpecFailure(ctx, failure);
+    }
+    ArenaDelete(arena);
+    return JS_NewUint32(ctx, state);
+}
+
 static JSValue NativeSlot(JSContext* ctx, JSValueConst, int argc,
                           JSValueConst* argv) {
     ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
@@ -178066,15 +186378,7 @@ static JSValue NativeSlot(JSContext* ctx, JSValueConst, int argc,
         return JS_EXCEPTION;
     }
     shell::SpecError failure = {};
-    if (!impl->scratch->Claim(element, &failure)) {
-        ArenaDelete(arena);
-        return SpecFailure(ctx, failure);
-    }
-    shell::SpecOp op = {};
-    op.kind = shell::SpecOpKind::Slot;
-    op.name = name;
-    op.node = element;
-    if (!impl->scratch->PushOp(owner, op, &failure)) {
+    if (!impl->scratch->FillSlot(owner, name, element, &failure)) {
         ArenaDelete(arena);
         return SpecFailure(ctx, failure);
     }
@@ -178131,7 +186435,7 @@ static bool IsBehavior(Str name) {
     static const char names[] =
         "disabled\0selected\0checked\0accessibility_label\0tooltip\0role\0"
         "aria_selected\0aria_active_descendant\0track_focus\0track_scroll\0"
-        "content_focus_handle\0tab_index\0tab_stop\0href\0id\0"
+        "content_focus_handle\0tab_index\0tab_stop\0href\0id\0group\0"
         "overflow_scroll\0overflow_x_scroll\0overflow_y_scroll\0"
         "overflow_scrollbar\0overflow_x_scrollbar\0overflow_y_scrollbar\0"
         "mode\0scroll_size\0viewport_from_layout\0controls_right\0"
@@ -179036,8 +187340,9 @@ static bool ComponentPayloadTransaction(
     JSContext* ctx, ShellRuntimeImpl* impl, const char* api,
     shell::Slice<shell::ArgumentDescriptor> descriptors, JSValueConst array,
     shell::PayloadFactory factory, shell::ComponentPayload* payload,
+    bool hasHolder, shell::SpecId holder,
     shell::ComponentArgument** validated = nullptr,
-    int* validatedCount = nullptr) {
+    int* validatedCount = nullptr, Vec<shell::SpecId>* taken = nullptr) {
     int checkpoint = impl->callbacks.Checkpoint();
     ComponentArgumentScope scope;
     scope.ctx = ctx;
@@ -179060,6 +187365,14 @@ static bool ComponentPayloadTransaction(
         }
     }
     if (ok) {
+        shell::SpecError failure = {};
+        if (!impl->scratch->CheckHold(hasHolder, holder, scope.elements.els,
+                                      scope.elements.len, &failure)) {
+            SpecFailure(ctx, failure);
+            ok = false;
+        }
+    }
+    if (ok) {
         shell::PayloadBuild build;
         build.a = scope.a;
         if (factory && !factory(&build, arguments, count)) {
@@ -179079,6 +187392,14 @@ static bool ComponentPayloadTransaction(
         if (!impl->scratch->Claim(scope.elements[i], &failure)) {
             SpecFailure(ctx, failure);
             ok = false;
+        }
+    }
+    if (ok && hasHolder) {
+        impl->scratch->Hold(holder, scope.elements.els, scope.elements.len);
+    }
+    if (ok && taken) {
+        for (int i = 0; i < len(scope.elements); i++) {
+            VecAppend(*taken, scope.elements[i]);
         }
     }
     VecReset(scope.elements);
@@ -179146,15 +187467,22 @@ static JSValue NativeRegisteredConstructor(JSContext* ctx, JSValueConst,
     const shell::ConstructorDescriptor& ctor = descriptor->constructors[index];
     if (ctor.deprecationReplacement) WarnDeprecatedExport(impl, ctor);
     shell::ComponentPayload payload = {};
+    Vec<shell::SpecId> taken;
     if (!ComponentPayloadTransaction(ctx, impl, ctor.exportName, ctor.arguments,
-                                     argv[0], ctor.factory, &payload))
+                                     argv[0], ctor.factory, &payload, false, 0,
+                                     nullptr, nullptr, &taken)) {
+        VecReset(taken);
         return JS_EXCEPTION;
+    }
     shell::Component component = {};
     component.kind = shell::ComponentKind::Registered;
     component.index = componentId;
     component.text = Str(descriptor->name);
     component.payload = payload;
-    return JS_NewUint32(ctx, impl->scratch->Push(component));
+    shell::SpecId id = impl->scratch->Push(component);
+    impl->scratch->Hold(id, taken.els, taken.len);
+    VecReset(taken);
+    return JS_NewUint32(ctx, id);
 }
 
 static bool ComponentDataFromJs(JSContext* ctx, JSValueConst value, Arena* a,
@@ -179546,7 +187874,7 @@ static bool ApplyRegistered(JSContext* ctx, ShellRuntimeImpl* impl,
         int count = 0;
         if (!ComponentPayloadTransaction(
                 ctx, impl, method->name, method->arguments, args,
-                method->recorder, &payload, &arguments, &count)) {
+                method->recorder, &payload, true, id, &arguments, &count)) {
             *result = JS_EXCEPTION;
             return true;
         }
@@ -179594,16 +187922,10 @@ static bool ApplyRegistered(JSContext* ctx, ShellRuntimeImpl* impl,
             return true;
         }
         shell::SpecError failure = {};
-        if (!impl->scratch->Claim((shell::SpecId)element, &failure)) {
+        if (!impl->scratch
+                 ->FillSlot(id, name, (shell::SpecId)element, &failure)) {
             *result = SpecFailure(ctx, failure);
-            return true;
         }
-        shell::SpecOp op = {};
-        op.kind = shell::SpecOpKind::Slot;
-        op.name = name;
-        op.node = (shell::SpecId)element;
-        if (!impl->scratch->PushOp(id, op, &failure))
-            *result = SpecFailure(ctx, failure);
         return true;
     }
     if (IsStyleCall(name, argCount)) return false;
@@ -179850,16 +188172,38 @@ static JSValue NativeApply(JSContext* ctx, JSValueConst, int argc,
             }
         }
         if (StrEq(name, StrL("href"))) {
+            bool link = receiver &&
+                        StrEq(Str(shell::ComponentName(receiver->component)),
+                              StrL("Link"));
             if (argCount != 1 || op.args[0]
                                          .kind != shell::BridgedKind::String) {
                 ArenaDelete(arena);
-                return JS_ThrowTypeError(ctx, "href(url) expects a string");
+                return JS_ThrowTypeError(
+                    ctx, link ? "Link.href expects one URL string"
+                              : "href(url) expects a string");
             }
             if (!IsOpenableUrl(op.args[0].string)) {
                 ArenaDelete(arena);
                 return JS_ThrowTypeError(
                     ctx,
-                    "href(url) expects an absolute HTTP(S) URL with a host");
+                    link ? "Link.href(url) expects an absolute HTTP(S) URL "
+                           "with a host"
+                         : "href(url) expects an absolute HTTP(S) URL with a "
+                           "host");
+            }
+        }
+
+        if (StrEq(name, StrL("group"))) {
+            bool named = argCount >= 1 &&
+                         op.args[0].kind == shell::BridgedKind::String &&
+                         len(op.args[0].string) > 0;
+            if (!named) {
+                ArenaDelete(arena);
+                return JS_ThrowTypeError(
+                    ctx,
+                    "group(name) expects a non-empty string; "
+                    "`group_hover(name, declare)` on an element inside it "
+                    "matches the same name");
             }
         }
         if (IsDockCommand(name)) {
@@ -180525,15 +188869,19 @@ static JSValue NativeShowFpsMonitor(JSContext* ctx, JSValueConst, int argc,
         if (JS_IsException(budget)) return JS_EXCEPTION;
         if (!JS_IsUndefined(budget) && !JS_IsNull(budget)) {
             double millis = 0;
-            bool valid = JS_IsNumber(budget) &&
-                         JS_ToFloat64(ctx, &millis, budget) == 0 &&
-                         isfinite(millis) && millis > 0;
+
+            bool number =
+                JS_IsNumber(budget) && JS_ToFloat64(ctx, &millis, budget) == 0;
             JS_FreeValue(ctx, budget);
-            if (!valid) {
-                return JS_ThrowTypeError(ctx,
-                                         "%s: frame_budget must be a positive "
-                                         "number of milliseconds",
-                                         kApi);
+            double nanos = millis * 1000000.0;
+            const double kMaxNanos = 18446744073709551616.0 * 1000000000.0;
+            if (!number || !(millis > 0.0) || !isfinite(nanos) ||
+                nanos >= kMaxNanos) {
+                return JS_ThrowTypeError(
+                    ctx,
+                    "%s: frame_budget must be a positive number of "
+                    "milliseconds that a Duration can hold",
+                    kApi);
             }
             request.hasFrameBudget = true;
             request.frameBudget = (float)(millis / 1000.0);
@@ -185192,7 +193540,26 @@ globalThis.__gpui = (() => {
       return this;
     };
   }
-  for (const name of ["child", "children", "map", "when", "hover", "active", "focus", "range_style",
+  // Applied while the pointer is over the nearest ancestor named with
+  // group(name), rather than over this element. Both arguments are checked
+  // before anything is recorded: with the two swapped, calling the name
+  // would fail as a type error naming neither.
+  explicit.group_hover = function (group, declare) {
+    if (typeof group !== "string") {
+      throw new TypeError(
+        "group_hover(group, declare) expects the group's name first, as a non-empty string",
+      );
+    }
+    if (typeof declare !== "function") {
+      throw new TypeError(
+        "group_hover(group, declare) expects a function second; it receives the element to style",
+      );
+    }
+    const target = element(__group_hover(this.__id, group));
+    declare(target);
+    return this;
+  };
+  for (const name of ["child", "children", "map", "when", "hover", "active", "focus", "group_hover", "range_style",
                       "cell_style", "cell_active_style", "caret_style"]) {
     registeredExplicit[name] = explicit[name];
   }
@@ -186844,15 +195211,21 @@ static JSValue NativePaginationItems(JSContext* ctx, JSValueConst, int argc,
         (argc > 2 && JS_ToFloat64(ctx, &visible, argv[2]) < 0)) {
         return JS_EXCEPTION;
     }
-    if (!isfinite(current) || current < 0 || !isfinite(total) || total < 0 ||
-        !isfinite(visible) || visible < 0) {
-        return JS_ThrowTypeError(ctx,
-                                 "pagination_items(current_page, total_pages, "
-                                 "visible_pages?) expects non-negative "
-                                 "numbers");
+
+    const double kMaxPaginationPage = 4294967295.0;
+    const double kMaxVisiblePages = 1000000.0;
+    if (!isfinite(current) || current < 0 || current > kMaxPaginationPage ||
+        !isfinite(total) || total < 0 || total > kMaxPaginationPage ||
+        !isfinite(visible) || visible < 0 || visible > kMaxVisiblePages) {
+        return JS_ThrowTypeError(
+            ctx,
+            "pagination_items(current_page, total_pages, visible_pages?) "
+            "expects non-negative page numbers up to 4294967295 and at most "
+            "1000000 visible pages");
     }
-    PaginationState state = PaginationStateNew((int)current, (int)total);
-    if (visible > 0) state.visiblePages = (int)visible;
+    PaginationState state =
+        PaginationStateNew((int64_t)current, (int64_t)total);
+    if (visible > 0) state.visiblePages = (int64_t)visible;
     PaginationItem items[64] = {};
     int count =
         PaginationItems(&state, items, (int)(sizeof(items) / sizeof(items[0])));
@@ -187958,6 +196331,8 @@ static bool InstallRuntime(ShellRuntimeImpl* impl, ShellError* error) {
     SetGlobalFunction(impl->context, global, "__path", NativePath, 6);
     SetGlobalFunction(impl->context, global, "__attach", NativeAttach, 2);
     SetGlobalFunction(impl->context, global, "__state", NativeState, 2);
+    SetGlobalFunction(impl->context, global, "__group_hover", NativeGroupHover,
+                      2);
     SetGlobalFunction(impl->context, global, "__slot", NativeSlot, 3);
     SetGlobalFunction(impl->context, global, "__apply", NativeApply, 3);
 
@@ -191099,6 +199474,17 @@ ScopeHostContext ScopeHostForGeneration(uint64_t generation,
 }
 
 }
+
+const Capabilities& CurrentCapabilities() {
+    if (Policy* scoped = shell::ScopeCurrentPolicy()) {
+        return PolicyCapabilities(scoped);
+    }
+    Policy* def = PolicyDefault();
+    const Capabilities& capabilities = PolicyCapabilities(def);
+    PolicyRelease(def);
+    return capabilities;
+}
+
 }
 
 #line 1 "src/shell/snapshot.cpp"
@@ -191123,6 +199509,12 @@ RenderSnapshot::~RenderSnapshot() {
 
 shell::StructureFingerprint RenderSnapshot::Structure() const {
     return arena ? arena->Structure() : shell::StructureFingerprint{};
+}
+
+uint8_t RenderSnapshot::Height() const {
+    if (!arena) return 1;
+    uint8_t height = arena->Height(root);
+    return height == 0 ? 1 : height;
 }
 
 int RenderSnapshot::Len() const {
@@ -191183,6 +199575,9 @@ static uint64_t OpShape(const SpecOp& op) {
         case SpecOpKind::StateStyle:
             return StructureMix(StructureMix(6, StructureName(op.name)),
                                 op.node);
+
+        case SpecOpKind::GroupHover:
+            return StructureMix(10, op.node);
         case SpecOpKind::Slot:
             return StructureMix(StructureMix(7, StructureName(op.name)),
                                 op.node);
@@ -191368,6 +199763,19 @@ Str SpecErrorMessage(Arena* arena, const SpecError& error) {
                 arena,
                 StrL("a child view handle can be mounted only once in one "
                      "snapshot; create a second Entity for a second position"));
+        case SpecErrorKind::TooDeep:
+            return StrDup(
+                arena,
+                fmt("this element would nest the description more than %d "
+                    "levels deep; elements, filled slots and component "
+                    "element arguments may nest at most %d levels",
+                    SpecArena::kMaxDescriptionDepth,
+                    SpecArena::kMaxDescriptionDepth));
+        case SpecErrorKind::Cycle:
+            return StrDup(
+                arena,
+                StrL("an element cannot be placed inside itself or inside an "
+                     "element it contains"));
     }
     return {};
 }
@@ -191397,6 +199805,8 @@ void SpecArena::Reset() {
     VecClear(nodes);
     VecClear(parented);
     VecClear(claimed);
+    VecClear(holders);
+    VecClear(heights);
     VecClear(mountedViews);
     virtualItems = 0;
     structure = 0;
@@ -191483,6 +199893,8 @@ SpecId SpecArena::Push(const Component& component) {
     VecAppend(nodes, node);
     VecAppend(parented, 0);
     VecAppend(claimed, 0);
+    VecAppend(holders, kNoHolder);
+    VecAppend(heights, (uint8_t)1);
     return (SpecId)(nodes.len - 1);
 }
 
@@ -191537,11 +199949,93 @@ bool SpecArena::CheckLive(SpecId id, SpecError* error) const {
     return true;
 }
 
+bool SpecArena::CheckHold(bool hasHolder, SpecId holder, const SpecId* elements,
+                          int count, SpecError* error) const {
+    uint32_t height = 0;
+    for (int i = 0; i < count; i++) {
+        SpecId element = elements ? elements[i] : 0;
+        if (element >= (SpecId)heights.len) {
+            SetSpecError(error, SpecErrorKind::Expired);
+            return false;
+        }
+        uint32_t next = (uint32_t)heights[(int)element] + 1;
+        if (next > height) height = next;
+    }
+    if (height > (uint32_t)kMaxDescriptionDepth) {
+        SetSpecError(error, SpecErrorKind::TooDeep);
+        return false;
+    }
+    if (!hasHolder) return true;
+    if (holder >= (SpecId)heights.len) {
+        SetSpecError(error, SpecErrorKind::Expired);
+        return false;
+    }
+    SpecId node = holder;
+    for (;;) {
+        if (height <= heights[(int)node]) return true;
+        if (height > (uint32_t)kMaxDescriptionDepth) {
+            SetSpecError(error, SpecErrorKind::TooDeep);
+            return false;
+        }
+        SpecId next = holders[(int)node];
+        if (next == kNoHolder) break;
+        node = next;
+        height += 1;
+    }
+    for (int i = 0; i < count; i++) {
+        if (elements && elements[i] == node) {
+            SetSpecError(error, SpecErrorKind::Cycle);
+            return false;
+        }
+    }
+    return true;
+}
+
+void SpecArena::Hold(SpecId holder, const SpecId* elements, int count) {
+    uint32_t height = 0;
+    for (int i = 0; i < count; i++) {
+        if (!elements || elements[i] >= (SpecId)holders.len) continue;
+        holders[(int)elements[i]] = holder;
+        uint32_t next = (uint32_t)heights[(int)elements[i]] + 1;
+        if (next > height) height = next;
+    }
+    SpecId node = holder;
+    while (node < (SpecId)heights.len && height > heights[(int)node]) {
+        heights[(int)node] = (uint8_t)height;
+        SpecId next = holders[(int)node];
+        if (next == kNoHolder) break;
+        node = next;
+        height += 1;
+    }
+}
+
 bool SpecArena::PushOp(SpecId id, const SpecOp& op, SpecError* error) {
     if (!CheckLive(id, error)) return false;
+    bool slot = op.kind == SpecOpKind::Slot;
+    if (slot) {
+        if (!CheckLive(op.node, error)) return false;
+        if (holders[(int)op.node] != kNoHolder) {
+            SetSpecError(error, SpecErrorKind::Claimed);
+            return false;
+        }
+        if (!CheckHold(true, id, &op.node, 1, error)) return false;
+    }
 
     structure = StructureMix(structure, OpShape(op));
-    return nodes[(int)id]->ops.Append(arena, CopyOp(op));
+    if (!nodes[(int)id]->ops.Append(arena, CopyOp(op))) return false;
+    if (slot) Hold(id, &op.node, 1);
+    return true;
+}
+
+bool SpecArena::FillSlot(SpecId holder, Str name, SpecId element,
+                         SpecError* error) {
+    if (!CanClaim(element, error)) return false;
+    SpecOp op = {};
+    op.kind = SpecOpKind::Slot;
+    op.name = name;
+    op.node = element;
+    if (!PushOp(holder, op, error)) return false;
+    return Claim(element, error);
 }
 
 bool SpecArena::Claim(SpecId id, SpecError* error) {
@@ -191574,11 +200068,14 @@ bool SpecArena::Attach(SpecId parent, SpecId child, SpecError* error) {
         SetSpecError(error, SpecErrorKind::SelfParent);
         return false;
     }
+    if (!CheckHold(true, parent, &child, 1, error)) return false;
 
     structure = StructureMix(StructureMix(structure, parent),
                              (uint64_t)child ^ (1ull << 32));
     parented[(int)child] = 1;
-    return nodes[(int)parent]->children.Append(arena, child);
+    if (!nodes[(int)parent]->children.Append(arena, child)) return false;
+    Hold(parent, &child, 1);
+    return true;
 }
 
 static ComponentArgument CopyArgument(Arena* arena,
@@ -191627,6 +200124,7 @@ SpecId SpecArena::Graft(const Template& tmpl) {
             SpecOp copied = CopyOp(op);
             copied.payload = CopyPayload(arena, op.payload, base);
             if (copied.kind == SpecOpKind::StateStyle ||
+                copied.kind == SpecOpKind::GroupHover ||
                 copied.kind == SpecOpKind::Slot) {
                 copied.node += base;
             }
@@ -191638,9 +200136,19 @@ SpecId SpecArena::Graft(const Template& tmpl) {
         VecAppend(nodes, node);
         VecAppend(parented, source->parented[i]);
         VecAppend(claimed, source->claimed[i]);
+        SpecId held = kNoHolder;
+        if (i < source->holders.len && source->holders[i] != kNoHolder) {
+            held = source->holders[i] + base;
+        }
+        VecAppend(holders, held);
+        VecAppend(heights,
+                  i < source->heights.len ? source->heights[i] : (uint8_t)1);
     }
 
     parented[(int)(tmpl.root + base)] = 0;
+    if ((int)(tmpl.root + base) < holders.len) {
+        holders[(int)(tmpl.root + base)] = kNoHolder;
+    }
 
     structure = StructureMix(structure, StructureMix(9, source->structure));
     return tmpl.root + base;
@@ -191740,6 +200248,24 @@ static void AppendBridged(StrBuilder* out, const Bridged& value) {
         case BridgedKind::Shadows:
             out->Append(fmt("Shadows([%d])", value.shadowCount));
             break;
+    }
+}
+
+static void AppendArgs(StrBuilder* out, const SpecOp& op);
+
+static void AppendStateOps(StrBuilder* out, const SpecNode* state) {
+    if (!state) {
+        out->AppendChar('?');
+        return;
+    }
+    for (const SpecOp& stateOp : state->ops) {
+        if (stateOp.kind == SpecOpKind::NullaryStyle ||
+            stateOp.kind == SpecOpKind::ParamStyle) {
+            out->Append(StrL("."));
+            out->Append(stateOp.name);
+            if (stateOp.kind == SpecOpKind::ParamStyle)
+                AppendArgs(out, stateOp);
+        }
     }
 }
 
@@ -191869,20 +200395,14 @@ void SpecArena::WriteTree(StrBuilder* out, SpecId id, int depth) const {
             out->Append(StrL(" :"));
             out->Append(op.name);
             out->AppendChar('(');
-            const SpecNode* state = Node(op.node);
-            if (state) {
-                for (const SpecOp& stateOp : state->ops) {
-                    if (stateOp.kind == SpecOpKind::NullaryStyle ||
-                        stateOp.kind == SpecOpKind::ParamStyle) {
-                        out->Append(StrL("."));
-                        out->Append(stateOp.name);
-                        if (stateOp.kind == SpecOpKind::ParamStyle)
-                            AppendArgs(out, stateOp);
-                    }
-                }
-            } else {
-                out->AppendChar('?');
-            }
+            AppendStateOps(out, Node(op.node));
+            out->AppendChar(')');
+        } else if (op.kind == SpecOpKind::GroupHover) {
+
+            out->Append(StrL(" :group_hover[\""));
+            out->Append(op.name);
+            out->Append(StrL("\"]("));
+            AppendStateOps(out, Node(op.node));
             out->AppendChar(')');
         }
     }
@@ -194719,7 +203239,7 @@ namespace gpui::shell {
 
 static const char kShellTypes0[] = R"GPUI_DTS(// Auto-generated — add `gpui-kit.d.ts` to your .gitignore.
 //
-// The built-in modules, as TypeScript declarations, for gpui-shell 0.8.0.
+// The built-in modules, as TypeScript declarations, for gpui-shell 0.9.0.
 // Do not edit: gpui-shell rewrites this on every run, in every directory that
 // imports one of them, from the runtime that is about to execute the script. A
 // committed copy could only ever be the stale one.
@@ -195340,7 +203860,9 @@ static const char kShellTypes1[] = R"GPUI_DTS(     * reported rather than swallo
      */
     map<Self extends Element, T>(this: Self, transform: (element: Self) => T): T;
     /**
-     * Adds one child. The child is consumed; using it again throws.
+     * Adds one child. The child is consumed; using it again throws. A
+     * description nests at most 64 levels, counting filled slots; the call
+     * that would go deeper throws.
      *
      * A **string is an element**, exactly as `&str`, `String` and
      * `SharedString` implement `IntoElement` in GPUI: `.child("hello")` is how
@@ -195349,7 +203871,9 @@ static const char kShellTypes1[] = R"GPUI_DTS(     * reported rather than swallo
      * An `Entity` from `cx.new(...)` is a child too, the way an `Entity<V>` is
      * renderable in GPUI — that is how a retained nested view is mounted. One
      * entity may appear once per parent snapshot; a second mount in the same
-     * description is refused before any of it is published.
+     * description is refused before any of it is published. Views mounted
+     * inside one another may span 65 levels together, one more for each view;
+     * a mount past that, or inside the view itself, draws nothing.
      */
     child<Self extends Element>(this: Self, child: Element | Entity | string | number | boolean): Self;
     /** Adds several children, in order. */
@@ -195386,11 +203910,11 @@ static const char kShellTypes1[] = R"GPUI_DTS(     * reported rather than swallo
      * is not, so filling both is how a picture gets something to fall back to.
      */
     image<Self extends Element>(this: Self, element: Element): Self;
-    /** Fills an `Avatar`'s `fallback` slot, which takes an `AvatarFallback`. */
+)GPUI_DTS";
+static const char kShellTypes2[] = R"GPUI_DTS(    /** Fills an `Avatar`'s `fallback` slot, which takes an `AvatarFallback`. */
     fallback<Self extends Element>(this: Self, element: Element): Self;
     /** Fills an `AccordionItem`'s `header` slot, which takes an `AccordionHeader`. */
-)GPUI_DTS";
-static const char kShellTypes2[] = R"GPUI_DTS(    header<Self extends Element>(this: Self, element: Element): Self;
+    header<Self extends Element>(this: Self, element: Element): Self;
     /** Fills a component's named `footer` slot. */
     footer<Self extends Element>(this: Self, element: Element): Self;
     /** Fills an `AccordionItem`'s `panel` slot, which takes an `AccordionPanel`. */
@@ -195606,13 +204130,13 @@ static const char kShellTypes2[] = R"GPUI_DTS(    header<Self extends Element>(t
      * half-open `[start, end)`, and `count` is the list's `item_count`.
      *
      * It is called once the frame is done, as an event handler is, so it may
-     * change state and call `cx.notify()`: load the page above when
+)GPUI_DTS";
+static const char kShellTypes3[] = R"GPUI_DTS(     * change state and call `cx.notify()`: load the page above when
      * `range.start` reaches 0, or the next one when `range.end` reaches
      * `count`. The item renderer cannot do this, because it runs inside
      * layout.
      *
-)GPUI_DTS";
-static const char kShellTypes3[] = R"GPUI_DTS(     * What calls it is the range itself, not what moved it: the first frame,
+     * What calls it is the range itself, not what moved it: the first frame,
      * a wheel or trackpad scroll, a `Scrollbar` drag, a change of
      * `item_count`, a change of the list's height. A frame that leaves both
      * the same calls nothing. Only `list` reports it; on `uniform_list` and
@@ -195836,13 +204360,13 @@ static const char kShellTypes3[] = R"GPUI_DTS(     * What calls it is the range 
     tab_index<Self extends Element>(this: Self, index: number): Self;
     /**
      * Whether Tab can land on this element. `false` keeps its place in the
-     * order without making it reachable, which is what a container that
+)GPUI_DTS";
+static const char kShellTypes4[] = R"GPUI_DTS(     * order without making it reachable, which is what a container that
      * forwards focus to its first child wants.
      */
     tab_stop<Self extends Element>(this: Self, value: boolean): Self;
     /** Sets the absolute HTTP(S) target opened by a `Link`. */
-)GPUI_DTS";
-static const char kShellTypes4[] = R"GPUI_DTS(    href<Self extends Element>(this: Self, url: string): Self;
+    href<Self extends Element>(this: Self, url: string): Self;
     /**
      * A stable name for this element, used as its identity.
      *
@@ -195855,6 +204379,15 @@ static const char kShellTypes4[] = R"GPUI_DTS(    href<Self extends Element>(thi
      * and ignores this.
      */
     id<Self extends Element>(this: Self, name: string): Self;
+    /**
+     * Names this element as a group, so that `group_hover(name, declare)` on
+     * an element inside it styles that element while the pointer is over this
+     * one. GPUI `InteractiveElement::group`.
+     *
+     * The name need not be unique: a group hover follows the nearest ancestor
+     * with its name, so every row of a list can be `group("row")`.
+     */
+    group<Self extends Element>(this: Self, name: string): Self;
     /** Owns wheel and touch scrolling on both axes for overflowing children. */
     overflow_scroll<Self extends Element>(this: Self): Self;
     /** Owns horizontal wheel and touch scrolling for overflowing children. */
@@ -196031,6 +204564,22 @@ static const char kShellTypes4[] = R"GPUI_DTS(    href<Self extends Element>(thi
     /** Styles applied while the element has focus. */
     focus<Self extends Element>(this: Self, declare: (el: NativeElement) => NativeElement | void): Self;
     /**
+     * Styles applied while the pointer is over the nearest ancestor named
+     * `name` with `group(name)`, rather than over this element: an action
+     * that appears when its row is hovered. `declare` receives a detached
+     * element that collects the styles, exactly as `hover` does; its return
+     * value is ignored. GPUI `InteractiveElement::group_hover`.
+     *
+     * It is a style, not a handler, so a virtual list's item renderer may use
+     * it. With no ancestor of that name the styles never apply. A second call
+     * replaces the first. A group hover that changes the element's size or
+     * position needs a stable identity, `.id(...)`, because GPUI lays the
+     * element out from its own state; one that only paints, such as an
+     * opacity or a color, does not.
+     */
+)GPUI_DTS";
+static const char kShellTypes5[] = R"GPUI_DTS(    group_hover<Self extends Element>(this: Self, name: string, declare: (el: NativeElement) => NativeElement | void): Self;
+    /**
      * Displays the tab at `index` in `group` when this element is clicked.
      *
      * One of the twelve **dock commands**, which are how an element a dock's
@@ -196057,8 +204606,7 @@ static const char kShellTypes4[] = R"GPUI_DTS(    href<Self extends Element>(thi
      */
     drag_tab<Self extends Element>(this: Self, group: import("gpui-base").DockGroup, index: number): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes5[] = R"GPUI_DTS(     * Accepts a dragged panel here. `index` is the slot it lands in; leave it
+     * Accepts a dragged panel here. `index` is the slot it lands in; leave it
      * out to append, which is what a drop past the last tab means.
      */
     drop_tab<Self extends Element>(this: Self, group: import("gpui-base").DockGroup, index?: number): Self;
@@ -196238,7 +204786,8 @@ static const char kShellTypes5[] = R"GPUI_DTS(     * Accepts a dragged panel her
      */
     border_10<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border width of the element. [Docs](https://tailwindcss.com/docs/border-width)
+)GPUI_DTS";
+static const char kShellTypes6[] = R"GPUI_DTS(     * Sets the border width of the element. [Docs](https://tailwindcss.com/docs/border-width)
      *
      * 11px
      */
@@ -196295,8 +204844,7 @@ static const char kShellTypes5[] = R"GPUI_DTS(     * Accepts a dragged panel her
      * Sets the border width of the element. [Docs](https://tailwindcss.com/docs/border-width)
      *
      * 5px
-)GPUI_DTS";
-static const char kShellTypes6[] = R"GPUI_DTS(     */
+     */
     border_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the border width of the element. [Docs](https://tailwindcss.com/docs/border-width)
@@ -196577,7 +205125,8 @@ static const char kShellTypes6[] = R"GPUI_DTS(     */
      */
     border_r_20<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border width of the right side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
+)GPUI_DTS";
+static const char kShellTypes7[] = R"GPUI_DTS(     * Sets the border width of the right side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
      * 24px
      */
@@ -196625,8 +205174,7 @@ static const char kShellTypes6[] = R"GPUI_DTS(     */
      */
     border_r_8<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes7[] = R"GPUI_DTS(     * Sets the border width of the right side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
+     * Sets the border width of the right side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
      * 9px
      */
@@ -196890,7 +205438,8 @@ static const char kShellTypes7[] = R"GPUI_DTS(     * Sets the border width of th
      */
     border_y_24<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border width of the horizontal sides of the element. [Docs](https://tailwindcss.com/docs/border-width#horizontal-and-vertical-sides)
+)GPUI_DTS";
+static const char kShellTypes8[] = R"GPUI_DTS(     * Sets the border width of the horizontal sides of the element. [Docs](https://tailwindcss.com/docs/border-width#horizontal-and-vertical-sides)
      *
      * 3px
      */
@@ -196936,8 +205485,7 @@ static const char kShellTypes7[] = R"GPUI_DTS(     * Sets the border width of th
      *
      * 9px
      */
-)GPUI_DTS";
-static const char kShellTypes8[] = R"GPUI_DTS(    border_y_9<Self extends Element>(this: Self): Self;
+    border_y_9<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -197225,7 +205773,8 @@ static const char kShellTypes8[] = R"GPUI_DTS(    border_y_9<Self extends Elemen
      *
      * 4px (0.25rem)
      */
-    bottom_neg_1<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes9[] = R"GPUI_DTS(    bottom_neg_1<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -197275,8 +205824,7 @@ static const char kShellTypes8[] = R"GPUI_DTS(    border_y_9<Self extends Elemen
      */
     bottom_neg_1_2<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 33% (1/3)
      */
@@ -197552,7 +206100,8 @@ static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a 
      */
     cursor_alias<Self extends Element>(this: Self): Self;
     /**
-     * Sets cursor style when hovering over an element to `col-resize`.
+)GPUI_DTS";
+static const char kShellTypes10[] = R"GPUI_DTS(     * Sets cursor style when hovering over an element to `col-resize`.
      *
      * [Docs](https://tailwindcss.com/docs/cursor)
      */
@@ -197604,8 +206153,7 @@ static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a 
      *
      * [Docs](https://tailwindcss.com/docs/cursor)
      */
-)GPUI_DTS";
-static const char kShellTypes10[] = R"GPUI_DTS(    cursor_grabbing<Self extends Element>(this: Self): Self;
+    cursor_grabbing<Self extends Element>(this: Self): Self;
     /**
      * Sets cursor style when hovering over an element to `move`.
      *
@@ -197886,7 +206434,8 @@ static const char kShellTypes10[] = R"GPUI_DTS(    cursor_grabbing<Self extends 
      */
     gap_1_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
+)GPUI_DTS";
+static const char kShellTypes11[] = R"GPUI_DTS(     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
      * 20% (1/5)
      */
@@ -197940,8 +206489,7 @@ static const char kShellTypes10[] = R"GPUI_DTS(    cursor_grabbing<Self extends 
      */
     gap_2_5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes11[] = R"GPUI_DTS(     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
+     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
      * 10px (0.625rem)
      */
@@ -198247,7 +206795,8 @@ static const char kShellTypes11[] = R"GPUI_DTS(     * Sets the gap between rows 
      */
     gap_neg_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
+)GPUI_DTS";
+static const char kShellTypes12[] = R"GPUI_DTS(     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
      * 160px (10rem)
      */
@@ -198299,8 +206848,7 @@ static const char kShellTypes11[] = R"GPUI_DTS(     * Sets the gap between rows 
      *
      * 28px (1.75rem)
      */
-)GPUI_DTS";
-static const char kShellTypes12[] = R"GPUI_DTS(    gap_neg_7<Self extends Element>(this: Self): Self;
+    gap_neg_7<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
@@ -198570,7 +207118,8 @@ static const char kShellTypes12[] = R"GPUI_DTS(    gap_neg_7<Self extends Elemen
      *
      * 256px (16rem)
      */
-    gap_x_64<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes13[] = R"GPUI_DTS(    gap_x_64<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
@@ -198614,8 +207163,7 @@ static const char kShellTypes12[] = R"GPUI_DTS(    gap_neg_7<Self extends Elemen
      */
     gap_x_full<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 0px
      */
@@ -198873,7 +207421,8 @@ static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between colum
      */
     gap_x_neg_96<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+)GPUI_DTS";
+static const char kShellTypes14[] = R"GPUI_DTS(     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 100%
      */
@@ -198919,8 +207468,7 @@ static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between colum
      *
      * 44px (2.75rem)
      */
-)GPUI_DTS";
-static const char kShellTypes14[] = R"GPUI_DTS(    gap_y_11<Self extends Element>(this: Self): Self;
+    gap_y_11<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
@@ -199185,7 +207733,8 @@ static const char kShellTypes14[] = R"GPUI_DTS(    gap_y_11<Self extends Element
      * 44px (2.75rem)
      */
     gap_y_neg_11<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes15[] = R"GPUI_DTS(    /**
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 448px (28rem)
@@ -199228,8 +207777,7 @@ static const char kShellTypes14[] = R"GPUI_DTS(    gap_y_11<Self extends Element
      */
     gap_y_neg_1_3<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes15[] = R"GPUI_DTS(     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 25% (1/4)
      */
@@ -199514,7 +208062,8 @@ static const char kShellTypes15[] = R"GPUI_DTS(     * Sets the gap between rows 
      * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
      * 25% (1/4)
-     */
+)GPUI_DTS";
+static const char kShellTypes16[] = R"GPUI_DTS(     */
     h_1_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
@@ -199571,8 +208120,7 @@ static const char kShellTypes15[] = R"GPUI_DTS(     * Sets the gap between rows 
      */
     h_2_5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes16[] = R"GPUI_DTS(     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
+     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
      * 10px (0.625rem)
      */
@@ -199914,7 +208462,8 @@ static const char kShellTypes16[] = R"GPUI_DTS(     * Sets the height of the ele
      */
     h_neg_3p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
+)GPUI_DTS";
+static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
      * 16px (1rem)
      */
@@ -199968,8 +208517,7 @@ static const char kShellTypes16[] = R"GPUI_DTS(     * Sets the height of the ele
      */
     h_neg_64<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
+     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
      * 28px (1.75rem)
      */
@@ -200250,7 +208798,8 @@ static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the height of the ele
      * 256px (16rem)
      */
     inset_64<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes18[] = R"GPUI_DTS(    /**
      * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 28px (1.75rem)
@@ -200291,8 +208840,7 @@ static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the height of the ele
      *
      * Auto
      */
-)GPUI_DTS";
-static const char kShellTypes18[] = R"GPUI_DTS(    inset_auto<Self extends Element>(this: Self): Self;
+    inset_auto<Self extends Element>(this: Self): Self;
     /**
      * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -200556,7 +209104,8 @@ static const char kShellTypes18[] = R"GPUI_DTS(    inset_auto<Self extends Eleme
      *
      * 384px (24rem)
      */
-    inset_neg_96<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes19[] = R"GPUI_DTS(    inset_neg_96<Self extends Element>(this: Self): Self;
     /**
      * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -200598,8 +209147,7 @@ static const char kShellTypes18[] = R"GPUI_DTS(    inset_auto<Self extends Eleme
      *
      * [Docs](https://tailwindcss.com/docs/align-items#center)
      */
-)GPUI_DTS";
-static const char kShellTypes19[] = R"GPUI_DTS(    items_center<Self extends Element>(this: Self): Self;
+    items_center<Self extends Element>(this: Self): Self;
     /**
      * Sets the element to align flex items to the end of the container's cross axis.
      *
@@ -200893,7 +209441,8 @@ static const char kShellTypes19[] = R"GPUI_DTS(    items_center<Self extends Ele
      */
     left_7<Self extends Element>(this: Self): Self;
     /**
-     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes20[] = R"GPUI_DTS(     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 288px (18rem)
      */
@@ -200939,8 +209488,7 @@ static const char kShellTypes19[] = R"GPUI_DTS(    items_center<Self extends Ele
      *
      * 0px
      */
-)GPUI_DTS";
-static const char kShellTypes20[] = R"GPUI_DTS(    left_neg_0<Self extends Element>(this: Self): Self;
+    left_neg_0<Self extends Element>(this: Self): Self;
     /**
      * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -201240,7 +209788,8 @@ static const char kShellTypes20[] = R"GPUI_DTS(    left_neg_0<Self extends Eleme
      *
      * 40px (2.5rem)
      */
-    m_10<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes21[] = R"GPUI_DTS(    m_10<Self extends Element>(this: Self): Self;
     /**
      * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
@@ -201294,8 +209843,7 @@ static const char kShellTypes20[] = R"GPUI_DTS(    left_neg_0<Self extends Eleme
      *
      * 25% (1/4)
      */
-)GPUI_DTS";
-static const char kShellTypes21[] = R"GPUI_DTS(    m_1_4<Self extends Element>(this: Self): Self;
+    m_1_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
@@ -201645,7 +210193,8 @@ static const char kShellTypes21[] = R"GPUI_DTS(    m_1_4<Self extends Element>(t
      */
     m_neg_3_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
+)GPUI_DTS";
+static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
      * 60% (3/5)
      */
@@ -201699,8 +210248,7 @@ static const char kShellTypes21[] = R"GPUI_DTS(    m_1_4<Self extends Element>(t
      */
     m_neg_5_6<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
+     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
      * 24px (1.5rem)
      */
@@ -202029,7 +210577,8 @@ static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the margin of the ele
      * Auto
      */
     max_h_auto<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes23[] = R"GPUI_DTS(    /**
      * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 100%
@@ -202078,8 +210627,7 @@ static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the margin of the ele
      */
     max_h_neg_12<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
+     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 512px (32rem)
      */
@@ -202421,7 +210969,8 @@ static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of
      */
     max_size_20<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum width and height of the element.
+)GPUI_DTS";
+static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and height of the element.
      *
      * 96px (6rem)
      */
@@ -202481,8 +211030,7 @@ static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of
      */
     max_size_3p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and height of the element.
+     * Sets the maximum width and height of the element.
      *
      * 16px (1rem)
      */
@@ -202872,7 +211420,8 @@ static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and
      */
     max_w_0p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
+)GPUI_DTS";
+static const char kShellTypes25[] = R"GPUI_DTS(     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
      * 4px (0.25rem)
      */
@@ -202920,8 +211469,7 @@ static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and
      */
     max_w_1_12<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes25[] = R"GPUI_DTS(     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
+     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
      * 50% (1/2)
      */
@@ -203249,7 +211797,8 @@ static const char kShellTypes25[] = R"GPUI_DTS(     * Sets the maximum width of 
      *
      * 66% (2/3)
      */
-    max_w_neg_2_3<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes26[] = R"GPUI_DTS(    max_w_neg_2_3<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
@@ -203297,8 +211846,7 @@ static const char kShellTypes25[] = R"GPUI_DTS(     * Sets the maximum width of 
      *
      * 14px (0.875rem)
      */
-)GPUI_DTS";
-static const char kShellTypes26[] = R"GPUI_DTS(    max_w_neg_3p5<Self extends Element>(this: Self): Self;
+    max_w_neg_3p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
@@ -203602,7 +212150,8 @@ static const char kShellTypes26[] = R"GPUI_DTS(    max_w_neg_3p5<Self extends El
     /**
      * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
-     * 20px (1.25rem)
+)GPUI_DTS";
+static const char kShellTypes27[] = R"GPUI_DTS(     * 20px (1.25rem)
      */
     mb_5<Self extends Element>(this: Self): Self;
     /**
@@ -203648,8 +212197,7 @@ static const char kShellTypes26[] = R"GPUI_DTS(    max_w_neg_3p5<Self extends El
      */
     mb_8<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 320px (20rem)
      */
@@ -203937,7 +212485,8 @@ static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of 
      */
     mb_neg_96<Self extends Element>(this: Self): Self;
     /**
-     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes28[] = R"GPUI_DTS(     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 100%
      */
@@ -203986,8 +212535,7 @@ static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of 
     min_h_11<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
-)GPUI_DTS";
-static const char kShellTypes28[] = R"GPUI_DTS(     *
+     *
      * 448px (28rem)
      */
     min_h_112<Self extends Element>(this: Self): Self;
@@ -204310,7 +212858,8 @@ static const char kShellTypes28[] = R"GPUI_DTS(     *
      */
     min_h_neg_1_5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
+)GPUI_DTS";
+static const char kShellTypes29[] = R"GPUI_DTS(     * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
      *
      * 16% (1/6)
      */
@@ -204362,8 +212911,7 @@ static const char kShellTypes28[] = R"GPUI_DTS(     *
      *
      * 10px (0.625rem)
      */
-)GPUI_DTS";
-static const char kShellTypes29[] = R"GPUI_DTS(    min_h_neg_2p5<Self extends Element>(this: Self): Self;
+    min_h_neg_2p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
      *
@@ -204723,7 +213271,8 @@ static const char kShellTypes29[] = R"GPUI_DTS(    min_h_neg_2p5<Self extends El
      *
      * 256px (16rem)
      */
-    min_size_64<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes30[] = R"GPUI_DTS(    min_size_64<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width and height of the element.
      *
@@ -204789,8 +213338,7 @@ static const char kShellTypes29[] = R"GPUI_DTS(    min_h_neg_2p5<Self extends El
      *
      * 4px (0.25rem)
      */
-)GPUI_DTS";
-static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1<Self extends Element>(this: Self): Self;
+    min_size_neg_1<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width and height of the element.
      *
@@ -205154,7 +213702,8 @@ static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1<Self extends E
     /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
-     * 80px (5rem)
+)GPUI_DTS";
+static const char kShellTypes31[] = R"GPUI_DTS(     * 80px (5rem)
      */
     min_w_20<Self extends Element>(this: Self): Self;
     /**
@@ -205209,8 +213758,7 @@ static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1<Self extends E
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
      * 60% (3/5)
-)GPUI_DTS";
-static const char kShellTypes31[] = R"GPUI_DTS(     */
+     */
     min_w_3_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
@@ -205531,7 +214079,8 @@ static const char kShellTypes31[] = R"GPUI_DTS(     */
      */
     min_w_neg_5_6<Self extends Element>(this: Self): Self;
     /**
-     * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
+)GPUI_DTS";
+static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
      * 24px (1.5rem)
      */
@@ -205584,8 +214133,7 @@ static const char kShellTypes31[] = R"GPUI_DTS(     */
      * 100%
      */
     min_w_neg_full<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes32[] = R"GPUI_DTS(    /**
+    /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
      * 1px
@@ -205880,7 +214428,8 @@ static const char kShellTypes32[] = R"GPUI_DTS(    /**
      */
     ml_neg_0p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes33[] = R"GPUI_DTS(     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 4px (0.25rem)
      */
@@ -205928,8 +214477,7 @@ static const char kShellTypes32[] = R"GPUI_DTS(    /**
      */
     ml_neg_1_12<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes33[] = R"GPUI_DTS(     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 50% (1/2)
      */
@@ -206217,7 +214765,8 @@ static const char kShellTypes33[] = R"GPUI_DTS(     * Sets the left margin of th
      */
     mr_1_3<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 25% (1/4)
      */
@@ -206267,8 +214816,7 @@ static const char kShellTypes33[] = R"GPUI_DTS(     * Sets the left margin of th
     /**
      * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
-)GPUI_DTS";
-static const char kShellTypes34[] = R"GPUI_DTS(     * 50% (2/4)
+     * 50% (2/4)
      */
     mr_2_4<Self extends Element>(this: Self): Self;
     /**
@@ -206556,7 +215104,8 @@ static const char kShellTypes34[] = R"GPUI_DTS(     * 50% (2/4)
     /**
      * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
-     * 12px (0.75rem)
+)GPUI_DTS";
+static const char kShellTypes35[] = R"GPUI_DTS(     * 12px (0.75rem)
      */
     mr_neg_3<Self extends Element>(this: Self): Self;
     /**
@@ -206607,8 +215156,7 @@ static const char kShellTypes34[] = R"GPUI_DTS(     * 50% (2/4)
      * 80% (4/5)
      */
     mr_neg_4_5<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes35[] = R"GPUI_DTS(    /**
+    /**
      * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 20px (1.25rem)
@@ -206897,7 +215445,8 @@ static const char kShellTypes35[] = R"GPUI_DTS(    /**
      */
     mt_56<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 80% (5/6)
      */
@@ -206951,8 +215500,7 @@ static const char kShellTypes35[] = R"GPUI_DTS(    /**
      */
     mt_96<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * Auto
      */
@@ -207238,7 +215786,8 @@ static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the
      *
      * 1px
      */
-    mt_px<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes37[] = R"GPUI_DTS(    mt_px<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
@@ -207292,8 +215841,7 @@ static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the
      *
      * 64px (4rem)
      */
-)GPUI_DTS";
-static const char kShellTypes37[] = R"GPUI_DTS(    mx_16<Self extends Element>(this: Self): Self;
+    mx_16<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
@@ -207581,7 +216129,8 @@ static const char kShellTypes37[] = R"GPUI_DTS(    mx_16<Self extends Element>(t
      *
      * 33% (1/3)
      */
-    mx_neg_1_3<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes38[] = R"GPUI_DTS(    mx_neg_1_3<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
@@ -207633,8 +216182,7 @@ static const char kShellTypes37[] = R"GPUI_DTS(    mx_16<Self extends Element>(t
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
-)GPUI_DTS";
-static const char kShellTypes38[] = R"GPUI_DTS(     * 50% (2/4)
+     * 50% (2/4)
      */
     mx_neg_2_4<Self extends Element>(this: Self): Self;
     /**
@@ -207924,7 +216472,8 @@ static const char kShellTypes38[] = R"GPUI_DTS(     * 50% (2/4)
      *
      * 10px (0.625rem)
      */
-    my_2p5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes39[] = R"GPUI_DTS(    my_2p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
@@ -207980,8 +216529,7 @@ static const char kShellTypes38[] = R"GPUI_DTS(     * 50% (2/4)
      */
     my_4_5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes39[] = R"GPUI_DTS(     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
+     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
      * 20px (1.25rem)
      */
@@ -208269,7 +216817,8 @@ static const char kShellTypes39[] = R"GPUI_DTS(     * Sets the vertical margin o
      */
     my_neg_5_6<Self extends Element>(this: Self): Self;
     /**
-     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
+)GPUI_DTS";
+static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
      * 24px (1.5rem)
      */
@@ -208323,8 +216872,7 @@ static const char kShellTypes39[] = R"GPUI_DTS(     * Sets the vertical margin o
      */
     my_neg_full<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
+     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
      * 1px
      */
@@ -208653,7 +217201,8 @@ static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the vertical margin o
      * 44px (2.75rem)
      */
     p_neg_11<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes41[] = R"GPUI_DTS(    /**
      * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
      * 448px (28rem)
@@ -208714,8 +217263,7 @@ static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the vertical margin o
      */
     p_neg_1_6<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes41[] = R"GPUI_DTS(     * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
+     * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
      * 6px (0.375rem)
      */
@@ -209027,7 +217575,8 @@ static const char kShellTypes41[] = R"GPUI_DTS(     * Sets the padding of the el
      */
     pb_2_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes42[] = R"GPUI_DTS(     * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 40% (2/5)
      */
@@ -209079,8 +217628,7 @@ static const char kShellTypes41[] = R"GPUI_DTS(     * Sets the padding of the el
      *
      * 160px (10rem)
      */
-)GPUI_DTS";
-static const char kShellTypes42[] = R"GPUI_DTS(    pb_40<Self extends Element>(this: Self): Self;
+    pb_40<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -209358,7 +217906,8 @@ static const char kShellTypes42[] = R"GPUI_DTS(    pb_40<Self extends Element>(t
      */
     pb_neg_4_5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes43[] = R"GPUI_DTS(     * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 20px (1.25rem)
      */
@@ -209410,8 +217959,7 @@ static const char kShellTypes42[] = R"GPUI_DTS(    pb_40<Self extends Element>(t
      *
      * 320px (20rem)
      */
-)GPUI_DTS";
-static const char kShellTypes43[] = R"GPUI_DTS(    pb_neg_80<Self extends Element>(this: Self): Self;
+    pb_neg_80<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -209695,7 +218243,8 @@ static const char kShellTypes43[] = R"GPUI_DTS(    pb_neg_80<Self extends Elemen
      */
     pl_9<Self extends Element>(this: Self): Self;
     /**
-     * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes44[] = R"GPUI_DTS(     * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 384px (24rem)
      */
@@ -209748,8 +218297,7 @@ static const char kShellTypes43[] = R"GPUI_DTS(    pb_neg_80<Self extends Elemen
      * 48px (3rem)
      */
     pl_neg_12<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes44[] = R"GPUI_DTS(    /**
+    /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 512px (32rem)
@@ -210028,7 +218576,8 @@ static const char kShellTypes44[] = R"GPUI_DTS(    /**
     /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
-     * 512px (32rem)
+)GPUI_DTS";
+static const char kShellTypes45[] = R"GPUI_DTS(     * 512px (32rem)
      */
     pr_128<Self extends Element>(this: Self): Self;
     /**
@@ -210083,8 +218632,7 @@ static const char kShellTypes44[] = R"GPUI_DTS(    /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 8px (0.5rem)
-)GPUI_DTS";
-static const char kShellTypes45[] = R"GPUI_DTS(     */
+     */
     pr_2<Self extends Element>(this: Self): Self;
     /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
@@ -210363,7 +218911,8 @@ static const char kShellTypes45[] = R"GPUI_DTS(     */
      */
     pr_neg_24<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 66% (2/3)
      */
@@ -210417,8 +218966,7 @@ static const char kShellTypes45[] = R"GPUI_DTS(     */
      */
     pr_neg_3p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 16px (1rem)
      */
@@ -210700,7 +219248,8 @@ static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of 
      */
     pt_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 160px (10rem)
      */
@@ -210754,8 +219303,7 @@ static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of 
      */
     pt_7<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 288px (18rem)
      */
@@ -211035,7 +219583,8 @@ static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of th
      *
      * 320px (20rem)
      */
-    pt_neg_80<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes48[] = R"GPUI_DTS(    pt_neg_80<Self extends Element>(this: Self): Self;
     /**
      * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -211089,8 +219638,7 @@ static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of th
      *
      * 40px (2.5rem)
      */
-)GPUI_DTS";
-static const char kShellTypes48[] = R"GPUI_DTS(    px_10<Self extends Element>(this: Self): Self;
+    px_10<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
@@ -211374,7 +219922,8 @@ static const char kShellTypes48[] = R"GPUI_DTS(    px_10<Self extends Element>(t
      */
     px_neg_12<Self extends Element>(this: Self): Self;
     /**
-     * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
+)GPUI_DTS";
+static const char kShellTypes49[] = R"GPUI_DTS(     * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
      * 512px (32rem)
      */
@@ -211426,8 +219975,7 @@ static const char kShellTypes48[] = R"GPUI_DTS(    px_10<Self extends Element>(t
      *
      * 6px (0.375rem)
      */
-)GPUI_DTS";
-static const char kShellTypes49[] = R"GPUI_DTS(    px_neg_1p5<Self extends Element>(this: Self): Self;
+    px_neg_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
@@ -211711,7 +220259,8 @@ static const char kShellTypes49[] = R"GPUI_DTS(    px_neg_1p5<Self extends Eleme
      */
     py_2<Self extends Element>(this: Self): Self;
     /**
-     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
+)GPUI_DTS";
+static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
      * 80px (5rem)
      */
@@ -211765,8 +220314,7 @@ static const char kShellTypes49[] = R"GPUI_DTS(    px_neg_1p5<Self extends Eleme
      */
     py_3_4<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
+     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
      * 60% (3/5)
      */
@@ -212052,7 +220600,8 @@ static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding 
      *
      * 160px (10rem)
      */
-    py_neg_40<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes51[] = R"GPUI_DTS(    py_neg_40<Self extends Element>(this: Self): Self;
     /**
      * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
@@ -212106,8 +220655,7 @@ static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding 
      *
      * 288px (18rem)
      */
-)GPUI_DTS";
-static const char kShellTypes51[] = R"GPUI_DTS(    py_neg_72<Self extends Element>(this: Self): Self;
+    py_neg_72<Self extends Element>(this: Self): Self;
     /**
      * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
@@ -212397,7 +220945,8 @@ static const char kShellTypes51[] = R"GPUI_DTS(    py_neg_72<Self extends Elemen
      */
     right_8<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes52[] = R"GPUI_DTS(     * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 320px (20rem)
      */
@@ -212451,8 +221000,7 @@ static const char kShellTypes51[] = R"GPUI_DTS(    py_neg_72<Self extends Elemen
      */
     right_neg_10<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes52[] = R"GPUI_DTS(     * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 44px (2.75rem)
      */
@@ -212734,7 +221282,8 @@ static const char kShellTypes52[] = R"GPUI_DTS(     * Sets the right value of a 
      */
     rounded_b_full<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border radius of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-sides-separately)
+)GPUI_DTS";
+static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-sides-separately)
      *
      * 8px (0.5rem)
      */
@@ -212782,8 +221331,7 @@ static const char kShellTypes52[] = R"GPUI_DTS(     * Sets the right value of a 
      */
     rounded_bl_3xl<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of the bottom left corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
+     * Sets the border radius of the bottom left corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 9999px
      */
@@ -213033,7 +221581,8 @@ static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of 
      *
      * 9999px
      */
-    rounded_t_full<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes54[] = R"GPUI_DTS(    rounded_t_full<Self extends Element>(this: Self): Self;
     /**
      * Sets the border radius of the top side of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-sides-separately)
      *
@@ -213081,8 +221630,7 @@ static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of 
      *
      * 24px (1.5rem)
      */
-)GPUI_DTS";
-static const char kShellTypes54[] = R"GPUI_DTS(    rounded_tl_3xl<Self extends Element>(this: Self): Self;
+    rounded_tl_3xl<Self extends Element>(this: Self): Self;
     /**
      * Sets the border radius of the top left corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
@@ -213382,7 +221930,8 @@ static const char kShellTypes54[] = R"GPUI_DTS(    rounded_tl_3xl<Self extends E
      *
      * 6px (0.375rem)
      */
-    size_1p5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes55[] = R"GPUI_DTS(    size_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the width and height of the element.
      *
@@ -213462,8 +222011,7 @@ static const char kShellTypes54[] = R"GPUI_DTS(    rounded_tl_3xl<Self extends E
      */
     size_4<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes55[] = R"GPUI_DTS(     * Sets the width and height of the element.
+     * Sets the width and height of the element.
      *
      * 160px (10rem)
      */
@@ -213861,7 +222409,8 @@ static const char kShellTypes55[] = R"GPUI_DTS(     * Sets the width and height 
      */
     text_decoration_0<Self extends Element>(this: Self): Self;
     /**
-     * Sets the text decoration to be 1px thick.
+)GPUI_DTS";
+static const char kShellTypes56[] = R"GPUI_DTS(     * Sets the text decoration to be 1px thick.
      *
      * [Docs](https://tailwindcss.com/docs/text-decoration-thickness)
      */
@@ -213915,8 +222464,7 @@ static const char kShellTypes55[] = R"GPUI_DTS(     * Sets the width and height 
      *
      * Note: This doesn't exist in Tailwind CSS.
      */
-)GPUI_DTS";
-static const char kShellTypes56[] = R"GPUI_DTS(    text_ellipsis_middle<Self extends Element>(this: Self): Self;
+    text_ellipsis_middle<Self extends Element>(this: Self): Self;
     /**
      * Sets the truncate overflowing text with an ellipsis (…) at the start if needed.
      *
@@ -214208,7 +222756,8 @@ static const char kShellTypes56[] = R"GPUI_DTS(    text_ellipsis_middle<Self ext
     /**
      * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
-     * 384px (24rem)
+)GPUI_DTS";
+static const char kShellTypes57[] = R"GPUI_DTS(     * 384px (24rem)
      */
     top_96<Self extends Element>(this: Self): Self;
     /**
@@ -214264,8 +222813,7 @@ static const char kShellTypes56[] = R"GPUI_DTS(    text_ellipsis_middle<Self ext
      *
      * 48px (3rem)
      */
-)GPUI_DTS";
-static const char kShellTypes57[] = R"GPUI_DTS(    top_neg_12<Self extends Element>(this: Self): Self;
+    top_neg_12<Self extends Element>(this: Self): Self;
     /**
      * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -214559,7 +223107,8 @@ static const char kShellTypes57[] = R"GPUI_DTS(    top_neg_12<Self extends Eleme
     /**
      * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
      *
-     * 448px (28rem)
+)GPUI_DTS";
+static const char kShellTypes58[] = R"GPUI_DTS(     * 448px (28rem)
      */
     w_112<Self extends Element>(this: Self): Self;
     /**
@@ -214624,8 +223173,7 @@ static const char kShellTypes57[] = R"GPUI_DTS(    top_neg_12<Self extends Eleme
     w_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
-)GPUI_DTS";
-static const char kShellTypes58[] = R"GPUI_DTS(     *
+     *
      * 8px (0.5rem)
      */
     w_2<Self extends Element>(this: Self): Self;
@@ -214972,7 +223520,8 @@ static const char kShellTypes58[] = R"GPUI_DTS(     *
      */
     w_neg_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
+)GPUI_DTS";
+static const char kShellTypes59[] = R"GPUI_DTS(     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
      *
      * 160px (10rem)
      */
@@ -215036,8 +223585,7 @@ static const char kShellTypes58[] = R"GPUI_DTS(     *
      *
      * 32px (2rem)
      */
-)GPUI_DTS";
-static const char kShellTypes59[] = R"GPUI_DTS(    w_neg_8<Self extends Element>(this: Self): Self;
+    w_neg_8<Self extends Element>(this: Self): Self;
     /**
      * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
      *
@@ -215262,7 +223810,8 @@ static const char kShellTypes59[] = R"GPUI_DTS(    w_neg_8<Self extends Element>
     stop(color: Color, percentage: number): BackgroundStop;
     linear_gradient(angle: number, from: Color | BackgroundStop, to: Color | BackgroundStop): Background;
     pattern_slash(color: Color, width: number, interval: number): Background;
-    checkerboard(color: Color, size: number): Background;
+)GPUI_DTS";
+static const char kShellTypes60[] = R"GPUI_DTS(    checkerboard(color: Color, size: number): Background;
   };
 
   /**
@@ -215308,8 +223857,7 @@ static const char kShellTypes59[] = R"GPUI_DTS(    w_neg_8<Self extends Element>
      */
     open_sheet(content: () => Element): void;
     /** The same, anchored at the `gpui-base` placement you name. */
-)GPUI_DTS";
-static const char kShellTypes60[] = R"GPUI_DTS(    open_sheet_at(placement: import("gpui-base").Placement, content: () => Element): void;
+    open_sheet_at(placement: import("gpui-base").Placement, content: () => Element): void;
     /** Closes the sheet, and answers whether one was open. */
     close_sheet(): boolean;
     /** Whether the sheet is open. Legal from `render`, unlike the rest. */
@@ -215562,7 +224110,8 @@ declare module "gpui-base" {
     bounds: { x: number; y: number; width: number; height: number };
     modifiers: { shift: boolean; alt: boolean; control: boolean; platform: boolean };
   }
-  export interface InlineTokenHoverEvent extends InlineTokenSpan {
+)GPUI_DTS";
+static const char kShellTypes61[] = R"GPUI_DTS(  export interface InlineTokenHoverEvent extends InlineTokenSpan {
     hovered: boolean;
     bounds: { x: number; y: number; width: number; height: number };
   }
@@ -215604,8 +224153,7 @@ declare module "gpui-base" {
    * It carries the progress role and the `0..=100` value a screen reader reads
    * out, and draws exactly what any other empty element draws — nothing. The
    * visible bar is a `ProgressTrack` you size and color, holding a
-)GPUI_DTS";
-static const char kShellTypes61[] = R"GPUI_DTS(   * `ProgressIndicator` whose width you set from the same number you passed to
+   * `ProgressIndicator` whose width you set from the same number you passed to
    * `value`. `Progress.new(...)` on its own puts nothing on screen.
    */
   export const Progress: ComponentType;
@@ -215802,6 +224350,8 @@ static const char kShellTypes61[] = R"GPUI_DTS(   * `ProgressIndicator` whose wi
    * collapsing each broken run into an ellipsis. `visible_pages` defaults to
    * seven and is clamped to a minimum of five; a total of one page or fewer
    * answers an empty list, because a control for a single page is not one.
+   * Throws for a page number above 4294967295 or `visible_pages` above
+   * 1000000.
    *
    * An ellipsis names the pages it stands for, inclusive on both ends, so it
    * can be a "jump to" control rather than inert text.
@@ -215851,7 +224401,8 @@ static const char kShellTypes61[] = R"GPUI_DTS(   * `ProgressIndicator` whose wi
   export const ToggleGroup: ComponentType;
 
   /**
-   * A semantic table root, composed the way HTML composes one: no data source
+)GPUI_DTS";
+static const char kShellTypes62[] = R"GPUI_DTS(   * A semantic table root, composed the way HTML composes one: no data source
    * and no delegate, just the groups, rows and cells the script nests itself.
    * No styling — draw the grid, the padding and the header weight yourself.
    *
@@ -215885,8 +224436,7 @@ static const char kShellTypes61[] = R"GPUI_DTS(   * `ProgressIndicator` whose wi
    *
    * Children are `resizable_panel()` calls. Anything else is wrapped in a panel
    * with base's default constraints, which is convenient and lossy — a wrapped
-)GPUI_DTS";
-static const char kShellTypes62[] = R"GPUI_DTS(   * element has no `size`, `size_range` or `visible` — so name the panels
+   * element has no `size`, `size_range` or `visible` — so name the panels
    * whenever any of the three matters.
    *
    * The group has no size of its own: it fills whatever it is put in, exactly as
@@ -216105,7 +224655,8 @@ static const char kShellTypes62[] = R"GPUI_DTS(   * element has no `size`, `size
 
   /**
    * A list that describes only what is on screen.
-   *
+)GPUI_DTS";
+static const char kShellTypes63[] = R"GPUI_DTS(   *
    * `render(range, cx)` is called with the visible interval and returns one
    * element per item in it — so a ten-thousand-row list costs the script what a
    * twenty-row one costs. It is the only callback in this API that is not an
@@ -216138,8 +224689,7 @@ static const char kShellTypes62[] = R"GPUI_DTS(   * element has no `size`, `size
    *   .child(v_virtual_list("rows", this.rows.length, 28,
    *     (index) => this.rows[index].id,
    *     (range) => this.rows.slice(range.start, range.end).map(row => text(row.name))))
-)GPUI_DTS";
-static const char kShellTypes63[] = R"GPUI_DTS(   *   .child(Scrollbar.vertical("rows").absolute().inset_0());
+   *   .child(Scrollbar.vertical("rows").absolute().inset_0());
    * ```
    *
    * @param id      Identity, and the name a `Scrollbar` pairs with.
@@ -216381,7 +224931,8 @@ static const char kShellTypes63[] = R"GPUI_DTS(   *   .child(Scrollbar.vertical(
    *
    * All four are needed and all four take the same state. The root announces
    * the value and owns the release; the track takes the press and the drag;
-   * the indicator records the box every pointer position is measured against —
+)GPUI_DTS";
+static const char kShellTypes64[] = R"GPUI_DTS(   * the indicator records the box every pointer position is measured against —
    * **a slider with no `SliderIndicator` cannot be moved at all**, which is
    * reported in the log rather than drawn; the thumb drags itself.
    *
@@ -216418,8 +224969,7 @@ static const char kShellTypes63[] = R"GPUI_DTS(   *   .child(Scrollbar.vertical(
   /**
    * Retained one-time-code state, created once and kept on the view.
    *
-)GPUI_DTS";
-static const char kShellTypes64[] = R"GPUI_DTS(   * Like `InputState.new(...)` this needs a live host call, so it belongs in
+   * Like `InputState.new(...)` this needs a live host call, so it belongs in
    * `init` or in an event handler — never in `render`.
    *
    * The length is fixed when the state is created, because it is what the
@@ -216664,7 +225214,8 @@ static const char kShellTypes64[] = R"GPUI_DTS(   * Like `InputState.new(...)` t
      * - `deserialize(data)` is handed back whatever `serialize()` wrote, right
      *   after the view is built, with a real host call available.
      *
-     * Registering the same name twice replaces the class, which is what a hot
+)GPUI_DTS";
+static const char kShellTypes65[] = R"GPUI_DTS(     * Registering the same name twice replaces the class, which is what a hot
      * reload does.
      */
     register_panel: (name: string, Class: import("gpui-kit").ViewClass) => string;
@@ -216700,8 +225251,7 @@ static const char kShellTypes64[] = R"GPUI_DTS(   * Like `InputState.new(...)` t
      * resize handle. Whatever this returns replaces the content, so put
      * `dock_content()` where the panels belong.
      */
-)GPUI_DTS";
-static const char kShellTypes65[] = R"GPUI_DTS(    dock(handler: (dock: DockRegion, cx: Context) => Element | null): DockAreaElement;
+    dock(handler: (dock: DockRegion, cx: Context) => Element | null): DockAreaElement;
   }
 
   /**
@@ -216888,7 +225438,10 @@ declare module "gpui-fps" {
   export interface FpsMonitorOptions {
     /** Corner or edge of the window. Default `top_right`. */
     anchor?: Anchor;
-    /** Frame budget in milliseconds, for the FRAME grading and the chart's scale. */
+    /**
+     * Frame budget in milliseconds, for the FRAME grading and the chart's
+     * scale. Positive, and no longer than a `Duration` holds.
+     */
     frame_budget?: number;
   }
 
@@ -216956,7 +225509,8 @@ interface Console {
  * to `tracing` under the `gpui_shell::script` target.
  */
 declare const console: Console;
-declare module "console" {
+)GPUI_DTS";
+static const char kShellTypes66[] = R"GPUI_DTS(declare module "console" {
   const console: Console;
   export default console;
 }
@@ -217003,8 +225557,7 @@ declare module "process" {
    */
   export interface ChildProcess {
     readonly pid: number;
-)GPUI_DTS";
-static const char kShellTypes66[] = R"GPUI_DTS(    on(event: "stdout" | "stderr", handler: (text: string, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
+    on(event: "stdout" | "stderr", handler: (text: string, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
     on(event: "exit", handler: (result: ExitResult, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
     /** Needs `stdin: "pipe"`; throws otherwise, or after `end()`. */
     write(text: string): void;
@@ -217034,7 +225587,7 @@ static const char kShellTypes66[] = R"GPUI_DTS(    on(event: "stdout" | "stderr"
     arch: string;
     /**
      * Common variables (`HOME`, `USER`, `HOSTNAME`, `LANG`, `TZ`, `PATH`,
-     * `EDITOR`, `DISPLAY`, `HTTP_PROXY`, the XDG directories…), plus those
+     * `EDITOR`, `DISPLAY`, `NO_PROXY`, the XDG directories…), plus those
      * `capabilities.process.env` names, when set; names match regardless of
      * case. Every other variable is absent. A fresh copy on each read; assigning to
      * it changes nothing.
@@ -217966,6 +226519,58 @@ ScriptView::~ScriptView() {
     if (runtime) runtime->Release();
 }
 
+struct NestingEntry {
+    EntityId entity = {};
+    uint32_t levels = 0;
+};
+
+static NestingEntry gNesting[72];
+static int gNestingLen = 0;
+static uint32_t gNestingDepth = 0;
+
+bool ShellNestingContains(EntityId entity) {
+    for (int i = 0; i < gNestingLen; i++) {
+        if (gNesting[i].entity == entity) return true;
+    }
+    return false;
+}
+
+uint32_t ShellNestingDepth() {
+    return gNestingDepth;
+}
+
+bool ShellNestingEnter(EntityId entity, uint32_t levels) {
+    if (gNestingLen >= (int)(sizeof(gNesting) / sizeof(gNesting[0])))
+        return false;
+    gNesting[gNestingLen].entity = entity;
+    gNesting[gNestingLen].levels = levels;
+    gNestingLen++;
+    gNestingDepth += levels;
+    return true;
+}
+
+void ShellNestingLeave() {
+    if (gNestingLen <= 0) return;
+    gNestingLen--;
+    gNestingDepth -= gNesting[gNestingLen].levels;
+}
+
+static void NoteNestingRefusal(ScriptView* self, NestingRefusal refusal) {
+    if (!self || self->refused == refusal) return;
+    self->refused = refusal;
+    if (refusal == NestingRefusal::Reentered) {
+        logf(
+            "script view %d is mounted inside itself; the inner mount "
+            "draws nothing\n",
+            self->self.index);
+    } else if (refusal == NestingRefusal::TooDeep) {
+        logf(
+            "script view %d would nest views more than %u levels deep; it "
+            "draws nothing at this mount\n",
+            self->self.index, kMaxNestedViewDepth);
+    }
+}
+
 Entity<ScriptView> ScriptView::New(App* app, ShellRuntime* runtime,
                                    ViewType* type, Policy* policy) {
     Entity<ScriptView> entity = EntityNew<ScriptView>(app);
@@ -217984,6 +226589,11 @@ El* ScriptView::Render(ScriptView* self, Ctx* cx) {
     if (!self || !self->runtime || !self->type) {
         return Div(cx->a)
             ->Child(TextEl(cx->a, StrL("Shell view is not initialized")));
+    }
+
+    if (ShellNestingContains(self->self)) {
+        NoteNestingRefusal(self, NestingRefusal::Reentered);
+        return Div(cx->a);
     }
     for (auto* batch : self->frameSnapshots) batch->Release();
     VecClear(self->frameSnapshots);
@@ -218010,6 +226620,7 @@ El* ScriptView::Render(ScriptView* self, Ctx* cx) {
             self->snapshot = next;
             self->dirty = false;
             self->renderBroken = false;
+            self->refused = NestingRefusal::None;
             ShellErrorClear(&self->error);
         } else {
             self->renderBroken = true;
@@ -218024,6 +226635,15 @@ El* ScriptView::Render(ScriptView* self, Ctx* cx) {
                   : self->error.IsSet()
                       ? self->error.message
                       : StrL("The shell view did not publish a snapshot");
+
+    uint32_t described =
+        self->snapshot ? (uint32_t)self->snapshot->Height() : 1;
+    uint32_t height = 1 + described;
+    if (ShellNestingDepth() + height > kMaxNestedViewDepth) {
+        NoteNestingRefusal(self, NestingRefusal::TooDeep);
+        return Div(cx->a);
+    }
+    NestingGuard nesting(self->self, height);
     if (self->snapshot && !reloadFailed && !renderFailed) {
         return ShellMaterialize(cx, self->runtime, self->snapshot,
                                 &self->error);
@@ -230633,11 +239253,13 @@ void WebViewSetLastError(const char* message) {
 #include <mach/mach_time.h>
 #include <mach/mach.h>
 #import <objc/runtime.h>
+#include <spawn.h>
 #import <Speech/Speech.h>
 #include <sys/mount.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #import <WebKit/WKDownload.h>
 #import <WebKit/WKDownloadDelegate.h>
@@ -235711,6 +244333,15 @@ void CanvasEllipse(PaintCtx* ctx, float cx, float cy, float rx, float ry,
     }
 }
 
+bool CanvasScrollRect(PaintCtx*, float, float, float, float, float, float) {
+    return false;
+}
+
+bool CanvasReadPixels(PaintCtx*, float, float, float, float, uint8_t*, int,
+                      int*, int*) {
+    return false;
+}
+
 void CanvasPushClip(PaintCtx* ctx, float x, float y, float w, float h) {
     if (scene::Recording()) {
         scene::RecPushClip(ctx, x, y, w, h);
@@ -237129,6 +245760,15 @@ void CanvasEllipse(PaintCtx* ctx, float cx, float cy, float rx, float ry,
     }
 }
 
+bool CanvasScrollRect(PaintCtx*, float, float, float, float, float, float) {
+    return false;
+}
+
+bool CanvasReadPixels(PaintCtx*, float, float, float, float, uint8_t*, int,
+                      int*, int*) {
+    return false;
+}
+
 void CanvasPushClip(PaintCtx* ctx, float x, float y, float w, float h) {
     if (scene::Recording()) {
         scene::RecPushClip(ctx, x, y, w, h);
@@ -238442,8 +247082,15 @@ EM_JS(int, GpJsTargetBeginOffscreen, (int pxW, int pxH), {
     if (!G || pxW <= 0 || pxH <= 0) {
         return 0;
     }
+
+    if (typeof OffscreenCanvas === "undefined" &&
+        typeof document === "undefined") {
+        return 0;
+    }
     if (!G.off) {
-        G.off = document.createElement("canvas");
+        G.off = typeof OffscreenCanvas !== "undefined"
+            ? new OffscreenCanvas(pxW, pxH)
+            : document.createElement("canvas");
     }
     G.off.width = pxW;
     G.off.height = pxH;
@@ -238704,6 +247351,13 @@ EM_JS(void, GpJsPathFree, (int id), {
 
 EM_JS(int, GpJsImageFromBgra, (const uint8_t* bgra, int w, int h), {
     const G = globalThis.__gpui;
+
+    if (typeof OffscreenCanvas === "undefined" &&
+        typeof document === "undefined") {
+        return G.alloc(G.images, G.imageFree,
+                       {img: null, w: w, h: h, status: 1, url: null,
+                        animated: false});
+    }
     const canvas = typeof OffscreenCanvas !== "undefined"
         ? new OffscreenCanvas(w, h) : document.createElement("canvas");
     canvas.width = w;
@@ -238728,6 +247382,13 @@ EM_JS(int, GpJsImageFromBgra, (const uint8_t* bgra, int w, int h), {
 
 EM_JS(int, GpJsImageDecode, (const uint8_t* bytes, int len), {
     const G = globalThis.__gpui;
+
+    if (typeof Image === "undefined" || typeof URL === "undefined" ||
+        typeof URL.createObjectURL !== "function") {
+        return G.alloc(G.images, G.imageFree,
+                       {img: null, w: 0, h: 0, status: 2, url: null,
+                        animated: false});
+    }
 
     const copy = new Uint8Array(HEAPU8.subarray(bytes, bytes + len));
     const url = URL.createObjectURL(new Blob([copy]));
@@ -238858,6 +247519,10 @@ EM_JS(void, GpJsImageDraw,
         c.beginPath();
         c.rect(x, y, w, h);
         c.clip();
+    }
+    if (!e.img) {
+        c.restore();
+        return;
     }
     c.drawImage(e.img, imageX, imageY, imageW, imageH);
     c.restore();
@@ -239299,6 +247964,15 @@ void CanvasEllipse(PaintCtx* ctx, float cx, float cy, float rx, float ry,
     } else {
         GpJsFill((int)Packed(ctx, c));
     }
+}
+
+bool CanvasScrollRect(PaintCtx*, float, float, float, float, float, float) {
+    return false;
+}
+
+bool CanvasReadPixels(PaintCtx*, float, float, float, float, uint8_t*, int,
+                      int*, int*) {
+    return false;
 }
 
 void CanvasPushClip(PaintCtx* ctx, float x, float y, float w, float h) {
@@ -239963,6 +248637,10 @@ struct PaintTarget {
     IDCompositionDevice* dcomp = nullptr;
     IDCompositionTarget* dcompTarget = nullptr;
     IDCompositionVisual* dcompVisual = nullptr;
+
+    ID2D1Bitmap1* scrollStage = nullptr;
+    int scrollStageW = 0;
+    int scrollStageH = 0;
 };
 
 static void MakeFontFamily(PaintApp* pa, const wchar_t* family, float px,
@@ -240144,6 +248822,7 @@ void PaintTargetFree(PaintCtx* ctx) {
         ctx->rt->dc->SetTarget(nullptr);
     }
     gpui_paint_win_Rel(&ctx->rt->backBuffer);
+    gpui_paint_win_Rel(&ctx->rt->scrollStage);
     gpui_paint_win_Rel(&ctx->rt->dc);
     gpui_paint_win_Rel(&ctx->rt->swap);
     delete ctx->rt;
@@ -240484,7 +249163,9 @@ static bool SceneFinish(PaintCtx* ctx) {
     Bounds damage = {};
     bool draw = scene::FrameEnd(ctx, &damage);
     if (draw) {
-        scene::Replay(ctx, &damage);
+        if (!scene::ReplayScroll(ctx)) {
+            scene::Replay(ctx, &damage);
+        }
     }
     return draw;
 }
@@ -240729,6 +249410,174 @@ void CanvasPopClip(PaintCtx* ctx) {
     if (ctx && ctx->rt) {
         ctx->rt->rt->PopAxisAlignedClip();
     }
+}
+
+bool CanvasScrollRect(PaintCtx* ctx, float x, float y, float w, float h,
+                      float dx, float dy) {
+    if (PaintGpuOn() || !ctx || !ctx->rt || !ctx->rt->dc || w < 1.f ||
+        h < 1.f) {
+        return false;
+    }
+    if (dx == 0.f && dy == 0.f) {
+        return false;
+    }
+    ID2D1DeviceContext* dc = ctx->rt->dc;
+    float dpiX = 96.f, dpiY = 96.f;
+    dc->GetDpi(&dpiX, &dpiY);
+    float sx = dpiX / 96.f;
+    float sy = dpiY / 96.f;
+    if (sx <= 0.f || sy <= 0.f) {
+        return false;
+    }
+    auto nearPx = [](float dip, float scale, int* px) {
+        float exact = dip * scale;
+        int rounded = (int)lroundf(exact);
+        if (fabsf(exact - (float)rounded) > 0.05f) {
+            return false;
+        }
+        *px = rounded;
+        return true;
+    };
+    int x0 = 0, y0 = 0, x1 = 0, y1 = 0, dxPx = 0, dyPx = 0;
+    if (!nearPx(x, sx, &x0) || !nearPx(y, sy, &y0) || !nearPx(x + w, sx, &x1) ||
+        !nearPx(y + h, sy, &y1) || !nearPx(dx, sx, &dxPx) ||
+        !nearPx(dy, sy, &dyPx)) {
+        return false;
+    }
+    int cw = x1 - x0;
+    int ch = y1 - y0;
+    if (cw <= 1 || ch <= 1 || (dxPx == 0 && dyPx == 0)) {
+        return false;
+    }
+    if (abs(dxPx) >= cw || abs(dyPx) >= ch) {
+        return false;
+    }
+
+    int srcX = x0;
+    int srcY = y0;
+    int dstX = x0;
+    int dstY = y0;
+    int copyW = cw;
+    int copyH = ch;
+    if (dxPx > 0) {
+        dstX = x0 + dxPx;
+        copyW = cw - dxPx;
+    } else if (dxPx < 0) {
+        srcX = x0 - dxPx;
+        copyW = cw + dxPx;
+    }
+    if (dyPx > 0) {
+        dstY = y0 + dyPx;
+        copyH = ch - dyPx;
+    } else if (dyPx < 0) {
+        srcY = y0 - dyPx;
+        copyH = ch + dyPx;
+    }
+    if (copyW <= 0 || copyH <= 0) {
+        return false;
+    }
+    if (!ctx->rt->scrollStage || ctx->rt->scrollStageW < copyW ||
+        ctx->rt->scrollStageH < copyH) {
+        gpui_paint_win_Rel(&ctx->rt->scrollStage);
+        int sw = copyW;
+        int sh = copyH;
+        D2D1_BITMAP_PROPERTIES1 props = D2D1::BitmapProperties1(
+            D2D1_BITMAP_OPTIONS_NONE,
+            D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+                              D2D1_ALPHA_MODE_IGNORE),
+            96.f, 96.f);
+        HRESULT hr = dc->CreateBitmap(D2D1::SizeU((UINT)sw, (UINT)sh), nullptr,
+                                      0, props, &ctx->rt->scrollStage);
+        if (FAILED(hr) || !ctx->rt->scrollStage) {
+            return false;
+        }
+        ctx->rt->scrollStageW = sw;
+        ctx->rt->scrollStageH = sh;
+    }
+    dc->Flush();
+    D2D1_POINT_2U destPoint = {0, 0};
+    D2D1_RECT_U srcRect = {(UINT)srcX, (UINT)srcY, (UINT)(srcX + copyW),
+                           (UINT)(srcY + copyH)};
+    HRESULT hr = ctx->rt->scrollStage
+                     ->CopyFromRenderTarget(&destPoint, dc, &srcRect);
+    if (FAILED(hr)) {
+        return false;
+    }
+    D2D1_RECT_F destDip =
+        D2D1::RectF((float)dstX / sx, (float)dstY / sy,
+                    (float)(dstX + copyW) / sx, (float)(dstY + copyH) / sy);
+    D2D1_RECT_F srcDip = D2D1::RectF(0.f, 0.f, (float)copyW, (float)copyH);
+    dc->DrawBitmap(ctx->rt->scrollStage, destDip, 1.f,
+                   D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, srcDip);
+    return true;
+}
+
+bool CanvasReadPixels(PaintCtx* ctx, float x, float y, float w, float h,
+                      uint8_t* bgra, int cap, int* outW, int* outH) {
+    if (outW) {
+        *outW = 0;
+    }
+    if (outH) {
+        *outH = 0;
+    }
+    if (PaintGpuOn() || !ctx || !ctx->rt || !ctx->rt->dc || !bgra || w < 1.f ||
+        h < 1.f) {
+        return false;
+    }
+    ID2D1DeviceContext* dc = ctx->rt->dc;
+    float dpiX = 96.f, dpiY = 96.f;
+    dc->GetDpi(&dpiX, &dpiY);
+    float sx = dpiX / 96.f;
+    float sy = dpiY / 96.f;
+    int x0 = (int)lroundf(x * sx);
+    int y0 = (int)lroundf(y * sy);
+    int x1 = (int)lroundf((x + w) * sx);
+    int y1 = (int)lroundf((y + h) * sy);
+    int pw = x1 - x0;
+    int ph = y1 - y0;
+    if (pw <= 0 || ph <= 0 || pw > 8192 || ph > 8192) {
+        return false;
+    }
+    if (cap / 4 < pw * ph) {
+        return false;
+    }
+    D2D1_BITMAP_PROPERTIES1 props = D2D1::BitmapProperties1(
+        D2D1_BITMAP_OPTIONS_CPU_READ | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+        D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE),
+        dpiX, dpiY);
+    ID2D1Bitmap1* bmp = nullptr;
+    HRESULT hr = dc->CreateBitmap(D2D1::SizeU((UINT)pw, (UINT)ph), nullptr, 0,
+                                  props, &bmp);
+    if (FAILED(hr) || !bmp) {
+        return false;
+    }
+    dc->Flush();
+    D2D1_POINT_2U destPoint = {0, 0};
+    D2D1_RECT_U srcRect = {(UINT)x0, (UINT)y0, (UINT)x1, (UINT)y1};
+    hr = bmp->CopyFromRenderTarget(&destPoint, dc, &srcRect);
+    if (FAILED(hr)) {
+        bmp->Release();
+        return false;
+    }
+    D2D1_MAPPED_RECT mapped = {};
+    hr = bmp->Map(D2D1_MAP_OPTIONS_READ, &mapped);
+    if (FAILED(hr) || !mapped.bits) {
+        bmp->Release();
+        return false;
+    }
+    for (int row = 0; row < ph; row++) {
+        memcpy(bgra + (size_t)row * (size_t)pw * 4,
+               mapped.bits + (size_t)row * mapped.pitch, (size_t)pw * 4);
+    }
+    bmp->Unmap();
+    bmp->Release();
+    if (outW) {
+        *outW = pw;
+    }
+    if (outH) {
+        *outH = ph;
+    }
+    return true;
 }
 
 struct Path {
@@ -247754,7 +256603,25 @@ static void PollAll(int xfd, int timeoutMs, PlatPollFd* extra, int nExtra) {
     }
 }
 
+static void UpdateImePosition(Window* win) {
+    if (!win || !win->plat || !win->plat->xic || !win->input) {
+        return;
+    }
+    InputState* in = win->input;
+    XPoint spot;
+    spot.x = (short)(in->lastBounds.x + in->caretX - in->scrollX);
+    spot.y = (short)(in->lastBounds.y - in->scrollY + in->lastLineH);
+    XVaNestedList preedit =
+        XVaCreateNestedList(0, XNSpotLocation, &spot, nullptr);
+    if (!preedit) {
+        return;
+    }
+    XSetICValues(win->plat->xic, XNPreeditAttributes, preedit, nullptr);
+    XFree(preedit);
+}
+
 bool PlatInit(App* app) {
+    PlatInstallImePositionUpdate(UpdateImePosition);
     WakeInit();
     if (gDpy) {
         return true;
@@ -248897,6 +257764,15 @@ static bool PressedButton(MouseButton* out) {
     NSUInteger hi =
         (NSUInteger)gpui::Utf8OffsetToUtf16(text, in->selectedRange.end);
     return NSMakeRange(lo, hi - lo);
+}
+
+- (void)setSelectedRange:(NSRange)range {
+    gpui::InputState* in = [self gpuiInput];
+    if (!in || range.location == NSNotFound) {
+        return;
+    }
+    gpui::InputSetSelectedTextRangeUtf16(in, win->app, win, (int)range.location,
+                                         (int)(range.location + range.length));
 }
 
 - (void)setMarkedText:(id)string
@@ -250096,8 +258972,17 @@ void PlatWake(App* app) {
     });
 }
 
+static void UpdateImePosition(Window* win) {
+    if (!win || !win->plat || !win->plat->view) {
+        return;
+    }
+    NSTextInputContext* context = [win->plat->view inputContext];
+    [context invalidateCharacterCoordinates];
+}
+
 bool PlatInit(App* app) {
     (void)app;
+    PlatInstallImePositionUpdate(UpdateImePosition);
     @autoreleasepool {
         [NSApplication sharedApplication];
 
@@ -251369,8 +260254,13 @@ bool ClipboardReadAsync(Window* win, ClipboardReadFn done, void* data) {
     return true;
 }
 
+static void UpdateImePosition(Window* win) {
+    (void)win;
+}
+
 bool PlatInit(App* app) {
     (void)app;
+    PlatInstallImePositionUpdate(UpdateImePosition);
     return true;
 }
 
@@ -253195,8 +262085,25 @@ void PlatWake(App* app) {
     }
 }
 
+static void UpdateImePosition(Window* win) {
+    if (!win || !win->input || !win->input->focused) {
+        return;
+    }
+    HWND hwnd = Hwnd(win);
+    if (!hwnd) {
+        return;
+    }
+    HIMC imc = ImmGetContext(hwnd);
+    if (!imc) {
+        return;
+    }
+    ImeMoveCandidateWindow(win, imc);
+    ImmReleaseContext(hwnd, imc);
+}
+
 bool PlatInit(App* app) {
     (void)app;
+    PlatInstallImePositionUpdate(UpdateImePosition);
     CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
     OleInitialize(nullptr);
@@ -258685,6 +267592,17 @@ bool SysSelfPrivateMemory(uint64_t* bytes) {
     return false;
 }
 
+bool SysSelfThreadCpu(double* seconds) {
+    struct timespec ts = {};
+    if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) != 0) {
+        return false;
+    }
+    if (seconds) {
+        *seconds = (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+    }
+    return true;
+}
+
 }
 
 #endif
@@ -258940,6 +267858,17 @@ bool SysSelfPrivateMemory(uint64_t* bytes) {
     return true;
 }
 
+bool SysSelfThreadCpu(double* seconds) {
+    struct timespec ts = {};
+    if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) != 0) {
+        return false;
+    }
+    if (seconds) {
+        *seconds = (double)ts.tv_sec + (double)ts.tv_nsec / 1e9;
+    }
+    return true;
+}
+
 }
 
 #endif
@@ -259040,6 +267969,11 @@ void SysRefresh(SysState* s) {
 
 bool SysSelfPrivateMemory(uint64_t* bytes) {
     (void)bytes;
+    return false;
+}
+
+bool SysSelfThreadCpu(double* seconds) {
+    (void)seconds;
     return false;
 }
 
@@ -259253,6 +268187,48 @@ bool SysSelfPrivateMemory(uint64_t* bytes) {
     return true;
 }
 
+static double RatedCyclesPerSec() {
+    static double hz = -1;
+    if (hz >= 0) {
+        return hz;
+    }
+    hz = 0;
+    HKEY key = nullptr;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                      "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0,
+                      KEY_READ, &key) == 0) {
+        DWORD mhz = 0;
+        DWORD size = sizeof(mhz);
+        if (RegQueryValueExA(key, "~MHz", nullptr, nullptr, (BYTE*)&mhz,
+                             &size) == 0 &&
+            mhz > 0) {
+            hz = (double)mhz * 1000000.0;
+        }
+        RegCloseKey(key);
+    }
+    return hz;
+}
+
+bool SysSelfThreadCpu(double* seconds) {
+    double hz = RatedCyclesPerSec();
+    ULONG64 cycles = 0;
+    if (hz > 0 && QueryThreadCycleTime(GetCurrentThread(), &cycles)) {
+        if (seconds) {
+            *seconds = (double)cycles / hz;
+        }
+        return true;
+    }
+    FILETIME created, exited, kernel, user;
+    if (!GetThreadTimes(GetCurrentThread(), &created, &exited, &kernel,
+                        &user)) {
+        return false;
+    }
+    if (seconds) {
+        *seconds = (double)(FtToU64(kernel) + FtToU64(user)) / 10000000.0;
+    }
+    return true;
+}
+
 }
 
 #endif
@@ -259261,6 +268237,10 @@ bool SysSelfPrivateMemory(uint64_t* bytes) {
 #line 1 "src/base_android.cpp"
 
 namespace base {
+
+bool PlatDisclaimSpeechResponsibility(int, char**, int*) {
+    return true;
+}
 
 bool PlatGetExePath(char* out, int cap) {
     if (!out || cap <= 0) return false;
@@ -259297,6 +268277,9 @@ bool PlatCleanOnEscape() {
 bool PlatScrollBounceTouch() {
     return true;
 }
+bool PlatOverscrollPhaselessStops() {
+    return false;
+}
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
 }
@@ -259328,6 +268311,10 @@ float PlatWindowShadowSize() {
 
 namespace base {
 
+bool PlatDisclaimSpeechResponsibility(int, char**, int*) {
+    return true;
+}
+
 bool PlatGetExePath(char* out, int cap) {
     if (out && cap > 0) out[0] = 0;
     return false;
@@ -259358,6 +268345,9 @@ bool PlatCleanOnEscape() {
 }
 bool PlatScrollBounceTouch() {
     return true;
+}
+bool PlatOverscrollPhaselessStops() {
+    return false;
 }
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
@@ -259391,6 +268381,10 @@ float PlatWindowShadowSize() {
 namespace base {
 
 void PlatDirNameInPlace(char* path);
+
+bool PlatDisclaimSpeechResponsibility(int, char**, int*) {
+    return true;
+}
 
 bool PlatGetExePath(char* out, int cap) {
     if (!out || cap <= 0) return false;
@@ -259461,6 +268455,9 @@ bool PlatCleanOnEscape() {
 bool PlatScrollBounceTouch() {
     return false;
 }
+bool PlatOverscrollPhaselessStops() {
+    return false;
+}
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
 }
@@ -259490,6 +268487,11 @@ float PlatWindowShadowSize() {
 #if GPUI_OS_MAC
 #line 1 "src/base_mac.cpp"
 
+extern "C" int responsibility_spawnattrs_setdisclaim(posix_spawnattr_t* attrs,
+                                                     int disclaim);
+
+extern "C" char** environ;
+
 namespace base {
 
 void PlatDirNameInPlace(char* path);
@@ -259501,6 +268503,79 @@ bool PlatGetExePath(char* out, int cap) {
     if (_NSGetExecutablePath(out, &n) != 0) return false;
     out[cap - 1] = 0;
     return out[0] != 0;
+}
+
+bool PlatDisclaimSpeechResponsibility(int argc, char** argv, int* status) {
+    if (getenv("SPEECH_RESPONSIBILITY_DISCLAIMED")) {
+        return true;
+    }
+    char path[kMaxPath];
+    if (!PlatGetExePath(path, kMaxPath)) {
+        fprintf(stderr,
+                "Speech could not disclaim the terminal's responsibility: "
+                "current executable path is unknown\n");
+        return true;
+    }
+    if (argc < 0) {
+        argc = 0;
+    }
+    char** childArgv = new char*[argc + 1];
+    for (int i = 0; i < argc; i++) {
+        childArgv[i] = argv ? argv[i] : nullptr;
+    }
+    childArgv[argc] = nullptr;
+
+    int nenv = 0;
+    if (environ) {
+        while (environ[nenv]) {
+            nenv++;
+        }
+    }
+    char** envp = new char*[nenv + 2];
+    for (int i = 0; i < nenv; i++) {
+        envp[i] = environ[i];
+    }
+    envp[nenv] = const_cast<char*>("SPEECH_RESPONSIBILITY_DISCLAIMED=1");
+    envp[nenv + 1] = nullptr;
+
+    posix_spawnattr_t attrs = nullptr;
+    pid_t pid = 0;
+    int err = posix_spawnattr_init(&attrs);
+    if (err == 0) {
+        err = responsibility_spawnattrs_setdisclaim(&attrs, 1);
+        if (err == 0) {
+            err = posix_spawn(&pid, path, nullptr, &attrs, childArgv, envp);
+        }
+        posix_spawnattr_destroy(&attrs);
+    }
+    delete[] childArgv;
+    delete[] envp;
+    if (err != 0) {
+        fprintf(stderr,
+                "Speech could not disclaim the terminal's responsibility: "
+                "%s\n",
+                strerror(err));
+        return true;
+    }
+
+    int raw = 0;
+    for (;;) {
+        if (waitpid(pid, &raw, 0) != -1) {
+            break;
+        }
+        if (errno != EINTR) {
+            fprintf(stderr,
+                    "Speech could not disclaim the terminal's responsibility: "
+                    "%s\n",
+                    strerror(errno));
+            return true;
+        }
+    }
+    int code = WIFEXITED(raw) ? WEXITSTATUS(raw) : 128 + WTERMSIG(raw);
+    if (status) {
+        *status = code;
+    }
+    return false;
 }
 
 void PlatGetExeDir(char* out, int cap) {
@@ -259563,6 +268638,9 @@ bool PlatCleanOnEscape() {
 }
 bool PlatScrollBounceTouch() {
     return false;
+}
+bool PlatOverscrollPhaselessStops() {
+    return true;
 }
 const char* PlatMonoFontName() {
     return "Menlo";
@@ -259947,6 +269025,10 @@ uint64_t PlatArenaReserveSize() {
     return 4ull * 1024ull * 1024ull;
 }
 
+bool PlatDisclaimSpeechResponsibility(int, char**, int*) {
+    return true;
+}
+
 bool PlatGetExePath(char* out, int cap) {
     if (out && cap > 0) out[0] = 0;
     return false;
@@ -259995,6 +269077,9 @@ bool PlatCleanOnEscape() {
     return true;
 }
 bool PlatScrollBounceTouch() {
+    return false;
+}
+bool PlatOverscrollPhaselessStops() {
     return false;
 }
 const char* PlatMonoFontName() {
@@ -260194,6 +269279,10 @@ bool PlatCanonicalPath(const char* path, char* out, int cap) {
     return true;
 }
 
+bool PlatDisclaimSpeechResponsibility(int, char**, int*) {
+    return true;
+}
+
 bool PlatGetExePath(char* out, int cap) {
     if (!out || cap <= 0) return false;
     out[0] = 0;
@@ -260390,6 +269479,9 @@ bool PlatCleanOnEscape() {
     return true;
 }
 bool PlatScrollBounceTouch() {
+    return false;
+}
+bool PlatOverscrollPhaselessStops() {
     return false;
 }
 const char* PlatMonoFontName() {
