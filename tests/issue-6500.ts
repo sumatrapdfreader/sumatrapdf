@@ -4,18 +4,25 @@
 // - a font-family that doesn't resolve fell back to mupdf's Latin serif font,
 //   so punctuation inside Chinese text (“” ……) was half width. CJK runs in a
 //   generic family now use the script's system font (mupdf patch 0085)
-// - "zw", a font name Chinese EPUB tools use, now maps to Microsoft YaHei
+// - "zw", a font name Chinese EPUB tools use, now maps to Microsoft YaHei, and
+//   to the system's CJK font on Linux and macOS
 // - justified lines were only spread at spaces, which Chinese has none of, so
 //   they ended ragged. They are now spread between the characters too
 //
 // Chapter 1 names no font, chapter 2 names "zw". Each is one paragraph that
 // fits on one page.
 //
+// Needs a Chinese system font: Windows and macOS have one. On a Linux system
+// without one, fontconfig is pointed at mupdf's Source Han Serif for the run (its
+// SC face has full-width quotes, like Microsoft YaHei; Droid Sans Fallback's aren't).
+// For ng on Linux pass -exe out/linux/dbg/SumatraPDF.
+//
 // Run:  bun tests/issue-6500.ts [--no-build]   (or via tests/run-almost-all.ts)
 
-import { writeFileSync } from "node:fs";
-import { IS_WIN } from "./host.ts";
-import { EXE, makeZip, runStandalone, tmpPath, type ZipEntry } from "./util.ts";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { IS_MAC, IS_WIN } from "./host.ts";
+import { EXE, makeZip, ROOT, runStandalone, tmpPath, type ZipEntry } from "./util.ts";
 
 const name = "issue-6500";
 const kOpenQuote = 0x201c;
@@ -60,10 +67,38 @@ function makeEpub(): Buffer {
 
 type Box = { cp: number; x: number; y: number; dx: number };
 
-function pageBoxes(epub: string, pageNo: number): Box[] {
+// environment for the app: on Linux without a Chinese font, a fontconfig
+// config that adds mupdf's CJK font to the system's
+function appEnv(): Record<string, string | undefined> {
+  if (IS_WIN || IS_MAC) {
+    return process.env;
+  }
+  const have = Bun.spawnSync(["fc-list", ":lang=zh"]);
+  if (have.exitCode === 0 && have.stdout.toString().trim().length > 0) {
+    return process.env;
+  }
+  const dir = tmpPath(`${name}-fontconfig`);
+  mkdirSync(dir, { recursive: true });
+  const han = join(ROOT, "ext", "mupdf", "resources", "fonts", "han");
+  const conf = join(dir, "fonts.conf");
+  writeFileSync(
+    conf,
+    `<?xml version="1.0"?>\n<!DOCTYPE fontconfig SYSTEM "fonts.dtd">\n<fontconfig>` +
+      `<include ignore_missing="yes">/etc/fonts/fonts.conf</include><dir>${han}</dir>` +
+      `<cachedir>${join(dir, "cache")}</cachedir>` +
+      // every face claims Chinese; distros' CJK font packages ship a rule like this
+      `<match target="pattern"><test name="lang" compare="contains"><string>zh-cn</string></test>` +
+      `<edit name="family" mode="prepend" binding="strong"><string>Source Han Serif SC</string></edit></match>` +
+      `</fontconfig>\n`,
+  );
+  return { ...process.env, FONTCONFIG_FILE: conf };
+}
+
+function pageBoxes(epub: string, pageNo: number, env: Record<string, string | undefined>): Box[] {
   const p = Bun.spawnSync([EXE, "-for-testing", "-extract-text", String(pageNo), epub], {
     stdout: "pipe",
     stderr: "pipe",
+    env,
   });
   const raw = p.stdout.toString() + p.stderr.toString();
   const m = new RegExp(`boxes on page ${pageNo}:(.*)`).exec(raw);
@@ -90,8 +125,8 @@ function median(a: number[]): number {
   return s[Math.floor(s.length / 2)];
 }
 
-function check(epub: string, pageNo: number, what: string): void {
-  const boxes = pageBoxes(epub, pageNo).filter((b) => b.dx > 0);
+function check(epub: string, pageNo: number, what: string, env: Record<string, string | undefined>): void {
+  const boxes = pageBoxes(epub, pageNo, env).filter((b) => b.dx > 0);
   const hanDx = median(boxes.filter((b) => isHan(b.cp)).map((b) => b.dx));
   const quotes = boxes.filter((b) => b.cp === kOpenQuote);
   if (!hanDx || quotes.length === 0) {
@@ -121,14 +156,11 @@ function check(epub: string, pageNo: number, what: string): void {
 }
 
 export async function testit(): Promise<void> {
-  if (!IS_WIN) {
-    console.log(`SKIP ${name}: expects Microsoft YaHei, a Windows font`);
-    return;
-  }
   const epub = tmpPath(`${name}.epub`);
   writeFileSync(epub, makeEpub());
-  check(epub, 1, "no font-family");
-  check(epub, 2, 'font-family "zw"');
+  const env = appEnv();
+  check(epub, 1, "no font-family", env);
+  check(epub, 2, 'font-family "zw"', env);
 }
 
 if (import.meta.main) {

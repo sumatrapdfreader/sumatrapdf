@@ -284,8 +284,22 @@ static CTFontRef create_fallback_font(int serif, int bold, int italic, unsigned 
     return font;
 }
 
+// "zw" (正文, body text): Chinese EPUB tools point it at e-reader font paths
+// (#6500). Windows maps it to Microsoft YaHei; here to the system's CJK font
+static int is_cjk_body_font_alias(const char* name, int* bold) {
+    if (!name) {
+        return 0;
+    }
+    if (!strcmp(name, "zw-Bold")) {
+        *bold = 1;
+        return 1;
+    }
+    return !strcmp(name, "zw");
+}
+
 static fz_font* load_mac_font(fz_context* ctx, const char* name, int bold, int italic, int exact) {
-    CTFontRef font = create_named_font(name, bold, italic, exact);
+    CTFontRef font = is_cjk_body_font_alias(name, &bold) ? create_fallback_font(0, bold, italic, 0x4e00)
+                                                         : create_named_font(name, bold, italic, exact);
     if (!font) {
         return NULL;
     }

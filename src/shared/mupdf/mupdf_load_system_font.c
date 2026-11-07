@@ -1224,8 +1224,11 @@ static int linux_match_has_rune(FcPattern* match, unsigned int rune) {
     return FcPatternGetCharSet(match, FC_CHARSET, 0, &charset) == FcResultMatch && FcCharSetHasChar(charset, rune);
 }
 
+// lang: a fontconfig language ("zh-cn") or NULL. A CJK font has a face per
+// language, which draws shared characters differently (Chinese quotes are full
+// width, Japanese ones aren't)
 static fz_font* load_linux_font_match(fz_context* ctx, const char* name, int bold, int italic, int exact,
-                                      unsigned int rune) {
+                                      unsigned int rune, const char* lang) {
     FcPattern* pattern = FcPatternCreate();
     FcPattern* match = NULL;
     fz_font* font = NULL;
@@ -1237,6 +1240,9 @@ static fz_font* load_linux_font_match(fz_context* ctx, const char* name, int bol
     }
     FcPatternAddInteger(pattern, FC_WEIGHT, bold ? FC_WEIGHT_BOLD : FC_WEIGHT_REGULAR);
     FcPatternAddInteger(pattern, FC_SLANT, italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
+    if (lang) {
+        FcPatternAddString(pattern, FC_LANG, (const FcChar8*)lang);
+    }
     if (rune) {
         FcCharSet* charset = FcCharSetCreate();
         if (charset) {
@@ -1289,18 +1295,39 @@ static fz_font* load_linux_font_match(fz_context* ctx, const char* name, int bol
     return font;
 }
 
+// "zw" (正文, body text): Chinese EPUB tools point it at e-reader font paths
+// (#6500). Windows maps it to Microsoft YaHei; here to the system's CJK font
+static int is_cjk_body_font_alias(const char* name, int* bold) {
+    if (!name) {
+        return 0;
+    }
+    if (!strcmp(name, "zw-Bold")) {
+        *bold = 1;
+        return 1;
+    }
+    return !strcmp(name, "zw");
+}
+
 static fz_font* load_linux_font(fz_context* ctx, const char* name, int bold, int italic, int exact) {
-    return load_linux_font_match(ctx, name, bold, italic, exact, 0);
+    if (is_cjk_body_font_alias(name, &bold)) {
+        return load_linux_font_match(ctx, "sans-serif", bold, italic, 0, 0x4e00, "zh-cn");
+    }
+    return load_linux_font_match(ctx, name, bold, italic, exact, 0, NULL);
 }
 
 static fz_font* load_linux_cjk_font(fz_context* ctx, const char* name, int ordering, int serif) {
     unsigned int rune = 0x4e00;
+    const char* lang = "zh-cn";
     if (ordering == FZ_ADOBE_JAPAN) {
         rune = 0x3042;
+        lang = "ja";
     } else if (ordering == FZ_ADOBE_KOREA) {
         rune = 0xac00;
+        lang = "ko";
+    } else if (ordering == FZ_ADOBE_CNS) {
+        lang = "zh-tw";
     }
-    return load_linux_font_match(ctx, name && *name ? name : (serif ? "serif" : "sans-serif"), 0, 0, 0, rune);
+    return load_linux_font_match(ctx, name && *name ? name : (serif ? "serif" : "sans-serif"), 0, 0, 0, rune, lang);
 }
 
 static unsigned int fallback_rune(int script) {
@@ -1371,13 +1398,41 @@ static unsigned int fallback_rune(int script) {
     }
 }
 
+// The fontconfig language for CJK text, or NULL. Untagged text gets the
+// script's usual language, as Windows picks Microsoft YaHei for Han, Yu Gothic
+// for kana and Malgun Gothic for Hangul
+static const char* fc_cjk_lang(int script, int language) {
+    switch (language) {
+        case FZ_LANG_zh_Hans:
+            return "zh-cn";
+        case FZ_LANG_zh_Hant:
+            return "zh-tw";
+        case FZ_LANG_ja:
+            return "ja";
+        case FZ_LANG_ko:
+            return "ko";
+    }
+    switch (script) {
+        case UCDN_SCRIPT_HAN:
+        case UCDN_SCRIPT_BOPOMOFO:
+            return "zh-cn";
+        case UCDN_SCRIPT_HIRAGANA:
+        case UCDN_SCRIPT_KATAKANA:
+            return "ja";
+        case UCDN_SCRIPT_HANGUL:
+            return "ko";
+        default:
+            return NULL;
+    }
+}
+
 static fz_font* load_linux_fallback_font(fz_context* ctx, int script, int language, int serif, int bold, int italic) {
-    (void)language;
     unsigned int rune = fallback_rune(script);
     if (!rune) {
         return NULL;
     }
-    return load_linux_font_match(ctx, serif ? "serif" : "sans-serif", bold, italic, 0, rune);
+    return load_linux_font_match(ctx, serif ? "serif" : "sans-serif", bold, italic, 0, rune,
+                                 fc_cjk_lang(script, language));
 }
 
 void install_load_linux_font_funcs(fz_context* ctx) {
