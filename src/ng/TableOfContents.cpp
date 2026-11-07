@@ -554,12 +554,10 @@ void TocContextMenuCommand(MainWindow* win, TocItem* dti, int cmd) {
             OpenEmbeddedFile(win->CurrentTab(), dest);
             break;
         case CmdSaveAttachment:
-            // hack: the attachment number is saved in pageNo, see
-            // PdfLoadAttachments and DestFromAttachment
-            SaveAttachment(win->CurrentTab(), dest->GetName(), pageNo);
+            SaveAttachment(win->CurrentTab(), dest->GetName(), ((PageDestination*)dest)->attachmentNo);
             break;
         case CmdOpenAttachment:
-            OpenAttachment(win->CurrentTab(), dest->GetName(), pageNo);
+            OpenAttachment(win->CurrentTab(), dest->GetName(), ((PageDestination*)dest)->attachmentNo);
             break;
         default:
             break;

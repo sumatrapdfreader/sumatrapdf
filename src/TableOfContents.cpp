@@ -540,15 +540,13 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     int attachmentNo = -1;
     if (destKind == kindDestinationAttachment) {
-        auto* attachment = (PageDestinationFile*)dest;
+        auto* attachment = (PageDestination*)dest;
         // this is a path to a file on disk, e.g. a path to opened PDF
         // with the embedded stream number
-        path = attachment->path;
+        path = attachment->value;
         // this is name of the file as set inside PDF file
         fileName = dest->GetName();
-        // hack: attachmentNo is saved in pageNo see
-        // PdfLoadAttachments and DestFromAttachment
-        attachmentNo = pageNo;
+        attachmentNo = attachment->attachmentNo;
         bool canOpenEmbedded = str::EndsWithI(fileName, StrL(".pdf"));
         if (!canOpenEmbedded) {
             MenuRemove(popup, CmdOpenAttachment);

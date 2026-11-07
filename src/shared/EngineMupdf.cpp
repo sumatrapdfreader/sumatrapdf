@@ -5413,7 +5413,7 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     Str title = outline->title ? Str(outline->title) : StrL("");
     TempStr nameHex = str::MemToHexTemp(title);
     dest->value = str::Dup(fmt("%s:%d:attachname=%s", engine->FilePath(), outline->page.page, nameHex));
-    dest->pageNo = outline->page.page;
+    dest->attachmentNo = outline->page.page;
     return dest;
 }
 

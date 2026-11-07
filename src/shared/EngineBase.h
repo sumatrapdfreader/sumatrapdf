@@ -220,6 +220,7 @@ struct PageDestination : IPageDestination {
     Str value;
     Str name;
     int embedObjNum = 0; // PDF object number for embedded file attachment annotations
+    int attachmentNo = -1; // index of a kindDestinationAttachment, see PdfLoadAttachments
 
     ~PageDestination() override;
 
