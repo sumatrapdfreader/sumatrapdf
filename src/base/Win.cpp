@@ -2196,7 +2196,12 @@ void RunNonElevated(Str exePath) {
     }
     cmd = fmt("\"%s\" \"%s\"", explorerPath, exePath);
 Run:
-    HANDLE h = LaunchProcessInDir(len(cmd) == 0 ? exePath : cmd);
+    // LaunchProcessInDir needs the exe quoted: "C:\Program Files\..." would
+    // otherwise first try to run C:\Program.exe
+    if (len(cmd) == 0) {
+        cmd = fmt("\"%s\"", exePath);
+    }
+    HANDLE h = LaunchProcessInDir(cmd);
     SafeCloseHandle(&h);
 }
 
