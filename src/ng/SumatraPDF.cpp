@@ -1120,7 +1120,7 @@ void ReloadTab(WindowTab* tab) {
     logf("ReloadTab: '%s'\n", tab->filePath);
     tab->reloadOnFocus = true;
     if (IsCurrentTab(win, tab)) {
-        tab->autoReloadLeftMs = kAutoReloadDelayInMs;
+        tab->autoReload.Arm(kAutoReloadDelayInMs);
     }
 }
 
@@ -1142,14 +1142,9 @@ static void WatchTabFile(WindowTab* tab) {
 // drives it instead of a WM_TIMER.
 void AutoReloadTick(MainWindow* win, int elapsedMs) {
     WindowTab* tab = win->CurrentTab();
-    if (!tab || tab->autoReloadLeftMs <= 0) {
+    if (!tab || !tab->autoReload.Tick(elapsedMs)) {
         return;
     }
-    tab->autoReloadLeftMs -= elapsedMs;
-    if (tab->autoReloadLeftMs > 0) {
-        return;
-    }
-    tab->autoReloadLeftMs = 0;
     if (!tab->reloadOnFocus) {
         return;
     }
@@ -1162,13 +1157,13 @@ void AutoReloadTick(MainWindow* win, int elapsedMs) {
     // an open menu still holds the page element it was built from. Reload
     // once it is gone, as orig does while TrackPopupMenu is running.
     if (win->gpuiWin && IsTrackedPopupOpenInApp(win->gpuiWin->app)) {
-        tab->autoReloadLeftMs = kAutoReloadDelayInMs;
+        tab->autoReload.Arm(kAutoReloadDelayInMs);
         return;
     }
     if (AutoReloadFileStillChanging(tab)) {
         // a writer (LaTeX etc.) is still producing the file; wait for it to go
         // quiet instead of showing a half-written document
-        tab->autoReloadLeftMs = kAutoReloadDelayInMs;
+        tab->autoReload.Arm(kAutoReloadDelayInMs);
         return;
     }
     ReloadDocument(win, true);
@@ -4730,7 +4725,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         win->presentation = PM_ENABLED;
         // hack: this tells OnMouseMove() to hide the cursor immediately
         win->dragPrevPos = Point(-2, -3);
-        win->presCursorHideLeftMs = 1;
+        win->presCursorHide.Arm(1);
     } else {
         win->isFullScreen = true;
     }
@@ -4778,7 +4773,7 @@ void ExitFullScreen(MainWindow* win) {
             win->ctrl->SetInPresentation(false);
         }
         // re-enable the auto-hidden cursor
-        win->presCursorHideLeftMs = -1;
+        win->presCursorHide.Cancel();
         AppShellShowCursor(win, true);
         // ensure that no ToC is shown when entering presentation mode the next time
         for (WindowTab* tab : win->Tabs()) {

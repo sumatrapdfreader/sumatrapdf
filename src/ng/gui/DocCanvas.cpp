@@ -2272,7 +2272,7 @@ static void FinishAnnotationNudge(MainWindow* win) {
     }
     win->annotationNudgeTab = nullptr;
     win->annotationNudgePageNo = 0;
-    win->annotationNudgeLeftMs = 0;
+    win->annotationNudge.Cancel();
     if (!IsWindowTabValid(tab)) {
         return;
     }
@@ -2332,7 +2332,7 @@ bool NudgeSelectedAnnotation(MainWindow* win, int vkey, bool shift) {
     }
     win->annotationNudgeTab = tab;
     win->annotationNudgePageNo = pageNo;
-    win->annotationNudgeLeftMs = kAnnotationNudgeDelayMs;
+    win->annotationNudge.Arm(kAnnotationNudgeDelayMs);
     return true;
 }
 
@@ -2340,8 +2340,7 @@ void AnnotationNudgeTick(MainWindow* win, int elapsedMs) {
     if (!win || !win->annotationNudgeTab) {
         return;
     }
-    win->annotationNudgeLeftMs -= elapsedMs;
-    if (win->annotationNudgeLeftMs <= 0) {
+    if (win->annotationNudge.Tick(elapsedMs)) {
         FinishAnnotationNudge(win);
     }
 }
@@ -2351,19 +2350,14 @@ void AnnotationNudgeTick(MainWindow* win, int elapsedMs) {
 constexpr int kAnnotationResizeRerenderDelayMs = 125;
 
 void AnnotationResizeRerenderTick(MainWindow* win, int elapsedMs) {
-    if (!win || win->annotationResizeRerenderLeftMs <= 0) {
+    if (!win || !win->annotationResizeRerender.Tick(elapsedMs)) {
         return;
     }
-    win->annotationResizeRerenderLeftMs -= elapsedMs;
-    if (win->annotationResizeRerenderLeftMs > 0) {
-        return;
-    }
-    win->annotationResizeRerenderLeftMs = 0;
     MainWindowRerender(win);
 }
 
 static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point pt, ResizeHandle handle) {
-    win->annotationResizeRerenderLeftMs = 0;
+    win->annotationResizeRerender.Cancel();
     // the drag rewrites the annotation on every mouse move; one undo step
     BeginPdfEditOperation(win, "Resize annotation");
     // a finished right-click leaves dragRightClick set; this is a left drag
@@ -2416,7 +2410,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     win->annotationBeingResized = false;
     win->annotationResizeOutlineOnly = false;
     win->annotationBeingDragged = nullptr;
-    win->annotationResizeRerenderLeftMs = 0;
+    win->annotationResizeRerender.Cancel();
     CanvasSetCursor(win, kCurArrow);
 
     if (aborted || !annot) {
@@ -2495,7 +2489,7 @@ static void UpdateAnnotationResize(MainWindow* win, int x, int y, bool isShift) 
         RectF newRect = CalculateResizedRect(win, x, y);
         SetRect(annot, newRect);
         win->annotationResizePreviewRect = newRect;
-        win->annotationResizeRerenderLeftMs = kAnnotationResizeRerenderDelayMs;
+        win->annotationResizeRerender.Arm(kAnnotationResizeRerenderDelayMs);
     }
     AppShellInvalidate(win);
 }
@@ -3356,7 +3350,7 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
         if (!win->dragPrevPos.Eq(x, y)) {
             AppShellShowCursor(win, true);
             // hack: hide the cursor immediately the first time (EnterFullScreen)
-            win->presCursorHideLeftMs = win->dragPrevPos.Eq(-2, -3) ? 1 : kHideCursorDelayInMs;
+            win->presCursorHide.Arm(win->dragPrevPos.Eq(-2, -3) ? 1 : kHideCursorDelayInMs);
         }
     }
     if (gLaserPointer && !kLaserPointerIsCursor) {
@@ -3484,14 +3478,9 @@ void DocCanvasMouseMove(MainWindow* win, int x, int y) {
 // orig's kHideCursorTimerID. A laser pointer that disappears when you stop
 // moving it would be useless, so it opts out of the hiding.
 void CanvasTickPresentation(MainWindow* win, int elapsedMs) {
-    if (win->presCursorHideLeftMs < 0) {
+    if (!win->presCursorHide.Tick(elapsedMs)) {
         return;
     }
-    win->presCursorHideLeftMs -= elapsedMs;
-    if (win->presCursorHideLeftMs > 0) {
-        return;
-    }
-    win->presCursorHideLeftMs = -1;
     if (win->InPresentation() && !IsLaserPointerActive()) {
         AppShellShowCursor(win, false);
     }

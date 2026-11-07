@@ -104,7 +104,7 @@ struct AnnotFilterToolbar : AnnotFilterToolbarBase {
     gp::Bounds listBounds{};
     gp::Bounds cardBounds{};
     gp::Bounds saveNewBounds{};
-    int selectPendingMs = -1;
+    Countdown selectPending;
     // the row context menu, and the row it is for
     MenuModel* menu = nullptr;
     int menuIdx = -1;
@@ -471,7 +471,7 @@ static void RebuildList(AnnotFilterToolbar* f) {
 }
 
 static void CancelPendingSelection(AnnotFilterToolbar* f) {
-    f->selectPendingMs = -1;
+    f->selectPending.Cancel();
 }
 
 static void ApplySelectionNow(AnnotFilterToolbar* f) {
@@ -497,7 +497,7 @@ static void ScheduleSelection(AnnotFilterToolbar* f) {
     if (annot == tab->selectedAnnotation) {
         return;
     }
-    f->selectPendingMs = kSelectionDebounceMs;
+    f->selectPending.Arm(kSelectionDebounceMs);
 }
 
 // the buttons are rebuilt from the selection every frame
@@ -533,14 +533,11 @@ static void OnFilterTextChanged(AnnotFilterToolbar* f) {
 // ng: orig waits out a WM_TIMER; the shell's tick counts it down instead
 void AnnotFilterTick(MainWindow* win, int elapsedMs) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    if (!f || f->selectPendingMs < 0) {
+    if (!f || !f->selectPending.Tick(elapsedMs)) {
         return;
     }
-    f->selectPendingMs -= elapsedMs;
-    if (f->selectPendingMs <= 0) {
-        ApplySelectionNow(f);
-        AppShellInvalidate(win);
-    }
+    ApplySelectionNow(f);
+    AppShellInvalidate(win);
 }
 
 bool IsFloatingAnnotListVisible(MainWindow* win) {
@@ -1544,11 +1541,11 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     Color btnBg = AccentColor(ThemeWindowControlBackgroundColor(), 14);
     Color saveNewTxt = dirty ? ThemeWindowTextColor() : EnsureContrast(ThemeWindowTextDisabledColor(), btnBg);
     Rect saveNewRc = FromGpui(f->saveNewBounds);
-    out.Append(
-        fmt("deleteEnabled=%d discardEnabled=%d saveEnabled=%d nSel=%d deleteCount=%d anchor=%d scrollY=%d "
-            "viewRows=%d listFocused=%d filterFocused=%d pending=%d pageSel=%d\n",
-            DeleteCount(f) > 0 ? 1 : 0, dirty, dirty, SelectedCount(f), DeleteCount(f), f->anchor, (int)f->scrollY,
-            f->viewRows, f->listFocused ? 1 : 0, IsFilterFocused(f) ? 1 : 0, f->selectPendingMs >= 0 ? 1 : 0, pageSel));
+    out.Append(fmt(
+        "deleteEnabled=%d discardEnabled=%d saveEnabled=%d nSel=%d deleteCount=%d anchor=%d scrollY=%d "
+        "viewRows=%d listFocused=%d filterFocused=%d pending=%d pageSel=%d\n",
+        DeleteCount(f) > 0 ? 1 : 0, dirty, dirty, SelectedCount(f), DeleteCount(f), f->anchor, (int)f->scrollY,
+        f->viewRows, f->listFocused ? 1 : 0, IsFilterFocused(f) ? 1 : 0, f->selectPending.IsArmed() ? 1 : 0, pageSel));
     // a second fmt: one call's instruction list tops out at 32
     out.Append(fmt("saveNewRect=%d,%d,%d,%d saveNewText=%s saveNewBg=%s\n", saveNewRc.x, saveNewRc.y, saveNewRc.dx,
                    saveNewRc.dy, SerializeColorTemp(saveNewTxt), SerializeColorTemp(btnBg)));

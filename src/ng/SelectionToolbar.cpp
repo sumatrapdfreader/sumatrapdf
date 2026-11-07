@@ -46,8 +46,8 @@ struct SelectionToolbar {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr; // tab the current selection belongs to
     bool visible = false;
-    // ms still to wait before the debounced show
-    int showPendingMs = -1;
+    // the debounced show
+    Countdown showPending;
     Vec<SelectionToolbarButton> buttons;
     // where the card ended up last frame; gpui reports it one frame late, which
     // is enough to center the card on the selection from the second frame on
@@ -151,28 +151,23 @@ void ShowSelectionToolbar(MainWindow* win, SelToolbarShow when) {
         return;
     }
     if (when == SelToolbarShow::Now) {
-        tb->showPendingMs = -1;
+        tb->showPending.Cancel();
         ShowSelectionToolbarNow(win);
         return;
     }
-    if (tb->showPendingMs >= 0) {
+    if (tb->showPending.IsArmed()) {
         return;
     }
-    tb->showPendingMs = kShowDelayInMs;
+    tb->showPending.Arm(kShowDelayInMs);
 }
 
 // ng: orig waits out kSelectionToolbarShowTimerID; the shell's tick counts it
 // down instead
 void SelectionToolbarOnShowTimer(MainWindow* win, int elapsedMs) {
     SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
-    if (!tb || tb->showPendingMs < 0) {
+    if (!tb || !tb->showPending.Tick(elapsedMs)) {
         return;
     }
-    tb->showPendingMs -= elapsedMs;
-    if (tb->showPendingMs > 0) {
-        return;
-    }
-    tb->showPendingMs = -1;
     // the selection may be gone or still being dragged by now; both self-guard
     if (IsActivelySelecting(win)) {
         return;
@@ -184,7 +179,7 @@ void SelectionToolbarOnShowTimer(MainWindow* win, int elapsedMs) {
 static void CancelPendingShow(MainWindow* win) {
     SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
     if (tb) {
-        tb->showPendingMs = -1;
+        tb->showPending.Cancel();
     }
 }
 

@@ -120,7 +120,7 @@ struct WindowTab {
     u64 autoReloadStartMs = 0;
     FILETIME autoReloadModTime{};
 #if defined(SUMATRA_NG)
-    int autoReloadLeftMs = 0;
+    Countdown autoReload;
 #endif
     ReadAloudHighlightMap* readAloudHighlight = nullptr;
     Str filePath;

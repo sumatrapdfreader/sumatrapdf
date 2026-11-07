@@ -65,8 +65,8 @@ struct NotificationWnd {
     int xMargin = kNotifDefaultMargin;
     int yMargin = kNotifDefaultMargin;
     NotificationClosed onClosed;
-    // ms left before the timeout closes it; the shell's tick counts it down
-    int timeLeftMs = 0;
+    // the timeout that closes it; the shell's tick counts it down
+    Countdown timeLeft;
     // 0..100, or -1 when the notification has no progress bar
     int progressPerc = -1;
     // ng: identity for the shell's listeners, which can only carry an integer

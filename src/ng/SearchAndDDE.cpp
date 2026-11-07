@@ -139,17 +139,13 @@ void OnFindBarTextChanged(MainWindow* win) {
     int nChars = FindEditTextLen(win);
     int delay = FindDebounceDelayMs(nChars);
     // re-arming replaces the previous countdown, so each keystroke restarts it
-    win->findDebounceLeftMs = delay;
+    win->findDebounce.Arm(delay);
     win->findDebouncePending = true;
 }
 
 // the shell's tick: runs the deferred search once the countdown expires
 void FindDebounceTick(MainWindow* win, int elapsedMs) {
-    if (!win->findDebouncePending) {
-        return;
-    }
-    win->findDebounceLeftMs -= elapsedMs;
-    if (win->findDebounceLeftMs > 0) {
+    if (!win->findDebounce.Tick(elapsedMs)) {
         return;
     }
     win->findDebouncePending = false;
@@ -163,8 +159,9 @@ void FindDebounceTick(MainWindow* win, int elapsedMs) {
 
 // if a debounced search is pending, cancel the timer and start it now (so Enter
 // forces the search to start immediately). Returns true if one was pending.
-// ng's debounce is a countdown that findDebouncePending gates
-void FindDebounceStop(MainWindow*) {}
+void FindDebounceStop(MainWindow* win) {
+    win->findDebounce.Cancel();
+}
 
 // ng's find buttons read the find state on every frame
 void FindSetToolbarBusy(MainWindow*, bool) {}
@@ -215,7 +212,7 @@ void UpdateFindStatus(UpdateFindStatusData* d) {
 // cancel a pending debounced find-as-you-type search
 void CancelPendingFind(MainWindow* win) {
     win->findDebouncePending = false;
-    win->findDebounceLeftMs = 0;
+    win->findDebounce.Cancel();
 }
 
 // ng: orig's win->canvasRc is the canvas HWND's client rect, i.e. the origin
@@ -315,26 +312,21 @@ void PaintAllFindMatches(MainWindow* win, gp::PaintCtx* ctx) {
 
 // ng: orig's kHideFwdSearchMarkTimerID handler in Canvas.cpp
 void ForwardSearchMarkTick(MainWindow* win, int elapsedMs) {
-    if (!win || win->fwdSearchMark.hideLeftMs < 0) {
-        return;
-    }
-    win->fwdSearchMark.hideLeftMs -= elapsedMs;
-    if (win->fwdSearchMark.hideLeftMs > 0) {
+    if (!win || !win->fwdSearchMark.hide.Tick(elapsedMs)) {
         return;
     }
     win->fwdSearchMark.hideStep++;
     if (win->fwdSearchMark.hideStep >= kHideFwdSearchMarkSteps) {
-        win->fwdSearchMark.hideLeftMs = -1;
         win->fwdSearchMark.show = false;
     } else {
-        win->fwdSearchMark.hideLeftMs = kHideFwdSearchMarkDecayIntervalInMs;
+        win->fwdSearchMark.hide.Arm(kHideFwdSearchMarkDecayIntervalInMs);
     }
     AppShellInvalidate(win);
 }
 
 // starts fading the forward search mark after delayMs
 void HideFwdSearchMarkAfter(MainWindow* win, int delayMs) {
-    win->fwdSearchMark.hideLeftMs = delayMs;
+    win->fwdSearchMark.hide.Arm(delayMs);
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE
@@ -351,7 +343,10 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
         win->fwdSearchMark.hideStep = 0;
-        win->fwdSearchMark.hideLeftMs = gSettings->forwardSearch.highlightPermanent ? -1 : kHideFwdSearchMarkDelayInMs;
+        win->fwdSearchMark.hide.Cancel();
+        if (!gSettings->forwardSearch.highlightPermanent) {
+            win->fwdSearchMark.hide.Arm(kHideFwdSearchMarkDelayInMs);
+        }
 
         // Scroll to show the overall highlighted zone
         Rect overallrc = rects[0];

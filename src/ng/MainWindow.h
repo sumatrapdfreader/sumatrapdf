@@ -311,8 +311,7 @@ struct MainWindow {
     mutable bool readAloudScrollFromCode = false;
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
     // ng: orig's kReadAloudHighlightTimerID, counted down by the shell's tick
-    bool readAloudTimerOn = false;
-    int readAloudTimerLeftMs = 0;
+    Countdown readAloudTimer;
 
     // --- links and selection (step 8a) --------------------------------------
 
@@ -376,9 +375,10 @@ struct MainWindow {
     bool findMatchCase = false;
     bool findMatchWholeWord = false;
     // find-as-you-type is debounced: orig arms a WM_TIMER on hwndFrame, here
-    // the shell's tick counts this down and fires the deferred search
+    // the shell's tick counts this down and fires the deferred search.
+    // findDebouncePending mirrors findDebounce.IsArmed(): shared code reads it
     bool findDebouncePending = false;
-    int findDebounceLeftMs = 0;
+    Countdown findDebounce;
     // the current find session already recorded its starting view
     bool searchStartMarked = false;
 
@@ -419,7 +419,7 @@ struct MainWindow {
     bool textSelectModeActive = false;
     bool textSelectModeVisual = false;
     bool textSelectCaretVisible = true; // toggled by the blink timer
-    int textSelectBlinkLeftMs = 0;
+    Countdown textSelectBlink;
     int textSelectPage = 0; // caret position, 0 if not set yet
     int textSelectGlyph = 0;
     int textSelectAnchorPage = 0; // where the selection started
@@ -523,9 +523,9 @@ struct MainWindow {
     // where arrow keys moved an annotation; re-rendered once the keys pause
     WindowTab* annotationNudgeTab = nullptr;
     int annotationNudgePageNo = 0;
-    int annotationNudgeLeftMs = 0;
+    Countdown annotationNudge;
     // page bitmap follows a rectangle resize once the pointer pauses
-    int annotationResizeRerenderLeftMs = 0;
+    Countdown annotationResizeRerender;
     // a press that only deselected an annotation; the click must do nothing
     bool pressOnlyDeselected = false;
     // an engine edit operation is open: everything until it closes is one
@@ -547,8 +547,8 @@ struct MainWindow {
     PresentationMode presentation = PM_DISABLED;
     int windowStateBeforePresentation = 0;
     // ng: orig arms kHideCursorTimerID on the canvas; the shell's tick counts
-    // this down instead. -1 is "no timer armed"
-    int presCursorHideLeftMs = -1;
+    // this down instead
+    Countdown presCursorHide;
     // set at the beginning of CloseWindow() to prevent processing commands
     // while closing
     bool isBeingClosed = false;
@@ -565,7 +565,7 @@ struct MainWindow {
         int page = 0;
         int hideStep = 0; // value used to gradually hide the markers
         // ng: orig arms kHideFwdSearchMarkTimerID; the tick counts this down
-        int hideLeftMs = -1;
+        Countdown hide;
     } fwdSearchMark;
 
     StressTest* stressTest = nullptr;

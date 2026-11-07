@@ -105,7 +105,7 @@ void RefHoverOnCanvasMouseMove(RefHoverState*& s, MainWindow* win, DocController
             return;
         }
         if (IsPopupLink(s, el)) {
-            s->hideLeftMs = -1;
+            s->hideTimer.Cancel();
             return;
         }
         RefHoverScheduleHide(s, 0);

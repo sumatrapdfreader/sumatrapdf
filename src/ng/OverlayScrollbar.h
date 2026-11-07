@@ -60,8 +60,8 @@ struct OverlayScrollbar {
     // how long to show the thin bar after a scroll, and after the mouse stops
     int showAfterScrollMs = 5000;
     int hideAfterMouseStopMs = 3000;
-    // what is left of the auto-hide timer, in ms; 0 = not armed
-    int hideLeftMs = 0;
+    // the auto-hide timer
+    Countdown autoHide;
 
     // scroll info (same semantics as SCROLLINFO)
     int nMin = 0;
@@ -80,7 +80,7 @@ struct OverlayScrollbar {
     ScrollMsg repeatScrollCode{};
     bool repeatIsInitial = false;
     // ng: orig's kTimerRepeatScroll, counted down by the owner's tick
-    int repeatLeftMs = 0;
+    Countdown repeat;
     // ng: where in the track the press that pages was (client coords)
     int repeatClickPos = 0;
 

@@ -85,8 +85,8 @@ struct AIChatPanel {
     DialogSelect optionSel;
     gp::InputState* input = nullptr;
     bool flagChecked = false;
-    // ms left of orig's kTimerAutoSelectSession; < 0 means not armed
-    int autoSelectMs = -1;
+    // orig's kTimerAutoSelectSession
+    Countdown autoSelect;
     // the selects are polled once a frame (see DialogSelect::PollChanged)
     bool initialized = false;
 };
@@ -777,7 +777,7 @@ void OnAIChatToggle(MainWindow* win, int providerId) {
         PopulateSessionCombo(win);
         // defer auto-select so the page has time to load
         AIChatPanel* panel = PanelOf(win);
-        panel->autoSelectMs = kAutoSelectDelayMs;
+        panel->autoSelect.Arm(kAutoSelectDelayMs);
     }
     logf("OnAIChatToggle:\n%s", AIChatPanelStateTemp(win));
     AppShellInvalidate(win);
@@ -942,14 +942,9 @@ int AIChatPanelDx(MainWindow* win) {
 // the deferred auto-select orig runs off kTimerAutoSelectSession
 void AIChatTick(MainWindow* win, int elapsedMs) {
     AIChatPanel* p = PanelOf(win);
-    if (!p || p->autoSelectMs < 0) {
+    if (!p || !p->autoSelect.Tick(elapsedMs)) {
         return;
     }
-    p->autoSelectMs -= elapsedMs;
-    if (p->autoSelectMs > 0) {
-        return;
-    }
-    p->autoSelectMs = -1;
     AutoSelectRecentSession(win);
     PopulateSessionCombo(win);
     AppShellInvalidate(win);

@@ -49,7 +49,7 @@ struct Toolbar {
 
     // overlay mode: whether the floating bar is up and the hide countdown
     bool overlayShown = false;
-    int overlayHideLeftMs = 0;
+    Countdown overlayHide;
 
     // the hover drop-down: the button it is up for, the one the mouse is
     // resting on and how long is left before it opens. The anchor is the
@@ -61,9 +61,9 @@ struct Toolbar {
     // from the one already up. Crossing Zoom In / Zoom Out does not.
     int hoverGen = 0;
     int hoverPendingCmdId = 0;
-    int hoverOpenLeftMs = 0;
-    // > 0 while the open drop-down waits out orig's close grace
-    int hoverCloseLeftMs = 0;
+    Countdown hoverOpen;
+    // armed while the open drop-down waits out orig's close grace
+    Countdown hoverClose;
 
     ~Toolbar();
 };

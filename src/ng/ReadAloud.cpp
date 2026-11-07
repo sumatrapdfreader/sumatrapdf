@@ -177,15 +177,14 @@ void ReadAloudHighlightTimerStart(MainWindow* win) {
     if (!win) {
         return;
     }
-    win->readAloudTimerOn = true;
-    win->readAloudTimerLeftMs = kReadAloudHighlightDelayInMs;
+    win->readAloudTimer.Arm(kReadAloudHighlightDelayInMs);
 }
 
 void ReadAloudHighlightTimerStop(MainWindow* win) {
     if (!win) {
         return;
     }
-    win->readAloudTimerOn = false;
+    win->readAloudTimer.Cancel();
 }
 
 // ng: orig fills the underlines with Gfx::FillRects; CanvasFillRects is the
@@ -265,14 +264,10 @@ void PaintReadAloudHighlight(MainWindow* win, gp::PaintCtx* ctx) {
 
 // ng: orig's kReadAloudHighlightTimerID handler in Canvas.cpp
 void ReadAloudTick(MainWindow* win, int elapsedMs) {
-    if (!win || !win->readAloudTimerOn) {
+    if (!win || !win->readAloudTimer.Tick(elapsedMs)) {
         return;
     }
-    win->readAloudTimerLeftMs -= elapsedMs;
-    if (win->readAloudTimerLeftMs > 0) {
-        return;
-    }
-    win->readAloudTimerLeftMs = kReadAloudHighlightDelayInMs;
+    win->readAloudTimer.Arm(kReadAloudHighlightDelayInMs);
 
     if (!GetReadAloudSourceTab()) {
         ReadAloudHighlightTimerStop(win);

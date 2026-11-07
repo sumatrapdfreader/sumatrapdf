@@ -40,9 +40,9 @@ struct RefHoverState {
     // WM_SETCURSOR does)
     int popupCursor = 0;
     // ng: orig arms kRefHoverTimerID / kRefHoverHideTimerID on the canvas;
-    // the shell's tick counts these down instead. < 0 means not armed.
-    int showLeftMs = -1;
-    int hideLeftMs = -1;
+    // the shell's tick counts these down instead
+    Countdown showTimer;
+    Countdown hideTimer;
     // `bmp` as something gpui can draw, made on first paint, dropped with it
     void* renderImage = nullptr;
 #else

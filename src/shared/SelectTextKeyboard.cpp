@@ -64,6 +64,15 @@ static int CaretBlinkMs() {
     return kCaretBlinkDefaultMs;
 #endif
 }
+
+// leaves the caret solid when blinking is turned off system-wide
+static void ArmCaretBlink(MainWindow* win) {
+    win->textSelectBlink.Cancel();
+    int ms = CaretBlinkMs();
+    if (ms > 0) {
+        win->textSelectBlink.Arm(ms);
+    }
+}
 #endif
 
 static void RepaintTextSelect(MainWindow* win) {
@@ -220,7 +229,7 @@ static void ApplySelection(MainWindow* win, bool selecting) {
 static void RestartCaretBlink(MainWindow* win) {
     win->textSelectCaretVisible = true;
 #if defined(SUMATRA_NG)
-    win->textSelectBlinkLeftMs = CaretBlinkMs();
+    ArmCaretBlink(win);
 #else
     if (!win->hwndCanvas) {
         return;
@@ -237,14 +246,10 @@ static void RestartCaretBlink(MainWindow* win) {
 
 #if defined(SUMATRA_NG)
 void SelectTextWithKeyboardBlinkTick(MainWindow* win, int elapsedMs) {
-    if (!SelectTextWithKeyboardActive(win) || win->textSelectBlinkLeftMs <= 0) {
+    if (!SelectTextWithKeyboardActive(win) || !win->textSelectBlink.Tick(elapsedMs)) {
         return;
     }
-    win->textSelectBlinkLeftMs -= elapsedMs;
-    if (win->textSelectBlinkLeftMs > 0) {
-        return;
-    }
-    win->textSelectBlinkLeftMs = CaretBlinkMs();
+    ArmCaretBlink(win);
     win->textSelectCaretVisible = !win->textSelectCaretVisible;
     RepaintTextSelect(win);
 }
@@ -304,7 +309,7 @@ bool StopSelectTextWithKeyboard(MainWindow* win) {
     win->textSelectModeActive = false;
     win->textSelectModeVisual = false;
 #if defined(SUMATRA_NG)
-    win->textSelectBlinkLeftMs = 0;
+    win->textSelectBlink.Cancel();
     RemoveNotificationsForGroup(win, kNotifTextSelectMode);
     RepaintTextSelect(win);
 #else

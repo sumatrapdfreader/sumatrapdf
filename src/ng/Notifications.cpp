@@ -84,17 +84,20 @@ void CloseNotification(NotificationWnd* wnd, NotifCloseReason reason) {
     RemoveNotification(wnd);
 }
 
+// a timeout of 0 persists until closed manually
+static void ArmTimeout(NotificationWnd* wnd, int timeoutMs) {
+    wnd->timeLeft.Cancel();
+    if (timeoutMs > 0) {
+        wnd->timeLeft.Arm(timeoutMs);
+    }
+}
+
 void ExpireNotifications(MainWindow* win, int elapsedMs) {
     for (int i = gNotifications.len - 1; i >= 0; i--) {
         NotificationWnd* wnd = gNotifications[i];
-        if (wnd->win != win || wnd->timeLeftMs <= 0) {
+        if (wnd->win != win || !wnd->timeLeft.Tick(elapsedMs)) {
             continue;
         }
-        wnd->timeLeftMs -= elapsedMs;
-        if (wnd->timeLeftMs > 0) {
-            continue;
-        }
-        wnd->timeLeftMs = 0;
         CloseNotification(wnd, NotifCloseReason::Timeout);
     }
 }
@@ -170,7 +173,7 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
     wnd->xMargin = args.xMargin;
     wnd->yMargin = args.yMargin;
     wnd->onClosed = args.onClosed;
-    wnd->timeLeftMs = args.timeoutMs;
+    ArmTimeout(wnd, args.timeoutMs);
     wnd->key = gNextNotifKey++;
     if (args.richMsg) {
         wnd->spans = args.richMsg;
@@ -235,7 +238,7 @@ void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS) {
     }
     str::ReplaceWithCopy(&wnd->msg, msg);
     wnd->timeoutMs = timeoutInMS;
-    wnd->timeLeftMs = timeoutInMS;
+    ArmTimeout(wnd, timeoutInMS);
     if (wnd->spans) {
         TipSpansFree(*wnd->spans);
         TipSpansParse(*wnd->spans, msg);

@@ -73,8 +73,8 @@ void RefHoverSchedule(RefHoverState* s, int delayMs, Point screenPt, int destPag
     if (!s || delayMs < 0) {
         return;
     }
-    s->showLeftMs = -1;
-    s->hideLeftMs = -1;
+    s->showTimer.Cancel();
+    s->hideTimer.Cancel();
 
     bool sameSrc = s->displayed.srcPage == srcPage && s->displayed.srcRect == srcRect;
     if (s->visible && s->displayed.destPageRaw == destPage && s->displayed.destX == destX &&
@@ -93,15 +93,15 @@ void RefHoverSchedule(RefHoverState* s, int delayMs, Point screenPt, int destPag
     if (s->visible) {
         delayMs = 0;
     }
-    s->showLeftMs = delayMs;
+    s->showTimer.Arm(delayMs);
 }
 
 void RefHoverHide(RefHoverState* s) {
     if (!s) {
         return;
     }
-    s->showLeftMs = -1;
-    s->hideLeftMs = -1;
+    s->showTimer.Cancel();
+    s->hideTimer.Cancel();
     s->pending.destPage = -1;
     s->renderGen++;
     RefHoverDropQueuedRender(s);
@@ -122,7 +122,7 @@ void RefHoverScheduleHide(RefHoverState* s, int delayMs) {
     if (!s) {
         return;
     }
-    s->showLeftMs = -1;
+    s->showTimer.Cancel();
     s->pending.destPage = -1;
     s->renderGen++;
     RefHoverDropQueuedRender(s);
@@ -131,7 +131,7 @@ void RefHoverScheduleHide(RefHoverState* s, int delayMs) {
         return;
     }
     delayMs = std::max(delayMs, kRefHoverHideMinMs);
-    s->hideLeftMs = delayMs;
+    s->hideTimer.Arm(delayMs);
 }
 
 // Fired by the hide timer: hides the popup unless the cursor is now over it
@@ -140,12 +140,12 @@ void RefHoverOnHideTimer(RefHoverState* s) {
     if (!s) {
         return;
     }
-    s->hideLeftMs = -1;
+    s->hideTimer.Cancel();
     if (!s->visible) {
         return;
     }
     if (s->cursorOverPopup) {
-        s->hideLeftMs = kRefHoverHidePollMs;
+        s->hideTimer.Arm(kRefHoverHidePollMs);
         return;
     }
     s->visible = false;
@@ -178,20 +178,12 @@ void RefHoverTick(MainWindow* win, int elapsedMs) {
     if (!s) {
         return;
     }
-    if (s->hideLeftMs >= 0) {
-        s->hideLeftMs -= elapsedMs;
-        if (s->hideLeftMs <= 0) {
-            RefHoverOnHideTimer(s);
-        }
+    if (s->hideTimer.Tick(elapsedMs)) {
+        RefHoverOnHideTimer(s);
     }
-    if (s->showLeftMs < 0) {
+    if (!s->showTimer.Tick(elapsedMs)) {
         return;
     }
-    s->showLeftMs -= elapsedMs;
-    if (s->showLeftMs > 0) {
-        return;
-    }
-    s->showLeftMs = -1;
     DisplayModel* dm = win->AsFixed();
     int destPage = s->pending.destPage;
     if (!dm || !dm->ValidPageNo(destPage)) {
@@ -231,13 +223,13 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
         }
         RefHoverOnCanvasMouseMove(win->refHover, win, win->ctrl, win->linkHandler, dm, doc.x, doc.y, el, srcPage, 0);
         RefHoverState* s = win->refHover;
-        if (!s || (s->showLeftMs < 0 && !s->visible)) {
+        if (!s || (!s->showTimer.IsArmed() && !s->visible)) {
             if (exitCodeOut) {
                 *exitCodeOut = 1;
             }
             return fmt("ERROR no-link x=%d y=%d", x, y);
         }
-        if (s->showLeftMs >= 0) {
+        if (s->showTimer.IsArmed()) {
             RefHoverTick(win, 1000);
         }
     }

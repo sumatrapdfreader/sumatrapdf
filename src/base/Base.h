@@ -499,6 +499,26 @@ struct NonCopyable {
     NonCopyable& operator=(const NonCopyable&) = delete;
 };
 
+// A one-shot countdown advanced by a periodic tick, for code without OS timers.
+// Not armed until Arm(); Tick() reports expiry exactly once.
+struct Countdown {
+    int leftMs = -1;
+    void Arm(int ms) { leftMs = ms < 0 ? 0 : ms; }
+    void Cancel() { leftMs = -1; }
+    bool IsArmed() const { return leftMs >= 0; }
+    bool Tick(int elapsedMs) {
+        if (leftMs < 0) {
+            return false;
+        }
+        leftMs -= elapsedMs;
+        if (leftMs > 0) {
+            return false;
+        }
+        leftMs = -1;
+        return true;
+    }
+};
+
 template <typename T>
 T limitValue(T val, T min, T max) {
     if (min > max) {
