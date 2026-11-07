@@ -36,11 +36,7 @@
 #include "DarkMode.h"
 #include "FindBar.h"
 #include "AppHelpersCommon.h"
-
-// command ids for the bar's toolbar buttons; must not collide with real commands
-constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
-
-constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
+#include "FindWindowCommon.h"
 
 // the bar's buttons, in order; btns[], the icons and these must line up
 constexpr int kFindBarBtnCmds[] = {

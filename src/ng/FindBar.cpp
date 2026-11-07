@@ -39,11 +39,9 @@
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "AppHelpersCommon.h"
+#include "FindWindowCommon.h"
 
 #include "SumatraLog.h"
-
-// command ids for the bar's toolbar buttons; must not collide with real commands
-constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
 
 struct FindBarView;
 
@@ -410,9 +408,6 @@ void FindBarView::OnGripDrag(FindBarView* self, gp::Ctx* cx, const gp::DragMoveE
     AppShellInvalidate(win);
     gp::Notify(cx);
 }
-
-// the pop-out button: switches to the floating find window
-constexpr int kFindBarPinCmdId = (int)CmdLast + 51;
 
 void FindBarView::OnInput(FindBarView* self, gp::Ctx* cx, const gp::InputEvent* ev) {
     MainWindow* win = self->win;

@@ -53,8 +53,6 @@
 
 #include "SumatraLog.h"
 
-constexpr int kFindWinCloseCmdId = (int)CmdLast + 52;
-
 constexpr int kFindWinDefaultDx = 460;
 constexpr int kFindWinDefaultDy = 320;
 constexpr int kFindWinMinDx = 260;
