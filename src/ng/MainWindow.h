@@ -251,6 +251,8 @@ struct MainWindow {
     // in a caption of the port's own (Windows; set when UseTabs is on)
     bool tabsInTitlebar = false;
     bool captionOverlayShown = false;
+    // last minimized state seen by the frame tick (orig gets it from WM_SIZE)
+    bool wasMinimized = false;
     // the width the tab strip has in that caption; 0 = the frame's
     int tabsAvailDx = 0;
     // size of the whole window and whether it is maximized, as the shell saw
