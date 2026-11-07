@@ -282,14 +282,6 @@ WindowTab* MainWindow::CurrentTab() const {
         curr = GetTab(i);
         return curr;
     }
-#if 0
-    int nTabs = TabCount();
-    ReportIf(nTabs > 0);
-    if (nTabs > 0) {
-        curr = GetTab(0);
-        return curr;
-    }
-#endif
     return nullptr;
 }
 
@@ -618,13 +610,6 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         /* technically c: is not abs, only c:\\ */
         isAbsPath = true;
     }
-#if 0
-    // we used to not allow absolute links due to security, but if we can open
-    // the doc we should assume we can handle it securely
-    if (isAbsPath) {
-        return;
-    }
-#endif
     if (!isAbsPath) {
         auto dir = path::GetDirTemp(win->ctrl->GetFilePath());
         fullPath = path::JoinTemp(dir, path);

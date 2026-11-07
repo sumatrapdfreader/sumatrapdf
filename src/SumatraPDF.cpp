@@ -3413,10 +3413,6 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     } else {
         win->CurrentTab()->SetFilePath(fullPath);
         win->CurrentTab()->SetDisplayName(args->DisplayName());
-#if 0
-        auto path = ToUtf8Temp(fullPath);
-        logf("LoadDocument: forceReuse, set win->CurrentTab() (0x%p) filePath to '%s'\n", win->CurrentTab(), path.Get());
-#endif
     }
 
     // TODO: stop remembering/restoring window positions when using tabs?
@@ -3447,14 +3443,6 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     currTab->loadCopyBytesTotal = 0;
     UpdateTabIsError(currTab);
     Str path = currTab->filePath;
-#if 0
-    int nPages = 0;
-    if (currTab->ctrl) {
-        nPages = currTab->ctrl->PageCount();
-    }
-    logf("LoadDocument: after ReplaceDocumentInCurrentTab win->CurrentTab() is 0x%p, path: '%s', %d pages\n", currTab,
-         path.Get(), nPages);
-#endif
     // when lazy loading: first time remember tab state, second time is
     // real loading so restore tab state
     if (!currTab->ctrl && !currTab->tabState) {
@@ -8589,17 +8577,6 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
     // need to make sure we don't break them
     bool isChm = IsBrowserDocController(win->ctrl);
     // TODO: not sure how this interacts with accelerators
-#if 0
-    bool isPageUp = (isCtrl && (VK_UP == key));
-    if (!isChm) {
-        isPageUp |= (VK_PRIOR == key) && !isCtrl;
-    }
-
-    bool isPageDown = (isCtrl && (VK_DOWN == key));
-    if (!isChm) {
-        isPageDown |= (VK_NEXT == key) && !isCtrl;
-    }
-#endif
     if (isChm) {
         if (ChmForwardKey(key)) {
             if (win->AsChm()) {
@@ -14387,21 +14364,6 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
         case WM_ERASEBKGND:
             // not sure why it's needed but it causes
             // flash of caption area in choco theme when resizing sidebar
-#if 0
-            LogRedraw("WM_ERASEBKGND", hwnd);
-            if (win && win->tabsInTitlebar && !IsCurrentThemeDefault()) {
-                HDC hdc = (HDC)wp;
-                HBRUSH br = CreateSolidBrush(ThemeMainWindowBackgroundColor());
-                HdcFillRect(hdc, HwndClientRect(hwnd), br);
-                DeleteObject(br);
-                if (!win->captionRect.IsEmpty()) {
-                    RECT rcCaption = ToRECT(win->captionRect);
-                    HBRUSH brCaption = CreateSolidBrush(ThemeControlBackgroundColor());
-                    HdcFillRect(hdc, ToRect(rcCaption), brCaption);
-                    DeleteObject(brCaption);
-                }
-            }
-#endif
             return TRUE;
 
         default:

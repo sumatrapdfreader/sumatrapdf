@@ -562,10 +562,6 @@ MenuDef menuDefThemes[] = {
 
 //[ ACCESSKEY_GROUP Settings Menu
 MenuDef menuDefSettings[] = {
-#if 0
-    { TrN("Contribute Translation"),       CmdContributeTranslation },
-    { StrL(kMenuSeparator),                       0                  },
-#endif
     {
         TrN("&Settings..."),
         CmdOptions,

@@ -1294,10 +1294,6 @@ bool HtmlWindow::CreateBrowser() {
         if (FAILED(hr)) {
             return false;
         }
-#if 0 // is this necessary?
-        hr = oleObject->DoVerb(OLEIVERB_SHOW, 0, fs->oleClientSite, 0,
-                hwnd, &rc);
-#endif
     }
 
     if (!setClientSiteFirst) {
@@ -2137,16 +2133,6 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetDC(__unused LPCRECT pRect, __unused DWO
         return E_INVALIDARG;
     }
 
-#if 0
-    if (grfFlags & OLEDC_NODRAW)
-    {
-        *phDC = mfs->hDCBuffer;
-        return S_OK;
-    }
-
-    if (fs->hDCBuffer != nullptr)
-        return E_UNEXPECTED;
-#endif
     return E_NOTIMPL;
 }
 

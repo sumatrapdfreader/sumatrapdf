@@ -986,22 +986,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL /*al
         return hrDoc;
     }
 
-#if 0
-    // extract target location
-    int target_page, target_idx;
-    if (IsNullRange()) {
-        target_page = 0;
-        target_idx = 0;
-    } else if (alignToTop) {
-        target_page = startPage;
-        target_idx = startGlyph;
-    } else {
-        target_page = endPage;
-        target_idx = endGlyph;
-    }
-#endif
-
-    // TODO: Scroll to target_page, target_idx
+    // TODO: scroll the range start (alignToTop) or end into view
     // document->GetDM()->ScrollYTo()
     return E_NOTIMPL;
 }

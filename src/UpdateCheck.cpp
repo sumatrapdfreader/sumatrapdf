@@ -474,13 +474,6 @@ Visit <a href="%s">%s</a> to download the latest version.)",
 }
 
 static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
-    // for store builds we do update check but ignore the result
-#if 0
-    if (gIsStoreBuild) {
-        return 0;
-    }
-#endif
-
     Str url = rsp->url;
     str::Builder* data = &rsp->data;
     UpdateInfoFetch kind = ClassifyUpdateInfoFetch(url, (int)rsp->error, (int)rsp->httpStatusCode, len(*data),
