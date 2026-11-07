@@ -388,11 +388,10 @@ void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
         }
 #endif
     }
+    // the tab is already gone: if no window could be made, reopen the document
+    // where it was rather than lose it
     if (!newWin) {
-        DeleteTabState(state);
-        str::Free(path);
-        str::Free(displayName);
-        return;
+        newWin = oldWin;
     }
     logf("MaybeMigrateTab: '%s' -> window 0x%p\n", path, newWin);
     // orig re-opens the document in the new window rather than sliding the
