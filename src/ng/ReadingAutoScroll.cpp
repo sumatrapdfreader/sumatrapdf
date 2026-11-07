@@ -316,7 +316,7 @@ static gp::El* BarRowBuild(MainWindow* win, gp::Ctx* cx, bool ownWindow) {
         }
     }
 
-    bool paused = tab->autoScroll.paused || tab->autoScroll.atEnd;
+    bool paused = tab->autoScroll.IsStopped();
     float margin = (float)DpiScale(kBarMargin);
     float gap = (float)DpiScale(kBtnGap);
     const gp::Theme& th = gp::ThemeNow(cx->app);
@@ -389,8 +389,8 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
     hwnd = (int)(uintptr_t)MainWindowHwnd(win);
 #endif
     out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
-                   (int)tab->autoScroll.paused, (int)tab->autoScroll.atEnd, tab->autoScroll.dir,
-                   (int)(CurrentSpeed(tab) + 0.5f), scrollY, page, pages, hwnd));
+                   (int)tab->autoScroll.IsStopped(), (int)(tab->autoScroll.stop == AutoScrollStop::AtEnd),
+                   tab->autoScroll.dir, (int)(CurrentSpeed(tab) + 0.5f), scrollY, page, pages, hwnd));
     out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", ClosestSpeedIdx(CurrentSpeed(tab)), SpeedCount(),
                    SpeedLabelTemp(tab)));
     out.Append(fmt("status=%s\n", StatusTextTemp(tab)));

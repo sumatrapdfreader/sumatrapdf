@@ -139,14 +139,16 @@ TempStr StatusTextTemp(WindowTab* tab) {
     if (!tab) {
         return {};
     }
-    if (tab->autoScroll.atEnd) {
-        return str::DupTemp(Tr("End of document"));
-    }
-    if (tab->autoScroll.timeUp) {
-        return str::DupTemp(Tr("Time is up"));
-    }
-    if (tab->autoScroll.paused) {
-        return str::DupTemp(Tr("Paused"));
+    switch (tab->autoScroll.stop) {
+        case AutoScrollStop::AtEnd:
+            return str::DupTemp(Tr("End of document"));
+        case AutoScrollStop::TimeUp:
+            return str::DupTemp(Tr("Time is up"));
+        case AutoScrollStop::User:
+        case AutoScrollStop::Minimized:
+            return str::DupTemp(Tr("Paused"));
+        case AutoScrollStop::None:
+            break;
     }
     return fmt("%s \xC2\xB7 %s", Tr("Scrolling"), ScrollTimesTemp(tab));
 }
@@ -309,28 +311,26 @@ void ReadingAutoScrollPause(MainWindow* win) {
     if (!tab) {
         return;
     }
-    if (tab->autoScroll.atEnd && tab->autoScroll.paused) {
+    AutoScroll& as = tab->autoScroll;
+    if (as.stop == AutoScrollStop::AtEnd) {
         return;
     }
-    tab->autoScroll.paused = !tab->autoScroll.paused;
-    tab->autoScroll.pausedByMinimize = false;
-    if (!tab->autoScroll.paused && tab->autoScroll.timeUp) {
-        // resuming after the timer ran out starts another timed run
-        tab->autoScroll.timeUp = false;
-        tab->autoScroll.runSec = 0;
-    }
-    logf("ReadingAutoScroll: paused %d\n", (int)tab->autoScroll.paused);
-    if (tab->autoScroll.paused) {
+    if (as.stop == AutoScrollStop::None) {
+        as.stop = AutoScrollStop::User;
         KillReadingTimer(win);
-        tab->autoScroll.accum = 0;
+        as.accum = 0;
     } else {
-        tab->autoScroll.atEnd = AtScrollLimit(ScrollModel(tab), tab->autoScroll.dir);
-        if (tab->autoScroll.atEnd) {
-            tab->autoScroll.paused = true;
-        } else {
+        if (as.stop == AutoScrollStop::TimeUp) {
+            // resuming after the timer ran out starts another timed run
+            as.runSec = 0;
+        }
+        bool atEnd = AtScrollLimit(ScrollModel(tab), as.dir);
+        as.stop = atEnd ? AutoScrollStop::AtEnd : AutoScrollStop::None;
+        if (!atEnd) {
             ArmReadingTimer(win, tab);
         }
     }
+    logf("ReadingAutoScroll: stop %d\n", (int)as.stop);
     BarUpdate(win, true);
 }
 
@@ -341,11 +341,14 @@ void ReadingAutoScrollReverse(MainWindow* win) {
     }
     tab->autoScroll.dir = tab->autoScroll.dir >= 0 ? -1 : 1;
     logf("ReadingAutoScroll: dir %d\n", tab->autoScroll.dir);
-    tab->autoScroll.atEnd = AtScrollLimit(ScrollModel(tab), tab->autoScroll.dir);
-    if (tab->autoScroll.atEnd) {
-        tab->autoScroll.paused = true;
+    AutoScroll& as = tab->autoScroll;
+    if (AtScrollLimit(ScrollModel(tab), as.dir)) {
+        as.stop = AutoScrollStop::AtEnd;
         KillReadingTimer(win);
-    } else if (!tab->autoScroll.paused) {
+    } else if (as.stop == AutoScrollStop::AtEnd) {
+        // turned away from the end: wait for Resume, as before
+        as.stop = AutoScrollStop::User;
+    } else if (!as.IsStopped()) {
         ArmReadingTimer(win, tab);
     }
     BarUpdate(win, true);
@@ -357,21 +360,19 @@ void ReadingAutoScrollStart(MainWindow* win) {
         return;
     }
     StopMiddleClickScroll(win);
-    tab->autoScroll.on = true;
-    tab->autoScroll.paused = false;
-    tab->autoScroll.atEnd = AtScrollLimit(ScrollModel(tab), tab->autoScroll.dir);
-    tab->autoScroll.accum = 0;
-    tab->autoScroll.runSec = 0;
-    tab->autoScroll.timeUp = false;
-    tab->autoScroll.pausedByMinimize = false;
-    if (!tab->autoScroll.atEnd) {
+    AutoScroll& as = tab->autoScroll;
+    as.on = true;
+    bool atEnd = AtScrollLimit(ScrollModel(tab), as.dir);
+    as.stop = atEnd ? AutoScrollStop::AtEnd : AutoScrollStop::None;
+    as.accum = 0;
+    as.runSec = 0;
+    if (!atEnd) {
         ArmReadingTimer(win, tab);
     } else {
-        tab->autoScroll.paused = true;
         KillReadingTimer(win);
     }
     BarSetSessionTab(win, tab);
-    logf("ReadingAutoScroll: start, speed %d px/s, atEnd %d\n", (int)CurrentSpeed(tab), (int)tab->autoScroll.atEnd);
+    logf("ReadingAutoScroll: start, speed %d px/s, atEnd %d\n", (int)CurrentSpeed(tab), (int)atEnd);
     BarUpdate(win, true);
 }
 
@@ -384,7 +385,7 @@ void ReadingAutoScrollSyncToTab(WindowTab* tab) {
         ReadingAutoScrollHideBar(win);
         return;
     }
-    if (!tab->autoScroll.paused && !tab->autoScroll.atEnd) {
+    if (!tab->autoScroll.IsStopped()) {
         ArmReadingTimer(win, tab);
     } else {
         KillReadingTimer(win);
@@ -450,7 +451,7 @@ bool ReadingAutoScrollOnKey(MainWindow* win, int key, bool ctrl, bool shift, boo
 
 void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
     WindowTab* tab = ActiveTab(win);
-    if (!tab || tab != SessionTab(win) || tab->autoScroll.paused) {
+    if (!tab || tab != SessionTab(win) || tab->autoScroll.IsStopped()) {
         KillReadingTimer(win);
         return;
     }
@@ -461,8 +462,7 @@ void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
     }
     int dir = tab->autoScroll.dir >= 0 ? 1 : -1;
     if (AtScrollLimit(dm, dir)) {
-        tab->autoScroll.atEnd = true;
-        tab->autoScroll.paused = true;
+        tab->autoScroll.stop = AutoScrollStop::AtEnd;
         KillReadingTimer(win);
         BarUpdate(win, true);
         return;
@@ -481,8 +481,7 @@ void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
     float minutes = gSettings ? gSettings->readingAutoScrollMinutes : 0;
     if (minutes > 0 && tab->autoScroll.runSec >= minutes * 60) {
         logf("ReadingAutoScroll: %.1f min timer is up\n", minutes);
-        tab->autoScroll.timeUp = true;
-        tab->autoScroll.paused = true;
+        tab->autoScroll.stop = AutoScrollStop::TimeUp;
         KillReadingTimer(win);
         BarUpdate(win, true);
         return;
@@ -501,8 +500,7 @@ void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
     dm->ScrollContentBy(dy, true);
     ScheduleRepaint(win, 0);
     if (AtScrollLimit(dm, dir)) {
-        tab->autoScroll.atEnd = true;
-        tab->autoScroll.paused = true;
+        tab->autoScroll.stop = AutoScrollStop::AtEnd;
         KillReadingTimer(win);
         BarUpdate(win, true);
     }
@@ -516,14 +514,14 @@ void ReadingAutoScrollOnMinimize(MainWindow* win, bool minimized) {
         return;
     }
     if (minimized) {
-        if (tab->autoScroll.paused) {
+        if (tab->autoScroll.IsStopped()) {
             return;
         }
         ReadingAutoScrollPause(win);
-        tab->autoScroll.pausedByMinimize = true;
+        tab->autoScroll.stop = AutoScrollStop::Minimized;
         return;
     }
-    if (tab->autoScroll.pausedByMinimize && tab->autoScroll.paused) {
+    if (tab->autoScroll.stop == AutoScrollStop::Minimized) {
         ReadingAutoScrollPause(win);
     }
 }

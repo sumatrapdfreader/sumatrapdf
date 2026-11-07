@@ -258,7 +258,7 @@ void ReadingAutoScrollBar::BuildLayout() {
 
 void ReadingAutoScrollBar::SyncLabels() {
     WindowTab* tab = SessionTab(WinFromBar(this));
-    bool paused = tab && (tab->autoScroll.paused || tab->autoScroll.atEnd);
+    bool paused = tab && tab->autoScroll.IsStopped();
     btnPause->SetText(paused ? Tr("Resume") : Tr("Pause"));
     if (speedSlider && !speedSlider->IsAdjusting()) {
         speedSlider->SetValue(ClosestSpeedIdx(CurrentSpeed(tab)), false);
@@ -435,8 +435,9 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
     Rect reverse = bar->btnReverse->bounds;
     Rect speed = bar->speedSlider->bounds;
     out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
-                   (int)tab->autoScroll.paused, (int)tab->autoScroll.atEnd, tab->autoScroll.dir,
-                   (int)lroundf(CurrentSpeed(tab)), scrollY, page, pages, (int)(uintptr_t)bar->hwnd));
+                   (int)tab->autoScroll.IsStopped(), (int)(tab->autoScroll.stop == AutoScrollStop::AtEnd),
+                   tab->autoScroll.dir, (int)lroundf(CurrentSpeed(tab)), scrollY, page, pages,
+                   (int)(uintptr_t)bar->hwnd));
     out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("reverse=%d,%d,%d,%d\n", reverse.x, reverse.y, reverse.dx, reverse.dy));

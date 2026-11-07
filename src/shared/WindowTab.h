@@ -41,17 +41,25 @@ SidebarView SidebarViewFromStr(Str s, SidebarView def);
 Str SidebarViewToStr(SidebarView);
 #endif
 
+// why a started auto-scroll isn't moving; one reason at a time
+enum class AutoScrollStop {
+    None, // scrolling
+    User,
+    AtEnd,     // reached the end in the scroll direction
+    TimeUp,    // ReadingAutoScrollMinutes ran out
+    Minimized, // resumes on restore
+};
+
 struct AutoScroll {
     bool on = false;
-    bool paused = false;
-    bool atEnd = false;
+    AutoScrollStop stop = AutoScrollStop::None;
     int dir = 1;
     float accum = 0;
     i64 lastQpc = 0;
     // seconds scrolled since start, for ReadingAutoScrollMinutes
     float runSec = 0;
-    bool timeUp = false;
-    bool pausedByMinimize = false;
+
+    bool IsStopped() const { return stop != AutoScrollStop::None; }
 };
 
 struct ReadingBarTab {
