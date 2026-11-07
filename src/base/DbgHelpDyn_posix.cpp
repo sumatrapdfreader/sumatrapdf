@@ -31,19 +31,11 @@ bool GetCurrentThreadCallstack(str::Builder& /*s*/) {
     return false;
 }
 
-void LogCallstack() {}
-
-void RememberCallstackLogs() {}
-
 TempStr GetCurrentThreadCallstackTemp() {
     return {};
 }
 
-void FreeCallstackLogs() {}
-
 void GetAllThreadsCallstacks(str::Builder& /*s*/) {}
-
-void GetAllThreadsCallstacksExcept(str::Builder& /*s*/, ThreadId /*skipThreadId*/) {}
 
 void GetExceptionInfo(str::Builder& /*s*/, EXCEPTION_POINTERS* /*excPointers*/) {}
 

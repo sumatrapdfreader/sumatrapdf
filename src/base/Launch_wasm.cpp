@@ -48,5 +48,3 @@ void OpenPathInDefaultFileManager(Str) {
 ChildProcess* StartChildProcess(Str) {
     return nullptr;
 }
-
-void CloseChildProcess(ChildProcess*) {}
