@@ -463,6 +463,71 @@ Str BackendDisplayName(AIChatBackend backend) {
     return StrL("AI");
 }
 
+static void LogTranslation(AIChatBackend backend, Str direction, Str text) {
+    logf("selection-translate %s %s: %s\n", BackendLogName(backend), direction, text);
+}
+
+// Runs the backend's CLI on `text` and returns the translation, or an error message, in msgOut.
+bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, Str& msgOut) {
+    TempStr exePath = FindBackendExecutableTemp(backend);
+    if (len(exePath) == 0) {
+        msgOut = str::Dup(Tr("The selected AI CLI is not installed."));
+        return false;
+    }
+
+    TempStr prompt = BuildTranslationPromptTemp(srcLang, dstLang, text);
+    TempStr cwd = StripTrailingSlashTemp(TranslateTempDirTemp());
+    TempStr cmdLine;
+    if (backend == AIChatBackend::Grok) {
+        cmdLine = BuildGrokTranslateCmdLineTemp(exePath, prompt, cwd);
+    } else if (backend == AIChatBackend::Claude) {
+        cmdLine = BuildClaudeTranslateCmdLineTemp(exePath, prompt);
+    } else if (backend == AIChatBackend::Codex) {
+        cmdLine = BuildCodexTranslateCmdLineTemp(exePath, prompt, cwd);
+    } else if (backend == AIChatBackend::AntiGravity) {
+        cmdLine = BuildAntiGravityTranslateCmdLineTemp(exePath, prompt);
+    }
+
+    LogTranslation(backend, StrL(">>> backend"), BackendDisplayName(backend));
+    LogTranslation(backend, StrL(">>> srcLang"), srcLang);
+    LogTranslation(backend, StrL(">>> dstLang"), dstLang);
+    LogTranslation(backend, StrL(">>> prompt"), prompt);
+    LogTranslation(backend, StrL(">>> cmd"), cmdLine);
+
+    str::Builder output;
+    str::BuilderReserve(output, 4096);
+    TranslateRun run = RunTranslateCli(cmdLine, cwd, output);
+    if (run == TranslateRun::LaunchFailed) {
+        msgOut = str::Dup(Tr("Failed to launch the AI CLI."));
+        LogTranslation(backend, StrL("<<< error"), msgOut);
+        return false;
+    }
+    if (run == TranslateRun::TimedOut) {
+        msgOut = str::Dup(Tr("Translation timed out."));
+        LogTranslation(backend, StrL("<<< error"), msgOut);
+        return false;
+    }
+
+    LogTranslation(backend, StrL("<<< raw"), ToStr(output));
+
+    str::Builder translation;
+    str::BuilderReserve(translation, 1024);
+    ParseTranslationOutput(backend, ToStr(output), translation);
+    LogTranslation(backend, StrL("<<< parsed"), ToStr(translation));
+    if (len(translation) == 0) {
+        msgOut = str::Dup(Tr("Translation response did not contain text."));
+        LogTranslation(backend, StrL("<<< error"), msgOut);
+        return false;
+    }
+    if (TranslationLooksLikeError(ToStr(translation))) {
+        msgOut = translation.TakeStr();
+        LogTranslation(backend, StrL("<<< error"), msgOut);
+        return false;
+    }
+    msgOut = translation.TakeStr();
+    return true;
+}
+
 bool EngineIsAI(TranslateEngine engine) {
     return engine == TranslateEngine::Grok || engine == TranslateEngine::Claude || engine == TranslateEngine::Codex ||
            engine == TranslateEngine::AntiGravity;

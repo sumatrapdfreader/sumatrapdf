@@ -84,3 +84,14 @@ static const WORD gPrimaryLangIds[] = {
 #endif
 
 Str PrimaryLangIdToEnglishName(WORD primary);
+
+enum class TranslateRun {
+    Done,
+    LaunchFailed,
+    TimedOut
+};
+bool RunTranslation(AIChatBackend backend, Str srcLang, Str dstLang, Str text, Str& msgOut);
+
+// implemented by each app
+TempStr TranslateTempDirTemp();
+TranslateRun RunTranslateCli(Str cmdLine, Str cwd, str::Builder& output);
