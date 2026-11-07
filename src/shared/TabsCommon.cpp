@@ -26,6 +26,7 @@
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "FileHistory.h"
+#include "Notifications.h"
 #include "Translations.h"
 #include "AppTools.h"
 #include "Tabs.h"
@@ -70,6 +71,42 @@ TempStr TabPageSuffixTemp(WindowTab* tab) {
         return fmt(" %d/%d · %d/%d", loc.chapter, tab->ctrl->ChapterCount(), loc.page, chapterPages);
     }
     return fmt(" %d/%d", curr, count);
+}
+
+// a tab for a document of the restored session, its file not loaded yet
+WindowTab* NewSessionTab(MainWindow* win, TabState* state) {
+    WindowTab* tab = new WindowTab(win);
+    tab->SetFilePath(state->filePath);
+    tab->tabState = state;
+    return tab;
+}
+
+// A restored session's document that no longer exists keeps a tab that says so
+// (#5585), unless KeepMissingSessionTabs = false (#6506). nullptr: no tab.
+WindowTab* NewMissingSessionTab(MainWindow* win, TabState* state) {
+    logf("NewMissingSessionTab: file not found '%s', keep tab: %d\n", state->filePath,
+         (int)gSettings->keepMissingSessionTabs);
+    FileHistoryDemote(state->filePath, true);
+    if (!gSettings->keepMissingSessionTabs) {
+        ShowPlainWarningNotification(win, fmt(Tr("File %s not found").s, state->filePath), kNotifDefaultTimeOut);
+        return nullptr;
+    }
+    return NewSessionTab(win, state);
+}
+
+// closes win's tabs whose file no longer exists, e.g. deleted by another app (#6506)
+void CloseMissingFileTabs(MainWindow* win) {
+    Vec<WindowTab*> toClose;
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+            continue;
+        }
+        if (!DocumentPathExists(tab->filePath)) {
+            VecAppend(toClose, tab);
+        }
+    }
+    logf("CloseMissingFileTabs: closing %d tab(s)\n", len(toClose));
+    CloseCollectedTabs(win, toClose);
 }
 
 void CloseCollectedTabs(MainWindow* win, const Vec<WindowTab*>& toClose) {

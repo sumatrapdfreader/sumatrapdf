@@ -261,12 +261,9 @@ void SetTabState(WindowTab* tab, TabState* state) {
 }
 
 static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
-    logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
-    FileHistoryDemote(state->filePath, true);
-    WindowTab* tab = new WindowTab(win);
-    tab->SetFilePath(state->filePath);
-    tab->tabState = state;
-    AddTabToWindow(win, tab);
+    if (WindowTab* tab = NewMissingSessionTab(win, state)) {
+        AddTabToWindow(win, tab);
+    }
 }
 
 // while the session's tabs are being created: adding a tab selects it, which
@@ -276,10 +273,7 @@ static bool gRestoringSession = false;
 // orig's LoadArgs::lazyLoad: with LazyLoading the tab is created without its
 // document, which loads on the first switch to the tab
 static void RestoreLazyTabOnStartup(MainWindow* win, TabState* state) {
-    WindowTab* tab = new WindowTab(win);
-    tab->SetFilePath(state->filePath);
-    tab->tabState = state;
-    AddTabToWindow(win, tab);
+    AddTabToWindow(win, NewSessionTab(win, state));
 }
 
 // orig's LoadModelIntoTab: "if (gSettings->lazyLoading && !tab->ctrl &&

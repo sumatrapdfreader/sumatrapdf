@@ -1226,6 +1226,10 @@ struct Settings {
     // if true and SessionData isn't empty, that session will be restored
     // at startup
     bool restoreSession;
+    // if true, a document of the restored session that no longer exists
+    // keeps its tab, which shows that the file is missing; if false, its
+    // tab is dropped at startup
+    bool keepMissingSessionTabs;
     // if true, open documents in the already running SumatraPDF instead of
     // starting a new one
     bool reuseInstance;

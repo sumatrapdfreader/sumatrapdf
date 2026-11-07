@@ -21,6 +21,7 @@ TemporaryFileAutoMove = true
 RememberOpenedFiles = true
 RememberStatePerDocument = true
 RestoreSession = true
+KeepMissingSessionTabs = true
 ReuseInstance = true
 ShowMenubar = true
 ShowMenubarWithTabs = false

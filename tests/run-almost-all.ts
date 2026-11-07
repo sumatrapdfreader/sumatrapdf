@@ -249,6 +249,7 @@ import { testit as issue1139 } from "./issue-1139.ts";
 import { testit as issue6497 } from "./issue-6497.ts";
 import { testit as issue6221 } from "./issue-6221.ts";
 import { testit as issue6505 } from "./issue-6505.ts";
+import { testit as issue6506 } from "./issue-6506.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
@@ -1096,6 +1097,7 @@ export const tests: NamedTest[] = [
   ["issue-6497", issue6497],
   ["issue-6221", issue6221],
   ["issue-6505", issue6505],
+  ["issue-6506", issue6506],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

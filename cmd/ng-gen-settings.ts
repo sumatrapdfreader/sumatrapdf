@@ -1583,6 +1583,13 @@ const globalPrefs: Field[] = [
   ),
   field("RestoreSession", Bool, true, "if true and SessionData isn't empty, that session will be restored at startup"),
   field(
+    "KeepMissingSessionTabs",
+    Bool,
+    true,
+    "if true, a document of the restored session that no longer exists keeps its tab, which shows " +
+      "that the file is missing; if false, its tab is dropped at startup",
+  ).ver("3.7"),
+  field(
     "ReuseInstance",
     Bool,
     true,
@@ -2471,6 +2478,7 @@ const globalPrefsLayout = [
   "RememberOpenedFiles",
   "RememberStatePerDocument",
   "RestoreSession",
+  "KeepMissingSessionTabs",
   "ReuseInstance",
   "ShowMenubar",
   "ShowMenubarWithTabs",

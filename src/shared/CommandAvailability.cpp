@@ -549,6 +549,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
+    if (CmdCloseMissingTabs == cmdId) {
+        // checking the files here would stat them on every menu build (#6369)
+        return ctx.hasDocTabs ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
     if (CmdCloseOtherTabs == cmdId) {
         return ctx.canCloseOtherTabs ? CommandVisibility::Show : CommandVisibility::Hide;
     }

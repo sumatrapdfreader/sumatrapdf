@@ -5133,6 +5133,13 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             RebuildMenuBar(win);
             break;
 
+        case CmdCloseMissingTabs:
+            CloseMissingFileTabs(win);
+            if (!IsMainWindowValidAndNotClosing(win)) {
+                return;
+            }
+            break;
+
         case CmdCloseOtherTabs:
         case CmdCloseTabsToTheRight:
         case CmdCloseTabsToTheLeft: {
