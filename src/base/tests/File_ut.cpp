@@ -262,6 +262,19 @@ void FileUtilTest() {
         ok = file::Delete(path);
         utassert(ok);
     }
+
+#if OS_WIN
+    {
+        // the short path's length must not count the NUL terminator
+        TempStr path = path::JoinTemp(GetTempDirTemp(), StrL("short path test long name.txt"));
+        utassert(file::WriteFile(path, StrL("x")));
+        TempStr shortPath = path::ShortPathTemp(path);
+        utassert(len(shortPath) > 0);
+        utassert(len(shortPath) == (int)strlen(shortPath.s));
+        utassert(file::Exists(shortPath));
+        file::Delete(path);
+    }
+#endif
 }
 
 #if OS_WIN

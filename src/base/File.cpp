@@ -872,9 +872,13 @@ TempStr ShortPathTemp(Str path) {
     if (!cch) {
         return ToUtf8Temp(normPath);
     }
-    TempWStr shortPath = WStr(AllocArrayTemp<WCHAR>((int)cch + 1), (int)cch + 1);
-    GetShortPathNameW(normPath.s, shortPath.s, cch);
-    return ToUtf8Temp(shortPath);
+    WCHAR* buf = AllocArrayTemp<WCHAR>((int)cch + 1);
+    // on success the return value is the length without the NUL
+    DWORD n = GetShortPathNameW(normPath.s, buf, cch);
+    if (!n || n >= cch) {
+        return ToUtf8Temp(normPath);
+    }
+    return ToUtf8Temp(WStr(buf, (int)n));
 }
 
 static bool IsSameFileHandleInformation(BY_HANDLE_FILE_INFORMATION& fi1, BY_HANDLE_FILE_INFORMATION fi2) {
