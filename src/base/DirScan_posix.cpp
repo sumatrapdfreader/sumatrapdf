@@ -9,13 +9,6 @@
 
 #include "base/DirScan.h"
 
-// field order matches Vec<T> so VecPush() can hand it to the VecNonTemplated helpers
-struct TempEntryVec {
-    int len;
-    int cap;
-    DirEntry* els;
-};
-
 static FILETIME FileTimeFromTimespec(time_t sec, long nsec) {
     u64 ticks = kFileTimeUnixEpoch + ((u64)sec * kFileTimeTicksPerSec) + (u64)nsec / 100;
     return FileTimeFromU64(ticks);
@@ -30,9 +23,6 @@ static FILETIME StatAccessTime(const struct stat& st) {
     return FileTimeFromTimespec(st.st_atimespec.tv_sec, st.st_atimespec.tv_nsec);
 }
 
-static FILETIME StatCreateTime(const struct stat& st) {
-    return FileTimeFromTimespec(st.st_birthtimespec.tv_sec, st.st_birthtimespec.tv_nsec);
-}
 #else
 static FILETIME StatModTime(const struct stat& st) {
     return FileTimeFromTimespec(st.st_mtim.tv_sec, st.st_mtim.tv_nsec);
@@ -42,9 +32,6 @@ static FILETIME StatAccessTime(const struct stat& st) {
     return FileTimeFromTimespec(st.st_atim.tv_sec, st.st_atim.tv_nsec);
 }
 
-static FILETIME StatCreateTime(const struct stat& st) {
-    return StatModTime(st);
-}
 #endif
 
 static DIR* DirHandle(DirIter::iterator* it) {
@@ -138,84 +125,4 @@ NextDir:
 DidFinish:
     CloseDirIter(it);
     it->didFinish = true;
-}
-
-void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit) {
-    if (shouldExit && AtomicBoolGet(shouldExit)) {
-        return;
-    }
-
-    TempEntryVec temp = {};
-
-    DirEntry dotdot = {};
-    dotdot.name = StrL("..");
-    dotdot.size = 0;
-    dotdot.dv = kStillScanningDir;
-    VecPush(GetTempArena(), temp, dotdot);
-
-    char* dirPath = CStrTemp(dv->fullDir);
-    DIR* dir = opendir(dirPath);
-    if (!dir) {
-        dv->err = str::Dup(arena, Str(strerror(errno)));
-        return;
-    }
-
-    for (;;) {
-        if (shouldExit && AtomicBoolGet(shouldExit)) {
-            closedir(dir);
-            return;
-        }
-
-        errno = 0;
-        dirent* de = readdir(dir);
-        if (!de) {
-            if (errno != 0) {
-                dv->err = str::Dup(arena, Str(strerror(errno)));
-            }
-            break;
-        }
-
-        Str name(de->d_name);
-        if (str::Eq(name, StrL(".")) || str::Eq(name, StrL(".."))) {
-            continue;
-        }
-
-        TempStr fullPath = path::JoinTemp(dv->fullDir, name);
-        struct stat st;
-        if (lstat(CStrTemp(fullPath), &st) != 0) {
-            continue;
-        }
-
-        DirEntry e = {};
-        e.name = name;
-        e.createTime = StatCreateTime(st);
-        e.modTime = StatModTime(st);
-        // lstat() reports on the link itself, so a symlink is never S_ISDIR
-        // here and lands in the file branch below. Recording it still matters:
-        // the caller uses isLink to decide not to walk in.
-        e.isLink = S_ISLNK(st.st_mode);
-        if (S_ISDIR(st.st_mode)) {
-            e.size = 0;
-            e.dv = kStillScanningDir;
-        } else {
-            e.size = (u64)st.st_size;
-            e.dv = nullptr;
-        }
-        VecPush(GetTempArena(), temp, e);
-    }
-
-    closedir(dir);
-
-    DirEntry* els = (DirEntry*)Alloc(arena, temp.len * sizeof(DirEntry));
-    for (int i = 0; i < temp.len; i++) {
-        els[i].name = str::Dup(arena, temp.els[i].name);
-        els[i].size = temp.els[i].size;
-        els[i].dv = temp.els[i].dv;
-        els[i].createTime = temp.els[i].createTime;
-        els[i].modTime = temp.els[i].modTime;
-        els[i].isLink = temp.els[i].isLink;
-    }
-    dv->els = els;
-    __sync_synchronize();
-    dv->len = temp.len;
 }
