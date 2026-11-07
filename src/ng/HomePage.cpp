@@ -458,36 +458,6 @@ static TempStr HomeSearchQueryTemp(MainWindow* win) {
     return str::DupTemp(h->searchQuery);
 }
 
-// orig's LayoutHomePage's file collection
-static void CollectHomePageFiles(MainWindow* win, Vec<FileState*>& fileStates, StrVec& filterWords) {
-    Vec<FileState*> allFileStates;
-    if (gSettings->homePageSortByFrequentlyRead) {
-        FileHistoryGetFrequencyOrder(allFileStates);
-    } else {
-        FileHistoryGetRecentlyOpenedOrder(allFileStates);
-    }
-
-    TempStr searchQuery = HomeSearchQueryTemp(win);
-    bool hasFilter = len(searchQuery) > 0;
-    if (hasFilter) {
-        SplitFilterToWords(searchQuery, filterWords);
-    }
-    for (int i = 0; i < len(allFileStates); i++) {
-        FileState* fs = allFileStates[i];
-        // a state without a path can't be opened or thumbnailed - don't show it
-        if (len(fs->filePath) == 0) {
-            continue;
-        }
-        if (hasFilter) {
-            TempStr baseName = path::GetBaseNameTemp(fs->filePath);
-            if (!FilterMatches(baseName, filterWords)) {
-                continue;
-            }
-        }
-        VecAppend(fileStates, fs);
-    }
-}
-
 // --- the view ----------------------------------------------------------------
 
 struct HomeView {
@@ -1537,7 +1507,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     HomePageUI* h = Ui(win);
     VecReset(h->files);
     StrVec filterWords;
-    CollectHomePageFiles(win, h->files, filterWords);
+    CollectHomePageFiles(HomeSearchQueryTemp(win), h->files, filterWords);
     h->filesLaidOut = true;
     int nFiles = len(h->files);
     h->entryCount = nFiles;

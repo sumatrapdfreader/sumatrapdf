@@ -1409,34 +1409,6 @@ static bool HomeLayoutCacheFilesMatch(MainWindow* win, const Vec<FileState*>& fi
     return true;
 }
 
-static void CollectHomePageFiles(MainWindow* win, Vec<FileState*>& fileStates, StrVec& filterWords) {
-    Vec<FileState*> allFileStates;
-    if (gSettings->homePageSortByFrequentlyRead) {
-        FileHistoryGetFrequencyOrder(allFileStates);
-    } else {
-        FileHistoryGetRecentlyOpenedOrder(allFileStates);
-    }
-
-    TempStr searchQuery = HomeSearchQueryTemp(win);
-    bool hasFilter = searchQuery && searchQuery.s[0];
-    if (hasFilter) {
-        SplitFilterToWords(searchQuery, filterWords);
-    }
-    for (int i = 0; i < len(allFileStates); i++) {
-        FileState* fs = allFileStates[i];
-        if (len(fs->filePath) == 0) {
-            continue;
-        }
-        if (hasFilter) {
-            TempStr baseName = path::GetBaseNameTemp(fs->filePath);
-            if (!FilterMatches(baseName, filterWords)) {
-                continue;
-            }
-        }
-        VecAppend(fileStates, fs);
-    }
-}
-
 static void SaveHomeLayoutCache(const HomePageLayout& l, Str filterText, int scrollY) {
     auto& c = HomeLayout(l.win);
     c.valid = true;
@@ -3083,7 +3055,7 @@ void HomePageRelayout(MainWindow* win) {
     if (HomeLayoutCacheMatches(win, l.rc, filterText)) {
         Vec<FileState*> files;
         StrVec filterWords;
-        CollectHomePageFiles(win, files, filterWords);
+        CollectHomePageFiles(HomeSearchQueryTemp(win), files, filterWords);
         if (HomeLayoutCacheFilesMatch(win, files)) {
             ApplyHomeLayoutCache(l, win->homePageScrollY);
             usedCache = true;

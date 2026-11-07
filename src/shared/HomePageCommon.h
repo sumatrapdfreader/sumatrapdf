@@ -15,6 +15,7 @@ TempStr TrimGitTemp(Str s);
 void AboutSourceRow(Str* text, Str* url);
 Str AboutNoteText();
 int CountHomePageFiles();
+void CollectHomePageFiles(Str searchQuery, Vec<FileState*>& fileStates, StrVec& filterWords);
 TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut);
 constexpr i64 kHomeFileSizePending = -2;
 i64 GetHomeFileSize(Str path);

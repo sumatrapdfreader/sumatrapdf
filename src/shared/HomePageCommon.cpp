@@ -17,6 +17,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "FileHistory.h"
+#include "FilterUtil.h"
 #include "Translations.h"
 #include "AppTools.h"
 #include "SumatraConfig.h"
@@ -128,6 +129,35 @@ void AboutSourceRow(Str* text, Str* url) {
 }
 
 // Home-list entries with a path (same set as thumbnails when search is empty).
+// the history files the home page shows, in its sort order, matching searchQuery
+void CollectHomePageFiles(Str searchQuery, Vec<FileState*>& fileStates, StrVec& filterWords) {
+    Vec<FileState*> allFileStates;
+    if (gSettings->homePageSortByFrequentlyRead) {
+        FileHistoryGetFrequencyOrder(allFileStates);
+    } else {
+        FileHistoryGetRecentlyOpenedOrder(allFileStates);
+    }
+
+    bool hasFilter = len(searchQuery) > 0;
+    if (hasFilter) {
+        SplitFilterToWords(searchQuery, filterWords);
+    }
+    for (int i = 0; i < len(allFileStates); i++) {
+        FileState* fs = allFileStates[i];
+        // a state without a path can't be opened or thumbnailed - don't show it
+        if (len(fs->filePath) == 0) {
+            continue;
+        }
+        if (hasFilter) {
+            TempStr baseName = path::GetBaseNameTemp(fs->filePath);
+            if (!FilterMatches(baseName, filterWords)) {
+                continue;
+            }
+        }
+        VecAppend(fileStates, fs);
+    }
+}
+
 int CountHomePageFiles() {
     Vec<FileState*> all;
     if (gSettings && gSettings->homePageSortByFrequentlyRead) {
