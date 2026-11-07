@@ -1605,6 +1605,20 @@ export function injectTouch(x: number, y: number, flag: number): boolean {
 
 // The real cursor position, in screen (physical, when this process is DPI
 // aware) coordinates.
+// Without an interactive desktop (a disconnected RDP session) SetCursorPos
+// fails or the cursor stays put, so a test that hovers by moving the real
+// cursor can't run. Moves it by a pixel and back to find out.
+export function canMoveCursor(): boolean {
+  const was = getCursorPos();
+  const probe = { x: was.x === 1 ? 2 : 1, y: was.y === 1 ? 2 : 1 };
+  if (!setCursorPos(probe.x, probe.y)) {
+    return false;
+  }
+  const now = getCursorPos();
+  setCursorPos(was.x, was.y);
+  return now.x === probe.x && now.y === probe.y;
+}
+
 export function getCursorPos(): { x: number; y: number } {
   if (IS_MAC) {
     return macCursor;
