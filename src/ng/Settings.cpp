@@ -816,6 +816,8 @@ const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, bgCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, tabCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, layerStates), SettingType::String, 0},
+    {offsetof(FileState, measurementUnit), SettingType::String, 0},
+    {offsetof(FileState, measurementScale), SettingType::Float, (intptr_t)"0"},
     {offsetof(FileState, openCount), SettingType::Int, 0},
     {offsetof(FileState, pageNo), SettingType::String, (intptr_t)"1"},
     {offsetof(FileState, pageCount), SettingType::Int, 0},
@@ -842,12 +844,12 @@ const FieldInfo gFileStateFields[] = {
 };
 StructInfo gFileStateInfo = {
     sizeof(FileState),
-    34,
+    36,
     gFileStateFields,
     "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0SidebarView\0DisplayMode\0Zoom\0BgCol\0TabCol\0LayerStates"
-    "\0OpenCount\0PageNo\0PageCount\0Rotation\0Brightness\0Contrast\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPi"
-    "nned\0IsMissing\0UseDefaultState\0ShowToc\0DisplayR2L\0UniformPageWidth\0TrimEmptyMargins\0UserCrop\0FreePan\0Faci"
-    "ngStepOne\0Mirror\0ReadingAutoScrollSpeed\0ReadColumns",
+    "\0MeasurementUnit\0MeasurementScale\0OpenCount\0PageNo\0PageCount\0Rotation\0Brightness\0Contrast\0WindowState\0Si"
+    "debarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0ShowToc\0DisplayR2L\0UniformPageWidth\0TrimEm"
+    "ptyMargins\0UserCrop\0FreePan\0FacingStepOne\0Mirror\0ReadingAutoScrollSpeed\0ReadColumns",
     "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
     "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
@@ -856,7 +858,8 @@ StructInfo gFileStateInfo = {
     "bookmarks (the default) or thumbnails\0layout of pages\0zoom (in %) or one of those values: fit page, fit width, "
     "fit height, fit content\0if given, overrides the background color for this document\0if given, overrides the tab "
     "color for this document\0visibility of the PDF's layers (optional content groups), if changed: 1 (shown) or 0 "
-    "(hidden) for each layer, in document order\0number of times this document has been opened recently\0number of the "
+    "(hidden) for each layer, in document order\0unit name for calibrated measurements\0calibrated measurement units "
+    "per document coordinate; 0 uses points\0number of times this document has been opened recently\0number of the "
     "last read page, or `bm:<bookmark>` for documents with chapters (folds in ReparseIdx; see "
     "PagePosition.cpp)\0number of pages in the document when it was last open; 0 if unknown. Used to show reading "
     "progress on the home page\0how far pages have been rotated as a multiple of 90 degrees\0brightness of rendered "

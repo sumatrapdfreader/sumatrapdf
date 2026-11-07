@@ -44,4 +44,23 @@ void AppSettingsTest() {
     utassert(str::Eq(out, expectLoaded));
     str::Free(out);
     DeleteSettings(loaded);
+
+    // ng on Windows shares orig's settings file, and array elements don't keep
+    // unknown keys: a save must not drop what orig wrote into a FileState
+    Str withFile = StrL(
+        "FileStates [\n"
+        "\t[\n"
+        "\t\tFilePath = C:\\doc.pdf\n"
+        "\t\tPageNo = 3\n"
+        "\t\tMeasurementScale = 2.5\n"
+        "\t\tMeasurementUnit = mm\n"
+        "\t]\n"
+        "]\n");
+    loaded = NewSettings(withFile);
+    utassert(loaded != nullptr);
+    out = SerializeSettings(loaded, withFile);
+    utassert(str::Contains(out, StrL("MeasurementScale = 2.5")));
+    utassert(str::Contains(out, StrL("MeasurementUnit = mm")));
+    str::Free(out);
+    DeleteSettings(loaded);
 }
