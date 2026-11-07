@@ -36,6 +36,7 @@ SearchUIFloating = false
 ShowFavorites = false
 ShowSidebarMiddle = false
 SortFavoritesByName = false
+FavoritesManualOrder = false
 ShowToc = true
 AlwaysShowSidebar = false
 ShowThumbnailsIfNoToc = false
