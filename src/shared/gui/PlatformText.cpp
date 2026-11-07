@@ -633,16 +633,12 @@ static TextRenderGdi* NewTextRenderGdi(Graphics* gfx) {
     return res;
 }
 
-static TextRenderGdiplus* NewTextRenderGdiplus(Graphics* gfx) {
+PlatformTextRender* CreateGdiplusTextRender(Graphics* gfx) {
     TextRenderGdiplus* res = new TextRenderGdiplus();
     res->gfx = gfx;
     // default to red to make mistakes stand out
     res->SetTextColor(kColRed);
     return res;
-}
-
-PlatformTextRender* CreateGdiplusTextRender(Graphics* gfx) {
-    return NewTextRenderGdiplus(gfx);
 }
 
 // called by CreatePlatformTextRender() in PlatformText.cpp. That caller only

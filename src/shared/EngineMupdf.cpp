@@ -11491,10 +11491,6 @@ bool EngineMupdfHasOfdSignatures(EngineBase* engine) {
     return ofd_count_signatures(e->Ctx(), e->_doc) > 0;
 }
 
-bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
-    return EngineMupdfIsPdf(engine);
-}
-
 // Restyle a reflowable document with the current theme page colors and drop
 // cached page display lists so the next render uses the new HTML. A chaptered
 // doc lays chapter 1 out again and defers the rest; a

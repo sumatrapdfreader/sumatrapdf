@@ -2937,12 +2937,8 @@ static void OnLocationEditChar(MainWindow* win, Edit::CharEvent* ev) {
     }
 }
 
-static int PageEditPadL() {
-    return UiEdgeDx();
-}
-
 static int PageEditPadR() {
-    return PageEditPadL() + DpiScale(4);
+    return UiEdgeDx() + DpiScale(4);
 }
 
 static Edit* ToolbarCreateLocationEdit(MainWindow* win, PlatformFont* font, int iconDy) {
@@ -2959,7 +2955,7 @@ static Edit* ToolbarCreateLocationEdit(MainWindow* win, PlatformFont* font, int 
     // the box is as tall as the icons, so without this the digits would sit at
     // its top instead of on the same line as "Page:" and "/ N"
     args.centerTextVert = true;
-    args.marginLeft = PageEditPadL();
+    args.marginLeft = UiEdgeDx();
     args.marginRight = PageEditPadR();
     auto* e = new Edit();
     e->SetColors(TbTextColor(), ThemeWindowControlBackgroundColor());

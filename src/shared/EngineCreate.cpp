@@ -593,7 +593,7 @@ bool EngineSupportsAnnotations(EngineBase* engine) {
     if (!IsEngineMupdf(engine)) {
         return false;
     }
-    return EngineMupdfSupportsAnnotations(engine);
+    return EngineMupdfIsPdf(engine);
 }
 
 bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {

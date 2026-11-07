@@ -35,7 +35,7 @@ EngineBase* GetPdfEngine(MainWindow* win) {
     }
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine || !EngineMupdfSupportsAnnotations(engine)) {
+    if (!engine || !EngineMupdfIsPdf(engine)) {
         return nullptr;
     }
     return engine;

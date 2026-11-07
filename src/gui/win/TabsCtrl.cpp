@@ -54,10 +54,6 @@ TabInfo::~TabInfo() {
     str::Free(pageText);
 }
 
-static Gdiplus::Color GdipCol(Color c) {
-    return GdiRgbFromColor(c);
-}
-
 //--- TabCtrl: one tab
 
 // paints the tab (background, title, dirty dot) and hosts its ✕. It doesn't own
@@ -722,7 +718,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     Color bgCol = GetColor(kColTabBg);
     Color textCol = TabTextColorForBackground(GetColor(kColTabText), bgCol);
 
-    SolidBrush br(GdipCol(bgCol));
+    SolidBrush br(GdiRgbFromColor(bgCol));
     Gdiplus::Rect gr(0, 0, r.dx, r.dy);
     gfx->FillRectangle(&br, gr);
 
@@ -754,11 +750,11 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
         rPage.Width = (float)pageDx;
     }
 
-    br.SetColor(GdipCol(textCol));
+    br.SetColor(GdiRgbFromColor(textCol));
     WCHAR* ws = CWStrTemp(ti->text);
     gfx->DrawString(ws, -1, f, rFile, &sfFile, &br);
     if (pageDx > 0) {
-        br.SetColor(GdipCol(AccentColor(textCol, 40)));
+        br.SetColor(GdiRgbFromColor(AccentColor(textCol, 40)));
         WCHAR* wsPage = CWStrTemp(ti->pageText);
         gfx->DrawString(wsPage, -1, f, rPage, &sfPage, &br);
     }

@@ -2088,7 +2088,8 @@ struct AnnotationClipboard {
 
 static AnnotationClipboard gAnnotClipboard;
 
-static void ClearAnnotationClipboard() {
+// gAnnotClipboard owns strings, Vecs and a stamp bitmap; also frees them at exit
+void FreeAnnotationClipboard() {
     gPendingCutAnnotation = nullptr;
     str::FreePtr(&gAnnotClipboard.contents);
     str::FreePtr(&gAnnotClipboard.iconName);
@@ -2207,11 +2208,6 @@ bool HasCopiedAnnotation() {
     return gAnnotClipboard.valid;
 }
 
-// gAnnotClipboard owns strings, Vecs and a stamp bitmap; free them at exit
-void FreeAnnotationClipboard() {
-    ClearAnnotationClipboard();
-}
-
 // The annotation's /Rect. GetBounds() is pdf_bound_annot(), which is expanded
 // by the border width and would grow the annotation on every copy -> paste.
 static RectF GetAnnotRect(Annotation* annot) {
@@ -2300,7 +2296,7 @@ bool CopyAnnotation(Annotation* annot) {
     if (!AnnotationIsLive(annot) || !AnnotationCanBeCopied(annot->type)) {
         return false;
     }
-    ClearAnnotationClipboard();
+    FreeAnnotationClipboard();
     gAnnotClipboard.valid = true;
     gAnnotClipboard.type = annot->type;
     gAnnotClipboard.rect = GetAnnotRect(annot);

@@ -67,10 +67,6 @@ static bool IsoDateParse(Str isoDate, SYSTEMTIME* timeOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-static void TrimHtmlTextToken(Str& tokText) {
-    str::TrimWsBoth(tokText);
-}
-
 static WStr ExtractHtmlText(EpubDoc* doc) {
     log(StrL("ExtractHtmlText()\n"));
 
@@ -87,7 +83,7 @@ static WStr ExtractHtmlText(EpubDoc* doc) {
             !VecContains(tagNesting, Tag_Style)) {
             // trim whitespace (TODO: also normalize within text?)
             Str tokText = t->s;
-            TrimHtmlTextToken(tokText);
+            str::TrimWsBoth(tokText);
             if (len(tokText) > 0) {
                 TempStr s = ResolveHtmlEntitiesTemp(tokText);
                 text.Append(s);
