@@ -455,6 +455,7 @@ static void FreeAttrsCacheEntry(AttrsCacheEntry& e) {
 // Look up a non-expired cache entry. Caller holds gAttrsCacheMutex.
 // Returns true if a live entry was found (ok or failed query).
 static bool LookupAttrsCache(Str path, u64 now, bool* okOut, WIN32_FILE_ATTRIBUTE_DATA* dataOut) {
+    ReportDebugIf(!gAttrsCacheMutex.IsHeldByCurrentThread());
     for (int i = 0; i < len(gAttrsCache); i++) {
         AttrsCacheEntry& e = gAttrsCache[i];
         if (!e.path || !str::EqI(Str(e.path), path)) {
@@ -473,6 +474,7 @@ static bool LookupAttrsCache(Str path, u64 now, bool* okOut, WIN32_FILE_ATTRIBUT
 
 // Insert or update cache entry. Caller holds gAttrsCacheMutex.
 static void StoreAttrsCache(Str path, u64 now, bool ok, const WIN32_FILE_ATTRIBUTE_DATA& data) {
+    ReportDebugIf(!gAttrsCacheMutex.IsHeldByCurrentThread());
     int freeIdx = -1;
     int oldestIdx = -1;
     u64 oldestTick = UINT64_MAX;
@@ -619,6 +621,7 @@ static bool GetNonFixedDriveKey(Str path, char* keyOut, int keyCap) {
 
 // Caller holds gAttrsCacheMutex. Drops expired nodes while scanning.
 static DriveAvailEntry* FindDriveAvailLocked(Str driveName, u64 now) {
+    ReportDebugIf(!gAttrsCacheMutex.IsHeldByCurrentThread());
     DriveAvailEntry** pp = &gDriveAvailHead;
     while (*pp) {
         DriveAvailEntry* e = *pp;
@@ -637,6 +640,7 @@ static DriveAvailEntry* FindDriveAvailLocked(Str driveName, u64 now) {
 
 // Caller holds gAttrsCacheMutex.
 static void StoreDriveAvailLocked(Str driveName, bool isAvailable, u64 now) {
+    ReportDebugIf(!gAttrsCacheMutex.IsHeldByCurrentThread());
     DriveAvailEntry* e = FindDriveAvailLocked(driveName, now);
     if (e) {
         e->isAvailable = isAvailable;

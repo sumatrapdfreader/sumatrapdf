@@ -3734,6 +3734,7 @@ static void ForEachPageInfo(EngineMupdf* e, const Fn& fn) {
 
 // "1" / "0" per optional content group. Caller holds docLock
 static TempStr LayerStatesTemp(EngineMupdf* e) {
+    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
     int n = e->layerCount;
     if (n <= 0) {
         return {};
@@ -3756,6 +3757,7 @@ static TempStr LayerStatesTemp(EngineMupdf* e) {
 // remembers the document's own layer state, to save only what the user changed.
 // Caller holds docLock
 static void LoadLayerDefaults(EngineMupdf* e) {
+    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
     auto* ctx = e->Ctx();
     fz_try(ctx) {
         e->layerCount = pdf_count_layers(ctx, e->pdfdoc);
@@ -4828,6 +4830,7 @@ static bool IsLinearizedFile(EngineMupdf* e) {
 // one vector, pageCount full entries: PDF, XPS and single-chapter reflow docs
 // size of each page of a PDF, from its page object. Caller holds docLock
 static void LoadPdfPageMediaboxes(EngineMupdf* e) {
+    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
     auto* ctx = e->Ctx();
     for (int pageNo = 0; pageNo < e->pageCount; pageNo++) {
         pdf_obj* pageref = nullptr;
@@ -4859,6 +4862,7 @@ static void LoadPdfPageMediaboxes(EngineMupdf* e) {
 
 // Caller holds docLock
 static void LoadPdfPageLabels(EngineMupdf* e) {
+    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
     auto* ctx = e->Ctx();
     if (e->pageLabels) {
         e->pageLabels->~StrVec();
@@ -5260,6 +5264,7 @@ static bool RectNear(RectF a, RectF b) {
 // placeholder; matching chapters share one box, a different size is per page.
 // True when a display model that cached the old size must rebuild.
 static bool ApplyChapterMediabox(EngineMupdf* e, int chapter, RectF measured) {
+    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
     if (measured.IsEmpty() || chapter < 1 || chapter > len(e->chapterPages)) {
         return false;
     }
@@ -6254,6 +6259,8 @@ static fz_stext_page* NewStextPage(fz_context* ctx, fz_page* page, const fz_stex
 
 // caller must hold pagesLock and renderLock
 static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQuick, fz_cookie* cookie) {
+    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
+    ReportDebugIf(!e->renderLock.IsHeldByCurrentThread());
     auto* ctx = e->Ctx();
     // docLock too: loading a page loads its annotations and has MuPDF generate
     // their appearance streams, reading the same pdf objects the UI thread
@@ -10156,6 +10163,7 @@ static void SaveIncrementalFromMemory(EngineMupdf* e, Str path, const pdf_write_
 // why an incremental save of path can't compare against memory, {} if it can.
 // Caller holds docLock.
 static Str WhyNotSaveFromMemory(EngineMupdf* e, Str path, const pdf_write_options& opts) {
+    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
     pdf_document* doc = e->pdfdoc;
     if (!opts.do_incremental) {
         return StrL("not incremental");
@@ -10290,6 +10298,7 @@ bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
 // caller must hold pagesLock (protects pages[] and pageInfo->images)
 // returns 1 or 0, or -1 while the page isn't fully loaded
 static int HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
+    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
     ReportIf(pageNo < 1 || pageNo > e->pageCount);
     if (pageNo < 1 || pageNo > e->pageCount) {
         return 0;
@@ -10732,6 +10741,8 @@ static void DropPageImages(fz_context* ctx, FzPageInfo* pi) {
 // Drop cached page bits that were built from the old content stream.
 // Caller holds pagesLock and renderLock. Leaves annotation wrappers in place.
 static void InvalidateFzPageAfterContentChange(EngineMupdf* e, FzPageInfo* pi) {
+    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
+    ReportDebugIf(!e->renderLock.IsHeldByCurrentThread());
     auto* ctx = e->Ctx();
     if (pi->displayList) {
         fz_drop_display_list(ctx, pi->displayList);

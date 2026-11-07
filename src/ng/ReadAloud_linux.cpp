@@ -98,6 +98,7 @@ static bool LoadSpdFn(T& fn, const char* name) {
 
 // caller holds gTtsMutex
 static void TtsBeganLocked(int messageId) {
+    ReportDebugIf(!gTtsMutex.IsHeldByCurrentThread());
     if (messageId != gTtsQueuedMessage) {
         return;
     }
@@ -112,6 +113,7 @@ static void TtsBeganLocked(int messageId) {
 
 // caller holds gTtsMutex
 static void TtsEndedLocked(int messageId) {
+    ReportDebugIf(!gTtsMutex.IsHeldByCurrentThread());
     if (messageId == gTtsQueuedMessage) {
         str::FreePtr(&gTtsQueuedText);
         gTtsQueuedMessage = 0;

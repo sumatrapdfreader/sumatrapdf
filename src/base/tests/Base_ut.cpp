@@ -314,6 +314,37 @@ static void ArenaChainedBlockSizeTest() {
     ArenaDelete(a);
 }
 
+#if IS_DEBUG
+static void OtherThreadSeesLock(Mutex* m) {
+    utassert(!m->IsHeldByCurrentThread());
+}
+
+// debug builds track the holder, so "caller holds X" can be asserted
+static void MutexOwnerTest() {
+    Mutex m;
+    utassert(!m.IsHeldByCurrentThread());
+    m.Lock();
+    utassert(m.IsHeldByCurrentThread());
+#if !OS_WASM
+    ThreadHandle t = StartThread(MkFunc0(OtherThreadSeesLock, &m), StrL("MutexOwnerTest"));
+    JoinThread(&t, -1);
+#endif
+    m.Unlock();
+    utassert(!m.IsHeldByCurrentThread());
+    utassert(m.TryLock());
+    utassert(m.IsHeldByCurrentThread());
+    m.Unlock();
+
+    RecursiveMutex rm;
+    rm.Lock();
+    rm.Lock();
+    rm.Unlock();
+    utassert(rm.IsHeldByCurrentThread());
+    rm.Unlock();
+    utassert(!rm.IsHeldByCurrentThread());
+}
+#endif
+
 // ReportIf() evaluates to its condition, once, so callers can bail out in release
 static void ReportIfReturnsCondTest() {
     int n = 0;
@@ -518,6 +549,9 @@ void BaseUtilTest() {
     Func1ListTest();
     ColorTest();
     ReportIfReturnsCondTest();
+#if IS_DEBUG
+    MutexOwnerTest();
+#endif
     ArenaChainedBlockSizeTest();
     ArenaPushOverflowTest();
     ArenaPtrCompressTest();

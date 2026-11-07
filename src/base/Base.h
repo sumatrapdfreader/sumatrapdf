@@ -1141,16 +1141,70 @@ int NormalizeRotation(int rotation);
 #if OS_WIN
 using ThreadId = DWORD;
 using ThreadHandle = HANDLE;
+#else
+using ThreadId = u64;
+ThreadId GetCurrentThreadId();
+#endif
+
+// Debug builds record which thread holds a Mutex / RecursiveMutex so code can
+// check a "caller holds X" precondition:
+// ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
+// Release builds don't track it and IsHeldByCurrentThread() is always true.
+#if IS_DEBUG
+// only the holder writes it; depth > 1 for a re-entered RecursiveMutex
+struct LockOwner {
+    volatile ThreadId thread = 0;
+    int depth = 0;
+
+    void Enter() {
+        thread = GetCurrentThreadId();
+        depth++;
+    }
+    void Leave() {
+        if (--depth == 0) {
+            thread = 0;
+        }
+    }
+    bool IsCurrentThread() const { return thread == GetCurrentThreadId(); }
+};
+#define LOCK_OWNER_FIELD LockOwner owner;
+#define LOCK_OWNER_ENTER() owner.Enter()
+#define LOCK_OWNER_LEAVE() owner.Leave()
+#define LOCK_OWNER_IS_CURRENT() owner.IsCurrentThread()
+#else
+#define LOCK_OWNER_FIELD
+#define LOCK_OWNER_ENTER() (void)0
+#define LOCK_OWNER_LEAVE() (void)0
+#define LOCK_OWNER_IS_CURRENT() true
+#endif
+
+#if OS_WIN
 
 struct Mutex : NonCopyable {
     SRWLOCK lock = SRWLOCK_INIT;
+    LOCK_OWNER_FIELD
 
     Mutex() = default;
     ~Mutex() = default;
 
-    void Lock() { AcquireSRWLockExclusive(&lock); }
-    void Unlock() { ReleaseSRWLockExclusive(&lock); }
-    bool TryLock() { return TryAcquireSRWLockExclusive(&lock); }
+    void Lock() {
+        AcquireSRWLockExclusive(&lock);
+        LOCK_OWNER_ENTER();
+    }
+    void Unlock() {
+        LOCK_OWNER_LEAVE();
+        ReleaseSRWLockExclusive(&lock);
+    }
+    bool TryLock() {
+        if (!TryAcquireSRWLockExclusive(&lock)) {
+            return false;
+        }
+        LOCK_OWNER_ENTER();
+        return true;
+    }
+    bool IsHeldByCurrentThread() const { return LOCK_OWNER_IS_CURRENT(); }
+    void NoteLocked() { LOCK_OWNER_ENTER(); }
+    void NoteUnlocked() { LOCK_OWNER_LEAVE(); }
 };
 
 struct ConditionVariable : NonCopyable {
@@ -1159,7 +1213,12 @@ struct ConditionVariable : NonCopyable {
     ConditionVariable() = default;
     ~ConditionVariable() = default;
 
-    void Wait(Mutex* mutex) { SleepConditionVariableSRW(&cond, &mutex->lock, INFINITE, 0); }
+    // the wait releases the mutex, so it isn't held while asleep
+    void Wait(Mutex* mutex) {
+        mutex->NoteUnlocked();
+        SleepConditionVariableSRW(&cond, &mutex->lock, INFINITE, 0);
+        mutex->NoteLocked();
+    }
     void Wake() { WakeConditionVariable(&cond); }
     void WakeAll() { WakeAllConditionVariable(&cond); }
 };
@@ -1167,16 +1226,29 @@ struct ConditionVariable : NonCopyable {
 struct RecursiveMutex : NonCopyable {
     CRITICAL_SECTION lock;
 
+    LOCK_OWNER_FIELD
+
     RecursiveMutex() { InitializeCriticalSection(&lock); }
     ~RecursiveMutex() { DeleteCriticalSection(&lock); }
 
-    void Lock() { EnterCriticalSection(&lock); }
-    void Unlock() { LeaveCriticalSection(&lock); }
-    bool TryLock() { return TryEnterCriticalSection(&lock); }
+    void Lock() {
+        EnterCriticalSection(&lock);
+        LOCK_OWNER_ENTER();
+    }
+    void Unlock() {
+        LOCK_OWNER_LEAVE();
+        LeaveCriticalSection(&lock);
+    }
+    bool TryLock() {
+        if (!TryEnterCriticalSection(&lock)) {
+            return false;
+        }
+        LOCK_OWNER_ENTER();
+        return true;
+    }
+    bool IsHeldByCurrentThread() const { return LOCK_OWNER_IS_CURRENT(); }
 };
 #else
-using ThreadId = u64;
-
 struct ThreadHandlePosix;
 using ThreadHandle = ThreadHandlePosix*;
 
@@ -1186,9 +1258,26 @@ struct Mutex : NonCopyable {
     Mutex() = default;
     ~Mutex() = default;
 
-    void Lock() { pthread_mutex_lock(&lock); }
-    void Unlock() { pthread_mutex_unlock(&lock); }
-    bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
+    LOCK_OWNER_FIELD
+
+    void Lock() {
+        pthread_mutex_lock(&lock);
+        LOCK_OWNER_ENTER();
+    }
+    void Unlock() {
+        LOCK_OWNER_LEAVE();
+        pthread_mutex_unlock(&lock);
+    }
+    bool TryLock() {
+        if (pthread_mutex_trylock(&lock) != 0) {
+            return false;
+        }
+        LOCK_OWNER_ENTER();
+        return true;
+    }
+    bool IsHeldByCurrentThread() const { return LOCK_OWNER_IS_CURRENT(); }
+    void NoteLocked() { LOCK_OWNER_ENTER(); }
+    void NoteUnlocked() { LOCK_OWNER_LEAVE(); }
 };
 
 struct ConditionVariable : NonCopyable {
@@ -1197,7 +1286,12 @@ struct ConditionVariable : NonCopyable {
     ConditionVariable() = default;
     ~ConditionVariable() { pthread_cond_destroy(&cond); }
 
-    void Wait(Mutex* mutex) { pthread_cond_wait(&cond, &mutex->lock); }
+    // the wait releases the mutex, so it isn't held while asleep
+    void Wait(Mutex* mutex) {
+        mutex->NoteUnlocked();
+        pthread_cond_wait(&cond, &mutex->lock);
+        mutex->NoteLocked();
+    }
     void Wake() { pthread_cond_signal(&cond); }
     void WakeAll() { pthread_cond_broadcast(&cond); }
 };
@@ -1213,13 +1307,25 @@ struct RecursiveMutex : NonCopyable {
         pthread_mutexattr_destroy(&attr);
     }
     ~RecursiveMutex() { pthread_mutex_destroy(&lock); }
+    LOCK_OWNER_FIELD
 
-    void Lock() { pthread_mutex_lock(&lock); }
-    void Unlock() { pthread_mutex_unlock(&lock); }
-    bool TryLock() { return pthread_mutex_trylock(&lock) == 0; }
+    void Lock() {
+        pthread_mutex_lock(&lock);
+        LOCK_OWNER_ENTER();
+    }
+    void Unlock() {
+        LOCK_OWNER_LEAVE();
+        pthread_mutex_unlock(&lock);
+    }
+    bool TryLock() {
+        if (pthread_mutex_trylock(&lock) != 0) {
+            return false;
+        }
+        LOCK_OWNER_ENTER();
+        return true;
+    }
+    bool IsHeldByCurrentThread() const { return LOCK_OWNER_IS_CURRENT(); }
 };
-
-ThreadId GetCurrentThreadId();
 #endif
 
 // ng: counting semaphore. Windows has CreateSemaphore, posix has sem_t (with

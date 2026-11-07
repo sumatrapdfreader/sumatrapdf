@@ -339,6 +339,7 @@ void GraphicsCacheEntry::Free() const {
 
 // caller must hold gGraphicsCacheMutex (it is not re-entrant)
 static Graphics* AllocGraphicsForMeasureTextNoLock() {
+    ReportDebugIf(!gGraphicsCacheMutex.IsHeldByCurrentThread());
     if (!gGraphicsCache) {
         gGraphicsCache = new Vec<GraphicsCacheEntry>();
     }

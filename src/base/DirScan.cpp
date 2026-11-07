@@ -205,6 +205,7 @@ static void DirScanWorkerThread(DirScanWorker* w);
 // subdirectories could otherwise start a thread after teardown has collected
 // the worker list, and that thread would outlive the context.
 static DirScanWorker* FindOrCreateWorker(DirScanCtx* ctx, Str dir) {
+    ReportDebugIf(!ctx->cs.IsHeldByCurrentThread());
     if (AtomicBoolGet(&ctx->shouldExit)) {
         return nullptr;
     }
@@ -232,6 +233,7 @@ static DirScanWorker* FindOrCreateWorker(DirScanCtx* ctx, Str dir) {
 
 // Must hold w->cs. Starts the clock if this is the first work in a while.
 static void WorkerNoteBusy(DirScanWorker* w) {
+    ReportDebugIf(!w->cs.IsHeldByCurrentThread());
     if (w->busySinceMs == 0) {
         w->busySinceMs = GetTickCount64();
     }
@@ -239,6 +241,7 @@ static void WorkerNoteBusy(DirScanWorker* w) {
 
 // Must hold w->cs. Banks the time spent in this stretch of scanning.
 static void WorkerNoteIdle(DirScanWorker* w) {
+    ReportDebugIf(!w->cs.IsHeldByCurrentThread());
     if (w->busySinceMs != 0) {
         w->scannedForMs += GetTickCount64() - w->busySinceMs;
         w->busySinceMs = 0;
@@ -364,6 +367,7 @@ void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive) {
 // Must hold w->cs. Re-sorts everything queued by walking into the ones under
 // dir and the ones that aren't, keeping the relative order within each.
 static void RepartitionWorkerQueues(DirScanWorker* w, Str dir) {
+    ReportDebugIf(!w->cs.IsHeldByCurrentThread());
     DirEntriesNode* nodes = w->preferredDirs;
     if (nodes) {
         w->preferredDirsLast->next = w->dirsToVisit;
