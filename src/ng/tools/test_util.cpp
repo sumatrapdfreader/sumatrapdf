@@ -60,6 +60,7 @@ extern bool MarkdownToc_UnitTestHighlightWikilinks();
 extern bool PdfDarkModeImageStats_UnitTest();
 extern bool EbookDoc_UnitTestLoading();
 extern bool EbookDoc_UnitTestLinearNo();
+extern bool EbookDoc_UnitTestUtf16BeTwice();
 bool GumboHtmlParser_UnitTest();
 bool DisplayMode_UnitTestZoom();
 bool Translations_UnitTestUnescape();
@@ -198,6 +199,7 @@ int main(int argc, char** argv) {
     utassert(Accelerators_UnitTestFolderNavIsSafe());
     utassert(EbookDoc_UnitTestLoading());
     utassert(EbookDoc_UnitTestLinearNo());
+    utassert(EbookDoc_UnitTestUtf16BeTwice());
     utassert(GumboHtmlParser_UnitTest());
     utassert(DisplayMode_UnitTestZoom());
     utassert(Translations_UnitTestUnescape());

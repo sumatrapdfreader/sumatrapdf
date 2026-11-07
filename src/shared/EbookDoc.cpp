@@ -148,8 +148,9 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
         return ToUtf8Temp(ws);
     }
     if (str::TrimPrefix(s, StrL(kUtf16BeBom))) {
-        // convert from utf16 big endian to utf16
-        int n = str::CastStrToWStr(s).len;
+        // convert from utf16 big endian to utf16 in a copy: s may be archive-owned
+        s = str::DupTemp(s);
+        int n = len(str::CastStrToWStr(s));
         for (int i = 0; i < n; i++) {
             int idx = i * 2;
             std::swap(s.s[idx], s.s[idx + 1]);
@@ -1501,6 +1502,44 @@ bool EbookDoc_UnitTestLinearNo() {
         last = at;
     }
     return true;
+}
+
+// Decoding UTF-16BE must not byte-swap the archive's cached data: a page
+// listed twice in the spine is decoded twice from the same buffer.
+bool EbookDoc_UnitTestUtf16BeTwice() {
+    Str opf = StrL(
+        "<package version='3.0'><manifest>"
+        "<item id='c1' href='c1.xhtml' media-type='application/xhtml+xml'/>"
+        "</manifest><spine><itemref idref='c1'/><itemref idref='c1'/></spine></package>");
+    Str htmlUtf8 = StrL("<html><body><h1>BEPAGE</h1></body></html>");
+    str::Builder html;
+    html.Append(StrL("\xFE\xFF"));
+    for (int i = 0; i < len(htmlUtf8); i++) {
+        html.AppendChar(0);
+        html.AppendChar(htmlUtf8.s[i]);
+    }
+
+    str::Builder zip;
+    ZipCreator creator(zip);
+    Str container = StrL("<container><rootfiles><rootfile full-path='OEBPS/content.opf'/></rootfiles></container>");
+    bool ok = creator.AddFileData(StrL("META-INF/container.xml"), container) &&
+              creator.AddFileData(StrL("OEBPS/content.opf"), opf) &&
+              creator.AddFileData(StrL("OEBPS/c1.xhtml"), ToStr(html));
+    if (!ok || !creator.Finish()) {
+        return false;
+    }
+    AutoDelete doc(EpubDoc::CreateFromData(ToStr(zip)));
+    if (!doc) {
+        return false;
+    }
+
+    Str s = ToStr(doc->htmlData);
+    int first = str::IndexOf(s, StrL("BEPAGE"));
+    if (first < 0) {
+        return false;
+    }
+    Str rest = Str(s.s + first + 1, len(s) - first - 1);
+    return str::IndexOf(rest, StrL("BEPAGE")) >= 0;
 }
 
 // issue #5846: consecutive ../../ must fully resolve

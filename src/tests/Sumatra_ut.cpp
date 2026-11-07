@@ -108,6 +108,7 @@ bool MarkdownToc_TestLineBreaks();
 bool EbookDoc_UnitTestNormalizeURL();
 bool EbookDoc_UnitTestLoading();
 bool EbookDoc_UnitTestLinearNo();
+bool EbookDoc_UnitTestUtf16BeTwice();
 bool GumboHtmlParser_UnitTest();
 bool DisplayMode_UnitTestZoom();
 bool ExternalViewers_UnitTestPDFXChangePaths();
@@ -733,6 +734,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(EbookDoc_UnitTestNormalizeURL());
     utassert(EbookDoc_UnitTestLoading());
     utassert(EbookDoc_UnitTestLinearNo());
+    utassert(EbookDoc_UnitTestUtf16BeTwice());
     utassert(GumboHtmlParser_UnitTest());
     utassert(DisplayMode_UnitTestZoom());
     utassert(ExternalViewers_UnitTestPDFXChangePaths());
