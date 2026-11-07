@@ -1156,8 +1156,9 @@ TempStr FindWindowContentsResultTemp(int maxRows, int* exitCodeOut) {
     gSettings->searchUIFloating = true;
     ShowFindWindow(win);
     TempStr term = FindEditTextTemp(win);
+    // a [Search] or -search fills the box only once its search got going
     if (len(term) == 0) {
-        return finish(1, StrL("ERROR empty-term"));
+        return finish(2, StrL("NOTREADY empty-term"));
     }
     if (win->findThread || win->findCountThread || !win->findCountValid || !win->findCountHasSnippets) {
         return finish(2, StrL("NOTREADY snippets"));

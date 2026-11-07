@@ -1311,8 +1311,9 @@ TempStr FindWindowContentsResultTemp(int* exitCodeOut) {
     ShowFindWindow(win);
 
     TempStr term = win->findEdit ? win->findEdit->GetTextTemp() : TempStr{};
+    // a [Search] or -search fills the box only once its search got going
     if (len(term) == 0) {
-        return fail(StrL("ERROR empty-term"));
+        return fail(StrL("NOTREADY empty-term"));
     }
     if (win->findThread || win->findCountThread || !win->findCountValid || !win->findCountHasSnippets) {
         return fail(StrL("NOTREADY snippets"));
