@@ -918,7 +918,8 @@ bool FindTermDiffersFromLast(MainWindow* win) {
     if (win->findCountText && len(win->findCountText) > 0) {
         return !str::Eq(searchText, FindTermWithoutWordStartSpace(win->findCountText));
     }
-    if (DisplayModel* dm = win->AsFixed()) {
+    // the find thread replaces (and frees) lastText while it runs
+    if (DisplayModel* dm = win->findThread ? nullptr : win->AsFixed()) {
         if (dm->textSearch && dm->textSearch->lastText) {
             return !str::Eq(searchText, dm->textSearch->lastText);
         }
@@ -986,7 +987,8 @@ TempStr CurrentFindTermTemp(MainWindow* win) {
     if (win->findCountText && len(win->findCountText) > 0) {
         return str::DupTemp(win->findCountText);
     }
-    if (DisplayModel* dm = win->AsFixed()) {
+    // the find thread replaces (and frees) lastText while it runs
+    if (DisplayModel* dm = win->findThread ? nullptr : win->AsFixed()) {
         if (dm->textSearch && dm->textSearch->lastText) {
             return str::DupTemp(dm->textSearch->lastText);
         }
@@ -1376,6 +1378,8 @@ void FindToggleMatchCase(MainWindow* win) {
     }
     win->findMatchCase = !win->findMatchCase;
     if (win->AsFixed()) {
+        // the find thread drives textSearch; it is re-run below anyway
+        JoinFindThread(win, false);
         win->AsFixed()->textSearch->SetMatchCase(win->findMatchCase);
     }
     FindBarSetMatchCaseChecked(win, win->findMatchCase);
@@ -1400,6 +1404,8 @@ void FindToggleMatchWholeWord(MainWindow* win) {
     }
     win->findMatchWholeWord = !win->findMatchWholeWord;
     if (win->AsFixed()) {
+        // the find thread drives textSearch; it is re-run below anyway
+        JoinFindThread(win, false);
         win->AsFixed()->textSearch->SetMatchWholeWord(win->findMatchWholeWord);
     }
     FindBarSetMatchWholeWordChecked(win, win->findMatchWholeWord);
