@@ -96,14 +96,10 @@
 #include "NavFilesInFolder.h"
 #include "EngineAll.h"
 #include "PdfCad.h"
-#include <mupdf/pdf.h>
 #include "base/ByteReaderWriter.h"
 #include "PdfCreator.h"
 #include "ImageSaveCropResize.h"
 #include "ImageReader.h"
-extern "C" {
-#include <mupdf/fitz.h>
-}
 #include "Annotation.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotEditToolbarCommon.h"
