@@ -682,14 +682,14 @@ void RememberDefaultWindowPosition(MainWindow* win) {
         if (intended == WIN_STATE_MAXIMIZED && !IsZoomed(win->hwndFrame)) {
             return;
         }
-        if (intended == WIN_STATE_FULLSCREEN && !win->isFullScreen) {
+        if (intended == WIN_STATE_FULLSCREEN && !win->IsFullScreen()) {
             return;
         }
     }
 
-    if (win->presentation) {
+    if (win->InPresentation()) {
         gSettings->windowState = win->windowStateBeforePresentation;
-    } else if (win->isFullScreen) {
+    } else if (win->IsFullScreen()) {
         gSettings->windowState = WIN_STATE_FULLSCREEN;
     } else if (IsZoomed(win->hwndFrame)) {
         gSettings->windowState = WIN_STATE_MAXIMIZED;
@@ -701,7 +701,7 @@ void RememberDefaultWindowPosition(MainWindow* win) {
     // stale when the sidebar is hidden or only favorites are showing
     gSettings->sidebarDx = win->sidebarDx > 0 ? win->sidebarDx : HwndWindowRect(win->sidebarTop->hwnd).dx;
 
-    if (IsIconic(win->hwndFrame) || win->presentation) {
+    if (IsIconic(win->hwndFrame) || win->InPresentation()) {
         return;
     }
 
@@ -896,7 +896,7 @@ static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
 // After the menu changes (e.g. home page -> document), repaint the menu bar so
 // stale caption/rebar pixels are not left behind (issue #5763).
 static void RedrawMenuBarForWindow(MainWindow* win) {
-    if (!win || win->presentation || win->isFullScreen || !IsMenubarVisible()) {
+    if (!win || win->IsFullScreenOrPresentation() || !IsMenubarVisible()) {
         return;
     }
     if (win->tabsInTitlebar) {
@@ -923,7 +923,7 @@ void RebuildMenuBarForWindow(MainWindow* win) {
     HMENU oldMenu = win->menu;
     win->menu = BuildMenu(win);
     bool redrawMenuBar = false;
-    if (!win->presentation && !win->isFullScreen && IsMenubarVisible()) {
+    if (!win->IsFullScreenOrPresentation() && IsMenubarVisible()) {
         if (win->tabsInTitlebar) {
             // use rebar menu bar instead of native menu when tabs are in titlebar
             if (IsShowingMenuBarRebar(win)) {
@@ -1877,7 +1877,7 @@ static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab);
 // thumbnails in the sidebar's top panel instead of no sidebar (#6407).
 // Bookmarks still being generated from headings count as bookmarks
 static bool OpensWithThumbnails(MainWindow* win, WindowTab* tab) {
-    if (!gSettings->showThumbnailsIfNoToc || !tab || win->presentation) {
+    if (!gSettings->showThumbnailsIfNoToc || !tab || win->InPresentation()) {
         return false;
     }
     // a top panel the user switched to favorites or thumbnails keeps that
@@ -1963,7 +1963,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         }
         showToc = fs->showToc || gSettings->alwaysShowSidebar;
         tab->sidebarView = SidebarViewFromStr(fs->sidebarView, SidebarView::Bookmarks);
-        if (win->ctrl && win->presentation) {
+        if (win->ctrl && win->InPresentation()) {
             showToc = tab->showTocPresentation;
         }
         ParsedColor* bgParsed = GetPrefsColor(fs->bgCol);
@@ -2373,7 +2373,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     } else {
         win->RedrawAll(false);
     }
-    if (!args->isNewWindow && win->presentation && win->ctrl) {
+    if (!args->isNewWindow && win->InPresentation() && win->ctrl) {
         win->ctrl->SetInPresentation(true);
     }
     StartPendingSearch(win);
@@ -2455,7 +2455,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     }
     // Set the windows state based on the actual window's placement
     int wstate = WIN_STATE_NORMAL;
-    if (win->isFullScreen) {
+    if (win->IsFullScreen()) {
         wstate = WIN_STATE_FULLSCREEN;
     } else {
         if (IsZoomed(win->hwndFrame)) {
@@ -2765,7 +2765,7 @@ static void UpdateWindowFrameBorderColor(MainWindow* win) {
     }
     // Maximized / fullscreen can't edge-resize; hide the DWM border so it does
     // not show as a bright 1px seam against the taskbar (issue #5851).
-    if (IsZoomed(win->hwndFrame) || win->isFullScreen || win->presentation) {
+    if (IsZoomed(win->hwndFrame) || win->IsFullScreenOrPresentation()) {
         SetWindowBorderColor(win->hwndFrame, (Color)DWMWA_COLOR_NONE);
         return;
     }
@@ -2983,7 +2983,7 @@ void ShowMainWindow(MainWindow* win, int windowState) {
         HwndToForeground(win->hwndFrame);
     }
 
-    if (win->tabsInTitlebar && !win->isFullScreen) {
+    if (win->tabsInTitlebar && !win->IsFullScreen()) {
         RECT r = ToRECT(win->captionRect);
         HwndInvalidateRect(win->hwndFrame, win->captionRect, true);
         RedrawWindow(win->hwndFrame, &r, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_FRAME);
@@ -4391,7 +4391,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         return;
     }
     DisplayModel* prevDm = win->AsFixed();
-    if (prevDm && win->isFullScreen && !win->InPresentation()) {
+    if (prevDm && win->IsFullScreen()) {
         prevDm->ApplyFullscreenDisplayMode(false);
     }
     CloseDocumentInCurrentTab(win, true, false);
@@ -4497,7 +4497,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         }
         if (dm->InPresentation() != win->InPresentation()) {
             dm->SetInPresentation(win->InPresentation());
-        } else if (win->isFullScreen && !win->InPresentation()) {
+        } else if (win->IsFullScreen()) {
             dm->ApplyFullscreenDisplayMode(true);
         }
     } else if (IsBrowserDocController(win->ctrl)) {
@@ -5497,7 +5497,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         }
     }
 
-    if (win->presentation) {
+    if (win->InPresentation()) {
         ExitFullScreen(win);
     }
 
@@ -6849,10 +6849,10 @@ constexpr int kCaptionGlyphDip = 10;
 using UILayout = MainWindow::UIState::Layout;
 
 static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
-    return s1->rc == s2->rc && s1->presentation == s2->presentation && s1->tabsInTitlebar == s2->tabsInTitlebar &&
-           s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
-           s1->isToolbarVisible == s2->isToolbarVisible && s1->isToolbarOverlay == s2->isToolbarOverlay &&
-           s1->sidebarTopVisible == s2->sidebarTopVisible && s1->sidebarBottomVisible == s2->sidebarBottomVisible &&
+    return s1->rc == s2->rc && s1->windowMode == s2->windowMode && s1->tabsInTitlebar == s2->tabsInTitlebar &&
+           s1->tabsVisible == s2->tabsVisible && s1->isToolbarVisible == s2->isToolbarVisible &&
+           s1->isToolbarOverlay == s2->isToolbarOverlay && s1->sidebarTopVisible == s2->sidebarTopVisible &&
+           s1->sidebarBottomVisible == s2->sidebarBottomVisible &&
            s1->sidebarMiddleVisible == s2->sidebarMiddleVisible && s1->favoritesAsTab == s2->favoritesAsTab &&
            s1->sigBarVisible == s2->sigBarVisible && s1->pageInfoBar == s2->pageInfoBar &&
            s1->showMenuBarRebar == s2->showMenuBarRebar && s1->aiChatVisible == s2->aiChatVisible &&
@@ -6998,7 +6998,7 @@ static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update);
 // SidebarAutoHide: a shown sidebar floats over the canvas instead of taking
 // its own column (#5819). Not over a Favorites tab, nor in presentation.
 static bool SidebarFloats(MainWindow* win) {
-    if (!gSettings->sidebarAutoHide || win->presentation) {
+    if (!gSettings->sidebarAutoHide || win->InPresentation()) {
         return false;
     }
     WindowTab* tab = win->CurrentTab();
@@ -7018,9 +7018,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // build a snapshot of all state that affects layout
     UILayout curState;
     curState.rc = rc;
-    curState.presentation = (int)win->presentation;
+    curState.windowMode = win->windowMode;
     curState.tabsInTitlebar = win->tabsInTitlebar;
-    curState.isFullScreen = win->isFullScreen;
     curState.tabsVisible = win->tabsVisible;
     curState.isToolbarVisible = win->isToolbarVisible;
     curState.isToolbarOverlay = win->isToolbarOverlay;
@@ -7105,7 +7104,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         LogRedraw(StrL("RelayoutFrame"), win->hwndFrame, &r);
     }
 
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         SigBarSetVisible(win, false);
         PageInfoBarSetVisible(win, false);
         // make the black/white canvas cover the entire window
@@ -7115,7 +7114,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     // inset by border for resize hit-testing (only with custom caption, not when maximized/fullscreen)
-    if (win->tabsInTitlebar && !IsZoomed(win->hwndFrame) && !win->isFullScreen && !win->presentation) {
+    if (win->tabsInTitlebar && !IsZoomed(win->hwndFrame) && !win->IsFullScreenOrPresentation()) {
         rc.x += kFrameBorderSize;
         rc.y += kFrameBorderSize;
         rc.dx -= 2 * kFrameBorderSize;
@@ -7169,10 +7168,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool layBottom = bottomVisible && !sidebarFloats;
     bool laySidebar = sidebarVisible && !sidebarFloats;
     bool aiChatVisible = !favAsTab && win->uiState.aiChatVisible && win->hwndAiChatBox;
-    bool showCaption = !win->presentation && !win->isFullScreen && win->tabsInTitlebar && gSettings->showCaption;
+    bool showCaption = !win->IsFullScreenOrPresentation() && win->tabsInTitlebar && gSettings->showCaption;
     bool showingMenuBar = IsShowingMenuBarRebar(win);
-    bool showTabsBar = !win->presentation && !win->isFullScreen && !win->tabsInTitlebar && win->tabsVisible;
-    bool showMenuRebar = showingMenuBar && (!win->tabsInTitlebar || win->isFullScreen);
+    bool showTabsBar = !win->IsFullScreenOrPresentation() && !win->tabsInTitlebar && win->tabsVisible;
+    bool showMenuRebar = showingMenuBar && (!win->tabsInTitlebar || win->IsFullScreen());
     bool showToolbar = win->isToolbarVisible;
     bool toolbarBottom = showToolbar && ToolbarAtBottom();
 
@@ -7474,7 +7473,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (isLiveDrag) {
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
     }
-    if (updateToolbars && win->tabsInTitlebar && !win->isFullScreen) {
+    if (updateToolbars && win->tabsInTitlebar && !win->IsFullScreen()) {
         HwndInvalidateRect(win->hwndFrame, win->captionRect, true);
         if (win->hwndMenuReBar && HwndIsVisible(win->hwndMenuReBar)) {
             RedrawWindow(win->hwndMenuReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
@@ -7585,7 +7584,7 @@ static void FrameUpdateUi(MainWindow* win) {
         FindBarReposition(win);
         RepositionSelectionToolbar(win);
         RepositionAnnotEditToolbar(win);
-        if (win->presentation || win->isFullScreen) {
+        if (win->IsFullScreenOrPresentation()) {
             Rect fullscreen = HwndGetFullscreenRect(win->hwndFrame);
             Rect rect = HwndWindowRect(win->hwndFrame);
             // Windows can alter the frame size on its own (display rotation,
@@ -8198,7 +8197,7 @@ static void OnMenuGoToPage(MainWindow* win) {
     // chaptered docs start at the chapter box, the natural first field
     bool hasChapters = ShowChapterUi(win->ctrl);
     Edit* target = (hasChapters && win->chapterEdit) ? win->chapterEdit : win->pageEdit;
-    if (target && !win->presentation) {
+    if (target && !win->InPresentation()) {
         if (win->isToolbarOverlay) {
             RevealOverlayToolbar(win);
             FocusPageNoEdit(target->hwnd);
@@ -8224,7 +8223,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 
     // callers exit one mode before entering the other. Entering on top of it
     // saved the stripped style as the one to restore, leaving a captionless window
-    if (win->isFullScreen || win->presentation) {
+    if (win->IsFullScreenOrPresentation()) {
         return;
     }
 
@@ -8239,17 +8238,17 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         } else {
             win->windowStateBeforePresentation = WIN_STATE_NORMAL;
         }
-        win->presentation = PM_ENABLED;
+        win->windowMode = WindowMode::Presentation;
         // hack: this tells OnMouseMove() to hide cursor immediately
         win->dragPrevPos = Point(-2, -3);
     } else {
-        win->isFullScreen = true;
+        win->windowMode = WindowMode::FullScreen;
     }
 
     // Save window style and rect before hiding anything, since
     // SetMenu(nullptr) can alter the window style bits.
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
-    if (!presentation || !win->isFullScreen) {
+    if (!presentation || !win->IsFullScreen()) {
         win->nonFullScreenWindowStyle = ws;
     }
     win->nonFullScreenFrameRect = HwndWindowRect(win->hwndFrame);
@@ -8332,7 +8331,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 // (The old code called EnterFullScreen again, but that early-returns when
 // already in fullscreen — so rotation left a wrongly sized frame; issue #1106.)
 static void ResizeFullScreenToCurrentDisplay(MainWindow* win) {
-    if (!win || (!win->isFullScreen && !win->presentation)) {
+    if (!win || (!win->IsFullScreenOrPresentation())) {
         return;
     }
 
@@ -8340,7 +8339,7 @@ static void ResizeFullScreenToCurrentDisplay(MainWindow* win) {
     Rect fsRect = HwndGetFullscreenRect(hwnd);
     Rect cur = HwndWindowRect(hwnd);
     bool wasMaximized = (win->nonFullScreenWindowStyle & WS_MAXIMIZE) != 0;
-    if (win->presentation && win->windowStateBeforePresentation == WIN_STATE_MAXIMIZED) {
+    if (win->InPresentation() && win->windowStateBeforePresentation == WIN_STATE_MAXIMIZED) {
         wasMaximized = true;
     }
 
@@ -8367,7 +8366,7 @@ static void ResizeFullScreenToCurrentDisplay(MainWindow* win) {
 }
 
 void ExitFullScreen(MainWindow* win) {
-    if (!win->isFullScreen && !win->presentation) {
+    if (!win->IsFullScreenOrPresentation()) {
         return;
     }
 
@@ -8375,9 +8374,9 @@ void ExitFullScreen(MainWindow* win) {
         SetThreadExecutionState(ES_CONTINUOUS);
     }
 
-    bool wasPresentation = PM_DISABLED != win->presentation;
+    bool wasPresentation = win->InPresentation();
     if (wasPresentation) {
-        win->presentation = PM_DISABLED;
+        win->windowMode = WindowMode::Normal;
         if (win->IsDocLoaded()) {
             win->ctrl->SetInPresentation(false);
         }
@@ -8389,7 +8388,7 @@ void ExitFullScreen(MainWindow* win) {
             tab->showTocPresentation = false;
         }
     } else {
-        win->isFullScreen = false;
+        win->windowMode = WindowMode::Normal;
         if (DisplayModel* dm = win->AsFixed()) {
             dm->ApplyFullscreenDisplayMode(false);
             UpdateToolbarState(win);
@@ -8468,7 +8467,7 @@ void ExitFullScreen(MainWindow* win) {
 void AdvanceFocus(MainWindow* win) {
     // Tab order: Frame -> Chapter -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
-    bool hasToolbar = !win->isFullScreen && !win->presentation && gSettings->showToolbar && win->IsDocLoaded();
+    bool hasToolbar = !win->IsFullScreenOrPresentation() && gSettings->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
     constexpr int kMaxWindows = 7;
@@ -8578,7 +8577,7 @@ static bool TryExtendTextSelectionFromKey(MainWindow* win, WPARAM key) {
 
 static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
     // TODO: how does this interact with new accelerators?
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         // black/white screen is disabled on any unmodified key press in FrameOnChar
         return true;
     }
@@ -8750,8 +8749,8 @@ static void OnFrameKeyEsc(MainWindow* win) {
         return;
     }
     // leave presentation / fullscreen before EscToExit quits (issue #6250)
-    if (win->presentation || win->isFullScreen) {
-        ToggleFullScreen(win, win->presentation != PM_DISABLED);
+    if (win->IsFullScreenOrPresentation()) {
+        ToggleFullScreen(win, win->InPresentation());
         return;
     }
     // Esc is the cancel key while the Edit PDF toolbar is up ("Place text
@@ -8808,8 +8807,8 @@ void ToggleCursorPositionInDoc(MainWindow* win) {
 }
 
 static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
-        win->ChangePresentationMode(PM_ENABLED);
+    if (win->InBlankPresentation()) {
+        win->ChangePresentationMode(WindowMode::Presentation);
         return;
     }
 
@@ -9001,7 +9000,7 @@ static bool FrameCanResizeForSidebar(MainWindow* win) {
     if (!str::EqI(gSettings->sidebarWindowSize, StrL("grow"))) {
         return false;
     }
-    if (win->isFullScreen || win->presentation) {
+    if (win->IsFullScreenOrPresentation()) {
         return false;
     }
     if (IsZoomed(win->hwndFrame)) {
@@ -9107,7 +9106,7 @@ void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible, 
     bool middleVisible =
         gSettings->showSidebarMiddle && topVisible && bottomVisible && IsSidebarViewAvailable(win, middle->view);
 
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         topVisible = false;
         middleVisible = false;
         bottomVisible = false;
@@ -9135,12 +9134,12 @@ void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible, 
 
     if (!tab) {
         ReportIf(topVisible);
-    } else if (!win->presentation) {
+    } else if (!win->InPresentation()) {
         // remember the request if the document can show the view, so it opens
         // once the bookmarks from headings arrive
         bool pending = top->view == SidebarView::Bookmarks && headingPending;
         tab->showToc = topAvailable || pending ? requestedTop : topVisible;
-    } else if (PM_ENABLED == win->presentation) {
+    } else if (win->windowMode == WindowMode::Presentation) {
         tab->showTocPresentation = topVisible;
     }
 
@@ -9618,7 +9617,7 @@ static void TransitionToTabs() {
 // (unlike ToggleMenuBar, which flips the pref). No-op in fullscreen /
 // presentation, where the menu bar is governed by that mode.
 static void ApplyMenuBarVisibility(MainWindow* win) {
-    if (!win->menu || win->presentation || win->isFullScreen) {
+    if (!win->menu || win->IsFullScreenOrPresentation()) {
         return;
     }
     bool visible = IsMenubarVisible();
@@ -11193,7 +11192,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // explicit state: on -> show (pinned), off -> hide
                 bool on = GetCommandBoolArg(cmd, kCmdArgState, true);
                 int mode = on ? kToolbarShow : kToolbarHide;
-                if (win->isFullScreen) {
+                if (win->IsFullScreen()) {
                     SetFullscreenToolbarMode(mode);
                     for (MainWindow* w : gWindows) {
                         ShowOrHideToolbar(w);
@@ -11659,13 +11658,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdTogglePresentationMode:
-            if (ShouldToggle(cmd, win->presentation != PM_DISABLED)) {
+            if (ShouldToggle(cmd, win->InPresentation())) {
                 TogglePresentationMode(win);
             }
             break;
 
         case CmdToggleFullscreen:
-            if (ShouldToggle(cmd, win->isFullScreen)) {
+            if (ShouldToggle(cmd, win->IsFullScreen())) {
                 ToggleFullScreen(win);
             }
             break;
@@ -12363,17 +12362,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdPresentationBlackBackground:
-            if (win->presentation) {
+            if (win->InPresentation()) {
                 // toggle: pressing the key again restores the slide (so a
                 // presenter remote bound to '.' can black out and back) (#2820)
-                bool isBlack = win->presentation == PM_BLACK_SCREEN;
-                win->ChangePresentationMode(isBlack ? PM_ENABLED : PM_BLACK_SCREEN);
+                bool isBlack = win->windowMode == WindowMode::PresentationBlack;
+                win->ChangePresentationMode(isBlack ? WindowMode::Presentation : WindowMode::PresentationBlack);
             }
             break;
         case CmdPresentationWhiteBackground:
-            if (win->presentation) {
-                bool isWhite = win->presentation == PM_WHITE_SCREEN;
-                win->ChangePresentationMode(isWhite ? PM_ENABLED : PM_WHITE_SCREEN);
+            if (win->InPresentation()) {
+                bool isWhite = win->windowMode == WindowMode::PresentationWhite;
+                win->ChangePresentationMode(isWhite ? WindowMode::Presentation : WindowMode::PresentationWhite);
             }
             break;
 
@@ -13290,7 +13289,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             break;
 
         case WM_NCPAINT: {
-            if (win->isFullScreen || win->presentation) {
+            if (win->IsFullScreenOrPresentation()) {
                 *callDef = false;
                 return 0;
             }
@@ -13300,7 +13299,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         }
 
         case WM_PAINT: {
-            if (win->isFullScreen || win->presentation) {
+            if (win->IsFullScreenOrPresentation()) {
                 break; // no custom caption painting in fullscreen
             }
             PAINTSTRUCT ps;
@@ -13385,7 +13384,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
         case WM_NCCALCSIZE: {
             RECT* r = wp == TRUE ? &((NCCALCSIZE_PARAMS*)lp)->rgrc[0] : (RECT*)lp;
-            bool isFullScreen = win->isFullScreen || win->presentation;
+            bool isFullScreen = win->IsFullScreenOrPresentation();
             if (IsZoomed(hwnd) && !isFullScreen) {
                 // The maximized outer frame extends beyond the work area. Global
                 // system metrics can still describe the old monitor during a
@@ -13424,7 +13423,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             Rect wrc = HwndWindowRect(hwnd);
 
             // use a larger hit-test area than the visible border for easier resizing
-            if (!IsZoomed(hwnd) && !win->isFullScreen && !win->presentation) {
+            if (!IsZoomed(hwnd) && !win->IsFullScreenOrPresentation()) {
                 int b = kFrameResizeHitTest;
                 bool onLeft = (x - wrc.x) < b;
                 bool onRight = (wrc.x + wrc.dx - x) <= b;
@@ -13716,7 +13715,7 @@ static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update) {
     constexpr int kCaptionRevealDy = 8;
     constexpr int kCaptionPollMs = 50;
     constexpr int kCaptionTimer = 1;
-    bool overlay = !gSettings->showCaption && win->tabsInTitlebar && !win->isFullScreen && !win->presentation;
+    bool overlay = !gSettings->showCaption && win->tabsInTitlebar && !win->IsFullScreenOrPresentation();
     if (overlay && !win->hwndCaptionOverlay) {
         WNDCLASSW cls{};
         cls.lpfnWndProc = CaptionOverlayProc;
@@ -14379,7 +14378,7 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             break;
 
         case WM_MOUSEACTIVATE:
-            if (win && win->presentation && hwnd != GetForegroundWindow()) {
+            if (win && win->InPresentation() && hwnd != GetForegroundWindow()) {
                 return MA_ACTIVATEANDEAT;
             }
             return MA_ACTIVATE;

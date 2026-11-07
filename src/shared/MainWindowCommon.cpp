@@ -78,7 +78,7 @@ MarkdownModel* MainWindow::AsMarkdown() const {
 }
 
 bool MainWindow::InPresentation() const {
-    return presentation != PM_DISABLED;
+    return windowMode >= WindowMode::Presentation;
 }
 
 // Convert file:// / file:/// / file: URIs to a local path (+ optional #fragment).

@@ -849,7 +849,7 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
         colPlaceholder = colDocBg;
     }
 
-    bool paintOnBlackWithoutShadow = win->presentation || isImage;
+    bool paintOnBlackWithoutShadow = win->InPresentation() || isImage;
     bool shouldPaint = false;
     auto* gcols = gSettings->fixedPageUI.gradientColors;
     auto nGCols = len(*gcols);
@@ -929,8 +929,7 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
                 PaintCheckerboard(ctx, bounds);
             } else {
                 Rect r = pi->pageOnScreen;
-                auto presMode = win->presentation;
-                PaintPageFrameAndShadow(ctx, bounds, r, presMode != PM_DISABLED, colPlaceholder);
+                PaintPageFrameAndShadow(ctx, bounds, r, win->InPresentation(), colPlaceholder);
             }
         }
 
@@ -1952,7 +1951,7 @@ static bool SetLaserPointerCursor(MainWindow* win) {
     if (!gLaserPointer) {
         return false;
     }
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         // the presenter blanked the screen on purpose, don't put a dot on it
         return false;
     }
@@ -2958,7 +2957,7 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     Point mousePos = Point(x, y);
     bool isOverText = dm->IsOverText(mousePos);
 
-    if (win->presentation || win->isFullScreen) {
+    if (win->IsFullScreenOrPresentation()) {
         // in fullscreen we allow to exit by tapping in upper right corner
         constexpr int kCornerSize = 64;
         Rect r = dm->GetViewPort();
@@ -3123,9 +3122,9 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
         return;
     }
 
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         /* return from white/black screens in presentation mode */
-        win->ChangePresentationMode(PM_ENABLED);
+        win->ChangePresentationMode(WindowMode::Presentation);
         return;
     }
 
@@ -3236,7 +3235,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
     // Click the left/right fifth of the canvas to turn the page (issue #1203).
     // Presentation mode has its own click-to-turn below. Manga (R2L) reverses
     // the sides so left still advances.
-    if (gSettings->clickEdgeToTurnPage && tab && tab->ctrl && PM_ENABLED != win->presentation) {
+    if (gSettings->clickEdgeToTurnPage && tab && tab->ctrl && win->windowMode != WindowMode::Presentation) {
         int canvasDx = dm->GetViewPort().dx;
         if (canvasDx > 0) {
             int edgeDx = canvasDx / 5;
@@ -3258,7 +3257,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
         }
     }
 
-    if (PM_ENABLED == win->presentation && tab && tab->ctrl) {
+    if (win->windowMode == WindowMode::Presentation && tab && tab->ctrl) {
         /* in presentation mode, change pages on left/right-clicks */
         if (CanvasShiftPressed()) {
             tab->ctrl->GoToPrevPage();
@@ -3342,7 +3341,7 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
     // orig's presentation branch: the cursor comes back when the mouse moves
     // and hides itself again shortly after it stops
     if (win->InPresentation()) {
-        if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        if (win->InBlankPresentation()) {
             // the presenter blanked the screen on purpose
             AppShellShowCursor(win, false);
             return;
@@ -3585,8 +3584,8 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     gp::CanvasPushClip(ctx, b.x, b.y, b.w, b.h);
     Size vp = win->AsFixed()->GetViewPort().Size();
     // presentation mode's blank screen: nothing else is on it
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
-        Color col = PM_BLACK_SCREEN == win->presentation ? kColBlack : kColWhite;
+    if (win->InBlankPresentation()) {
+        Color col = win->windowMode == WindowMode::PresentationBlack ? kColBlack : kColWhite;
         FillRect(ctx, Rect(0, 0, vp.dx, vp.dy), col);
         gp::CanvasPopClip(ctx);
         gFrame.ctx = nullptr;
@@ -3762,7 +3761,7 @@ static void OnMouseRightButtonUp(MainWindow* win, gp::Ctx* cx, int x, int y, boo
 
     if (didDragMouse) {
         /* pass */;
-    } else if (PM_ENABLED == win->presentation) {
+    } else if (win->windowMode == WindowMode::Presentation) {
         if (isCtrl) {
             OnWindowContextMenu(win, cx, x, y);
         } else if (isShift) {
@@ -3773,8 +3772,8 @@ static void OnMouseRightButtonUp(MainWindow* win, gp::Ctx* cx, int x, int y, boo
         ReadAloudOnUserViewChanged(win);
     }
     /* return from white/black screens in presentation mode */
-    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
-        win->ChangePresentationMode(PM_ENABLED);
+    else if (win->InBlankPresentation()) {
+        win->ChangePresentationMode(WindowMode::Presentation);
     } else {
         OnWindowContextMenu(win, cx, x, y);
     }
@@ -3798,7 +3797,7 @@ void DocCanvasView::OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDown
         // counts in presentation mode, where two quick right clicks turn two
         // pages
         bool isDblClick = ev->clickCount > 0 && (ev->clickCount % 2) == 0;
-        if (isDblClick && !(win->presentation && !ev->modifiers.Modified())) {
+        if (isDblClick && !(win->InPresentation() && !ev->modifiers.Modified())) {
             return;
         }
         OnMouseRightButtonDown(win, pt.x, pt.y);
@@ -4162,7 +4161,7 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
     // orig's DrawCanvasKeyboardFocusIfNeeded: a focus ring on the canvas when
     // the document has the keyboard focus, gated by ShowDocumentFocusIndicator
     // (default off; #4644)
-    bool showFocus = gSettings->showDocumentFocusIndicator && !win->presentation && !win->isFullScreen &&
+    bool showFocus = gSettings->showDocumentFocusIndicator && !win->IsFullScreenOrPresentation() &&
                      AppShellIsFrameFocused(win) && gp::WindowIsActive(cx);
     if (showFocus) {
         // inset so the dashed rect is fully inside the client area

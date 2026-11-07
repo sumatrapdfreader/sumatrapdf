@@ -42,7 +42,7 @@ bool StartSignatureFieldSigning(MainWindow* win, Annotation* widget) {
     // do - and the same gate that decides whether the Sign Document command is
     // shown at all, so a click can't reach a dialog the menu is hiding
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !EngineSupportsAnnotations(dm->GetEngine()) || win->isFullScreen) {
+    if (!dm || !EngineSupportsAnnotations(dm->GetEngine()) || win->IsFullScreen()) {
         return false;
     }
     TempStr fieldName;

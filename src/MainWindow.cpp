@@ -403,9 +403,11 @@ void MainWindow::RedrawAllIncludingNonClient() const {
                  RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
 }
 
-void MainWindow::ChangePresentationMode(PresentationMode mode) {
-    presentation = mode;
-    if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
+// switches between the presentation modes (normal, black, white screen)
+void MainWindow::ChangePresentationMode(WindowMode mode) {
+    ReportIf(!InPresentation() || mode < WindowMode::Presentation);
+    windowMode = mode;
+    if (InBlankPresentation()) {
         DeleteToolTip();
     }
     RedrawAll();

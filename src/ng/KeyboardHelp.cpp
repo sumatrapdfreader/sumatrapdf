@@ -108,7 +108,7 @@ void ToggleKeyboardHelp(MainWindow* win) {
     }
     KeyboardHelpArgs args;
     args.win = win;
-    args.parentFullscreen = win->isFullScreen || win->InPresentation();
+    args.parentFullscreen = win->IsFullScreenOrPresentation();
     args.dataSource = &gSumatraDataSource;
     ToggleKeyboardHelp(args);
 }

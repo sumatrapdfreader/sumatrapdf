@@ -1352,12 +1352,12 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdToggleFullscreen: {
             isToggle = true;
-            newIsOn = !(win->isFullScreen || win->presentation);
+            newIsOn = !(win->IsFullScreenOrPresentation());
         } break;
         case CmdToggleToolbar: {
             isToggle = true;
             bool currentlyOn =
-                win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+                win->IsFullScreen() ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
             newIsOn = !currentlyOn;
         } break;
         case CmdToggleMenuBar: {
@@ -1384,7 +1384,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdTogglePresentationMode: {
             isToggle = true;
-            newIsOn = !win->presentation;
+            newIsOn = !win->InPresentation();
         } break;
         case CmdToggleLinks: {
             isToggle = true;

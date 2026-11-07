@@ -294,7 +294,7 @@ int ToolbarDy(MainWindow* win) {
 
 // The row a document tab gets, for sizing a document while Home is current.
 int ToolbarDocTabDy(MainWindow* win) {
-    if (win->presentation || win->isQuickLook || ToolbarModeForWindow(win) != kToolbarShow) {
+    if (win->InPresentation() || win->isQuickLook || ToolbarModeForWindow(win) != kToolbarShow) {
         return 0;
     }
     return Tb(win)->rowDy;

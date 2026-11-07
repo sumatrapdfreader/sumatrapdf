@@ -2792,8 +2792,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
             // chrome, so a sweep can check fullscreen without a screenshot
             Rect scr = AppShellWindowScreenRect(win);
             out.Append(fmt("window rect=%d,%d,%d,%d maximized=%d fullscreen=%d presentation=%d scale=%.4f\n", scr.x,
-                           scr.y, scr.dx, scr.dy, win->isMaximized ? 1 : 0, win->isFullScreen ? 1 : 0,
-                           (int)win->presentation, CanvasScale(win)));
+                           scr.y, scr.dx, scr.dy, win->isMaximized ? 1 : 0, win->IsFullScreen() ? 1 : 0,
+                           (int)win->InPresentation(), CanvasScale(win)));
             WindowTab* titleTab = win->CurrentTab();
             Str frameTitle = titleTab ? titleTab->frameTitle : Str{};
             out.Append(fmt("windowTitle=%s\n", frameTitle));

@@ -783,7 +783,7 @@ TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     Str zoomLabel;
     ZoomToString(&zoomLabel, win->ctrl->GetZoomVirtual(false), nullptr);
     TempStr res = fmt("OK mode=%s presentation=%d fullscreen=%d zoom=%s", mode, win->InPresentation() ? 1 : 0,
-                      win->isFullScreen ? 1 : 0, zoomLabel);
+                      win->IsFullScreen() ? 1 : 0, zoomLabel);
     str::Free(zoomLabel);
     return finish(res, 0);
 }

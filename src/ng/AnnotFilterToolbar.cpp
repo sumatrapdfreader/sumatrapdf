@@ -1215,7 +1215,7 @@ static bool FrameIsMaxOrFullscreen(MainWindow* win) {
 #if OS_WIN
     zoomed = zoomed || IsZoomed(AppShellNativeHwnd(win));
 #endif
-    return win->isFullScreen || win->presentation || zoomed;
+    return win->IsFullScreenOrPresentation() || zoomed;
 }
 
 // orig's AnnotFilterDefaultRect: beside the frame on the side with more room,
@@ -1223,7 +1223,7 @@ static bool FrameIsMaxOrFullscreen(MainWindow* win) {
 static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
     Rect fr = AppShellWindowScreenRect(win);
     int gap = MulDiv(kFloatWinGap, std::max(AppShellWindowDpi(win), 96), 96);
-    Rect area = (win->isFullScreen || win->presentation) ? AppShellMonitorRect(win) : AppShellWorkArea(win);
+    Rect area = (win->IsFullScreenOrPresentation()) ? AppShellMonitorRect(win) : AppShellWorkArea(win);
     dx = std::min(dx, std::max(area.dx, 1));
     dy = std::min(dy, std::max(area.dy, 1));
 

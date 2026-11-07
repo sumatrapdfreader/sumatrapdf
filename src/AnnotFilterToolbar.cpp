@@ -495,7 +495,7 @@ static bool FrameIsMaxOrFullscreen(MainWindow* win) {
     if (!win || !win->hwndFrame) {
         return false;
     }
-    return win->isFullScreen || win->presentation || IsZoomed(win->hwndFrame);
+    return win->IsFullScreenOrPresentation() || IsZoomed(win->hwndFrame);
 }
 
 static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
@@ -503,7 +503,7 @@ static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
     Rect fr = HwndWindowRect(hwnd);
     int dpi = DpiGetForHwnd(hwnd);
     int gap = DpiScaleByDpi(dpi, kFloatWinGap);
-    Rect area = (win->isFullScreen || win->presentation) ? HwndGetFullscreenRect(hwnd) : GetWorkAreaRect(fr, nullptr);
+    Rect area = (win->IsFullScreenOrPresentation()) ? HwndGetFullscreenRect(hwnd) : GetWorkAreaRect(fr, nullptr);
     dx = std::min(dx, std::max(area.dx, 1));
     dy = std::min(dy, std::max(area.dy, 1));
 

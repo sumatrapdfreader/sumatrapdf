@@ -247,7 +247,7 @@ void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {
         return;
     }
     win->tabsInTitlebar = inTitleBar;
-    if (!win->isFullScreen && !win->presentation) {
+    if (!win->IsFullScreenOrPresentation()) {
         AppShellSetClientTitleBar(win, inTitleBar);
         AppShellFrameChanged(win);
     }
@@ -255,7 +255,7 @@ void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {
 }
 
 static bool ShowCaption(MainWindow* win) {
-    return win->tabsInTitlebar && !win->presentation && !win->isFullScreen;
+    return win->tabsInTitlebar && !win->IsFullScreenOrPresentation();
 }
 
 // orig's SyncCaptionLayout sizes: the window buttons span the padding above
@@ -797,7 +797,7 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
                    view ? view->menuArmedIdx : -1, win->isMenuBarVisible ? 1 : 0, view && view->menuBarTemp ? 1 : 0));
     out.Append(fmt(" page=%d findUI=%d selection=%d annotSel=%d presentation=%d fullscreen=%d mouseAction=%d",
                    win->ctrl ? win->ctrl->CurrentPageNo() : 0, IsFindUIVisible(win) ? 1 : 0, win->showSelection ? 1 : 0,
-                   tab && tab->selectedAnnotation ? 1 : 0, (int)win->presentation, win->isFullScreen ? 1 : 0,
+                   tab && tab->selectedAnnotation ? 1 : 0, (int)win->InPresentation(), win->IsFullScreen() ? 1 : 0,
                    (int)win->mouseAction));
     int tocItems = 0;
     if (win->ctrl) {
@@ -1304,7 +1304,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_open_dropped() {
 // sees. A no-op when the app left it, as it exits its mode first.
 extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_fullscreen_left() {
     for (MainWindow* win : gWindows) {
-        if (win->isFullScreen || win->InPresentation()) {
+        if (win->IsFullScreenOrPresentation()) {
             ExitFullScreen(win);
         }
     }
@@ -1989,7 +1989,7 @@ static bool HasNotificationsFor(MainWindow* win);
 // SidebarAutoHide (#5819): a shown sidebar floats over the canvas instead of
 // taking a column. Not in presentation.
 bool AppShellSidebarFloats(MainWindow* win) {
-    if (!gSettings->sidebarAutoHide || win->presentation) {
+    if (!gSettings->sidebarAutoHide || win->InPresentation()) {
         return false;
     }
     return win->uiState.tocVisible || win->uiState.favVisible;
@@ -2836,10 +2836,10 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     }
     // orig's FrameOnKeydown / FrameOnChar: a black or white presentation screen
     // swallows a key that is not an accelerator and goes back to the slide
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         if (SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt, ev->platform) == 0) {
             if (ev->vk == VK_ESCAPE || (ev->vk == 0 && ev->ch != 0)) {
-                win->ChangePresentationMode(PM_ENABLED);
+                win->ChangePresentationMode(WindowMode::Presentation);
             }
             mut->propagate = false;
             gp::Notify(cx);
@@ -2902,7 +2902,7 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
                 DeleteOldSelectionInfo(win, true);
                 ClearSearchResult(win); // repaints; also drops any find-match highlights
                 ToolbarUpdateStateForWindow(win, false);
-            } else if (win->InPresentation() || win->isFullScreen) {
+            } else if (win->IsFullScreenOrPresentation()) {
                 // orig's OnFrameKeyEsc: Escape leaves the mode it put us in
                 ToggleFullScreen(win, win->InPresentation());
             } else if (!win->pdfAnnotationsToolbarEnabled && gSettings->escToExit) {
@@ -3328,7 +3328,7 @@ Rect AppShellPredictCanvasRc(MainWindow* win, CanvasPredict predict) {
         return {};
     }
     bool tabsVisible = TabsAreVisible(win);
-    if (predict == CanvasPredict::DocumentTab && SettingsUseTabs() && !win->isQuickLook && !win->isFullScreen &&
+    if (predict == CanvasPredict::DocumentTab && SettingsUseTabs() && !win->isQuickLook && !win->IsFullScreen() &&
         !win->InPresentation()) {
         tabsVisible = true;
     }

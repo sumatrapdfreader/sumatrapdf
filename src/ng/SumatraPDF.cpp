@@ -675,13 +675,13 @@ void RememberDefaultWindowPosition(MainWindow* win) {
         if (intended == WIN_STATE_MAXIMIZED && !zoomed) {
             return;
         }
-        if (intended == WIN_STATE_FULLSCREEN && !win->isFullScreen) {
+        if (intended == WIN_STATE_FULLSCREEN && !win->IsFullScreen()) {
             return;
         }
     }
     if (win->InPresentation()) {
         gSettings->windowState = win->windowStateBeforePresentation;
-    } else if (win->isFullScreen) {
+    } else if (win->IsFullScreen()) {
         gSettings->windowState = WIN_STATE_FULLSCREEN;
     } else if (win->isMaximized) {
         gSettings->windowState = WIN_STATE_MAXIMIZED;
@@ -3931,7 +3931,7 @@ static bool FrameCanResizeForSidebar(MainWindow* win) {
     if (!str::EqI(gSettings->sidebarWindowSize, StrL("grow"))) {
         return false;
     }
-    if (win->isFullScreen || win->presentation) {
+    if (win->IsFullScreenOrPresentation()) {
         return false;
     }
     if (IsZoomed(hwnd)) {
@@ -4021,7 +4021,7 @@ static void AdjustFrameForSidebarNow(MainWindow* win, bool show) {
         }
         return;
     }
-    if (win->isFullScreen || win->presentation || win->isMaximized) {
+    if (win->IsFullScreenOrPresentation() || win->isMaximized) {
         if (!show) {
             win->sidebarGrewFrameDx = 0;
         }
@@ -4155,7 +4155,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     // the middle panel shows only with the other two
     bool middleVisible = gSettings->showSidebarMiddle && tocVisible && showFavorites && middleAvailable;
 
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         tocVisible = false;
         middleVisible = false;
         showFavorites = false;
@@ -4183,14 +4183,14 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
 
     if (!tab) {
         ReportIf(tocVisible);
-    } else if (!win->presentation) {
+    } else if (!win->InPresentation()) {
         bool pending = topContent == SidebarContent::Bookmarks && headingPending;
         if (topAvailable || pending) {
             tab->showToc = requestedToc;
         } else {
             tab->showToc = tocVisible;
         }
-    } else if (PM_ENABLED == win->presentation) {
+    } else if (win->windowMode == WindowMode::Presentation) {
         tab->showTocPresentation = tocVisible;
     }
 
@@ -4713,7 +4713,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         return;
     }
     // callers exit one mode before entering the other
-    if (win->isFullScreen || win->InPresentation()) {
+    if (win->IsFullScreenOrPresentation()) {
         return;
     }
 
@@ -4722,12 +4722,12 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
             return;
         }
         win->windowStateBeforePresentation = win->isMaximized ? WIN_STATE_MAXIMIZED : WIN_STATE_NORMAL;
-        win->presentation = PM_ENABLED;
+        win->windowMode = WindowMode::Presentation;
         // hack: this tells OnMouseMove() to hide the cursor immediately
         win->dragPrevPos = Point(-2, -3);
         win->presCursorHide.Arm(1);
     } else {
-        win->isFullScreen = true;
+        win->windowMode = WindowMode::FullScreen;
     }
 
     // TODO: make showFavorites a per-window pref
@@ -4760,7 +4760,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 
 // orig's ExitFullScreen
 void ExitFullScreen(MainWindow* win) {
-    if (!win->isFullScreen && !win->InPresentation()) {
+    if (!win->IsFullScreenOrPresentation()) {
         return;
     }
     if (gSettings->preventSleepInFullscreen) {
@@ -4768,7 +4768,7 @@ void ExitFullScreen(MainWindow* win) {
     }
     bool wasPresentation = win->InPresentation();
     if (wasPresentation) {
-        win->presentation = PM_DISABLED;
+        win->windowMode = WindowMode::Normal;
         if (win->IsDocLoaded()) {
             win->ctrl->SetInPresentation(false);
         }
@@ -4780,7 +4780,7 @@ void ExitFullScreen(MainWindow* win) {
             tab->showTocPresentation = false;
         }
     } else {
-        win->isFullScreen = false;
+        win->windowMode = WindowMode::Normal;
         if (DisplayModel* dm = win->AsFixed()) {
             dm->ApplyFullscreenDisplayMode(false);
             UpdateToolbarState(win);
@@ -4827,7 +4827,7 @@ static bool TryExtendTextSelectionFromKey(MainWindow* win, int key, bool isCtrl,
 void AdvanceFocus(MainWindow* win, bool isShift) {
     // Tab order: Frame -> Chapter -> Page -> ToC -> Favorites -> Frame -> ...
 
-    bool hasToolbar = !win->isFullScreen && !win->presentation && gSettings->showToolbar && win->IsDocLoaded();
+    bool hasToolbar = !win->IsFullScreenOrPresentation() && gSettings->showToolbar && win->IsDocLoaded();
     int direction = isShift ? -1 : 1;
 
     // ng: orig's tabOrder is an array of HWNDs
@@ -5585,7 +5585,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdToggleFullscreen:
-            if (ShouldToggle(cmd, win->isFullScreen)) {
+            if (ShouldToggle(cmd, win->IsFullScreen())) {
                 ToggleFullScreen(win);
             }
             break;
@@ -5594,15 +5594,15 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             if (win->InPresentation()) {
                 // toggle: pressing the key again restores the slide (so a
                 // presenter remote bound to '.' can black out and back)
-                bool isBlack = win->presentation == PM_BLACK_SCREEN;
-                win->ChangePresentationMode(isBlack ? PM_ENABLED : PM_BLACK_SCREEN);
+                bool isBlack = win->windowMode == WindowMode::PresentationBlack;
+                win->ChangePresentationMode(isBlack ? WindowMode::Presentation : WindowMode::PresentationBlack);
             }
             break;
 
         case CmdPresentationWhiteBackground:
             if (win->InPresentation()) {
-                bool isWhite = win->presentation == PM_WHITE_SCREEN;
-                win->ChangePresentationMode(isWhite ? PM_ENABLED : PM_WHITE_SCREEN);
+                bool isWhite = win->windowMode == WindowMode::PresentationWhite;
+                win->ChangePresentationMode(isWhite ? WindowMode::Presentation : WindowMode::PresentationWhite);
             }
             break;
 
@@ -5649,7 +5649,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
                 // explicit state: on -> show (pinned), off -> hide
                 bool on = GetCommandBoolArg(cmd, kCmdArgState, true);
                 int mode = on ? kToolbarShow : kToolbarHide;
-                if (win->isFullScreen) {
+                if (win->IsFullScreen()) {
                     SetFullscreenToolbarMode(mode);
                 } else {
                     SetToolbarMode(mode);
@@ -7795,7 +7795,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_fullscreen() {
     if (!TestHooksEnabled() || !win) {
         return 0;
     }
-    return win->InPresentation() ? 2 : (win->isFullScreen ? 1 : 0);
+    return win->InPresentation() ? 2 : (win->IsFullScreen() ? 1 : 0);
 }
 
 // Rendering without the app, for a page that compares how engines render a

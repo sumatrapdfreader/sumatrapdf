@@ -204,7 +204,7 @@ static bool RequestedTopVisible(MainWindow* win) {
     if (!tab) {
         return false;
     }
-    return win->presentation == PM_ENABLED ? tab->showTocPresentation : tab->showToc;
+    return win->windowMode == WindowMode::Presentation ? tab->showTocPresentation : tab->showToc;
 }
 
 // shows the panels again as they are to be for the current tab

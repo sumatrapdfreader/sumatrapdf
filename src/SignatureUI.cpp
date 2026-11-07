@@ -282,7 +282,7 @@ bool SigBarWanted(MainWindow* win) {
     if (!res || res->sum.nSigned == 0 || res->barDismissed || !gSettings->showSignatureStatus) {
         return false;
     }
-    return !win->isFullScreen && win->presentation == PM_DISABLED;
+    return !win->IsFullScreenOrPresentation();
 }
 
 int SigBarDy(MainWindow* win) {

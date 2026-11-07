@@ -103,7 +103,7 @@ static bool SetLaserPointerCursor(MainWindow* win) {
     if (!gLaserPointer) {
         return false;
     }
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         // the presenter blanked the screen on purpose, don't put a dot on it
         return false;
     }
@@ -1102,7 +1102,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     if (win->InPresentation()) {
-        if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        if (win->InBlankPresentation()) {
             // logf("OnMouseMove: hiding cursor because black screen or white screen\n");
             SetCursor((HCURSOR) nullptr);
             return;
@@ -1852,9 +1852,9 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+    if (win->InBlankPresentation()) {
         /* return from white/black screens in presentation mode */
-        win->ChangePresentationMode(PM_ENABLED);
+        win->ChangePresentationMode(WindowMode::Presentation);
         return;
     }
 
@@ -1961,7 +1961,8 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // Click the left/right fifth of the canvas to turn the page (issue #1203).
     // Presentation mode has its own click-to-turn below. Manga (R2L) reverses
     // the sides so left still advances.
-    if (gSettings && gSettings->clickEdgeToTurnPage && tab && tab->ctrl && PM_ENABLED != win->presentation) {
+    if (gSettings && gSettings->clickEdgeToTurnPage && tab && tab->ctrl &&
+        win->windowMode != WindowMode::Presentation) {
         Rect rc = HwndClientRect(win->hwndCanvas);
         if (rc.dx > 0) {
             int edgeDx = rc.dx / 5;
@@ -1985,7 +1986,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         }
     }
 
-    if (PM_ENABLED == win->presentation) {
+    if (win->windowMode == WindowMode::Presentation) {
         /* in presentation mode, change pages on left/right-clicks */
         if ((key & MK_SHIFT)) {
             tab->ctrl->GoToPrevPage();
@@ -2044,7 +2045,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     Point mousePos = Point(x, y);
     bool isOverText = dm->IsOverText(mousePos);
 
-    if (isLeft && (win->presentation || win->isFullScreen)) {
+    if (isLeft && (win->IsFullScreenOrPresentation())) {
         // in fullscreen we allow to exit by tapping in upper right corner
         constexpr int kCornerSize = 64;
         Rect r = HwndClientRect(win->hwndCanvas);
@@ -2199,7 +2200,7 @@ static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
 
     if (didDragMouse) {
         /* pass */;
-    } else if (PM_ENABLED == win->presentation) {
+    } else if (win->windowMode == WindowMode::Presentation) {
         if ((key & MK_CONTROL)) {
             OnWindowContextMenu(win, x, y);
         } else if ((key & MK_SHIFT)) {
@@ -2210,15 +2211,15 @@ static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         ReadAloudOnUserViewChanged(win);
     }
     /* return from white/black screens in presentation mode */
-    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
-        win->ChangePresentationMode(PM_ENABLED);
+    else if (win->InBlankPresentation()) {
+        win->ChangePresentationMode(WindowMode::Presentation);
     } else {
         OnWindowContextMenu(win, x, y);
     }
 }
 
 static void OnMouseRightButtonDblClick(MainWindow* win, int x, int y, WPARAM key) {
-    if (win->presentation && !(key & ~MK_RBUTTON)) {
+    if (win->InPresentation() && !(key & ~MK_RBUTTON)) {
         // in presentation mode, right clicks turn the page,
         // make two quick right clicks (AKA one double-click) turn two pages
         OnMouseRightButtonDown(win, x, y);
@@ -2863,7 +2864,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     bool isImage = engine->isImageCollection;
     // draw comic books and single images on a black background
     // (without frame and shadow)
-    bool paintOnBlackWithoutShadow = win->presentation || isImage;
+    bool paintOnBlackWithoutShadow = win->InPresentation() || isImage;
     bool isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
     bool isPdf = engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, StrL(".pdf"));
     Color colDocBg;
@@ -3014,7 +3015,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
                 HdcPaintCheckerboard(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy);
             } else {
                 Rect r = pi->pageOnScreen;
-                auto presMode = win->presentation;
+                auto presMode = win->InPresentation();
                 PaintPageFrameAndShadow(hdc, bounds, r, presMode, colPlaceholder);
             }
         }
@@ -3097,7 +3098,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     RepositionAnnotEditToolbar(win);
     RepositionFreeTextInPlaceEdit(win);
     PaintCurrentEditAnnotationMark(tab, hdc, dm);
-    if (ShowPageGrid() && win->presentation == PM_DISABLED) {
+    if (ShowPageGrid() && !win->InPresentation()) {
         PaintPageGrid(dm, hdc);
     }
     GfxHdc gfx(hdc);
@@ -3165,7 +3166,7 @@ static bool CanvasShouldShowKeyboardFocus(MainWindow* win) {
     if (!gSettings || !gSettings->showDocumentFocusIndicator) {
         return false;
     }
-    if (win->presentation || win->isFullScreen) {
+    if (win->IsFullScreenOrPresentation()) {
         return false;
     }
     return GetFocus() == win->hwndFrame;
@@ -3206,9 +3207,9 @@ static void OnPaintDocument(MainWindow* win) {
     // page is never mirrored, even when the frame is RTL (issue #5326)
     SetLayout(hdc, 0);
 
-    if (win->presentation == PM_BLACK_SCREEN) {
+    if (win->windowMode == WindowMode::PresentationBlack) {
         HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(BLACK_BRUSH));
-    } else if (win->presentation == PM_WHITE_SCREEN) {
+    } else if (win->windowMode == WindowMode::PresentationWhite) {
         HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(WHITE_BRUSH));
     } else {
         bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), ToRect(ps.rcPaint));
@@ -3404,7 +3405,7 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
             return OnSetCursorMouseNone(win, hwnd);
         }
     }
-    return win->presentation ? TRUE : FALSE;
+    return win->InPresentation() ? TRUE : FALSE;
 }
 
 static float ScaleZoomBy(MainWindow* win, float factor) {

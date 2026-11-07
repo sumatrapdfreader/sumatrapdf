@@ -47,11 +47,14 @@ struct FindMatch {
     Str snippet; // UTF-8, owned (freed when findMatches is rebuilt)
 };
 
-enum PresentationMode {
-    PM_DISABLED = 0,
-    PM_ENABLED,
-    PM_BLACK_SCREEN,
-    PM_WHITE_SCREEN
+// One mode at a time: fullscreen and presentation used to be two fields, so
+// both could be set. The PresentationBlack / White modes hide the page.
+enum class WindowMode {
+    Normal,
+    FullScreen,
+    Presentation,
+    PresentationBlack,
+    PresentationWhite,
 };
 
 // Current action being performed with a mouse
@@ -541,10 +544,9 @@ struct MainWindow {
     bool contextMenuPtValid = false;
 
     bool showSelection = false;
-    bool isFullScreen = false;
     // -quicklook: a chrome-less always-on-top preview window (Explorer Space)
     bool isQuickLook = false;
-    PresentationMode presentation = PM_DISABLED;
+    WindowMode windowMode = WindowMode::Normal;
     int windowStateBeforePresentation = 0;
     // ng: orig arms kHideCursorTimerID on the canvas; the shell's tick counts
     // this down instead
@@ -576,7 +578,13 @@ struct MainWindow {
     void Focus() const;
     void ToggleZoom() const;
     bool InPresentation() const;
-    void ChangePresentationMode(PresentationMode mode);
+    bool IsFullScreen() const { return windowMode == WindowMode::FullScreen; }
+    bool IsFullScreenOrPresentation() const { return windowMode != WindowMode::Normal; }
+    // presentation with the page hidden behind a black / white screen
+    bool InBlankPresentation() const {
+        return windowMode == WindowMode::PresentationBlack || windowMode == WindowMode::PresentationWhite;
+    }
+    void ChangePresentationMode(WindowMode mode);
 };
 
 bool HasOpenedDocuments(MainWindow*);

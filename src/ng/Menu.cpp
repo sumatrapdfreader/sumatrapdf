@@ -938,7 +938,7 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     MenuModel* popup = BuildMenuFromDef(menuDefContext, ctx);
 
     // in fullscreen, add "Menu" as first item containing the full menu bar
-    bool isFullScreen = win->isFullScreen || win->presentation;
+    bool isFullScreen = win->IsFullScreenOrPresentation();
     if (isFullScreen) {
         MenuModel* bar = BuildMenuFromDef(menuDefMenubar, ctx);
         SetMenuChecks(bar, win);
@@ -1287,7 +1287,7 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
     if (showTemporarily) {
         return;
     }
-    if (win->isFullScreen) {
+    if (win->IsFullScreen()) {
         gSettings->fullscreen.showMenubar = !gSettings->fullscreen.showMenubar;
         win->isMenuBarVisible = gSettings->fullscreen.showMenubar;
     } else {

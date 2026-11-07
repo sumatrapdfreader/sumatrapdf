@@ -1056,7 +1056,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     switch (cmdId) {
         case CmdToggleFullscreen: {
             isToggle = true;
-            newIsOn = !(win->isFullScreen || win->presentation);
+            newIsOn = !(win->IsFullScreenOrPresentation());
         } break;
         case CmdToggleMenuBar: {
             isToggle = true;
@@ -1086,7 +1086,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdTogglePresentationMode: {
             isToggle = true;
-            newIsOn = !win->presentation;
+            newIsOn = !win->InPresentation();
         } break;
         case CmdToggleLinks: {
             isToggle = true;

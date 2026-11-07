@@ -139,11 +139,14 @@ enum class SelectionDragEdge {
     Move,
 };
 
-enum PresentationMode {
-    PM_DISABLED = 0,
-    PM_ENABLED,
-    PM_BLACK_SCREEN,
-    PM_WHITE_SCREEN
+// One mode at a time: fullscreen and presentation used to be two fields, so
+// both could be set. The PresentationBlack / White modes hide the page.
+enum class WindowMode {
+    Normal,
+    FullScreen,
+    Presentation,
+    PresentationBlack,
+    PresentationWhite,
 };
 
 // WM_GESTURE handling
@@ -565,10 +568,9 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     bool toolbarOverlayShown = false;
     // a hide of the overlay toolbar is scheduled (after kDelayToolbarHide)
     bool toolbarOverlayHidePending = false;
-    bool isFullScreen = false;
     // chrome-less always-on-top preview from Explorer Space (issue #2568)
     bool isQuickLook = false;
-    PresentationMode presentation = PM_DISABLED;
+    WindowMode windowMode = WindowMode::Normal;
     int windowStateBeforePresentation = 0;
     bool suppressFrameRedraw = false;
     // whether BeginFrameRedrawSuppression sent WM_SETREDRAW FALSE (it doesn't
@@ -588,9 +590,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     struct UIState {
         struct Layout {
             Rect rc;
-            int presentation = 0;
+            WindowMode windowMode = WindowMode::Normal;
             bool tabsInTitlebar = false;
-            bool isFullScreen = false;
             bool tabsVisible = false;
             bool isToolbarVisible = false;
             bool isToolbarOverlay = false;
@@ -819,8 +820,14 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // no-op unless gShowFrameRate is set
     void ShowFrameRateDur(double durMs);
 
-    void ChangePresentationMode(PresentationMode mode);
+    void ChangePresentationMode(WindowMode mode);
     bool InPresentation() const;
+    bool IsFullScreen() const { return windowMode == WindowMode::FullScreen; }
+    bool IsFullScreenOrPresentation() const { return windowMode != WindowMode::Normal; }
+    // presentation with the page hidden behind a black / white screen
+    bool InBlankPresentation() const {
+        return windowMode == WindowMode::PresentationBlack || windowMode == WindowMode::PresentationWhite;
+    }
 
     void Focus() const;
 

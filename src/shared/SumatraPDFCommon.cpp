@@ -453,7 +453,7 @@ void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo) {
     // of the whole document, also for a chaptered ebook
     int percentRead = (pageNo * 100) / std::max(nPages, 1);
     pageInfo = fmt("%s (%d%%)", pageInfo, percentRead);
-    if (win->isFullScreen || win->InPresentation()) {
+    if (win->IsFullScreenOrPresentation()) {
         TempStr fileName = path::GetBaseNameTemp(ctrl->GetFilePath());
         pageInfo = str::JoinTemp(fileName, StrL(kPageInfoSep), pageInfo);
     }
@@ -548,7 +548,7 @@ bool PageInfoBarShown(MainWindow* win) {
     if (!win->IsDocLoaded() || !win->ctrl) {
         return false;
     }
-    return win->presentation != PM_BLACK_SCREEN && win->presentation != PM_WHITE_SCREEN;
+    return win->windowMode != WindowMode::PresentationBlack && win->windowMode != WindowMode::PresentationWhite;
 }
 
 // the left half only changes with the document, and reads the disk and the
@@ -2321,9 +2321,9 @@ bool TextSelectExtendFromVk(int key, TextSelectUnit& unit, int& delta) {
 }
 
 void ToggleFullScreen(MainWindow* win, bool presentation) {
-    bool enterFullScreen = presentation ? !win->InPresentation() : !win->isFullScreen;
+    bool enterFullScreen = presentation ? !win->InPresentation() : !win->IsFullScreen();
 
-    if (win->InPresentation() || win->isFullScreen) {
+    if (win->IsFullScreenOrPresentation()) {
         ExitFullScreen(win);
     } else {
         RememberDefaultWindowPosition(win);
@@ -2410,7 +2410,7 @@ void RememberClosedWindow(MainWindow* win) {
 // Enter the requested mode even when the window is in the other fullscreen
 // mode, as command-line and DDE requests require.
 void SwitchToFullScreen(MainWindow* win, bool presentation) {
-    if (presentation ? win->isFullScreen : win->InPresentation()) {
+    if (presentation ? win->IsFullScreen() : win->InPresentation()) {
         ExitFullScreen(win);
     }
     EnterFullScreen(win, presentation);
@@ -2568,7 +2568,7 @@ void DeleteCurrentFileAndOpenNext(MainWindow* win) {
 }
 
 void OnMenuViewShowHideToolbar(MainWindow* win) {
-    if (win->isFullScreen) {
+    if (win->IsFullScreen()) {
         int mode = FullscreenToolbarModeFromPrefs();
         int next = kToolbarShow;
         if (mode == kToolbarShow) {
@@ -3113,8 +3113,8 @@ void OnFrameKeyB(MainWindow* win, bool isShift) {
         } else if (!forward && currPage <= ctrl->CurrentPageNo()) {
             win->ctrl->GoToPrevPage();
         }
-    } else if (win->presentation) {
-        win->ChangePresentationMode(PM_BLACK_SCREEN);
+    } else if (win->InPresentation()) {
+        win->ChangePresentationMode(WindowMode::PresentationBlack);
     }
 }
 

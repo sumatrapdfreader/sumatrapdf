@@ -919,7 +919,8 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdFavoriteShowInTab, FindFavoritesTab(win) != nullptr);
     {
         // checked when mode is not "hide" (show or overlay)
-        bool toolbarOn = win->isFullScreen ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+        bool toolbarOn =
+            win->IsFullScreen() ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
         MenuSetChecked(win->menu, CmdToggleToolbar, toolbarOn);
     }
     MenuSetChecked(win->menu, CmdToggleMenuBar, gSettings->showMenubar);
@@ -1121,7 +1122,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     HMENU popup = BuildMenuFromDef(menuDefContext, CreatePopupMenu(), ctx);
 
     // in fullscreen, add "Menu" as first item containing the full menu bar
-    bool isFullScreen = win->isFullScreen || win->presentation;
+    bool isFullScreen = win->IsFullScreenOrPresentation();
     if (isFullScreen) {
         HMENU menuBarCopy = BuildMenuFromDef(menuDefMenubar, CreatePopupMenu(), ctx);
         WCHAR* menuLabel = CWStrTemp(Tr("Menu"));
@@ -1832,7 +1833,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
 void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
     ReportIf(!win->menu);
 
-    if (win->presentation) {
+    if (win->InPresentation()) {
         return;
     }
 
@@ -1847,7 +1848,7 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
         return;
     }
 
-    if (win->isFullScreen) {
+    if (win->IsFullScreen()) {
         gSettings->fullscreen.showMenubar = !gSettings->fullscreen.showMenubar;
         if (gSettings->fullscreen.showMenubar) {
             // use rebar-based menu bar (WS_CAPTION is stripped in fullscreen, so SetMenu won't work)
@@ -2253,7 +2254,7 @@ bool IsShowingMenuBarRebar(MainWindow* win) {
     if (gMyWindowWasEmbedded) {
         return false;
     }
-    if (win->presentation || win->isQuickLook) {
+    if (win->InPresentation() || win->isQuickLook) {
         return false;
     }
     return true;

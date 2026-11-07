@@ -78,7 +78,7 @@ bool TabsAreVisible(MainWindow* win) {
         return false;
     }
     // orig's showTabsBar: fullscreen and presentation hide the strip
-    if (win->isFullScreen || win->InPresentation()) {
+    if (win->IsFullScreenOrPresentation()) {
         return false;
     }
     int nTabs = win->TabCount();
@@ -98,9 +98,9 @@ static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
         return;
     }
     bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
-    if (PM_DISABLED != win->presentation) {
-        expectedTocVisibility = false; // PM_BLACK_SCREEN, PM_WHITE_SCREEN
-        if (PM_ENABLED == win->presentation) {
+    if (win->InPresentation()) {
+        expectedTocVisibility = false; // WindowMode::PresentationBlack, WindowMode::PresentationWhite
+        if (win->windowMode == WindowMode::Presentation) {
             expectedTocVisibility = tdata->showTocPresentation;
         }
     }

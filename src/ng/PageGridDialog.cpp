@@ -221,7 +221,7 @@ bool PageGridCovers(MainWindow* win) {
     if (!win || !ShowPageGrid() || !win->AsFixed()) {
         return false;
     }
-    return win->presentation != PM_BLACK_SCREEN && win->presentation != PM_WHITE_SCREEN;
+    return win->windowMode != WindowMode::PresentationBlack && win->windowMode != WindowMode::PresentationWhite;
 }
 
 void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx) {

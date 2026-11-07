@@ -1200,7 +1200,7 @@ static bool GetAnnotScreenBounds(MainWindow* win, Annotation* annot, Rect& out) 
 // popup is TOPMOST (issue #6111)
 static HWND ToolbarZ(AnnotEditToolbar* tb) {
     MainWindow* win = tb ? tb->win : nullptr;
-    if (win && (win->isFullScreen || win->presentation)) {
+    if (win && (win->IsFullScreenOrPresentation())) {
         return HWND_TOPMOST;
     }
     return HWND_TOP;

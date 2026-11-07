@@ -127,7 +127,7 @@ TempStr ToolbarTipTemp(int cmdId, Str tip, bool translate) {
 
 // toolbar mode for this window: Fullscreen.Toolbar in fullscreen, else Toolbar
 int ToolbarModeForWindow(MainWindow* win) {
-    if (win->isFullScreen) {
+    if (win->IsFullScreen()) {
         return FullscreenToolbarModeFromPrefs();
     }
     return ToolbarModeFromPrefs();
@@ -547,7 +547,7 @@ void EnablePdfAnnotationsToolbar(MainWindow* win) {
 }
 
 bool ShouldShowToolbar(MainWindow* win) {
-    if (win->presentation || win->isQuickLook) {
+    if (win->InPresentation() || win->isQuickLook) {
         return false;
     }
 #if OS_WASM
@@ -561,7 +561,7 @@ bool ShouldShowToolbar(MainWindow* win) {
 }
 
 bool ShouldOverlayToolbar(MainWindow* win) {
-    if (win->presentation || win->isQuickLook) {
+    if (win->InPresentation() || win->isQuickLook) {
         return false;
     }
     if (ToolbarModeForWindow(win) != kToolbarOverlay) {
