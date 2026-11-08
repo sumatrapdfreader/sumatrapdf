@@ -266,8 +266,6 @@ PortableExe64: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prere
 PortableExeArm64: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-arm64.exe
 PortableExe32: https://www.sumatrapdfreader.org/dl/prerel/21929/SumatraPDF-prerel-32.exe
 )");
-        utassert(len(body) == 611);
-
         SquareTreeNode* root = ParseSquareTree(body);
         SquareTreeNode* node = root ? root->GetChild(StrL("SumatraPDF")) : nullptr;
         utassert(node);

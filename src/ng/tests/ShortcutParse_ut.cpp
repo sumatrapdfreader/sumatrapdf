@@ -115,6 +115,7 @@ bool ShortcutParse_UnitTestShiftedPunct() {
         utassert(ParseShortcutString(n.s, a));
         utassert(a.vk == n.vk && a.Mods() == kVirt);
     }
+    utassert(AccelShowsAs(kCtrl | kVirt, VK_MEDIA_NEXT_TRACK, StrL("Ctrl + Media Next")));
 
     gShortcutLangCode = prevLang;
     return true;

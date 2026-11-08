@@ -472,7 +472,6 @@ export const sharedFiles = [
   "src/shared/tests/PdfSync_ut.cpp",
   "src/shared/tests/ReadAloudHighlight_ut.cpp",
   "src/shared/tests/RenderCache_ut.cpp",
-  "src/shared/tests/SimpleLog_ut.cpp",
   "src/shared/tests/TextSelection_ut.cpp",
   "src/shared/tools/MakeLzSA.cpp",
   "src/shared/tools/plugin-test.cpp",

@@ -1628,17 +1628,11 @@
     <ClCompile Include="..\src\shared\tests\RtfDoc_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\shared\tests\SimpleLog_ut.cpp">
-      <Filter>src\shared\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shared\tests\SumatraCommon_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\tests\TextSelection_ut.cpp">
       <Filter>src\shared\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\tests\ShortcutParse_ut.cpp">
-      <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\Sumatra_ut.cpp">
       <Filter>src\tests</Filter>

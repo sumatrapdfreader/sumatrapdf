@@ -617,8 +617,4 @@ bool ParseShortcutString(Str shortcut, ACCEL& accel) {
     return true;
 }
 
-TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& accel) {
-    KeyShortcut sc(accel.fVirt, accel.key);
-    return AppendAccelKeyToMenuStringTemp(menuStr, sc);
-}
 #endif

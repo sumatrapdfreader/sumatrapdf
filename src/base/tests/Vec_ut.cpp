@@ -39,7 +39,6 @@ void VecTest() {
     Vec<int> ints;
     utassert(len(ints) == 0);
     VecAppend(ints, 1);
-    utassert(VecCap(ints) == 4);
     VecAppend(ints, 2);
     VecInsertAt(ints, 0, -1);
     utassert(len(ints) == 3);

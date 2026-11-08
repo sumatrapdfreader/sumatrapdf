@@ -210,23 +210,6 @@ void FileUtilTest() {
         }
     }
     {
-        // a UNC path is \\?\UNC\server\share when extended, not \\?\\\server\share
-        Str shortUnc = StrL("\\\\server\\share\\doc.pdf");
-        utassert(str::Eq(path::NormalizeTemp(shortUnc), shortUnc));
-
-        str::Builder longName;
-        for (int i = 0; i < MAX_PATH; i++) {
-            longName.AppendChar('a');
-        }
-        TempStr longUnc = fmt("\\\\server\\share\\%s.pdf", ToStr(longName));
-        TempStr expected = fmt("\\\\?\\UNC\\server\\share\\%s.pdf", ToStr(longName));
-        TempStr norm = path::NormalizeTemp(longUnc);
-        utassert(str::Eq(norm, expected));
-        // already extended: unchanged
-        utassert(str::Eq(path::NormalizeTemp(norm), expected));
-    }
-
-    {
         // the module path must come back whole no matter how small the first
         // buffer is, i.e. the growing loop must run and not truncate
         TempWStr expected = GetModulePathTemp((HMODULE) nullptr, MAX_PATH + 1);

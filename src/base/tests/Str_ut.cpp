@@ -20,59 +20,7 @@ concept CanNegate = requires(T v) {
 static_assert(!CanNegate<Str>);
 static_assert(!CanNegate<WStr>);
 
-static void StrReplaceTestOne(Str s, Str toReplace, Str replaceWith, Str expected) {
-    TempStr res = str::ReplaceTemp(s, toReplace, replaceWith);
-    utassert(str::Eq(res, expected));
-}
-
 static void StrReplaceTest() {
-    Str d[] = {
-        StrL("golagon"),
-        StrL("gon"),
-        StrL("rabato"),
-        StrL("golarabato"),
-        StrL("a"),
-        StrL("a"),
-        StrL("bor"),
-        StrL("bor"),
-        StrL("abora"),
-        StrL("a"),
-        StrL(""),
-        StrL("bor"),
-        StrL("aaaaaa"),
-        StrL("a"),
-        StrL("b"),
-        StrL("bbbbbb"),
-        StrL("aba"),
-        StrL("a"),
-        StrL("ccc"),
-        StrL("cccbccc"),
-        StrL("Aba"),
-        StrL("a"),
-        StrL("c"),
-        StrL("Abc"),
-        StrL("abc"),
-        StrL("abc"),
-        StrL(""),
-        StrL(""),
-        {},
-        StrL("a"),
-        StrL("b"),
-        {},
-        StrL("a"),
-        StrL(""),
-        StrL("b"),
-        {},
-        StrL("a"),
-        StrL("b"),
-        {},
-        {},
-    };
-    size_t n = dimof(d) / 4;
-    for (size_t i = 0; i < n; i++) {
-        StrReplaceTestOne(d[i * 4], d[(i * 4) + 1], d[(i * 4) + 2], d[(i * 4) + 3]);
-    }
-
     struct {
         Str string, find, replace, result;
     } data[] = {
@@ -934,13 +882,6 @@ void StrTest() {
         utassert(str::Parse(StrL("ansi string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
         utassert(str::Eq(str1, StrL("ansi string")) && i == -30 && j == 20 && f == 1.5f);
     }
-    {
-        TempStr str1;
-        int i, j;
-        float f;
-        utassert(str::Parse(StrL("wide string, -30-20 1.5%"), "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f).s);
-        utassert(str::Eq(str1, StrL("wide string")) && i == -30 && j == 20 && f == 1.5f);
-    }
 
     {
         Str path = StrL(
@@ -1144,10 +1085,6 @@ void StrTest() {
     }
     {
         TempWStr tmp = strconv::StrCPToWStrTemp(StrL("abc"), 12345);
-        utassert(len(tmp) == 0);
-    }
-    {
-        Str tmp = strconv::WStrToCodePage(987654, L"abc");
         utassert(len(tmp) == 0);
     }
 

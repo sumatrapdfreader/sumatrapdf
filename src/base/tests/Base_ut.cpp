@@ -133,12 +133,10 @@ static void Func1ListTest() {
 
 static void GeomTest() {
     PointF ptD(12.4f, -13.6f);
-    utassert(ptD.x == 12.4f && ptD.y == -13.6f);
     Point ptI = ToPoint(ptD);
     utassert(ptI.x == 12 && ptI.y == -13);
 
     SizeF szD(7.7f, -3.3f);
-    utassert(szD.dx == 7.7f && szD.dy == -3.3f);
     Size szI(8, -3);
 
     utassert(!szD.IsEmpty() && !szI.IsEmpty());

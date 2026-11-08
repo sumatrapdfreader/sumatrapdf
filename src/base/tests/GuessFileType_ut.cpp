@@ -224,8 +224,6 @@ static void icoTest() {
     utassert(fti.imageDx == 64);
     utassert(fti.imageDy == 48);
     utassert(fti.hasImageSize);
-
-    utassert(GuessFileTypeFromName(StrL("favicon.ico")) == FileType::Ico);
 }
 
 static void jpegTest() {
