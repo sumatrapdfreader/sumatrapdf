@@ -156,6 +156,8 @@ struct CreateThumbnailFromFileData {
     // see LoadDocumentAsyncData: the thumbnail is rendered off the UI thread,
     // so the per-document ebook settings have to come along as a copy (#4600)
     FileEBookUI* fileEBookUI = nullptr;
+    // the regenerate batch it came from, 0 for a single thumbnail
+    int batchGen = 0;
     ~CreateThumbnailFromFileData() {
         str::Free(filePath);
         SafeEngineRelease(&engine);
