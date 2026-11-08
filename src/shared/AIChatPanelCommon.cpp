@@ -356,16 +356,16 @@ static void OnAIChatUpdate(AIChatUpdateData* data) {
     AIChatUpdateApplied(win);
 }
 
-AIChatCaptureSink* gAIChatCapture = nullptr;
-
+// per stream, not global: a chat streaming on its reader thread while a
+// one-shot request parses must keep its own output
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text) {
-    if (gAIChatCapture) {
+    if (AIChatCaptureSink* capture = ctx->capture) {
         if (type == AIChatUpdateType::Text) {
-            gAIChatCapture->text.Append(text ? text : Str(""));
+            capture->text.Append(text ? text : Str(""));
         } else if (type == AIChatUpdateType::Error) {
-            gAIChatCapture->err.Append(text ? text : Str(""));
+            capture->err.Append(text ? text : Str(""));
         } else if (type == AIChatUpdateType::Finished) {
-            gAIChatCapture->finished = true;
+            capture->finished = true;
         }
         return;
     }
