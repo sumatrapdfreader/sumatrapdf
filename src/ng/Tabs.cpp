@@ -162,9 +162,22 @@ void LoadModelIntoTab(WindowTab* tab) {
         if (win->mouseAction != MouseAction::None || win->annotationBeingDragged || win->annotationBeingResized) {
             CanvasCancelDrag(win);
         }
+        // as orig: the outgoing document leaves F11's display mode
+        DisplayModel* prevDm = win->AsFixed();
+        if (prevDm && win->IsFullScreen()) {
+            prevDm->ApplyFullscreenDisplayMode(false);
+        }
     }
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
+    // as orig: the incoming document takes the window's presentation / F11 layout
+    if (DisplayModel* dm = tab->AsFixed()) {
+        if (dm->InPresentation() != win->InPresentation()) {
+            dm->SetInPresentation(win->InPresentation());
+        } else if (win->IsFullScreen()) {
+            dm->ApplyFullscreenDisplayMode(true);
+        }
+    }
     // this canvas size was already applied to the previous document
     win->lastViewPortSize = Size{};
     win->showSelection = tab->selectionOnPage != nullptr;

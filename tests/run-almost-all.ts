@@ -250,6 +250,7 @@ import { testit as scrollbarCaptureLoss } from "./scrollbar-capture-loss.ts";
 import { testit as nextFileSavePrompt } from "./next-file-save-prompt.ts";
 import { testit as backgroundTabReload } from "./background-tab-reload.ts";
 import { testit as sessionRestoreBrokenFile } from "./session-restore-broken-file.ts";
+import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
@@ -1098,6 +1099,7 @@ export const tests: NamedTest[] = [
   ["next-file-save-prompt", nextFileSavePrompt],
   ["background-tab-reload", backgroundTabReload],
   ["session-restore-broken-file", sessionRestoreBrokenFile],
+  ["tab-switch-presentation", tabSwitchPresentation],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
