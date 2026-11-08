@@ -684,12 +684,9 @@ void StopReadAloudIfSourceWindow(MainWindow* win) {
     if (!win || !gReadAloudSourceTab || gReadAloudSourceTab->win != win) {
         return;
     }
-
-    if (TtsIsSpeaking()) {
-        TtsStop();
-    }
-
-    ReadAloudClearSourceTab();
+    // as for a tab: also stop the highlight timer, which a kept last window
+    // would go on running
+    StopReadAloudIfSourceTab(gReadAloudSourceTab);
 }
 
 // reset "Continue reading" state, called when its document goes away
