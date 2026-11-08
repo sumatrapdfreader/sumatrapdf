@@ -648,6 +648,7 @@ const appSources = [
   "src/ng/Theme.cpp",
   "src/ng/TranslationLangs.cpp",
   "src/ng/Translations.cpp",
+  "src/ng/SystemLocale_mac.mm",
   // the browser's file picker, downloads and OPFS write-back (wasm only,
   // and no gpui in it, so it belongs here rather than in the app target)
   "src/ng/gui/WasmBridge_wasm.cpp",

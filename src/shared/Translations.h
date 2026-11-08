@@ -15,9 +15,13 @@ TempStr GetLangCodeByIdxTemp(int idx);
 TempStr GetLangNameByIdxTemp(int idx);
 bool IsCurrLangRtl();
 Str DetectUserLang();
+Str LangCodeFromLocale(Str locale);
 void Destroy();
 
 } // namespace trans
+
+// the OS's UI languages, most preferred first; implemented per platform
+void GetSystemPreferredLocales(StrVec& out);
 
 Str Tr(Str s);
 inline Str Tr(const char* s) {

@@ -181,8 +181,10 @@ builds and `-for-testing` runs don't upload.
 
 Use `cmd/ng-gen-commands.ts` and `cmd/ng-gen-settings.ts` for ng generated
 files. `ng-gen-embedded.ts` generates ignored `src/ng/EmbeddedData*.cpp`;
-`ng-gen-translations.ts` completes the checked-in translation snapshot into
-`.work/ng/translations.txt`. The manual uses the original website checkout
+Translations come from `bun cmd/trans-dl.ts`, which writes
+`.work/translations.txt` from apptranslator and needs the maintainer's
+`TRANS_UPLOAD_SECRET`; without it the file is empty and the build is
+English only, by design. The manual uses the original website checkout
 and `.work/docs` staging; CI skips it when that checkout is absent.
 
 Standard Windows CI builds ng x64 release and runs its unit tests. Daily Windows CI builds debug

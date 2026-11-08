@@ -254,38 +254,68 @@ bool IsCurrLangRtl() {
     return IsLangRtl(gCurrLangIdx);
 }
 
+// BCP 47 / ISO 639 tags whose apptranslator code differs; most codes match
+// the tag already ("de", "fr"). Longest tags first within a language.
+static const char* gLocaleAliases =
+    "zh-hans\0cn\0zh-cn\0cn\0zh-sg\0cn\0zh\0cn\0"
+    "zh-hant\0tw\0zh-tw\0tw\0zh-hk\0tw\0zh-mo\0tw\0"
+    "ko\0kr\0cs\0cz\0da\0dk\0pt-br\0br\0be\0by\0vi\0vn\0ms\0my\0hy\0am\0nb\0no\0"
+    "sr-cyrl\0sr-rs\0sr-latn\0sp-rs\0sr\0sr-rs\0ca-valencia\0ca-xv\0fy\0fy-nl\0";
+
+static int FindLangIdxByTag(Str tag) {
+    int i = SeqStrIndex(gLocaleAliases, tag);
+    if (i >= 0 && i % 2 == 0) {
+        return FindLangIdx(SeqStrByIndex(gLocaleAliases, i + 1));
+    }
+    return FindLangIdx(tag);
+}
+
+// "zh-Hans-CN", "de_DE.UTF-8" or "pt_BR" to our language code, empty if we
+// have no translation: the tag loses its last part until something matches
+Str LangCodeFromLocale(Str locale) {
+    int n = 0;
+    while (n < len(locale) && locale.s[n] != '.' && locale.s[n] != '@') {
+        n++;
+    }
+    TempStr tag = str::DupTemp(Str(locale.s, n));
+    str::ToLowerInPlace(tag);
+    for (int i = 0; i < len(tag); i++) {
+        if (tag.s[i] == '_') {
+            tag.s[i] = '-';
+        }
+    }
+    while (len(tag) > 0) {
+        int idx = FindLangIdxByTag(tag);
+        if (idx >= 0) {
+            return GetLangCodeByIdxTemp(idx);
+        }
+        int dash = str::LastIndexOfChar(tag, '-');
+        if (dash <= 0) {
+            break;
+        }
+        tag = Str(tag.s, dash);
+    }
+    return {};
+}
+
 #if !OS_WIN
-// ng: the win32 half below maps a LANGID to our language code. POSIX has no
-// LANGID; $LC_ALL / $LANG ("de_DE.UTF-8") name the language directly.
+// ng: the win32 half below maps a LANGID to our language code. Here the OS
+// (macOS: the preferred languages list; a GUI app launched from Finder has no
+// $LANG) or $LC_ALL / $LC_MESSAGES / $LANG name the language.
 Str DetectUserLang() {
+    StrVec locales;
+    ::GetSystemPreferredLocales(locales);
     const char* envNames[] = {"LC_ALL", "LC_MESSAGES", "LANG"};
     for (const char* name : envNames) {
         const char* v = getenv(name);
-        if (!v || !*v) {
-            continue;
+        if (v && *v) {
+            locales.Append(Str((char*)v));
         }
-        Str s = Str((char*)v);
-        // "de_DE.UTF-8" -> try "de-de", then "de"
-        int n = 0;
-        while (n < s.len && s.s[n] != '.' && s.s[n] != '@') {
-            n++;
-        }
-        TempStr code = str::DupTemp(Str(s.s, n));
-        str::ToLowerInPlace(code);
-        for (int i = 0; i < len(code); i++) {
-            if (code.s[i] == '_') {
-                code.s[i] = '-';
-            }
-        }
-        int idx = FindLangIdx(code);
-        if (idx < 0) {
-            int dash = str::IndexOfChar(code, '-');
-            if (dash > 0) {
-                idx = FindLangIdx(Str(code.s, dash));
-            }
-        }
-        if (idx >= 0) {
-            return GetLangCodeByIdxTemp(idx);
+    }
+    for (Str locale : locales) {
+        Str code = LangCodeFromLocale(locale);
+        if (len(code) > 0) {
+            return code;
         }
     }
     return StrL("en");
@@ -319,8 +349,42 @@ void Destroy() {
 
 } // namespace trans
 
+#if !OS_WIN && !OS_DARWIN
+void GetSystemPreferredLocales(StrVec&) {}
+#endif
+
 #if IS_DEBUG
 // translations.txt keeps C escapes; unescaped they must equal the compiled Tr() literal
+bool Translations_UnitTestLocale() {
+    struct {
+        Str locale;
+        Str want;
+    } tests[] = {
+        {StrL("zh_CN.UTF-8"), StrL("cn")},
+        {StrL("zh-Hans-CN"), StrL("cn")},
+        {StrL("zh-Hant-TW"), StrL("tw")},
+        {StrL("zh"), StrL("cn")},
+        {StrL("ko_KR"), StrL("kr")},
+        {StrL("pt_BR"), StrL("br")},
+        {StrL("pt_PT"), StrL("pt")},
+        {StrL("de_DE.UTF-8@euro"), StrL("de")},
+        {StrL("en-US"), StrL("en")},
+        {StrL("sr-Latn-RS"), StrL("sp-rs")},
+        {StrL("ca-ES-valencia"), StrL("ca")},
+        {StrL("C"), {}},
+        {StrL("xx-YY"), {}},
+        {StrL(""), {}},
+    };
+    for (auto& t : tests) {
+        Str got = trans::LangCodeFromLocale(t.locale);
+        if (!str::Eq(got, t.want)) {
+            logf("Translations_UnitTestLocale: '%s' => '%s', want '%s'\n", t.locale, got, t.want);
+            return false;
+        }
+    }
+    return true;
+}
+
 bool Translations_UnitTestUnescape() {
     struct {
         Str escaped;
