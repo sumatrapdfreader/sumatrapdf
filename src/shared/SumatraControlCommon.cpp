@@ -369,7 +369,7 @@ bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitCount, u
 void ControlPollSleep(u64 startMs) {
     constexpr u64 kFineForMs = 200;
     bool fine = GetTickCount64() - startMs < kFineForMs;
-    SleepInMs(fine ? 2 : 20);
+    SleepInMs(fine ? 5 : 20);
 }
 
 // Block on the control thread until visible tiles are cached at target
