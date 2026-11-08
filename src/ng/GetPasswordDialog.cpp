@@ -95,7 +95,7 @@ static void FinishGetPassword(bool accepted) {
         res.password = pwd;
     }
     if (win && win->gpuiWin && gGetPassword.editPwd) {
-        gp::InputBlur(gGetPassword.editPwd, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gGetPassword.editPwd, win->gpuiWin);
     }
     Func1<PasswordDialogResult*> onDone = gGetPassword.onDone;
     gGetPassword.onDone = {};

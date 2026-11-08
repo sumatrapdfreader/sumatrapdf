@@ -145,7 +145,7 @@ static void FinishSavePathDialog(Str path) {
     gSave.confirmingOverwrite = false;
     MainWindow* win = args ? args->win : nullptr;
     if (win && win->gpuiWin && gSave.nameEdit) {
-        gp::InputBlur(gSave.nameEdit, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gSave.nameEdit, win->gpuiWin);
     }
     delete gSave.nameEdit;
     gSave.nameEdit = nullptr;

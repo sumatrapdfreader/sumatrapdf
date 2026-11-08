@@ -74,7 +74,7 @@ void CloseCustomZoomDialog() {
     if (gCustomZoomTw) {
         DlgWindowClose(&gCustomZoomTw);
     } else if (win && win->gpuiWin && gCustomZoom.editZoom) {
-        gp::InputBlur(gCustomZoom.editZoom, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gCustomZoom.editZoom, win->gpuiWin);
     }
     delete gCustomZoom.editZoom;
     gCustomZoom.editZoom = nullptr;

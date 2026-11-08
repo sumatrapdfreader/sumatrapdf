@@ -591,7 +591,7 @@ static void FreeToolState(gp::Window* toolWin) {
     gp::InputState* edits[] = {gTool.destEdit, gTool.pagesEdit, gTool.passwordEdit, gTool.mergeAskEdit, gTool.dpiEdit};
     for (gp::InputState* e : edits) {
         if (e && win && win->gpuiWin && win->gpuiWin->input == e) {
-            gp::InputBlur(e, win->gpuiWin->app, win->gpuiWin);
+            InputBlurWhereFocused(e, win->gpuiWin);
         }
         if (e && toolWin && toolWin->input == e) {
             gp::InputBlur(e, toolWin->app, toolWin);

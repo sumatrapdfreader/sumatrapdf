@@ -340,7 +340,7 @@ static void FinishColorDialog(CloseAction action) {
         }
     }
     if (!dlg && win && win->gpuiWin && gColor.editRgb) {
-        gp::InputBlur(gColor.editRgb, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gColor.editRgb, win->gpuiWin);
     }
     delete gColor.editRgb;
     gColor.editRgb = nullptr;

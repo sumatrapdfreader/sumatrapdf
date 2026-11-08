@@ -95,5 +95,15 @@ inline Rect FromGpui(gp::Bounds b) {
 // ng: gpui's Listen() needs the listener's owner entity type, so it can't be
 // wrapped generically. This is the one shape the shell repeats: a handler on
 // the root view entity.
+// Blur a text field in the window it is focused in. A dialog's field lives in
+// its tool window: blurred against the main window, the tool window kept
+// pointing at it after it was freed, and closing that window read it.
+inline void InputBlurWhereFocused(gp::InputState* s, gp::Window* fallback) {
+    gp::Window* w = s && s->focusWin ? s->focusWin : fallback;
+    if (w) {
+        gp::InputBlur(s, w->app, w);
+    }
+}
+
 #define GpuiListen(cx, fn) gp::Listen(cx, fn)
 #define GpuiListenArg(cx, fn, arg) gp::Listen(cx, fn, arg)

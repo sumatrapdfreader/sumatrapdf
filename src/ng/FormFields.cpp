@@ -135,7 +135,7 @@ void CommitFormFieldEdit(bool save) {
         }
     }
     if (gEdit.edit && win && win->gpuiWin) {
-        gp::InputBlur(gEdit.edit, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gEdit.edit, win->gpuiWin);
     }
     // ng: the commit runs from the field's own gpui listener, so gpui still
     // holds the InputState for the rest of the event; free it on the next

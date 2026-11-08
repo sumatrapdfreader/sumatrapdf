@@ -200,7 +200,7 @@ bool IsPlacingSignature(MainWindow* win) {
 static void FreeSignDialogState() {
     MainWindow* win = gSign.win;
     if (win && win->gpuiWin) {
-        gp::InputBlur(gSign.editCert, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gSign.editCert, win->gpuiWin);
     }
     delete gSign.editCert;
     delete gSign.editPassword;

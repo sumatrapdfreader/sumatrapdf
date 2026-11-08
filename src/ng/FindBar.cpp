@@ -246,7 +246,7 @@ void HideFindBar(MainWindow* win) {
     win->findBar->visible = false;
     win->findBar->wantFocus = false;
     if (win->findEdit && win->gpuiWin) {
-        gp::InputBlur(win->findEdit, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(win->findEdit, win->gpuiWin);
     }
     AppShellInvalidate(win);
 }
