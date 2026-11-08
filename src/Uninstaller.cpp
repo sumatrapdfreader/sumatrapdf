@@ -89,6 +89,13 @@ static void OnButtonUninstall() {
 
     auto fn = MkFunc0Void(UninstallerThread);
     hThread = StartThread(fn, StrL("UninstallerThread"));
+    if (!hThread) {
+        // nothing was removed: say so and let the user retry
+        log(StrL("OnButtonUninstall: couldn't start the uninstaller thread\n"));
+        gButtonUninstaller->SetIsEnabled(true);
+        SetMsg(Tr("Uninstallation failed"), kColorMsgFailed);
+        HwndRepaintNow(gHwndFrame);
+    }
 }
 
 static void OnButtonExit() {

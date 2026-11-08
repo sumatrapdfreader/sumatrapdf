@@ -62,6 +62,8 @@ static SeqStrings gSkipLogNames =
     "kind)\0Repaint\0SaveSettings\0ShowSelectedAnnot\0GoToFindMatch\0";
 
 static Mutex gQueueMutex;
+// Dispatch::Queue's queue; with Dispatch::Native it holds the tasks whose
+// PostMessage failed (a full message queue), run with the next dispatch
 static Vec<TaskInfo*>* gQueue = nullptr;
 
 static void ExecuteTask(TaskInfo* ti) {
@@ -83,6 +85,21 @@ static void ExecuteTask(TaskInfo* ti) {
     FreeTaskInfo(ti);
 }
 
+static void RunQueuedTasks() {
+    Vec<TaskInfo*> toRun;
+    {
+        AutoUnlockMutex lock(&gQueueMutex);
+        if (!gQueue) {
+            return;
+        }
+        VecAppendVec(toRun, *gQueue);
+        VecClear(*gQueue);
+    }
+    for (TaskInfo* ti : toRun) {
+        ExecuteTask(ti);
+    }
+}
+
 #if OS_WIN
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (gExecuteTaskMessage != msg) {
@@ -90,6 +107,8 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
     }
     auto* ti = (TaskInfo*)lp;
     ExecuteTask(ti);
+    // the ones PostMessage couldn't take
+    RunQueuedTasks();
     return 0;
 }
 constexpr const WCHAR* kUiTaskClassName = L"UITask_Wnd_Class";
@@ -114,6 +133,7 @@ void Initialize(Dispatch dispatch) {
         DWORD style = WS_OVERLAPPED;
         gTaskDispatchHwnd = CreateWindowExW(0, cls, title, style, 0, 0, 0, 0, HWND_MESSAGE, nullptr, m, nullptr);
 
+        gQueue = new Vec<TaskInfo*>();
         gInitialized = gTaskDispatchHwnd != nullptr;
         return;
     }
@@ -134,16 +154,9 @@ void DrainQueue() {
         while (PeekMessage(&msg, gTaskDispatchHwnd, wmExecTask, wmExecTask, PM_REMOVE)) {
             DispatchMessage(&msg);
         }
-        return;
     }
 #endif
-    Vec<TaskInfo*> toRun;
-    {
-        AutoUnlockMutex lock(&gQueueMutex);
-        VecAppendVec(toRun, *gQueue);
-        VecClear(*gQueue);
-    }
-    for (TaskInfo* ti : toRun) ExecuteTask(ti);
+    RunQueuedTasks();
 }
 
 void Destroy() {
@@ -185,12 +198,21 @@ void Post(const Func0& f, Kind kind) {
     ti->queueTime = TimeGet();
 #if OS_WIN
     if (gDispatch == Dispatch::Native) {
-        if (!PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) FreeTaskInfo(ti);
-        return;
+        if (PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) {
+            return;
+        }
+        // a dropped task never calls back, and whatever it owns leaks: keep it
+        // for the next dispatch
+        logf("uitask::Post: PostMessage failed for '%s', queueing\n", kind ? Str(kind) : StrL("(no kind)"));
     }
 #endif
     {
         AutoUnlockMutex lock(&gQueueMutex);
+        // Destroy() ran since the gInitialized check above
+        if (!gQueue) {
+            FreeTaskInfo(ti);
+            return;
+        }
         VecAppend(*gQueue, ti);
     }
     if (gWakeupFn) gWakeupFn();

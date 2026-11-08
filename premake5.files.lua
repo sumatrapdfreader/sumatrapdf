@@ -375,6 +375,8 @@ function sumatrapdf_files()
     "GlobalHotkeysCommon_win.*",
     "GoogleLens.*",
     "HangDetector.*",
+    "HexView.*",
+    "HexViewCommon.*",
     "HomePage.*",
     "HomePageCommon.*",
     "OpenFromUrlCommon.*",

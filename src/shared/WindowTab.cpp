@@ -29,6 +29,8 @@
 #include "ReadingBar.h"
 #include "AnnotEditToolbar.h"
 #endif
+#include "AIChatCommon.h"
+#include "HexViewCommon.h"
 #include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {
@@ -108,10 +110,30 @@ bool WindowTab::IsFavoritesTab() const {
     return type == WindowTab::Type::Favorites;
 }
 
-// About or Favorites: no document controller
-bool WindowTab::IsNonDocumentTab() const {
-    return IsAboutTab() || IsFavoritesTab();
+bool WindowTab::IsHexTab() const {
+    return type == WindowTab::Type::HexView;
 }
+
+// About, Favorites or hex view: no document controller
+bool WindowTab::IsNonDocumentTab() const {
+    return IsAboutTab() || IsFavoritesTab() || IsHexTab();
+}
+
+#if !defined(SUMATRA_NG)
+// frees a finished background load that was never attached
+void WindowTab::DropPendingLoad() {
+    if (!pendingLoadArgs) {
+        return;
+    }
+    // LoadArgs dtor releases any leftover engine; drop ctrl first so we do
+    // not double-delete through both paths if both were set
+    delete pendingLoadArgs->ctrl;
+    pendingLoadArgs->ctrl = nullptr;
+    SafeEngineRelease(&pendingLoadArgs->engine);
+    delete pendingLoadArgs;
+    pendingLoadArgs = nullptr;
+}
+#endif
 
 WindowTab::~WindowTab() {
     logf("~WindowTab: 0x%p, dm: 0x%p\n", this, AsFixed());
@@ -155,6 +177,8 @@ WindowTab::~WindowTab() {
     FileWatcherUnsubscribe(watcher);
     watcher = nullptr;
     delete selectionOnPage;
+    HexViewFree(hex);
+    hex = nullptr;
 #if !defined(SUMATRA_NG)
     // technically we only need to clear ctrl == gMostRecentlyOpenedDoc
     // but gMostRecentlyOpenedDoc is only for dde commands
@@ -165,14 +189,7 @@ WindowTab::~WindowTab() {
     DeleteControllerAsync(ctrl);
     ctrl = nullptr;
 #if !defined(SUMATRA_NG)
-    if (pendingLoadArgs) {
-        // LoadArgs dtor releases any leftover engine; drop ctrl first so we do
-        // not double-delete through both paths if both were set
-        delete pendingLoadArgs->ctrl;
-        pendingLoadArgs->ctrl = nullptr;
-        SafeEngineRelease(&pendingLoadArgs->engine);
-    }
-    delete pendingLoadArgs;
+    DropPendingLoad();
 #endif
     DeleteOpenCacheCopyOf(this, filePath);
     str::Free(filePath);
@@ -192,16 +209,12 @@ WindowTab::~WindowTab() {
         delete readAloudHighlight;
         readAloudHighlight = nullptr;
     }
-#if !defined(SUMATRA_NG)
+    // ng too: a running chat's process outlived its closed tab
     for (AIChatTabState& st : aiChat) {
         str::Free(st.sessionId);
         st.sessionId = {};
-        if (st.process) {
-            TerminateProcess(st.process, 0);
-            CloseHandle(st.process);
-        }
+        AIChatCloseProcess(&st.process, true);
     }
-#endif
 }
 
 bool WindowTab::IsDocLoaded() const {
@@ -248,6 +261,10 @@ Str WindowTab::GetTabTitle() const {
             return Tr("Favorites");
         }
         return StrL("");
+    }
+    if (IsHexTab()) {
+        Str name = gSettings->fullPathInTitle ? filePath : path::GetBaseNameTemp(filePath);
+        return fmt("%s (hex)", name);
     }
     TempStr embeddedFileName = ParseEmbeddedPdfName(filePath).fileName;
     if (embeddedFileName) {

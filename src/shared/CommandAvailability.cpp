@@ -605,6 +605,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    // works on a failed load too: that is when looking at the bytes helps
+    if (cmdId == CmdViewAsHex) {
+        bool canView = !ctx.isHexTab && len(ctx.filePath) > 0 && CanAccessDisk();
+        return canView ? MapForSurface(CommandVisibility::Show, surface) : CommandVisibility::Hide;
+    }
+
     if (CmdWorksWithoutDocument(cmdId)) {
         return MapForSurface(CommandVisibility::Show, surface);
     }
@@ -723,8 +729,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (!ctx.isPdf) {
         if (cmdId == CmdPdfShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
-            cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdToggleEditPDF ||
-            cmdId == CmdMergePDF || cmdId == CmdRunPDFScript) {
+            cmdId == CmdTogglePageBoxes || cmdId == CmdToggleEditPDF || cmdId == CmdMergePDF ||
+            cmdId == CmdRunPDFScript) {
+            return CommandVisibility::Hide;
+        }
+        // XPS, EPUB, ... (anything MuPDF opened) extract to a new PDF (#6509)
+        if (cmdId == CmdPdfExtractPages && ctx.engineKind != kindEngineMupdf) {
             return CommandVisibility::Hide;
         }
     }

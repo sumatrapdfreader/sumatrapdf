@@ -30,6 +30,7 @@ TempStr BuildKeepPagesRangeTemp(int pageCount, const Vec<int>& pagesToDelete);
 TempStr FormatPageRangeTemp(const Vec<int>& pages);
 bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages);
 TempStr DefaultPdfDestPathTemp(Str srcPath);
+bool ExtractPagesToNewPdf(WindowTab* tab, const Vec<int>& pages, Str destPath);
 bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath);
 constexpr int kConvertPdfToImagesDpi = 150;
 constexpr int kSaveSelectionDefaultDpi = 300;

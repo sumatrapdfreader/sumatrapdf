@@ -486,7 +486,7 @@ static void FreePageGridInputs() {
                                gPageGrid.editOffX,  gPageGrid.editOffY,   gPageGrid.editColor};
     for (gp::InputState* e : edits) {
         if (e && win && win->gpuiWin) {
-            gp::InputBlur(e, win->gpuiWin->app, win->gpuiWin);
+            InputBlurWhereFocused(e, win->gpuiWin);
         }
         delete e;
     }

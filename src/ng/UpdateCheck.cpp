@@ -122,18 +122,23 @@ static void OpenWebPage(Str url) {
 
 #if OS_WIN
 
-void StartInstallerAutoUpgrade(Str installerPath) {
+// true when the installer started; only then may we exit for it to replace us
+bool StartInstallerAutoUpgrade(Str installerPath) {
     TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
     TempStr installerSigner = GetExecutableSignerTemp(installerPath);
     if (len(expectedSigner) == 0 || len(installerSigner) == 0 || !str::Eq(expectedSigner, installerSigner) ||
         !IsPEFileSigned(installerPath)) {
         logf("StartInstallerAutoUpgrade: refusing an update with an untrusted signature\n");
-        return;
+        return false;
     }
     // orig asks the installer (IsOurExeInstalled()). Here "not portable" means installed.
     TempStr cmd = InstallerUpgradeArgsTemp(!IsRunningInPortableMode(), gIsPreReleaseBuild, GetSelfExePathTemp());
     logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", cmd);
-    CreateProcessHelper(installerPath, cmd);
+    bool ok = CreateProcessHelper(installerPath, cmd);
+    if (!ok) {
+        logf("StartInstallerAutoUpgrade: starting the installer failed\n");
+    }
+    return ok;
 }
 
 static void ExitAfterStartingUpdater() {
@@ -144,7 +149,9 @@ static void ExitAfterStartingUpdater() {
 #else
 
 // no installer off Windows: the user is sent to the download page instead
-void StartInstallerAutoUpgrade(Str) {}
+bool StartInstallerAutoUpgrade(Str) {
+    return false;
+}
 
 static void ExitAfterStartingUpdater() {}
 
@@ -160,6 +167,7 @@ static void OpenDownloadPage(UpdateInfo* updateInfo) {
 }
 
 static void OnInstallAnswer(UpdateInfo* updateInfo, int res) {
+    gUpdateCheckInProgress = false;
     AutoDelete delInfo(updateInfo);
     Str installerPath = updateInfo->installerPath;
     bool didDownloadInstaller = file::Exists(installerPath);
@@ -176,8 +184,11 @@ static void OnInstallAnswer(UpdateInfo* updateInfo, int res) {
         OpenDownloadPage(updateInfo);
         return;
     }
-    StartInstallerAutoUpgrade(installerPath);
-    ExitAfterStartingUpdater();
+    if (StartInstallerAutoUpgrade(installerPath)) {
+        ExitAfterStartingUpdater();
+    } else {
+        OpenDownloadPage(updateInfo);
+    }
 }
 
 // ng: orig's TaskDialog with "Don't install" / "Install and relaunch" buttons;
@@ -191,8 +202,11 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         ScheduleSaveSettings();
         FlushScheduledSaveSettings();
         if (installerPathAuto && file::Exists(installerPathAuto)) {
-            StartInstallerAutoUpgrade(installerPathAuto);
-            ExitAfterStartingUpdater();
+            if (StartInstallerAutoUpgrade(installerPathAuto)) {
+                ExitAfterStartingUpdater();
+            } else {
+                OpenDownloadPage(updateInfo);
+            }
         } else {
             logf("NotifyUserOfUpdate: auto-install requested but installer not downloaded\n");
             OpenDownloadPage(updateInfo);
@@ -207,6 +221,8 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     TempStr content = fmt("%s\n\n%s", mainInstr, fmt(fmtStr.s, currentVersion, ver));
     logf("NotifyUserOfUpdate: %s -> %s\n", currentVersion, ver);
 
+    // as orig's modal dialog: no other check starts until this is answered
+    gUpdateCheckInProgress = true;
     uint flags = MbYesNo | MbIconInformation;
     MsgBox(updateInfo->win, content, Tr("SumatraPDF Update"), flags,
            MkFunc1<UpdateInfo, int>(OnInstallAnswer, updateInfo));

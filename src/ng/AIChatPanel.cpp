@@ -524,9 +524,9 @@ bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str& outTex
     // parse the collected output through the real provider parser, capturing the
     // text it emits instead of posting to a (nonexistent) webview
     AIChatCaptureSink sink;
-    gAIChatCapture = &sink;
     AIChatStreamCtx ctx;
     ctx.providerId = (int)backend;
+    ctx.capture = &sink;
     Str rest = ToStr(raw);
     Str line;
     while (str::NextLine(rest, line, rest)) {
@@ -537,7 +537,6 @@ bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str& outTex
         AIChatLog(p->logger, StrL("<<<"), l);
         p->ParseStreamLine(l, &ctx);
     }
-    gAIChatCapture = nullptr;
     str::Free(ctx.sessionId);
 
     Str err = ToStr(sink.err);

@@ -22,6 +22,7 @@ struct AppCommandCtx {
     WindowTab* tab = nullptr;
 
     bool isDocLoaded = false;
+    bool isHexTab = false;
     Str filePath;
     Kind engineKind = nullptr;
     int pageCount = 0;

@@ -86,9 +86,9 @@ void CloseGoToPageDialog() {
     if (gGoToPage.tw) {
         DlgWindowClose(&gGoToPage.tw);
     } else if (win && win->gpuiWin && gGoToPage.editPage) {
-        gp::InputBlur(gGoToPage.editPage, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gGoToPage.editPage, win->gpuiWin);
         if (gGoToPage.editChapter) {
-            gp::InputBlur(gGoToPage.editChapter, win->gpuiWin->app, win->gpuiWin);
+            InputBlurWhereFocused(gGoToPage.editChapter, win->gpuiWin);
         }
     }
     FreeInputs();

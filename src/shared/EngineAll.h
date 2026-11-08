@@ -195,6 +195,7 @@ int EngineMupdfCountSignedSignatures(EngineBase*);
 bool EngineMupdfHasOfdSignatures(EngineBase*);
 bool EngineMupdfIsOfd(EngineBase*);
 bool EngineMupdfSaveAsPdf(EngineBase*, Str destPath);
+bool EngineMupdfExtractPagesToPdf(EngineBase*, const Vec<int>& pages, Str destPath);
 bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);

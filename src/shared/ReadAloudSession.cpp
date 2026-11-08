@@ -634,6 +634,11 @@ static TempStr CleanReadAloudTextTemp(Str text) {
 
 // Read-aloud lifetime and commands
 static void ReadAloudSetSourceTab(WindowTab* tab) {
+    // reading moves to another tab: stop the old one as pause does, so it keeps
+    // its position and its window's highlight timer stops
+    if (gReadAloudSourceTab && gReadAloudSourceTab != tab) {
+        ReadAloudStopRememberPos();
+    }
     gReadAloudSourceTab = tab;
 }
 
@@ -679,12 +684,9 @@ void StopReadAloudIfSourceWindow(MainWindow* win) {
     if (!win || !gReadAloudSourceTab || gReadAloudSourceTab->win != win) {
         return;
     }
-
-    if (TtsIsSpeaking()) {
-        TtsStop();
-    }
-
-    ReadAloudClearSourceTab();
+    // as for a tab: also stop the highlight timer, which a kept last window
+    // would go on running
+    StopReadAloudIfSourceTab(gReadAloudSourceTab);
 }
 
 // reset "Continue reading" state, called when its document goes away

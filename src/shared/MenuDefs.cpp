@@ -284,6 +284,10 @@ MenuDef menuDefView[] = {
         CmdToggleColumnsWholePage,
     },
     {
+        TrN("View As &Hex"),
+        CmdViewAsHex,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },
@@ -1099,7 +1103,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdDocumentShowOutline,
     },
     {
-        TrN("Extract Pages From PDF"),
+        TrN("Extract Pages"),
         CmdPdfExtractPages,
     },
     {

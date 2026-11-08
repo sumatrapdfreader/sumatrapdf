@@ -246,6 +246,19 @@ import { testit as issue6221 } from "./issue-6221.ts";
 import { testit as issue6505 } from "./issue-6505.ts";
 import { testit as issue6506 } from "./issue-6506.ts";
 import { testit as copyJoinLines } from "./copy-join-lines.ts";
+import { testit as tabSwitchEndsModes } from "./tab-switch-ends-modes.ts";
+import { testit as scrollbarCaptureLoss } from "./scrollbar-capture-loss.ts";
+import { testit as nextFileSavePrompt } from "./next-file-save-prompt.ts";
+import { testit as backgroundTabReload } from "./background-tab-reload.ts";
+import { testit as sessionRestoreBrokenFile } from "./session-restore-broken-file.ts";
+import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
+import { testit as reloadKeepsFullscreenLayout } from "./reload-keeps-fullscreen-layout.ts";
+import { testit as closeWindowWithDialog } from "./close-window-with-dialog.ts";
+import { testit as captionCaptureLoss } from "./caption-capture-loss.ts";
+import { testit as menuBarArmedDeactivate } from "./menu-bar-armed-deactivate.ts";
+import { testit as issue6509 } from "./issue-6509.ts";
+import { testit as f7EndsPlacement } from "./f7-ends-placement.ts";
+import { testit as findUiOneAtATime } from "./find-ui-one-at-a-time.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
@@ -504,6 +517,7 @@ import { testit as issue6080 } from "./issue-6080.ts";
 import { testit as issue6203 } from "./issue-6203.ts";
 import { testit as issue6205 } from "./issue-6205.ts";
 import { testit as advSettingsEnter } from "./adv-settings-enter.ts";
+import { testit as hexView } from "./hex-view.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
 import { testit as issue6137AdvSettings } from "./issue-6137-adv-settings.ts";
 import { testit as advSettingsHomeReload } from "./adv-settings-home-reload.ts";
@@ -1027,6 +1041,7 @@ export const tests: NamedTest[] = [
   ["issue-6203", issue6203],
   ["issue-6205", issue6205],
   ["adv-settings-enter", advSettingsEnter],
+  ["hex-view", hexView],
   ["adv-settings-fresh-defaults", advSettingsFreshDefaults],
   ["issue-6137-adv-settings", issue6137AdvSettings],
   ["adv-settings-home-reload", advSettingsHomeReload],
@@ -1090,6 +1105,19 @@ export const tests: NamedTest[] = [
   ["issue-6505", issue6505],
   ["issue-6506", issue6506],
   ["copy-join-lines", copyJoinLines],
+  ["tab-switch-ends-modes", tabSwitchEndsModes],
+  ["scrollbar-capture-loss", scrollbarCaptureLoss],
+  ["next-file-save-prompt", nextFileSavePrompt],
+  ["background-tab-reload", backgroundTabReload],
+  ["session-restore-broken-file", sessionRestoreBrokenFile],
+  ["tab-switch-presentation", tabSwitchPresentation],
+  ["reload-keeps-fullscreen-layout", reloadKeepsFullscreenLayout],
+  ["close-window-with-dialog", closeWindowWithDialog],
+  ["caption-capture-loss", captionCaptureLoss],
+  ["menu-bar-armed-deactivate", menuBarArmedDeactivate],
+  ["issue-6509", issue6509],
+  ["f7-ends-placement", f7EndsPlacement],
+  ["find-ui-one-at-a-time", findUiOneAtATime],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

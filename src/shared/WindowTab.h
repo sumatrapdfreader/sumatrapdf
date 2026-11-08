@@ -12,6 +12,7 @@ struct TocTree;
 struct TabState;
 struct Annotation;
 struct WatchedFile;
+struct HexView;
 #if !defined(SUMATRA_NG)
 struct LoadArgs;
 #endif
@@ -92,9 +93,11 @@ struct WindowTab {
         About,
         Document,
         Favorites, // full-window favorites list (CmdFavoriteShowInTab)
+        HexView,   // filePath's bytes (CmdViewAsHex)
     };
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
+    HexView* hex = nullptr;
     u64 loadStartedAt = 0;
 #if !defined(SUMATRA_NG)
     // network-drive copy progress while loading (-1 = not in copy phase)
@@ -215,10 +218,14 @@ struct WindowTab {
     WindowTab(const WindowTab&) = delete;
     WindowTab& operator=(const WindowTab&) = delete;
     ~WindowTab();
+#if !defined(SUMATRA_NG)
+    void DropPendingLoad();
+#endif
 
     bool IsAboutTab() const;
     bool IsPinnedHomeTab() const;
     bool IsFavoritesTab() const;
+    bool IsHexTab() const;
     bool IsNonDocumentTab() const;
 
     DisplayModel* AsFixed() const;
@@ -245,4 +252,5 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data);
 
 bool IsPdfDoc(WindowTab* tab);
 bool IsEpubDoc(WindowTab* tab);
+bool IsMupdfNonPdfDoc(WindowTab* tab);
 bool IsCajDoc(WindowTab* tab);

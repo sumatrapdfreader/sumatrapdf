@@ -151,7 +151,7 @@ static void CloseCurrentDlg() {
         ToolWindowClose(gTg->tw);
         gTg->tw = nullptr;
     } else if (win && win->gpuiWin && gTg->editName) {
-        gp::InputBlur(gTg->editName, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gTg->editName, win->gpuiWin);
     }
     delete gTg->editName;
     gTg->editName = nullptr;

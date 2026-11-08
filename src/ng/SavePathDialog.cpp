@@ -145,7 +145,7 @@ static void FinishSavePathDialog(Str path) {
     gSave.confirmingOverwrite = false;
     MainWindow* win = args ? args->win : nullptr;
     if (win && win->gpuiWin && gSave.nameEdit) {
-        gp::InputBlur(gSave.nameEdit, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gSave.nameEdit, win->gpuiWin);
     }
     delete gSave.nameEdit;
     gSave.nameEdit = nullptr;
@@ -177,6 +177,13 @@ static void FinishSavePathDialog(Str path) {
 void CloseSavePathDialog() {
     if (gSave.visible) {
         FinishSavePathDialog({});
+    }
+}
+
+// cancel it while its window, about to close, is still valid
+void CloseSavePathDialogFor(MainWindow* win) {
+    if (gSave.args && gSave.args->win == win) {
+        CloseSavePathDialog();
     }
 }
 

@@ -70,7 +70,7 @@ void CloseInverseSearchDialog() {
     DlgWindowClose(&gInverseSearchTw);
     MainWindow* win = gInverseSearch.win;
     if (win && win->gpuiWin && gInverseSearch.editCmd) {
-        gp::InputBlur(gInverseSearch.editCmd, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gInverseSearch.editCmd, win->gpuiWin);
     }
     delete gInverseSearch.editCmd;
     gInverseSearch.editCmd = nullptr;

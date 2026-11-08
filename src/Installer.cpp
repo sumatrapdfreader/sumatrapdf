@@ -1143,6 +1143,12 @@ static void StartInstallation(InstallerWnd* wnd) {
 
     auto fn = MkFunc0(InstallerThread, &gCliNew);
     wnd->hThread = StartThread(fn, StrL("InstallerThread"));
+    if (!wnd->hThread) {
+        // finish as failed instead of showing "in progress" forever
+        logf("StartInstallation: couldn't start the installer thread\n");
+        gInstallFailed = true;
+        PostMessageW(wnd->hwnd, kWmAppInstallationFinished, 0, 0);
+    }
 }
 
 static void OnButtonOptions(InstallerWnd* wnd);

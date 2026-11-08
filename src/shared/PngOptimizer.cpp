@@ -79,8 +79,14 @@ static int RecompressPng(Str png, unsigned char** out, size_t* outSize) {
 
 // Replace with a smaller, losslessly compressed PNG. An atomic rename keeps
 // concurrent readers from seeing a partial write.
+// each optimization writes its own temp file: two of the same path at once
+// (saved twice quickly) must not write into one
+static AtomicInt gPngTmpSeq = 0;
+
 static void OptimizePngFile(Str path) {
     auto timeStart = TimeGet();
+    // the file this optimizes: a save that replaces it meanwhile wins
+    u64 modTime = FileTimeToU64(file::GetModificationTime(path));
     Str d = file::ReadFile(path);
     AutoFree dataOwner(d.s);
     int nOrig = len(d);
@@ -113,10 +119,17 @@ static void OptimizePngFile(Str path) {
     memcpy(withMarker, out, kMarkerOffset);
     BuildMarkerChunk(withMarker + kMarkerOffset);
     memcpy(withMarker + kMarkerOffset + kMarkerChunkSize, out + kMarkerOffset, outSize - kMarkerOffset);
-    TempStr tmpPath = fmt("%s.zopfli-tmp", path);
+    TempStr tmpPath = fmt("%s.%d.zopfli-tmp", path, AtomicIntInc(&gPngTmpSeq));
     bool ok = file::WriteFile(tmpPath, Str((char*)withMarker, (int)outSizeTotal));
     if (!ok) {
         logf("OptimizePngFile: failed to write '%s'\n", tmpPath);
+        return;
+    }
+    // recompressing takes seconds; replacing a newer save would lose it
+    bool changed = FileTimeToU64(file::GetModificationTime(path)) != modTime || file::GetSize(path) != nOrig;
+    if (changed) {
+        file::Delete(tmpPath);
+        logf("OptimizePngFile: '%s' changed while optimizing, keeping it\n", path);
         return;
     }
     if (!file::RenameReplace(path, tmpPath)) {

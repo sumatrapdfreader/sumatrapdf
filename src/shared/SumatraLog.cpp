@@ -50,6 +50,9 @@ bool gLogToPipe = false;
 #endif
 
 Str gLogFilePath;
+// kept open between lines: opening the file for every line cost a CreateFile
+// and a close per log call, a tenth of the main thread when a frame log is on
+static FILE* gLogFile = nullptr;
 
 // 1 MB - 128 to stay under 1 MB even after appending (an estimate)
 constexpr int kMaxLogBuf = (1024 * 1024) - 128;
@@ -199,11 +202,12 @@ void log(Str s) {
     }
 
     if (gLogFilePath) {
-        auto* f = fopen(gLogFilePath.s, "a");
-        if (f != nullptr) {
-            fwrite(s.s, 1, n, f);
-            fflush(f);
-            fclose(f);
+        if (!gLogFile) {
+            gLogFile = fopen(gLogFilePath.s, "a");
+        }
+        if (gLogFile) {
+            fwrite(s.s, 1, n, gLogFile);
+            fflush(gLogFile);
         }
     }
     logToPipe(s);
@@ -254,6 +258,10 @@ void DestroyLogging() {
         gLogBuf = nullptr;
         ArenaDelete(gLogAllocator);
         gLogAllocator = nullptr;
+        if (gLogFile) {
+            fclose(gLogFile);
+            gLogFile = nullptr;
+        }
         str::FreePtr(&gLogFilePath);
     }
 #if !OS_WASM

@@ -462,6 +462,20 @@ static void StopMouseTracking() {
 
 // ---- WndProc for scrollbar window (handles clicks, drag, wheel) ----
 
+// the left button is up or the capture is gone: stop auto-repeat, finish a drag
+static void EndScrollbarPress(OverlayScrollbar* sb) {
+    if (sb->repeatScrollCode != 0) {
+        sb->repeatScrollCode = 0;
+        KillTimer(sb->hwnd, OverlayScrollbar::kTimerRepeatScroll);
+    }
+    if (sb->isDragging) {
+        sb->isDragging = false;
+        sb->nPos = sb->nTrackPos;
+        PaintScrollbar(sb);
+        SendScrollMsg(sb, ScrollMsgForType(sb), MAKEWPARAM(SB_THUMBPOSITION, sb->nPos));
+    }
+}
+
 static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     OverlayScrollbar* sb = (OverlayScrollbar*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     if (!sb) {
@@ -614,17 +628,14 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
         }
 
         case WM_LBUTTONUP:
-            if (sb->repeatScrollCode != 0) {
-                sb->repeatScrollCode = 0;
-                KillTimer(hwnd, OverlayScrollbar::kTimerRepeatScroll);
-            }
-            if (sb->isDragging) {
-                sb->isDragging = false;
-                sb->nPos = sb->nTrackPos;
-                PaintScrollbar(sb);
-                SendScrollMsg(sb, ScrollMsgForType(sb), MAKEWPARAM(SB_THUMBPOSITION, sb->nPos));
-            }
+            EndScrollbarPress(sb);
             ReleaseCapture();
+            return 0;
+
+        // capture taken away (Alt+Tab, a dialog) while an arrow or the thumb is
+        // held: no button-up will come, so end the auto-repeat and the drag now
+        case WM_CAPTURECHANGED:
+            EndScrollbarPress(sb);
             return 0;
 
         case WM_MOUSEWHEEL:

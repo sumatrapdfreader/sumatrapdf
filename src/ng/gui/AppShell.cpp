@@ -42,6 +42,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Tabs.h"
+#include "HexView.h"
 #include "gui/NativeFileDlg.h"
 #include "gui/AppShell.h"
 #include "gui/WasmBridge.h"
@@ -159,6 +160,7 @@ struct ShellView {
     static void OnExternalDrop(ShellView* self, gp::Ctx* cx, const gp::DropEvent* ev);
     static void OnNotifClose(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t key);
     static void OnNotifLink(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t packed);
+    static void OnOpenInHexView(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*);
 };
 
 // ng: one per MainWindow (step 10b). Every listener is bound to this window's
@@ -810,6 +812,8 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
                    win->ctrl ? win->ctrl->CurrentPageNo() : 0, IsFindUIVisible(win) ? 1 : 0, win->showSelection ? 1 : 0,
                    tab && tab->selectedAnnotation ? 1 : 0, (int)win->InPresentation(), win->IsFullScreen() ? 1 : 0,
                    (int)win->mouseAction));
+    out.Append(
+        fmt(" placing=%d textSelectMode=%d", IsPlacingAnnotation(win) ? 1 : 0, win->textSelectModeActive ? 1 : 0));
     int tocItems = 0;
     if (win->ctrl) {
         TocTree* tree = win->ctrl->GetToc();
@@ -1969,6 +1973,9 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     if (currTab && currTab->IsFavoritesTab()) {
         return SidebarBuildFavTab(win, cx);
     }
+    if (currTab && currTab->IsHexTab()) {
+        return HexViewBuild(win, cx);
+    }
     if (browser && !overlayUp) {
         gp::El* box = gp::Div(cx->a)->Flex1()->W(gp::kFill)->Bg(ThemeGpuiCanvasBg());
         int clipTop = 0;
@@ -1989,6 +1996,16 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
             TempStr reason = CajErrorReasonTemp(tab->filePath);
             if (len(reason) > 0) {
                 canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, reason))->Font(16)->Fg(th.foreground));
+            }
+            // looking at the bytes can tell why; not when the file is gone
+            if (file::Exists(tab->filePath) && CanAccessDisk()) {
+                canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, Tr("Open in hex view")))
+                                  ->Font(16)
+                                  ->Fg(ToGpui(ThemeWindowLinkColor()))
+                                  ->Underline()
+                                  ->Cursor(gp::CursorKind::Pointer)
+                                  ->PathClick(GStrL("load-error-hex"))
+                                  ->OnClick(gp::ListenTo(ShellViewOf(win), &ShellView::OnOpenInHexView)));
             }
             return canvas;
         }
@@ -2309,6 +2326,11 @@ void ShellView::OnNotifClose(ShellView*, gp::Ctx* cx, const gp::ClickEvent*, int
         logf("NotificationClose: '%s'\n", n->msg);
         CloseNotification(n, NotifCloseReason::User);
     }
+    gp::Notify(cx);
+}
+
+void ShellView::OnOpenInHexView(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*) {
+    ExecuteCmd(self->win, CmdViewAsHex);
     gp::Notify(cx);
 }
 
@@ -2994,6 +3016,12 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         gp::Notify(cx);
         return;
     }
+    bool plainKey = !ev->shift && !ev->alt && !ev->ctrl;
+    if (plainKey && HexViewOnKeyDown(win, ev->vk)) {
+        mut->propagate = false;
+        gp::Notify(cx);
+        return;
+    }
     if (SelectTextWithKeyboardOnKeyDown(win, ev->vk, ev->ctrl, ev->shift, ev->alt)) {
         mut->propagate = false;
         gp::Notify(cx);
@@ -3464,6 +3492,11 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     bool nativeMenu = gp::AppHasMenuBar();
     // orig's WM_EXITMENULOOP: hide the menu bar again if it was shown only
     // temporarily
+    // as win32's menu loop: switching away lets go of the keyboard-armed bar,
+    // or the keys typed after coming back would go to it
+    if (self->menuArmedIdx >= 0 && cx->win && !cx->win->active) {
+        self->menuArmedIdx = -1;
+    }
     if (self->menuArmedIdx >= 0) {
         // a click on a title opened its menu: the bar is no longer just armed
         auto* mbOpen = (gpc::AppMenuBarState*)gp::EntityGet(cx->app, self->menuBarState.id);

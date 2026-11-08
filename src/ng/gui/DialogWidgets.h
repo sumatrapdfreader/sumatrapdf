@@ -174,6 +174,7 @@ struct DlgWindowSpec {
 ToolWindow* DlgWindowOpen(const DlgWindowSpec& spec, MainWindow* win);
 // closes it and clears *tw
 void DlgWindowClose(ToolWindow** tw);
+void DlgWindowsCloseFor(MainWindow* win);
 // true while `cx` is such a window's
 bool DlgWindowIsHost(gpui::Ctx* cx);
 // the window whose build / close / key callback is running, for a dialog

@@ -652,8 +652,11 @@ void NotificationWnd::UpdateMessage(Str msg, int timeoutMs, bool highlight) {
     HwndSetRtl(hwnd, IsUIRtl());
     Layout(msg);
     HwndRepaintNow(hwnd);
+    // 0 persists: drop a timeout armed by an earlier message
     if (timeoutMs != 0) {
         SetTimer(hwnd, kNotifTimerTimeoutId, timeoutMs, nullptr);
+    } else {
+        KillTimer(hwnd, kNotifTimerTimeoutId);
     }
 }
 

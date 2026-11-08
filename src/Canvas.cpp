@@ -72,6 +72,7 @@
 
 #include "RefHover.h"
 #include "Canvas.h"
+#include "HexView.h"
 #include "PageGridDialogCommon.h"
 #include "MeasurementToolbar.h"
 #include "SumatraLog.h"
@@ -845,6 +846,8 @@ void FinishAnnotationNudge(MainWindow* win) {
     ToolbarUpdateStateForWindow(win, true);
 }
 
+static void StopAutoScroll(MainWindow* win);
+
 static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
     if (GetCapture() != win->hwndCanvas) {
         return;
@@ -886,8 +889,21 @@ void CancelDrag(MainWindow* win) {
     }
     auto pt = win->dragPrevPos;
     auto [x, y] = pt;
-    StopMouseDrag(win, x, y, true);
+    // as ng: a selection ends as aborted, so a rectangle edit reverts
+    bool selecting = win->mouseAction == MouseAction::Selecting || win->mouseAction == MouseAction::SelectingText;
+    if (selecting && win->AsFixed()) {
+        OnSelectionStop(win, x, y, true);
+    } else {
+        StopMouseDrag(win, x, y, true);
+    }
     win->mouseAction = MouseAction::None;
+    // a press on selected text / an image waits for a move to start an OLE
+    // drag; without this a later button-less move would start one
+    win->dragStartPending = false;
+    win->textDragPending = false;
+    win->imageDragPending = false;
+    win->imageDragElement = nullptr;
+    win->imageDragPageNo = -1;
     win->linkOnLastButtonDown = nullptr;
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
@@ -987,7 +1003,11 @@ static void DragTouchSelHandle(MainWindow* win, int x, int y) {
     PointF ptf = dm->CvtFromScreen(pt, pageNo);
     dm->textSelection->SelectUpTo(pageNo, ptf.x, ptf.y);
 
+    // the selection is rebuilt under the handles: they and the drag stay
+    TouchSelHandle dragging = win->touchSelDragging;
     DeleteOldSelectionInfo(win, false);
+    win->touchSelHandles = true;
+    win->touchSelDragging = dragging;
     WindowTab* tab = win->CurrentTab();
     tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
     win->showSelection = tab->selectionOnPage != nullptr;
@@ -1176,8 +1196,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                     SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
                 }
             }
-            if (win->dragPrevPos.Eq(-2, -3)) {
-                // hack: hide cursor immediately. see EnterFullScreen
+            if (win->hideCursorOnNextMove) {
+                win->hideCursorOnNextMove = false;
                 SetTimer(win->hwndCanvas, kHideCursorTimerID, 1, nullptr);
             } else {
                 // logf("OnMouseMove: starting kHideCursorTimerID\n");
@@ -1514,7 +1534,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     RefHoverOnCanvasLeftButtonDown(win->refHover, win->hwndCanvas);
 
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
         return;
     }
 
@@ -1857,13 +1877,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // Also covers the crash-report case of a left-up after the down was lost
     // (different hwnd, focus change, etc.) — just reset cleanly.
     if (MouseAction::Scrolling == ma) {
-        win->mouseAction = MouseAction::None;
-        win->xScrollSpeed = 0;
-        win->yScrollSpeed = 0;
-        win->xScrollAccum = 0;
-        win->yScrollAccum = 0;
-        KillTimer(win->hwndCanvas, kAutoScrollTimerID);
-        SetCanvasCursor(win, IDC_ARROW);
+        StopAutoScroll(win);
         return;
     }
 
@@ -2158,6 +2172,18 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     }
 }
 
+// every way out of middle-click auto-scroll: the speeds, the timer and the
+// cursor go with the mode, or a quick restart scrolls at the old speed
+static void StopAutoScroll(MainWindow* win) {
+    win->mouseAction = MouseAction::None;
+    win->xScrollSpeed = 0;
+    win->yScrollSpeed = 0;
+    win->xScrollAccum = 0;
+    win->yScrollAccum = 0;
+    KillTimer(win->hwndCanvas, kAutoScrollTimerID);
+    SetCanvasCursor(win, IDC_ARROW);
+}
+
 static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // Handle message by recording placement then moving document as mouse moves.
 
@@ -2170,7 +2196,7 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM /*key*
         win->dragStart = Point(x, y);
         SetCanvasCursor(win, IDC_SIZEALL);
     } else if (win->mouseAction == MouseAction::Scrolling) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
     }
 }
 
@@ -2201,8 +2227,7 @@ static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM /*key*/) {
     // releasing it ends the scroll; releasing without moving leaves auto-scroll
     // latched on, which is what dragStartPending still being set means
     if (win->mouseAction == MouseAction::Scrolling && !win->dragStartPending) {
-        win->mouseAction = MouseAction::None;
-        SetCanvasCursor(win, IDC_ARROW);
+        StopAutoScroll(win);
     }
 }
 
@@ -2217,7 +2242,7 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
         return;
     }
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
     } else if (win->mouseAction != MouseAction::None) {
         return;
     }
@@ -2989,6 +3014,23 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         }
     };
 
+    // every visible page paints its own rect (placeholder, then bitmap), so the
+    // background only needs the space around them; an image collection has no
+    // placeholder under a page not rendered yet
+    int savedDC = 0;
+    if (!isImage) {
+        savedDC = SaveDC(hdc);
+        Rect visible(Point(), dm->GetViewPort().Size());
+        for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
+            PageInfo* pi = dm->GetPageInfo(pageNo);
+            if (!pi || 0.0F == pi->visibleRatio || !pi->isShown) {
+                continue;
+            }
+            Rect b = pi->pageOnScreen.Intersect(visible);
+            ExcludeClipRect(hdc, b.x, b.y, b.x + b.dx, b.y + b.dy);
+        }
+    }
+
     if (paintOnBlackWithoutShadow || colDocBg == kColorUnset) {
         paintBgOrCheckerboard(colDocBg, rcArea);
     } else if (0 == nGCols) {
@@ -3049,6 +3091,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
             nMesh = 2;
         }
         GradientFill(hdc, tv, dimof(tv), gr, nMesh, GRADIENT_FILL_RECT_V);
+    }
+    if (savedDC) {
+        RestoreDC(hdc, savedDC);
     }
 
     bool rendering = false;
@@ -4689,7 +4734,25 @@ static Color LoadErrorTextColor() {
     return MkRgb(0xef, 0x9a, 0x9a);
 }
 
+// "Open in hex view" under the error, unless the file is gone
+static void DrawLoadErrorHexLink(MainWindow* win, Gfx* gfx, Rect rc, bool hasReason, PlatformFont* font) {
+    WindowTab* tab = win->CurrentTab();
+    if (!file::Exists(tab->filePath) || !CanAccessDisk()) {
+        return;
+    }
+    Str txt = Tr("Open in hex view");
+    Size sz = gfx->MeasureText(txt, font);
+    int lineDy = PlatformFontMeasureText(font, txt).dy;
+    // the error line's y, then past it (and the reason) with a blank line's gap
+    int nameY = rc.y + (rc.dy - (hasReason ? lineDy : 0) - lineDy) / 2;
+    int y = nameY + lineDy * (hasReason ? 2 : 1) + lineDy / 2;
+    Rect r(rc.x + (rc.dx - sz.dx) / 2, y, sz.dx, sz.dy);
+    gfx->DrawTextAt(txt, r.TL(), gfxTextSingleLine | gfxTextNoClip, font, ThemeWindowLinkColor());
+    win->loadErrorHexLinkRc = r;
+}
+
 static void OnPaintDocumentStatus(MainWindow* win) {
+    win->loadErrorHexLinkRc = {};
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
     SetLayout(hdc, 0);
@@ -4756,6 +4819,7 @@ static void OnPaintDocumentStatus(MainWindow* win) {
                 gfx->DrawText(reason, bottom, flags, fontRightTxt, LoadErrorTextColor());
             }
             DrawLoadErrorLine(gfx, top, name, fontRightTxt, LoadErrorTextColor());
+            DrawLoadErrorHexLink(win, gfx, rc, len(reason) > 0, fontRightTxt);
         }
     }
     delete gfx;
@@ -4775,6 +4839,17 @@ static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPAR
 
         case WM_SETCURSOR:
             win->DeleteToolTip();
+            if (win->loadErrorHexLinkRc.Contains(HwndGetCursorPos(hwnd))) {
+                SetCursorCached(IDC_HAND);
+                return TRUE;
+            }
+            return DefWindowProc(hwnd, msg, wp, lp);
+
+        case WM_LBUTTONUP:
+            if (win->loadErrorHexLinkRc.Contains(Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)))) {
+                HwndSendCommand(win->hwndFrame, CmdViewAsHex);
+                return 0;
+            }
             return DefWindowProc(hwnd, msg, wp, lp);
 
         default:
@@ -5298,12 +5373,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // stop middle-button auto-scroll when the canvas loses focus, e.g.
             // the user clicked the bookmarks/menu or minimized the window (#3203)
             if (win->mouseAction == MouseAction::Scrolling) {
-                win->mouseAction = MouseAction::None;
-                win->xScrollSpeed = 0;
-                win->yScrollSpeed = 0;
-                win->xScrollAccum = 0;
-                win->yScrollAccum = 0;
-                KillTimer(hwnd, kAutoScrollTimerID);
+                StopAutoScroll(win);
             }
             return DefWindowProc(hwnd, msg, wp, lp);
 
@@ -5317,6 +5387,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (win->IsCurrentTabAbout()) {
                     HomePageRelayout(win);
                 }
+                HexViewUpdateScrollbars(win);
                 // fully invalidate since layout depends on size
                 // (replaces CS_HREDRAW | CS_VREDRAW which caused transparent flash)
                 HwndInvalidate(hwnd);
@@ -5363,6 +5434,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
 
             HomePageHideSearch(win);
+            if (win->CurrentTab() && win->CurrentTab()->IsHexTab()) {
+                return WndProcCanvasHex(win, hwnd, msg, wp, lp);
+            }
             return WndProcCanvasLoadError(win, hwnd, msg, wp, lp);
     }
 }

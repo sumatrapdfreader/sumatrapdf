@@ -511,7 +511,8 @@ bool SameRectF(RectF a, RectF b) {
 }
 
 void OnAnnotsProgress(WindowTab* tab) {
-    if (!tab || !IsMainWindowValidAndNotClosing(tab->win)) {
+    // posted from the load thread: the tab may have closed since
+    if (!IsWindowTabValid(tab) || !IsMainWindowValidAndNotClosing(tab->win)) {
         return;
     }
     RefreshAnnotFilterAnnotations(tab->win);
@@ -895,6 +896,14 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         return;
     }
     Annotation* keepSelected = annot == tab->selectedAnnotation ? nullptr : tab->selectedAnnotation;
+
+    // deleting the annotation being moved or resized (Delete mid-drag) ends that
+    // gesture first; otherwise the drag goes on as a pan of the page
+    MainWindow* win = tab->win;
+    bool resizingIt = win && win->annotationBeingResized && annot == tab->selectedAnnotation;
+    if (win && (win->annotationBeingDragged == annot || resizingIt)) {
+        CancelDrag(win);
+    }
 
     DetachAnnotationFromUI(annot);
     DeleteAnnotation(annot);

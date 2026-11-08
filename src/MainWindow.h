@@ -423,6 +423,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
        cursor. A delta between previous and current is by how much we
        moved */
     Point dragPrevPos;
+    // presentation just started: the next mouse move hides the cursor at once
+    bool hideCursorOnNextMove = false;
     /* when dragging, mouse x/y position when dragging was started */
     Point dragStart;
 
@@ -546,6 +548,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     // home page thumbnail scrolling
     int homePageScrollY = 0;
+    // "Open in hex view" on the load error page; empty when not shown
+    Rect loadErrorHexLinkRc;
     // keyboard-selected home page entry (index into the filtered list),
     // -1 when there's nothing to select. Enter opens it (issue #1136)
     int homePageSelIdx = 0;

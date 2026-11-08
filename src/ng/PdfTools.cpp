@@ -419,7 +419,7 @@ static Str ToolTitleFor(PdfToolKind kind) {
         case PdfToolKind::DeletePages:
             return Tr("Delete Pages From PDF");
         case PdfToolKind::ExtractPages:
-            return Tr("Extract Pages From PDF");
+            return Tr("Extract Pages");
         case PdfToolKind::Encrypt:
             return Tr("Encrypt PDF");
         case PdfToolKind::Decrypt:
@@ -591,7 +591,7 @@ static void FreeToolState(gp::Window* toolWin) {
     gp::InputState* edits[] = {gTool.destEdit, gTool.pagesEdit, gTool.passwordEdit, gTool.mergeAskEdit, gTool.dpiEdit};
     for (gp::InputState* e : edits) {
         if (e && win && win->gpuiWin && win->gpuiWin->input == e) {
-            gp::InputBlur(e, win->gpuiWin->app, win->gpuiWin);
+            InputBlurWhereFocused(e, win->gpuiWin);
         }
         if (e && toolWin && toolWin->input == e) {
             gp::InputBlur(e, toolWin->app, toolWin);
@@ -803,6 +803,17 @@ static void PdfDeletePageDoIt() {
         return;
     }
     if (!isExtract && len(parsedPages) >= gTool.pageCount) {
+        return;
+    }
+
+    // XPS, EPUB, ...: MuPDF draws the pages of the open document into a new PDF
+    WindowTab* docTab = FindTabByFilePath(gTool.srcPath);
+    if (isExtract && IsMupdfNonPdfDoc(docTab)) {
+        if (!ExtractPagesToNewPdf(docTab, parsedPages, destPath)) {
+            MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Extract Pages"));
+            return;
+        }
+        CloseAndLoad(destPath);
         return;
     }
 
@@ -2952,7 +2963,9 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     ToolScope scope;
-    if (!CanShowToolDialog(win, true)) {
+    // extract also works for XPS, EPUB, ...; delete rewrites the PDF itself
+    bool toNewPdf = isExtract && win && IsMupdfNonPdfDoc(win->CurrentTab());
+    if (!CanShowToolDialog(win, !toNewPdf)) {
         return;
     }
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
@@ -2963,7 +2976,9 @@ void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     logf("ShowPdfPageRangeDialog: opening %s dialog for '%s', %d pages\n", Str(isExtract ? "extract" : "delete"),
          srcPath, pageCount);
     PdfToolKind kind = isExtract ? PdfToolKind::ExtractPages : PdfToolKind::DeletePages;
-    if (!StartToolDialog(win, kind, MakeUniqueFilePathTemp(srcPath), StrL(".pdf"))) {
+    // from XPS, EPUB, ... the pages go to a new PDF next to the document
+    TempStr destPath = toNewPdf ? DefaultPdfDestPathTemp(srcPath) : MakeUniqueFilePathTemp(srcPath);
+    if (!StartToolDialog(win, kind, destPath, StrL(".pdf"))) {
         return;
     }
     int currentPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;

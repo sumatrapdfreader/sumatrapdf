@@ -589,8 +589,8 @@ void ShowOrHideToolbar(MainWindow* win) {
     }
     // move the focus out of the toolbar when it goes away
     if (!show && !overlay && IsToolbarPageBoxFocused(win) && win->gpuiWin) {
-        gp::InputBlur(tb->pageEdit, win->gpuiWin->app, win->gpuiWin);
-        gp::InputBlur(tb->chapterEdit, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(tb->pageEdit, win->gpuiWin);
+        InputBlurWhereFocused(tb->chapterEdit, win->gpuiWin);
     }
     AppShellInvalidate(win);
 }
@@ -2042,8 +2042,8 @@ bool ToolbarOnEscape(MainWindow* win) {
     }
     Toolbar* tb = Tb(win);
     if (win->gpuiWin) {
-        gp::InputBlur(tb->pageEdit, win->gpuiWin->app, win->gpuiWin);
-        gp::InputBlur(tb->chapterEdit, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(tb->pageEdit, win->gpuiWin);
+        InputBlurWhereFocused(tb->chapterEdit, win->gpuiWin);
     }
     UpdateOverlayToolbarForMouse(win, Point{});
     AppShellInvalidate(win);

@@ -85,6 +85,8 @@
 #define NOMINMAX
 #include <windows.h>
 #include <windowsx.h>
+
+#include <unknwn.h>
 #else
 #include <pthread.h>
 #include <limits.h>
@@ -151,12 +153,17 @@ uint64_t PlatLargePageSize();
 
 uint64_t PlatArenaReserveSize();
 void* PlatMemReserve(uint64_t size);
+
 bool PlatMemCommit(void* base, uint64_t size, bool largePages);
+bool PlatMemCommitPages(void* base, uint64_t size, bool largePages);
 void* PlatMemReserveCommit(uint64_t size, bool largePages);
 void PlatMemRelease(void* base, uint64_t size);
 
 int StrCmpI(const char* a, const char* b);
 int StrCmpNI(const char* a, const char* b, int n);
+
+int StrCopyCapped(char* dst, int cap, Str src);
+
 void StrCopyZ(char* dst, int cap, const char* src);
 
 bool PlatDirExists(const char* path);
@@ -166,6 +173,12 @@ bool PlatCanonicalPath(const char* path, char* out, int cap);
 void PlatGetExeDir(char* out, int cap);
 
 bool PlatGetExePath(char* out, int cap);
+
+void PlatExeDirFromExePath(char* out, int cap);
+
+void PlatDirNameInPlace(char* path);
+
+bool PlatProcSelfExePath(char* out, int cap);
 
 bool PlatDisclaimSpeechResponsibility(int argc, char** argv, int* status);
 
@@ -188,21 +201,59 @@ int PlatListDir(const char* dir, DirEntry* out, int max);
 int PlatCoreCount();
 bool PlatSelfUsage(uint64_t* cpu100ns, uint64_t* memBytes);
 
+struct PlatFacts {
+    char pathSep = '/';
+    bool pathsCaseFold = false;
+    bool isWindows = false;
+
+    bool secondaryIsCommand = false;
+
+    bool showsWindowControls = true;
+
+    bool titleBarCloseIsElement = false;
+
+    float caretWidth = 1.f;
+
+    bool scrollBounce = false;
+
+    bool cleanOnEscape = true;
+
+    bool scrollBounceTouch = false;
+
+    bool overscrollPhaselessStops = false;
+    const char* monoFontName = "DejaVu Sans Mono";
+
+    const char* shellDataDir = "/.local/share";
+
+    const char* shellPlatformName = "linux";
+
+    bool blockSelectUsesControl = false;
+
+    bool scrollGestureLocks = true;
+
+    bool asyncIo = false;
+
+    float windowShadowSize = 0.f;
+
+    uint64_t arenaReserveSize = 64ull * 1024ull * 1024ull;
+
+    bool (*exePath)(char* out, int cap) = nullptr;
+
+    bool (*disclaimSpeechResponsibility)(int argc, char** argv,
+                                         int* status) = nullptr;
+};
+extern const PlatFacts kPlatFacts;
+
 char PlatPathSep();
 bool PlatPathsCaseFold();
 bool PlatIsWindows();
 bool PlatSecondaryIsCommand();
 bool PlatShowsWindowControls();
-
 bool PlatTitleBarCloseIsElement();
-
 float PlatCaretWidth();
 bool PlatScrollBounce();
-
 bool PlatCleanOnEscape();
-
 bool PlatScrollBounceTouch();
-
 bool PlatOverscrollPhaselessStops();
 const char* PlatMonoFontName();
 const char* PlatShellDataDir();
@@ -371,8 +422,55 @@ struct CondVar {
     ~CondVar() = default;
 };
 
+#if GPUI_OS_WINDOWS
+
+template <typename First, typename... Rest, typename Self>
+HRESULT ComQueryInterface(Self* self, REFIID riid, void** ppv) {
+    if (!ppv) {
+        return E_POINTER;
+    }
+    *ppv = nullptr;
+    if (riid == __uuidof(IUnknown)) {
+        *ppv = static_cast<First*>(self);
+    }
+    ((!*ppv && riid == __uuidof(Rest) ? (void)(*ppv = static_cast<Rest*>(self))
+                                      : (void)0),
+     ...);
+    if (!*ppv && riid == __uuidof(First)) {
+        *ppv = static_cast<First*>(self);
+    }
+    if (!*ppv) {
+        return E_NOINTERFACE;
+    }
+    self->AddRef();
+    return S_OK;
+}
+
+template <typename... Is>
+struct ComObject : Is... {
+    LONG refs = 1;
+
+    virtual ~ComObject() = default;
+
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        return ComQueryInterface<Is...>(this, riid, ppv);
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override {
+        return (ULONG)InterlockedIncrement(&refs);
+    }
+    ULONG STDMETHODCALLTYPE Release() override {
+        LONG left = InterlockedDecrement(&refs);
+        if (left == 0) {
+            delete this;
+        }
+        return (ULONG)left;
+    }
+};
+#endif
+
 bool PlatThreadRun(Func0 f);
 uint64_t PlatThreadId();
+uint64_t PlatProcessId();
 void PlatSleepMs(int ms);
 
 static const uint64_t kArenaHeaderSize = 256;
@@ -1140,6 +1238,8 @@ LocalTime TimeOfDayNow();
 void StrFree(Str s);
 void StrFree(const char*) = delete;
 
+void StrVecFree(Vec<Str>* v);
+
 Str StrDup(Arena*, Str str);
 Str StrDup(Str s);
 
@@ -1167,6 +1267,20 @@ inline bool StrEqI(Str s1, const char* s2) {
     return StrEqI(s1, Str(s2));
 }
 bool StrStartsWith(Str s, Str prefix);
+
+inline bool ScanSkipQuoted(char c, char* quote) {
+    if (*quote) {
+        if (c == *quote) {
+            *quote = 0;
+        }
+        return true;
+    }
+    if (c == '"' || c == '\'') {
+        *quote = c;
+        return true;
+    }
+    return false;
+}
 inline bool StrStartsWith(Str s, const char* prefix) {
     return StrStartsWith(s, Str(prefix));
 }
@@ -1213,6 +1327,50 @@ Str SeqStrByIndex(SeqStrings strs, int idx);
 int SeqStrCount(SeqStrings strs);
 void StrLowerAscii(char* s);
 
+constexpr int HexDigitValue(char c) {
+    return c >= '0' && c <= '9'   ? c - '0'
+           : c >= 'a' && c <= 'f' ? c - 'a' + 10
+           : c >= 'A' && c <= 'F' ? c - 'A' + 10
+                                  : -1;
+}
+
+void HexEncode(const void* bytes, int n, char* out);
+
+bool ParseHexRgba(Str digits, uint32_t* rgba);
+
+int PercentDecode(Str s, char* out);
+
+constexpr bool IsUnicodeWhitespace(uint32_t cp) {
+    return (cp >= 0x09 && cp <= 0x0D) || cp == 0x20 || cp == 0x85 ||
+           cp == 0xA0 || cp == 0x1680 || (cp >= 0x2000 && cp <= 0x200A) ||
+           cp == 0x2028 || cp == 0x2029 || cp == 0x202F || cp == 0x205F ||
+           cp == 0x3000;
+}
+
+int Utf8Encode(char* out, uint32_t cp);
+
+constexpr int Utf8LeadLen(uint8_t lead) {
+    return (lead & 0xE0) == 0xC0   ? 2
+           : (lead & 0xF0) == 0xE0 ? 3
+           : (lead & 0xF8) == 0xF0 ? 4
+                                   : 1;
+}
+
+int Utf8At(Str s, int i, uint32_t* out);
+
+int Utf8Prev(Str s, int i);
+
+int Utf8StrictAt(const uint8_t* b, int avail, uint32_t* cp);
+
+bool Utf8IsCharBoundary(Str s, int i);
+
+int Utf8CharCount(Str s);
+
+Str HtmlNamedCharRef(Str name);
+
+int HtmlNamedCharRefCount();
+void HtmlNamedCharRefAt(int i, Str* name, Str* value);
+
 struct StrBuilder : Vec<char> {
     Arena* a = nullptr;
 
@@ -1222,11 +1380,16 @@ struct StrBuilder : Vec<char> {
     bool Reserve(int cap);
     bool AppendChar(char c);
     bool Append(Str src);
+
+    bool AppendUtf8(uint32_t cp);
     char RemoveAt(int idx, int count = 1);
     char RemoveLast();
     Str TakeStr();
     char LastChar() const;
 };
+
+void AppendHtmlEscaped(StrBuilder& out, Str value, bool escapeGt,
+                       bool escapeQuote);
 
 void StrBuilderUseExternalBuffer(StrBuilder& b, Str buf);
 
@@ -3820,6 +3983,12 @@ inline Rgba Rgba8(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 inline bool RgbaEq(Rgba a, Rgba b) {
     return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
 }
+
+inline uint8_t RgbLuma709(uint8_t r, uint8_t g, uint8_t b) {
+    return (
+        uint8_t)(((uint32_t)r * 54 + (uint32_t)g * 183 + (uint32_t)b * 19) >>
+                 8);
+}
 inline Rgba RgbaHex(uint32_t hex) {
 
     if (hex > 0xFFFFFFu) {
@@ -3828,6 +3997,23 @@ inline Rgba RgbaHex(uint32_t hex) {
     }
     return Rgba{(uint8_t)((hex >> 16) & 0xff), (uint8_t)((hex >> 8) & 0xff),
                 (uint8_t)(hex & 0xff), 255};
+}
+
+inline bool RgbaParseHexDigits(Str digits, Rgba* out) {
+    uint32_t v = 0;
+    if (!ParseHexRgba(digits, &v)) {
+        return false;
+    }
+    *out = Rgba{(uint8_t)(v >> 24), (uint8_t)(v >> 16), (uint8_t)(v >> 8),
+                (uint8_t)v};
+    return true;
+}
+
+inline bool RgbaParseHex(Str s, Rgba* out) {
+    if (len(s) < 2 || s.s[0] != '#') {
+        return false;
+    }
+    return RgbaParseHexDigits(Str(s.s + 1, len(s) - 1), out);
 }
 Rgba RgbaOpacity(Rgba c, float a01);
 
@@ -4065,7 +4251,7 @@ enum class DispatchPhase : uint8_t {
     Bubble
 };
 
-struct MouseDownEvent {
+struct MouseButtonEvent {
     MouseButton button = MouseButton::Left;
     float x = 0;
     float y = 0;
@@ -4074,26 +4260,18 @@ struct MouseDownEvent {
     Modifiers modifiers = {};
 
     int clickCount = 1;
+
+    DispatchPhase phase = DispatchPhase::Bubble;
+
+    bool IsFocusing() const { return button == MouseButton::Left; }
+};
+
+struct MouseDownEvent : MouseButtonEvent {
 
     bool firstMouse = false;
-
-    DispatchPhase phase = DispatchPhase::Bubble;
-
-    bool IsFocusing() const { return button == MouseButton::Left; }
 };
 
-struct MouseUpEvent {
-    MouseButton button = MouseButton::Left;
-    float x = 0;
-    float y = 0;
-
-    Bounds el = {};
-    Modifiers modifiers = {};
-    int clickCount = 1;
-    DispatchPhase phase = DispatchPhase::Bubble;
-
-    bool IsFocusing() const { return button == MouseButton::Left; }
-};
+struct MouseUpEvent : MouseButtonEvent {};
 
 struct MouseMoveEvent {
     float x = 0;
@@ -4864,7 +5042,28 @@ struct ChartSeries;
 
 Rgba ChartBarTooltipColor(const ChartSeries& c, int index);
 
-struct ChartSeries {
+struct ChartAxisOptions {
+
+    bool yAxis = false;
+
+    AxisLabelPlacement axisLabelPlacement = AxisLabelPlacement::Outside;
+
+    int yTickCount = 5;
+
+    ChartTickFormatFn tickFormat = nullptr;
+    void* tickFormatUser = nullptr;
+
+    int xTickCount = -1;
+
+    int gridColumns = 0;
+
+    bool gridDashed = true;
+
+    float yPaddingTop = 10;
+    float yPaddingBottom = 0;
+};
+
+struct ChartSeries : ChartAxisOptions {
     ChartKind kind = ChartKind::Area;
     const float* ys = nullptr;
 
@@ -4888,24 +5087,6 @@ struct ChartSeries {
     bool pinnedDomain = false;
 
     int pointCount = 0;
-
-    bool yAxis = false;
-
-    AxisLabelPlacement axisLabelPlacement = AxisLabelPlacement::Outside;
-
-    int yTickCount = 5;
-
-    ChartTickFormatFn tickFormat = nullptr;
-    void* tickFormatUser = nullptr;
-
-    int xTickCount = -1;
-
-    int gridColumns = 0;
-
-    bool gridDashed = true;
-
-    float yPaddingTop = 10;
-    float yPaddingBottom = 0;
 
     const double* referenceLines = nullptr;
     int nReferenceLines = 0;
@@ -5509,6 +5690,10 @@ enum class AccessibilityRole : uint8_t {
     ListGrid,
     Terminal
 };
+
+bool AccessibilityRoleIsTextField(AccessibilityRole role);
+
+bool AccessibilityRoleTakesText(AccessibilityRole role);
 
 enum class AccessibilityToggled : uint8_t {
     Unset,
@@ -6127,6 +6312,8 @@ struct El {
     El* Left(float v);
     El* Bottom(float v);
     El* Right(float v);
+
+    El* Inset0();
     El* LeftRel(float frac);
     El* RightRel(float frac);
     El* TopRel(float frac);
@@ -6642,10 +6829,6 @@ enum class CharKind : uint8_t {
     Newline,
     Other
 };
-
-int Utf8At(Str s, int i, uint32_t* out);
-
-int Utf8Prev(Str s, int i);
 
 enum class Bias : uint8_t {
     Left,
@@ -8359,6 +8542,10 @@ void TextMeasClear(PaintCtx* ctx);
 
 uint16_t ElTextWeight(const El* e);
 
+uint8_t FontWeightBits(FontWeight weight, uint8_t unknown);
+
+uint16_t StyleFontWeightBits(const Style& s, uint16_t unset);
+
 bool TextPointAt(PaintCtx* ctx, Str s, float fontSize, float maxW, bool wrap,
                  int off, float* outX, float* outY, float* outH,
                  uint16_t font = 0, float lineHeight = 0,
@@ -8481,6 +8668,11 @@ bool TextMultiClickRange(PaintCtx* ctx, float x, float y, int clickCount,
 bool TextMultiClickRangeIn(PaintCtx* ctx, float x, float y, int clickCount,
                            int scope, int* outA, int* outB, int* outScope);
 int HashClickId(Str s);
+
+const uint32_t kFnv1aBasis32 = 2166136261u;
+const uint64_t kFnv1aBasis64 = 1469598103934665603ull;
+uint32_t Fnv1a32(uint32_t h, const void* p, size_t n);
+uint64_t Fnv1a64(uint64_t h, const void* p, size_t n);
 
 enum class BoxFill : uint8_t {
     Base,
@@ -8866,6 +9058,8 @@ struct Window {
     uint64_t frameSeq = 0;
 
     uint64_t invalidations = 0;
+
+    bool dirty = true;
 
     Window() = default;
 
@@ -9380,7 +9574,13 @@ using ClipboardReadFn = void (*)(void* data, App* app, Window* win,
                                  const ClipboardItem& item);
 bool ClipboardReadAsync(Window* win, ClipboardReadFn done, void* data);
 
+#if GPUI_OS_WINDOWS || GPUI_OS_LINUX || GPUI_OS_WASM
+inline void WindowSetTextContentType(Window* win, Str value) {
+    (void)win, (void)value;
+}
+#else
 void WindowSetTextContentType(Window* win, Str value);
+#endif
 
 void OpenUrl(Str url);
 
@@ -9433,6 +9633,8 @@ void IdsCollectChildren(El* e);
 void AccessibilityCollect(El* root, Vec<AccessibilityNode>* out);
 const AccessibilityNode* WindowAccessibilityNode(const Window* win,
                                                  uint32_t nodeId);
+
+int WindowAccessibilityNodeIndex(const Window* win, uint32_t nodeId);
 bool WindowAccessibilityPerform(Window* win, uint32_t nodeId,
                                 AccessibilityAction action, Str value = {});
 
@@ -9760,6 +9962,15 @@ struct AccordionItem {
 
 #line 1 "src/base/actions.h"
 
+#define GPUI_DEFINE_ACTION(fn, name)   \
+    uint32_t fn() {                    \
+        static uint32_t id = 0;        \
+        if (!id) {                     \
+            id = ActionOf(StrL(name)); \
+        }                              \
+        return id;                     \
+    }
+
 namespace gpui {
 
 namespace action {
@@ -9883,7 +10094,8 @@ struct DialogTrigger {
                    Str id = StrL("dialog-trigger"));
 };
 
-struct Dialog {
+template <typename Self>
+struct DialogBuilder {
     Ctx* cx = nullptr;
     El* root = nullptr;
 
@@ -9891,15 +10103,52 @@ struct Dialog {
     bool open = true;
     DialogHandle handle = {};
 
+    static Self* NewHost(Ctx* cx, AccessibilityRole role, Str trapName) {
+        Arena* a = cx->a;
+        Self* d = ArenaNew<Self>(a);
+        d->cx = cx;
+        d->trap = trapName;
+        d->root = Div(a)
+                      ->Role(role)
+                      ->Fixed()
+                      ->Top(0)
+                      ->Left(0)
+                      ->W(kFill)
+                      ->H(kFill)
+                      ->Flex()
+                      ->ItemsCenter()
+                      ->JustifyCenter();
+        return d;
+    }
+    Self* Open(bool value) {
+        open = value;
+        return static_cast<Self*>(this);
+    }
+    Self* Handle(DialogHandle value) {
+        handle = value;
+        return static_cast<Self*>(this);
+    }
+    Self* Trap(Str name) {
+        trap = name;
+        return static_cast<Self*>(this);
+    }
+    Self* Backdrop(El* backdrop) {
+        if (backdrop) {
+            root->Child(backdrop);
+        }
+        return static_cast<Self*>(this);
+    }
+    El* IntoEl() {
+        bool visible = handle.IsValid() ? handle.IsOpen(cx->app, open) : open;
+        return visible ? root : Div(cx->a);
+    }
+};
+
+struct Dialog : DialogBuilder<Dialog> {
     static Dialog* New(Ctx* cx);
-    Dialog* Open(bool value);
-    Dialog* Handle(DialogHandle value);
-    Dialog* Trap(Str name);
-    Dialog* Backdrop(El* backdrop);
     Dialog* Popup(El* popup);
 
     Dialog* AccessibilityLabel(Str label);
-    El* IntoEl();
 };
 }
 
@@ -9932,21 +10181,9 @@ struct AlertDialogTrigger {
     static El* New(Ctx* cx, Listener onOpen = {}, DialogHandle handle = {});
 };
 
-struct AlertDialog {
-    Ctx* cx = nullptr;
-    El* root = nullptr;
-
-    Str trap = {};
-    bool open = true;
-    DialogHandle handle = {};
-
+struct AlertDialog : DialogBuilder<AlertDialog> {
     static AlertDialog* New(Ctx* cx);
-    AlertDialog* Open(bool value);
-    AlertDialog* Handle(DialogHandle value);
-    AlertDialog* Trap(Str name);
-    AlertDialog* Backdrop(El* backdrop);
     AlertDialog* Popup(El* popup);
-    El* IntoEl();
 };
 }
 
@@ -10117,6 +10354,10 @@ El* ElRefine(El* e, const StateStyle& s);
 #line 1 "src/base/button.h"
 
 namespace gpui {
+
+El* ControlBox(Arena* a, Str id);
+
+El* ControlFocus(El* e, FocusHandle focus, Str id, int tabIndex, bool tabStop);
 
 struct ButtonStyles {
     StateStyle selected = {};
@@ -10293,7 +10534,18 @@ using CalendarItemFn = El* (*)(void* user, Ctx* cx, El* item,
 using CalendarLabelFn = Str (*)(void* user, Ctx* cx, CalendarItemKind kind,
                                 int value);
 
-struct CalendarOpts {
+struct CalendarListeners {
+    Listener onDay = {};
+    Listener onDate = {};
+    Listener onPrev = {};
+    Listener onNext = {};
+    Listener onMonthToggle = {};
+    Listener onYearToggle = {};
+    Listener onMonth = {};
+    Listener onYear = {};
+};
+
+struct CalendarOpts : CalendarListeners {
     int year = 0;
     int month = 1;
     int numberOfMonths = 1;
@@ -10312,14 +10564,6 @@ struct CalendarOpts {
     int yearMin = 0;
     int yearMax = 0;
     int yearPageStart = 0;
-    Listener onDay = {};
-    Listener onDate = {};
-    Listener onPrev = {};
-    Listener onNext = {};
-    Listener onMonthToggle = {};
-    Listener onYearToggle = {};
-    Listener onMonth = {};
-    Listener onYear = {};
     CalendarItemFn item = nullptr;
     void* user = nullptr;
     CalendarLabelFn label = nullptr;
@@ -10964,28 +11208,29 @@ struct Sequence {
 };
 
 template <typename T>
+inline void MotionStart(MotionState<T>* st, T from, T adjustedStart,
+                        const Motion& policy, T target, double now,
+                        float factor, float durationMs) {
+    st->from = from;
+    st->reversingAdjustedStart = adjustedStart;
+    st->policy = policy;
+    st->target = target;
+    st->startedAt = now;
+    st->reversingFactor = factor;
+    st->durationMs = durationMs;
+}
+
+template <typename T>
 MotionStep<T> MotionAdvance(MotionState<T>* st, T target, const Motion& m,
                             double now, bool reduced) {
     MotionStep<T> out;
     if (!st->init) {
         st->init = true;
-        st->from = target;
-        st->reversingAdjustedStart = target;
-        st->policy = m;
-        st->target = target;
-        st->startedAt = now;
-        st->reversingFactor = 1.f;
-        st->durationMs = m.durationMs;
+        MotionStart(st, target, target, m, target, now, 1.f, m.durationMs);
     }
     if (reduced || m.durationMs <= 0) {
         if (!MotionEq(st->from, target) || !MotionEq(st->target, target)) {
-            st->from = target;
-            st->reversingAdjustedStart = target;
-            st->policy = m;
-            st->target = target;
-            st->startedAt = now;
-            st->reversingFactor = 1.f;
-            st->durationMs = m.durationMs;
+            MotionStart(st, target, target, m, target, now, 1.f, m.durationMs);
         }
         out.value = target;
         out.status = MotionStatus::Finished;
@@ -11016,13 +11261,8 @@ MotionStep<T> MotionAdvance(MotionState<T>* st, T target, const Motion& m,
         if (reversing && m.delayMs < 0.f) {
             active.delayMs = m.delayMs * factor;
         }
-        st->reversingAdjustedStart = reversing ? st->target : sampled;
-        st->policy = active;
-        st->from = sampled;
-        st->target = target;
-        st->startedAt = now;
-        st->reversingFactor = factor;
-        st->durationMs = duration;
+        MotionStart(st, sampled, reversing ? st->target : sampled, active,
+                    target, now, factor, duration);
         MotionStatus initialStatus;
         float initial = MotionProgress(active, 0.f, duration, &initialStatus);
         out.value = motion::Interpolate<T>::Between(
@@ -12822,6 +13062,8 @@ struct JsonWriter {
 
 namespace gpui {
 
+const char* DockPlacementName(DockPlacement placement);
+
 enum class PanelInfoKind : uint8_t {
     Panel,
     Stack,
@@ -13223,6 +13465,10 @@ struct GridLayoutState {
     void Adopt(const GridArea* items, int n);
     bool Commit(Ctx* cx, const Vec<GridArea>* next);
     void Select(Ctx* cx, bool has, Str id);
+
+    bool ApplySelection(bool has, Str id);
+
+    void ClearDrag();
     bool SelectedArea(GridArea* out) const;
 };
 
@@ -14068,6 +14314,50 @@ struct TabSize {
 
 float TabExpandedWidth(Str text, float stop,
                        float (*measure)(void* user, Str text), void* user);
+
+double TabNextStop(double x, float stop);
+
+struct TabSegment {
+    int start = 0;
+    int end = 0;
+    double left = 0;
+    double right = 0;
+    bool tab = false;
+};
+
+template <typename Measure, typename Visit>
+float TabWalk(Str text, float stop, Measure measure, Visit visit) {
+    double shaped = 0;
+    double shift = 0;
+    int i = 0;
+    while (i < len(text)) {
+        TabSegment seg;
+        seg.start = i;
+        seg.left = shaped + shift;
+        if (text.s[i] == '\t') {
+            double end = shaped + (double)measure(Str(text.s + i, 1));
+            seg.end = i + 1;
+            seg.right = TabNextStop(seg.left, stop);
+            seg.tab = true;
+            shift = seg.right - end;
+            shaped = end;
+        } else {
+            int j = i + 1;
+            while (j < len(text) && text.s[j] != '\t') {
+                j++;
+            }
+            float w = measure(Str(text.s + i, j - i));
+            seg.end = j;
+            seg.right = seg.left + (double)w;
+            shaped += (double)w;
+        }
+        if (!visit(seg)) {
+            break;
+        }
+        i = seg.end;
+    }
+    return (float)(shaped + shift);
+}
 
 Str TextNoLineBreaks(Arena* a, Str text);
 
@@ -15206,6 +15496,8 @@ void InputEndEdgeDrag(InputState* s, App* app, Window* win);
 
 bool InputIsEditMenuOpen(const InputState* s);
 bool InputTouchSelectionRange(const InputState* s, Selection* out);
+
+Str InputMaskedText(Arena* a, Str text);
 }
 
 #line 1 "src/gpui/keymap.h"
@@ -15347,6 +15639,12 @@ uint32_t ShowCompletions();
 Str InputContext();
 
 void InputInitKeys();
+
+void InputBindPlatformKeys(const char* ctx);
+
+void InputBindKeysNonMac(const char* ctx, const KeyBinding* extra, int nExtra);
+
+void InputBindKeysOther(const char* ctx);
 
 InputAction InputActionOf(uint32_t id, int64_t arg = 0);
 
@@ -15579,15 +15877,25 @@ bool NumberParseValue(Str value, double* out);
 
 bool NumberStepForKey(int key, StepAction* out);
 
-bool NumberInputApplyStep(InputState* state, App* app, Window* win,
-                          StepAction action, const NumberStep* step,
-                          bool hasMin, double min, bool hasMax, double max,
-                          bool disabled, Listener onStep = {});
+struct NumberRange {
+    bool hasMin = false;
+    double min = 0;
+    bool hasMax = false;
+    double max = 0;
+};
 
-Func0 NumberInputStepCallback(Ctx* cx, InputState* state, StepAction action,
-                              const NumberStep* step, bool hasMin, double min,
-                              bool hasMax, double max, bool disabled,
-                              Listener onStep = {});
+struct NumberStepTarget : NumberRange {
+    InputState* state = nullptr;
+    NumberStep step = {};
+    bool hasStep = false;
+    bool disabled = false;
+};
+
+bool NumberInputApplyStep(const NumberStepTarget& target, App* app, Window* win,
+                          StepAction action, Listener onStep = {});
+
+Func0 NumberInputStepCallback(Ctx* cx, const NumberStepTarget& target,
+                              StepAction action, Listener onStep = {});
 
 void NumberInputEnsureMask(InputState* state);
 
@@ -17111,32 +17419,28 @@ bool SheetClosesOnKey(int key);
 void SheetInitKeys();
 Str SheetContext();
 
-struct SheetState {
+struct SheetDismissal {
     bool overlayInteractive = true;
     bool overlayClosable = true;
     bool hasDismissBefore = false;
     float dismissBeforeY = 0;
     Listener requestClose = {};
     Listener onClose = {};
+};
 
+struct SheetState : SheetDismissal {
     void Close(Ctx* cx);
     static void OnOverlay(SheetState* self, Ctx* cx, const MouseDownEvent* ev);
     static void OnAction(SheetState* self, Ctx* cx, const ActionEvent* ev);
 };
 
-struct Sheet {
+struct Sheet : SheetDismissal {
     Ctx* cx = nullptr;
     El* root = nullptr;
 
     Str trap = {};
     El* overlay = nullptr;
     El* surface = nullptr;
-    bool overlayInteractive = true;
-    bool overlayClosable = true;
-    bool hasDismissBefore = false;
-    float dismissBeforeY = 0;
-    Listener requestClose = {};
-    Listener onClose = {};
 
     static Sheet* New(Ctx* cx);
     Sheet* Trap(Str name);
@@ -17306,6 +17610,10 @@ inline El* HFlex(Arena* a) {
 
 inline El* VFlex(Arena* a) {
     return Div(a)->FlexCol();
+}
+
+inline El* CenteredOverlay(Arena* a) {
+    return Div(a)->Absolute()->Inset0()->Flex()->ItemsCenter()->JustifyCenter();
 }
 
 inline BoxShadow box_shadow(float x, float y, float blur, float spread,
@@ -18666,6 +18974,23 @@ struct ParseOptions {
     static ParseOptions Gfm();
 };
 
+inline Constructs Constructs::Gfm() {
+    Constructs constructs;
+    constructs.gfmAutolinkLiteral = true;
+    constructs.gfmFootnoteDefinition = true;
+    constructs.gfmLabelStartFootnote = true;
+    constructs.gfmStrikethrough = true;
+    constructs.gfmTable = true;
+    constructs.gfmTaskListItem = true;
+    return constructs;
+}
+
+inline ParseOptions ParseOptions::Gfm() {
+    ParseOptions options;
+    options.constructs = Constructs::Gfm();
+    return options;
+}
+
 Node* ToMdast(Arena* a, Str source, const ParseOptions& options);
 
 struct NodeSpan {
@@ -19814,6 +20139,20 @@ struct TextView {
     El* Table(MdNode* n);
 
     El* TableActionsRow(MdNode* n, int nCols, const uint8_t* colAlign);
+
+    struct TableColumns {
+        Rgba surface = {};
+        int nCols = 0;
+        uint8_t* colAlign = nullptr;
+        float* maxW = nullptr;
+        float* minW = nullptr;
+        float minTotal = 0;
+    };
+    bool MeasureTable(MdNode* n, bool scroll, TableColumns* out);
+
+    El* TableRow(MdNode* r, int rowIx, const TableColumns& t);
+
+    El* TableWithActions(El* table, MdNode* n, const TableColumns& t);
     El* CodeBlock(MdNode* n);
 
     El* CodeLines(Str code, const ArenaVec<CodeHighlight>& spans,
@@ -19919,6 +20258,8 @@ namespace gpui {
 
 CharKind CharKindOf(uint32_t c);
 
+uint32_t CharLowerSimple(uint32_t c);
+
 int Utf8ClipLeft(Str s, int off);
 
 bool TextWordRangeAt(Str s, int off, int* outA, int* outB);
@@ -20003,6 +20344,31 @@ enum class TimeSegment : uint8_t {
 
     Period,
 };
+
+template <typename Directive>
+void StrftimeWalk(Str pattern, StrBuilder& out, bool modifiers,
+                  Directive directive) {
+    for (int i = 0; i < len(pattern); i++) {
+        char ch = pattern.s[i];
+        if (ch != '%' || i + 1 >= len(pattern)) {
+            out.AppendChar(ch);
+            continue;
+        }
+        char d = pattern.s[++i];
+        char modifier = 0;
+        if (modifiers && (d == '-' || d == '_' || d == '0') &&
+            i + 1 < len(pattern)) {
+            modifier = d;
+            d = pattern.s[++i];
+        }
+        if (d == '%') {
+            out.AppendChar('%');
+        } else if (!directive(d, modifier)) {
+            out.AppendChar('%');
+            out.AppendChar(d);
+        }
+    }
+}
 
 Str TimePrecisionFormat(TimePrecision precision, HourCycle hourCycle);
 
@@ -21955,10 +22321,10 @@ inline float UiInputPadX(UiSize s) {
     }
 }
 
-inline float UiInputFontPx(UiSize s) {
+inline float UiTextLadderPx(UiSize s, float custom) {
     switch (s) {
         case UiSize::Size:
-            return s.pixels * 0.875f;
+            return custom;
         case UiSize::XSmall:
             return 12;
         case UiSize::Small:
@@ -21967,6 +22333,10 @@ inline float UiInputFontPx(UiSize s) {
         default:
             return 16;
     }
+}
+
+inline float UiInputFontPx(UiSize s) {
+    return UiTextLadderPx(s, s.pixels * 0.875f);
 }
 
 inline float UiInputPadY(UiSize s) {
@@ -22067,17 +22437,7 @@ inline El* UiSizeWith(const Ctx* cx, El* e, UiSize s) {
 }
 
 inline float UiTableCellFontPx(UiSize s) {
-    switch (s) {
-        case UiSize::XSmall:
-            return 12;
-        case UiSize::Small:
-        case UiSize::Medium:
-            return 14;
-        case UiSize::Large:
-            return 16;
-        default:
-            return 0;
-    }
+    return UiTextLadderPx(s, 0);
 }
 inline El* UiTableCellSize(El* e, UiSize s) {
     Edges pad = UiTableCellPadding(s);
@@ -22088,15 +22448,7 @@ inline El* UiTableCellSize(El* e, UiSize s) {
 }
 
 inline float UiButtonTextPx(UiSize s) {
-    switch (s) {
-        case UiSize::XSmall:
-            return 12;
-        case UiSize::Small:
-        case UiSize::Medium:
-            return 14;
-        default:
-            return 16;
-    }
+    return UiTextLadderPx(s, 16);
 }
 inline El* UiButtonTextSize(El* e, UiSize s) {
     return e->Font(UiButtonTextPx(s));
@@ -22119,6 +22471,60 @@ inline El* BindPathClick(El* e, Str name, Listener onClick) {
     }
     return e;
 }
+
+inline El* SpreadRow(Ctx* cx) {
+    return Div(cx->a)
+        ->FlexRow()
+        ->W(kFill)
+        ->MinW(0)
+        ->Gap(Rems(cx, 0.25f))
+        ->ItemsCenter()
+        ->JustifyBetween();
+}
+
+template <typename Self>
+struct StyledBuilder {
+    Arena* a = nullptr;
+    Ctx* cx = nullptr;
+    Style style = {};
+    uint32_t styleSet = 0;
+
+    static Self* New(Ctx* cx) {
+        Self* self = ArenaNew<Self>(cx->a);
+        self->a = cx->a;
+        self->cx = cx;
+        return self;
+    }
+    Self* Refine(const Style& s, uint32_t fields) {
+        StyleApplyFields(&style, s, fields);
+        styleSet |= fields;
+        return static_cast<Self*>(this);
+    }
+};
+
+template <typename Self>
+struct SlotBuilder : StyledBuilder<Self> {
+    ArenaVec<El*> children;
+
+    Self* Child(El* e) {
+        if (e) {
+            children.Append(this->a, e);
+        }
+        return static_cast<Self*>(this);
+    }
+};
+
+template <typename Self>
+struct IdBuilder {
+    Str id = {};
+    bool hasId = false;
+
+    Self* Id(Str value) {
+        id = value;
+        hasId = true;
+        return static_cast<Self*>(this);
+    }
+};
 }
 }
 
@@ -22397,20 +22803,12 @@ struct AttachmentSlotLayout {
     bool hasId = false;
 };
 
-struct AttachmentMedia {
+struct AttachmentMedia : AttachmentSlotLayout {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     ArenaVec<El*> children;
     ArenaVec<El*> overlays;
-    UiSize size = UiSize::Medium;
     bool hasSize = false;
-    AttachmentStatus status = AttachmentStatus::Complete;
-    Axis axis = Axis::Horizontal;
-    bool flush = false;
-    Listener retry;
-    float progress = -1;
-    Str id = {};
-    bool hasId = false;
     Str source = {};
     bool hasSource = false;
     Style style = {};
@@ -22470,9 +22868,7 @@ struct AttachmentContentChild {
     El* element = nullptr;
 };
 
-struct AttachmentContent {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct AttachmentContent : StyledBuilder<AttachmentContent> {
     ArenaVec<AttachmentContentChild> children;
     bool verticalLayout = false;
     AttachmentStatus status = AttachmentStatus::Complete;
@@ -22481,40 +22877,22 @@ struct AttachmentContent {
     Str retryId = {};
 
     float progress = -1;
-    Style style = {};
-    uint32_t styleSet = 0;
 
-    static AttachmentContent* New(Ctx* cx);
     AttachmentContent* Title(AttachmentTitle* value);
     AttachmentContent* Description(AttachmentDescription* value);
     AttachmentContent* Child(El* e);
-    AttachmentContent* Refine(const Style& s, uint32_t fields);
     AttachmentContent* Layout(const AttachmentSlotLayout& layout);
     El* IntoEl();
 };
 
-struct AttachmentActions {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
+struct AttachmentActions : SlotBuilder<AttachmentActions> {
     bool verticalLayout = false;
-    Style style = {};
-    uint32_t styleSet = 0;
 
-    static AttachmentActions* New(Ctx* cx);
-    AttachmentActions* Child(El* e);
-    AttachmentActions* Refine(const Style& s, uint32_t fields);
     AttachmentActions* LayoutForAxis(Axis axis);
     El* IntoEl();
 };
 
-struct Attachment {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    Str id = {};
-    bool hasId = false;
-    Style style = {};
-    uint32_t styleSet = 0;
+struct Attachment : StyledBuilder<Attachment>, IdBuilder<Attachment> {
     AttachmentStatus status = AttachmentStatus::Complete;
     UiSize size = UiSize::Medium;
     Axis axis = Axis::Horizontal;
@@ -22528,10 +22906,6 @@ struct Attachment {
     float progress = -1;
     Str tooltip = {};
     bool hasTooltip = false;
-
-    static Attachment* New(Ctx* cx);
-
-    Attachment* Id(Str value);
 
     Attachment* OnClick(Listener handler);
 
@@ -22548,7 +22922,6 @@ struct Attachment {
     Attachment* Content(AttachmentContent* value);
     Attachment* Actions(AttachmentActions* value);
     Attachment* WithSize(UiSize value);
-    Attachment* Refine(const Style& s, uint32_t fields);
 
     Listener RetryControl() const;
 
@@ -22724,95 +23097,62 @@ enum class MessageAlignment : uint8_t {
     End
 };
 
-struct MessageGroup {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
+El* MessageGroupColumn(Ctx* cx, const ArenaVec<El*>& children,
+                       const Style& style, uint32_t styleSet);
 
-    static MessageGroup* New(Ctx* cx);
-    MessageGroup* Child(El* e);
-    MessageGroup* Refine(const Style& s, uint32_t fields);
+struct MessageGroup : SlotBuilder<MessageGroup> {
     El* IntoEl();
 };
 
-struct MessageAvatar {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
-
-    static MessageAvatar* New(Ctx* cx);
-    MessageAvatar* Child(El* e);
-    MessageAvatar* Refine(const Style& s, uint32_t fields);
+struct MessageAvatar : SlotBuilder<MessageAvatar> {
     El* IntoEl();
 };
 
-struct MessageHeader {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
+El* MessageMetaRow(Ctx* cx, bool contentInset, bool hasContentInset,
+                   const Style& style, uint32_t styleSet,
+                   const ArenaVec<El*>& children);
+
+template <typename Self>
+struct MessageMetaSlot : SlotBuilder<Self> {
 
     bool contentInset = false;
     bool hasContentInset = false;
-    Style style = {};
-    uint32_t styleSet = 0;
 
-    static MessageHeader* New(Ctx* cx);
-    MessageHeader* ContentInset(bool value);
+    Self* ContentInset(bool value) {
+        contentInset = value;
+        hasContentInset = true;
+        return static_cast<Self*>(this);
+    }
 
-    MessageHeader* WithInheritedContentInset(bool value);
-    MessageHeader* Child(El* e);
-    MessageHeader* Refine(const Style& s, uint32_t fields);
-    El* IntoEl();
+    Self* WithInheritedContentInset(bool value) {
+        if (!hasContentInset) {
+            contentInset = value;
+            hasContentInset = true;
+        }
+        return static_cast<Self*>(this);
+    }
+    El* IntoEl() {
+        return MessageMetaRow(this->cx, contentInset, hasContentInset,
+                              this->style, this->styleSet, this->children);
+    }
 };
 
-struct MessageContent {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
+struct MessageHeader : MessageMetaSlot<MessageHeader> {};
+
+struct MessageContent : SlotBuilder<MessageContent> {
     MessageAlignment alignment = MessageAlignment::Start;
     bool hasGhostBubble = false;
-    Style style = {};
-    uint32_t styleSet = 0;
-
-    static MessageContent* New(Ctx* cx);
 
     MessageContent* WithBubble(Bubble* bubble);
     MessageContent* Aligned(MessageAlignment value);
-    MessageContent* Child(El* e);
-    MessageContent* Refine(const Style& s, uint32_t fields);
     El* IntoEl();
 };
 
-struct MessageFooter {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    bool contentInset = false;
-    bool hasContentInset = false;
-    Style style = {};
-    uint32_t styleSet = 0;
+struct MessageFooter : MessageMetaSlot<MessageFooter> {};
 
-    static MessageFooter* New(Ctx* cx);
-    MessageFooter* ContentInset(bool value);
-    MessageFooter* WithInheritedContentInset(bool value);
-    MessageFooter* Child(El* e);
-    MessageFooter* Refine(const Style& s, uint32_t fields);
-    El* IntoEl();
-};
+struct Message : StyledBuilder<Message>, IdBuilder<Message> {
 
-struct Message {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-
-    Str id = {};
-    bool hasId = false;
     RoleOverride role = {};
-    Style style = {};
-    uint32_t styleSet = 0;
     Style stackStyle = {};
     uint32_t stackStyleSet = 0;
     MessageAlignment alignment = MessageAlignment::Start;
@@ -22820,10 +23160,6 @@ struct Message {
     MessageHeader* header = nullptr;
     MessageContent* content = nullptr;
     MessageFooter* footer = nullptr;
-
-    static Message* New(Ctx* cx);
-
-    Message* Id(Str value);
 
     Message* Role(RoleOverride value);
     Message* Alignment(MessageAlignment value);
@@ -22834,7 +23170,6 @@ struct Message {
     Message* Header(MessageHeader* value);
     Message* Content(MessageContent* value);
     Message* Footer(MessageFooter* value);
-    Message* Refine(const Style& s, uint32_t fields);
     El* IntoEl();
 };
 
@@ -22873,33 +23208,16 @@ enum class BubbleReactionSide : uint8_t {
     Bottom
 };
 
-struct BubbleContent {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
+struct BubbleContent : SlotBuilder<BubbleContent> {
 
     BubbleVariant variant = BubbleVariant::Filled;
     MessageAlignment alignment = MessageAlignment::Start;
     bool hasAlignment = false;
-    Style style = {};
-    uint32_t styleSet = 0;
 
-    static BubbleContent* New(Ctx* cx);
-    BubbleContent* Child(El* e);
-    BubbleContent* Refine(const Style& s, uint32_t fields);
     El* IntoEl();
 };
 
-struct BubbleGroup {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
-
-    static BubbleGroup* New(Ctx* cx);
-    BubbleGroup* Child(El* e);
-    BubbleGroup* Refine(const Style& s, uint32_t fields);
+struct BubbleGroup : SlotBuilder<BubbleGroup> {
     El* IntoEl();
 };
 
@@ -22908,22 +23226,16 @@ struct BubbleReactionChild {
     El* element = nullptr;
 };
 
-struct BubbleReactions {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct BubbleReactions : StyledBuilder<BubbleReactions> {
     ArenaVec<BubbleReactionChild> children;
     BubbleReactionSide side = BubbleReactionSide::Bottom;
     MessageAlignment alignment = MessageAlignment::End;
-    Style style = {};
-    uint32_t styleSet = 0;
 
-    static BubbleReactions* New(Ctx* cx);
     BubbleReactions* Side(BubbleReactionSide value);
     BubbleReactions* Alignment(MessageAlignment value);
 
     BubbleReactions* Action(Button* action);
     BubbleReactions* Child(El* e);
-    BubbleReactions* Refine(const Style& s, uint32_t fields);
     El* IntoEl();
 };
 
@@ -23235,6 +23547,8 @@ struct Button {
     El* IntoEl();
 };
 
+Button* ClearButton(Ctx* cx);
+
 enum class ToggleVariant : uint8_t {
     Ghost,
     Outline
@@ -23322,10 +23636,49 @@ struct ToggleGroup {
     El* IntoEl();
 };
 
+template <typename Self>
+struct ButtonVariantProps {
+    bool outline = false;
+    bool hasVariant = false;
+    ButtonVariant variant = ButtonVariant::Default;
+    ButtonCustomVariant customVariant = {};
+    bool hasSize = false;
+    UiSize size = UiSize::Medium;
+
+    Self* Outline() {
+        outline = true;
+        return static_cast<Self*>(this);
+    }
+    Self* WithVariant(ButtonVariant v) {
+        hasVariant = true;
+        variant = v;
+        if (v != ButtonVariant::Custom) customVariant = {};
+        return static_cast<Self*>(this);
+    }
+    Self* Primary() { return WithVariant(ButtonVariant::Primary); }
+    Self* Secondary() { return WithVariant(ButtonVariant::Secondary); }
+    Self* Danger() { return WithVariant(ButtonVariant::Danger); }
+    Self* Warning() { return WithVariant(ButtonVariant::Warning); }
+    Self* Success() { return WithVariant(ButtonVariant::Success); }
+    Self* Info() { return WithVariant(ButtonVariant::Info); }
+    Self* Ghost() { return WithVariant(ButtonVariant::Ghost); }
+    Self* Link() { return WithVariant(ButtonVariant::Link); }
+    Self* Text() { return WithVariant(ButtonVariant::Text); }
+    Self* Custom(const ButtonCustomVariant& value) {
+        customVariant = value;
+        return WithVariant(ButtonVariant::Custom);
+    }
+    Self* WithSize(UiSize s) {
+        hasSize = true;
+        size = s;
+        return static_cast<Self*>(this);
+    }
+};
+
 struct DropdownMenu;
 struct PopupMenu;
 
-struct DropdownButton {
+struct DropdownButton : ButtonVariantProps<DropdownButton> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -23333,13 +23686,6 @@ struct DropdownButton {
     PopupMenu* menu = nullptr;
     bool selected = false;
     bool disabled = false;
-    bool outline = false;
-
-    bool hasVariant = false;
-    ButtonVariant variant = ButtonVariant::Default;
-    ButtonCustomVariant customVariant = {};
-    bool hasSize = false;
-    UiSize size = UiSize::Medium;
 
     bool anchorRight = true;
     bool anchorAbove = false;
@@ -23351,21 +23697,8 @@ struct DropdownButton {
     DropdownButton* Menu(PopupMenu* m);
     DropdownButton* Selected(bool v);
     DropdownButton* Disabled(bool v);
-    DropdownButton* Outline();
 
     DropdownButton* MenuAccessibilityLabel(Str label);
-    DropdownButton* WithVariant(ButtonVariant v);
-    DropdownButton* Primary();
-    DropdownButton* Secondary();
-    DropdownButton* Danger();
-    DropdownButton* Warning();
-    DropdownButton* Success();
-    DropdownButton* Info();
-    DropdownButton* Ghost();
-    DropdownButton* Link();
-    DropdownButton* Text();
-    DropdownButton* Custom(const ButtonCustomVariant& value);
-    DropdownButton* WithSize(UiSize s);
     El* IntoEl();
 };
 
@@ -23383,7 +23716,7 @@ struct ButtonGroupEvent {
     }
 };
 
-struct ButtonGroup {
+struct ButtonGroup : ButtonVariantProps<ButtonGroup> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -23392,12 +23725,6 @@ struct ButtonGroup {
     bool disabled = false;
     bool vertical = false;
     bool compact = false;
-    bool outline = false;
-    bool hasVariant = false;
-    ButtonVariant variant = ButtonVariant::Default;
-    ButtonCustomVariant customVariant = {};
-    bool hasSize = false;
-    UiSize size = UiSize::Medium;
 
     Listener onClick;
 
@@ -23409,19 +23736,6 @@ struct ButtonGroup {
     ButtonGroup* Vertical(bool v = true);
     ButtonGroup* Layout(Axis value);
     ButtonGroup* Compact();
-    ButtonGroup* Outline();
-    ButtonGroup* WithVariant(ButtonVariant v);
-    ButtonGroup* Primary();
-    ButtonGroup* Secondary();
-    ButtonGroup* Danger();
-    ButtonGroup* Warning();
-    ButtonGroup* Success();
-    ButtonGroup* Info();
-    ButtonGroup* Ghost();
-    ButtonGroup* Link();
-    ButtonGroup* Text();
-    ButtonGroup* Custom(const ButtonCustomVariant& value);
-    ButtonGroup* WithSize(UiSize s);
     ButtonGroup* OnClick(Listener l);
     El* IntoEl();
 };
@@ -23763,6 +24077,122 @@ struct ChartAppear {
     }
 };
 
+template <typename Self>
+struct ChartBuilder {
+    Arena* a = nullptr;
+    Ctx* cx = nullptr;
+    Str tooltipName = {};
+
+    uint32_t id = 0;
+
+    bool interactive = true;
+
+    ChartAppear appear = {};
+
+    Self* This() { return static_cast<Self*>(this); }
+
+    Self* Tooltip(Str name) {
+        tooltipName = name;
+        return This();
+    }
+
+    Self* Id(Str name) {
+        id = IdFoldName(cx ? cx->path : 0, name);
+        return This();
+    }
+
+    Self* Interactive(bool v) {
+        interactive = v;
+        return This();
+    }
+
+    Self* Appear(bool v) {
+        appear.SetEnabled(v);
+        return This();
+    }
+
+    Self* AppearKey(Str key) {
+        appear.SetKey(key);
+        return This();
+    }
+    Self* AppearKey(uint64_t key) {
+        appear.SetKey(key);
+        return This();
+    }
+
+    uint32_t PlotId() const { return id; }
+
+    bool PlotInteractive() const { return interactive; }
+
+    bool AppearGeneration(uint64_t* out) const {
+        return appear.Generation(out);
+    }
+};
+
+template <typename Self>
+struct ChartTooltipBuilder : ChartBuilder<Self> {
+
+    ChartTooltipContent tooltipContent = {};
+
+    Self* TooltipTitle(ChartTooltipTitleFn fn, void* user = nullptr) {
+        tooltipContent.title = fn;
+        tooltipContent.titleUser = user;
+        return this->This();
+    }
+
+    Self* TooltipValue(ChartTooltipValueFn fn, void* user = nullptr) {
+        tooltipContent.value = fn;
+        tooltipContent.valueUser = user;
+        return this->This();
+    }
+
+    Self* TooltipValueColor(ChartTooltipValueColorFn fn, void* user = nullptr) {
+        tooltipContent.valueColor = fn;
+        tooltipContent.valueColorUser = user;
+        return this->This();
+    }
+
+    Self* TooltipContent(ChartTooltipContentFn fn, void* user = nullptr) {
+        tooltipContent.content = fn;
+        tooltipContent.contentUser = user;
+        return this->This();
+    }
+
+    Self* Data(const void* items, int stride) {
+        tooltipContent.data = items;
+        tooltipContent.dataStride = stride;
+        return this->This();
+    }
+    template <typename T>
+    Self* Data(const T* items) {
+        return Data((const void*)items, (int)sizeof(T));
+    }
+};
+
+template <typename Self>
+struct ChartBandBuilder : ChartTooltipBuilder<Self> {
+    const char* const* labels = nullptr;
+
+    int tickMargin = 1;
+
+    Self* Labels(const char* const* l) {
+        labels = l;
+        return this->This();
+    }
+    Self* TickMargin(int t) {
+        tickMargin = t;
+        return this->This();
+    }
+};
+
+template <typename Self>
+struct SeriesChartBuilder : ChartBandBuilder<Self> {
+    const float* ys = nullptr;
+
+    const double* exact = nullptr;
+    int n = 0;
+};
+
 struct PieSlice {
     float value = 0;
     Rgba color = {};
@@ -23774,9 +24204,7 @@ struct PieSlice {
     Str tooltipValue = {};
 };
 
-struct PieChart {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct PieChart : ChartBuilder<PieChart> {
     ArenaVec<PieSlice> slices;
 
     float outerRadius = 0;
@@ -23790,13 +24218,6 @@ struct PieChart {
     float labelGap = 15;
     bool hasLabelColor = false;
     Rgba labelColor = {};
-    Str tooltipName = {};
-
-    uint32_t id = 0;
-
-    bool interactive = true;
-
-    ChartAppear appear = {};
 
     static PieChart* New(Ctx* cx, const char* file = __builtin_FILE(),
                          int line = __builtin_LINE());
@@ -23810,28 +24231,9 @@ struct PieChart {
     PieChart* LabelGap(float gap);
     PieChart* LabelColor(Rgba c);
 
-    PieChart* Tooltip(Str name);
-
     PieChart* TooltipName(Str name);
 
     PieChart* TooltipValue(Str value);
-
-    PieChart* Id(Str name);
-
-    PieChart* Interactive(bool v);
-
-    PieChart* Appear(bool v);
-
-    PieChart* AppearKey(Str key);
-    PieChart* AppearKey(uint64_t key);
-
-    uint32_t PlotId() const { return id; }
-
-    bool PlotInteractive() const { return interactive; }
-
-    bool AppearGeneration(uint64_t* out) const {
-        return appear.Generation(out);
-    }
 
     float ResolveOuterRadius(float height) const;
 
@@ -23839,51 +24241,16 @@ struct PieChart {
     El* IntoEl();
 };
 
-struct PointAxes {
-    bool yAxis = false;
-    AxisLabelPlacement placement = AxisLabelPlacement::Outside;
-    int yTickCount = 5;
-    ChartTickFormatFn tickFormat = nullptr;
-    void* tickFormatUser = nullptr;
-
-    int xTickCount = -1;
-    int gridColumns = 0;
-    bool gridDashed = true;
-    float yPaddingTop = 10;
-    float yPaddingBottom = 0;
+struct PointAxes : ChartAxisOptions {
     ArenaVec<double> referenceLines;
 
     void ApplyTo(Arena* a, ChartSeries* chart) const;
 };
 
-struct AreaChart {
-    Arena* a = nullptr;
-    Str tooltipName = {};
-
-    ChartTooltipContent tooltipContent = {};
-
-    uint32_t id = 0;
-
-    bool interactive = true;
-
-    ChartAppear appear = {};
-    Ctx* cx = nullptr;
-    const float* ys = nullptr;
-
-    const double* exact = nullptr;
-    int n = 0;
-    const char* const* labels = nullptr;
-
-    int tickMargin = 1;
-
-    bool overlay = false;
+template <typename Self>
+struct PointChartBuilder : SeriesChartBuilder<Self> {
     Rgba stroke = {};
-    Rgba fill = {};
-
-    Rgba fillBottom = {};
     ChartStroke strokeStyle = ChartStroke::Natural;
-
-    ArenaVec<ChartSeriesExtra> more;
     bool hasYDomain = false;
     float yDomainMin = 0;
     float yDomainMax = 0;
@@ -23892,6 +24259,98 @@ struct AreaChart {
 
     bool xAxis = true;
     bool grid = true;
+
+    Self* Natural() {
+        strokeStyle = ChartStroke::Natural;
+        return this->This();
+    }
+    Self* Linear() {
+        strokeStyle = ChartStroke::Linear;
+        return this->This();
+    }
+    Self* StepAfter() {
+        strokeStyle = ChartStroke::StepAfter;
+        return this->This();
+    }
+
+    Self* XAxis(bool v) {
+        xAxis = v;
+        return this->This();
+    }
+
+    Self* Grid(bool v) {
+        grid = v;
+        return this->This();
+    }
+
+    Self* YDomain(float min, float max) {
+        hasYDomain = true;
+        yDomainMin = min;
+        yDomainMax = max;
+        return this->This();
+    }
+
+    Self* PointCount(int count) {
+        pointCount = count;
+        return this->This();
+    }
+
+    Self* YAxis(bool v = true) {
+        axes.yAxis = v;
+        return this->This();
+    }
+
+    Self* YAxisLabelPlacement(AxisLabelPlacement placement) {
+        axes.axisLabelPlacement = placement;
+        return this->This();
+    }
+
+    Self* YTickCount(int count) {
+        axes.yTickCount = count > 2 ? count : 2;
+        return this->This();
+    }
+
+    Self* YTickFormat(ChartTickFormatFn format, void* user = nullptr) {
+        axes.tickFormat = format;
+        axes.tickFormatUser = user;
+        return this->This();
+    }
+
+    Self* XTickCount(int count) {
+        axes.xTickCount = count < 0 ? 0 : count;
+        return this->This();
+    }
+
+    Self* GridColumns(int count) {
+        axes.gridColumns = count < 0 ? 0 : count;
+        return this->This();
+    }
+
+    Self* GridDashed(bool dashed) {
+        axes.gridDashed = dashed;
+        return this->This();
+    }
+
+    Self* ReferenceLine(double value) {
+        axes.referenceLines.Append(this->a, value);
+        return this->This();
+    }
+
+    Self* YPadding(float top, float bottom) {
+        axes.yPaddingTop = top;
+        axes.yPaddingBottom = bottom;
+        return this->This();
+    }
+};
+
+struct AreaChart : PointChartBuilder<AreaChart> {
+
+    bool overlay = false;
+    Rgba fill = {};
+
+    Rgba fillBottom = {};
+
+    ArenaVec<ChartSeriesExtra> more;
 
     static AreaChart* New(Ctx* cx, const float* ys, int n,
                           const char* file = __builtin_FILE(),
@@ -23904,108 +24363,16 @@ struct AreaChart {
     AreaChart* Y(const float* ys);
 
     AreaChart* Tooltip(Str name);
-
-    AreaChart* TooltipTitle(ChartTooltipTitleFn fn, void* user = nullptr);
-
-    AreaChart* TooltipValue(ChartTooltipValueFn fn, void* user = nullptr);
-
-    AreaChart* TooltipValueColor(ChartTooltipValueColorFn fn,
-                                 void* user = nullptr);
-
-    AreaChart* TooltipContent(ChartTooltipContentFn fn, void* user = nullptr);
-
-    AreaChart* Data(const void* items, int stride);
-    template <typename T>
-    AreaChart* Data(const T* items) {
-        return Data((const void*)items, (int)sizeof(T));
-    }
-
-    AreaChart* Id(Str name);
-
-    AreaChart* Interactive(bool v);
-
-    AreaChart* Appear(bool v);
-
-    AreaChart* AppearKey(Str key);
-    AreaChart* AppearKey(uint64_t key);
-
-    uint32_t PlotId() const { return id; }
-
-    bool PlotInteractive() const { return interactive; }
-
-    bool AppearGeneration(uint64_t* out) const {
-        return appear.Generation(out);
-    }
     AreaChart* Stroke(Rgba c);
     AreaChart* Fill(Rgba c);
 
     AreaChart* Fill(Rgba top, Rgba bottom);
-    AreaChart* Labels(const char* const* l);
-    AreaChart* TickMargin(int n);
     AreaChart* Overlay(bool v = true);
-
-    AreaChart* Natural();
-    AreaChart* Linear();
-
-    AreaChart* XAxis(bool v);
-
-    AreaChart* Grid(bool v);
-    AreaChart* StepAfter();
-
-    AreaChart* YDomain(float min, float max);
-
-    AreaChart* PointCount(int count);
-
-    AreaChart* YAxis(bool v = true);
-
-    AreaChart* YAxisLabelPlacement(AxisLabelPlacement placement);
-
-    AreaChart* YTickCount(int count);
-
-    AreaChart* YTickFormat(ChartTickFormatFn format, void* user = nullptr);
-
-    AreaChart* XTickCount(int count);
-
-    AreaChart* GridColumns(int count);
-
-    AreaChart* GridDashed(bool dashed);
-
-    AreaChart* ReferenceLine(double value);
-
-    AreaChart* YPadding(float top, float bottom);
     El* IntoEl();
 };
 
-struct LineChart {
-    Arena* a = nullptr;
-    Str tooltipName = {};
-
-    ChartTooltipContent tooltipContent = {};
-
-    uint32_t id = 0;
-
-    bool interactive = true;
-
-    ChartAppear appear = {};
-    Ctx* cx = nullptr;
-    const float* ys = nullptr;
-
-    const double* exact = nullptr;
-    int n = 0;
-    const char* const* labels = nullptr;
-
-    int tickMargin = 1;
-    Rgba stroke = {};
-    bool hasYDomain = false;
-    float yDomainMin = 0;
-    float yDomainMax = 0;
-    int pointCount = 0;
-    PointAxes axes;
-    ChartStroke strokeStyle = ChartStroke::Natural;
+struct LineChart : PointChartBuilder<LineChart> {
     bool dot = false;
-
-    bool xAxis = true;
-    bool grid = true;
 
     static LineChart* New(Ctx* cx, const float* ys, int n,
                           const char* file = __builtin_FILE(),
@@ -24014,94 +24381,12 @@ struct LineChart {
     static LineChart* New(Ctx* cx, const double* ys, int n,
                           const char* file = __builtin_FILE(),
                           int line = __builtin_LINE());
-
-    LineChart* Tooltip(Str name);
-
-    LineChart* TooltipTitle(ChartTooltipTitleFn fn, void* user = nullptr);
-
-    LineChart* TooltipValue(ChartTooltipValueFn fn, void* user = nullptr);
-
-    LineChart* TooltipValueColor(ChartTooltipValueColorFn fn,
-                                 void* user = nullptr);
-
-    LineChart* TooltipContent(ChartTooltipContentFn fn, void* user = nullptr);
-
-    LineChart* Data(const void* items, int stride);
-    template <typename T>
-    LineChart* Data(const T* items) {
-        return Data((const void*)items, (int)sizeof(T));
-    }
-
-    LineChart* Id(Str name);
-
-    LineChart* Interactive(bool v);
-
-    LineChart* Appear(bool v);
-
-    LineChart* AppearKey(Str key);
-    LineChart* AppearKey(uint64_t key);
-
-    uint32_t PlotId() const { return id; }
-
-    bool PlotInteractive() const { return interactive; }
-
-    bool AppearGeneration(uint64_t* out) const {
-        return appear.Generation(out);
-    }
     LineChart* Stroke(Rgba c);
-    LineChart* Labels(const char* const* l);
-    LineChart* TickMargin(int n);
-
-    LineChart* YDomain(float min, float max);
-
-    LineChart* PointCount(int count);
-
-    LineChart* YAxis(bool v = true);
-
-    LineChart* YAxisLabelPlacement(AxisLabelPlacement placement);
-
-    LineChart* YTickCount(int count);
-
-    LineChart* YTickFormat(ChartTickFormatFn format, void* user = nullptr);
-
-    LineChart* XTickCount(int count);
-
-    LineChart* GridColumns(int count);
-
-    LineChart* GridDashed(bool dashed);
-
-    LineChart* ReferenceLine(double value);
-
-    LineChart* YPadding(float top, float bottom);
-    LineChart* Natural();
-    LineChart* Linear();
-    LineChart* StepAfter();
     LineChart* Dot(bool v = true);
-
-    LineChart* XAxis(bool v);
-
-    LineChart* Grid(bool v);
     El* IntoEl();
 };
 
-struct BarChart {
-    Arena* a = nullptr;
-    Str tooltipName = {};
-
-    ChartTooltipContent tooltipContent = {};
-
-    uint32_t id = 0;
-
-    bool interactive = true;
-
-    ChartAppear appear = {};
-    Ctx* cx = nullptr;
-    const float* ys = nullptr;
-
-    const double* exact = nullptr;
-    int n = 0;
-    const char* const* labels = nullptr;
-    int tickMargin = 1;
+struct BarChart : SeriesChartBuilder<BarChart> {
     Rgba fill = {};
 
     float paddingInner = 0.4f;
@@ -24147,43 +24432,7 @@ struct BarChart {
     static BarChart* New(Ctx* cx, const double* ys, int n,
                          const char* file = __builtin_FILE(),
                          int line = __builtin_LINE());
-
-    BarChart* Tooltip(Str name);
-
-    BarChart* TooltipTitle(ChartTooltipTitleFn fn, void* user = nullptr);
-
-    BarChart* TooltipValue(ChartTooltipValueFn fn, void* user = nullptr);
-
-    BarChart* TooltipValueColor(ChartTooltipValueColorFn fn,
-                                void* user = nullptr);
-
-    BarChart* TooltipContent(ChartTooltipContentFn fn, void* user = nullptr);
-
-    BarChart* Data(const void* items, int stride);
-    template <typename T>
-    BarChart* Data(const T* items) {
-        return Data((const void*)items, (int)sizeof(T));
-    }
-
-    BarChart* Id(Str name);
-
-    BarChart* Interactive(bool v);
-
-    BarChart* Appear(bool v);
-
-    BarChart* AppearKey(Str key);
-    BarChart* AppearKey(uint64_t key);
-
-    uint32_t PlotId() const { return id; }
-
-    bool PlotInteractive() const { return interactive; }
-
-    bool AppearGeneration(uint64_t* out) const {
-        return appear.Generation(out);
-    }
     BarChart* Fill(Rgba c);
-    BarChart* Labels(const char* const* l);
-    BarChart* TickMargin(int n);
 
     BarChart* ValueAxis(bool on = true);
 
@@ -24227,76 +24476,25 @@ struct BarChart {
     El* IntoEl();
 };
 
-struct CandlestickChart {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct CandlestickChart : ChartBandBuilder<CandlestickChart> {
     const float* opens = nullptr;
     const float* highs = nullptr;
     const float* lows = nullptr;
     const float* closes = nullptr;
     int n = 0;
-    const char* const* labels = nullptr;
-    int tickMargin = 1;
     Rgba up = {};
     Rgba down = {};
     float padding = 0.3f;
     float bodyWidthRatio = 0.8f;
 
     float maxBandWidth = kChartMaxBandWidth;
-    Str tooltipName = {};
-
-    ChartTooltipContent tooltipContent = {};
-
-    uint32_t id = 0;
-
-    bool interactive = true;
-
-    ChartAppear appear = {};
 
     static CandlestickChart* New(Ctx* cx, const float* opens,
                                  const float* highs, const float* lows,
                                  const float* closes, int n,
                                  const char* file = __builtin_FILE(),
                                  int line = __builtin_LINE());
-    CandlestickChart* Tooltip(Str name);
-
-    CandlestickChart* TooltipTitle(ChartTooltipTitleFn fn,
-                                   void* user = nullptr);
-
-    CandlestickChart* TooltipValue(ChartTooltipValueFn fn,
-                                   void* user = nullptr);
-
-    CandlestickChart* TooltipValueColor(ChartTooltipValueColorFn fn,
-                                        void* user = nullptr);
-
-    CandlestickChart* TooltipContent(ChartTooltipContentFn fn,
-                                     void* user = nullptr);
-
-    CandlestickChart* Data(const void* items, int stride);
-    template <typename T>
-    CandlestickChart* Data(const T* items) {
-        return Data((const void*)items, (int)sizeof(T));
-    }
-
-    CandlestickChart* Id(Str name);
-
-    CandlestickChart* Interactive(bool v);
-
-    CandlestickChart* Appear(bool v);
-
-    CandlestickChart* AppearKey(Str key);
-    CandlestickChart* AppearKey(uint64_t key);
-
-    uint32_t PlotId() const { return id; }
-
-    bool PlotInteractive() const { return interactive; }
-
-    bool AppearGeneration(uint64_t* out) const {
-        return appear.Generation(out);
-    }
     CandlestickChart* Colors(Rgba up, Rgba down);
-    CandlestickChart* Labels(const char* const* l);
-    CandlestickChart* TickMargin(int n);
     CandlestickChart* Padding(float v);
     CandlestickChart* BodyWidthRatio(float v);
 
@@ -24323,9 +24521,7 @@ const float kRadarDefaultLabelGap = 10;
 int RadarHoveredIndex(int n, float outerRadius, float labelGap, Point position,
                       Size size);
 
-struct RadarChart {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct RadarChart : ChartTooltipBuilder<RadarChart> {
     const float* values = nullptr;
 
     const double* exact = nullptr;
@@ -24349,16 +24545,6 @@ struct RadarChart {
     Rgba labelColor = {};
     bool hasLabelColor = false;
 
-    Str tooltipName = {};
-
-    ChartTooltipContent tooltipContent = {};
-
-    uint32_t id = 0;
-
-    bool interactive = true;
-
-    ChartAppear appear = {};
-
     El* el = nullptr;
 
     static RadarChart* New(Ctx* cx, const float* values, int n,
@@ -24372,38 +24558,6 @@ struct RadarChart {
     RadarChart* Value(const float* ys);
 
     RadarChart* Tooltip(Str name);
-
-    RadarChart* TooltipTitle(ChartTooltipTitleFn fn, void* user = nullptr);
-
-    RadarChart* TooltipValue(ChartTooltipValueFn fn, void* user = nullptr);
-
-    RadarChart* TooltipValueColor(ChartTooltipValueColorFn fn,
-                                  void* user = nullptr);
-
-    RadarChart* TooltipContent(ChartTooltipContentFn fn, void* user = nullptr);
-
-    RadarChart* Data(const void* items, int stride);
-    template <typename T>
-    RadarChart* Data(const T* items) {
-        return Data((const void*)items, (int)sizeof(T));
-    }
-
-    RadarChart* Id(Str name);
-
-    RadarChart* Interactive(bool v);
-
-    RadarChart* Appear(bool v);
-
-    RadarChart* AppearKey(Str key);
-    RadarChart* AppearKey(uint64_t key);
-
-    uint32_t PlotId() const { return id; }
-
-    bool PlotInteractive() const { return interactive; }
-
-    bool AppearGeneration(uint64_t* out) const {
-        return appear.Generation(out);
-    }
 
     RadarChart* Stroke(Rgba c);
     RadarChart* Fill(Rgba c);
@@ -24462,9 +24616,7 @@ struct SankeyChartNode {
     Str tooltipValue = {};
 };
 
-struct SankeyChart {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct SankeyChart : ChartBuilder<SankeyChart> {
 
     ArenaVec<SankeyChartNode> nodes;
     ArenaVec<SankeyLink> links;
@@ -24479,37 +24631,12 @@ struct SankeyChart {
     float labelGap = kSankeyChartLabelGap;
 
     bool showValues = false;
-    Str tooltipName = {};
-
-    uint32_t id = 0;
-
-    bool interactive = true;
-
-    ChartAppear appear = {};
 
     static SankeyChart* New(Ctx* cx, const char* file = __builtin_FILE(),
                             int line = __builtin_LINE());
-    SankeyChart* Tooltip(Str name);
 
     SankeyChart* TooltipName(Str name);
     SankeyChart* TooltipValue(Str value);
-
-    SankeyChart* Id(Str name);
-
-    SankeyChart* Interactive(bool v);
-
-    SankeyChart* Appear(bool v);
-
-    SankeyChart* AppearKey(Str key);
-    SankeyChart* AppearKey(uint64_t key);
-
-    uint32_t PlotId() const { return id; }
-
-    bool PlotInteractive() const { return interactive; }
-
-    bool AppearGeneration(uint64_t* out) const {
-        return appear.Generation(out);
-    }
 
     SankeyChart* Node(Str label);
     SankeyChart* NodeColored(Str label, Rgba color);
@@ -24544,7 +24671,7 @@ namespace gpui {
 
 namespace component {
 
-struct Checkbox {
+struct ChoiceFields {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -24552,42 +24679,97 @@ struct Checkbox {
 
     Str accessibilityLabel = {};
     Str hint = {};
-
-    El* child = nullptr;
+    Str tooltip = {};
+    int tooltipShowDelayMs = -1;
     bool checked = false;
     bool disabled = false;
     UiSize size = UiSize::Medium;
-    Str tooltip = {};
-    int tooltipShowDelayMs = -1;
     bool focusRing = true;
-    AccessibilityRole accessibilityRole = AccessibilityRole::CheckBox;
     int tabIndex = 0;
     bool tabStop = true;
-    float w = 0;
     Listener onClick;
+};
 
-    static Checkbox* New(Ctx* cx, Str id);
-    Checkbox* Label(Str s);
+El* ChoiceRow(Ctx* cx, El* row, const ChoiceFields& f);
 
-    Checkbox* AccessibilityLabel(Str s);
-    Checkbox* Hint(Str s);
+template <typename Self>
+struct ChoiceBuilder : ChoiceFields {
+    static Self* New(Ctx* cx, Str id) {
+        Self* self = ArenaNew<Self>(cx->a);
+        self->a = cx->a;
+        self->cx = cx;
+        self->id = id;
+        return self;
+    }
+    Self* This() { return static_cast<Self*>(this); }
+    Self* Label(Str s) {
+        label = s;
+        return This();
+    }
+
+    Self* AccessibilityLabel(Str s) {
+        accessibilityLabel = s;
+        return This();
+    }
+    Self* Hint(Str s) {
+        hint = s;
+        return This();
+    }
+    Self* Tooltip(Str s) {
+        tooltip = s;
+        return This();
+    }
+    Self* TooltipShowDelay(int ms) {
+        tooltipShowDelayMs = ms;
+        return This();
+    }
+    Self* Checked(bool v) {
+        checked = v;
+        return This();
+    }
+    Self* Disabled(bool v) {
+        disabled = v;
+        return This();
+    }
+    Self* WithSize(UiSize s) {
+        size = s;
+        return This();
+    }
+
+    Self* FocusRing(bool v) {
+        focusRing = v;
+        return This();
+    }
+    Self* TabIndex(int v) {
+        tabIndex = v;
+        return This();
+    }
+    Self* TabStop(bool v) {
+        tabStop = v;
+        return This();
+    }
+
+    Self* OnChange(Listener fn) {
+        onClick = fn;
+        return This();
+    }
+    Self* OnClick(Listener fn) { return OnChange(fn); }
+};
+
+struct Checkbox : ChoiceBuilder<Checkbox> {
+
+    El* child = nullptr;
+    AccessibilityRole accessibilityRole = AccessibilityRole::CheckBox;
+    float w = 0;
+
     Checkbox* Child(El* e);
-    Checkbox* Checked(bool v);
-    Checkbox* Disabled(bool v);
-    Checkbox* WithSize(UiSize s);
     Checkbox* W(float v);
-
-    Checkbox* FocusRing(bool v);
     Checkbox* Role(AccessibilityRole role);
-    Checkbox* TabIndex(int v);
-    Checkbox* TabStop(bool v);
-    Checkbox* Tooltip(Str s);
-    Checkbox* TooltipShowDelay(int ms);
-    Checkbox* OnClick(Listener fn);
-
-    Checkbox* OnChange(Listener fn);
     El* IntoEl();
 };
+
+El* ChoiceLabelColumn(Ctx* cx, El* indicator, float box, Str label, Str hint,
+                      UiSize size, bool disabled, bool wrapLabel);
 
 }
 }
@@ -25263,6 +25445,11 @@ struct SearchableListState {
     }
 };
 
+int SearchableListFlatIndex(const SearchableListState* s, IndexPath path);
+IndexPath SearchableListPath(const SearchableListState* s, int flat);
+
+void SearchableListSetMultiple(SearchableListState* s, bool multiple);
+
 void SearchableListSelectOnly(SearchableListState* s, int index);
 
 void SearchableListChangesFor(const SearchableListState* s,
@@ -25286,28 +25473,66 @@ bool SearchableListClick(SearchableListState* s, int index);
 void SearchableListSearch(SearchableListState* s, const SearchableItem* items,
                           int nItems, Str query);
 
-struct SearchableList {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    Str id = {};
-    Entity<SearchableListState> state = {};
+struct SearchableListContent {
+
     const SearchableItem* items = nullptr;
     int nItems = 0;
 
     const Str* sections = nullptr;
     int nSections = 0;
+
     InputState* query = nullptr;
     Listener onQueryFocus = {};
-    El* empty = nullptr;
 
     El* footer = nullptr;
-    float w = 240;
-    float maxH = 320;
 
     IconName checkIcon = IconName::Check;
     UiSize size = UiSize::Medium;
     SearchableListDelegate delegate = {};
     bool hasDelegate = false;
+};
+
+template <typename Self, typename Base>
+struct SearchableContentBuilder : Base {
+    Self* This() { return static_cast<Self*>(this); }
+    Self* Items(const SearchableItem* it, int n) {
+        this->items = it;
+        this->nItems = n;
+        return This();
+    }
+    Self* Sections(const Str* titles, int n) {
+        this->sections = titles;
+        this->nSections = n;
+        return This();
+    }
+    Self* Footer(El* e) {
+        this->footer = e;
+        return This();
+    }
+    Self* CheckIcon(IconName n) {
+        this->checkIcon = n;
+        return This();
+    }
+    Self* WithSize(UiSize s) {
+        this->size = s;
+        return This();
+    }
+    Self* Delegate(const SearchableListDelegate& value) {
+        this->delegate = value;
+        this->hasDelegate = true;
+        return This();
+    }
+};
+
+struct SearchableList
+    : SearchableContentBuilder<SearchableList, SearchableListContent> {
+    Arena* a = nullptr;
+    Ctx* cx = nullptr;
+    Str id = {};
+    Entity<SearchableListState> state = {};
+    El* empty = nullptr;
+    float w = 240;
+    float maxH = 320;
 
     bool inSelect = false;
 
@@ -25315,16 +25540,10 @@ struct SearchableList {
 
     static SearchableList* New(Ctx* cx, Str id, Entity<SearchableListState> st,
                                InputState* query);
-    SearchableList* Items(const SearchableItem* items, int n);
-    SearchableList* Sections(const Str* titles, int n);
     SearchableList* OnQueryFocus(Listener fn);
     SearchableList* Empty(El* e);
-    SearchableList* Footer(El* e);
     SearchableList* W(float v);
     SearchableList* MaxH(float v);
-    SearchableList* CheckIcon(IconName n);
-    SearchableList* WithSize(UiSize value);
-    SearchableList* Delegate(const SearchableListDelegate& value);
     SearchableList* InSelect(bool v);
 
     SearchableList* ScrollBounce(bool v);
@@ -25405,47 +25624,94 @@ struct SelectState {
 
 Entity<SearchableListState> SelectListEntity(Entity<SelectState> state);
 
-struct Select {
+struct SelectFields : SearchableListContent {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
     Entity<SearchableListState> state = {};
-    Entity<SelectState> selectState = {};
-
-    const SearchableItem* items = nullptr;
-    int nItems = 0;
-    const Str* sections = nullptr;
-    int nSections = 0;
     Str placeholder = {};
-
-    Str accessibilityLabel = {};
-    Str titlePrefix = {};
     Str empty = {};
-    El* emptyEl = nullptr;
+
     float width = kFill;
     float menuWidth = 0;
     float menuMaxH = 0;
-
-    int scrollBounce = -1;
-    UiSize size = UiSize::Medium;
     IconName icon = IconName::None;
-
-    IconName checkIcon = IconName::Check;
     bool disabled = false;
     bool cleanable = false;
     bool appearance = true;
     bool focusRing = true;
 
-    InputState* query = nullptr;
-    Listener onQueryFocus = {};
-
     El* trigger = nullptr;
-
-    El* footer = nullptr;
-    SearchableListDelegate delegate = {};
-    bool hasDelegate = false;
     Listener onToggle;
     Listener onClear;
+};
+
+template <typename Self>
+struct SelectBuilder : SearchableContentBuilder<Self, SelectFields> {
+    Self* Placeholder(Str s) {
+        this->placeholder = s;
+        return this->This();
+    }
+    Self* Empty(Str s) {
+        this->empty = s;
+        return this->This();
+    }
+    Self* W(float v) {
+        this->width = v;
+        return this->This();
+    }
+    Self* MenuWidth(float v) {
+        this->menuWidth = v;
+        return this->This();
+    }
+    Self* MenuMaxH(float v) {
+        this->menuMaxH = v;
+        return this->This();
+    }
+    Self* Icon(IconName n) {
+        this->icon = n;
+        return this->This();
+    }
+    Self* Disabled(bool v) {
+        this->disabled = v;
+        return this->This();
+    }
+    Self* Cleanable(bool v = true) {
+        this->cleanable = v;
+        return this->This();
+    }
+    Self* Appearance(bool v) {
+        this->appearance = v;
+        return this->This();
+    }
+
+    Self* FocusRing(bool v) {
+        this->focusRing = v;
+        return this->This();
+    }
+    Self* Trigger(El* e) {
+        this->trigger = e;
+        return this->This();
+    }
+    Self* OnToggle(Listener fn) {
+        this->onToggle = fn;
+        return this->This();
+    }
+    Self* OnClear(Listener fn) {
+        this->onClear = fn;
+        return this->This();
+    }
+};
+
+struct Select : SelectBuilder<Select> {
+    using SelectBuilder<Select>::Empty;
+    Entity<SelectState> selectState = {};
+
+    Str accessibilityLabel = {};
+    Str titlePrefix = {};
+    El* emptyEl = nullptr;
+
+    int scrollBounce = -1;
     Listener onMouseDownOut;
     Bounds* triggerBoundsOut = nullptr;
     Style triggerStyle = {};
@@ -25455,35 +25721,15 @@ struct Select {
 
     static Select* New(Ctx* cx, Str id, Entity<SearchableListState> state);
     static Select* New(Ctx* cx, Str id, Entity<SelectState> state);
-    Select* Items(const SearchableItem* items, int n);
-    Select* Sections(const Str* titles, int n);
-    Select* Placeholder(Str s);
 
     Select* AccessibilityLabel(Str s);
     Select* TitlePrefix(Str s);
-    Select* Empty(Str s);
     Select* Empty(El* element);
-    Select* W(float v);
-    Select* MenuWidth(float v);
-    Select* MenuMaxH(float v);
-    Select* WithSize(UiSize s);
-    Select* Icon(IconName n);
-    Select* CheckIcon(IconName n);
-    Select* Disabled(bool v);
-    Select* Cleanable(bool v = true);
-    Select* Appearance(bool v);
-
-    Select* FocusRing(bool v);
     Select* Searchable(InputState* query, Listener onFocus);
 
     Select* ScrollBounce(bool v);
-    Select* Trigger(El* e);
-    Select* Footer(El* e);
-    Select* Delegate(const SearchableListDelegate& value);
 
     Select* Multiple(bool v = true);
-    Select* OnToggle(Listener fn);
-    Select* OnClear(Listener fn);
     Select* OnMouseDownOut(Listener fn);
     Select* TriggerBoundsOut(Bounds* bounds);
     Select* TriggerRefine(const Style& style, uint32_t fields);
@@ -25594,37 +25840,9 @@ struct ComboboxState {
 
 Entity<SearchableListState> ComboboxListEntity(Entity<ComboboxState> state);
 
-struct Combobox {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    Str id = {};
-    Entity<SearchableListState> state = {};
+struct Combobox : SelectBuilder<Combobox> {
     Entity<ComboboxState> comboboxState = {};
-    const SearchableItem* items = nullptr;
-    int nItems = 0;
-    const Str* sections = nullptr;
-    int nSections = 0;
-    Str placeholder = {};
     Str searchPlaceholder = {};
-    Str empty = {};
-
-    IconName icon = IconName::None;
-
-    IconName checkIcon = IconName::Check;
-
-    float width = kFill;
-    float menuWidth = 0;
-    float menuMaxH = 0;
-    UiSize size = UiSize::Medium;
-    bool disabled = false;
-    bool cleanable = false;
-    bool appearance = true;
-    bool focusRing = true;
-    InputState* query = nullptr;
-    Listener onQueryFocus = {};
-
-    El* trigger = nullptr;
-    El* footer = nullptr;
     void* triggerData = nullptr;
     void* footerData = nullptr;
     void* emptyData = nullptr;
@@ -25632,50 +25850,26 @@ struct Combobox {
                          const ComboboxTriggerContext* trigger) = nullptr;
     El* (*renderFooter)(Ctx* cx, void* data) = nullptr;
     El* (*renderEmpty)(Ctx* cx, void* data) = nullptr;
-    SearchableListDelegate delegate = {};
-    bool hasDelegate = false;
     Style style = {};
     uint32_t styleSet = 0;
 
     ElRefiner refiner = {};
-    Listener onToggle;
-    Listener onClear;
 
     static Combobox* New(Ctx* cx, Str id, Entity<SearchableListState> state,
                          InputState* query);
     static Combobox* New(Ctx* cx, Str id, Entity<ComboboxState> state);
-    Combobox* Items(const SearchableItem* items, int n);
-    Combobox* Sections(const Str* titles, int n);
-    Combobox* Placeholder(Str s);
     Combobox* SearchPlaceholder(Str s);
-    Combobox* Empty(Str s);
-    Combobox* Icon(IconName n);
-    Combobox* CheckIcon(IconName n);
-    Combobox* W(float v);
-    Combobox* MenuWidth(float v);
-    Combobox* MenuMaxH(float v);
-    Combobox* WithSize(UiSize value);
-    Combobox* Disabled(bool v);
-    Combobox* Cleanable(bool v = true);
-    Combobox* Appearance(bool v);
-
-    Combobox* FocusRing(bool v);
     Combobox* Multiple(bool v = true);
-    Combobox* Trigger(El* e);
     Combobox* RenderTrigger(void* data,
                             El* (*fn)(Ctx* cx, void* data,
                                       const ComboboxTriggerContext* trigger));
-    Combobox* Footer(El* e);
     Combobox* RenderFooter(void* data, El* (*fn)(Ctx* cx, void* data));
     Combobox* RenderEmpty(void* data, El* (*fn)(Ctx* cx, void* data));
-    Combobox* Delegate(const SearchableListDelegate& value);
     Combobox* Refine(const Style& value, uint32_t fields);
     Combobox* Refiner(ElRefiner value);
 
     Combobox* MaxSelected(int n);
     Combobox* OnQueryFocus(Listener fn);
-    Combobox* OnToggle(Listener fn);
-    Combobox* OnClear(Listener fn);
     El* IntoEl();
 };
 
@@ -25962,7 +26156,29 @@ namespace gpui {
 
 namespace component {
 
-struct Calendar {
+template <typename Self>
+struct CalendarListenerSetters : CalendarListeners {
+    Self* OnDay(Listener fn) { return Set(&CalendarListeners::onDay, fn); }
+    Self* OnDate(Listener fn) { return Set(&CalendarListeners::onDate, fn); }
+    Self* OnPrev(Listener fn) { return Set(&CalendarListeners::onPrev, fn); }
+    Self* OnNext(Listener fn) { return Set(&CalendarListeners::onNext, fn); }
+    Self* OnMonthToggle(Listener fn) {
+        return Set(&CalendarListeners::onMonthToggle, fn);
+    }
+    Self* OnYearToggle(Listener fn) {
+        return Set(&CalendarListeners::onYearToggle, fn);
+    }
+    Self* OnMonth(Listener fn) { return Set(&CalendarListeners::onMonth, fn); }
+    Self* OnYear(Listener fn) { return Set(&CalendarListeners::onYear, fn); }
+
+  private:
+    Self* Set(Listener CalendarListeners::* field, Listener fn) {
+        this->*field = fn;
+        return static_cast<Self*>(this);
+    }
+};
+
+struct Calendar : CalendarListenerSetters<Calendar> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     int year = 2026;
@@ -25984,14 +26200,6 @@ struct Calendar {
     uint32_t styleSet = 0;
 
     bool bare = false;
-    Listener onDay;
-    Listener onDate;
-    Listener onPrev;
-    Listener onNext;
-    Listener onMonthToggle;
-    Listener onYearToggle;
-    Listener onMonth;
-    Listener onYear;
 
     static Calendar* New(Ctx* cx);
 
@@ -26009,14 +26217,6 @@ struct Calendar {
     Calendar* DisabledMatcher(DateMatcher matcher);
     Calendar* Bare();
     Calendar* Refine(const Style& value, uint32_t fields);
-    Calendar* OnDay(Listener fn);
-    Calendar* OnDate(Listener fn);
-    Calendar* OnPrev(Listener fn);
-    Calendar* OnNext(Listener fn);
-    Calendar* OnMonthToggle(Listener fn);
-    Calendar* OnYearToggle(Listener fn);
-    Calendar* OnMonth(Listener fn);
-    Calendar* OnYear(Listener fn);
     El* IntoEl();
 };
 
@@ -26198,7 +26398,7 @@ Str DatePickerFormatDate(Arena* a, Str pattern, LocalDate date,
                          LocalTime time = {});
 Str DatePickerFormatValue(Arena* a, Str pattern, Date date);
 
-struct DatePicker {
+struct DatePicker : CalendarListenerSetters<DatePicker> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -26231,15 +26431,7 @@ struct DatePicker {
     const DateRangePreset* presets = nullptr;
     int presetsCount = 0;
     Listener onToggle;
-    Listener onDay;
-    Listener onDate;
     Listener onClear;
-    Listener onPrev;
-    Listener onNext;
-    Listener onMonthToggle;
-    Listener onYearToggle;
-    Listener onMonth;
-    Listener onYear;
     Listener onPreset;
     Entity<DatePickerState> state = {};
     Style style = {};
@@ -26272,15 +26464,7 @@ struct DatePicker {
                         Listener onSelect = {});
     DatePicker* Open(bool v);
     DatePicker* OnToggle(Listener fn);
-    DatePicker* OnDay(Listener fn);
-    DatePicker* OnDate(Listener fn);
     DatePicker* OnClear(Listener fn);
-    DatePicker* OnPrev(Listener fn);
-    DatePicker* OnNext(Listener fn);
-    DatePicker* OnMonthToggle(Listener fn);
-    DatePicker* OnYearToggle(Listener fn);
-    DatePicker* OnMonth(Listener fn);
-    DatePicker* OnYear(Listener fn);
     El* IntoEl();
 };
 
@@ -26385,6 +26569,8 @@ struct DialogMount {
     bool topmost = true;
     bool showOverlay = true;
     bool exitEnabled = false;
+
+    bool sampled = false;
     bool unmount = false;
     float visibility = 1;
     float surfaceY = 0;
@@ -27027,19 +27213,10 @@ struct DiffSyntaxStyle {
 using DiffSyntaxHighlighter = void (*)(void* data, Str language, Str text,
                                        Vec<DiffSyntaxStyle>* out);
 
-struct DiffSyntaxSpan {
+struct DiffSyntaxSpan : DiffSyntaxStyle {
     int file = 0;
     uint8_t side = 0;
     int line = 0;
-    int start = 0;
-    int end = 0;
-    uint16_t weight = 0;
-    bool italic = false;
-    bool hasColor = false;
-    Rgba color = {};
-    bool hasBackground = false;
-    Rgba background = {};
-    bool underline = false;
 };
 
 struct DiffState {
@@ -27329,64 +27506,33 @@ enum class EmptyMediaVariant : uint8_t {
     Icon,
 };
 
-struct EmptyMedia {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct EmptyMedia : SlotBuilder<EmptyMedia> {
     EmptyMediaVariant variant = EmptyMediaVariant::Default;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
 
     ElRefiner refiner = {};
 
-    static EmptyMedia* New(Ctx* cx);
     EmptyMedia* WithVariant(EmptyMediaVariant value);
-    EmptyMedia* Child(El* child);
-    EmptyMedia* Refine(const Style& value, uint32_t fields);
     El* IntoEl();
 };
 
-struct EmptyTitle {
-    Arena* a = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
+struct EmptyTitle : SlotBuilder<EmptyTitle> {
 
     ElRefiner refiner = {};
 
-    static EmptyTitle* New(Ctx* cx);
-    EmptyTitle* Child(El* child);
-    EmptyTitle* Refine(const Style& value, uint32_t fields);
     El* IntoEl();
 };
 
-struct EmptyDescription {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
+struct EmptyDescription : SlotBuilder<EmptyDescription> {
 
     ElRefiner refiner = {};
 
-    static EmptyDescription* New(Ctx* cx);
-    EmptyDescription* Child(El* child);
-    EmptyDescription* Refine(const Style& value, uint32_t fields);
     El* IntoEl();
 };
 
-struct EmptyContent {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
+struct EmptyContent : SlotBuilder<EmptyContent> {
 
     ElRefiner refiner = {};
 
-    static EmptyContent* New(Ctx* cx);
-    EmptyContent* Child(El* child);
-    EmptyContent* Refine(const Style& value, uint32_t fields);
     El* IntoEl();
 };
 
@@ -27409,22 +27555,14 @@ struct EmptyHeader {
     El* IntoEl();
 };
 
-struct Empty {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct Empty : SlotBuilder<Empty> {
     EmptyHeader* header = nullptr;
     EmptyContent* content = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
 
     ElRefiner refiner = {};
 
-    static Empty* New(Ctx* cx);
     Empty* Header(EmptyHeader* value);
     Empty* Content(EmptyContent* value);
-    Empty* Child(El* child);
-    Empty* Refine(const Style& value, uint32_t fields);
     El* IntoEl();
 };
 
@@ -28059,7 +28197,53 @@ struct NativeMenu;
 using EditorContextMenuFn = NativeMenu* (*)(Ctx * cx, NativeMenu* empty,
                                             void* data);
 
-struct Input {
+template <typename Self>
+struct EditorHooks {
+    InputPasteFn onPaste = nullptr;
+    void* onPasteData = nullptr;
+    EditorContextMenuFn contextMenu = nullptr;
+    void* contextMenuData = nullptr;
+
+    Self* ContextMenu(EditorContextMenuFn fn, void* data = nullptr) {
+        contextMenu = fn;
+        contextMenuData = data;
+        return static_cast<Self*>(this);
+    }
+    Self* OnPaste(InputPasteFn fn, void* data = nullptr) {
+        onPaste = fn;
+        onPasteData = data;
+        return static_cast<Self*>(this);
+    }
+};
+
+template <typename Self>
+struct InputFieldHooks : EditorHooks<Self> {
+    InlineTokenRenderer tokenRenderer = nullptr;
+    void* tokenRendererUser = nullptr;
+    InlineTokenClickListener tokenClick = nullptr;
+    void* tokenClickUser = nullptr;
+    InlineTokenHoverListener tokenHover = nullptr;
+    void* tokenHoverUser = nullptr;
+
+    Self* Token(InlineTokenRenderer fn, void* user = nullptr) {
+        tokenRenderer = fn;
+        tokenRendererUser = user;
+        return static_cast<Self*>(this);
+    }
+    Self* OnTokenClick(InlineTokenClickListener fn, void* user = nullptr) {
+        tokenClick = fn;
+        tokenClickUser = user;
+        return static_cast<Self*>(this);
+    }
+
+    Self* OnTokenHover(InlineTokenHoverListener fn, void* user = nullptr) {
+        tokenHover = fn;
+        tokenHoverUser = user;
+        return static_cast<Self*>(this);
+    }
+};
+
+struct Input : InputFieldHooks<Input> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -28090,22 +28274,10 @@ struct Input {
     Listener onFocus;
     Listener onClear;
     Listener onToggleMask;
-    InputPasteFn onPaste = nullptr;
-    void* onPasteData = nullptr;
-    InlineTokenRenderer tokenRenderer = nullptr;
-    void* tokenRendererUser = nullptr;
-    InlineTokenClickListener tokenClick = nullptr;
-    void* tokenClickUser = nullptr;
-    InlineTokenHoverListener tokenHover = nullptr;
-    void* tokenHoverUser = nullptr;
-    EditorContextMenuFn contextMenu = nullptr;
-    void* contextMenuData = nullptr;
 
     ElRefiner refiner = {};
 
     static Input* New(Ctx* cx, Str id, InputState* state);
-
-    Input* ContextMenu(EditorContextMenuFn fn, void* data = nullptr);
     Input* Label(Str s);
     Input* WithSize(UiSize s);
     Input* Align(InputAlign v);
@@ -28132,12 +28304,6 @@ struct Input {
     Input* W(float v);
     Input* OnChange(Listener fn);
     Input* OnFocus(Listener fn);
-    Input* OnPaste(InputPasteFn fn, void* data = nullptr);
-
-    Input* Token(InlineTokenRenderer fn, void* user = nullptr);
-    Input* OnTokenClick(InlineTokenClickListener fn, void* user = nullptr);
-
-    Input* OnTokenHover(InlineTokenHoverListener fn, void* user = nullptr);
     El* IntoEl();
 };
 
@@ -28163,7 +28329,7 @@ struct SearchPanel {
     El* IntoEl();
 };
 
-struct Editor {
+struct Editor : EditorHooks<Editor> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -28180,10 +28346,6 @@ struct Editor {
     int tabIndex = 0;
     AccessibilityRole accessibilityRole = AccessibilityRole::MultilineTextInput;
     Str ariaLabel = {};
-    EditorContextMenuFn contextMenu = nullptr;
-    void* contextMenuData = nullptr;
-    InputPasteFn onPaste = nullptr;
-    void* onPasteData = nullptr;
 
     Str language = {};
     const TextSpan* decorations = nullptr;
@@ -28212,8 +28374,6 @@ struct Editor {
     Editor* TabIndex(int value);
     Editor* Role(AccessibilityRole value);
     Editor* AriaLabel(Str value);
-    Editor* ContextMenu(EditorContextMenuFn fn, void* data = nullptr);
-    Editor* OnPaste(InputPasteFn fn, void* data = nullptr);
     Editor* Language(Str value);
     Editor* Decorations(const TextSpan* runs, int n);
     Editor* ActiveLine(bool value = true);
@@ -28273,7 +28433,7 @@ struct HoverPopover {
     El* IntoEl();
 };
 
-struct Textarea {
+struct Textarea : InputFieldHooks<Textarea> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -28295,22 +28455,10 @@ struct Textarea {
     bool readonly = false;
     bool focusRing = true;
     Listener onFocus;
-    InputPasteFn onPaste = nullptr;
-    void* onPasteData = nullptr;
-    InlineTokenRenderer tokenRenderer = nullptr;
-    void* tokenRendererUser = nullptr;
-    InlineTokenClickListener tokenClick = nullptr;
-    void* tokenClickUser = nullptr;
-    InlineTokenHoverListener tokenHover = nullptr;
-    void* tokenHoverUser = nullptr;
-    EditorContextMenuFn contextMenu = nullptr;
-    void* contextMenuData = nullptr;
 
     ElRefiner refiner = {};
 
     static Textarea* New(Ctx* cx, Str id, InputState* state);
-
-    Textarea* ContextMenu(EditorContextMenuFn fn, void* data = nullptr);
 
     Textarea* Rows(int n);
     Textarea* WithSize(UiSize s);
@@ -28325,11 +28473,6 @@ struct Textarea {
     Textarea* Bordered(bool v);
     Textarea* FocusRing(bool v);
     Textarea* OnFocus(Listener fn);
-    Textarea* OnPaste(InputPasteFn fn, void* data = nullptr);
-    Textarea* Token(InlineTokenRenderer fn, void* user = nullptr);
-    Textarea* OnTokenClick(InlineTokenClickListener fn, void* user = nullptr);
-
-    Textarea* OnTokenHover(InlineTokenHoverListener fn, void* user = nullptr);
     El* IntoEl();
 };
 
@@ -28450,7 +28593,7 @@ struct InputGroup {
     El* IntoEl();
 };
 
-struct NumberInput {
+struct NumberInput : NumberRange {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str id = {};
@@ -28469,10 +28612,6 @@ struct NumberInput {
     bool hasTextColor = false;
     NumberStep numberStep = {};
     bool hasNumberStep = true;
-    bool hasMin = false;
-    double min = 0;
-    bool hasMax = false;
-    double max = 0;
     Listener onStep;
     Listener onInc;
     Listener onDec;
@@ -28659,16 +28798,7 @@ enum class MarkerAlignment : uint8_t {
     End
 };
 
-struct MarkerIcon {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
-
-    static MarkerIcon* New(Ctx* cx);
-    MarkerIcon* Child(El* e);
-    MarkerIcon* Refine(const Style& s, uint32_t fields);
+struct MarkerIcon : SlotBuilder<MarkerIcon> {
     El* IntoEl();
 };
 
@@ -28678,9 +28808,7 @@ struct MarkerContentChild {
     bool isText = false;
 };
 
-struct MarkerContent {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct MarkerContent : StyledBuilder<MarkerContent> {
     ArenaVec<MarkerContentChild> children;
 
     bool shimmer = false;
@@ -28690,14 +28818,9 @@ struct MarkerContent {
 
     Rgba fg = {};
     bool hasFg = false;
-    Style style = {};
-    uint32_t styleSet = 0;
-
-    static MarkerContent* New(Ctx* cx);
 
     MarkerContent* Text(Str text);
     MarkerContent* Child(El* e);
-    MarkerContent* Refine(const Style& s, uint32_t fields);
     El* IntoEl();
 };
 
@@ -28707,13 +28830,7 @@ struct MarkerChild {
     El* element = nullptr;
 };
 
-struct Marker {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    Str id = {};
-    bool hasId = false;
-    Style style = {};
-    uint32_t styleSet = 0;
+struct Marker : StyledBuilder<Marker>, IdBuilder<Marker> {
     Style separatorStyle = {};
     uint32_t separatorStyleSet = 0;
     MarkerVariant variant = MarkerVariant::Plain;
@@ -28725,10 +28842,6 @@ struct Marker {
     ShimmerStyle shimmerStyle = {};
     RoleOverride role = {};
     ArenaVec<MarkerChild> children;
-
-    static Marker* New(Ctx* cx);
-
-    Marker* Id(Str value);
 
     Marker* Role(RoleOverride value);
     Marker* WithVariant(MarkerVariant value);
@@ -28742,7 +28855,6 @@ struct Marker {
     Marker* Icon(MarkerIcon* value);
     Marker* Content(MarkerContent* value);
     Marker* Child(El* e);
-    Marker* Refine(const Style& s, uint32_t fields);
     El* IntoEl();
 };
 
@@ -28856,6 +28968,8 @@ void PopupMenuOpen(PopupMenuState* s, Ctx* cx);
 void PopupMenuDismiss(PopupMenuState* s, Ctx* cx);
 void PopupMenuDismissAll(PopupMenuState* s, Ctx* cx);
 
+void PopupMenuCloseSubmenu(PopupMenuState* s, Ctx* cx);
+
 void PopupMenuPerform(PopupMenuState* s, Ctx* cx, PopupMenuAction act,
                       const bool* clickable, const bool* hasSubmenu, int n);
 
@@ -28916,6 +29030,19 @@ struct MenuItem {
 
     El* element = nullptr;
 };
+
+template <typename Item>
+void MenuItemSetIcon(Item* it, const Icon* icon) {
+    if (!icon) {
+        return;
+    }
+    it->icon = icon->name;
+    if (icon->source == IconSource::Data) {
+        it->iconSvg = icon->data;
+    } else {
+        it->iconPath = icon->path;
+    }
+}
 
 struct PopupMenu {
     Arena* a = nullptr;
@@ -28998,9 +29125,9 @@ struct DropdownMenuPopover : DropdownMenu {
 
 struct ContextMenuState {
     Entity<PopupMenuState> menu = {};
+
     bool open = false;
     Point position = {};
-    FocusHandle previousFocus = {};
     FocusHandle triggerFocus = {};
 
     static void OnMouseDown(ContextMenuState* self, Ctx* cx,
@@ -29458,8 +29585,6 @@ struct NotificationListState {
 
     float itemH = 76;
 
-    double lastTickAt = 0;
-
     NotificationDelivery delivery = NotificationDelivery::InApp;
 
     bool isAdvancing = false;
@@ -29812,9 +29937,8 @@ Bounds ArrowJoinBounds(const Point points[3], gpui::Placement side,
 
 struct Button;
 
-struct Popover {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct Popover : SlotBuilder<Popover> {
+    using SlotBuilder<Popover>::New;
     Str id = {};
     El* trigger = nullptr;
 
@@ -29824,12 +29948,8 @@ struct Popover {
     El* (*contentFn)(void* user, Ctx* cx) = nullptr;
     void* contentUser = nullptr;
 
-    ArenaVec<El*> children;
-
     bool appearance = true;
 
-    Style style = {};
-    uint32_t styleSet = 0;
     ElRefiner refiner = {};
 
     bool controlled = false;
@@ -29851,18 +29971,13 @@ struct Popover {
     Style triggerStyle = {};
     uint32_t triggerStyleSet = 0;
 
-    static Popover* New(Ctx* cx);
     static Popover* New(Ctx* cx, Str id);
     Popover* Trigger(El* e);
     Popover* Trigger(component::Button* triggerBtn);
     Popover* Content(El* e);
     Popover* ContentBuilder(El* (*fn)(void* user, Ctx* cx), void* user);
 
-    Popover* Child(El* e);
-
     Popover* Appearance(bool v);
-
-    Popover* Refine(const Style& s, uint32_t fields);
 
     Popover* RefineWith(ElRefiner r);
     Popover* Open(bool v);
@@ -30099,46 +30214,13 @@ namespace gpui {
 
 namespace component {
 
-struct Radio {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    Str id = {};
-    Str label = {};
-
-    Str accessibilityLabel = {};
-    Str hint = {};
-    Str tooltip = {};
-    int tooltipShowDelayMs = -1;
-    bool checked = false;
-    bool disabled = false;
-    UiSize size = UiSize::Medium;
-    bool focusRing = true;
-    int tabIndex = 0;
-    bool tabStop = true;
-    Listener onClick;
+struct Radio : ChoiceBuilder<Radio> {
 
     ArenaVec<El*> children;
 
     ElRefiner refiner = {};
 
-    static Radio* New(Ctx* cx, Str id);
     Radio* Child(El* child);
-    Radio* Label(Str s);
-
-    Radio* AccessibilityLabel(Str s);
-    Radio* Hint(Str s);
-    Radio* Tooltip(Str s);
-    Radio* TooltipShowDelay(int ms);
-    Radio* Checked(bool v);
-    Radio* Disabled(bool v);
-    Radio* WithSize(UiSize s);
-
-    Radio* FocusRing(bool v);
-    Radio* TabIndex(int v);
-    Radio* TabStop(bool v);
-    Radio* OnClick(Listener fn);
-
-    Radio* OnChange(Listener fn);
     El* IntoEl();
 };
 
@@ -30267,9 +30349,7 @@ enum class SheetPlacement : uint8_t {
     Bottom
 };
 
-struct Sheet {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct Sheet : SlotBuilder<Sheet> {
     Str title = {};
     El* titleEl = nullptr;
     bool open = false;
@@ -30281,7 +30361,6 @@ struct Sheet {
     bool overlay = true;
     bool overlayClosable = true;
     El* body = nullptr;
-    ArenaVec<El*> children;
 
     El* footer = nullptr;
 
@@ -30289,10 +30368,7 @@ struct Sheet {
     int scrollId = 0;
     Listener onScroll;
     Listener onClose;
-    Style style = {};
-    uint32_t styleSet = 0;
 
-    static Sheet* New(Ctx* cx);
     Sheet* Title(Str s);
     Sheet* Title(El* e);
     Sheet* Placement(SheetPlacement p);
@@ -30302,9 +30378,7 @@ struct Sheet {
     Sheet* OverlayClosable(bool v = true);
     Sheet* Open(bool v);
     Sheet* Body(El* e);
-    Sheet* Child(El* e);
     Sheet* Footer(El* e);
-    Sheet* Refine(const Style& style, uint32_t fields);
     Sheet* Scroll(int id, float y, Listener fn);
     Sheet* OnClose(Listener fn);
     El* IntoEl(WinSize size);
@@ -30414,8 +30488,6 @@ struct WindowLayers {
     bool hasSheet = false;
 
     Entity<component::NotificationListState> notifications = {};
-
-    int notifyTimer = 0;
 
     ~WindowLayers();
 };
@@ -31045,19 +31117,13 @@ struct SidebarMenuItem {
     El* IntoEl(Str id);
 };
 
-struct SidebarMenu {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
+struct SidebarMenu : StyledBuilder<SidebarMenu> {
     ArenaVec<SidebarMenuItem*> items;
     bool collapsed = false;
-    Style style = {};
-    uint32_t styleSet = 0;
 
     ElRefiner refiner = {};
 
-    static SidebarMenu* New(Ctx* cx);
     SidebarMenu* Child(SidebarMenuItem* item);
-    SidebarMenu* Refine(const Style& v, uint32_t fields);
     El* IntoEl(Str id);
 };
 
@@ -31077,43 +31143,32 @@ struct SidebarGroup {
     El* IntoEl(Str id);
 };
 
-struct SidebarHeader {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
+template <typename Self>
+struct SidebarBandBuilder : SlotBuilder<Self> {
     bool selected = false;
     bool collapsed = false;
     Listener onClick = {};
     ElRefiner refiner = {};
 
-    static SidebarHeader* New(Ctx* cx);
-    SidebarHeader* Child(El* child);
-    SidebarHeader* Selected(bool v);
-    SidebarHeader* Collapsed(bool v);
-    SidebarHeader* OnClick(Listener fn);
-    SidebarHeader* Refine(const Style& v, uint32_t fields);
+    Self* Selected(bool v) {
+        selected = v;
+        return static_cast<Self*>(this);
+    }
+    Self* Collapsed(bool v) {
+        collapsed = v;
+        return static_cast<Self*>(this);
+    }
+    Self* OnClick(Listener fn) {
+        onClick = fn;
+        return static_cast<Self*>(this);
+    }
+};
+
+struct SidebarHeader : SidebarBandBuilder<SidebarHeader> {
     El* IntoEl();
 };
 
-struct SidebarFooter {
-    Arena* a = nullptr;
-    Ctx* cx = nullptr;
-    ArenaVec<El*> children;
-    Style style = {};
-    uint32_t styleSet = 0;
-    bool selected = false;
-    bool collapsed = false;
-    Listener onClick = {};
-    ElRefiner refiner = {};
-
-    static SidebarFooter* New(Ctx* cx);
-    SidebarFooter* Child(El* child);
-    SidebarFooter* Selected(bool v);
-    SidebarFooter* Collapsed(bool v);
-    SidebarFooter* OnClick(Listener fn);
-    SidebarFooter* Refine(const Style& v, uint32_t fields);
+struct SidebarFooter : SidebarBandBuilder<SidebarFooter> {
     El* IntoEl();
 };
 
@@ -31244,6 +31299,12 @@ struct Slider {
 }
 
 #line 1 "src/sys/speech_recognizer.h"
+
+#if GPUI_OS_LINUX || GPUI_OS_WASM
+#define GPUI_SPEECH_RECOGNIZER_UNSUPPORTED 1
+#else
+#define GPUI_SPEECH_RECOGNIZER_UNSUPPORTED 0
+#endif
 
 namespace gpui {
 
@@ -31615,7 +31676,9 @@ struct SpeechState {
     LiquidSurfaces surfaces = {};
 
     Vec<SpeechDeferredOp*> deferred;
+
     bool drainPosted = false;
+    Window* drainWin = nullptr;
     int updateDepth = 0;
 
     Entity<SpeechState> self = {};
@@ -33267,6 +33330,11 @@ struct SysState {
     }
 };
 
+#if GPUI_OS_IOS || GPUI_OS_ANDROID
+#define GPUI_SYSINFO_HOSTED 1
+#else
+#define GPUI_SYSINFO_HOSTED 0
+#endif
 void SysStateInit(SysState* s);
 void SysStateFree(SysState* s);
 void SysRefresh(SysState* s);
@@ -33279,6 +33347,30 @@ enum class ProcessSort : uint8_t {
 };
 void SysSortProcesses(SysState* s, ProcessSort field, bool descending,
                       int keepTop);
+
+void SysStateReset(SysState* s, int ncpu);
+
+void SysRefreshCpu(SysState* s);
+void SysRefreshMemory(SysState* s);
+void SysRefreshDisk(SysState* s);
+void SysRefreshBattery(SysState* s);
+void SysRefreshProcesses(SysState* s);
+
+void SysCpuSample(SysState* s, uint64_t idle, uint64_t total);
+
+void SysDiskSet(SysState* s, uint64_t total, uint64_t avail);
+
+void SysMemorySet(SysState* s, uint64_t total, uint64_t avail);
+
+struct SysProcScan {
+    Vec<ProcessInfo> procs;
+    Vec<ProcSample> samples;
+    uint64_t wallDelta = 0;
+};
+void SysProcScanBegin(SysProcScan* scan, uint64_t wall100ns);
+void SysProcScanSample(SysState* s, SysProcScan* scan, ProcessInfo* pi,
+                       uint64_t cpu100ns);
+void SysProcScanEnd(SysState* s, SysProcScan* scan);
 
 TempStr FormatBytesTemp(uint64_t bytes);
 TempStr FormatPctTemp(float v, int decimals);
@@ -33300,6 +33392,10 @@ struct ShellError {
 
 void ShellErrorClear(ShellError* error);
 void ShellErrorSet(ShellError* error, Str message);
+
+void ErrorOutSet(Str* error, Str message);
+
+void ErrorOutClear(Str* error);
 
 }
 
@@ -34471,6 +34567,7 @@ inline constexpr ArgumentDescriptor kDisabledArguments[] = {
     {"disabled", SchemaBoolean()}};
 inline constexpr ArgumentDescriptor kSelectedArguments[] = {
     {"selected", SchemaBoolean()}};
+inline constexpr ArgumentDescriptor kIdArguments[] = {{"id", SchemaString()}};
 
 inline constexpr MethodDescriptor kOnClickMethod = {
     "on_click", kOnClickArguments,
@@ -34489,8 +34586,34 @@ inline constexpr MethodDescriptor kSelectedMethod = {
 
 inline constexpr const char* kSizeLiterals[] = {"xsmall", "small", "medium",
                                                 "large"};
+inline constexpr ArgumentDescriptor kSizeArguments[] = {
+    {"size", SchemaEnum(kSizeLiterals)}};
 
 UiSize SizeOfLiteral(Str literal);
+
+template <class T, typename T::Kind K>
+bool RecordSizeOp(PayloadBuild* build, const ComponentArgument* args, int) {
+    T* op = build->New<T>();
+    op->kind = K;
+    op->size = SizeOfLiteral(args[0].string);
+    return true;
+}
+
+template <class T, typename K>
+bool RecordFlagOp(PayloadBuild* build, const ComponentArgument* args, int count,
+                  K kind, const char* component, const char* name) {
+    if (count != 1 || args[0].kind != shell::ComponentArgumentKind::Boolean)
+        return build
+            ->Fail(fmt("%s.%s expects one boolean", Str(component), Str(name)));
+    T* op = build->New<T>();
+    op->kind = kind;
+    op->flag = args[0].boolean;
+    return true;
+}
+
+bool IsUsizeNumber(double value);
+
+int SaturatingInt(double value);
 
 bool RejectStyle(MaterializeRequest* request, const char* name);
 
@@ -34551,6 +34674,21 @@ void EachMethod(const MaterializeRequest* request, F&& visit) {
 
 bool ParseColorArgument(PayloadBuild* build, const char* component, Str text,
                         Rgba* out);
+
+inline constexpr const char* kCardAnchorLiterals[] = {
+    "top_left",      "top_center",   "top_right",   "bottom_left",
+    "bottom_center", "bottom_right", "left_center", "right_center"};
+inline constexpr ArgumentDescriptor kCardAnchorArguments[] = {
+    {"anchor", SchemaEnum(kCardAnchorLiterals)}};
+inline constexpr ArgumentDescriptor kOpenChangeArguments[] = {
+    {"callback", SchemaCallback("(open: boolean, cx: Context) => void")}};
+
+bool CardAnchorArgument(PayloadBuild* build, const char* component,
+                        const ComponentArgument* args, int count,
+                        gpui::Anchor* out);
+
+bool OpenChangeArgument(PayloadBuild* build, const char* component,
+                        const ComponentArgument* args, int count);
 
 TempStr F64DisplayTemp(double value);
 
@@ -35043,6 +35181,9 @@ bool Prepare(MaterializeRequest* request, InputState* state, uint64_t handle,
 void ApplyInput(const Binding& binding, component::Input* input);
 void ApplyTextarea(const Binding& binding, component::Textarea* textarea);
 
+void ReportChange(const shell::ComponentEventBinding* binding, ScriptView* view,
+                  Ctx* cx, const void* event, const char* failure);
+
 El* Wrap(const Binding& binding, Ctx* cx, El* element);
 
 }
@@ -35177,6 +35318,44 @@ bool RequireLeaf(int children, bool styled, Str* error);
 
 }
 
+#line 1 "src/component_shell/searchable_rows.h"
+
+namespace gpui::component_shell {
+
+bool SearchableItemsFromRows(Ctx* cx, const char* component,
+                             const shell::ComponentDataValue* rows, int count,
+                             component::SearchableListItem** items, Str* error);
+
+struct RetainedSearchableItems {
+    Arena* arena = nullptr;
+    Vec<component::SearchableListItem> items;
+
+    bool Same(const component::SearchableListItem* next, int count) const;
+
+    void Set(const component::SearchableListItem* next, int count);
+    void Free();
+};
+
+bool IsIdAndThreeCallbacks(const ComponentArgument* args, int count);
+
+bool MenuWidthArgument(PayloadBuild* build, const char* component,
+                       const ComponentArgument* args, int count, float* out);
+
+template <typename Op>
+bool RecordMenuWidthOp(PayloadBuild* build, const char* component,
+                       const ComponentArgument* args, int count) {
+    float width = 0;
+    if (!MenuWidthArgument(build, component, args, count, &width)) {
+        return false;
+    }
+    Op* op = build->New<Op>();
+    op->kind = Op::MenuWidth;
+    op->number = width;
+    return true;
+}
+
+}
+
 #line 1 "src/component_shell/settings/mod.h"
 
 namespace gpui::component_shell::settings {
@@ -35234,6 +35413,72 @@ struct TableCellPart {};
 
 bool RecordCellSpan(PayloadBuild* build, const ComponentArgument* args,
                     int count);
+
+}
+
+#line 1 "src/component_shell/text_editing.h"
+
+namespace gpui::component_shell::text_editing {
+
+struct Op {
+    enum Kind : uint8_t {
+        Appearance,
+        Bordered,
+        Readonly,
+        AriaLabel,
+    } kind = Appearance;
+    bool flag = false;
+    Str text;
+};
+
+bool RecordState(PayloadBuild* build, const char* component,
+                 const char* stateName, const ComponentArgument* args,
+                 int count);
+
+bool RecordBool(PayloadBuild* build, const char* component, Op::Kind kind,
+                const ComponentArgument* args, int count);
+bool RecordAriaLabel(PayloadBuild* build, const char* component,
+                     const ComponentArgument* args, int count);
+
+template <const char* Component, Op::Kind K>
+bool RecordBoolFor(PayloadBuild* build, const ComponentArgument* args,
+                   int count) {
+    return RecordBool(build, Component, K, args, count);
+}
+template <const char* Component>
+bool RecordAriaLabelFor(PayloadBuild* build, const ComponentArgument* args,
+                        int count) {
+    return RecordAriaLabel(build, Component, args, count);
+}
+
+template <class W>
+void ApplyOps(const MaterializeRequest* request, W* widget) {
+    EachMethod<Op>(request, [&](const Op& op) {
+        switch (op.kind) {
+            case Op::Appearance:
+                widget->Appearance(op.flag);
+                break;
+            case Op::Bordered:
+                widget->Bordered(op.flag);
+                break;
+            case Op::Readonly:
+                widget->Readonly(op.flag);
+                break;
+            case Op::AriaLabel:
+                widget->AriaLabel(op.text);
+                break;
+        }
+    });
+}
+
+inline constexpr ArgumentDescriptor kAppearanceArgs[] = {
+    {"appearance", SchemaBoolean()}};
+inline constexpr ArgumentDescriptor kBorderedArgs[] = {
+    {"bordered", SchemaBoolean()}};
+inline constexpr ArgumentDescriptor kReadonlyArgs[] = {
+    {"readonly", SchemaBoolean()}};
+inline constexpr ArgumentDescriptor kAriaLabelArgs[] = {
+    {"label", SchemaString()}};
 
 }
 
@@ -35663,82 +35908,11 @@ int ImageCacheEncodedCount(App* app = nullptr);
 
 #include <math.h>
 
-#if GPUI_OS_WINDOWS
-#ifndef WIN_BACKEND_ALL
-#define WIN_BACKEND_ALL 0
-#endif
-#if WIN_BACKEND_ALL
-#undef WIN_BACKEND_DIRECT2D
-#undef WIN_BACKEND_D3D11
-#undef WIN_BACKEND_D3D12
-#define WIN_BACKEND_DIRECT2D 1
-#define WIN_BACKEND_D3D11 1
-#define WIN_BACKEND_D3D12 1
-#else
-#if !defined(WIN_BACKEND_DIRECT2D) && !defined(WIN_BACKEND_D3D11) && \
-    !defined(WIN_BACKEND_D3D12)
-#define WIN_BACKEND_DIRECT2D 1
-#endif
-#ifndef WIN_BACKEND_DIRECT2D
-#define WIN_BACKEND_DIRECT2D 0
-#endif
-#ifndef WIN_BACKEND_D3D11
-#define WIN_BACKEND_D3D11 0
-#endif
-#ifndef WIN_BACKEND_D3D12
-#define WIN_BACKEND_D3D12 0
-#endif
-#if WIN_BACKEND_DIRECT2D + WIN_BACKEND_D3D11 + WIN_BACKEND_D3D12 != 1
-#error Define exactly one WIN_BACKEND_DIRECT2D, WIN_BACKEND_D3D11 or WIN_BACKEND_D3D12, or define WIN_BACKEND_ALL
-#endif
-#endif
-#else
-#undef WIN_BACKEND_ALL
-#undef WIN_BACKEND_DIRECT2D
-#undef WIN_BACKEND_D3D11
-#undef WIN_BACKEND_D3D12
-#define WIN_BACKEND_ALL 0
-#define WIN_BACKEND_DIRECT2D 0
-#define WIN_BACKEND_D3D11 0
-#define WIN_BACKEND_D3D12 0
-#endif
-
-#define WIN_BACKEND_GPU (WIN_BACKEND_D3D11 || WIN_BACKEND_D3D12)
-
 namespace gpui {
 
 #if GPUI_OS_WINDOWS
-enum class WinPaintBackend : uint8_t {
-    Direct2D,
-    D3D11,
-    D3D12,
-};
 
-enum class WinPaintMsaa : uint8_t {
-    X1 = 1,
-    X2 = 2,
-    X4 = 4,
-    X8 = 8,
-};
-
-enum class WinSceneMode : uint8_t {
-    Off,
-    Replay,
-    Cache,
-    Skip,
-    Damage,
-};
-
-struct WinPaintOptions {
-    WinPaintBackend backend = WinPaintBackend::Direct2D;
-    WinPaintMsaa msaa = WinPaintMsaa::X4;
-    WinSceneMode scene = WinSceneMode::Damage;
-
-    int gpuResetEvery = 0;
-};
-
-const WinPaintOptions& WinPaintOptionsGet();
-bool WinPaintOptionsTakeArg(Str arg);
+HBITMAP WinDib32New(int w, int h, void** bits);
 #endif
 
 enum : uint8_t {
@@ -35850,6 +36024,17 @@ bool CanvasScrollRect(PaintCtx* ctx, float x, float y, float w, float h,
 bool CanvasReadPixels(PaintCtx* ctx, float x, float y, float w, float h,
                       uint8_t* bgra, int cap, int* outW, int* outH);
 
+#if GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_WASM
+inline bool CanvasScrollRect(PaintCtx*, float, float, float, float, float,
+                             float) {
+    return false;
+}
+inline bool CanvasReadPixels(PaintCtx*, float, float, float, float, uint8_t*,
+                             int, int*, int*) {
+    return false;
+}
+#endif
+
 struct Path;
 
 Path* PathNew(PaintCtx* ctx, bool winding);
@@ -35877,6 +36062,12 @@ void PathStrokeGradient(PaintCtx* ctx, Path* p, float stroke, float x0,
                         bool roundCaps = false, float dx = 0, float dy = 0);
 
 void PathRealize(PaintCtx* ctx, Path* p);
+
+#if GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_WASM
+inline void PathRealize(PaintCtx* ctx, Path* p) {
+    (void)ctx, (void)p;
+}
+#endif
 
 struct RenderImage;
 
@@ -35946,94 +36137,188 @@ float TextLayoutBaseline(TextLayout* tl);
 
 }
 
-#line 1 "src/gpui/paintgpu.h"
+#line 1 "src/gpui/paint_backend.h"
 
 #if GPUI_OS_WINDOWS
+struct ID2D1Bitmap;
+#elif GPUI_OS_LINUX
+struct _cairo_surface;
+#elif GPUI_OS_MAC
+struct CGImage;
+#endif
 
 namespace gpui {
 
-bool PaintGpuOn();
+uint64_t PaintResourceGenerationNew();
 
-bool PaintD3d12On();
+bool PaintSceneFinish(PaintCtx* ctx, bool replayUnchanged);
 
-int PaintGpuSamples();
+void PaintCopyBgraRows(uint8_t* dst, size_t dstStride, const uint8_t* src,
+                       size_t srcStride, int w, int h);
 
-void* PaintSharedD3dDevice(PaintApp* pa);
+void PaintGrayBgraRows(uint8_t* dst, size_t dstStride, const uint8_t* src,
+                       size_t srcStride, int w, int h);
 
-void* PaintSharedDxgiFactory(PaintApp* pa);
+#if GPUI_OS_WINDOWS || GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_WASM
+#define GPUI_PAINT_IN_TREE 1
+#else
+#define GPUI_PAINT_IN_TREE 0
+#endif
 
-void PaintSharedD3dDeviceReset(PaintApp* pa);
+#if GPUI_OS_WINDOWS || GPUI_OS_LINUX || GPUI_OS_MAC
+#define GPUI_PAINT_IMAGE_FRAMES 1
+#else
+#define GPUI_PAINT_IMAGE_FRAMES 0
+#endif
 
-void* PaintSharedDwrite(PaintApp* pa);
+#if GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_WASM
+#define GPUI_PAINT_DIRECT 1
+#else
+#define GPUI_PAINT_DIRECT 0
+#endif
 
-bool PaintImagePixels(const RenderImage* img, const uint8_t** bgra, int* w,
-                      int* h, int frameIndex);
+#if GPUI_PAINT_IN_TREE
 
-void* PaintTextLayoutNative(TextLayout* tl);
+struct TextLayoutHead {
 
-namespace gpuw {
+    int textLen = 0;
+    uint64_t generation = 0;
+    int refs = 1;
 
-void PaintAppFree();
-bool PaintTargetBegin(PaintCtx* ctx, void* native, int pxW, int pxH);
-bool PaintTargetBeginOffscreen(PaintCtx* ctx, int pxW, int pxH);
-bool PaintTargetEndOffscreen(PaintCtx* ctx, uint8_t* outBgra);
-bool PaintTargetEnd(PaintCtx* ctx);
-void PaintTargetFree(PaintCtx* ctx);
-
-void CanvasClear(PaintCtx* ctx, Rgba c);
-void CanvasFillRect(PaintCtx* ctx, float x, float y, float w, float h, Rgba c);
-void CanvasFillRound(PaintCtx* ctx, float x, float y, float w, float h, float r,
-                     Rgba c);
-void CanvasStrokeRound(PaintCtx* ctx, float x, float y, float w, float h,
-                       float r, float stroke, Rgba c, const float* dash);
-void CanvasLine(PaintCtx* ctx, float x1, float y1, float x2, float y2,
-                float stroke, Rgba c, const float* dash);
-void CanvasEllipse(PaintCtx* ctx, float cx, float cy, float rx, float ry,
-                   float stroke, Rgba c);
-void CanvasPushClip(PaintCtx* ctx, float x, float y, float w, float h);
-void CanvasPopClip(PaintCtx* ctx);
-
-Path* PathNew(PaintCtx* ctx, bool winding);
-void PathFree(Path* p);
-void PathMoveTo(Path* p, float x, float y);
-void PathLineTo(Path* p, float x, float y);
-void PathCubicTo(Path* p, float x1, float y1, float x2, float y2, float x,
-                 float y);
-void PathArcTo(Path* p, float cx, float cy, float r, float a0, float a1,
-               bool clockwise);
-void PathClose(Path* p);
-void PathFill(PaintCtx* ctx, Path* p, Rgba c, float dx, float dy);
-void PathFillGradient(PaintCtx* ctx, Path* p, float x0, float y0, float x1,
-                      float y1, Rgba from, Rgba to, float dx, float dy);
-void PathStroke(PaintCtx* ctx, Path* p, float stroke, Rgba c, bool roundCaps,
-                float dx, float dy);
-void PathStrokeGradient(PaintCtx* ctx, Path* p, float stroke, float x0,
-                        float y0, float x1, float y1, Rgba from, Rgba to,
-                        bool roundCaps, float dx, float dy);
-void PathRealize(PaintCtx* ctx, Path* p);
-
-void RenderImageDraw(PaintCtx* ctx, RenderImage* img, Bounds bounds,
-                     Bounds imageBounds, int frameIndex, float radius,
-                     bool grayscale);
-
-void RenderImageFree(uint64_t imageGeneration);
-int RenderImageCacheCountForTest(uint64_t imageGeneration);
-void TextLayoutDraw(PaintCtx* ctx, TextLayout* tl, float x, float y, Rgba c,
-                    bool clip, float clipW);
-
-struct FrameStats {
-    int instances = 0;
-    int draws = 0;
-    int glyphsRasterized = 0;
-    int pathTriangles = 0;
+    Size cover = {};
 };
-const FrameStats& LastFrameStats();
 
-}
+void TextLayoutDestroy(TextLayout* tl);
 
-}
+void PaintListInstalledFonts(PaintApp* pa, Vec<Str>* out);
+
+#if GPUI_PAINT_IMAGE_FRAMES
+struct ImageFrame {
+    int w = 0;
+    int h = 0;
+    int durationMs = 100;
+#if GPUI_OS_WINDOWS
+    uint8_t* bgra = nullptr;
+    ID2D1Bitmap* bmp = nullptr;
+    ID2D1Bitmap* grayBmp = nullptr;
+
+    uint64_t bmpTargetGeneration = 0;
+#elif GPUI_OS_LINUX
+    _cairo_surface* surface = nullptr;
+    _cairo_surface* graySurface = nullptr;
+#elif GPUI_OS_MAC
+    CGImage* image = nullptr;
+    CGImage* grayImage = nullptr;
+#endif
+};
+
+void ImageFrameFree(ImageFrame* frame);
+#endif
+
+struct RenderImage {
+    int refs = 1;
+    uint64_t generation = 0;
+    RenderImageStatus status = RenderImageStatus::Ready;
+#if GPUI_PAINT_IMAGE_FRAMES
+    Vec<ImageFrame> frames;
+#endif
+#if GPUI_OS_WASM
+    int js = 0;
+#endif
+};
+
+#if GPUI_OS_WASM
+void RenderImageDropNative(RenderImage* img);
+#else
+inline void RenderImageDropNative(RenderImage*) {}
+#endif
+
+RenderImage* RenderImageAlloc(RenderImageStatus status);
+
+#if GPUI_PAINT_IMAGE_FRAMES
+
+int RenderImageFrameIndex(const RenderImage* img, int frameIndex);
+
+RenderImage* RenderImageWithFrame(const ImageFrame& frame);
+void RenderImageFramesFree(RenderImage* img);
+#endif
+
+#if GPUI_PAINT_DIRECT
+
+TextLayout* TextLayoutShape(PaintCtx* ctx, Str s, float fontSize, float maxW,
+                            bool wrap, uint16_t weight, float lineH,
+                            Size* outSize, TextAlign align);
+
+struct PathHead {
+
+    bool winding = true;
+
+    bool fig = false;
+};
+
+Path* PathAlloc();
+void PathDestroy(Path* p);
+void PathEmitMove(Path* p, float x, float y);
+void PathEmitLine(Path* p, float x, float y);
+void PathEmitCubic(Path* p, float x1, float y1, float x2, float y2, float x,
+                   float y);
+void PathEmitArc(Path* p, float cx, float cy, float r, float a0, float a1,
+                 bool clockwise);
+void PathEmitClose(Path* p);
+
+void PaintTargetDestroy(PaintTarget* rt);
+
+bool PaintTargetReplace(PaintCtx* ctx, void* native);
+#endif
+
+void PaintBackendCanvasClear(PaintCtx* ctx, Rgba c);
+void PaintBackendCanvasFillRect(PaintCtx* ctx, float x, float y, float w,
+                                float h, Rgba c);
+void PaintBackendCanvasFillRound(PaintCtx* ctx, float x, float y, float w,
+                                 float h, float r, Rgba c);
+void PaintBackendCanvasStrokeRound(PaintCtx* ctx, float x, float y, float w,
+                                   float h, float r, float stroke, Rgba c,
+                                   const float* dash);
+void PaintBackendCanvasLine(PaintCtx* ctx, float x1, float y1, float x2,
+                            float y2, float stroke, Rgba c, const float* dash);
+void PaintBackendCanvasEllipse(PaintCtx* ctx, float cx, float cy, float rx,
+                               float ry, float stroke, Rgba c);
+void PaintBackendCanvasPushClip(PaintCtx* ctx, float x, float y, float w,
+                                float h);
+void PaintBackendCanvasPopClip(PaintCtx* ctx);
+void PaintBackendPathFill(PaintCtx* ctx, Path* p, Rgba c, float dx, float dy);
+void PaintBackendPathFillGradient(PaintCtx* ctx, Path* p, float x0, float y0,
+                                  float x1, float y1, Rgba from, Rgba to,
+                                  float dx, float dy);
+void PaintBackendPathStroke(PaintCtx* ctx, Path* p, float stroke, Rgba c,
+                            bool roundCaps, float dx, float dy);
+void PaintBackendPathStrokeGradient(PaintCtx* ctx, Path* p, float stroke,
+                                    float x0, float y0, float x1, float y1,
+                                    Rgba from, Rgba to, bool roundCaps,
+                                    float dx, float dy);
+void PaintBackendRenderImageDraw(PaintCtx* ctx, RenderImage* img, Bounds bounds,
+                                 Bounds imageBounds, int frameIndex,
+                                 float radius, bool grayscale);
+void PaintBackendTextLayoutDraw(PaintCtx* ctx, TextLayout* tl, float x, float y,
+                                Rgba c, bool clip, float clipW);
+Path* PaintBackendPathNew(PaintCtx* ctx, bool winding);
+void PaintBackendPathFree(Path* p);
+void PaintBackendPathMoveTo(Path* p, float x, float y);
+void PaintBackendPathLineTo(Path* p, float x, float y);
+void PaintBackendPathCubicTo(Path* p, float x1, float y1, float x2, float y2,
+                             float x, float y);
+void PaintBackendPathArcTo(Path* p, float cx, float cy, float r, float a0,
+                           float a1, bool clockwise);
+void PaintBackendPathClose(Path* p);
+
+bool PaintBackendTextLayoutSpansAccepted(const TextLayout* tl, int n);
+bool PaintBackendTextLayoutSpans(PaintCtx* ctx, TextLayout* tl, Str text,
+                                 float x, float y, Rgba base,
+                                 const TextSpan* spans, int n);
 
 #endif
+
+}
 
 #line 1 "src/gpui/platform.h"
 
@@ -36046,7 +36331,10 @@ void WindowDrawFrameHeadless(Window* win, float dipW, float dipH);
 
 bool PlatReduceMotion();
 
-#if GPUI_OS_IOS || GPUI_OS_ANDROID
+#if GPUI_OS_LINUX
+bool PlatReduceMotionKnown(bool* out);
+void PlatReduceMotionFollow(void (*onChange)(bool reduce));
+#else
 inline bool PlatReduceMotionKnown(bool* out) {
     if (out) {
         *out = PlatReduceMotion();
@@ -36056,9 +36344,6 @@ inline bool PlatReduceMotionKnown(bool* out) {
 inline void PlatReduceMotionFollow(void (*onChange)(bool reduce)) {
     (void)onChange;
 }
-#else
-bool PlatReduceMotionKnown(bool* out);
-void PlatReduceMotionFollow(void (*onChange)(bool reduce));
 #endif
 
 struct KeyDownFlags {
@@ -36114,6 +36399,8 @@ int WindowChromeHit(Window* win, float x, float y);
 
 int WindowTimerMs(Window* win);
 
+double WindowTimersDue(const Window* win);
+
 void WindowClosed(Window* win);
 bool WindowShouldClose(Window* win);
 bool AppAnyWindowOpen(App* app);
@@ -36137,6 +36424,25 @@ void PlatSetTimer(Window* win, int ms);
 void PlatInstallImePositionUpdate(void (*update)(Window* win));
 
 void PlatWake(App* app);
+
+#if GPUI_OS_WINDOWS || GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_WASM
+#define GPUI_WINDOW_IN_TREE 1
+#else
+#define GPUI_WINDOW_IN_TREE 0
+#endif
+#if GPUI_WINDOW_IN_TREE
+
+void PlatClipboardSetText(Window* win, Str text);
+Str PlatClipboardGetText(Arena* a, Window* win);
+ClipboardItem PlatClipboardGetItem(Arena* a, Window* win);
+#endif
+#if GPUI_OS_WINDOWS
+void PlatInvalidate(Window* win);
+#else
+inline void PlatInvalidate(Window* win) {
+    (void)win;
+}
+#endif
 
 struct PlatPollFd {
     int fd;
@@ -36192,7 +36498,11 @@ struct PlatMenuItem {
     Modifiers keyMods = {};
 };
 
-#if GPUI_OS_IOS || GPUI_OS_ANDROID
+#if GPUI_OS_WINDOWS || GPUI_OS_MAC
+bool PlatHasMenu();
+int PlatShowMenu(Window* win, const PlatMenuItem* items, int n, float x,
+                 float y, bool dark);
+#else
 inline bool PlatHasMenu() {
     return false;
 }
@@ -36201,10 +36511,6 @@ inline int PlatShowMenu(Window* win, const PlatMenuItem* items, int n, float x,
     (void)win, (void)items, (void)n, (void)x, (void)y, (void)dark;
     return 0;
 }
-#else
-bool PlatHasMenu();
-int PlatShowMenu(Window* win, const PlatMenuItem* items, int n, float x,
-                 float y, bool dark);
 #endif
 
 bool PlatHasAppMenu();
@@ -36212,6 +36518,18 @@ bool PlatHasAppMenu();
 void PlatSetAppMenu(App* app, const PlatMenuItem* items, int n);
 
 void PlatSetMenuBarVisible(bool visible);
+
+#if GPUI_OS_WINDOWS || GPUI_OS_LINUX || GPUI_OS_WASM
+inline bool PlatHasAppMenu() {
+    return false;
+}
+inline void PlatSetAppMenu(App* app, const PlatMenuItem* items, int n) {
+    (void)app, (void)items, (void)n;
+}
+inline void PlatSetMenuBarVisible(bool visible) {
+    (void)visible;
+}
+#endif
 
 void AppMenuChosen(int id);
 
@@ -36221,22 +36539,11 @@ void AppMenuChosen(int id);
 
 namespace gpui {
 
-enum SceneLevel : uint8_t {
-    kSceneOff = 0,
-    kSceneReplay = 1,
-    kSceneCache = 2,
-    kSceneSkip = 3,
-    kSceneDamage = 4
-};
-
-int SceneLevelOn();
-inline bool SceneOn() {
-    return SceneLevelOn() > kSceneOff;
-}
+bool SceneOn();
 
 bool SceneTakeArg(Str arg);
 
-bool ScrollLayersTakeArg(Str arg);
+bool SceneDamageSupported();
 
 namespace scene {
 
@@ -36417,6 +36724,62 @@ void TestFocus(Window* win, FocusHandle handle);
 
 }
 
+#line 1 "src/gpui/window_loop.h"
+
+namespace gpui {
+
+template <typename Plat>
+void RunLoopRedrawDirty(App* app, void (*redraw)(Window*)) {
+    for (int i = 0; i < app->windows.len; i++) {
+        Window* w = app->windows[i];
+        if (w->plat && w->dirty) {
+            redraw(w);
+        }
+    }
+}
+
+template <typename Plat>
+double RunLoopWaitFor(App* app, bool* anyDirty) {
+    double now = TimeNow();
+    double waitS = 1.0;
+    *anyDirty = false;
+    for (int i = 0; i < app->windows.len; i++) {
+        Window* w = app->windows[i];
+        Plat* plat = w->plat;
+        if (!plat) {
+            continue;
+        }
+        if (w->dirty) {
+            *anyDirty = true;
+        }
+        if (plat->nextTick > 0) {
+            double d = plat->nextTick - now;
+            if (d < waitS) {
+                waitS = d;
+            }
+        }
+    }
+    return waitS;
+}
+
+template <typename Plat>
+void RunLoopTickDue(App* app) {
+    double now = TimeNow();
+    for (int i = 0; i < app->windows.len; i++) {
+        Window* w = app->windows[i];
+        Plat* plat = w->plat;
+        if (!plat || plat->nextTick <= 0) {
+            continue;
+        }
+        if (now >= plat->nextTick) {
+
+            WindowTimerTick(w);
+        }
+    }
+}
+
+}
+
 #if GPUI_INCLUDE_PRIVATE_API
 #line 1 "src/html5ever/html5ever.h"
 
@@ -36584,8 +36947,102 @@ inline const Attribute* TokenAttrs(Arena* a, const Token* token) {
     return token ? ArenaPtrGet(a, token->attrs) : nullptr;
 }
 
-const Attribute* Attr(Arena* a, const Node* node, Str name);
-Str AttrValue(Arena* a, const Node* node, Str name);
+inline const Attribute* Attr(Arena* a, const Node* node, Str name) {
+    for (const Attribute* attr = NodeAttrs(a, node); attr;
+         attr = AttributeNext(a, attr)) {
+        if (base::StrEqI(AttributeName(a, attr), name)) return attr;
+    }
+    return nullptr;
+}
+inline Str AttrValue(Arena* a, const Node* node, Str name) {
+    return AttributeValue(a, Attr(a, node, name));
+}
+
+struct TokenizerInput {
+    Arena* a = nullptr;
+    Str source = {};
+    int at = 0;
+    int line = 1;
+    TokenSink sink = nullptr;
+    void* user = nullptr;
+    TokenizerOptions options = {};
+
+    void Start(Arena* arena, Str text, TokenSink to, void* data,
+               TokenizerOptions opts) {
+        a = arena;
+        source = text;
+        sink = to;
+        user = data;
+        options = opts;
+    }
+    void Emit(const Token& token) const {
+        if (sink) sink(user, &token);
+    }
+};
+
+inline Node* NodeNew(Arena* a, NodeKind kind, Str name = {}) {
+    Node* node = base::ArenaNew<Node>(a);
+    node->kind = kind;
+    node->name = base::ArenaStrDup(a, name);
+    return node;
+}
+
+inline void NodeAppend(Arena* a, Node* parent, Node* child) {
+    child->parent = base::ArenaPtrOf(a, parent);
+    child->next = {};
+    Node* last = NodeLast(a, parent);
+    if (last)
+        last->next = base::ArenaPtrOf(a, child);
+    else
+        parent->first = base::ArenaPtrOf(a, child);
+    parent->last = base::ArenaPtrOf(a, child);
+}
+
+inline bool NumericCharRef(Str s, int at, int* radix, int* digits, int* end) {
+    if (at >= len(s) || s.s[at] != '#') {
+        return false;
+    }
+    at++;
+    *radix = 10;
+    if (at < len(s) && (s.s[at] == 'x' || s.s[at] == 'X')) {
+        *radix = 16;
+        at++;
+    }
+    *digits = at;
+    while (at < len(s)) {
+        int d = base::HexDigitValue(s.s[at]);
+        if (d < 0 || d >= *radix) break;
+        at++;
+    }
+    *end = at;
+    return true;
+}
+
+inline void SerializeStartTag(Arena* a, base::StrBuilder& out,
+                              const Node* node) {
+    out.AppendChar('<');
+    out.Append(NodeName(a, node));
+    for (const Attribute* at = NodeAttrs(a, node); at;
+         at = AttributeNext(a, at)) {
+        out.AppendChar(' ');
+        out.Append(AttributeName(a, at));
+        out.Append(StrL("=\""));
+        base::AppendHtmlEscaped(out, AttributeValue(a, at), false, true);
+        out.AppendChar('"');
+    }
+    out.AppendChar('>');
+}
+inline void SerializeEndTag(Arena* a, base::StrBuilder& out, const Node* node) {
+    out.Append(StrL("</"));
+    out.Append(NodeName(a, node));
+    out.AppendChar('>');
+}
+inline void SerializeComment(Arena* a, base::StrBuilder& out,
+                             const Node* node) {
+    out.Append(StrL("<!--"));
+    out.Append(NodeData(a, node));
+    out.Append(StrL("-->"));
+}
 
 }
 
@@ -36643,14 +37100,6 @@ constexpr int kThematicBreakMarkerCountMin = 3;
 extern const char kHtmlBlockNames[];
 extern const char kHtmlRawNames[];
 
-struct CharacterReference {
-    int32_t nameOff;
-    int32_t valueOff;
-};
-extern const char kCharacterReferenceNames[];
-extern const char kCharacterReferenceValues[];
-extern const CharacterReference kCharacterReferences[2125];
-
 }
 
 #endif
@@ -36662,324 +37111,329 @@ namespace markdown {
 
 struct Tokenizer;
 
+#define GPUI_MARKDOWN_STATES(X)                           \
+    X(AttentionStart)                                     \
+    X(AttentionInside)                                    \
+    X(AutolinkStart)                                      \
+    X(AutolinkOpen)                                       \
+    X(AutolinkSchemeOrEmailAtext)                         \
+    X(AutolinkSchemeInsideOrEmailAtext)                   \
+    X(AutolinkUrlInside)                                  \
+    X(AutolinkEmailAtSignOrDot)                           \
+    X(AutolinkEmailAtext)                                 \
+    X(AutolinkEmailValue)                                 \
+    X(AutolinkEmailLabel)                                 \
+    X(BlankLineStart)                                     \
+    X(BlankLineAfter)                                     \
+    X(BlockQuoteStart)                                    \
+    X(BlockQuoteContStart)                                \
+    X(BlockQuoteContBefore)                               \
+    X(BlockQuoteContAfter)                                \
+    X(BomStart)                                           \
+    X(BomInside)                                          \
+    X(CharacterEscapeStart)                               \
+    X(CharacterEscapeInside)                              \
+    X(CharacterReferenceStart)                            \
+    X(CharacterReferenceOpen)                             \
+    X(CharacterReferenceNumeric)                          \
+    X(CharacterReferenceValue)                            \
+    X(CodeIndentedStart)                                  \
+    X(CodeIndentedAtBreak)                                \
+    X(CodeIndentedAfter)                                  \
+    X(CodeIndentedFurtherStart)                           \
+    X(CodeIndentedInside)                                 \
+    X(CodeIndentedFurtherBegin)                           \
+    X(CodeIndentedFurtherAfter)                           \
+    X(ContentChunkStart)                                  \
+    X(ContentChunkInside)                                 \
+    X(ContentDefinitionBefore)                            \
+    X(ContentDefinitionAfter)                             \
+    X(DataStart)                                          \
+    X(DataInside)                                         \
+    X(DataAtBreak)                                        \
+    X(DefinitionStart)                                    \
+    X(DefinitionBefore)                                   \
+    X(DefinitionLabelAfter)                               \
+    X(DefinitionLabelNok)                                 \
+    X(DefinitionMarkerAfter)                              \
+    X(DefinitionDestinationBefore)                        \
+    X(DefinitionDestinationAfter)                         \
+    X(DefinitionDestinationMissing)                       \
+    X(DefinitionTitleBefore)                              \
+    X(DefinitionAfter)                                    \
+    X(DefinitionAfterWhitespace)                          \
+    X(DefinitionTitleBeforeMarker)                        \
+    X(DefinitionTitleAfter)                               \
+    X(DefinitionTitleAfterOptionalWhitespace)             \
+    X(DestinationStart)                                   \
+    X(DestinationEnclosedBefore)                          \
+    X(DestinationEnclosed)                                \
+    X(DestinationEnclosedEscape)                          \
+    X(DestinationRaw)                                     \
+    X(DestinationRawEscape)                               \
+    X(DocumentStart)                                      \
+    X(DocumentBeforeFrontmatter)                          \
+    X(DocumentContainerExistingBefore)                    \
+    X(DocumentContainerExistingAfter)                     \
+    X(DocumentContainerNewBefore)                         \
+    X(DocumentContainerNewBeforeNotBlockQuote)            \
+    X(DocumentContainerNewBeforeNotList)                  \
+    X(DocumentContainerNewBeforeNotGfmFootnoteDefinition) \
+    X(DocumentContainerNewAfter)                          \
+    X(DocumentContainersAfter)                            \
+    X(DocumentFlowInside)                                 \
+    X(DocumentFlowEnd)                                    \
+    X(FlowStart)                                          \
+    X(FlowBeforeGfmTable)                                 \
+    X(FlowBeforeCodeIndented)                             \
+    X(FlowBeforeRaw)                                      \
+    X(FlowBeforeHtml)                                     \
+    X(FlowBeforeHeadingAtx)                               \
+    X(FlowBeforeHeadingSetext)                            \
+    X(FlowBeforeThematicBreak)                            \
+    X(FlowAfter)                                          \
+    X(FlowBlankLineBefore)                                \
+    X(FlowBlankLineAfter)                                 \
+    X(FlowBeforeContent)                                  \
+    X(FrontmatterStart)                                   \
+    X(FrontmatterOpenSequence)                            \
+    X(FrontmatterOpenAfter)                               \
+    X(FrontmatterAfter)                                   \
+    X(FrontmatterContentStart)                            \
+    X(FrontmatterContentInside)                           \
+    X(FrontmatterContentEnd)                              \
+    X(FrontmatterCloseStart)                              \
+    X(FrontmatterCloseSequence)                           \
+    X(FrontmatterCloseAfter)                              \
+    X(GfmAutolinkLiteralProtocolStart)                    \
+    X(GfmAutolinkLiteralProtocolAfter)                    \
+    X(GfmAutolinkLiteralProtocolPrefixInside)             \
+    X(GfmAutolinkLiteralProtocolSlashesInside)            \
+    X(GfmAutolinkLiteralWwwStart)                         \
+    X(GfmAutolinkLiteralWwwAfter)                         \
+    X(GfmAutolinkLiteralWwwPrefixInside)                  \
+    X(GfmAutolinkLiteralWwwPrefixAfter)                   \
+    X(GfmAutolinkLiteralDomainInside)                     \
+    X(GfmAutolinkLiteralDomainAtPunctuation)              \
+    X(GfmAutolinkLiteralDomainAfter)                      \
+    X(GfmAutolinkLiteralPathInside)                       \
+    X(GfmAutolinkLiteralPathAtPunctuation)                \
+    X(GfmAutolinkLiteralPathAfter)                        \
+    X(GfmAutolinkLiteralTrail)                            \
+    X(GfmAutolinkLiteralTrailCharRefInside)               \
+    X(GfmAutolinkLiteralTrailCharRefStart)                \
+    X(GfmAutolinkLiteralTrailBracketAfter)                \
+    X(GfmFootnoteDefinitionStart)                         \
+    X(GfmFootnoteDefinitionLabelBefore)                   \
+    X(GfmFootnoteDefinitionLabelAtMarker)                 \
+    X(GfmFootnoteDefinitionLabelInside)                   \
+    X(GfmFootnoteDefinitionLabelEscape)                   \
+    X(GfmFootnoteDefinitionLabelAfter)                    \
+    X(GfmFootnoteDefinitionWhitespaceAfter)               \
+    X(GfmFootnoteDefinitionContStart)                     \
+    X(GfmFootnoteDefinitionContBlank)                     \
+    X(GfmFootnoteDefinitionContFilled)                    \
+    X(GfmLabelStartFootnoteStart)                         \
+    X(GfmLabelStartFootnoteOpen)                          \
+    X(GfmTaskListItemCheckStart)                          \
+    X(GfmTaskListItemCheckInside)                         \
+    X(GfmTaskListItemCheckClose)                          \
+    X(GfmTaskListItemCheckAfter)                          \
+    X(GfmTaskListItemCheckAfterSpaceOrTab)                \
+    X(GfmTableStart)                                      \
+    X(GfmTableHeadRowBefore)                              \
+    X(GfmTableHeadRowStart)                               \
+    X(GfmTableHeadRowBreak)                               \
+    X(GfmTableHeadRowData)                                \
+    X(GfmTableHeadRowEscape)                              \
+    X(GfmTableHeadDelimiterStart)                         \
+    X(GfmTableHeadDelimiterBefore)                        \
+    X(GfmTableHeadDelimiterCellBefore)                    \
+    X(GfmTableHeadDelimiterValueBefore)                   \
+    X(GfmTableHeadDelimiterLeftAlignmentAfter)            \
+    X(GfmTableHeadDelimiterFiller)                        \
+    X(GfmTableHeadDelimiterRightAlignmentAfter)           \
+    X(GfmTableHeadDelimiterCellAfter)                     \
+    X(GfmTableHeadDelimiterNok)                           \
+    X(GfmTableBodyRowStart)                               \
+    X(GfmTableBodyRowBreak)                               \
+    X(GfmTableBodyRowData)                                \
+    X(GfmTableBodyRowEscape)                              \
+    X(HardBreakEscapeStart)                               \
+    X(HardBreakEscapeAfter)                               \
+    X(HeadingAtxStart)                                    \
+    X(HeadingAtxBefore)                                   \
+    X(HeadingAtxSequenceOpen)                             \
+    X(HeadingAtxAtBreak)                                  \
+    X(HeadingAtxSequenceFurther)                          \
+    X(HeadingAtxData)                                     \
+    X(HeadingSetextStart)                                 \
+    X(HeadingSetextBefore)                                \
+    X(HeadingSetextInside)                                \
+    X(HeadingSetextAfter)                                 \
+    X(HtmlFlowStart)                                      \
+    X(HtmlFlowBefore)                                     \
+    X(HtmlFlowOpen)                                       \
+    X(HtmlFlowDeclarationOpen)                            \
+    X(HtmlFlowCommentOpenInside)                          \
+    X(HtmlFlowCdataOpenInside)                            \
+    X(HtmlFlowTagCloseStart)                              \
+    X(HtmlFlowTagName)                                    \
+    X(HtmlFlowBasicSelfClosing)                           \
+    X(HtmlFlowCompleteClosingTagAfter)                    \
+    X(HtmlFlowCompleteEnd)                                \
+    X(HtmlFlowCompleteAttributeNameBefore)                \
+    X(HtmlFlowCompleteAttributeName)                      \
+    X(HtmlFlowCompleteAttributeNameAfter)                 \
+    X(HtmlFlowCompleteAttributeValueBefore)               \
+    X(HtmlFlowCompleteAttributeValueQuoted)               \
+    X(HtmlFlowCompleteAttributeValueQuotedAfter)          \
+    X(HtmlFlowCompleteAttributeValueUnquoted)             \
+    X(HtmlFlowCompleteAfter)                              \
+    X(HtmlFlowBlankLineBefore)                            \
+    X(HtmlFlowContinuation)                               \
+    X(HtmlFlowContinuationDeclarationInside)              \
+    X(HtmlFlowContinuationAfter)                          \
+    X(HtmlFlowContinuationStart)                          \
+    X(HtmlFlowContinuationBefore)                         \
+    X(HtmlFlowContinuationCommentInside)                  \
+    X(HtmlFlowContinuationRawTagOpen)                     \
+    X(HtmlFlowContinuationRawEndTag)                      \
+    X(HtmlFlowContinuationClose)                          \
+    X(HtmlFlowContinuationCdataInside)                    \
+    X(HtmlFlowContinuationStartNonLazy)                   \
+    X(HtmlTextStart)                                      \
+    X(HtmlTextOpen)                                       \
+    X(HtmlTextDeclarationOpen)                            \
+    X(HtmlTextTagCloseStart)                              \
+    X(HtmlTextTagClose)                                   \
+    X(HtmlTextTagCloseBetween)                            \
+    X(HtmlTextTagOpen)                                    \
+    X(HtmlTextTagOpenBetween)                             \
+    X(HtmlTextTagOpenAttributeName)                       \
+    X(HtmlTextTagOpenAttributeNameAfter)                  \
+    X(HtmlTextTagOpenAttributeValueBefore)                \
+    X(HtmlTextTagOpenAttributeValueQuoted)                \
+    X(HtmlTextTagOpenAttributeValueQuotedAfter)           \
+    X(HtmlTextTagOpenAttributeValueUnquoted)              \
+    X(HtmlTextCdata)                                      \
+    X(HtmlTextCdataOpenInside)                            \
+    X(HtmlTextCdataClose)                                 \
+    X(HtmlTextCdataEnd)                                   \
+    X(HtmlTextCommentOpenInside)                          \
+    X(HtmlTextComment)                                    \
+    X(HtmlTextCommentClose)                               \
+    X(HtmlTextCommentEnd)                                 \
+    X(HtmlTextDeclaration)                                \
+    X(HtmlTextEnd)                                        \
+    X(HtmlTextInstruction)                                \
+    X(HtmlTextInstructionClose)                           \
+    X(HtmlTextLineEndingBefore)                           \
+    X(HtmlTextLineEndingAfter)                            \
+    X(HtmlTextLineEndingAfterPrefix)                      \
+    X(LabelStart)                                         \
+    X(LabelAtBreak)                                       \
+    X(LabelEolAfter)                                      \
+    X(LabelEscape)                                        \
+    X(LabelInside)                                        \
+    X(LabelNok)                                           \
+    X(LabelEndStart)                                      \
+    X(LabelEndAfter)                                      \
+    X(LabelEndResourceStart)                              \
+    X(LabelEndResourceBefore)                             \
+    X(LabelEndResourceOpen)                               \
+    X(LabelEndResourceDestinationAfter)                   \
+    X(LabelEndResourceDestinationMissing)                 \
+    X(LabelEndResourceBetween)                            \
+    X(LabelEndResourceTitleAfter)                         \
+    X(LabelEndResourceEnd)                                \
+    X(LabelEndOk)                                         \
+    X(LabelEndNok)                                        \
+    X(LabelEndReferenceFull)                              \
+    X(LabelEndReferenceFullAfter)                         \
+    X(LabelEndReferenceFullMissing)                       \
+    X(LabelEndReferenceNotFull)                           \
+    X(LabelEndReferenceCollapsed)                         \
+    X(LabelEndReferenceCollapsedOpen)                     \
+    X(LabelStartImageStart)                               \
+    X(LabelStartImageOpen)                                \
+    X(LabelStartImageAfter)                               \
+    X(LabelStartLinkStart)                                \
+    X(ListItemStart)                                      \
+    X(ListItemBefore)                                     \
+    X(ListItemBeforeOrdered)                              \
+    X(ListItemBeforeUnordered)                            \
+    X(ListItemValue)                                      \
+    X(ListItemMarker)                                     \
+    X(ListItemMarkerAfter)                                \
+    X(ListItemAfter)                                      \
+    X(ListItemMarkerAfterFilled)                          \
+    X(ListItemWhitespace)                                 \
+    X(ListItemPrefixOther)                                \
+    X(ListItemWhitespaceAfter)                            \
+    X(ListItemContStart)                                  \
+    X(ListItemContBlank)                                  \
+    X(ListItemContFilled)                                 \
+    X(NonLazyContinuationStart)                           \
+    X(NonLazyContinuationAfter)                           \
+    X(ParagraphStart)                                     \
+    X(ParagraphLineStart)                                 \
+    X(ParagraphInside)                                    \
+    X(RawFlowStart)                                       \
+    X(RawFlowBeforeSequenceOpen)                          \
+    X(RawFlowSequenceOpen)                                \
+    X(RawFlowInfoBefore)                                  \
+    X(RawFlowInfo)                                        \
+    X(RawFlowMetaBefore)                                  \
+    X(RawFlowMeta)                                        \
+    X(RawFlowAtNonLazyBreak)                              \
+    X(RawFlowCloseStart)                                  \
+    X(RawFlowBeforeSequenceClose)                         \
+    X(RawFlowSequenceClose)                               \
+    X(RawFlowAfterSequenceClose)                          \
+    X(RawFlowContentBefore)                               \
+    X(RawFlowContentStart)                                \
+    X(RawFlowBeforeContentChunk)                          \
+    X(RawFlowContentChunk)                                \
+    X(RawFlowAfter)                                       \
+    X(RawTextStart)                                       \
+    X(RawTextSequenceOpen)                                \
+    X(RawTextBetween)                                     \
+    X(RawTextData)                                        \
+    X(RawTextSequenceClose)                               \
+    X(SpaceOrTabStart)                                    \
+    X(SpaceOrTabInside)                                   \
+    X(SpaceOrTabAfter)                                    \
+    X(SpaceOrTabEolStart)                                 \
+    X(SpaceOrTabEolAfterFirst)                            \
+    X(SpaceOrTabEolAfterEol)                              \
+    X(SpaceOrTabEolAtEol)                                 \
+    X(SpaceOrTabEolAfterMore)                             \
+    X(StringStart)                                        \
+    X(StringBefore)                                       \
+    X(StringBeforeData)                                   \
+    X(TextStart)                                          \
+    X(TextBefore)                                         \
+    X(TextBeforeHtml)                                     \
+    X(TextBeforeHardBreakEscape)                          \
+    X(TextBeforeLabelStartLink)                           \
+    X(TextBeforeData)                                     \
+    X(ThematicBreakStart)                                 \
+    X(ThematicBreakBefore)                                \
+    X(ThematicBreakSequence)                              \
+    X(ThematicBreakAtBreak)                               \
+    X(TitleStart)                                         \
+    X(TitleBegin)                                         \
+    X(TitleAfterEol)                                      \
+    X(TitleAtBreak)                                       \
+    X(TitleEscape)                                        \
+    X(TitleInside)                                        \
+    X(TitleNok)
+
 enum class StateName : uint16_t {
-    AttentionStart,
-    AttentionInside,
-    AutolinkStart,
-    AutolinkOpen,
-    AutolinkSchemeOrEmailAtext,
-    AutolinkSchemeInsideOrEmailAtext,
-    AutolinkUrlInside,
-    AutolinkEmailAtSignOrDot,
-    AutolinkEmailAtext,
-    AutolinkEmailValue,
-    AutolinkEmailLabel,
-    BlankLineStart,
-    BlankLineAfter,
-    BlockQuoteStart,
-    BlockQuoteContStart,
-    BlockQuoteContBefore,
-    BlockQuoteContAfter,
-    BomStart,
-    BomInside,
-    CharacterEscapeStart,
-    CharacterEscapeInside,
-    CharacterReferenceStart,
-    CharacterReferenceOpen,
-    CharacterReferenceNumeric,
-    CharacterReferenceValue,
-    CodeIndentedStart,
-    CodeIndentedAtBreak,
-    CodeIndentedAfter,
-    CodeIndentedFurtherStart,
-    CodeIndentedInside,
-    CodeIndentedFurtherBegin,
-    CodeIndentedFurtherAfter,
-    ContentChunkStart,
-    ContentChunkInside,
-    ContentDefinitionBefore,
-    ContentDefinitionAfter,
-    DataStart,
-    DataInside,
-    DataAtBreak,
-    DefinitionStart,
-    DefinitionBefore,
-    DefinitionLabelAfter,
-    DefinitionLabelNok,
-    DefinitionMarkerAfter,
-    DefinitionDestinationBefore,
-    DefinitionDestinationAfter,
-    DefinitionDestinationMissing,
-    DefinitionTitleBefore,
-    DefinitionAfter,
-    DefinitionAfterWhitespace,
-    DefinitionTitleBeforeMarker,
-    DefinitionTitleAfter,
-    DefinitionTitleAfterOptionalWhitespace,
-    DestinationStart,
-    DestinationEnclosedBefore,
-    DestinationEnclosed,
-    DestinationEnclosedEscape,
-    DestinationRaw,
-    DestinationRawEscape,
-    DocumentStart,
-    DocumentBeforeFrontmatter,
-    DocumentContainerExistingBefore,
-    DocumentContainerExistingAfter,
-    DocumentContainerNewBefore,
-    DocumentContainerNewBeforeNotBlockQuote,
-    DocumentContainerNewBeforeNotList,
-    DocumentContainerNewBeforeNotGfmFootnoteDefinition,
-    DocumentContainerNewAfter,
-    DocumentContainersAfter,
-    DocumentFlowInside,
-    DocumentFlowEnd,
-    FlowStart,
-    FlowBeforeGfmTable,
-    FlowBeforeCodeIndented,
-    FlowBeforeRaw,
-    FlowBeforeHtml,
-    FlowBeforeHeadingAtx,
-    FlowBeforeHeadingSetext,
-    FlowBeforeThematicBreak,
-    FlowAfter,
-    FlowBlankLineBefore,
-    FlowBlankLineAfter,
-    FlowBeforeContent,
-    FrontmatterStart,
-    FrontmatterOpenSequence,
-    FrontmatterOpenAfter,
-    FrontmatterAfter,
-    FrontmatterContentStart,
-    FrontmatterContentInside,
-    FrontmatterContentEnd,
-    FrontmatterCloseStart,
-    FrontmatterCloseSequence,
-    FrontmatterCloseAfter,
-    GfmAutolinkLiteralProtocolStart,
-    GfmAutolinkLiteralProtocolAfter,
-    GfmAutolinkLiteralProtocolPrefixInside,
-    GfmAutolinkLiteralProtocolSlashesInside,
-    GfmAutolinkLiteralWwwStart,
-    GfmAutolinkLiteralWwwAfter,
-    GfmAutolinkLiteralWwwPrefixInside,
-    GfmAutolinkLiteralWwwPrefixAfter,
-    GfmAutolinkLiteralDomainInside,
-    GfmAutolinkLiteralDomainAtPunctuation,
-    GfmAutolinkLiteralDomainAfter,
-    GfmAutolinkLiteralPathInside,
-    GfmAutolinkLiteralPathAtPunctuation,
-    GfmAutolinkLiteralPathAfter,
-    GfmAutolinkLiteralTrail,
-    GfmAutolinkLiteralTrailCharRefInside,
-    GfmAutolinkLiteralTrailCharRefStart,
-    GfmAutolinkLiteralTrailBracketAfter,
-    GfmFootnoteDefinitionStart,
-    GfmFootnoteDefinitionLabelBefore,
-    GfmFootnoteDefinitionLabelAtMarker,
-    GfmFootnoteDefinitionLabelInside,
-    GfmFootnoteDefinitionLabelEscape,
-    GfmFootnoteDefinitionLabelAfter,
-    GfmFootnoteDefinitionWhitespaceAfter,
-    GfmFootnoteDefinitionContStart,
-    GfmFootnoteDefinitionContBlank,
-    GfmFootnoteDefinitionContFilled,
-    GfmLabelStartFootnoteStart,
-    GfmLabelStartFootnoteOpen,
-    GfmTaskListItemCheckStart,
-    GfmTaskListItemCheckInside,
-    GfmTaskListItemCheckClose,
-    GfmTaskListItemCheckAfter,
-    GfmTaskListItemCheckAfterSpaceOrTab,
-    GfmTableStart,
-    GfmTableHeadRowBefore,
-    GfmTableHeadRowStart,
-    GfmTableHeadRowBreak,
-    GfmTableHeadRowData,
-    GfmTableHeadRowEscape,
-    GfmTableHeadDelimiterStart,
-    GfmTableHeadDelimiterBefore,
-    GfmTableHeadDelimiterCellBefore,
-    GfmTableHeadDelimiterValueBefore,
-    GfmTableHeadDelimiterLeftAlignmentAfter,
-    GfmTableHeadDelimiterFiller,
-    GfmTableHeadDelimiterRightAlignmentAfter,
-    GfmTableHeadDelimiterCellAfter,
-    GfmTableHeadDelimiterNok,
-    GfmTableBodyRowStart,
-    GfmTableBodyRowBreak,
-    GfmTableBodyRowData,
-    GfmTableBodyRowEscape,
-    HardBreakEscapeStart,
-    HardBreakEscapeAfter,
-    HeadingAtxStart,
-    HeadingAtxBefore,
-    HeadingAtxSequenceOpen,
-    HeadingAtxAtBreak,
-    HeadingAtxSequenceFurther,
-    HeadingAtxData,
-    HeadingSetextStart,
-    HeadingSetextBefore,
-    HeadingSetextInside,
-    HeadingSetextAfter,
-    HtmlFlowStart,
-    HtmlFlowBefore,
-    HtmlFlowOpen,
-    HtmlFlowDeclarationOpen,
-    HtmlFlowCommentOpenInside,
-    HtmlFlowCdataOpenInside,
-    HtmlFlowTagCloseStart,
-    HtmlFlowTagName,
-    HtmlFlowBasicSelfClosing,
-    HtmlFlowCompleteClosingTagAfter,
-    HtmlFlowCompleteEnd,
-    HtmlFlowCompleteAttributeNameBefore,
-    HtmlFlowCompleteAttributeName,
-    HtmlFlowCompleteAttributeNameAfter,
-    HtmlFlowCompleteAttributeValueBefore,
-    HtmlFlowCompleteAttributeValueQuoted,
-    HtmlFlowCompleteAttributeValueQuotedAfter,
-    HtmlFlowCompleteAttributeValueUnquoted,
-    HtmlFlowCompleteAfter,
-    HtmlFlowBlankLineBefore,
-    HtmlFlowContinuation,
-    HtmlFlowContinuationDeclarationInside,
-    HtmlFlowContinuationAfter,
-    HtmlFlowContinuationStart,
-    HtmlFlowContinuationBefore,
-    HtmlFlowContinuationCommentInside,
-    HtmlFlowContinuationRawTagOpen,
-    HtmlFlowContinuationRawEndTag,
-    HtmlFlowContinuationClose,
-    HtmlFlowContinuationCdataInside,
-    HtmlFlowContinuationStartNonLazy,
-    HtmlTextStart,
-    HtmlTextOpen,
-    HtmlTextDeclarationOpen,
-    HtmlTextTagCloseStart,
-    HtmlTextTagClose,
-    HtmlTextTagCloseBetween,
-    HtmlTextTagOpen,
-    HtmlTextTagOpenBetween,
-    HtmlTextTagOpenAttributeName,
-    HtmlTextTagOpenAttributeNameAfter,
-    HtmlTextTagOpenAttributeValueBefore,
-    HtmlTextTagOpenAttributeValueQuoted,
-    HtmlTextTagOpenAttributeValueQuotedAfter,
-    HtmlTextTagOpenAttributeValueUnquoted,
-    HtmlTextCdata,
-    HtmlTextCdataOpenInside,
-    HtmlTextCdataClose,
-    HtmlTextCdataEnd,
-    HtmlTextCommentOpenInside,
-    HtmlTextComment,
-    HtmlTextCommentClose,
-    HtmlTextCommentEnd,
-    HtmlTextDeclaration,
-    HtmlTextEnd,
-    HtmlTextInstruction,
-    HtmlTextInstructionClose,
-    HtmlTextLineEndingBefore,
-    HtmlTextLineEndingAfter,
-    HtmlTextLineEndingAfterPrefix,
-    LabelStart,
-    LabelAtBreak,
-    LabelEolAfter,
-    LabelEscape,
-    LabelInside,
-    LabelNok,
-    LabelEndStart,
-    LabelEndAfter,
-    LabelEndResourceStart,
-    LabelEndResourceBefore,
-    LabelEndResourceOpen,
-    LabelEndResourceDestinationAfter,
-    LabelEndResourceDestinationMissing,
-    LabelEndResourceBetween,
-    LabelEndResourceTitleAfter,
-    LabelEndResourceEnd,
-    LabelEndOk,
-    LabelEndNok,
-    LabelEndReferenceFull,
-    LabelEndReferenceFullAfter,
-    LabelEndReferenceFullMissing,
-    LabelEndReferenceNotFull,
-    LabelEndReferenceCollapsed,
-    LabelEndReferenceCollapsedOpen,
-    LabelStartImageStart,
-    LabelStartImageOpen,
-    LabelStartImageAfter,
-    LabelStartLinkStart,
-    ListItemStart,
-    ListItemBefore,
-    ListItemBeforeOrdered,
-    ListItemBeforeUnordered,
-    ListItemValue,
-    ListItemMarker,
-    ListItemMarkerAfter,
-    ListItemAfter,
-    ListItemMarkerAfterFilled,
-    ListItemWhitespace,
-    ListItemPrefixOther,
-    ListItemWhitespaceAfter,
-    ListItemContStart,
-    ListItemContBlank,
-    ListItemContFilled,
-    NonLazyContinuationStart,
-    NonLazyContinuationAfter,
-    ParagraphStart,
-    ParagraphLineStart,
-    ParagraphInside,
-    RawFlowStart,
-    RawFlowBeforeSequenceOpen,
-    RawFlowSequenceOpen,
-    RawFlowInfoBefore,
-    RawFlowInfo,
-    RawFlowMetaBefore,
-    RawFlowMeta,
-    RawFlowAtNonLazyBreak,
-    RawFlowCloseStart,
-    RawFlowBeforeSequenceClose,
-    RawFlowSequenceClose,
-    RawFlowAfterSequenceClose,
-    RawFlowContentBefore,
-    RawFlowContentStart,
-    RawFlowBeforeContentChunk,
-    RawFlowContentChunk,
-    RawFlowAfter,
-    RawTextStart,
-    RawTextSequenceOpen,
-    RawTextBetween,
-    RawTextData,
-    RawTextSequenceClose,
-    SpaceOrTabStart,
-    SpaceOrTabInside,
-    SpaceOrTabAfter,
-    SpaceOrTabEolStart,
-    SpaceOrTabEolAfterFirst,
-    SpaceOrTabEolAfterEol,
-    SpaceOrTabEolAtEol,
-    SpaceOrTabEolAfterMore,
-    StringStart,
-    StringBefore,
-    StringBeforeData,
-    TextStart,
-    TextBefore,
-    TextBeforeHtml,
-    TextBeforeHardBreakEscape,
-    TextBeforeLabelStartLink,
-    TextBeforeData,
-    ThematicBreakStart,
-    ThematicBreakBefore,
-    ThematicBreakSequence,
-    ThematicBreakAtBreak,
-    TitleStart,
-    TitleBegin,
-    TitleAfterEol,
-    TitleAtBreak,
-    TitleEscape,
-    TitleInside,
-    TitleNok,
+#define GPUI_MARKDOWN_STATE_NAME(name) name,
+    GPUI_MARKDOWN_STATES(GPUI_MARKDOWN_STATE_NAME)
+#undef GPUI_MARKDOWN_STATE_NAME
     Count,
 };
 
@@ -37255,7 +37709,7 @@ inline bool IsAsciiDigit(uint8_t b) {
     return b >= '0' && b <= '9';
 }
 inline bool IsAsciiHexDigit(uint8_t b) {
-    return IsAsciiDigit(b) || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F');
+    return base::HexDigitValue((char)b) >= 0;
 }
 inline bool IsAsciiAlpha(uint8_t b) {
     return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z');
@@ -37267,7 +37721,7 @@ inline bool IsAsciiControl(uint8_t b) {
     return b < 0x20 || b == 0x7f;
 }
 
-int32_t Utf8Encode(char* out, uint32_t cp);
+using base::Utf8Encode;
 
 struct Position {
     Point start = {};
@@ -37547,6 +38001,18 @@ Node* ToMdastCompile(const Vec<Event>& events, ParseState* parseState,
 #line 1 "src/markdown/construct.h"
 
 namespace markdown {
+
+inline void ResetLabelTokens(Tokenizer* t) {
+    t->tokenizeState.token1 = Name::Data;
+    t->tokenizeState.token2 = Name::Data;
+    t->tokenizeState.token3 = Name::Data;
+}
+inline void ResetDestinationTokens(Tokenizer* t) {
+    ResetLabelTokens(t);
+    t->tokenizeState.token4 = Name::Data;
+    t->tokenizeState.token5 = Name::Data;
+    t->tokenizeState.sizeB = 0;
+}
 
 State AttentionStart(Tokenizer* t);
 State AttentionInside(Tokenizer* t);
@@ -37983,6 +38449,13 @@ struct FsResult {
     void Free();
 };
 
+bool FsReadAppend(StrBuilder* output, const char* bytes, int count, Str root,
+                  Str relative, Str* error);
+
+bool FsOperationWrites(FsOperation operation);
+
+bool FsSetLinkTarget(FsResult* result, Str target, Str* error);
+
 bool FsRun(FsOperation operation, Str root, Str relative, Str input,
            bool recursive, FsResult* result, Str* error);
 
@@ -38118,7 +38591,7 @@ struct ExecuteGrant {
     bool Allows(Str command) const;
 };
 
-struct HttpRequestGrant {
+struct HttpGrantFields {
     Str scheme;
     Str host;
     uint16_t port = 0;
@@ -38126,7 +38599,9 @@ struct HttpRequestGrant {
     Vec<Str> methods;
     Vec<Str> paths;
     Vec<Str> pathPrefixes;
+};
 
+struct HttpRequestGrant : HttpGrantFields {
     HttpRequestGrant();
     explicit HttpRequestGrant(Str host);
     HttpRequestGrant(const HttpRequestGrant& other);
@@ -38233,6 +38708,26 @@ class Capabilities {
     void Clear();
     void CopyFrom(const Capabilities& other);
 };
+
+}
+
+#line 1 "src/shell/common.h"
+
+namespace gpui::shell {
+
+bool PathIsAbsolute(Str path);
+
+Str PathJoin(Str left, Str right);
+
+Str TrimAscii(Str value);
+
+void AppendJsonString(StrBuilder* out, Str value);
+
+bool WriteWholeFile(Str path, Str contents, Str* error);
+
+bool ReadWholeFile(Str path, int limit, Str* out, Str* error);
+
+bool SourceTreeSkipsDirectory(Str name);
 
 }
 
@@ -38355,6 +38850,8 @@ class HostModule {
 HostModules* HostModulesNew();
 HostModules* HostModulesRetain(HostModules* modules);
 void HostModulesRelease(HostModules* modules);
+
+HostModules* HostModulesCurrent();
 HostModules* HostModulesClone(HostModules* modules);
 uint64_t HostModulesGeneration(const HostModules* modules);
 int HostModulesCount(const HostModules* modules);
@@ -38429,7 +38926,8 @@ class Storage {
     bool BeginWrite(StorageWrite* write, Str* error = nullptr);
     void FinishWrite(uint64_t writeRevision, bool ok,
                      Vec<StorageWaiter*>* ready);
-    void AbortWrite(uint64_t writeRevision);
+
+    void AbortWrite(uint64_t writeRevision, Vec<StorageWaiter*>* ready);
     bool Wait(Func1<StorageOutcome> settle, StorageWaiter** waiter,
               bool* immediate, Str* error = nullptr);
     void CancelWaiter(StorageWaiter* waiter);
@@ -38558,12 +39056,16 @@ class ScopeHostContext {
   private:
     friend ScopeHostContext ScopeCurrentHost();
     friend ScopeHostContext ScopeHostForGeneration(uint64_t, ShellError*);
-    ScopeHostContext(Window* window, App* app, bool held);
-    static ScopeHostContext Acquire(Window* window, App* app);
+    ScopeHostContext(Window* window, App* app, uint64_t frame);
+
+    static ScopeHostContext Acquire(Window* window, App* app,
+                                    uint64_t generation);
     void Release();
 
     Window* window = nullptr;
     App* app = nullptr;
+
+    uint64_t frame = 0;
     bool held = false;
 };
 
@@ -38740,13 +39242,9 @@ struct RetainedCallback {
     CallbackId callback = 0;
 };
 
-struct NumberInputConfig {
+struct NumberInputConfig : NumberRange {
     bool hasStep = false;
     double step = 1;
-    bool hasMin = false;
-    double min = 0;
-    bool hasMax = false;
-    double max = 0;
 };
 
 struct RetainedEntry {
@@ -39197,14 +39695,7 @@ struct ShellSelectBinding {
 };
 
 struct ShellNumberBinding {
-    InputState* state = nullptr;
-    NumberStep step = {};
-    bool hasStep = false;
-    bool hasMin = false;
-    double min = 0;
-    bool hasMax = false;
-    double max = 0;
-    bool disabled = false;
+    NumberStepTarget target = {};
     shell::CallbackId onStep = 0;
 };
 
@@ -39493,15 +39984,7 @@ constexpr int kShellMaxManifestBytes = 1024 * 1024;
 
 constexpr const char* kGitDependencyDefaultEntry = "index.js";
 
-struct PluginHttpGrant {
-    Str scheme;
-    Str host;
-    uint16_t port = 0;
-    bool hasPort = false;
-    Vec<Str> methods;
-    Vec<Str> paths;
-    Vec<Str> pathPrefixes;
-};
+struct PluginHttpGrant : HttpGrantFields {};
 
 struct GitDependency {
     Str name;
@@ -39706,6 +40189,14 @@ bool DependencyRemoveDirectoryLink(Str link);
 bool DependencyReadDirectoryLink(Str link, Str* target);
 uint32_t DependencyProcessId();
 
+bool DependencyMakeDirectory(Str path);
+
+bool DependencyLockOpen(Str path, DependencyLock* lock);
+
+int DependencyLockTry(DependencyLock* lock);
+
+void DependencyLockClose(DependencyLock* lock);
+
 bool ShellWriteDependencyLinks(Str applicationRoot, int* linked, Str* error);
 
 }
@@ -39731,6 +40222,10 @@ struct ShellPanelScript {
     bool zoomable = true;
     bool visible = true;
 };
+
+bool IsDockCommandName(Str name);
+
+DockPlacement DockPlacementOfName(Str name);
 
 Str ShellPanelName(Str application, Str panel);
 
@@ -39855,6 +40350,8 @@ Str HttpProxyDirectDup();
 bool HttpGet(Str url, HttpRsp* out);
 bool HttpGetNoRedirect(Str url, HttpRsp* out);
 
+void HttpTrimMediaType(Str* s);
+
 constexpr int kHttpMaxBody = 16 * 1024 * 1024;
 constexpr int kHttpTimeoutMs = 15000;
 
@@ -39944,6 +40441,9 @@ struct FetchRequest {
     Str body;
 
     double deadline = 0;
+
+    bool (*cancelled)(void* user) = nullptr;
+    void* cancelUser = nullptr;
 
     void Free();
 };
@@ -40072,6 +40572,18 @@ bool ShellWriteAgents(Str directory, const FrozenComponentRegistry* components,
 Window* ShellOpenWindow(App* app, const FrozenComponentRegistry* components,
                         const ComponentWindowOptions& options,
                         ComponentWindowBuild build, void* data);
+
+}
+
+#line 1 "src/sys/clock.h"
+
+namespace gpui {
+
+uint64_t ClockMonotonicNs();
+
+double ClockMonotonicSecondsSinceStart();
+
+bool ClockThreadCpuSeconds(double* seconds);
 
 }
 
@@ -40212,6 +40724,75 @@ bool ProcessDecodeFeed(ProcessDecodeState* state, ProcessEventBox* box,
 void ProcessDecodeFinish(ProcessDecodeState* state, ProcessEventBox* box,
                          ProcessStreamEvent::Kind kind);
 
+struct ProcessStreamCore {
+    ProcessEventBox box;
+    Str command;
+    Str cwd;
+    double timeoutSeconds = 0;
+    uint32_t pid = 0;
+    ProcessDecodeState outDecode;
+    ProcessDecodeState errDecode;
+};
+
+void ProcessStreamCoreInit(ProcessStreamCore* stream, Str command,
+                           const ProcessSpawnOptions* options);
+
+void ProcessStreamCoreFree(ProcessStreamCore* stream);
+
+void ProcessStreamCoreTimedOut(ProcessStreamCore* stream);
+
+ProcessStreamCore* ProcessStreamCoreOf(ProcessStream* stream);
+
+bool ProcessStreamStarted(ProcessStream* stream, bool ok, ProcessStream** out);
+
+void ProcessStreamThreadsFailed(Str command, Str* error);
+
+void ProcessStdinPump(ProcessEventBox* box,
+                      int (*writeSome)(void* ctx, const char* bytes, int count),
+                      void* ctx);
+
+void ProcessEventPushExit(ProcessEventBox* box, ProcessStreamEvent event);
+
+int ProcessTimeoutMilliseconds(double seconds);
+
+bool ProcessCaptureAppend(StrBuilder* out, const char* bytes, int count,
+                          Str* error, const char* name);
+
+double ProcessBoundedTimeoutSeconds(const ProcessOptions* options);
+
+void ProcessBoundedStopError(Str command, bool cancelled, double timeoutSeconds,
+                             Str* error);
+
+template <typename Drain, typename Stop, typename Poll>
+bool ProcessBoundedPump(Str command, const ProcessOptions* options,
+                        ProcessCancellation* cancellation, Str* error,
+                        StrBuilder* out, StrBuilder* err, bool closed[2],
+                        bool* exited, Drain drain, Stop stop, Poll poll) {
+    double started = ClockMonotonicSecondsSinceStart();
+    double timeoutSeconds = ProcessBoundedTimeoutSeconds(options);
+    while (!*exited || !closed[0] || !closed[1]) {
+        bool ok = true;
+        if (!closed[0]) ok = drain(0, out, &closed[0], "stdout");
+        if (ok && !closed[1]) ok = drain(1, err, &closed[1], "stderr");
+        bool cancelled = cancellation && cancellation->IsCancelled();
+        if (!ok || cancelled ||
+            ClockMonotonicSecondsSinceStart() - started >= timeoutSeconds) {
+            if (ok)
+                ProcessBoundedStopError(command, cancelled, timeoutSeconds,
+                                        error);
+            stop();
+            return false;
+        }
+        if (!*exited) {
+            int polled = poll();
+            if (polled < 0) return false;
+            *exited = polled > 0;
+        }
+        if (!*exited || !closed[0] || !closed[1]) PlatSleepMs(5);
+    }
+    return true;
+}
+
 }
 
 #line 1 "src/shell/watch.h"
@@ -40298,6 +40879,8 @@ constexpr int kStandardDataLimit = 64 * 1024 * 1024;
 void Sha256(Str data, uint8_t digest[32]);
 bool SecureRandom(uint8_t* bytes, int count);
 
+bool SecureRandomFromUrandom(uint8_t* bytes, int offset, int count);
+
 bool ZlibDeflate(Str input, bool gzip, Str* output, Str* error = nullptr);
 bool ZlibInflate(Str input, bool gzip, Str* output, Str* error = nullptr);
 
@@ -40373,7 +40956,23 @@ bool ShellWriteTypeDeclarations(
 
 }
 
+#line 1 "src/shell/wide.h"
+
+namespace gpui::shell {
+
+wchar_t* WideDup(Str value);
+
+Str Utf8Dup(const wchar_t* value, int count);
+
+}
+
 #line 1 "src/sys/audio_input.h"
+
+#if GPUI_OS_WASM || (GPUI_OS_LINUX && !GPUI_HAVE_ALSA)
+#define GPUI_AUDIO_INPUT_UNSUPPORTED 1
+#else
+#define GPUI_AUDIO_INPUT_UNSUPPORTED 0
+#endif
 
 namespace gpui {
 
@@ -40441,12 +41040,38 @@ DirWatchId DirWatchAdd(Func0 onChange);
 
 void DirWatchSignal(DirWatchId id);
 
+void DirWatchEnded(DirWatchId id);
+
 struct DirWatchPlat;
 
 DirWatchPlat* DirWatchPlatOpen(DirWatchId id, const char* dir, bool create,
                                DirWatchError* err);
 
 void DirWatchPlatClose(DirWatchPlat* plat);
+
+void* DirWatchPlatAllocPosix(const char* dir, bool create, size_t size,
+                             DirWatchError* err);
+
+template <typename Plat>
+Plat* DirWatchPlatNewPosix(DirWatchId id, const char* dir, bool create,
+                           DirWatchError* err) {
+    auto* w = (Plat*)DirWatchPlatAllocPosix(dir, create, sizeof(Plat), err);
+    if (w) {
+        w->id = id;
+    }
+    return w;
+}
+
+template <typename Plat>
+Plat* DirWatchPlatStartThread(Plat* w, void (*thread)(Plat*),
+                              void (*release)(Plat*), DirWatchError* err) {
+    if (!PlatThreadRun(MkFunc0(thread, w))) {
+        *err = DirWatchError::Failed;
+        release(w);
+        return nullptr;
+    }
+    return w;
+}
 
 }
 
@@ -40498,9 +41123,25 @@ float GpuUsagePercent();
 
 void GpuProbeFree();
 
+#if GPUI_OS_WINDOWS || GPUI_OS_MAC
+#define GPUI_GPU_PROBE 1
+
+bool GpuProbeOpenLocked();
+float GpuUsagePercentLocked();
+void GpuProbeFreeLocked();
+#else
+#define GPUI_GPU_PROBE 0
+#endif
+
 }
 
 #line 1 "src/sys/notify.h"
+
+#if GPUI_OS_MAC || GPUI_OS_LINUX || GPUI_OS_WASM
+#define GPUI_NOTIFY_UNSUPPORTED 1
+#else
+#define GPUI_NOTIFY_UNSUPPORTED 0
+#endif
 
 namespace gpui {
 
@@ -40578,6 +41219,8 @@ struct TaskPromise {
     TaskHandle id;
 
     bool awaiting = false;
+
+    bool running = false;
     bool cancelled = false;
 
     TaskPromise() = default;
@@ -41186,6 +41829,94 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
 LayoutOutput ComputeBlockLayout(TaffyTree* tree, NodeId node,
                                 const LayoutInput& inputs,
                                 BlockContext* blockCtx);
+
+inline SizeF BoxSizingAdjustment(BoxSizing boxSizing, SizeF paddingBorderSize) {
+    return boxSizing == BoxSizing::ContentBox ? paddingBorderSize
+                                              : SizeF::Zero();
+}
+
+inline SizeFOpt ResolveStyledSize(const SizeDim& size, SizeFOpt context,
+                                  CalcResolver calc, Optf aspectRatio,
+                                  SizeF boxSizingAdjustment) {
+    return MaybeAdd(
+        MaybeApplyAspectRatio(size.MaybeResolve(context, calc), aspectRatio),
+        boxSizingAdjustment);
+}
+
+inline SizeFOpt MinMaxDefiniteSize(SizeFOpt minSize, SizeFOpt maxSize) {
+    SizeFOpt out = SizeFOptNone();
+    if (IsSome(minSize.w) && IsSome(maxSize.w) && maxSize.w <= minSize.w) {
+        out.w = minSize.w;
+    }
+    if (IsSome(minSize.h) && IsSome(maxSize.h) && maxSize.h <= minSize.h) {
+        out.h = minSize.h;
+    }
+    return out;
+}
+
+struct NodeStyledSizes {
+    SizeFOpt size;
+    SizeFOpt minSize;
+    SizeFOpt maxSize;
+    SizeFOpt clampedSize;
+    SizeFOpt minMaxDefiniteSize;
+};
+
+inline NodeStyledSizes ResolveNodeStyledSizes(const Style& style,
+                                              SizeFOpt parentSize,
+                                              CalcResolver calc,
+                                              SizeF paddingBorderSize,
+                                              bool inherentSize) {
+    Optf aspectRatio = style.aspectRatio;
+    SizeF boxSizingAdjustment =
+        BoxSizingAdjustment(style.boxSizing, paddingBorderSize);
+    NodeStyledSizes out;
+    out.minSize = ResolveStyledSize(style.minSize, parentSize, calc,
+                                    aspectRatio, boxSizingAdjustment);
+    out.maxSize = ResolveStyledSize(style.maxSize, parentSize, calc,
+                                    aspectRatio, boxSizingAdjustment);
+    out.size = SizeFOptNone();
+    if (inherentSize) {
+        out.size = ResolveStyledSize(style.size, parentSize, calc, aspectRatio,
+                                     boxSizingAdjustment);
+    }
+    out.clampedSize = MaybeClamp(out.size, out.minSize, out.maxSize);
+    out.minMaxDefiniteSize = MinMaxDefiniteSize(out.minSize, out.maxSize);
+    return out;
+}
+
+inline bool ComputeSizeFromStyles(const LayoutInput& inputs,
+                                  SizeFOpt styledKnownDimensions,
+                                  LayoutOutput* out) {
+    if (inputs.runMode != RunMode::ComputeSize) {
+        return false;
+    }
+    if (BothAxisDefined(styledKnownDimensions)) {
+        *out = LayoutOutput::FromOuterSize(
+            {styledKnownDimensions.w, styledKnownDimensions.h});
+        return true;
+    }
+    if (inputs.axis == RequestedAxis::Horizontal &&
+        IsSome(styledKnownDimensions.w)) {
+        *out = LayoutOutput::FromOuterSize({styledKnownDimensions.w, 0.0f});
+        return true;
+    }
+    return false;
+}
+
+inline PointF RelativePositionOffset(RectFOpt inset, Direction direction) {
+    Optf negRight = inset.right;
+    if (IsSome(negRight)) {
+        negRight = -negRight;
+    }
+    Optf negBottom = inset.bottom;
+    if (IsSome(negBottom)) {
+        negBottom = -negBottom;
+    }
+    Optf dx =
+        IsRtl(direction) ? Or(negRight, inset.left) : Or(inset.left, negRight);
+    return {UnwrapOr(dx, 0.0f), UnwrapOr(Or(inset.top, negBottom), 0.0f)};
+}
 
 inline AlignItemsKeyword ResolveSelfAlignmentSafety(AlignItems alignment,
                                                     bool overflows) {
@@ -42614,6 +43345,17 @@ SafeSplit SplitAtSafe(Str text);
 
 #line 1 "src/wry/wry.h"
 
+#if GPUI_OS_WASM
+#define GPUI_WRY_UNSUPPORTED 1
+#define GPUI_WRY_UNSUPPORTED_REASON "no webview backend on this platform"
+#elif GPUI_OS_LINUX && !GPUI_HAVE_WEBKITGTK
+#define GPUI_WRY_UNSUPPORTED 1
+#define GPUI_WRY_UNSUPPORTED_REASON \
+    "built without WebKitGTK, so there is no webview here"
+#else
+#define GPUI_WRY_UNSUPPORTED 0
+#endif
+
 namespace wry {
 
 using base::Str;
@@ -42733,6 +43475,14 @@ struct CustomProtocol {
                     RequestResponder* responder) = nullptr;
 };
 
+int CustomProtocolsAppendCopy(Vec<CustomProtocol>* protocols,
+                              const CustomProtocol& protocol);
+void CustomProtocolsFree(Vec<CustomProtocol>* protocols);
+
+void CustomProtocolDispatch(const CustomProtocol& protocol, Str id,
+                            const Request* request,
+                            RequestResponder* responder);
+
 struct WebView;
 
 enum class NewWindowResponse : uint8_t {
@@ -42804,8 +43554,35 @@ void CookieListFree(Vec<Cookie>* cookies);
 bool MacCookieMatchesUrl(const Cookie* cookie, Str scheme, Str domain);
 Str MacDownloadFileNameTemp(Str suggested, int collision);
 
-struct WebViewAttributes {
+struct WebViewHandlers {
     static bool AllowDownload(void*, Str, Str*) { return true; }
+
+    void* ctx = nullptr;
+
+    void (*ipcHandler)(void* ctx, Str url, Str body) = nullptr;
+
+    bool (*navigationHandler)(void* ctx, Str url) = nullptr;
+    void (*documentTitleChangedHandler)(void* ctx, Str title) = nullptr;
+    void (*onPageLoadHandler)(void* ctx, PageLoadEvent event,
+                              Str url) = nullptr;
+
+    void (*processFailedHandler)(void* ctx, int kind) = nullptr;
+
+    DownloadStartedHandler downloadStartedHandler = AllowDownload;
+    DownloadCompletedHandler downloadCompletedHandler = nullptr;
+    DragDropHandler dragDropHandler = nullptr;
+
+    NewWindowResponse (*newWindowReqHandler)(
+        void* ctx, Str url, const NewWindowFeatures* features,
+        WebView** createdWebView) = nullptr;
+};
+
+inline void WebViewHandlersSet(WebViewHandlers* dst,
+                               const WebViewHandlers* attrs) {
+    *dst = *attrs;
+}
+
+struct WebViewAttributes : WebViewHandlers {
 
     Str id;
 
@@ -42827,25 +43604,6 @@ struct WebViewAttributes {
     int initializationScriptCount = 0;
     const CustomProtocol* customProtocols = nullptr;
     int customProtocolCount = 0;
-
-    void* ctx = nullptr;
-
-    void (*ipcHandler)(void* ctx, Str url, Str body) = nullptr;
-
-    bool (*navigationHandler)(void* ctx, Str url) = nullptr;
-    void (*documentTitleChangedHandler)(void* ctx, Str title) = nullptr;
-    void (*onPageLoadHandler)(void* ctx, PageLoadEvent event,
-                              Str url) = nullptr;
-
-    void (*processFailedHandler)(void* ctx, int kind) = nullptr;
-
-    DownloadStartedHandler downloadStartedHandler = AllowDownload;
-    DownloadCompletedHandler downloadCompletedHandler = nullptr;
-    DragDropHandler dragDropHandler = nullptr;
-
-    NewWindowResponse (*newWindowReqHandler)(
-        void* ctx, Str url, const NewWindowFeatures* features,
-        WebView** createdWebView) = nullptr;
 
     bool clipboard = false;
 #if defined(DEBUG) || defined(_DEBUG)
@@ -43011,6 +43769,14 @@ struct PollFd {
 int EventLoopPrepare(PollFd** fds, int* timeoutMs);
 
 void EventLoopDispatch();
+#if GPUI_OS_WINDOWS || GPUI_OS_MAC || GPUI_WRY_UNSUPPORTED
+inline int EventLoopPrepare(PollFd** fds, int* timeoutMs) {
+    (void)timeoutMs;
+    *fds = nullptr;
+    return 0;
+}
+inline void EventLoopDispatch() {}
+#endif
 
 Str WebViewVersionTemp();
 

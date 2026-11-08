@@ -85,10 +85,10 @@ void CloseSettingsDialog() {
     MainWindow* win = gSettingsDlg.win;
     if (win && win->gpuiWin) {
         if (gSettingsDlg.editZoom) {
-            gp::InputBlur(gSettingsDlg.editZoom, win->gpuiWin->app, win->gpuiWin);
+            InputBlurWhereFocused(gSettingsDlg.editZoom, win->gpuiWin);
         }
         if (gSettingsDlg.editInverse) {
-            gp::InputBlur(gSettingsDlg.editInverse, win->gpuiWin->app, win->gpuiWin);
+            InputBlurWhereFocused(gSettingsDlg.editInverse, win->gpuiWin);
         }
     }
     delete gSettingsDlg.editZoom;

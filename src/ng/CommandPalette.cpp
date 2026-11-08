@@ -459,7 +459,7 @@ void CloseCommandPalette() {
         ToolWindowClose(wnd->tw);
         wnd->tw = nullptr;
     } else if (win && win->gpuiWin && wnd->editQuery) {
-        gp::InputBlur(wnd->editQuery, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(wnd->editQuery, win->gpuiWin);
     }
     delete wnd->editQuery;
     if (wnd->thumbCache) {

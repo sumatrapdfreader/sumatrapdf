@@ -1324,6 +1324,12 @@ static void PrintToDeviceOnThread(MainWindow* win, PrintData* data) {
     win->printThread = nullptr;
     auto fn = MkFunc0(PrintThread, threadData);
     win->printThread = StartThread(fn, StrL("PrintThread"));
+    if (!win->printThread) {
+        // the thread would have freed it and dropped its progress notification
+        logf("PrintToDeviceOnThread: couldn't start the print thread\n");
+        delete threadData;
+        return;
+    }
     // read by DeletePrinterThread, which the thread posts to this (UI) thread,
     // so it runs after this
     threadData->thread = win->printThread;

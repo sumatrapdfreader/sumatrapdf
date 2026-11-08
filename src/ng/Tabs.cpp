@@ -44,6 +44,10 @@
 #include "SumatraDialogs.h"
 #include "gui/AppShell.h"
 #include "gui/TabsUI.h"
+#include "gui/DocCanvas.h"
+#include "AnnotPlacement.h"
+#include "LinkFollow.h"
+#include "SelectTextKeyboard.h"
 
 #include "SessionState.h"
 #include "AIChatCommon.h"
@@ -149,8 +153,31 @@ void LoadModelIntoTab(WindowTab* tab) {
         return;
     }
     MainWindow* win = tab->win;
+    // as orig: the modes hold page positions of the outgoing document; end them
+    // while win->ctrl is still that document
+    if (win->currentTabTemp && win->currentTabTemp != tab) {
+        StopKeyboardLinkFollowing(win);
+        StopSelectTextWithKeyboard(win);
+        CancelAnnotationPlacement(win);
+        if (win->mouseAction != MouseAction::None || win->annotationBeingDragged || win->annotationBeingResized) {
+            CanvasCancelDrag(win);
+        }
+        // as orig: the outgoing document leaves F11's display mode
+        DisplayModel* prevDm = win->AsFixed();
+        if (prevDm && win->IsFullScreen()) {
+            prevDm->ApplyFullscreenDisplayMode(false);
+        }
+    }
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
+    // as orig: the incoming document takes the window's presentation / F11 layout
+    if (DisplayModel* dm = tab->AsFixed()) {
+        if (dm->InPresentation() != win->InPresentation()) {
+            dm->SetInPresentation(win->InPresentation());
+        } else if (win->IsFullScreen()) {
+            dm->ApplyFullscreenDisplayMode(true);
+        }
+    }
     // this canvas size was already applied to the previous document
     win->lastViewPortSize = Size{};
     win->showSelection = tab->selectionOnPage != nullptr;
@@ -174,6 +201,11 @@ void LoadModelIntoTab(WindowTab* tab) {
     ShowPageInfoIfWanted(win);
     win->RedrawAll();
     LoadLazyTabIfNeeded(tab);
+    // its file changed while in the background: AutoReloadTick runs only for
+    // the current tab, so arm it now
+    if (tab->reloadOnFocus) {
+        tab->autoReload.Arm(kAutoReloadDelayInMs);
+    }
     StartPendingSearch(win);
 }
 

@@ -12,7 +12,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType);
 void AppendClientInfoQuery(str::Builder& url);
 bool HasPendingPreReleaseUpdate();
 void DownloadAndInstallPendingUpdate(MainWindow* win);
-void StartInstallerAutoUpgrade(Str installerPath);
+bool StartInstallerAutoUpgrade(Str installerPath);
 void UpdateSelfTo(Str dstPath, int sleepMs);
 bool IsUpdateTempFileName(Str name);
 void DeleteStaleUpdateTemps(Str dir, Str skip, int minAgeSec);

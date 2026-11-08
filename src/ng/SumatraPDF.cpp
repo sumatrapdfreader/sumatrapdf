@@ -75,6 +75,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Tabs.h"
+#include "HexView.h"
 #include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/NativeFileDlg.h"
@@ -277,7 +278,7 @@ void UpdateDocumentColors() {
     gRenderCache->textColor = text;
     gRenderCache->backgroundColor = bg;
     gRenderCache->linkColor = link;
-    gRenderCache->darkModeEpoch++;
+    gRenderCache->BumpDarkModeEpoch();
 
     // ng: orig also regenerates the chm / markdown previews here; their browser
     // host is step 11b
@@ -362,7 +363,7 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
             if (dm && dm->GetEngine()) {
                 dm->GetEngine()->disableAntiAlias = p->disableAntiAlias;
             }
-            gRenderCache->darkModeEpoch++;
+            gRenderCache->BumpDarkModeEpoch();
             w->RedrawAll(true);
         }
     }
@@ -1204,6 +1205,16 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         SetTabState(win->CurrentTab(), state);
         DeleteTabState(state);
     }
+    // the restored state is the non-fullscreen layout: enter presentation /
+    // F11's again (leaving first, as entering twice is a no-op)
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (win->InPresentation()) {
+            dm->SetInPresentation(false);
+            dm->SetInPresentation(true);
+        } else if (win->IsFullScreen()) {
+            dm->ApplyFullscreenDisplayMode(true);
+        }
+    }
     // reopening reads the file again: slow on a network / cloud drive
     logf("ReloadDocument: reloaded in %.1f ms\n", TimeSinceInMs(timeStart));
 }
@@ -1637,6 +1648,8 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
         DeleteControllerAsync(prev);
         reuseTab->SetFilePath(fullPath);
         reuseTab->ctrl = ctrl;
+        // a Discard answered for the previous document doesn't cover this one
+        reuseTab->askedToSaveAnnotations = false;
         reuseTab->everPaintedPage = false;
         reuseTab->loadState = WindowTab::LoadState::None;
         win->currentTabTemp = reuseTab;
@@ -1858,6 +1871,12 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
 
     logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)TimeSinceInMs(timeStart), ctrl->PageCount(), fullPath);
 
+    // as orig: a document loaded in presentation / F11 takes their layout
+    if (win->InPresentation()) {
+        ctrl->SetInPresentation(true);
+    } else if (win->IsFullScreen() && dm) {
+        dm->ApplyFullscreenDisplayMode(true);
+    }
     win->currPageNo = ctrl->CurrentPageNo();
     if (win->InPresentation()) {
         // orig's LoadModelIntoTab: presentation mode has its own sidebar state
@@ -2111,15 +2130,7 @@ static void FinishNextPrevDirScan(NextPrevDirScan* r) {
     gNextPrevDirReady = true;
     gNextPrevDirScanning = false;
 
-    if (!gPendingNextPrevNav) {
-        return;
-    }
-    PendingNextPrevNav* p = gPendingNextPrevNav;
-    gPendingNextPrevNav = nullptr;
-    if (IsMainWindowValidAndNotClosing(p->win) && !p->win->IsCurrentTabAbout()) {
-        OpenNextPrevFileInFolder(p->win, p->forward, p->pathToDelete);
-    }
-    delete p;
+    ReplayPendingNextPrevNav();
 }
 
 static void NextPrevDirScanThread(NextPrevDirScan* req) {
@@ -2347,6 +2358,20 @@ static bool GoToFileInBrowserView(MainWindow* win, Str path) {
 }
 
 // pathToDelete is removed from disk once another document has loaded
+struct NextPrevLoadCtx {
+    MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    bool forward = true;
+    Str path;         // owned
+    Str pathToDelete; // owned
+    ~NextPrevLoadCtx() {
+        str::Free(path);
+        str::Free(pathToDelete);
+    }
+};
+
+static void LoadNextPrevFile(NextPrevLoadCtx* c, bool canProceed);
+
 void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     if (!win || win->IsCurrentTabAbout() || !CanAccessDisk() || gPluginMode) {
         return;
@@ -2361,12 +2386,7 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     Str path = tab->filePath;
     StrVec* files = GetNextPrevFilesReady(path);
     if (!files) {
-        ClearPendingNextPrevNav();
-        auto* p = new PendingNextPrevNav;
-        p->win = win;
-        p->forward = forward;
-        p->pathToDelete = str::Dup(pathToDelete);
-        gPendingNextPrevNav = p;
+        DeferNextPrevNav(win, tab, forward, pathToDelete);
         logf("OpenNextPrevFileInFolder: folder scan in progress, deferring\n");
         return;
     }
@@ -2398,10 +2418,31 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     if (len(pathToDelete) == 0 && GoToFileInBrowserView(win, chosen)) {
         return;
     }
-    UpdateTabFileDisplayStateForTab(tab);
-    TempStr chosenCopy = str::DupTemp(chosen);
+
+    // the load replaces the document: offer to save its annotations first
+    auto* c = new NextPrevLoadCtx;
+    c->win = win;
+    c->tab = tab;
+    c->forward = forward;
+    c->path = str::Dup(chosen);
+    c->pathToDelete = str::Dup(pathToDelete);
+    MaybeSaveAnnotations(tab, MkFunc1(LoadNextPrevFile, c));
+}
+
+static void LoadNextPrevFile(NextPrevLoadCtx* c, bool canProceed) {
+    MainWindow* win = c->win;
+    WindowTab* tab = c->tab;
+    bool forward = c->forward;
+    TempStr chosenCopy = str::DupTemp(c->path);
     // the load resets the temp arena and may free the pending request
-    Str toDelete = str::Dup(pathToDelete);
+    Str toDelete = str::Dup(c->pathToDelete);
+    delete c;
+    bool stillCurrent = IsMainWindowValidAndNotClosing(win) && win->CurrentTab() == tab;
+    if (!canProceed || !stillCurrent) {
+        str::Free(toDelete);
+        return;
+    }
+    UpdateTabFileDisplayStateForTab(tab);
     if (!LoadDocument(win, chosenCopy, LoadPrefs::Save, LoadReuse::CurrentTab)) {
         // orig advances from the load callback. Stay put when this was the last file.
         gFilesFailedToOpen.Append(chosenCopy);
@@ -2767,6 +2808,15 @@ bool AnnotationsNeedSavePrompt(WindowTab* tab) {
     if (!tab || tab->askedToSaveAnnotations) {
         return false;
     }
+    // edits typed into a free text box or the contents editor are not in the
+    // document until committed; teardown would commit them only after the
+    // prompt, into a closing engine
+    if (tab->win && IsEditingFreeTextInPlace(tab->win)) {
+        EndFreeTextInPlaceEdit(true);
+    }
+    if (tab->win && IsEditingAnnotContents(tab->win)) {
+        EndAnnotContentsEdit(true);
+    }
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return false;
@@ -3034,6 +3084,8 @@ static void CloseDocumentInCurrentTab(MainWindow* win) {
     DeleteOldSelectionInfo(win, true);
     RemoveNotificationsForGroup(win, kNotifPageInfo);
     RemoveNotificationsForGroup(win, kNotifCursorPos);
+    // as orig: the citation popup belongs to the document going away
+    RefHoverHide(win->refHover);
     DocController* prev = tab->ctrl;
     tab->ctrl = nullptr;
     win->ctrl = nullptr;
@@ -3429,9 +3481,19 @@ struct PendingCloseWindow {
 
 static void ContinueCloseWindow(PendingCloseWindow* p);
 
+// a close was cancelled: tabs answered with Discard stay open, so ask again
+static void ResetSavePrompts(const Vec<WindowTab*>& tabs) {
+    for (WindowTab* tab : tabs) {
+        if (IsWindowTabValid(tab)) {
+            tab->askedToSaveAnnotations = false;
+        }
+    }
+}
+
 static void OnCloseWindowAfterSavePrompt(PendingCloseWindow* p, bool canClose) {
     MainWindow* win = p->win;
     if (!canClose) {
+        ResetSavePrompts(p->tabs);
         if (IsMainWindowValid(win)) {
             win->isClosePending = false;
         }
@@ -3786,6 +3848,10 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
         AppShellInvalidate(win);
         return;
     }
+    // their close callbacks use win; the tool window layer would run them
+    // only after it's deleted
+    CloseSavePathDialogFor(win);
+    DlgWindowsCloseFor(win);
     VecRemove(gWindows, win);
     AppShellCloseWindow(win);
     delete win;
@@ -3825,6 +3891,7 @@ static void ContinueExit(PendingExit* p);
 
 static void OnExitSavePromptDone(PendingExit* p, bool canClose) {
     if (!canClose) {
+        ResetSavePrompts(p->tabs);
         gExitPending = false;
         delete p;
         return;
@@ -4677,8 +4744,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         }
         win->windowStateBeforePresentation = win->isMaximized ? WIN_STATE_MAXIMIZED : WIN_STATE_NORMAL;
         win->windowMode = WindowMode::Presentation;
-        // hack: this tells OnMouseMove() to hide the cursor immediately
-        win->dragPrevPos = Point(-2, -3);
+        win->hideCursorOnNextMove = true;
         win->presCursorHide.Arm(1);
     } else {
         win->windowMode = WindowMode::FullScreen;
@@ -5475,6 +5541,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         case CmdUndo:
         case CmdRedo:
             UndoRedoInTab(tab, cmdId == CmdRedo);
+            break;
+
+        case CmdViewAsHex:
+            ViewTabAsHex(tab);
             break;
 
         case CmdDuplicateInNewTab:

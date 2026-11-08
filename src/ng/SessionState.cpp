@@ -96,8 +96,8 @@ static void RememberSessionState() {
         }
         SessionData* windowState = NewSessionData();
         for (WindowTab* tab : win->Tabs()) {
-            if (len(tab->filePath) == 0) {
-                // home page tab
+            if (len(tab->filePath) == 0 || tab->IsHexTab()) {
+                // home page or hex view tab
                 continue;
             }
             Str fp = tab->filePath;
@@ -134,7 +134,7 @@ static void RememberSessionState() {
         int selectedDocOrdinal = 1;
         WindowTab* cur = win->CurrentTab();
         for (WindowTab* tab : win->Tabs()) {
-            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+            if (tab->IsAboutTab() || tab->IsHexTab() || len(tab->filePath) == 0) {
                 continue;
             }
             docOrdinal++;
@@ -306,6 +306,10 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
         if (state) {
             SetTabState(curr, state);
         }
+        // the borrowed state is applied; gInitialSessionData that owns it can go
+        // away on the next save, as orig's LoadDocumentFinish does
+        curr->tabState = nullptr;
+        tab->tabState = nullptr;
     } else if (curr == tab) {
         tab->loadState = WindowTab::LoadState::Error;
     }
@@ -322,8 +326,8 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state) {
         RestoreLazyTabOnStartup(win, state);
         return;
     }
+    // a failed load already shows its error tab (or asks for a password)
     if (!LoadDocument(win, state->filePath, LoadPrefs::DontSave)) {
-        RestoreMissingTabOnStartup(win, state);
         return;
     }
     SetTabState(win->CurrentTab(), state);

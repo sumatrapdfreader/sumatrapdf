@@ -213,6 +213,10 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
         return;
     }
 
+    // a drag or selection still under way would finish into the placement
+    if (win->mouseAction != MouseAction::None || win->annotationBeingDragged || win->annotationBeingResized) {
+        CancelDrag(win);
+    }
     EndCurrentPlacement(win);
 
     AnnotPlacement& p = win->annotPlacement;

@@ -56,6 +56,7 @@ void ParseFileArgsTest();
 void ParseCommandLineTest();
 void RestrictedUseConfigTest();
 void ControlFrameActionTest();
+void HexViewTest();
 void OpenDdeCmdTest();
 void UpdateCheckDecisionTest();
 
@@ -350,6 +351,7 @@ static void SumatraPDF_UnitTests() {
     OnlineURLAllowedTest();
     RestrictedUseConfigTest();
     ControlFrameActionTest();
+    HexViewTest();
     OpenDdeCmdTest();
     UpdateCheckDecisionTest();
     CachedObjects_UnitTests();

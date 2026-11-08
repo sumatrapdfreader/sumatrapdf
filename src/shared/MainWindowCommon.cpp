@@ -460,6 +460,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     ctx.tab = win->CurrentTab();
     ctx.isDocLoaded = win->IsDocLoaded();
     ctx.filePath = ctx.tab ? ctx.tab->filePath : Str();
+    ctx.isHexTab = ctx.tab && ctx.tab->IsHexTab();
     ctx.hasOpenDocuments = HasOpenedDocuments(win);
     ctx.debugDpiOverrideAvailable = true;
 

@@ -76,6 +76,8 @@ struct AIChatStreamCtx {
     int providerId = 0;
     Str sessionId;  // owned; the session the output belongs to
     int turnId = 0; // AIChatTabState::turnId of the turn this streams
+    // a one-shot request collects its output here instead of the chat panel
+    struct AIChatCaptureSink* capture = nullptr;
 };
 
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text);

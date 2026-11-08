@@ -284,6 +284,8 @@ struct MainWindow {
     bool dragRightClick = false;
     Point dragStart;
     Point dragPrevPos;
+    // presentation just started: the next mouse move hides the cursor at once
+    bool hideCursorOnNextMove = false;
     // middle-button auto-scroll: pixels per 20 ms, with the sub-pixel leftover
     float xScrollSpeed = 0;
     float yScrollSpeed = 0;

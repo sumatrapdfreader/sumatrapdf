@@ -218,7 +218,7 @@ const CommandInfo gCommands[] = {
     {CmdPdfCompress, "CmdPdfCompress\0", StrL("Compress PDF...")},
     {CmdPdfDecompress, "CmdPdfDecompress\0", StrL("Decompress PDF...")},
     {CmdPdfDeletePages, "CmdPdfDeletePages\0", StrL("Delete Pages From PDF...")},
-    {CmdPdfExtractPages, "CmdPdfExtractPages\0", StrL("Extract Pages From PDF...")},
+    {CmdPdfExtractPages, "CmdPdfExtractPages\0", StrL("Extract Pages...")},
     {CmdPdfEncrypt, "CmdPdfEncrypt\0", StrL("Encrypt PDF...")},
     {CmdPdfDecrypt, "CmdPdfDecrypt\0", StrL("Decrypt PDF...")},
     {CmdPdfBake, "CmdPdfBake\0", StrL("Bake PDF File...")},
@@ -379,6 +379,7 @@ const CommandInfo gCommands[] = {
     {CmdTocCollapseChapter, "CmdTocCollapseChapter\0", StrL("Bookmarks: Collapse Chapter")},
     {CmdEditFavorites, "CmdEditFavorites\0", StrL("Edit Favorites...")},
     {CmdCloseMissingTabs, "CmdCloseMissingTabs\0", StrL("Close Tabs of Missing Files")},
+    {CmdViewAsHex, "CmdViewAsHex\0", StrL("View As Hex")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

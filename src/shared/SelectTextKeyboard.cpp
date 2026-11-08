@@ -389,6 +389,11 @@ void ToggleSelectTextWithKeyboard(MainWindow* win) {
     if (!CanSelectTextWithKeyboard(win)) {
         return;
     }
+    // only the highlighter works on a keyboard selection; other placements
+    // take the pointer and end, as starting one ends this mode
+    if (IsPlacingAnnotation(win) && win->annotPlacement.kind != AnnotPlacementKind::Highlighter) {
+        CancelAnnotationPlacement(win);
+    }
     PlaceInitialCaret(win);
     if (PageTextLen(win->AsFixed()->GetEngine(), win->textSelectPage) <= 0) {
         // no text to put a caret in: don't leave the user in a mode with no

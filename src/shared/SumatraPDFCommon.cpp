@@ -1037,6 +1037,38 @@ void ClearPendingNextPrevNav() {
     gPendingNextPrevNav = nullptr;
 }
 
+// next / prev file asked for while the folder scan runs: done when it ends
+void DeferNextPrevNav(MainWindow* win, WindowTab* tab, bool forward, Str pathToDelete) {
+    ClearPendingNextPrevNav();
+    auto* p = new PendingNextPrevNav;
+    p->win = win;
+    p->tab = tab;
+    p->forward = forward;
+    p->path = str::Dup(tab->filePath);
+    p->pathToDelete = str::Dup(pathToDelete);
+    gPendingNextPrevNav = p;
+}
+
+// the scan ended: navigate, unless the user moved to another tab or document
+// meanwhile, which the request no longer applies to
+void ReplayPendingNextPrevNav() {
+    PendingNextPrevNav* p = gPendingNextPrevNav;
+    if (!p) {
+        return;
+    }
+    gPendingNextPrevNav = nullptr;
+    AutoDelete delP(p);
+    MainWindow* win = p->win;
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (tab != p->tab || win->IsCurrentTabAbout() || !str::Eq(tab->filePath, p->path)) {
+        return;
+    }
+    OpenNextPrevFileInFolder(win, p->forward, p->pathToDelete);
+}
+
 bool IsAtDocumentBottom(MainWindow* win) {
     DocController* ctrl = win->ctrl;
     if (!ctrl) {
@@ -3242,7 +3274,16 @@ enum class ThumbnailsToMake {
 struct RegenerateThumbnailsData {
     Vec<CreateThumbnailFromFileData*> files;
     ThumbnailsToMake which = ThumbnailsToMake::All;
+    int gen = 0;
 };
+
+// bumped by each regenerate batch: an older one still running stops, and its
+// thumbnails (maybe of the previous ThumbnailsType) are dropped
+static AtomicInt gThumbnailBatchGen = 0;
+
+static bool IsThumbnailBatchStale(int gen) {
+    return gen != 0 && gen != AtomicIntGet(&gThumbnailBatchGen);
+}
 
 // The history entries, in the order the home page shows them. Only copies: the
 // thumbnail thread finds out which files still exist, because checking a file on
@@ -3338,7 +3379,7 @@ static void RegenerateThumbnailsThread(RegenerateThumbnailsData* data) {
     int done = 0;
     for (CreateThumbnailFromFileData* d : data->files) {
         done++;
-        if (!DocumentIsThere(d->filePath)) {
+        if (IsThumbnailBatchStale(data->gen) || !DocumentIsThere(d->filePath)) {
             delete d;
             ResetTempArena();
             continue;
@@ -3356,6 +3397,17 @@ static void RegenerateThumbnailsThread(RegenerateThumbnailsData* data) {
     uitask::Post(MkFunc0Void(RegenerateThumbnailsDone), "ThumbnailProgressDone");
     delete data;
     DestroyTempArena();
+}
+
+// a batch started here supersedes the one still running
+static void StartRegenerateThumbnails(RegenerateThumbnailsData* data) {
+    data->gen = AtomicIntInc(&gThumbnailBatchGen);
+    for (CreateThumbnailFromFileData* d : data->files) {
+        d->batchGen = data->gen;
+    }
+    auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
+    ThumbnailThreadStarted();
+    RunAsync(fn, StrL("RegenerateThumbnails"));
 }
 
 // the cached thumbnails were made for the other ThumbnailsType: drop them and
@@ -3376,10 +3428,7 @@ void OnThumbnailsTypeChanged() {
         return;
     }
 
-    auto* data = NewRegenerateThumbnailsData(ThumbnailsToMake::All);
-    auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
-    ThumbnailThreadStarted();
-    RunAsync(fn, StrL("RegenerateThumbnails"));
+    StartRegenerateThumbnails(NewRegenerateThumbnailsData(ThumbnailsToMake::All));
 }
 
 // Home-page files that still exist but have no cached thumbnail.
@@ -3397,9 +3446,7 @@ void RegenerateMissingThumbnails() {
         delete data;
         return;
     }
-    auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
-    ThumbnailThreadStarted();
-    RunAsync(fn, StrL("RegenerateThumbnails"));
+    StartRegenerateThumbnails(data);
 }
 
 int SidebarExtraDx(MainWindow* win) {
@@ -3448,7 +3495,7 @@ void ToggleSidebarAutoHide(CustomCommand* cmd) {
 }
 
 void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
-    if (d->bmp) {
+    if (d->bmp && !IsThumbnailBatchStale(d->batchGen)) {
         FileState* fs = FileHistoryFindByPath(d->filePath);
         SetThumbnail(fs, d->bmp);
         d->bmp = nullptr;

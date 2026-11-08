@@ -1339,6 +1339,8 @@ void DisplayModel::SetUiDpi(int dpi) {
 void DisplayModel::Retire() {
     VecRemove(gLiveDisplayModels, this);
     pauseRendering = true;
+    // its progress callback is for the tab that is going away
+    EngineMupdfCancelLoadAllAnnotations(engine);
 }
 
 DisplayModel::~DisplayModel() {

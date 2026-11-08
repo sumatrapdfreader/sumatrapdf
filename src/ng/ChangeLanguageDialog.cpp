@@ -68,7 +68,7 @@ void CloseChangeLanguageDialog() {
     DlgWindowClose(&gChangeLanguageTw);
     MainWindow* win = gChangeLanguage.win;
     if (win && win->gpuiWin && gChangeLanguage.editSearch) {
-        gp::InputBlur(gChangeLanguage.editSearch, win->gpuiWin->app, win->gpuiWin);
+        InputBlurWhereFocused(gChangeLanguage.editSearch, win->gpuiWin);
     }
     delete gChangeLanguage.editSearch;
     gChangeLanguage.editSearch = nullptr;
