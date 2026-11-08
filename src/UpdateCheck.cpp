@@ -89,18 +89,23 @@ PortableZip32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prere
 ]
 */
 
-void StartInstallerAutoUpgrade(Str installerPath) {
+// true when the installer started; only then may we exit for it to replace us
+bool StartInstallerAutoUpgrade(Str installerPath) {
     TempStr expectedSigner = GetExecutableSignerTemp(GetSelfExePathTemp());
     TempStr installerSigner = GetExecutableSignerTemp(installerPath);
     if (len(expectedSigner) == 0 || len(installerSigner) == 0 || !str::Eq(expectedSigner, installerSigner) ||
         !IsPEFileSigned(installerPath)) {
         logf("StartInstallerAutoUpgrade: refusing an update with an untrusted signature\n");
-        return;
+        return false;
     }
     // installed: setup UI. Portable: wait, then overwrite this exe.
     TempStr cmd = InstallerUpgradeArgsTemp(IsOurExeInstalled(), gIsPreReleaseBuild, GetSelfExePathTemp());
     logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", cmd);
-    CreateProcessHelper(installerPath, cmd);
+    bool ok = CreateProcessHelper(installerPath, cmd);
+    if (!ok) {
+        logf("StartInstallerAutoUpgrade: starting the installer failed\n");
+    }
+    return ok;
 }
 
 static void ExitAfterStartingUpdater() {
@@ -124,8 +129,11 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         ScheduleSaveSettings();
         FlushScheduledSaveSettings();
         if (installerPathAuto && file::Exists(installerPathAuto)) {
-            StartInstallerAutoUpgrade(installerPathAuto);
-            ExitAfterStartingUpdater();
+            if (StartInstallerAutoUpgrade(installerPathAuto)) {
+                ExitAfterStartingUpdater();
+            } else {
+                SumatraLaunchBrowser(StrL(kWebisteDownloadPageURL));
+            }
         } else {
             logf("NotifyUserOfUpdate: auto-install requested but installer not downloaded\n");
         }
@@ -196,8 +204,11 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         return;
     }
 
-    StartInstallerAutoUpgrade(installerPath);
-    ExitAfterStartingUpdater();
+    if (StartInstallerAutoUpgrade(installerPath)) {
+        ExitAfterStartingUpdater();
+    } else {
+        SumatraLaunchBrowser(StrL(kWebisteDownloadPageURL));
+    }
 }
 
 struct UpdateProgressData {
