@@ -6463,8 +6463,10 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
     fz_stext_page* stext = nullptr;
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions(kImageTextPageFlags);
-    // a pdf page's list includes its annotations, which Contents leaves out
-    fz_display_list* list = e->pdfdoc ? nullptr : pageInfo->displayList;
+    // a pdf page's list includes its annotations, which Contents leaves out;
+    // with none on the page the two runs are the same
+    bool listIsContents = !e->pdfdoc || (len(pageInfo->annotations) == 0 && len(pageInfo->widgets) == 0);
+    fz_display_list* list = listIsContents ? pageInfo->displayList : nullptr;
     fz_try(ctx) {
         stext = NewStextPage(ctx, page, &opts, cookie, StextRun::Contents, list);
         // a list built before the chapter's layout finished is empty, while the
@@ -6477,7 +6479,6 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-
     fz_link* link = fz_load_links(ctx, page);
     link = FixupPageLinks(link);
     if (e->pdfdoc) {
