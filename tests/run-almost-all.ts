@@ -1,3 +1,4 @@
+import { testit as codexProvider } from "./codex-provider.ts";
 // Fast regular tests: everything except cases whose time is the test
 // (print-to-PDF, LaTeX, debounce/CPU/scroll windows, high-zoom tile settle,
 // 400-file HTML TOC, restrict.ini exe copies). Those live in run-all.ts.
@@ -563,6 +564,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["codex-provider", codexProvider],
   ["issue-6412", issue6412],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-1909", issue1909],

@@ -300,10 +300,10 @@ static void SyncAIChatSettingsFromUI(MainWindow* win) {
         return;
     }
     if (win->aiChatModelCombo) {
-        int sel = CbGetCurrentSelection(win->aiChatModelCombo);
         StrVec models;
         p->BuildModelsList(models);
-        if (sel >= 0 && sel < len(models)) {
+        int sel = AIChatFindModelInList(models, HwndGetTextTemp(win->aiChatModelCombo->hwnd));
+        if (sel >= 0) {
             p->SetModel(models[sel]);
         }
     }
