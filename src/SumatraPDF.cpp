@@ -4735,6 +4735,11 @@ static void OnMenuExit() {
     for (MainWindow* win : toClose) {
         CloseWindow(win, true, false);
     }
+    // a window whose unsaved-changes prompt was cancelled stays open; keep
+    // saving its settings
+    if (len(gWindows) > 0) {
+        gDontSaveSettings = false;
+    }
 }
 
 // quit by going through the same path as CmdExit so that windows close
@@ -14317,8 +14322,9 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             // the forced CloseWindow below aborts any print job still running
             ScheduleSaveSettings();
             FlushScheduledSaveSettings();
-            gDontSaveSettings = true;
+            // wp is FALSE when the session end was cancelled: we keep running
             if (wp == TRUE) {
+                gDontSaveSettings = true;
                 CloseWindow(win, true, true);
             }
             return 0;
