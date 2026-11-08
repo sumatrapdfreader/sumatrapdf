@@ -858,6 +858,10 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, bool isShift, boo
     if (!IsPlacingAnnotation(win) || KindOf(win) == AnnotPlacementKind::Highlighter) {
         return false;
     }
+    // a right-drag pan or a middle-click scroll under way keeps its moves
+    if (win->mouseAction == MouseAction::Dragging || win->mouseAction == MouseAction::Scrolling) {
+        return false;
+    }
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return true;
