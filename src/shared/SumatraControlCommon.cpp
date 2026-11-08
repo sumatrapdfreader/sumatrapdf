@@ -363,6 +363,15 @@ bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitCount, u
     return true;
 }
 
+// Pause between polls of a Wait* loop: fine-grained at first, so a test's
+// timing of a short wait isn't quantized to 20 ms, coarser once it drags on
+// since each poll repaints
+void ControlPollSleep(u64 startMs) {
+    constexpr u64 kFineForMs = 200;
+    bool fine = GetTickCount64() - startMs < kFineForMs;
+    SleepInMs(fine ? 2 : 20);
+}
+
 // Block on the control thread until visible tiles are cached at target
 // resolution, or until timeoutMs. Optional first int arg is the timeout.
 void RunWaitRenderIdle(ControlRequest* req) {
@@ -371,7 +380,8 @@ void RunWaitRenderIdle(ControlRequest* req) {
     if (timeoutMs < 1) {
         timeoutMs = 1;
     }
-    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    u64 start = GetTickCount64();
+    u64 deadline = start + (u64)timeoutMs;
     for (;;) {
         req->done.Reset();
         uitask::Post(MkFunc0<ControlRequest>(SnapshotRenderIdle, req), "WaitRenderIdle");
@@ -385,7 +395,7 @@ void RunWaitRenderIdle(ControlRequest* req) {
             AppendTestResult(req, 1, req->idleInfo[0] ? fmt("%s %s", kind, Str(req->idleInfo)) : kind);
             return;
         }
-        SleepInMs(20);
+        ControlPollSleep(start);
     }
 }
 
@@ -396,7 +406,8 @@ void RunWaitSessionRestored(ControlRequest* req) {
     if (timeoutMs < 1) {
         timeoutMs = 1;
     }
-    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    u64 start = GetTickCount64();
+    u64 deadline = start + (u64)timeoutMs;
     for (;;) {
         req->done.Reset();
         uitask::Post(MkFunc0<ControlRequest>(SnapshotSessionRestore, req), "WaitSessionRestored");
@@ -409,7 +420,7 @@ void RunWaitSessionRestored(ControlRequest* req) {
             AppendTestResult(req, 1, req->idleInfo[0] ? fmt("timeout %s", Str(req->idleInfo)) : StrL("timeout"));
             return;
         }
-        SleepInMs(20);
+        ControlPollSleep(start);
     }
 }
 

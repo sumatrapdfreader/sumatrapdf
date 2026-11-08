@@ -2423,7 +2423,8 @@ static void SnapshotHomePainted(ControlRequest* req) {
 static void RunWaitHomePainted(ControlRequest* req) {
     i32 timeoutMs = 15000;
     IntArg(req, 0, timeoutMs);
-    u64 deadline = GetTickCount64() + (u64)std::max(timeoutMs, 1);
+    u64 start = GetTickCount64();
+    u64 deadline = start + (u64)std::max(timeoutMs, 1);
     for (;;) {
         req->done.Reset();
         uitask::Post(MkFunc0<ControlRequest>(SnapshotHomePainted, req), "WaitHomePainted");
@@ -2436,7 +2437,7 @@ static void RunWaitHomePainted(ControlRequest* req) {
             AppendTestResult(req, 1, fmt("timeout %s", Str(req->idleInfo)));
             return;
         }
-        SleepInMs(20);
+        ControlPollSleep(start);
     }
 }
 

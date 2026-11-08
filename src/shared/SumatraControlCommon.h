@@ -110,6 +110,7 @@ struct PacketReader {
     }
 };
 bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitCount, u16 count = 0);
+void ControlPollSleep(u64 startMs);
 void RunWaitRenderIdle(ControlRequest* req);
 void RunWaitSessionRestored(ControlRequest* req);
 

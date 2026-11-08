@@ -2354,10 +2354,13 @@ class EngineCbx : public EngineImages {
     bool LoadFromFile(Str fileName);
     bool LoadFromData(Str data);
     bool FinishLoading();
+    void PrefetchPageAfter(int pageNo);
 
     // access to cbxFile must be protected after initialization (with cacheLock)
     Archive* cbxArchive = nullptr;
     Vec<Archive::FileInfo*> files;
+    // the page a prefetch was last started for
+    AtomicInt prefetchedPageNo = 0;
     TocTree* tocTree = nullptr;
 
     // When set, the archive was actually opened from this local path (e.g.
@@ -2713,12 +2716,43 @@ TocTree* EngineCbx::GetToc() {
     return tocTree;
 }
 
+struct CbxPrefetch {
+    EngineCbx* engine;
+    Archive* archive;
+    int fileId;
+};
+
+static void CbxPrefetchThread(CbxPrefetch* p) {
+    p->archive->GetFileDataById(p->fileId);
+    p->engine->Release();
+    delete p;
+}
+
+// Paging forward asks for page N's media box and data while N+1 is still
+// unread; extracting N+1 now, off the UI thread, makes that next query a
+// cache hit. One prefetch per page, whichever thread asked first.
+void EngineCbx::PrefetchPageAfter(int pageNo) {
+    int next = pageNo + 1;
+    if (next > len(files) || AtomicIntGet(&prefetchedPageNo) == next) {
+        return;
+    }
+    Archive::FileInfo* fi = files[next - 1];
+    if (fi->data || fi->failed) {
+        return;
+    }
+    AtomicIntSet(&prefetchedPageNo, next);
+    AddRef();
+    auto* p = new CbxPrefetch{this, cbxArchive, fi->fileId};
+    RunAsync(MkFunc0(CbxPrefetchThread, p), StrL("CbxPrefetch"));
+}
+
 Str EngineCbx::GetImageData(int pageNo) {
     if (ReportIf(pageNo < 1 || pageNo > len(files))) {
         return {};
     }
     int fileId = files[pageNo - 1]->fileId;
     auto* fi = cbxArchive->GetFileDataById(fileId);
+    PrefetchPageAfter(pageNo);
     if (!fi || !fi->data) {
         return {};
     }
@@ -2852,8 +2886,9 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     }
     int fileId = files[pageNo - 1]->fileId;
 
-    // try to get image size from just the file header (first 1024 bytes)
-    Str header = cbxArchive->GetFileDataPartById(fileId, 1024);
+    // try to get image size from just the file header
+    Str header = cbxArchive->GetFileDataPartById(fileId, kImageSizeFromDataPartialSize);
+    PrefetchPageAfter(pageNo);
     if (len(header) > 0) {
         Size size = ImageSizeFromDataPortable(header, true);
         str::Free(header);

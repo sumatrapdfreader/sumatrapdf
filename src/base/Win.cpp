@@ -2127,8 +2127,9 @@ bool CreateShortcut(Str shortcutPath, Str exePath, Str args, Str description, in
 
 //--- process launch / shell
 
-// SHAddToRecentDocs can block on network paths (shell resolves / writes Recent).
-// Run those off the UI thread with COM initialized and a heap-owned path.
+// SHAddToRecentDocs blocks while the shell resolves the path and writes
+// Recent, ~40 ms for a local file and longer on a network path. Run it off
+// the UI thread with COM initialized and a heap-owned path.
 static void AddPathToRecentDocsOnThread(WCHAR* pathW) {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     bool comInitedByUs = SUCCEEDED(hr);
@@ -2152,12 +2153,6 @@ void AddPathToRecentDocs(Str path) {
     if (len(path) == 0) {
         return;
     }
-    if (!path::IsOnNetworkDrive(path)) {
-        WCHAR* pathW = CWStrTemp(path);
-        SHAddToRecentDocs(SHARD_PATH, pathW);
-        return;
-    }
-
     WCHAR* owned = ToWStr(path).s; // heap; thread frees
     if (!owned) {
         return;

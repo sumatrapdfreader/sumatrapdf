@@ -42,6 +42,8 @@ struct Archive {
         // internal use
         i64 filePos = 0;
         char* data = nullptr;
+        // a thread is extracting it; others wait on Archive::extracted_
+        bool extracting = false;
     };
 
     Archive();
@@ -59,6 +61,10 @@ struct Archive {
     FileInfo* GetFileDataByName(Str filename);
     FileInfo* GetFileDataById(int fileId);
     Str GetFileDataPartById(int fileId, int sizeHint);
+    // guards FileInfo::data / failed / extracting; extraction itself runs
+    // unlocked so threads reading different entries don't wait for each other
+    Mutex extractLock_;
+    ConditionVariable extracted_;
 
     // password for encrypted archives (owned by this object)
     Str password;
