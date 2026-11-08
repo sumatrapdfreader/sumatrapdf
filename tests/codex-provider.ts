@@ -42,8 +42,17 @@ export async function testit(): Promise<void> {
         ["codex-plain-error", "unexpected argument"],
       ]) {
         const result = await client.request(ControlCommand.TestAIChat, [2, join(dir, "document.pdf"), prompt]);
-        if (!String(result[1]).split("\n").slice(0, 2).join("\n").includes(expected))
-          failures.push(`${prompt}: ${result[1]}`);
+        const text = String(result[1]);
+        // once: a failed turn repeats its error; retries ("Reconnecting...") aren't errors
+        const shown = text.split("--- debug log ---")[0];
+        const shownOnce = shown.split(expected).length === 2;
+        if (
+          !text.split("\n").slice(0, 2).join("\n").includes(expected) ||
+          !shownOnce ||
+          shown.includes("Reconnecting")
+        ) {
+          failures.push(`${prompt}: ${text}`);
+        }
       }
       writeFileSync(cache, catalog("fresh-catalog-model"));
       const refreshed = await client.request(ControlCommand.TestAIChat, [2, join(dir, "document.pdf"), "model"]);

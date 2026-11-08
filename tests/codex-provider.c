@@ -11,7 +11,12 @@ int main(int argc, char** argv) {
         return 1;
     }
     if (strstr(prompt, "codex-error")) {
-        puts("{\"type\":\"error\",\"message\":\"Selected model is unavailable\"}");
+        // like codex 0.x: a retry, then the error twice, the second time in turn.failed
+        const char* api = "{\\\"type\\\":\\\"error\\\",\\\"status\\\":400,\\\"error\\\":{\\\"message\\\":"
+                          "\\\"Selected model is unavailable\\\"}}";
+        puts("{\"type\":\"error\",\"message\":\"Reconnecting... 1/5\"}");
+        printf("{\"type\":\"error\",\"message\":\"%s\"}\n", api);
+        printf("{\"type\":\"turn.failed\",\"error\":{\"message\":\"%s\"}}\n", api);
         return 1;
     }
     if (strstr(prompt, "codex-plain-error")) {

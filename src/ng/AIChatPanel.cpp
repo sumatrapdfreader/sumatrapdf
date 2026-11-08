@@ -1016,9 +1016,13 @@ gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
     gp::El* chat = gp::Div(cx->a)->Flex1()->W(gp::kFill)->MinH(0);
     if (p->view) {
 #if OS_DARWIN
-        // Native WebViews cover GPUI popups; restore the chat when the list closes.
-        gpc::SelectState* session = p->sessionSel.state.Get(cx);
-        BrowserViewSetVisible(p->view, !session || !session->state.open);
+        // the native WebView covers gpui popups: hide it while a list is open
+        auto isOpen = [cx](DialogSelect& sel) {
+            gpc::SelectState* st = sel.state.Get(cx);
+            return st && st->state.open;
+        };
+        bool listOpen = isOpen(p->sessionSel) || isOpen(p->modelSel) || isOpen(p->optionSel);
+        BrowserViewSetVisible(p->view, !listOpen);
 #endif
         chat->Child(BrowserViewBuild(p->view, cx));
     }

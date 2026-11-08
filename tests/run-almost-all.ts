@@ -1,4 +1,3 @@
-import { testit as codexProvider } from "./codex-provider.ts";
 // Fast regular tests: everything except cases whose time is the test
 // (print-to-PDF, LaTeX, debounce/CPU/scroll windows, high-zoom tile settle,
 // 400-file HTML TOC, restrict.ini exe copies). Those live in run-all.ts.
@@ -518,6 +517,7 @@ import { testit as issue6203 } from "./issue-6203.ts";
 import { testit as issue6205 } from "./issue-6205.ts";
 import { testit as advSettingsEnter } from "./adv-settings-enter.ts";
 import { testit as hexView } from "./hex-view.ts";
+import { testit as codexProvider } from "./codex-provider.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
 import { testit as issue6137AdvSettings } from "./issue-6137-adv-settings.ts";
 import { testit as advSettingsHomeReload } from "./adv-settings-home-reload.ts";
@@ -578,7 +578,6 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
-  ["codex-provider", codexProvider],
   ["issue-6412", issue6412],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-1909", issue1909],
@@ -1118,6 +1117,7 @@ export const tests: NamedTest[] = [
   ["issue-6509", issue6509],
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
+  ["codex-provider", codexProvider],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
