@@ -29,6 +29,7 @@
 #include "ReadingBar.h"
 #include "AnnotEditToolbar.h"
 #endif
+#include "AIChatCommon.h"
 #include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {
@@ -201,16 +202,12 @@ WindowTab::~WindowTab() {
         delete readAloudHighlight;
         readAloudHighlight = nullptr;
     }
-#if !defined(SUMATRA_NG)
+    // ng too: a running chat's process outlived its closed tab
     for (AIChatTabState& st : aiChat) {
         str::Free(st.sessionId);
         st.sessionId = {};
-        if (st.process) {
-            TerminateProcess(st.process, 0);
-            CloseHandle(st.process);
-        }
+        AIChatCloseProcess(&st.process, true);
     }
-#endif
 }
 
 bool WindowTab::IsDocLoaded() const {
