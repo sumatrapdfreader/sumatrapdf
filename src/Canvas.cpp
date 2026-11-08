@@ -3014,6 +3014,23 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         }
     };
 
+    // every visible page paints its own rect (placeholder, then bitmap), so the
+    // background only needs the space around them; an image collection has no
+    // placeholder under a page not rendered yet
+    int savedDC = 0;
+    if (!isImage) {
+        savedDC = SaveDC(hdc);
+        Rect visible(Point(), dm->GetViewPort().Size());
+        for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
+            PageInfo* pi = dm->GetPageInfo(pageNo);
+            if (!pi || 0.0F == pi->visibleRatio || !pi->isShown) {
+                continue;
+            }
+            Rect b = pi->pageOnScreen.Intersect(visible);
+            ExcludeClipRect(hdc, b.x, b.y, b.x + b.dx, b.y + b.dy);
+        }
+    }
+
     if (paintOnBlackWithoutShadow || colDocBg == kColorUnset) {
         paintBgOrCheckerboard(colDocBg, rcArea);
     } else if (0 == nGCols) {
@@ -3074,6 +3091,9 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
             nMesh = 2;
         }
         GradientFill(hdc, tv, dimof(tv), gr, nMesh, GRADIENT_FILL_RECT_V);
+    }
+    if (savedDC) {
+        RestoreDC(hdc, savedDC);
     }
 
     bool rendering = false;
