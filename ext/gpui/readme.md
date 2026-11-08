@@ -43,12 +43,9 @@ bun run.ts gpui_shell -- examples/js_todolist --dev
 loads and renders once without opening a window, and `types <directory>` writes
 the matching `gpui.d.ts` declarations.
 
-Windows builds Direct2D by default. Pass
-`--win-backend=d2d|d3d11|d3d12|all` to `build.ts` or `run.ts` to choose what
-the executable contains. An `all` build retains the process-start
-`__paint=d2d|d3d11|d3d12` selector; `__msaa=1|2|4|8` controls the custom
-renderers' sample count, and `__scene=off|replay|cache|skip|damage` selects the
-scene optimization level (`skip` by default). `__layout_reuse=off|on` rebuilds
+Windows draws with Direct2D. `__scene=off` makes the element tree draw
+straight to the backend instead of through the scene, which skips unchanged
+frames and redraws only what changed. `__layout_reuse=off|on` rebuilds
 the taffy tree every frame when off. Pass those after `run.ts`'s `--`; the
 runtime removes them from `argv` before calling `GpuiMain`.
 
@@ -99,11 +96,8 @@ inside `gpui.cpp` behind `GPUI_OS_*`
 guards, so the same source set builds on all four:
 
 - **Windows** — `cl /std:c++20 /EHsc /utf-8 /DUNICODE /D_UNICODE`, static CRT;
-  define one of `WIN_BACKEND_DIRECT2D`, `WIN_BACKEND_D3D11` or
-  `WIN_BACKEND_D3D12` and link its import libraries. With no definition the
-  compatibility default is Direct2D. `WIN_BACKEND_ALL` compiles and links all
-  three. The custom backends already contain their shader bytecode and do not
-  require `d3dcompiler.lib` or `D3DCompiler_47.dll`.
+  link `d2d1.lib d3d11.lib dxgi.lib dcomp.lib dwrite.lib windowscodecs.lib`
+  beside the usual user32/gdi32/ole32/shell32 set (see `build.ts`).
 - **Linux** — `g++ -std=c++20` with `pkg-config --cflags --libs x11 cairo pangocairo gdk-pixbuf-2.0`.
   Add `libcurl` and `-DGPUI_HAVE_CURL=1` for remote images,
   `webkit2gtk-4.1` and `-DGPUI_HAVE_WEBKITGTK=1` for the webview, and
@@ -161,7 +155,7 @@ No other dependencies, no nested build system, no STL containers.
 
 ## This copy
 
-Amalgamated from gpui-kit-cpp [`b912b86a75a3d78b52fce0db62ef03d481cb9a4c`](https://github.com/kjk/gpui-kit-cpp/commit/b912b86a75a3d78b52fce0db62ef03d481cb9a4c).
+Amalgamated from gpui-kit-cpp [`a192219e3003ba9e4faa4c2c7432afac2167815e`](https://github.com/kjk/gpui-kit-cpp/commit/a192219e3003ba9e4faa4c2c7432afac2167815e).
 
-[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/b912b86a75a3d78b52fce0db62ef03d481cb9a4c...main)
+[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/a192219e3003ba9e4faa4c2c7432afac2167815e...main)
 shows every commit this copy is behind by; if that page is empty, it is current.
