@@ -2018,13 +2018,6 @@ void VecReverse(Vec<T>& v) {
     }
 }
 
-template <typename T, typename E>
-bool VecPush(Arena* arena, T& v, E el) {
-    if (!VecGrow(arena, v, 1)) return false;
-    v.els[v.len++] = el;
-    return true;
-}
-
 //--- Str.h ------------------------------------------------------------------
 
 #define kUtf8Bom "\xEF\xBB\xBF"
@@ -2297,7 +2290,6 @@ struct BuilderT : Vec<C> {
     C RemoveAt(int idx, int count = 1);
     C RemoveLast();
     S TakeStr();
-    S TakeWStr() { return TakeStr(); }
     C LastChar() const;
     // Lend a buffer to start in, instead of the first allocation, the way
     // VecUseExternalBuffer() does. Must be empty with no storage yet. Appends

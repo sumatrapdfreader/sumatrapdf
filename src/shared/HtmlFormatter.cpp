@@ -1573,13 +1573,3 @@ void DrawHtmlPage(HtmlDrawContext context, PlatformTextRender* textDraw, Vec<Dra
     }
 }
 #endif
-
-HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocator) {
-    HtmlFormatterArgs* args = new HtmlFormatterArgs();
-    args->SetFontName(L"Georgia");
-    args->fontSize = 12.5f;
-    args->pageDx = (float)dx;
-    args->pageDy = (float)dy;
-    args->textAllocator = textAllocator;
-    return args;
-}

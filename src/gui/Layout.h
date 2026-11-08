@@ -21,7 +21,6 @@ struct Constraints {
     bool HasTightWidth() const;
     bool HasTightHeight() const;
     Constraints Inset(int width, int height) const;
-    bool IsNormalized() const;
     bool IsTight() const;
     bool IsZero() const;
     Constraints Loosen() const;

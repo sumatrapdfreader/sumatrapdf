@@ -278,5 +278,3 @@ struct CGContext;
 void DrawHtmlPage(struct CGContext* context, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
                   float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr);
 #endif
-
-HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocator = nullptr);

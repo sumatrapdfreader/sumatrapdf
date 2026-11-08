@@ -32,7 +32,6 @@ class BrowserDocView {
     void SetVisible(bool show);
     bool IsVisible() const;
     void RefreshControllerSurface();
-    HWND GetParentHwnd() const { return hwndParent; }
 
     void NavigateToDataUrl(Str url);
     void GoBack();

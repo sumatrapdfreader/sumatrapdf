@@ -1140,10 +1140,6 @@ int GetAppMenuFontSizeForDpi(int dpi) {
     return std::abs(ncm.lfMenuFont.lfHeight);
 }
 
-int GetAppMenuFontSize() {
-    return GetAppMenuFontSizeForDpi(DpiGet());
-}
-
 int GetAppFontSizeForDpi(int dpi) {
     auto fntSize = gSettings->uIFontSize;
     if (fntSize < kMinFontSize) {

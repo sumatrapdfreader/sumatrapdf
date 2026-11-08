@@ -35,8 +35,6 @@ TempStr GetCurrentThreadCallstackTemp() {
     return {};
 }
 
-void GetAllThreadsCallstacks(str::Builder& /*s*/) {}
-
 void GetExceptionInfo(str::Builder& /*s*/, EXCEPTION_POINTERS* /*excPointers*/) {}
 
 } // namespace dbghelp

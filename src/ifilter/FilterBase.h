@@ -135,10 +135,6 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     // return FILTER_E_END_OF_CHUNKS when there are no more chunks
     virtual HRESULT GetNextChunkValue(ChunkValue& chunkValue) = 0;
 
-  protected:
-    DWORD GetChunkId() const { return m_dwChunkId; }
-
-  public:
     FilterBase(AtomicInt* plRefCount) : m_lRef(1), m_plModuleRef(plRefCount), m_dwChunkId(0), m_iText(0) {
         AtomicIntInc(m_plModuleRef);
     }

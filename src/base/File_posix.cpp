@@ -369,37 +369,8 @@ bool WriteAll(FileHandle h, Str data) {
     return true;
 }
 
-// Reads exactly size bytes at offset; a short read (e.g. hitting the end of
-// the file) is a failure. pread() doesn't move the file position, but the
-// Windows implementation does, so callers must not rely on either.
-bool ReadAt(FileHandle h, i64 offset, void* buf, int size) {
-    char* d = (char*)buf;
-    int left = size;
-    while (left > 0) {
-        ssize_t n = pread(h, d, (size_t)left, (off_t)offset);
-        if (n < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            return false;
-        }
-        if (n == 0) {
-            return false;
-        }
-        d += n;
-        offset += n;
-        left -= (int)n;
-    }
-    return true;
-}
-
 bool Flush(FileHandle h) {
     return fsync(h) == 0;
-}
-
-// Text of the error left behind by the last failed call, for error messages.
-TempStr LastErrorTemp() {
-    return str::DupTemp(Str(strerror(errno)));
 }
 
 bool Exists(Str path) {

@@ -162,10 +162,6 @@ Constraints Constraints::Inset(int width, int height) const {
     return Constraints{min2, max2};
 }
 
-bool Constraints::IsNormalized() const {
-    return min.dx >= 0.0 && min.dx <= max.dx && min.dy >= 0.0 && min.dy <= max.dy;
-}
-
 bool Constraints::IsTight() const {
     return HasTightWidth() && HasTightHeight();
 }

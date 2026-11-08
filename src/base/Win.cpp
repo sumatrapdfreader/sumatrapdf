@@ -2878,33 +2878,6 @@ Exit:
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
-IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd) {
-    AutoReleaseComPtr<IShellFolder> pDesktopFolder;
-    HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
-    if (FAILED(hr)) {
-        return nullptr;
-    }
-
-    WCHAR* lpWPath = CWStrTemp(filePath);
-    LPITEMIDLIST pidl;
-    hr = pDesktopFolder->ParseDisplayName(nullptr, nullptr, lpWPath, nullptr, &pidl, nullptr);
-    if (FAILED(hr)) {
-        return nullptr;
-    }
-    AutoReleaseComPtr<IShellFolder> pShellFolder;
-    LPCITEMIDLIST pidlChild;
-    hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
-    CoTaskMemFree(pidl);
-    if (FAILED(hr)) {
-        return nullptr;
-    }
-    IDataObject* pDataObject = nullptr;
-    hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, nullptr, (void**)&pDataObject);
-    if (FAILED(hr)) {
-        return nullptr;
-    }
-    return pDataObject;
-}
 
 HRESULT CLSIDFromString(Str lpsz, LPCLSID pclsid) {
     WCHAR* ws = CWStrTemp(lpsz);

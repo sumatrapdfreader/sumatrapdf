@@ -11,7 +11,6 @@ void GetThreadCallstack(str::Builder& s, ThreadId threadId);
 int GetSuspendedThreadCallstackAddrs(ThreadHandle hThread, u64* addrs, int maxAddrs);
 bool GetCurrentThreadCallstack(str::Builder& s);
 TempStr GetCurrentThreadCallstackTemp();
-void GetAllThreadsCallstacks(str::Builder& s);
 void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers);
 
 } // namespace dbghelp

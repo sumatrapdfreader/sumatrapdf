@@ -362,7 +362,6 @@ TempStr GetTempDirTemp(int initialCch = MAX_PATH);
 void ChangeCurrDirToDocuments();
 TempStr ResolveLnkTemp(Str path);
 bool CreateShortcut(Str shortcutPath, Str exePath, Str args = Str(), Str description = Str(), int iconIndex = 0);
-IDataObject* GetDataObjectForFile(Str filePath, HWND hwnd = nullptr);
 void AddPathToRecentDocs(Str path);
 
 //--- process launch / shell

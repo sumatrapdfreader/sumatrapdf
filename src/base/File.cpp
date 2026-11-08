@@ -1764,27 +1764,6 @@ bool WriteAll(FileHandle h, Str data) {
     return true;
 }
 
-bool ReadAt(FileHandle h, i64 offset, void* buf, int size) {
-    LARGE_INTEGER pos;
-    pos.QuadPart = offset;
-    if (!SetFilePointerEx(h, pos, nullptr, FILE_BEGIN)) {
-        return false;
-    }
-    int total = 0;
-    while (total < size) {
-        DWORD n = 0;
-        if (!::ReadFile(h, (char*)buf + total, (DWORD)(size - total), &n, nullptr) || n == 0) {
-            return false;
-        }
-        total += (int)n;
-    }
-    return true;
-}
-
-TempStr LastErrorTemp() {
-    return GetLastErrorAsStr(GetTempArena());
-}
-
 #endif
 
 } // namespace file
