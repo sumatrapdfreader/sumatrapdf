@@ -8687,11 +8687,22 @@ static TempStr FormatUnixTimeTemp(int64_t unixSecs) {
     }
     time_t t = (time_t)unixSecs;
     struct tm tm;
-    gmtime_s(&tm, &t);
+    if (gmtime_s(&tm, &t) != 0) {
+        return {};
+    }
     char buf[64];
     strftime(buf, sizeof buf, "%Y/%m/%d %H:%M:%S UTC", &tm);
     return str::DupTemp(Str(buf));
 }
+
+#if IS_DEBUG
+bool EngineMupdf_UnitTestFormatUnixTime() {
+    // a certificate's notAfter can be past what gmtime_s handles (year 3000)
+    constexpr int64_t kYear9999 = 253402300799LL;
+    return str::Eq(FormatUnixTimeTemp(86400), StrL("1970/01/02 00:00:00 UTC")) &&
+           len(FormatUnixTimeTemp(kYear9999)) == 0;
+}
+#endif
 
 static TempStr FormatPdfDateRawTemp(fz_context* ctx, pdf_obj* obj) {
     if (!obj) {
