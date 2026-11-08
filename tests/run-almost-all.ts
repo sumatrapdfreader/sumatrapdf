@@ -30,8 +30,7 @@ import { testit as jpegXlPdf } from "./jpeg-xl-pdf.ts";
 import { testit as buildCli } from "./build-cli.ts";
 import { testit as ngEmbedded } from "./ng-embedded.ts";
 import { testit as combiningMarkFirst } from "./combining-mark-first.ts";
-import { testit as parseTipBrackets } from "./parse-tip-brackets.ts";
-import { testit as issue5840 } from "./issue-5840.ts";
+import { testit as appUnitTests } from "./app-unit-tests.ts";
 import { testit as issue5844 } from "./issue-5844.ts";
 import { testit as issue3434 } from "./issue-3434.ts";
 import { testit as cmykImageSave } from "./cmyk-image-save.ts";
@@ -42,10 +41,6 @@ import { testit as issue6346 } from "./issue-6346.ts";
 import { testit as issue6348 } from "./issue-6348.ts";
 import { testit as issue750 } from "./issue-750.ts";
 import { testit as issue6039 } from "./issue-6039.ts";
-import { testit as issue5846 } from "./issue-5846.ts";
-import { testit as issue5941 } from "./issue-5941.ts";
-import { testit as issue2447 } from "./issue-2447.ts";
-import { testit as issue476 } from "./issue-476.ts";
 import { testit as issue5875 } from "./issue-5875.ts";
 import { testit as issue3744 } from "./issue-3744.ts";
 import { testit as issue4986 } from "./issue-4986.ts";
@@ -744,16 +739,11 @@ export const tests: NamedTest[] = [
   ["lint-posted-tasks", lintPostedTasks],
   ["font-map-current", fontMapCurrent],
   ["build-cli", buildCli],
-  ["parse-tip-brackets", parseTipBrackets],
+  ["app-unit-tests", appUnitTests],
   ["combining-mark-first", combiningMarkFirst],
-  ["issue-5840", issue5840],
   ["issue-5844", issue5844],
   ["issue-3434", issue3434],
   ["issue-1809", issue1809],
-  ["issue-5846", issue5846],
-  ["issue-5941", issue5941],
-  ["issue-2447", issue2447],
-  ["issue-476", issue476],
   ["issue-5875", issue5875],
 
   // --- default session: -for-testing + quadrant window + -dbg-control ----

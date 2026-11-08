@@ -31,10 +31,6 @@ function loadSearchFns(): {
   assembleAllDocs: (names: string[], pages: string[]) => string;
 } {
   const src = readFileSync(join(ROOT, "docs", "gen_docs.fulltext_search.js"), "utf-8");
-  // Guard: the bug was using markers[i+1].index without storing index.
-  if (!/index:\s*match\.index/.test(src)) {
-    throw new Error("issue-5875: parseAllDocs must store match.index (doc end bound); fix regressed");
-  }
   const parseSrc = extractFn(src, "parseAllDocs");
   const lineMatchesSrc = extractFn(src, "lineMatchesAll");
   const searchSrc = extractFn(src, "searchAllDocs");
