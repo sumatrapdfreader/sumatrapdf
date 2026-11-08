@@ -51300,7 +51300,20 @@ void InputBlur(InputState* s, App* app, Window* win) {
         s->columnSelectStart = {};
         s->autoScroll.Stop();
     }
+
+    Window* owner = s->focusWin;
     s->focusWin = nullptr;
+    if (owner && owner != win) {
+        BlinkStop(app, owner, &s->blink);
+        if (owner->input == s) {
+            owner->input = nullptr;
+            owner->prevInput = nullptr;
+        }
+        if (FocusHandleIsFocused(owner, s->focus)) {
+            WindowSetFocusId(owner, 0);
+        }
+        Notify(app, owner);
+    }
     if (win) {
         BlinkStop(app, win, &s->blink);
         if (win->input == s) {
