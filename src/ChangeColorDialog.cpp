@@ -19,6 +19,7 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "Annotation.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "FileHistory.h"

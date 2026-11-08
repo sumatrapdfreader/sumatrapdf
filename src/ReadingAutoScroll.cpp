@@ -24,6 +24,7 @@
 #include "DisplayModel.h"
 #include "Theme.h"
 #include "FindBar.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "Canvas.h"

@@ -27,6 +27,7 @@
 #include "AnnotPlacement.h"
 #include "Notifications.h"
 #include "Canvas.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"

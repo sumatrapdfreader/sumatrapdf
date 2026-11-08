@@ -60,6 +60,7 @@
 #include "Canvas.h"
 #endif
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SelectionToolbar.h"
 #if defined(SUMATRA_NG)

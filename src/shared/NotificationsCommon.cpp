@@ -12,6 +12,7 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Notifications.h"
 #include "EmbeddedResources.h"

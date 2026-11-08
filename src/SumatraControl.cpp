@@ -36,6 +36,7 @@
 #include "AnnotPlacement.h"
 #include "Canvas.h"
 #include "Tabs.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
 #include "Selection.h"

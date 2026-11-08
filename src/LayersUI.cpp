@@ -21,6 +21,7 @@
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Theme.h"
 #include "SumatraPDF.h"

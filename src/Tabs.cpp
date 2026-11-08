@@ -24,6 +24,7 @@
 #include "SumatraPDF.h"
 #include "DocumentProperties.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Commands.h"
 #include "CommandAvailability.h"

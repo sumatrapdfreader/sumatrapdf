@@ -26,6 +26,7 @@
 #include "MainWindow.h"
 #include "DisplayModel.h"
 #include "Favorites.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"

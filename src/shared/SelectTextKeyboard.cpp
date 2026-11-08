@@ -29,6 +29,7 @@
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #if !defined(SUMATRA_NG)
 #include "Canvas.h"

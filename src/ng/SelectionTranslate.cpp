@@ -35,6 +35,7 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
 #include "Selection.h"

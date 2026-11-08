@@ -20,6 +20,7 @@
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "Annotation.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "FileHistory.h"

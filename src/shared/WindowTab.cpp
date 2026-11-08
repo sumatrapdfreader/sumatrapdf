@@ -29,6 +29,7 @@
 #include "ReadingBar.h"
 #include "AnnotEditToolbar.h"
 #endif
+#include "AIChatTypes.h"
 #include "AIChatCommon.h"
 #include "HexViewCommon.h"
 #include "WindowTab.h"

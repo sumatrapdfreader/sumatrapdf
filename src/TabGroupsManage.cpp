@@ -19,6 +19,7 @@
 #include "EngineBase.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Translations.h"
 #include "SumatraConfig.h"

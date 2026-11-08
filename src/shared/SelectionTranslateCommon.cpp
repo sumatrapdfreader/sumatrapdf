@@ -13,6 +13,7 @@
 #include "SumatraPDF.h"
 #include "SumatraConfig.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
 #include "Selection.h"

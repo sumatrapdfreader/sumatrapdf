@@ -33,6 +33,7 @@
 #include "FileHistory.h"
 #include "SumatraPDF.h"
 #if !defined(SUMATRA_NG)
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "DisplayModel.h"

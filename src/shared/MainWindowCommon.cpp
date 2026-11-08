@@ -23,6 +23,7 @@
 #include "Annotation.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"
+#include "AIChatTypes.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "SelectionToolbar.h"

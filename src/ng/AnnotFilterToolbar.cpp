@@ -40,6 +40,7 @@
 #include "SvgIcons.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Toolbar.h"
 #include "Menu.h"

@@ -11,8 +11,6 @@ struct PlatformFont;
 struct WindowTab;
 struct WebViewResourceResult;
 
-#include "AIChatTypes.h"
-
 struct AIChatSessionInfo {
     Str sessionId;
     Str display;

@@ -22,6 +22,7 @@
 #include "MainWindow.h"
 #include "Selection.h"
 #include "AnnotPlacement.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Tabs.h"
 #include "Commands.h"

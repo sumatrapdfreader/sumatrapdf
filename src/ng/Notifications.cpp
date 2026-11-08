@@ -16,6 +16,7 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "TipMarkup.h"
 #include "Notifications.h"

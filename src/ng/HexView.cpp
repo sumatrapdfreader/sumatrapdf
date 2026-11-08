@@ -11,6 +11,7 @@
 #include "DocController.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Tabs.h"
 #include "Translations.h"

@@ -21,6 +21,7 @@
 #include "FileHistory.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "resource.h"
 #include "Commands.h"

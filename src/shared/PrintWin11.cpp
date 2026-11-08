@@ -17,6 +17,7 @@
 #include "AppSettings.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"

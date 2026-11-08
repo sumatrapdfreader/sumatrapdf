@@ -27,6 +27,7 @@
 #include "AppSettings.h"
 #include "AppTools.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "Translations.h"

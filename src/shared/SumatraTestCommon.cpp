@@ -33,6 +33,7 @@ extern "C" {
 #include "TextSearch.h"
 #include "MainWindow.h"
 #include "SumatraPDF.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "PagePosition.h"
 #include "Selection.h"

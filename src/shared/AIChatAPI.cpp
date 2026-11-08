@@ -13,6 +13,7 @@
 #include "EngineBase.h"
 #include "AppSettings.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "DisplayModel.h"

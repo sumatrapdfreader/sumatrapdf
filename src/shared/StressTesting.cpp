@@ -33,6 +33,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"

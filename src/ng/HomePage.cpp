@@ -39,6 +39,7 @@
 #include "Version.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Menu.h"
 #include "PagePosition.h"

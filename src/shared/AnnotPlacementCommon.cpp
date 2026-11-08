@@ -14,6 +14,7 @@
 #include "DisplayModel.h"
 #include "Theme.h"
 #include "TextSelection.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "AnnotEditToolbar.h"

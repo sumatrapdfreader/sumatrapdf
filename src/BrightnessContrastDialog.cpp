@@ -18,6 +18,7 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "RenderCache.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "FileHistory.h"

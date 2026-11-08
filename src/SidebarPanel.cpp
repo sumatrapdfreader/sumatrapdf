@@ -21,6 +21,7 @@
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Translations.h"
 #include "Theme.h"

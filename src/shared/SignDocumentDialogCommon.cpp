@@ -13,6 +13,7 @@
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Selection.h"
 #include "Theme.h"
