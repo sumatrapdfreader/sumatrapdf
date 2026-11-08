@@ -908,13 +908,6 @@ void TabsCtrl::CloseTab(int idx) {
     tabBeingClosed = -1;
 }
 
-static bool CanDragTab(TabInfo* tab) {
-    if (tab->isPinned) {
-        return false;
-    }
-    return true;
-}
-
 void TabsCtrl::Paint(VirtPaintCtx&) {
     // children paint themselves; host WM_PAINT fills the background
 }
@@ -1029,16 +1022,6 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
 
             if (hl != tabUnderMouse) {
-                // note: hl == -1 possible repro: we start drag, a file gets loaded via DDE etc.
-                // which re-layouts tabs and mouse is no longer over a tab
-                if (isDragging && hl != -1 && tabUnderMouse != -1) {
-                    // send notification if the highlighted tab is dragged over another
-                    if (!CanDragTab(GetTab(tabUnderMouse))) {
-                        TriggerTabDragged(this, hl, tabUnderMouse);
-                        UpdateAfterDrag(this, hl, tabUnderMouse);
-                        return 0;
-                    }
-                }
                 UpdateHover(tabUnderMouse);
                 return 0;
             }
@@ -1054,9 +1037,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONDOWN: {
-            if (overClose) {
-                tabBeingClosed = tabUnderMouse;
-            }
+            // a ✕ closes only when both press and release are on it
+            tabBeingClosed = overClose ? tabUnderMouse : -1;
             LRESULT res = 0;
             if (vroot) {
                 vroot->OnMessage(msg, wp, lp, res);
