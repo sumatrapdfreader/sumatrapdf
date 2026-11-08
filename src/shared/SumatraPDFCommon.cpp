@@ -2563,21 +2563,18 @@ void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
         }
     }
 
-    // re-opening a PostScript or DVI file converts it again (seconds for a big
-    // one), so hand the thread a clone of the engine we already have
-    EngineBase* clone = nullptr;
+    // render page 1 of the engine we already have rather than open the file
+    // again: a PostScript or DVI conversion, an ebook layout or an archive
+    // extraction, done twice. Engines render from several threads anyway. The
+    // ref keeps it alive for the thread even if the tab closes first.
+    EngineBase* shared = nullptr;
     DisplayModel* dm = win->IsDocLoaded() ? win->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    bool isConverted = engine && (engine->kind == kindEnginePostScript || engine->kind == kindEngineDvi ||
-                                  engine->kind == kindEngineCaj);
-    if (isConverted && str::Eq(engine->FilePath(), ds->filePath)) {
-        clone = engine->Clone();
+    if (engine && str::Eq(engine->FilePath(), ds->filePath)) {
+        engine->AddRef();
+        shared = engine;
     }
-
-    // otherwise use file-based async thumbnail creation; it's independent
-    // of the tab lifecycle so it works even if the tab is closed before
-    // the render completes
-    CreateThumbnailFromFileAsync(ds, clone);
+    CreateThumbnailFromFileAsync(ds, shared);
 }
 
 void DeleteCurrentFileAndOpenNext(MainWindow* win) {
@@ -3299,9 +3296,16 @@ static RegenerateThumbnailsData* NewRegenerateThumbnailsData(ThumbnailsToMake wh
     auto* data = new RegenerateThumbnailsData();
     data->which = which;
     for (FileState* fs : all) {
-        if (len(fs->filePath) > 0) {
-            VecAppend(data->files, NewThumbnailData(fs));
+        if (len(fs->filePath) == 0) {
+            continue;
         }
+        // an open document's load makes its own thumbnail (CreateThumbnailForFile)
+        bool openElsewhere = which == ThumbnailsToMake::Missing && gSettings->showStartPage &&
+                             FindMainWindowByFile(fs->filePath, false) != nullptr;
+        if (openElsewhere) {
+            continue;
+        }
+        VecAppend(data->files, NewThumbnailData(fs));
     }
     return data;
 }

@@ -149,8 +149,8 @@ TempStr PeekNextFileInFolderTemp(MainWindow* win, int* outN = nullptr, int* outM
 
 struct CreateThumbnailFromFileData {
     Str filePath;
-    // when set, render from this clone of the open document instead of loading
-    // the file again (owned)
+    // when set, the open document's engine, ref'd for us: render from it
+    // instead of loading the file again
     EngineBase* engine = nullptr;
     Pixmap* bmp = nullptr;
     // see LoadDocumentAsyncData: the thumbnail is rendered off the UI thread,
