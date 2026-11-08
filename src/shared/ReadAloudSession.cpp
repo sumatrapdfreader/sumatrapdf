@@ -634,6 +634,11 @@ static TempStr CleanReadAloudTextTemp(Str text) {
 
 // Read-aloud lifetime and commands
 static void ReadAloudSetSourceTab(WindowTab* tab) {
+    // reading moves to another tab: stop the old one as pause does, so it keeps
+    // its position and its window's highlight timer stops
+    if (gReadAloudSourceTab && gReadAloudSourceTab != tab) {
+        ReadAloudStopRememberPos();
+    }
     gReadAloudSourceTab = tab;
 }
 
