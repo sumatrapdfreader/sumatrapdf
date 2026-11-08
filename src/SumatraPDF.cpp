@@ -13544,32 +13544,46 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         } break;
 
         case WM_LBUTTONUP: {
-            bool anyPressed = false;
+            int pressedIdx = -1;
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-                anyPressed |= win->captionBtn[i].pressed;
+                if (win->captionBtn[i].pressed) {
+                    pressedIdx = i;
+                }
             }
-            if (!anyPressed) {
+            if (pressedIdx < 0) {
                 // not ours: whoever else is tracking the mouse (a splitter
                 // drag) has to see the button go up, or it keeps dragging
                 break;
             }
-            if (GetCapture() == hwnd) {
-                ReleaseCapture();
-            }
             Point ptu{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
             int btnIdx = CaptionButtonAt(win, ptu);
+            // clear before ReleaseCapture: its WM_CAPTURECHANGED cancels a press
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
                 if (win->captionBtn[i].pressed) {
                     win->captionBtn[i].pressed = false;
                     RepaintButton(hwnd, i, win);
-                    if (i == btnIdx) {
-                        HandleCaptionClick(win, i);
-                    }
                 }
+            }
+            if (GetCapture() == hwnd) {
+                ReleaseCapture();
+            }
+            if (pressedIdx == btnIdx) {
+                HandleCaptionClick(win, pressedIdx);
             }
             *callDef = false;
             return 0;
         }
+
+        // capture taken mid-press (Alt+Tab, a dialog): no button-up will come,
+        // and a later one over the button must not click it
+        case WM_CAPTURECHANGED:
+            for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+                if (win->captionBtn[i].pressed) {
+                    win->captionBtn[i].pressed = false;
+                    RepaintButton(hwnd, i, win);
+                }
+            }
+            break;
 
         case WM_LBUTTONDBLCLK: {
             Point ptdc{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
