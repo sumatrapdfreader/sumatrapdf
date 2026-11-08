@@ -517,6 +517,7 @@ import { testit as issue6203 } from "./issue-6203.ts";
 import { testit as issue6205 } from "./issue-6205.ts";
 import { testit as advSettingsEnter } from "./adv-settings-enter.ts";
 import { testit as hexView } from "./hex-view.ts";
+import { testit as codexProvider } from "./codex-provider.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
 import { testit as issue6137AdvSettings } from "./issue-6137-adv-settings.ts";
 import { testit as advSettingsHomeReload } from "./adv-settings-home-reload.ts";
@@ -1116,6 +1117,7 @@ export const tests: NamedTest[] = [
   ["issue-6509", issue6509],
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
+  ["codex-provider", codexProvider],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

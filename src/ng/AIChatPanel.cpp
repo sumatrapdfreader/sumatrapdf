@@ -347,8 +347,8 @@ static void SyncAIChatSettingsFromUI(MainWindow* win) {
     }
     StrVec models;
     provider->BuildModelsList(models);
-    int sel = p->modelSel.sel;
-    if (sel >= 0 && sel < len(models)) {
+    int sel = AIChatFindModelInList(models, p->modelSel.SelText());
+    if (sel >= 0) {
         provider->SetModel(models[sel]);
     }
     if (p->optionSel.sel >= 0) {
@@ -1015,6 +1015,15 @@ gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
     // the chat page
     gp::El* chat = gp::Div(cx->a)->Flex1()->W(gp::kFill)->MinH(0);
     if (p->view) {
+#if OS_DARWIN
+        // the native WebView covers gpui popups: hide it while a list is open
+        auto isOpen = [cx](DialogSelect& sel) {
+            gpc::SelectState* st = sel.state.Get(cx);
+            return st && st->state.open;
+        };
+        bool listOpen = isOpen(p->sessionSel) || isOpen(p->modelSel) || isOpen(p->optionSel);
+        BrowserViewSetVisible(p->view, !listOpen);
+#endif
         chat->Child(BrowserViewBuild(p->view, cx));
     }
     col->Child(chat);

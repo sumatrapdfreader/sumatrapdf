@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 // OpenAI Codex provider for the AI chat sidebar (see AIChatPanel.cpp)
-// The app-server model query uses Win32 pipes and is disabled elsewhere.
+// Model discovery also reads the CLI cache on platforms without app-server pipes.
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
@@ -180,6 +180,85 @@ static bool QueryCodexModels(Str, StrVec&) {
     return false;
 }
 #endif
+
+// $CODEX_HOME, ~/.codex by default
+static TempStr CodexHomeTemp() {
+#if OS_WIN
+    TempStr configured = GetEnvVariableTemp(StrL("CODEX_HOME"));
+#else
+    const char* env = getenv("CODEX_HOME");
+    TempStr configured = env ? str::DupTemp(Str(env)) : TempStr();
+#endif
+    if (len(configured) > 0) {
+        return configured;
+    }
+    return path::JoinTemp(AIChatHomeDirTemp(), StrL(".codex"));
+}
+
+// the models the CLI lists, from the catalog it caches
+static bool ReadCodexModelsCache(StrVec& models) {
+    Str data = file::ReadFile(path::JoinTemp(CodexHomeTemp(), StrL("models_cache.json")));
+    StrVec cached;
+    json::Reader reader(data);
+    int index = -1;
+    Str slug;
+    bool visible = false;
+    for (json::Value& v : reader) {
+        bool isSlug = json::PathMatch(v.path, StrL("/models"), StrL("*"), StrL("/slug"));
+        bool isVisibility = json::PathMatch(v.path, StrL("/models"), StrL("*"), StrL("/visibility"));
+        if ((!isSlug && !isVisibility) || v.type != json::Type::String) {
+            continue;
+        }
+        int current = json::PathSegIndex(json::PathNth(v.path, 1));
+        if (current != index) {
+            if (visible) {
+                AIChatAppendModelUnique(cached, slug);
+            }
+            index = current;
+            slug = {};
+            visible = false;
+        }
+        if (isSlug) {
+            slug = str::DupTemp(v.value);
+        }
+        if (isVisibility) {
+            visible = str::Eq(v.value, StrL("list"));
+        }
+    }
+    if (visible) {
+        AIChatAppendModelUnique(cached, slug);
+    }
+    bool ok = reader.Ok() && len(cached) > 0;
+    str::Free(data);
+    if (ok) {
+        models = cached;
+    }
+    return ok;
+}
+
+// turn.failed's error.message, which can itself be the API's JSON error:
+// {"type":"error","status":400,"error":{"message":"The 'x' model is not supported"}}
+static TempStr CodexErrorMessageTemp(Str line) {
+    TempStr message;
+    json::Reader reader(line);
+    for (json::Value& v : reader) {
+        if (v.type == json::Type::String && json::PathMatch(v.path, StrL("/error"), StrL("/message"))) {
+            message = str::DupTemp(v.value);
+        }
+    }
+    if (len(message) > 0 && message.s[0] == '{') {
+        json::Reader inner(message);
+        for (json::Value& v : inner) {
+            if (v.type == json::Type::String && json::PathMatch(v.path, StrL("/error"), StrL("/message"))) {
+                return str::DupTemp(v.value);
+            }
+        }
+    }
+    if (len(message) == 0) {
+        return str::DupTemp(StrL("Codex failed without an error message"));
+    }
+    return message;
+}
 
 // --- Session history ---
 
@@ -435,6 +514,13 @@ struct CodexBuildProvider : AIChatProvider {
 
     void BuildModelsList(StrVec& models) override {
         models.Reset();
+        // Re-read the CLI-owned cache so a CLI refresh reaches an open viewer.
+        if (ReadCodexModelsCache(models)) {
+            gCodexModels = models;
+            defaultModel = gCodexModels[0];
+            AIChatAppendModels(models, gSettings->codexBuild.models);
+            return;
+        }
         if (!gTriedCodexModels) {
             gTriedCodexModels = true;
             TempStr exePath = FindCodexExecutableTemp();
@@ -494,10 +580,29 @@ struct CodexBuildProvider : AIChatProvider {
     }
 
     void ParseStreamLine(Str line, AIChatStreamCtx* ctx) override {
-        if (len(line) == 0 || line.s[0] != '{') {
+        str::TrimWsBoth(line);
+        if (len(line) == 0) {
+            return;
+        }
+        // stderr, e.g. "error: unexpected argument" from an older CLI
+        if (line.s[0] != '{') {
+            if (str::StartsWithI(line, StrL("error:"))) {
+                AIChatPostUpdate(
+                    ctx, AIChatUpdateType::Error,
+                    fmt("%s\nCheck that the installed Codex CLI supports the selected model and command options.",
+                        line));
+            }
             return;
         }
         TempStr eventType = AIChatJsonStrTemp(line, StrL("type"));
+        // a failed turn sends "error" then "turn.failed" with the same message;
+        // "error" also reports retries ("Reconnecting... 2/5"), so only the last counts
+        if (eventType && str::Eq(eventType, StrL("turn.failed"))) {
+            TempStr message = CodexErrorMessageTemp(line);
+            AIChatPostUpdate(ctx, AIChatUpdateType::Error,
+                             fmt("%s\nCheck that the installed Codex CLI supports the selected model.", message));
+            return;
+        }
 
         if (eventType && str::Eq(eventType, StrL("thread.started"))) {
             TempStr threadId = AIChatJsonStrTemp(line, StrL("thread_id"));
