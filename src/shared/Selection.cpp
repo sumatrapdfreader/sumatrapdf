@@ -153,6 +153,12 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
     win->showSelection = false;
     win->selectionMeasure = SizeF();
     win->selectionDragEdge = SelectionDragEdge::None;
+#if !defined(SUMATRA_NG)
+    // the handles belong to the selection: a later keyboard or menu selection
+    // must not show them
+    win->touchSelHandles = false;
+    win->touchSelDragging = TouchSelHandle::None;
+#endif
     WindowTab* tab = win->CurrentTab();
     if (!tab) {
         return;

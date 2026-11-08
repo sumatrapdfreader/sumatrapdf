@@ -1000,7 +1000,11 @@ static void DragTouchSelHandle(MainWindow* win, int x, int y) {
     PointF ptf = dm->CvtFromScreen(pt, pageNo);
     dm->textSelection->SelectUpTo(pageNo, ptf.x, ptf.y);
 
+    // the selection is rebuilt under the handles: they and the drag stay
+    TouchSelHandle dragging = win->touchSelDragging;
     DeleteOldSelectionInfo(win, false);
+    win->touchSelHandles = true;
+    win->touchSelDragging = dragging;
     WindowTab* tab = win->CurrentTab();
     tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
     win->showSelection = tab->selectionOnPage != nullptr;
