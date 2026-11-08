@@ -908,6 +908,10 @@ static void PositionFindWindow(FindWindowWnd* w) {
 }
 
 void ShowFindWindow(MainWindow* win) {
+    // one find UI at a time: SearchUIFloating can change while the bar is up
+    if (IsFindBarVisible(win)) {
+        HideFindBar(win);
+    }
     // Capture before we re-point findEdit at this window's (possibly empty) edit.
     // CLI -search writes the term into the hidden compact bar; without this the
     // floating window opens with a blank box and empty result rows (#6055).

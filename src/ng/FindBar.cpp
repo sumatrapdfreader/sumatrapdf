@@ -198,6 +198,10 @@ void DeleteFindBar(MainWindow* win) {
 
 // the compact overlay half of ShowFindBar
 void ShowCompactBar(MainWindow* win) {
+    // one find UI at a time: SearchUIFloating can change while the window is up
+    if (IsFindWindowVisible(win)) {
+        HideFindWindow(win);
+    }
     TempStr term = CurrentFindTermTemp(win);
     if (!win->findBar) {
         win->findBar = new FindBar();
