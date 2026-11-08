@@ -18,11 +18,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\libjpeg-turbo\simd\i386\jsimd.c">
-      <Filter>simd\i386</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\libjpeg-turbo\simd\x86_64\jsimd.c">
-      <Filter>simd\x86_64</Filter>
+    <ClCompile Include="..\ext\libjpeg-turbo\simd\jsimd.c">
+      <Filter>simd</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libjpeg-turbo\src\jaricom.c">
       <Filter>src</Filter>
@@ -311,19 +308,19 @@
     <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jidctred-sse2.asm">
       <Filter>simd\i386</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquant-3dn.asm">
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquantf-3dn.asm">
       <Filter>simd\i386</Filter>
     </CustomBuild>
-    <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquant-mmx.asm">
-      <Filter>simd\i386</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquant-sse.asm">
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquantf-sse.asm">
       <Filter>simd\i386</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquantf-sse2.asm">
       <Filter>simd\i386</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquanti-avx2.asm">
+      <Filter>simd\i386</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquanti-mmx.asm">
       <Filter>simd\i386</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\libjpeg-turbo\simd\i386\jquanti-sse2.asm">

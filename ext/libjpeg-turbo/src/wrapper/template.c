@@ -1,7 +1,7 @@
 /*
  * @WRAPPER_FILE@
  *
- * Copyright (C) 2025, D. R. Commander.
+ * Copyright (C) 2026, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *

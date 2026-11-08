@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2009-2015, 2017, 2020-2026 D. R. Commander.
- *                                          All Rights Reserved.
+ * Copyright (C) 2009-2015, 2017, 2020-2026 D. R. Commander
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,6 +31,8 @@
 
 #include <stddef.h>
 
+#define TURBOJPEG_VERSION_NUMBER  3002000
+
 #if defined(_WIN32) && defined(DLLDEFINE)
 #define DLLEXPORT  __declspec(dllexport)
 #else
@@ -59,15 +60,15 @@
  * width, height, and level of chrominance subsampling.  The luminance plane
  * width is the image width padded to the nearest multiple of the horizontal
  * subsampling factor (1 in the case of 4:4:4, grayscale, 4:4:0, or 4:4:1; 2 in
- * the case of 4:2:2 or 4:2:0; 4 in the case of 4:1:1.)  Similarly, the
- * luminance plane height is the image height padded to the nearest multiple of
- * the vertical subsampling factor (1 in the case of 4:4:4, 4:2:2, grayscale,
- * or 4:1:1; 2 in the case of 4:2:0 or 4:4:0; 4 in the case of 4:4:1.)  This is
- * irrespective of any additional padding that may be specified as an argument
- * to the various YUV functions.  The chrominance plane width is equal to the
- * luminance plane width divided by the horizontal subsampling factor, and the
- * chrominance plane height is equal to the luminance plane height divided by
- * the vertical subsampling factor.
+ * the case of 4:2:2, 4:2:0, or 2:4; 4 in the case of 4:1:1 or 4:1:0.)
+ * Similarly, the luminance plane height is the image height padded to the
+ * nearest multiple of the vertical subsampling factor (1 in the case of 4:4:4,
+ * 4:2:2, grayscale, or 4:1:1; 2 in the case of 4:2:0, 4:4:0, or 4:1:0; 4 in
+ * the case of 4:4:1 or 2:4.)  This is irrespective of any additional padding
+ * that may be specified as an argument to the various YUV functions.  The
+ * chrominance plane width is equal to the luminance plane width divided by the
+ * horizontal subsampling factor, and the chrominance plane height is equal to
+ * the luminance plane height divided by the vertical subsampling factor.
  *
  * For example, if the source image is 35 x 35 pixels and 4:2:2 subsampling is
  * used, then the luminance plane would be 36 x 35 bytes, and each of the
@@ -75,6 +76,59 @@
  * of 4 bytes on top of this, then the luminance plane would be 36 x 35 bytes,
  * and each of the chrominance planes would be 20 x 35 bytes.
  *
+ * @anchor JPEGDestBufNotes
+ * JPEG Destination Buffer Management
+ * ----------------------------------
+ *
+ * **If #TJPARAM_NOREALLOC is set to `0`:**
+ *
+ * The TurboJPEG compression and transform functions will reallocate the
+ * destination buffer, if necessary, to accommodate the size of a
+ * generated/transformed JPEG image.  Thus, you can choose one of the following
+ * options:
+ * -# Use #tj3Alloc() to pre-allocate the buffer with an arbitrary size, and
+ *    let the API automatically reallocate the buffer as needed.  (If the API
+ *    reallocates the buffer, then the pre-allocated buffer is no longer
+ *    valid.)
+ * -# Set the buffer pointer to NULL to tell the API to automatically allocate
+ *    the buffer.
+ * -# Use #tj3Alloc() to pre-allocate the buffer to a "worst-case" size
+ *    determined as follows:
+ *    - *Compression:* Call #tj3JPEGBufSize() and add the return value to the
+ *      size of the ICC profile (if any) that was previously associated with
+ *      the TurboJPEG instance.  (See #tj3SetICCProfile() and
+ *      #tj3GetICCProfile().)
+ *    - *Lossless transformation:* Call #tj3TransformBufSize().
+ *    .
+ *    This should ensure that the buffer never has to be re-allocated.
+ *    (Setting #TJPARAM_NOREALLOC to `1` guarantees that it won't be.)
+ *
+ * Because there is no way for applications to know the size of an
+ * automatically (re)allocated JPEG destination buffer, the API tracks a
+ * destination buffer's size across multiple compression and transform function
+ * calls until the first such call in which the buffer is no longer used.  If a
+ * specified JPEG destination buffer pointer matches a destination buffer that
+ * was previously used in one of the compression or transform functions, then
+ * the specified buffer size is ignored.  (If multiple simultaneous transforms
+ * are performed, then #tj3Transform() separately tracks the destination buffer
+ * size for each transformed image.  The destination buffer size for the first
+ * image is tracked from a previous compression function call, and vice versa.)
+ * This allows applications to repeatedly call a compression or transform
+ * function with the same destination buffer argument(s) without re-specifying
+ * the destination buffer size(s) each time.
+ *
+ * @warning A JPEG destination buffer is API-managed rather than
+ * caller-managed between the first and last compression or transform function
+ * calls in which that buffer is used.  Applications must not reallocate the
+ * buffer during that time.
+ *
+ * **If #TJPARAM_NOREALLOC is set to `1`:**
+ *
+ * The JPEG destination buffer must always be pre-allocated, and the buffer
+ * size must always be specified.  The TurboJPEG compression and transform
+ * functions will throw an error if the destination buffer is not big enough to
+ * receive the generated/transformed JPEG image.  The buffer must be
+ * pre-allocated to the "worst-case" size, per above, to avoid this.
  * @{
  */
 
@@ -107,7 +161,7 @@ enum TJINIT {
 /**
  * The number of chrominance subsampling options
  */
-#define TJ_NUMSAMP  7
+#define TJ_NUMSAMP  9
 
 /**
  * Chrominance subsampling options
@@ -183,6 +237,26 @@ enum TJSAMP {
    */
   TJSAMP_441,
   /**
+   * 4:1:0 chrominance subsampling
+   *
+   * The JPEG or YUV image will contain one chrominance component for every 4x2
+   * block of pixels in the source image.  4:1:0 chrominance subsampling cannot
+   * be used with YCCK JPEG images.
+   *
+   * @note 4:1:0 subsampling is not fully accelerated in libjpeg-turbo.
+   */
+  TJSAMP_410,
+  /**
+   * 2:4 chrominance subsampling
+   *
+   * The JPEG or YUV image will contain one chrominance component for every 2x4
+   * block of pixels in the source image.  2:4 chrominance subsampling cannot
+   * be used with YCCK JPEG images.
+   *
+   * @note 2:4 subsampling is not fully accelerated in libjpeg-turbo.
+   */
+  TJSAMP_24,
+  /**
    * Unknown subsampling
    *
    * The JPEG image uses an unusual type of chrominance subsampling.  Such
@@ -220,8 +294,10 @@ enum TJSAMP {
  * - 16x16 for 4:2:0
  * - 32x8 for 4:1:1
  * - 8x32 for 4:4:1
+ * - 32x16 for 4:1:0
+ * - 16x32 for 2:4
  */
-static const int tjMCUWidth[TJ_NUMSAMP]  = { 8, 16, 16, 8, 8, 32, 8 };
+static const int tjMCUWidth[TJ_NUMSAMP]  = { 8, 16, 16, 8, 8, 32, 8, 32, 16 };
 
 /**
  * iMCU height (in pixels) for a given level of chrominance subsampling
@@ -248,8 +324,10 @@ static const int tjMCUWidth[TJ_NUMSAMP]  = { 8, 16, 16, 8, 8, 32, 8 };
  * - 16x16 for 4:2:0
  * - 32x8 for 4:1:1
  * - 8x32 for 4:4:1
+ * - 32x16 for 4:1:0
+ * - 16x32 for 2:4
  */
-static const int tjMCUHeight[TJ_NUMSAMP] = { 8, 8, 16, 8, 16, 8, 32 };
+static const int tjMCUHeight[TJ_NUMSAMP] = { 8, 8, 16, 8, 16, 8, 32, 16, 32 };
 
 
 /**
@@ -505,7 +583,15 @@ enum TJCS {
    * perceptual loss.  YCCK JPEG images can only be generated from and
    * decompressed to packed-pixel images with the CMYK pixel format.
    */
-  TJCS_YCCK
+  TJCS_YCCK,
+  /**
+   * Default colorspace
+   *
+   * Generate a grayscale JPEG image if #TJPARAM_SUBSAMP is set to
+   * #TJSAMP_GRAY, a YCCK JPEG image if the source image is CMYK, and a YCbCr
+   * JPEG image otherwise.
+   */
+  TJCS_DEFAULT = -1
 };
 
 
@@ -537,10 +623,13 @@ enum TJPARAM {
    * transformation]
    *
    * **Value**
-   * - `0` *[default]* Attempt to allocate or reallocate the JPEG destination
-   * buffer as needed.
+   * - `0` *[default]* Automatically allocate or reallocate the JPEG
+   * destination buffer as needed.
    * - `1` Generate an error if the JPEG destination buffer is invalid or too
    * small.
+   *
+   * Refer to @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for
+   * more details.
    */
   TJPARAM_NOREALLOC,
   /**
@@ -577,18 +666,18 @@ enum TJPARAM {
    *
    * The JPEG image uses (decompression) or will use (lossless compression) the
    * specified number of bits per sample.  This parameter also specifies the
-   * target data precision when loading a PBMPLUS file with #tj3LoadImage8(),
-   * #tj3LoadImage12(), or #tj3LoadImage16() and the source data precision when
-   * saving a PBMPLUS file with #tj3SaveImage8(), #tj3SaveImage12(), or
-   * #tj3SaveImage16().
+   * target data precision when loading a PNG or PBMPLUS file with
+   * #tj3LoadImage8(), #tj3LoadImage12(), or #tj3LoadImage16() and the source
+   * data precision when saving a PNG or PBMPLUS file with #tj3SaveImage8(),
+   * #tj3SaveImage12(), or #tj3SaveImage16().
    *
    * The data precision is the number of bits in the maximum sample value,
    * which may not be the same as the width of the data type used to store the
    * sample.
    *
    * **Value**
-   * - `8` or `12` for lossy JPEG images; `2` to `16` for lossless JPEG and
-   * PBMPLUS images
+   * - `8` or `12` for lossy JPEG images; `2` to `16` for lossless JPEG, PNG,
+   * and PBMPLUS images
    *
    * 12-bit JPEG data precision implies #TJPARAM_OPTIMIZE unless
    * #TJPARAM_ARITHMETIC is set.
@@ -925,7 +1014,8 @@ enum TJPARAM {
    */
   TJPARAM_MAXPIXELS,
   /**
-   * Marker copying behavior [decompression, lossless transformation]
+   * Marker copying behavior [decompression, lossless transformation,
+   * packed-pixel image I/O]
    *
    * **Value [lossless transformation]**
    * - `0` Do not copy any extra markers (including comments, JFIF thumbnails,
@@ -942,11 +1032,23 @@ enum TJPARAM {
    *
    * #TJXOPT_COPYNONE overrides this parameter for a particular transform.
    * This parameter overrides any ICC profile that was previously associated
-   * with the TurboJPEG instance using #tj3SetICCProfile().
+   * with the TurboJPEG instance using #tj3SetICCProfile(), #tj3LoadImage8(),
+   * #tj3LoadImage12(), or #tj3LoadImage16().
    *
-   * When decompressing, #tj3DecompressHeader() extracts the ICC profile from a
-   * JPEG image if this parameter is set to `2` or `4`.  #tj3GetICCProfile()
-   * can then be used to retrieve the profile.
+   * If this parameter is set to `2` or `4`:
+   * - When decompressing, #tj3DecompressHeader() extracts the ICC profile from
+   *   a JPEG image.  (#tj3DecompressHeader() always removes any ICC profile
+   *   that was previously extracted.)  #tj3GetICCProfile() can then be used to
+   *   retrieve the extracted profile.
+   * - When loading a PNG image using a TurboJPEG compression instance,
+   *   #tj3LoadImage8(), #tj3LoadImage12(), and #tj3LoadImage16() extract the
+   *   ICC profile from the PNG image and associate the profile with the
+   *   TurboJPEG instance.  #tj3GetICCProfile() can then be used to retrieve
+   *   the profile.
+   * - When saving a PNG image using a TurboJPEG decompression instance,
+   *   #tj3SaveImage8(), #tj3SaveImage12(), and #tj3SaveImage16() transfer the
+   *   ICC profile that was previously extracted from a JPEG image to the PNG
+   *   image.
    */
   TJPARAM_SAVEMARKERS
 };
@@ -1043,7 +1145,9 @@ enum TJXOP {
  */
 #define TJXOPT_TRIM  (1 << 1)
 /**
- * Enable lossless cropping.  See #tj3Transform() for more information.
+ * Enable lossless cropping of the transformed image.  (Cropping is performed
+ * after any other transformation operations.)  See #tj3Transform() for more
+ * information.
  */
 #define TJXOPT_CROP  (1 << 2)
 /**
@@ -1101,20 +1205,22 @@ typedef struct {
 } tjscalingfactor;
 
 /**
- * Cropping region
+ * Cropping region.  Note that lossless cropping is performed after any other
+ * transformation operations, so the coordinates and iMCU dimensions are
+ * relative to the flipped/rotated/tranposed image.
  */
 typedef struct {
   /**
    * The left boundary of the cropping region.  For lossless transformation,
    * this must be evenly divisible by the iMCU width (see #tjMCUWidth) of the
-   * destination image.  For decompression, this must be evenly divisible by
+   * transformed image.  For decompression, this must be evenly divisible by
    * the scaled iMCU width of the source image.
    */
   int x;
   /**
    * The upper boundary of the cropping region.  For lossless transformation,
    * this must be evenly divisible by the iMCU height (see #tjMCUHeight) of the
-   * destination image.
+   * transformed image.
    */
   int y;
   /**
@@ -1229,7 +1335,13 @@ extern "C" {
  * @return a handle to the newly-created instance, or NULL if an error occurred
  * (see #tj3GetErrorStr().)
  */
+#ifdef __DOXYGEN__
 DLLEXPORT tjhandle tj3Init(int initType);
+#else
+#define tj3Init(initType)  tj3InitVersion(initType, TURBOJPEG_VERSION_NUMBER)
+#endif
+
+DLLEXPORT tjhandle tj3InitVersion(int initType, int apiVersion);
 
 
 /**
@@ -1297,7 +1409,7 @@ DLLEXPORT int tj3Get(tjhandle handle, int param);
  * Allocate a byte buffer for use with TurboJPEG.  You should always use this
  * function to allocate the JPEG destination buffer(s) for the compression and
  * transform functions unless you are disabling automatic buffer (re)allocation
- * (by setting #TJPARAM_NOREALLOC.)
+ * (by setting #TJPARAM_NOREALLOC to `1`.)
  *
  * @param bytes the number of bytes to allocate
  *
@@ -1491,28 +1603,14 @@ DLLEXPORT int tj3SetICCProfile(tjhandle handle, unsigned char *iccBuf,
  * "Pixel formats".)
  *
  * @param jpegBuf address of a pointer to a byte buffer that will receive the
- * JPEG image.  TurboJPEG has the ability to reallocate the JPEG buffer to
- * accommodate the size of the JPEG image.  Thus, you can choose to:
- * -# pre-allocate the JPEG buffer with an arbitrary size using #tj3Alloc() and
- * let TurboJPEG grow the buffer as needed,
- * -# set `*jpegBuf` to NULL to tell TurboJPEG to allocate the buffer for you,
- * or
- * -# pre-allocate the buffer to a "worst case" size determined by calling
- * #tj3JPEGBufSize() and adding the return value to the size of the ICC profile
- * (if any) that was previously associated with the TurboJPEG instance (see
- * #tj3SetICCProfile().)  This should ensure that the buffer never has to be
- * re-allocated.  (Setting #TJPARAM_NOREALLOC guarantees that it won't be.)
- * .
- * Unless you have set #TJPARAM_NOREALLOC, you should always check `*jpegBuf`
- * upon return from this function, as it may have changed.
+ * JPEG image.  If #TJPARAM_NOREALLOC is set to `0`, you should always check
+ * `*jpegBuf` upon return from this function, as it may have changed.  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
- * @param jpegSize pointer to a size_t variable that holds the size of the JPEG
- * buffer.  If `*jpegBuf` points to a pre-allocated buffer, then `*jpegSize`
- * should be set to the size of the buffer.  Otherwise, `*jpegSize` is
- * ignored.  If `*jpegBuf` points to a JPEG buffer that is being reused from a
- * previous call to one of the JPEG compression functions, then `*jpegSize` is
- * also ignored.  Upon return, `*jpegSize` will contain the size of the JPEG
- * image (in bytes.)
+ * @param jpegSize pointer to a size_t variable that specifies the size of the
+ * JPEG buffer.  Upon return, `*jpegSize` will contain the size of the JPEG
+ * image (in bytes.)  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr()
  * and #tj3GetErrorCode().)
@@ -1551,28 +1649,14 @@ DLLEXPORT int tj3Compress8(tjhandle handle, const unsigned char *srcBuf,
  * "Pixel formats".)
  *
  * @param jpegBuf address of a pointer to a byte buffer that will receive the
- * JPEG image.  TurboJPEG has the ability to reallocate the JPEG buffer to
- * accommodate the size of the JPEG image.  Thus, you can choose to:
- * -# pre-allocate the JPEG buffer with an arbitrary size using #tj3Alloc() and
- * let TurboJPEG grow the buffer as needed,
- * -# set `*jpegBuf` to NULL to tell TurboJPEG to allocate the buffer for you,
- * or
- * -# pre-allocate the buffer to a "worst case" size determined by calling
- * #tj3JPEGBufSize() and adding the return value to the size of the ICC profile
- * (if any) that was previously associated with the TurboJPEG instance (see
- * #tj3SetICCProfile().)  This should ensure that the buffer never has to be
- * re-allocated.  (Setting #TJPARAM_NOREALLOC guarantees that it won't be.)
- * .
- * Unless you have set #TJPARAM_NOREALLOC, you should always check `*jpegBuf`
- * upon return from this function, as it may have changed.
+ * JPEG image.  If #TJPARAM_NOREALLOC is set to `0`, you should always check
+ * `*jpegBuf` upon return from this function, as it may have changed.  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
- * @param jpegSize pointer to a size_t variable that holds the size of the JPEG
- * buffer.  If `*jpegBuf` points to a pre-allocated buffer, then `*jpegSize`
- * should be set to the size of the buffer.  Otherwise, `*jpegSize` is
- * ignored.  If `*jpegBuf` points to a JPEG buffer that is being reused from a
- * previous call to one of the JPEG compression functions, then `*jpegSize` is
- * also ignored.  Upon return, `*jpegSize` will contain the size of the JPEG
- * image (in bytes.)
+ * @param jpegSize pointer to a size_t variable that specifies the size of the
+ * JPEG buffer.  Upon return, `*jpegSize` will contain the size of the JPEG
+ * image (in bytes.)  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr()
  * and #tj3GetErrorCode().)
@@ -1612,28 +1696,14 @@ DLLEXPORT int tj3Compress12(tjhandle handle, const short *srcBuf, int width,
  * "Pixel formats".)
  *
  * @param jpegBuf address of a pointer to a byte buffer that will receive the
- * JPEG image.  TurboJPEG has the ability to reallocate the JPEG buffer to
- * accommodate the size of the JPEG image.  Thus, you can choose to:
- * -# pre-allocate the JPEG buffer with an arbitrary size using #tj3Alloc() and
- * let TurboJPEG grow the buffer as needed,
- * -# set `*jpegBuf` to NULL to tell TurboJPEG to allocate the buffer for you,
- * or
- * -# pre-allocate the buffer to a "worst case" size determined by calling
- * #tj3JPEGBufSize() and adding the return value to the size of the ICC profile
- * (if any) that was previously associated with the TurboJPEG instance (see
- * #tj3SetICCProfile().)  This should ensure that the buffer never has to be
- * re-allocated.  (Setting #TJPARAM_NOREALLOC guarantees that it won't be.)
- * .
- * Unless you have set #TJPARAM_NOREALLOC, you should always check `*jpegBuf`
- * upon return from this function, as it may have changed.
+ * JPEG image.  If #TJPARAM_NOREALLOC is set to `0`, you should always check
+ * `*jpegBuf` upon return from this function, as it may have changed.  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
- * @param jpegSize pointer to a size_t variable that holds the size of the JPEG
- * buffer.  If `*jpegBuf` points to a pre-allocated buffer, then `*jpegSize`
- * should be set to the size of the buffer.  Otherwise, `*jpegSize` is
- * ignored.  If `*jpegBuf` points to a JPEG buffer that is being reused from a
- * previous call to one of the JPEG compression functions, then `*jpegSize` is
- * also ignored.  Upon return, `*jpegSize` will contain the size of the JPEG
- * image (in bytes.)
+ * @param jpegSize pointer to a size_t variable that specifies the size of the
+ * JPEG buffer.  Upon return, `*jpegSize` will contain the size of the JPEG
+ * image (in bytes.)  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr()
  * and #tj3GetErrorCode().)
@@ -1677,28 +1747,14 @@ DLLEXPORT int tj3Compress16(tjhandle handle, const unsigned short *srcBuf,
  * buffer copy will be performed.
  *
  * @param jpegBuf address of a pointer to a byte buffer that will receive the
- * JPEG image.  TurboJPEG has the ability to reallocate the JPEG buffer to
- * accommodate the size of the JPEG image.  Thus, you can choose to:
- * -# pre-allocate the JPEG buffer with an arbitrary size using #tj3Alloc() and
- * let TurboJPEG grow the buffer as needed,
- * -# set `*jpegBuf` to NULL to tell TurboJPEG to allocate the buffer for you,
- * or
- * -# pre-allocate the buffer to a "worst case" size determined by calling
- * #tj3JPEGBufSize() and adding the return value to the size of the ICC profile
- * (if any) that was previously associated with the TurboJPEG instance (see
- * #tj3SetICCProfile().)  This should ensure that the buffer never has to be
- * re-allocated.  (Setting #TJPARAM_NOREALLOC guarantees that it won't be.)
- * .
- * Unless you have set #TJPARAM_NOREALLOC, you should always check `*jpegBuf`
- * upon return from this function, as it may have changed.
+ * JPEG image.  If #TJPARAM_NOREALLOC is set to `0`, you should always check
+ * `*jpegBuf` upon return from this function, as it may have changed.  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
- * @param jpegSize pointer to a size_t variable that holds the size of the JPEG
- * buffer.  If `*jpegBuf` points to a pre-allocated buffer, then `*jpegSize`
- * should be set to the size of the buffer.  Otherwise, `*jpegSize` is
- * ignored.  If `*jpegBuf` points to a JPEG buffer that is being reused from a
- * previous call to one of the JPEG compression functions, then `*jpegSize` is
- * also ignored.  Upon return, `*jpegSize` will contain the size of the JPEG
- * image (in bytes.)
+ * @param jpegSize pointer to a size_t variable that specifies the size of the
+ * JPEG buffer.  Upon return, `*jpegSize` will contain the size of the JPEG
+ * image (in bytes.)  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr()
  * and #tj3GetErrorCode().)
@@ -1739,28 +1795,14 @@ DLLEXPORT int tj3CompressFromYUVPlanes8(tjhandle handle,
  * buffer copy will be performed.
  *
  * @param jpegBuf address of a pointer to a byte buffer that will receive the
- * JPEG image.  TurboJPEG has the ability to reallocate the JPEG buffer to
- * accommodate the size of the JPEG image.  Thus, you can choose to:
- * -# pre-allocate the JPEG buffer with an arbitrary size using #tj3Alloc() and
- * let TurboJPEG grow the buffer as needed,
- * -# set `*jpegBuf` to NULL to tell TurboJPEG to allocate the buffer for you,
- * or
- * -# pre-allocate the buffer to a "worst case" size determined by calling
- * #tj3JPEGBufSize() and adding the return value to the size of the ICC profile
- * (if any) that was previously associated with the TurboJPEG instance (see
- * #tj3SetICCProfile().)  This should ensure that the buffer never has to be
- * re-allocated.  (Setting #TJPARAM_NOREALLOC guarantees that it won't be.)
- * .
- * Unless you have set #TJPARAM_NOREALLOC, you should always check `*jpegBuf`
- * upon return from this function, as it may have changed.
+ * JPEG image.  If #TJPARAM_NOREALLOC is set to `0`, you should always check
+ * `*jpegBuf` upon return from this function, as it may have changed.  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
- * @param jpegSize pointer to a size_t variable that holds the size of the JPEG
- * buffer.  If `*jpegBuf` points to a pre-allocated buffer, then `*jpegSize`
- * should be set to the size of the buffer.  Otherwise, `*jpegSize` is
- * ignored.  If `*jpegBuf` points to a JPEG buffer that is being reused from a
- * previous call to one of the JPEG compression functions, then `*jpegSize` is
- * also ignored.  Upon return, `*jpegSize` will contain the size of the JPEG
- * image (in bytes.)
+ * @param jpegSize pointer to a size_t variable that specifies the size of the
+ * JPEG buffer.  Upon return, `*jpegSize` will contain the size of the JPEG
+ * image (in bytes.)  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr()
  * and #tj3GetErrorCode().)
@@ -1879,11 +1921,13 @@ DLLEXPORT int tj3EncodeYUV8(tjhandle handle, const unsigned char *srcBuf,
 /**
  * Retrieve information about a JPEG image without decompressing it, or prime
  * the decompressor with quantization and Huffman tables.  If a JPEG image is
- * passed to this function, then the @ref TJPARAM "parameters" that describe
- * the JPEG image will be set when the function returns.  If a JPEG image is
- * passed to this function and #TJPARAM_SAVEMARKERS is set to `2` or `4`, then
- * the ICC profile (if any) will be extracted from the JPEG image.
- * (#tj3GetICCProfile() can then be used to retrieve the profile.)
+ * passed to this function, then:
+ * - The @ref TJPARAM "parameters" that describe the JPEG image will be set
+ *   when the function returns.
+ * - If #TJPARAM_SAVEMARKERS is set to `2` or `4`, then the ICC profile (if
+ *   any) will be extracted from the JPEG image.  #tj3GetICCProfile() can then
+ *   be used to retrieve the profile.
+ * - Any ICC profile that was previously extracted will be removed.
  *
  * @param handle handle to a TurboJPEG instance that has been initialized for
  * decompression
@@ -1900,6 +1944,13 @@ DLLEXPORT int tj3EncodeYUV8(tjhandle handle, const unsigned char *srcBuf,
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr()
  * and #tj3GetErrorCode().)
+ *
+ * @warning If this function returns a fatal error, then continuing to use the
+ * TurboJPEG instance is unsupported API abuse.  An application that abuses the
+ * API in that manner may work in practice, but it is relying upon undefined
+ * behavior.  If a fatal error occurs, then the application should destroy the
+ * TurboJPEG instance and create a new one if it wishes to safely continue
+ * decompressing images.
  */
 DLLEXPORT int tj3DecompressHeader(tjhandle handle,
                                   const unsigned char *jpegBuf,
@@ -1908,15 +1959,18 @@ DLLEXPORT int tj3DecompressHeader(tjhandle handle,
 
 /**
  * Retrieve the ICC (International Color Consortium) color management profile
- * (if any) that was previously extracted from a JPEG image.
+ * (if any) that was previously extracted from a JPEG image or associated with
+ * a TurboJPEG compression instance.
  *
  * @note To extract the ICC profile from a JPEG image, call
- * #tj3DecompressHeader() with #TJPARAM_SAVEMARKERS set to `2` or `4`.  Once
- * the ICC profile is retrieved, it must be re-extracted before it can be
- * retrieved again.
+ * #tj3DecompressHeader() with #TJPARAM_SAVEMARKERS set to `2` or `4`.
  *
- * @param handle handle to a TurboJPEG instance that has been initialized for
- * decompression
+ * @note To associate an ICC profile with a TurboJPEG compression instance,
+ * call #tj3SetICCProfile() or use #tj3LoadImage8(), #tj3LoadImage12(), or
+ * #tj3LoadImage16() to load a PNG image with #TJPARAM_SAVEMARKERS set to `2`
+ * or `4`.
+ *
+ * @param handle handle to a TurboJPEG instance
  *
  * @param iccBuf address of a pointer to a byte buffer.  Upon return:
  * - If `iccBuf` is not NULL and there is an ICC profile to retrieve, then
@@ -2051,6 +2105,24 @@ DLLEXPORT int tj3Decompress8(tjhandle handle, const unsigned char *jpegBuf,
 /**
  * Decompress a JPEG image with 9 to 12 bits of data precision per sample into
  * a packed-pixel RGB, grayscale, or CMYK image with the same data precision.
+ *
+ * @note This function can also be used to decompress an 8-bit-per-sample lossy
+ * JPEG image into a 12-bit-per-sample packed-pixel image.
+ *
+ * @note The JPEG format uses 16-bit DCT coefficients and computes those
+ * coefficients relative to an 8x8 DCT block.  Thus, an 8-bit-per-sample JPEG
+ * image can preserve most of the signal from an underexposed
+ * higher-data-precision source image, provided that the data precision of the
+ * source image is retained in the compressor until the forward DCT stage.
+ * (Modern digital cameras typically do that, but note that libjpeg-turbo does
+ * not.  Our solution for retaining higher data precision in the compressor is
+ * simply to generate a 12-bit-per-sample JPEG image.)
+ *
+ * @note It may be desirable to preserve as much of that signal as possible in
+ * the decompressor, to facilitate shadow recovery in the decompressed image.
+ * Thus, calling this function forces the decompressor to use the
+ * 12-bit-per-sample decompression pipeline even if the JPEG image has 8 bits
+ * of data precision.
  *
  * \details \copydetails tj3Decompress8()
  */
@@ -2262,11 +2334,12 @@ DLLEXPORT int tj3DecodeYUV8(tjhandle handle, const unsigned char *srcBuf,
  * This function is a wrapper for #tj3JPEGBufSize() that takes into account
  * cropping, transposition of the width and height (which affects the
  * destination image dimensions and level of chrominance subsampling),
- * grayscale conversion, and the ICC profile (if any) that was previously
- * associated with the TurboJPEG instance (see #tj3SetICCProfile()) or
- * extracted from the source image (see #tj3GetICCProfile() and
- * #TJPARAM_SAVEMARKERS.)  The JPEG header must be read (see
- * tj3DecompressHeader()) prior to calling this function.
+ * grayscale conversion, the ICC profile (if any) that was previously
+ * associated with the TurboJPEG instance or extracted from the source image
+ * (see #tj3SetICCProfile(), #tj3GetICCProfile(), and #TJPARAM_SAVEMARKERS),
+ * and any other extra markers in the source image (see #TJPARAM_SAVEMARKERS.)
+ * The JPEG header must be read (see #tj3DecompressHeader()) prior to calling
+ * this function.
  *
  * @param handle handle to a TurboJPEG instance that has been initialized for
  * lossless transformation
@@ -2307,31 +2380,16 @@ DLLEXPORT size_t tj3TransformBufSize(tjhandle handle,
  *
  * @param dstBufs pointer to an array of n byte buffers.  `dstBufs[i]` will
  * receive a JPEG image that has been transformed using the parameters in
- * `transforms[i]`.  TurboJPEG has the ability to reallocate the JPEG
- * destination buffer to accommodate the size of the transformed JPEG image.
- * Thus, you can choose to:
- * -# pre-allocate the JPEG destination buffer with an arbitrary size using
- * #tj3Alloc() and let TurboJPEG grow the buffer as needed,
- * -# set `dstBufs[i]` to NULL to tell TurboJPEG to allocate the buffer for
- * you, or
- * -# pre-allocate the buffer to a "worst case" size determined by calling
- * #tj3TransformBufSize().  Under normal circumstances, this should ensure that
- * the buffer never has to be re-allocated.  (Setting #TJPARAM_NOREALLOC
- * guarantees that it won't be.  However, if the source image has a large
- * amount of embedded Exif data, then the transformed JPEG image may be larger
- * than the worst-case size.  #TJPARAM_NOREALLOC cannot be used in that case
- * unless the embedded data is discarded using #TJXOPT_COPYNONE or
- * #TJPARAM_SAVEMARKERS.)
- * .
- * Unless you have set #TJPARAM_NOREALLOC, you should always check `dstBufs[i]`
- * upon return from this function, as it may have changed.
+ * `transforms[i]`.  If #TJPARAM_NOREALLOC is set to `0`, you should always
+ * check `dstBufs[i]` upon return from this function, as it may have changed.
+ * Refer to @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more
+ * details.
  *
- * @param dstSizes pointer to an array of n size_t variables that will receive
- * the actual sizes (in bytes) of each transformed JPEG image.  If `dstBufs[i]`
- * points to a pre-allocated buffer, then `dstSizes[i]` should be set to the
- * size of the buffer.  Otherwise, `dstSizes[i]` is ignored.  Upon return,
- * `dstSizes[i]` will contain the size of the transformed JPEG image (in
- * bytes.)
+ * @param dstSizes pointer to an array of n size_t variables, each of which
+ * specifies the size of the destination buffer for the corresponding
+ * transformed JPEG image.  Upon return, `dstSizes[i]` will contain the size of
+ * the transformed JPEG image (in bytes.)  Refer to
+ * @ref JPEGDestBufNotes "JPEG Destination Buffer Management" for more details.
  *
  * @param transforms pointer to an array of n #tjtransform structures, each of
  * which specifies the transform parameters and/or cropping region for the
@@ -2349,15 +2407,20 @@ DLLEXPORT int tj3Transform(tjhandle handle, const unsigned char *jpegBuf,
  * Load a packed-pixel image with 2 to 8 bits of data precision per sample from
  * disk into memory.
  *
+ * @note If loading a PNG image using a TurboJPEG compression instance, the
+ * ICC profile (if any) embedded in the PNG image is extracted and associated
+ * with the TurboJPEG instance if #TJPARAM_SAVEMARKERS is set to `2` or `4`.
+ *
  * @param handle handle to a TurboJPEG instance
  *
- * @param filename name of a file containing a packed-pixel image in Windows
- * BMP or PBMPLUS (PPM/PGM) format.  Windows BMP files require 8-bit-per-sample
- * data precision.  When loading a PBMPLUS file, the target data precision
- * (from 2 to 8 bits per sample) can be specified using #TJPARAM_PRECISION and
- * defaults to 8 if #TJPARAM_PRECISION is unset or out of range.  If the data
- * precision of the PBMPLUS file does not match the target data precision, then
- * upconverting or downconverting will be performed.
+ * @param filename name of a file containing a packed-pixel image in PNG,
+ * PBMPLUS (PPM/PGM), or Windows BMP format.  Windows BMP files require
+ * 8-bit-per-sample data precision.  When loading a PNG or PBMPLUS file, the
+ * target data precision (from 2 to 8 bits per sample) can be specified using
+ * #TJPARAM_PRECISION and defaults to 8 if #TJPARAM_PRECISION is unset or out
+ * of range.  If the data precision of the PNG or PBMPLUS file does not match
+ * the target data precision, then upconverting or downconverting will be
+ * performed.
  *
  * @param width pointer to an integer variable that will receive the width (in
  * pixels) of the packed-pixel image
@@ -2401,14 +2464,18 @@ DLLEXPORT unsigned char *tj3LoadImage8(tjhandle handle, const char *filename,
  * Load a packed-pixel image with 9 to 12 bits of data precision per sample
  * from disk into memory.
  *
+ * @note If loading a PNG image using a TurboJPEG compression instance, the
+ * ICC profile (if any) embedded in the PNG image is extracted and associated
+ * with the TurboJPEG instance if #TJPARAM_SAVEMARKERS is set to `2` or `4`.
+ *
  * @param handle handle to a TurboJPEG instance
  *
- * @param filename name of a file containing a packed-pixel image in PBMPLUS
- * (PPM/PGM) format.  The target data precision (from 9 to 12 bits per sample)
- * can be specified using #TJPARAM_PRECISION and defaults to 12 if
+ * @param filename name of a file containing a packed-pixel image in PNG or
+ * PBMPLUS (PPM/PGM) format.  The target data precision (from 9 to 12 bits per
+ * sample) can be specified using #TJPARAM_PRECISION and defaults to 12 if
  * #TJPARAM_PRECISION is unset or out of range.  If the data precision of the
- * PBMPLUS file does not match the target data precision, then upconverting or
- * downconverting will be performed.
+ * PNG or PBMPLUS file does not match the target data precision, then
+ * upconverting or downconverting will be performed.
  *
  * @param width pointer to an integer variable that will receive the width (in
  * pixels) of the packed-pixel image
@@ -2451,14 +2518,18 @@ DLLEXPORT short *tj3LoadImage12(tjhandle handle, const char *filename,
  * Load a packed-pixel image with 13 to 16 bits of data precision per sample
  * from disk into memory.
  *
+ * @note If loading a PNG image using a TurboJPEG compression instance, the
+ * ICC profile (if any) embedded in the PNG image is extracted and associated
+ * with the TurboJPEG instance if #TJPARAM_SAVEMARKERS is set to `2` or `4`.
+ *
  * @param handle handle to a TurboJPEG instance
  *
- * @param filename name of a file containing a packed-pixel image in PBMPLUS
- * (PPM/PGM) format.  The target data precision (from 13 to 16 bits per sample)
- * can be specified using #TJPARAM_PRECISION and defaults to 16 if
+ * @param filename name of a file containing a packed-pixel image in PNG or
+ * PBMPLUS (PPM/PGM) format.  The target data precision (from 13 to 16 bits per
+ * sample) can be specified using #TJPARAM_PRECISION and defaults to 16 if
  * #TJPARAM_PRECISION is unset or out of range.  If the data precision of the
- * PBMPLUS file does not match the target data precision, then upconverting or
- * downconverting will be performed.
+ * PNG or PBMPLUS file does not match the target data precision, then
+ * upconverting or downconverting will be performed.
  *
  * @param width pointer to an integer variable that will receive the width (in
  * pixels) of the packed-pixel image
@@ -2502,14 +2573,19 @@ DLLEXPORT unsigned short *tj3LoadImage16(tjhandle handle, const char *filename,
  * Save a packed-pixel image with 2 to 8 bits of data precision per sample from
  * memory to disk.
  *
+ * @note If saving a PNG image using a TurboJPEG decompression instance, the
+ * ICC profile (if any) that was previously extracted from a JPEG image is
+ * transferred to the PNG image if #TJPARAM_SAVEMARKERS is set to `2` or `4`.
+ *
  * @param handle handle to a TurboJPEG instance
  *
  * @param filename name of a file to which to save the packed-pixel image.  The
- * image will be stored in Windows BMP or PBMPLUS (PPM/PGM) format, depending
- * on the file extension.  Windows BMP files require 8-bit-per-sample data
- * precision.  When saving a PBMPLUS file, the source data precision (from 2 to
- * 8 bits per sample) can be specified using #TJPARAM_PRECISION and defaults to
- * 8 if #TJPARAM_PRECISION is unset or out of range.
+ * image will be stored in PNG, PBMPLUS (PPM/PGM), or Windows BMP format,
+ * depending on the file extension.  Windows BMP files require 8-bit-per-sample
+ * data precision.  When saving a PNG or PBMPLUS file, the source data
+ * precision (from 2 to 8 bits per sample) can be specified using
+ * #TJPARAM_PRECISION and defaults to 8 if #TJPARAM_PRECISION is unset or out
+ * of range.
  *
  * @param buffer pointer to a buffer containing a packed-pixel RGB, grayscale,
  * or CMYK image to be saved
@@ -2524,12 +2600,13 @@ DLLEXPORT unsigned short *tj3LoadImage16(tjhandle handle, const char *filename,
  *
  * @param pixelFormat pixel format of the packed-pixel image (see @ref TJPF
  * "Pixel formats".)  If this parameter is set to @ref TJPF_GRAY, then the
- * image will be stored in PGM or 8-bit-per-pixel (indexed color) BMP format.
- * Otherwise, the image will be stored in PPM or 24-bit-per-pixel BMP format.
- * If this parameter is set to @ref TJPF_CMYK, then the CMYK pixels will be
- * converted to RGB using a quick & dirty algorithm that is suitable only for
- * testing purposes.  (Proper conversion between CMYK and other formats
- * requires a color management system.)
+ * image will be stored in grayscale PNG, PGM, or 8-bit-per-pixel (indexed
+ * color) BMP format.  Otherwise, the image will be stored in truecolor PNG,
+ * PPM, or 24-bit-per-pixel BMP format.  If this parameter is set to
+ * @ref TJPF_CMYK, then the CMYK pixels will be converted to RGB using a quick
+ * & dirty algorithm that is suitable only for testing purposes.  (Proper
+ * conversion between CMYK and other formats requires a color management
+ * system.)
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr().)
  */
@@ -2541,12 +2618,17 @@ DLLEXPORT int tj3SaveImage8(tjhandle handle, const char *filename,
  * Save a packed-pixel image with 9 to 12 bits of data precision per sample
  * from memory to disk.
  *
+ * @note If saving a PNG image using a TurboJPEG decompression instance, the
+ * ICC profile (if any) that was previously extracted from a JPEG image is
+ * transferred to the PNG image if #TJPARAM_SAVEMARKERS is set to `2` or `4`.
+ *
  * @param handle handle to a TurboJPEG instance
  *
  * @param filename name of a file to which to save the packed-pixel image,
- * which will be stored in PBMPLUS (PPM/PGM) format.  The source data precision
- * (from 9 to 12 bits per sample) can be specified using #TJPARAM_PRECISION and
- * defaults to 12 if #TJPARAM_PRECISION is unset or out of range.
+ * which will be stored in PNG or PBMPLUS (PPM/PGM) format.  The source data
+ * precision (from 9 to 12 bits per sample) can be specified using
+ * #TJPARAM_PRECISION and defaults to 12 if #TJPARAM_PRECISION is unset or out
+ * of range.
  *
  * @param buffer pointer to a buffer containing a packed-pixel RGB, grayscale,
  * or CMYK image to be saved
@@ -2561,11 +2643,12 @@ DLLEXPORT int tj3SaveImage8(tjhandle handle, const char *filename,
  *
  * @param pixelFormat pixel format of the packed-pixel image (see @ref TJPF
  * "Pixel formats".)  If this parameter is set to @ref TJPF_GRAY, then the
- * image will be stored in PGM format.  Otherwise, the image will be stored in
- * PPM format.  If this parameter is set to @ref TJPF_CMYK, then the CMYK
- * pixels will be converted to RGB using a quick & dirty algorithm that is
- * suitable only for testing purposes.  (Proper conversion between CMYK and
- * other formats requires a color management system.)
+ * image will be stored in PGM or grayscale PNG format.  Otherwise, the image
+ * will be stored in PPM or truecolor PNG format.  If this parameter is set to
+ * @ref TJPF_CMYK, then the CMYK pixels will be converted to RGB using a quick
+ * & dirty algorithm that is suitable only for testing purposes.  (Proper
+ * conversion between CMYK and other formats requires a color management
+ * system.)
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr().)
  */
@@ -2577,12 +2660,17 @@ DLLEXPORT int tj3SaveImage12(tjhandle handle, const char *filename,
  * Save a packed-pixel image with 13 to 16 bits of data precision per sample
  * from memory to disk.
  *
+ * @note If saving a PNG image using a TurboJPEG decompression instance, the
+ * ICC profile (if any) that was previously extracted from a JPEG image is
+ * transferred to the PNG image if #TJPARAM_SAVEMARKERS is set to `2` or `4`.
+ *
  * @param handle handle to a TurboJPEG instance
  *
  * @param filename name of a file to which to save the packed-pixel image,
- * which will be stored in PBMPLUS (PPM/PGM) format.  The source data precision
- * (from 13 to 16 bits per sample) can be specified using #TJPARAM_PRECISION
- * and defaults to 16 if #TJPARAM_PRECISION is unset or out of range.
+ * which will be stored in PNG or PBMPLUS (PPM/PGM) format.  The source data
+ * precision (from 13 to 16 bits per sample) can be specified using
+ * #TJPARAM_PRECISION and defaults to 16 if #TJPARAM_PRECISION is unset or out
+ * of range.
  *
  * @param buffer pointer to a buffer containing a packed-pixel RGB, grayscale,
  * or CMYK image to be saved
@@ -2597,11 +2685,12 @@ DLLEXPORT int tj3SaveImage12(tjhandle handle, const char *filename,
  *
  * @param pixelFormat pixel format of the packed-pixel image (see @ref TJPF
  * "Pixel formats".)  If this parameter is set to @ref TJPF_GRAY, then the
- * image will be stored in PGM format.  Otherwise, the image will be stored in
- * PPM format.  If this parameter is set to @ref TJPF_CMYK, then the CMYK
- * pixels will be converted to RGB using a quick & dirty algorithm that is
- * suitable only for testing purposes.  (Proper conversion between CMYK and
- * other formats requires a color management system.)
+ * image will be stored in PGM or grayscale PNG format.  Otherwise, the image
+ * will be stored in PPM or truecolor PNG format.  If this parameter is set to
+ * @ref TJPF_CMYK, then the CMYK pixels will be converted to RGB using a quick
+ * & dirty algorithm that is suitable only for testing purposes.  (Proper
+ * conversion between CMYK and other formats requires a color management
+ * system.)
  *
  * @return 0 if successful, or -1 if an error occurred (see #tj3GetErrorStr().)
  */

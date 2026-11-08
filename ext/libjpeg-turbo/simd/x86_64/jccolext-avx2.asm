@@ -1,5 +1,5 @@
 ;
-; Colorspace conversion (64-bit AVX2)
+; RGB-to-YCbCr Color Conversion (64-bit AVX2)
 ;
 ; Copyright (C) 2009, 2016, 2024-2025, D. R. Commander.
 ; Copyright (C) 2015, Intel Corporation.

@@ -896,6 +896,14 @@ start_input_ppm(j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
 }
 
 
+METHODDEF(boolean)
+read_icc_profile_ppm(j_compress_ptr cinfo, cjpeg_source_ptr sinfo,
+                     JOCTET **icc_data_ptr, unsigned int *icc_data_len)
+{
+  return FALSE;
+}
+
+
 /*
  * Finish up at the end of the file.
  */
@@ -930,6 +938,7 @@ _jinit_read_ppm(j_compress_ptr cinfo)
                                 sizeof(ppm_source_struct));
   /* Fill in method ptrs, except get_pixel_rows which start_input sets */
   source->pub.start_input = start_input_ppm;
+  source->pub.read_icc_profile = read_icc_profile_ppm;
   source->pub.finish_input = finish_input_ppm;
   source->pub.max_pixels = 0;
 

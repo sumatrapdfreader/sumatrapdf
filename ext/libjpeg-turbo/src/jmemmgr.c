@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2016, 2021-2022, 2024, D. R. Commander.
+ * Copyright (C) 2016, 2021-2022, 2024, 2026, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -459,7 +459,7 @@ alloc_sarray(j_common_ptr cinfo, int pool_id, JDIMENSION samplesperrow,
   if ((ALIGN_SIZE % sample_size) != 0)
     out_of_memory(cinfo, 5);    /* safety check */
 
-  if (samplesperrow > MAX_ALLOC_CHUNK) {
+  if (samplesperrow == 0 || samplesperrow > MAX_ALLOC_CHUNK) {
     /* This prevents overflow/wrap-around in round_up_pow2() if sizeofobject
        is close to SIZE_MAX. */
     out_of_memory(cinfo, 9);
@@ -560,7 +560,7 @@ alloc_barray(j_common_ptr cinfo, int pool_id, JDIMENSION blocksperrow,
   long ltemp;
 
   /* Make sure each row is properly aligned */
-  if ((sizeof(JBLOCK) % ALIGN_SIZE) != 0)
+  if (blocksperrow == 0 || (sizeof(JBLOCK) % ALIGN_SIZE) != 0)
     out_of_memory(cinfo, 6);    /* safety check */
 
   /* Calculate max # of rows allowed in one allocation chunk */

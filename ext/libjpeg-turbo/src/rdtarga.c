@@ -467,6 +467,14 @@ start_input_tga(j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
 }
 
 
+METHODDEF(boolean)
+read_icc_profile_tga(j_compress_ptr cinfo, cjpeg_source_ptr sinfo,
+                     JOCTET **icc_data_ptr, unsigned int *icc_data_len)
+{
+  return FALSE;
+}
+
+
 /*
  * Finish up at the end of the file.
  */
@@ -497,6 +505,7 @@ jinit_read_targa(j_compress_ptr cinfo)
   source->cinfo = cinfo;        /* make back link for subroutines */
   /* Fill in method ptrs, except get_pixel_rows which start_input sets */
   source->pub.start_input = start_input_tga;
+  source->pub.read_icc_profile = read_icc_profile_tga;
   source->pub.finish_input = finish_input_tga;
   source->pub.max_pixels = 0;
 

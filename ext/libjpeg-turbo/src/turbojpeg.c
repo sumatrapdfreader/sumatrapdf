@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2009-2026 D. R. Commander.  All Rights Reserved.
- * Copyright (C) 2021 Alex Richardson.  All Rights Reserved.
+ * Copyright (C) 2009-2026 D. R. Commander
+ * Copyright (C) 2021 Alex Richardson
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,9 @@
 #include "jpegapicomp.h"
 #include "cdjpeg.h"
 
+#undef tj3Init
+DLLEXPORT tjhandle tj3Init(int initType);
+
 extern void jpeg_mem_dest_tj(j_compress_ptr, unsigned char **, size_t *,
                              boolean);
 extern void jpeg_mem_src_tj(j_decompress_ptr, const unsigned char *, size_t);
@@ -64,6 +67,7 @@ struct my_error_mgr {
   jmp_buf setjmp_buffer;
   void (*emit_message) (j_common_ptr, int);
   boolean warning, stopOnWarning;
+  tjhandle tjHandle;
 };
 typedef struct my_error_mgr *my_error_ptr;
 
@@ -79,13 +83,6 @@ static void my_error_exit(j_common_ptr cinfo)
 
   (*cinfo->err->output_message) (cinfo);
   longjmp(myerr->setjmp_buffer, 1);
-}
-
-/* Based on output_message() in jerror.c */
-
-static void my_output_message(j_common_ptr cinfo)
-{
-  (*cinfo->err->format_message) (cinfo, errStr);
 }
 
 static void my_emit_message(j_common_ptr cinfo, int msg_level)
@@ -106,11 +103,15 @@ enum { COMPRESS = 1, DECOMPRESS = 2 };
 
 typedef struct _tjinstance {
   struct jpeg_compress_struct cinfo;
+  struct jpeg_destination_mgr **dstMgrs;
+  int nDstMgrs;
   struct jpeg_decompress_struct dinfo;
   struct my_error_mgr jerr;
-  int init;
+  int init, apiVersion, numSamp;
   char errStr[JMSG_LENGTH_MAX];
   boolean isInstanceError;
+  unsigned char *iccBuf, *decompICCBuf;
+  size_t iccSize, decompICCSize, decompMarkerSize, decompCommentSize;
   /* Parameters */
   boolean bottomUp;
   boolean noRealloc;
@@ -139,12 +140,24 @@ typedef struct _tjinstance {
   int maxMemory;
   int maxPixels;
   int saveMarkers;
-  unsigned char *iccBuf, *tempICCBuf;
-  size_t iccSize, tempICCSize;
 } tjinstance;
 
 static tjhandle _tjInitCompress(tjinstance *this);
 static tjhandle _tjInitDecompress(tjinstance *this);
+
+/* Based on output_message() in jerror.c */
+
+static void my_output_message(j_common_ptr cinfo)
+{
+  my_error_ptr myerr = (my_error_ptr)cinfo->err;
+  tjinstance *this = (tjinstance *)myerr->tjHandle;
+
+  if (this) {
+    this->isInstanceError = TRUE;
+    (*cinfo->err->format_message) (cinfo, this->errStr);
+  } else
+    (*cinfo->err->format_message) (cinfo, errStr);
+}
 
 struct my_progress_mgr {
   struct jpeg_progress_mgr pub;
@@ -286,6 +299,18 @@ static int cs2pf[JPEG_NUMCS] = {
   } \
 }
 
+/* Catch a libjpeg error from the secondary TurboJPEG instance and copy the
+   error message and state to the primary instance.  This is used by
+   the packed-pixel image I/O functions. */
+#define CATCH_LIBJPEG2() { \
+  if (setjmp(this2->jerr.setjmp_buffer)) { \
+    memcpy(this->errStr, this2->errStr, JMSG_LENGTH_MAX); \
+    this->jerr.warning = this2->jerr.warning; \
+    this->isInstanceError = this2->isInstanceError; \
+    retval = -1;  goto bailout; \
+  } \
+}
+
 #define GET_INSTANCE(handle) \
   tjinstance *this = (tjinstance *)handle; \
   j_compress_ptr cinfo = NULL; \
@@ -333,6 +358,21 @@ static int cs2pf[JPEG_NUMCS] = {
   this->jerr.warning = FALSE; \
   this->isInstanceError = FALSE;
 
+#define CHECK_DESTINATION_MGRS(n) { \
+  if (n != this->nDstMgrs) { \
+    struct jpeg_destination_mgr **newDstMgrs = \
+      (struct jpeg_destination_mgr **) \
+        realloc(this->dstMgrs, n * sizeof(struct jpeg_destination_mgr *)); \
+    if (!newDstMgrs) \
+      THROW("Memory allocation failure"); \
+    this->dstMgrs = newDstMgrs; \
+    if (n > this->nDstMgrs) \
+      memset(&this->dstMgrs[this->nDstMgrs], 0, \
+             (n - this->nDstMgrs) * sizeof(struct jpeg_destination_mgr *)); \
+    this->nDstMgrs = n; \
+  } \
+}
+
 static int getPixelFormat(int pixelSize, int flags)
 {
   if (pixelSize == 1) return TJPF_GRAY;
@@ -354,7 +394,7 @@ static int getPixelFormat(int pixelSize, int flags)
 
 static void setCompDefaults(tjinstance *this, int pixelFormat, boolean yuv)
 {
-  int colorspace = yuv ? -1 : this->colorspace;
+  int colorspace = yuv ? TJCS_DEFAULT : this->colorspace;
 
   this->cinfo.in_color_space = pf2cs[pixelFormat];
   this->cinfo.input_components = tjPixelSize[pixelFormat];
@@ -417,9 +457,10 @@ static void setCompDefaults(tjinstance *this, int pixelFormat, boolean yuv)
 }
 
 
-static int getSubsamp(j_decompress_ptr dinfo)
+static int getSubsamp(tjinstance *this)
 {
   int retval = TJSAMP_UNKNOWN, i, k;
+  j_decompress_ptr dinfo = &this->dinfo;
 
   /* The sampling factors actually have no meaning with grayscale JPEG files,
      and in fact it's possible to generate grayscale JPEGs with sampling
@@ -428,7 +469,7 @@ static int getSubsamp(j_decompress_ptr dinfo)
   if (dinfo->num_components == 1 && dinfo->jpeg_color_space == JCS_GRAYSCALE)
     return TJSAMP_GRAY;
 
-  for (i = 0; i < TJ_NUMSAMP; i++) {
+  for (i = 0; i < this->numSamp; i++) {
     if (i == TJSAMP_GRAY) continue;
 
     if (dinfo->num_components == 3 ||
@@ -501,7 +542,7 @@ static int getSubsamp(j_decompress_ptr dinfo)
 
 static void setDecompParameters(tjinstance *this)
 {
-  this->subsamp = getSubsamp(&this->dinfo);
+  this->subsamp = getSubsamp(this);
   this->jpegWidth = this->dinfo.image_width;
   this->jpegHeight = this->dinfo.image_height;
   this->precision = this->dinfo.data_precision;
@@ -511,7 +552,7 @@ static void setDecompParameters(tjinstance *this)
   case JCS_YCbCr:      this->colorspace = TJCS_YCbCr;  break;
   case JCS_CMYK:       this->colorspace = TJCS_CMYK;  break;
   case JCS_YCCK:       this->colorspace = TJCS_YCCK;  break;
-  default:             this->colorspace = -1;  break;
+  default:             this->colorspace = TJCS_DEFAULT;  break;
   }
   this->progressive = this->dinfo.progressive_mode;
   this->arithmetic = this->dinfo.arith_code;
@@ -556,14 +597,26 @@ static void processFlags(tjhandle handle, int flags, int operation)
 
 /*************************** General API functions ***************************/
 
-/* TurboJPEG 3.0+ */
-DLLEXPORT tjhandle tj3Init(int initType)
+/* In the TurboJPEG v3.2+ API, tj3Init(initType) is a macro defined as
+ * tj3InitVersion(initType, TURBOJPEG_VERSION_NUMBER).  This is a similar trick
+ * to the one that the libjpeg API uses for jpeg_create_*compress().  It allows
+ * us to detect whether the caller was compiled against this version of the
+ * TurboJPEG API or an earlier version.  If it was compiled against an earlier
+ * version, then we disable any features that are API-incompatible with earlier
+ * versions.  (At the moment, that means avoiding the use of TJSAMP_410 and
+ * TJSAMP_24, since the static tjMCUWidth[] and tjMCUHeight[] arrays from
+ * earlier versions did not account for those constants.)
+ */
+
+/* TurboJPEG 3.2+ */
+DLLEXPORT tjhandle tj3InitVersion(int initType, int apiVersion)
 {
   static const char FUNCTION_NAME[] = "tj3Init";
   tjinstance *this = NULL;
   tjhandle retval = NULL;
 
-  if (initType < 0 || initType >= TJ_NUMINIT)
+  if (initType < 0 || initType >= TJ_NUMINIT || apiVersion < 1000000 ||
+      apiVersion > 999999999)
     THROWG("Invalid argument", NULL);
 
   if ((this = (tjinstance *)malloc(sizeof(tjinstance))) == NULL)
@@ -576,12 +629,15 @@ DLLEXPORT tjhandle tj3Init(int initType)
   this->jpegWidth = -1;
   this->jpegHeight = -1;
   this->precision = 8;
-  this->colorspace = -1;
+  this->colorspace = TJCS_DEFAULT;
   this->losslessPSV = 1;
   this->xDensity = 1;
   this->yDensity = 1;
   this->scalingFactor = TJUNSCALED;
   this->saveMarkers = 2;
+
+  this->apiVersion = apiVersion;
+  this->numSamp = apiVersion >= 3002000 ? TJ_NUMSAMP : 7;
 
   switch (initType) {
   case TJINIT_COMPRESS:  return _tjInitCompress(this);
@@ -595,6 +651,12 @@ DLLEXPORT tjhandle tj3Init(int initType)
 
 bailout:
   return retval;
+}
+
+/* TurboJPEG 3.0+ */
+DLLEXPORT tjhandle tj3Init(int initType)
+{
+  return tj3InitVersion(initType, 3001000);
 }
 
 
@@ -619,8 +681,9 @@ destroy_decompress:
   if (setjmp(this->jerr.setjmp_buffer)) goto bailout;
   if (this->init & DECOMPRESS) jpeg_destroy_decompress(dinfo);
 bailout:
+  free(this->dstMgrs);
   free(this->iccBuf);
-  free(this->tempICCBuf);
+  free(this->decompICCBuf);
   free(this);
 }
 
@@ -720,7 +783,7 @@ DLLEXPORT int tj3Set(tjhandle handle, int param, int value)
     SET_PARAM(quality, 1, 100);
     break;
   case TJPARAM_SUBSAMP:
-    SET_PARAM(subsamp, 0, TJ_NUMSAMP - 1);
+    SET_PARAM(subsamp, 0, this->numSamp - 1);
     break;
   case TJPARAM_JPEGWIDTH:
     if (!(this->init & DECOMPRESS))
@@ -738,7 +801,7 @@ DLLEXPORT int tj3Set(tjhandle handle, int param, int value)
   case TJPARAM_COLORSPACE:
     if (!(this->init & COMPRESS))
       THROW("TJPARAM_COLORSPACE is read-only in decompression instances.");
-    SET_PARAM(colorspace, 0, TJ_NUMCS - 1);
+    SET_PARAM(colorspace, TJCS_DEFAULT, TJ_NUMCS - 1);
     break;
   case TJPARAM_FASTUPSAMPLE:
     if (!(this->init & DECOMPRESS))
@@ -817,8 +880,6 @@ DLLEXPORT int tj3Set(tjhandle handle, int param, int value)
     SET_PARAM(maxPixels, 0, -1);
     break;
   case TJPARAM_SAVEMARKERS:
-    if (!(this->init & DECOMPRESS))
-      THROW("TJPARAM_SAVEMARKERS is not applicable to compression instances.");
     SET_PARAM(saveMarkers, 0, 4);
     break;
   default:
@@ -946,7 +1007,8 @@ DLLEXPORT size_t tj3JPEGBufSize(int width, int height, int jpegSubsamp)
   mcuw = tjMCUWidth[jpegSubsamp];
   mcuh = tjMCUHeight[jpegSubsamp];
   chromasf = jpegSubsamp == TJSAMP_GRAY ? 0 : 4 * 64 / (mcuw * mcuh);
-  retval = PAD(width, mcuw) * PAD(height, mcuh) * (2ULL + chromasf) + 2048ULL;
+  retval = (unsigned long long)PAD(width, mcuw) * PAD(height, mcuh) *
+           (2ULL + chromasf) + 2048ULL;
 #if ULLONG_MAX > ULONG_MAX
   if (retval > (unsigned long long)((unsigned long)-1))
     THROWG("Image is too large", 0);
@@ -983,7 +1045,8 @@ DLLEXPORT unsigned long TJBUFSIZE(int width, int height)
   /* This allows for rare corner cases in which a JPEG image can actually be
      larger than the uncompressed input (we wouldn't mention it if it hadn't
      happened before.) */
-  retval = PAD(width, 16) * PAD(height, 16) * 6ULL + 2048ULL;
+  retval = (unsigned long long)PAD(width, 16) * PAD(height, 16) * 6ULL +
+           2048ULL;
 #if ULLONG_MAX > ULONG_MAX
   if (retval > (unsigned long long)((unsigned long)-1))
     THROWG("Image is too large", (unsigned long)-1);
@@ -1005,13 +1068,14 @@ DLLEXPORT size_t tj3YUVBufSize(int width, int align, int height, int subsamp)
     THROWG("Invalid argument", 0);
 
   nc = (subsamp == TJSAMP_GRAY ? 1 : 3);
+
   for (i = 0; i < nc; i++) {
     int pw = tj3YUVPlaneWidth(i, width, subsamp);
-    int stride = PAD(pw, align);
+    unsigned long long stride = PAD((unsigned long long)pw, align);
     int ph = tj3YUVPlaneHeight(i, height, subsamp);
 
     if (pw == 0 || ph == 0) return 0;
-    else retval += (unsigned long long)stride * ph;
+    else retval += stride * ph;
   }
 #if ULLONG_MAX > ULONG_MAX
   if (retval > (unsigned long long)((unsigned long)-1))
@@ -1152,9 +1216,11 @@ DLLEXPORT int tjPlaneHeight(int componentID, int height, int subsamp)
 
 static tjhandle _tjInitCompress(tjinstance *this)
 {
+  static const char FUNCTION_NAME[] = "tj3Init";
   static unsigned char buffer[1];
   unsigned char *buf = buffer;
   size_t size = 1;
+  tjhandle retval = (tjhandle)this;
 
   /* This is also straight out of example.c */
   this->cinfo.err = jpeg_std_error(&this->jerr.pub);
@@ -1165,19 +1231,28 @@ static tjhandle _tjInitCompress(tjinstance *this)
   this->jerr.pub.addon_message_table = turbojpeg_message_table;
   this->jerr.pub.first_addon_message = JMSG_FIRSTADDONCODE;
   this->jerr.pub.last_addon_message = JMSG_LASTADDONCODE;
+  this->jerr.tjHandle = (tjhandle)this;
 
   if (setjmp(this->jerr.setjmp_buffer)) {
     /* If we get here, the JPEG code has signaled an error. */
     free(this);
-    return NULL;
+    retval = NULL;  goto bailout;
   }
 
   jpeg_create_compress(&this->cinfo);
   /* Make an initial call so it will create the destination manager */
   jpeg_mem_dest_tj(&this->cinfo, &buf, &size, 0);
+  this->dstMgrs = (struct jpeg_destination_mgr **)
+    malloc(sizeof(struct jpeg_destination_mgr *));
+  if (!this->dstMgrs)
+    THROWG("Memory allocation failure", NULL);
+  this->dstMgrs[0] = this->cinfo.dest;
+  this->nDstMgrs = 1;
 
   this->init |= COMPRESS;
-  return (tjhandle)this;
+
+bailout:
+  return retval;
 }
 
 /* TurboJPEG 1.0+ */
@@ -1239,7 +1314,7 @@ DLLEXPORT int tjCompress2(tjhandle handle, const unsigned char *srcBuf,
 
   GET_TJINSTANCE(handle, -1);
 
-  if (jpegSize == NULL || jpegSubsamp < 0 || jpegSubsamp >= TJ_NUMSAMP ||
+  if (jpegSize == NULL || jpegSubsamp < 0 || jpegSubsamp >= this->numSamp ||
       jpegQual < 0 || jpegQual > 100)
     THROW("Invalid argument");
 
@@ -1324,7 +1399,10 @@ DLLEXPORT int tj3CompressFromYUVPlanes8(tjhandle handle,
   cinfo->data_precision = 8;
 
   if (this->noRealloc) alloc = FALSE;
+  CHECK_DESTINATION_MGRS(1);
+  cinfo->dest = this->dstMgrs[0];
   jpeg_mem_dest_tj(cinfo, jpegBuf, jpegSize, alloc);
+  this->dstMgrs[0] = cinfo->dest;
   setCompDefaults(this, TJPF_RGB, TRUE);
   cinfo->raw_data_in = TRUE;
 
@@ -1339,6 +1417,8 @@ DLLEXPORT int tj3CompressFromYUVPlanes8(tjhandle handle,
     ih = compptr->height_in_blocks * DCTSIZE;
     pw[i] = PAD(cinfo->image_width, cinfo->max_h_samp_factor) *
             compptr->h_samp_factor / cinfo->max_h_samp_factor;
+    if (strides && strides[i] != 0 && strides[i] < pw[i])
+      THROW("Invalid argument");
     ph[i] = PAD(cinfo->image_height, cinfo->max_v_samp_factor) *
             compptr->v_samp_factor / cinfo->max_v_samp_factor;
     if (iw[i] != pw[i] || ih != ph[i]) usetmpbuf = 1;
@@ -1426,7 +1506,7 @@ DLLEXPORT int tjCompressFromYUVPlanes(tjhandle handle,
 
   GET_TJINSTANCE(handle, -1);
 
-  if (subsamp < 0 || subsamp >= TJ_NUMSAMP || jpegSize == NULL ||
+  if (subsamp < 0 || subsamp >= this->numSamp || jpegSize == NULL ||
       jpegQual < 0 || jpegQual > 100)
     THROW("Invalid argument");
 
@@ -1468,7 +1548,7 @@ DLLEXPORT int tj3CompressFromYUV8(tjhandle handle,
   pw0 = tj3YUVPlaneWidth(0, width, this->subsamp);
   ph0 = tj3YUVPlaneHeight(0, height, this->subsamp);
   srcPlanes[0] = srcBuf;
-  strides[0] = PAD(pw0, align);
+  strides[0] = (int)PAD((unsigned long long)pw0, align);
   if (this->subsamp == TJSAMP_GRAY) {
     strides[1] = strides[2] = 0;
     srcPlanes[1] = srcPlanes[2] = NULL;
@@ -1476,7 +1556,7 @@ DLLEXPORT int tj3CompressFromYUV8(tjhandle handle,
     int pw1 = tjPlaneWidth(1, width, this->subsamp);
     int ph1 = tjPlaneHeight(1, height, this->subsamp);
 
-    strides[1] = strides[2] = PAD(pw1, align);
+    strides[1] = strides[2] = (int)PAD((unsigned long long)pw1, align);
     if ((unsigned long long)strides[0] * (unsigned long long)ph0 >
         (unsigned long long)INT_MAX ||
         (unsigned long long)strides[1] * (unsigned long long)ph1 >
@@ -1506,7 +1586,7 @@ DLLEXPORT int tjCompressFromYUV(tjhandle handle, const unsigned char *srcBuf,
 
   GET_TJINSTANCE(handle, -1);
 
-  if (subsamp < 0 || subsamp >= TJ_NUMSAMP)
+  if (subsamp < 0 || subsamp >= this->numSamp)
     THROW("Invalid argument");
 
   this->quality = jpegQual;
@@ -1563,6 +1643,8 @@ DLLEXPORT int tj3EncodeYUVPlanes8(tjhandle handle, const unsigned char *srcBuf,
     THROW("Cannot generate YUV images from packed-pixel CMYK images");
 
   if (pitch == 0) pitch = width * tjPixelSize[pixelFormat];
+  else if (pitch < width * tjPixelSize[pixelFormat])
+    THROW("Invalid argument");
 
   CATCH_LIBJPEG(this);
 
@@ -1634,6 +1716,8 @@ DLLEXPORT int tj3EncodeYUVPlanes8(tjhandle handle, const unsigned char *srcBuf,
         &_tmpbuf2_aligned[PAD(compptr->width_in_blocks * DCTSIZE, 32) * row];
     }
     pw[i] = pw0 * compptr->h_samp_factor / cinfo->max_h_samp_factor;
+    if (strides && strides[i] != 0 && strides[i] < pw[i])
+      THROW("Invalid argument");
     ph[i] = ph0 * compptr->v_samp_factor / cinfo->max_v_samp_factor;
     outbuf[i] = (JSAMPROW *)malloc(sizeof(JSAMPROW) * ph[i]);
     if (!outbuf[i])
@@ -1685,7 +1769,7 @@ DLLEXPORT int tjEncodeYUVPlanes(tjhandle handle, const unsigned char *srcBuf,
 
   GET_TJINSTANCE(handle, -1);
 
-  if (subsamp < 0 || subsamp >= TJ_NUMSAMP)
+  if (subsamp < 0 || subsamp >= this->numSamp)
     THROW("Invalid argument");
 
   this->subsamp = subsamp;
@@ -1720,7 +1804,7 @@ DLLEXPORT int tj3EncodeYUV8(tjhandle handle, const unsigned char *srcBuf,
   pw0 = tj3YUVPlaneWidth(0, width, this->subsamp);
   ph0 = tj3YUVPlaneHeight(0, height, this->subsamp);
   dstPlanes[0] = dstBuf;
-  strides[0] = PAD(pw0, align);
+  strides[0] = (int)PAD((unsigned long long)pw0, align);
   if (this->subsamp == TJSAMP_GRAY) {
     strides[1] = strides[2] = 0;
     dstPlanes[1] = dstPlanes[2] = NULL;
@@ -1728,7 +1812,7 @@ DLLEXPORT int tj3EncodeYUV8(tjhandle handle, const unsigned char *srcBuf,
     int pw1 = tj3YUVPlaneWidth(1, width, this->subsamp);
     int ph1 = tj3YUVPlaneHeight(1, height, this->subsamp);
 
-    strides[1] = strides[2] = PAD(pw1, align);
+    strides[1] = strides[2] = (int)PAD((unsigned long long)pw1, align);
     if ((unsigned long long)strides[0] * (unsigned long long)ph0 >
         (unsigned long long)INT_MAX ||
         (unsigned long long)strides[1] * (unsigned long long)ph1 >
@@ -1756,7 +1840,7 @@ DLLEXPORT int tjEncodeYUV3(tjhandle handle, const unsigned char *srcBuf,
 
   GET_TJINSTANCE(handle, -1);
 
-  if (subsamp < 0 || subsamp >= TJ_NUMSAMP)
+  if (subsamp < 0 || subsamp >= this->numSamp)
     THROW("Invalid argument");
 
   this->subsamp = subsamp;
@@ -1804,6 +1888,7 @@ static tjhandle _tjInitDecompress(tjinstance *this)
   this->jerr.pub.addon_message_table = turbojpeg_message_table;
   this->jerr.pub.first_addon_message = JMSG_FIRSTADDONCODE;
   this->jerr.pub.last_addon_message = JMSG_LASTADDONCODE;
+  this->jerr.tjHandle = (tjhandle)this;
 
   if (setjmp(this->jerr.setjmp_buffer)) {
     /* If we get here, the JPEG code has signaled an error. */
@@ -1835,6 +1920,7 @@ DLLEXPORT int tj3DecompressHeader(tjhandle handle,
   int retval = 0;
   unsigned char *iccPtr = NULL;
   unsigned int iccLen = 0;
+  jpeg_saved_marker_ptr marker;
 
   GET_DINSTANCE(handle);
   if ((this->init & DECOMPRESS) == 0)
@@ -1847,14 +1933,15 @@ DLLEXPORT int tj3DecompressHeader(tjhandle handle,
 
   jpeg_mem_src_tj(dinfo, jpegBuf, jpegSize);
 
-  /* Extract ICC profile if TJPARAM_SAVEMARKERS is 2 or 4.  (We could
-     eventually reuse this mechanism to save other markers, if needed.)
-     Because ICC profiles can be large, we extract them by default but allow
-     the user to override that behavior. */
-#ifdef SAVE_MARKERS_SUPPORTED
-  if (this->saveMarkers == 2 || this->saveMarkers == 4)
-    jpeg_save_markers(dinfo, JPEG_APP0 + 2, 0xFFFF);
-#endif
+  /* Extract ICC profile if TJPARAM_SAVEMARKERS is 2 or 4 and the instance is
+     initialized for decompression, and extract all extra markers (including
+     comments, JFIF thumbnails, Exif data, and ICC profile data) if
+     TJPARAM_SAVEMARKERS is not 0 and the instance is initialized for lossless
+     transformation.  Because these markers can be large, we extract them by
+     default but allow the user to override that behavior. */
+  if (this->saveMarkers == 2 || this->saveMarkers == 4 ||
+      (this->init & COMPRESS) != 0)
+    jcopy_markers_setup(dinfo, (JCOPY_OPTION)this->saveMarkers);
   /* jpeg_read_header() calls jpeg_abort() and returns JPEG_HEADER_TABLES_ONLY
      if the datastream is a tables-only datastream.  Since we aren't using a
      suspending data source, the only other value it can return is
@@ -1864,22 +1951,76 @@ DLLEXPORT int tj3DecompressHeader(tjhandle handle,
 
   setDecompParameters(this);
 
-  if (this->saveMarkers == 2 || this->saveMarkers == 4) {
+  free(this->decompICCBuf);
+  this->decompICCBuf = NULL;
+  this->decompICCSize = 0;
+  if (this->saveMarkers == 2 || this->saveMarkers == 4 ||
+      (this->init & COMPRESS) != 0) {
     if (jpeg_read_icc_profile(dinfo, &iccPtr, &iccLen)) {
-      free(this->tempICCBuf);
-      this->tempICCBuf = iccPtr;
-      this->tempICCSize = (size_t)iccLen;
+      if (this->saveMarkers == 2 || this->saveMarkers == 4)
+        this->decompICCBuf = iccPtr;
+      else
+        free(iccPtr);
+      this->decompICCSize = (size_t)iccLen;
+    }
+  }
+
+  /* Determine the size of all non-ICC extra markers */
+  if ((this->init & COMPRESS) != 0) {
+    this->decompMarkerSize = 0;
+    for (marker = dinfo->marker_list; marker != NULL; marker = marker->next) {
+      if (marker->marker != JPEG_APP0 + 2 && marker->marker != JPEG_APP0 &&
+          marker->marker != JPEG_APP0 + 14 && marker->marker != JPEG_COM)
+        this->decompMarkerSize += marker->data_length + 4;
+    }
+  }
+
+  if ((this->init & COMPRESS) != 0) {
+    this->decompCommentSize = 0;
+    for (marker = dinfo->marker_list; marker != NULL; marker = marker->next) {
+      if (marker->marker == JPEG_COM)
+        this->decompCommentSize += marker->data_length + 4;
     }
   }
 
   jpeg_abort_decompress(dinfo);
 
-  if (this->colorspace < 0)
+  if (this->colorspace == TJCS_DEFAULT)
     THROW("Could not determine colorspace of JPEG image");
   if (this->jpegWidth < 1 || this->jpegHeight < 1)
     THROW("Invalid data returned in header");
 
 bailout:
+/* Our decompression fuzzers intentionally ignore the return value of
+   tj3DecompressHeader() in order to improve test coverage.  Since most fuzzer
+   test cases are malformed in some way, aborting the fuzzer if
+   tj3DecompressHeader() throws an error would prevent most test cases from
+   touching the decompressor code.  However, if tj3DecompressHeader() called
+   jpeg_abort_decompress() when a fatal libjpeg error was thrown, then the
+   global state would be reset to DSTATE_START, jpeg_read_header() in
+   tj3Decompress*() would re-read the same data that triggered the libjpeg
+   error, and tj3Decompress*() would throw a fatal error.  That would also
+   prevent most test cases from touching the decompressor code.  As an example,
+   if the fuzzer inserts junk header data that the marker processor detects as
+   an unknown marker, then jpeg_read_header() will throw a fatal error, but it
+   may still be possible to decompress the rest of the image.
+
+   If we're not fuzz testing, then it is desirable to call
+   jpeg_abort_decompress() here if a fatal error occurred.  Otherwise, if a
+   misbehaved application ignores the error and calls tj3DecompressHeader()
+   again with a valid image, then the libjpeg input controller would not have
+   been reset, and jpeg_read_header() would not actually read the valid image's
+   header.  In that case, the JPEG width and height fields might still reflect
+   the dimensions reported in the malformed image's header, which might cause
+   the misbehaved application to allocate too small of a buffer to hold the
+   decompressed valid image.  To be clear, any application that continues to
+   use a TurboJPEG instance after a fatal error occurs is abusing the API, so
+   this API hardening measure should not be interpreted in any way as support
+   for or endorsement of that behavior. */
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+  if (retval == -1 && dinfo->global_state > DSTATE_START)
+    jpeg_abort_decompress(dinfo);
+#endif
   if (this->jerr.warning) retval = -1;
   return retval;
 }
@@ -1944,25 +2085,31 @@ DLLEXPORT int tj3GetICCProfile(tjhandle handle, unsigned char **iccBuf,
   int retval = 0;
 
   GET_TJINSTANCE(handle, -1);
-  if ((this->init & DECOMPRESS) == 0)
-    THROW("Instance has not been initialized for decompression");
 
   if (iccSize == NULL)
     THROW("Invalid argument");
 
-  if (!this->tempICCBuf || !this->tempICCSize) {
-    if (iccBuf) *iccBuf = NULL;
-    *iccSize = 0;
-    this->jerr.warning = TRUE;
-    THROW("No ICC profile data has been extracted");
-  }
-
-  *iccSize = this->tempICCSize;
+  if (this->init & DECOMPRESS) {
+    if (!this->decompICCBuf || !this->decompICCSize) {
+      if (iccBuf) *iccBuf = NULL;
+      *iccSize = 0;
+      this->jerr.warning = TRUE;
+      THROW("No ICC profile data has been extracted");
+    }
+    *iccSize = this->decompICCSize;
+  } else
+    *iccSize = this->iccSize;
   if (iccBuf == NULL)
     return 0;
-  *iccBuf = this->tempICCBuf;
-  this->tempICCBuf = NULL;
-  this->tempICCSize = 0;
+  if (*iccSize) {
+    if ((*iccBuf = (unsigned char *)malloc(*iccSize)) == NULL)
+      THROW("Memory allocation failure");
+    if (this->init & DECOMPRESS)
+      memcpy(*iccBuf, this->decompICCBuf, *iccSize);
+    else
+      memcpy(*iccBuf, this->iccBuf, *iccSize);
+  } else
+    *iccBuf = NULL;
 
 bailout:
   return retval;
@@ -2203,6 +2350,8 @@ DLLEXPORT int tj3DecompressToYUVPlanes8(tjhandle handle,
     iw[i] = compptr->width_in_blocks * dctsize;
     ih = compptr->height_in_blocks * dctsize;
     pw[i] = tj3YUVPlaneWidth(i, dinfo->output_width, this->subsamp);
+    if (strides && strides[i] != 0 && strides[i] < pw[i])
+      THROW("Invalid argument");
     ph[i] = tj3YUVPlaneHeight(i, dinfo->output_height, this->subsamp);
     if (iw[i] != pw[i] || ih != ph[i]) usetmpbuf = 1;
     th[i] = compptr->v_samp_factor * dctsize;
@@ -2232,7 +2381,15 @@ DLLEXPORT int tj3DecompressToYUVPlanes8(tjhandle handle,
   CATCH_LIBJPEG(this);
 
   dinfo->do_fancy_upsampling = !this->fastUpsample;
-  dinfo->dct_method = this->fastDCT ? JDCT_FASTEST : JDCT_ISLOW;
+  /* Referring to the comment below, this function will never use the "fast"
+     IDCT algorithm with decompression scaling, so if the scaling factor is not
+     1/1, we need to explicitly set dinfo->dct_method = JDCT_ISLOW so that the
+     "slow" IDCT tables will be assigned to all components.  Otherwise, when
+     libjpeg tries to be clever, it will assign the "fast" IDCT tables to the
+     chrominance components, and those tables don't work properly with the
+     scaled IDCT algorithms. */
+  dinfo->dct_method =
+    (dctsize == DCTSIZE && this->fastDCT) ? JDCT_FASTEST : JDCT_ISLOW;
   dinfo->raw_data_out = TRUE;
 
   dinfo->mem->max_memory_to_use = (long)this->maxMemory * 1048576L;
@@ -2246,17 +2403,18 @@ DLLEXPORT int tj3DecompressToYUVPlanes8(tjhandle handle,
     for (i = 0; i < dinfo->num_components; i++) {
       jpeg_component_info *compptr = &dinfo->comp_info[i];
 
-      if (this->subsamp == TJSAMP_420) {
-        /* When 4:2:0 subsampling is used with IDCT scaling, libjpeg will try
-           to be clever and use the IDCT to perform upsampling on the U and V
-           planes.  For instance, if the output image is to be scaled by 1/2
-           relative to the JPEG image, then the scaling factor and upsampling
-           effectively cancel each other, so a normal 8x8 IDCT can be used.
-           However, this is not desirable when using the decompress-to-YUV
-           functionality in TurboJPEG, since we want to output the U and V
-           planes in their subsampled form.  Thus, we have to override some
-           internal libjpeg parameters to force it to use the "scaled" IDCT
-           functions on the U and V planes. */
+      if (this->subsamp == TJSAMP_420 || this->subsamp == TJSAMP_410 ||
+          this->subsamp == TJSAMP_24) {
+        /* When 4:2:0, 4:1:0, or 2:4 subsampling is used with IDCT scaling,
+           libjpeg will try to be clever and use the IDCT to perform upsampling
+           on the U and V planes.  For instance, if the output image is to be
+           scaled by 1/2 relative to the JPEG image, then the scaling factor
+           and upsampling effectively cancel each other, so a normal 8x8 IDCT
+           can be used. However, this is not desirable when using the
+           decompress-to-YUV functionality in TurboJPEG, since we want to
+           output the U and V planes in their subsampled form.  Thus, we have
+           to override some internal libjpeg parameters to force it to use the
+           "scaled" IDCT functions on the U and V planes. */
         compptr->_DCT_scaled_size = dctsize;
         compptr->MCU_sample_width = tjMCUWidth[this->subsamp] *
           this->scalingFactor.num / this->scalingFactor.denom *
@@ -2541,6 +2699,8 @@ DLLEXPORT int tj3DecodeYUVPlanes8(tjhandle handle,
     THROW("Cannot decode YUV images into packed-pixel CMYK images.");
 
   if (pitch == 0) pitch = width * tjPixelSize[pixelFormat];
+  else if (pitch < width * tjPixelSize[pixelFormat])
+    THROW("Invalid argument");
   dinfo->image_width = width;
   dinfo->image_height = height;
 
@@ -2598,6 +2758,8 @@ DLLEXPORT int tj3DecodeYUVPlanes8(tjhandle handle,
         &_tmpbuf_aligned[PAD(compptr->width_in_blocks * DCTSIZE, 32) * row];
     }
     pw[i] = pw0 * compptr->h_samp_factor / dinfo->max_h_samp_factor;
+    if (strides && strides[i] != 0 && strides[i] < pw[i])
+      THROW("Invalid argument");
     ph[i] = ph0 * compptr->v_samp_factor / dinfo->max_v_samp_factor;
     inbuf[i] = (JSAMPROW *)malloc(sizeof(JSAMPROW) * ph[i]);
     if (!inbuf[i])
@@ -2653,7 +2815,7 @@ DLLEXPORT int tjDecodeYUVPlanes(tjhandle handle,
 
   GET_TJINSTANCE(handle, -1);
 
-  if (subsamp < 0 || subsamp >= TJ_NUMSAMP)
+  if (subsamp < 0 || subsamp >= this->numSamp)
     THROW("Invalid argument");
 
   this->subsamp = subsamp;
@@ -2688,7 +2850,7 @@ DLLEXPORT int tj3DecodeYUV8(tjhandle handle, const unsigned char *srcBuf,
   pw0 = tj3YUVPlaneWidth(0, width, this->subsamp);
   ph0 = tj3YUVPlaneHeight(0, height, this->subsamp);
   srcPlanes[0] = srcBuf;
-  strides[0] = PAD(pw0, align);
+  strides[0] = (int)PAD((unsigned long long)pw0, align);
   if (this->subsamp == TJSAMP_GRAY) {
     strides[1] = strides[2] = 0;
     srcPlanes[1] = srcPlanes[2] = NULL;
@@ -2696,7 +2858,7 @@ DLLEXPORT int tj3DecodeYUV8(tjhandle handle, const unsigned char *srcBuf,
     int pw1 = tj3YUVPlaneWidth(1, width, this->subsamp);
     int ph1 = tj3YUVPlaneHeight(1, height, this->subsamp);
 
-    strides[1] = strides[2] = PAD(pw1, align);
+    strides[1] = strides[2] = (int)PAD((unsigned long long)pw1, align);
     if ((unsigned long long)strides[0] * (unsigned long long)ph0 >
         (unsigned long long)INT_MAX ||
         (unsigned long long)strides[1] * (unsigned long long)ph1 >
@@ -2724,7 +2886,7 @@ DLLEXPORT int tjDecodeYUV(tjhandle handle, const unsigned char *srcBuf,
 
   GET_TJINSTANCE(handle, -1);
 
-  if (subsamp < 0 || subsamp >= TJ_NUMSAMP)
+  if (subsamp < 0 || subsamp >= this->numSamp)
     THROW("Invalid argument");
 
   this->subsamp = subsamp;
@@ -2762,6 +2924,8 @@ static int getDstSubsamp(int srcSubsamp, const tjtransform *transform)
     else if (dstSubsamp == TJSAMP_440) dstSubsamp = TJSAMP_422;
     else if (dstSubsamp == TJSAMP_411) dstSubsamp = TJSAMP_441;
     else if (dstSubsamp == TJSAMP_441) dstSubsamp = TJSAMP_411;
+    else if (dstSubsamp == TJSAMP_410) dstSubsamp = TJSAMP_24;
+    else if (dstSubsamp == TJSAMP_24) dstSubsamp = TJSAMP_410;
   }
 
   return dstSubsamp;
@@ -2778,7 +2942,7 @@ static int getTransformedSpecs(tjhandle handle, int *width, int *height,
     THROW("Instance has not been initialized for transformation");
 
   if (!width || !height || !subsamp || !transform || *width < 1 ||
-      *height < 1 || *subsamp < TJSAMP_UNKNOWN || *subsamp >= TJ_NUMSAMP)
+      *height < 1 || *subsamp < TJSAMP_UNKNOWN || *subsamp >= this->numSamp)
     THROW("Invalid argument");
 
   dstWidth = *width;  dstHeight = *height;
@@ -2848,16 +3012,36 @@ DLLEXPORT size_t tj3TransformBufSize(tjhandle handle,
   }
 
   retval = tj3JPEGBufSize(dstWidth, dstHeight, dstSubsamp);
+
   if ((this->saveMarkers == 2 || this->saveMarkers == 4) &&
       !(transform->options & TJXOPT_COPYNONE))
-    retval += this->tempICCSize;
+    retval += (this->decompICCSize ? this->decompICCSize + 18 : 0);
   else
-    retval += this->iccSize;
+    retval += (this->iccSize ? this->iccSize + 18 : 0);
+
+  if ((this->saveMarkers == 2 || this->saveMarkers == 3) &&
+      !(transform->options & TJXOPT_COPYNONE))
+    retval += this->decompMarkerSize;
+
+  if (this->saveMarkers >= 1 && this->saveMarkers <= 3 &&
+      !(transform->options & TJXOPT_COPYNONE))
+    retval += this->decompCommentSize;
 
 bailout:
   return retval;
 }
 
+
+#if TRANSFORMS_SUPPORTED
+
+static int compareDstBufs(const void *dstBuf1, const void *dstBuf2)
+{
+  if ((unsigned char *)dstBuf1 < (unsigned char *)dstBuf2) return -1;
+  else if ((unsigned char *)dstBuf1 > (unsigned char *)dstBuf2) return 1;
+  return 0;
+}
+
+#endif
 
 /* TurboJPEG 3.0+ */
 DLLEXPORT int tj3Transform(tjhandle handle, const unsigned char *jpegBuf,
@@ -2874,6 +3058,7 @@ DLLEXPORT int tj3Transform(tjhandle handle, const unsigned char *jpegBuf,
   int i, saveMarkers = 0, srcSubsamp;
   boolean alloc = TRUE;
   struct my_progress_mgr progress;
+  unsigned char **tmpDstBufs = NULL;
 
   GET_INSTANCE(handle);
   if ((this->init & COMPRESS) == 0 || (this->init & DECOMPRESS) == 0)
@@ -2939,7 +3124,7 @@ DLLEXPORT int tj3Transform(tjhandle handle, const unsigned char *jpegBuf,
       (unsigned long long)dinfo->image_width * dinfo->image_height >
       (unsigned long long)this->maxPixels)
     THROW("Image is too large");
-  srcSubsamp = getSubsamp(&this->dinfo);
+  srcSubsamp = getSubsamp(this);
 
   for (i = 0; i < n; i++) {
     if (!jtransform_request_workspace(dinfo, &xinfo[i]))
@@ -2960,10 +3145,31 @@ DLLEXPORT int tj3Transform(tjhandle handle, const unsigned char *jpegBuf,
 
   srccoefs = jpeg_read_coefficients(dinfo);
 
+  if (n > 1) {
+    if ((tmpDstBufs =
+         (unsigned char **)malloc(n * sizeof(unsigned char *))) == NULL)
+      THROW("Memory allocation failure");
+    memset(tmpDstBufs, 0, n * sizeof(unsigned char *));
+    for (i = 0; i < n; i++) {
+      if (!(t[i].options & TJXOPT_NOOUTPUT))
+        tmpDstBufs[i] = dstBufs[i];
+    }
+    qsort(tmpDstBufs, n, sizeof(unsigned char *), compareDstBufs);
+    for (i = 0; i < n - 1; i++) {
+      if (tmpDstBufs[i] && tmpDstBufs[i] == tmpDstBufs[i + 1])
+        THROW("Duplicate destination buffer");
+    }
+    free(tmpDstBufs);  tmpDstBufs = NULL;
+  }
+
   for (i = 0; i < n; i++) {
     if (this->noRealloc) alloc = FALSE;
-    if (!(t[i].options & TJXOPT_NOOUTPUT))
+    if (!(t[i].options & TJXOPT_NOOUTPUT)) {
+      CHECK_DESTINATION_MGRS(n);
+      cinfo->dest = this->dstMgrs[i];
       jpeg_mem_dest_tj(cinfo, &dstBufs[i], &dstSizes[i], alloc);
+      this->dstMgrs[i] = cinfo->dest;
+    }
     jpeg_copy_critical_parameters(dinfo, cinfo);
     dstcoefs = jtransform_adjust_parameters(dinfo, cinfo, srccoefs, &xinfo[i]);
     if (this->optimize || t[i].options & TJXOPT_OPTIMIZE)
@@ -3031,6 +3237,7 @@ bailout:
     if (alloc) (*cinfo->dest->term_destination) (cinfo);
     jpeg_abort_compress(cinfo);
   }
+  free(tmpDstBufs);
   if (dinfo->global_state > DSTATE_START) jpeg_abort_decompress(dinfo);
   free(xinfo);
   if (this->jerr.warning) retval = -1;
@@ -3070,7 +3277,7 @@ DLLEXPORT int tjTransform(tjhandle handle, const unsigned char *jpegBuf,
   if (this->noRealloc) {
     jpeg_mem_src_tj(dinfo, jpegBuf, jpegSize);
     jpeg_read_header(dinfo, TRUE);
-    srcSubsamp = getSubsamp(dinfo);
+    srcSubsamp = getSubsamp(this);
   }
 
   if ((sizes = (size_t *)malloc(n * sizeof(size_t))) == NULL)

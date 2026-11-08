@@ -4,7 +4,8 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1997-2019, Thomas G. Lane, Guido Vollbeding.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2017, 2021, D. R. Commander.
+ * Copyright (C) 2017, 2021, 2026, D. R. Commander.
+ * Copyright (C) 2026, Ricardo M. Ferreira.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -105,7 +106,8 @@ typedef enum {
   JXFORM_ROT_180,         /* 180-degree rotation */
   JXFORM_ROT_270,         /* 270-degree clockwise (or 90 ccw) */
   JXFORM_WIPE,            /* wipe */
-  JXFORM_DROP             /* drop */
+  JXFORM_DROP,            /* drop */
+  JXFORM_ROLL             /* roll (shift with wraparound) */
 } JXFORM_CODE;
 
 /*
@@ -196,7 +198,7 @@ EXTERN(void) jtransform_execute_transform(j_decompress_ptr srcinfo,
 EXTERN(boolean) jtransform_perfect_transform(JDIMENSION image_width,
                                              JDIMENSION image_height,
                                              int MCU_width, int MCU_height,
-                                             JXFORM_CODE transform);
+                                             jpeg_transform_info *info);
 
 /* jtransform_execute_transform used to be called
  * jtransform_execute_transformation, but some compilers complain about

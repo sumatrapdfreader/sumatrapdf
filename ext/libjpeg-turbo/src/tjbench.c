@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2019, 2021-2026 D. R. Commander.  All Rights Reserved.
+ * Copyright (C) 2009-2019, 2021-2026 D. R. Commander
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -97,21 +97,22 @@ static int tjErrorLine = -1, tjErrorCode = -1;
 static int stopOnWarning = 0, bottomUp = 0, noRealloc = 1, precision = 8,
   fastUpsample = 0, fastDCT = 0, optimize = 0, progressive = 0, maxScans = 0,
   arithmetic = 0, lossless = 0, restartIntervalBlocks = 0,
-  restartIntervalRows = 0, maxMemory = 0, maxPixels = 0;
+  restartIntervalRows = 0, maxMemory = 0, maxPixels = 0, noICC = 0;
 static char *ext = "ppm";
 static int sampleSize, compOnly = 0, decompOnly = 0, doWrite = 1,
   pf = TJPF_BGR, quiet = 0, doTile = 0, doYUV = 0, yuvAlign = 1;
+static size_t iccSize = 0;
 static const char *pixFormatStr[TJ_NUMPF] = {
   "RGB", "BGR", "RGBX", "BGRX", "XBGR", "XRGB", "GRAY", "", "", "", "", "CMYK"
 };
 static const char *subNameLong[TJ_NUMSAMP] = {
-  "4:4:4", "4:2:2", "4:2:0", "GRAY", "4:4:0", "4:1:1", "4:4:1"
+  "4:4:4", "4:2:2", "4:2:0", "GRAY", "4:4:0", "4:1:1", "4:4:1", "4:1:0", "2:4"
 };
 static const char *csName[TJ_NUMCS] = {
   "RGB", "YCbCr", "GRAY", "CMYK", "YCCK"
 };
 static const char *subName[TJ_NUMSAMP] = {
-  "444", "422", "420", "GRAY", "440", "411", "441"
+  "444", "422", "420", "GRAY", "440", "411", "441", "410", "24"
 };
 static tjscalingfactor *scalingFactors = NULL, sf = { 1, 1 };
 static tjregion cr = { 0, 0, 0, 0 };
@@ -211,11 +212,11 @@ static int decomp(unsigned char **jpegBufs, size_t *jpegSizes, void *dstBuf,
     THROW_TJ();
   if (tj3Set(handle, TJPARAM_MAXPIXELS, maxPixels) == -1)
     THROW_TJ();
+  if (noICC && tj3Set(handle, TJPARAM_SAVEMARKERS, 0) == -1)
+    THROW_TJ();
 
-  if (IS_CROPPED(cr)) {
-    if (tj3DecompressHeader(handle, jpegBufs[0], jpegSizes[0]) == -1)
-      THROW_TJ();
-  }
+  if (tj3DecompressHeader(handle, jpegBufs[0], jpegSizes[0]) == -1)
+    THROW_TJ();
   if (tj3SetScalingFactor(handle, sf) == -1)
     THROW_TJ();
   if (tj3SetCroppingRegion(handle, cr) == -1)
@@ -423,7 +424,7 @@ static int fullTest(tjhandle handle, void *srcBuf, int w, int h, int subsamp,
                                            ntilesh)) == NULL)
         THROW_UNIX("allocating JPEG buffer size array");
       for (i = 0; i < ntilesw * ntilesh; i++) {
-        size_t jpegBufSize = tj3JPEGBufSize(tilew, tileh, subsamp);
+        size_t jpegBufSize = tj3JPEGBufSize(tilew, tileh, subsamp) + iccSize;
 
         if (jpegBufSize == 0)
           THROW_TJG();
@@ -761,6 +762,8 @@ static int decompTest(char *fileName)
       else if (tsubsamp == TJSAMP_440) tsubsamp = TJSAMP_422;
       else if (tsubsamp == TJSAMP_411) tsubsamp = TJSAMP_441;
       else if (tsubsamp == TJSAMP_441) tsubsamp = TJSAMP_411;
+      else if (tsubsamp == TJSAMP_410) tsubsamp = TJSAMP_24;
+      else if (tsubsamp == TJSAMP_24) tsubsamp = TJSAMP_410;
     }
 
     if (noRealloc && doTransform) {
@@ -917,7 +920,7 @@ static void usage(char *progName)
   int i;
 
   printf("USAGE: %s\n", progName);
-  printf("       <Inputimage (BMP|PPM|PGM)> <Quality or PSV> [options]\n\n");
+  printf("       <Inputimage (PNG|PPM|PGM|BMP)> <Quality or PSV> [options]\n\n");
   printf("       %s\n", progName);
   printf("       <Inputimage (JPG)> [options]\n");
 
@@ -943,6 +946,9 @@ static void usage(char *progName)
   printf("    JPEG compression, and lossless transformation [default = no limit]\n");
   printf("-maxpixels N\n");
   printf("    Input image size limit (in pixels) [default = no limit]\n");
+  printf("-noicc\n");
+  printf("    Do not transfer the embedded ICC profile (if any) from PNG input images or\n");
+  printf("    to PNG output images.\n");
   printf("-nowrite\n");
   printf("    Do not write reference or output images (improves consistency of benchmark\n");
   printf("    results)\n");
@@ -952,6 +958,8 @@ static void usage(char *progName)
   printf("-pixelformat cmyk\n");
   printf("    Indirectly test YCCK JPEG compression/decompression (use the CMYK pixel\n");
   printf("    format for packed-pixel source/destination buffers)\n");
+  printf("-png\n");
+  printf("    Use PNG format for output images [default = PPM or PGM]\n");
   printf("-precision N\n");
   printf("    Use N-bit data precision when compressing [N = 2..16; default = 8; if N is\n");
   printf("    not 8 or 12, then -lossless must also be specified] (-precision 12 implies\n");
@@ -1026,8 +1034,8 @@ static void usage(char *progName)
   printf(")\n");
   printf("-subsamp S\n");
   printf("    When compressing, use the specified level of chrominance subsampling\n");
-  printf("    (S = 444, 422, 440, 420, 411, 441, or GRAY) [default = test Grayscale,\n");
-  printf("    4:2:0, 4:2:2, and 4:4:4 in sequence]\n");
+  printf("    (S = 444, 422, 440, 420, 411, 441, 410, 24, or GRAY)\n");
+  printf("    [default = test Grayscale, 4:2:0, 4:2:2, and 4:4:4 in sequence]\n");
   printf("-yuv\n");
   printf("    Compress from/decompress to intermediate planar YUV images\n");
   printf("    ** 8-bit data precision only **\n");
@@ -1056,7 +1064,8 @@ int main(int argc, char *argv[])
 
   temp = strrchr(argv[1], '.');
   if (temp != NULL) {
-    if (!strcasecmp(temp, ".bmp")) ext = "bmp";
+    if (!strcasecmp(temp, ".png")) ext = "png";
+    else if (!strcasecmp(temp, ".bmp")) ext = "bmp";
     if (!strcasecmp(temp, ".jpg") || !strcasecmp(temp, ".jpeg"))
       decompOnly = 1;
   }
@@ -1162,7 +1171,9 @@ int main(int argc, char *argv[])
 
         if (tempi < 0) usage(argv[0]);
         maxMemory = tempi;
-      } else if (MATCH_ARG(argv[i], "-nooutput", 4))
+      } else if (MATCH_ARG(argv[i], "-noicc", 4))
+        noICC = 1;
+      else if (MATCH_ARG(argv[i], "-nooutput", 4))
         xformOpt |= TJXOPT_NOOUTPUT;
       else if (MATCH_ARG(argv[i], "-nosmooth", 4)) {
         printf("Using fastest upsampling algorithm\n\n");
@@ -1194,7 +1205,9 @@ int main(int argc, char *argv[])
           pf = TJPF_XRGB;
         else
           usage(argv[0]);
-      } else if (MATCH_ARG(argv[i], "-precision", 4) && i < argc - 1) {
+      } else if (MATCH_ARG(argv[i], "-png", 3))
+        ext = "png";
+      else if (MATCH_ARG(argv[i], "-precision", 4) && i < argc - 1) {
         int tempi = atoi(argv[++i]);
 
         if (tempi < 2 || tempi > 16)
@@ -1259,6 +1272,10 @@ int main(int argc, char *argv[])
           subsamp = TJSAMP_411;
         else if (MATCH_ARG(argv[i], "441", 3))
           subsamp = TJSAMP_441;
+        else if (MATCH_ARG(argv[i], "410", 3))
+          subsamp = TJSAMP_410;
+        else if (MATCH_ARG(argv[i], "24", 3))
+          subsamp = TJSAMP_24;
         else
           usage(argv[0]);
       } else if (MATCH_ARG(argv[i], "-scale", 2) && i < argc - 1) {
@@ -1363,6 +1380,8 @@ int main(int argc, char *argv[])
       THROW_TJ();
     if (tj3Set(handle, TJPARAM_MAXPIXELS, maxPixels) == -1)
       THROW_TJ();
+    if (noICC && tj3Set(handle, TJPARAM_SAVEMARKERS, 0) == -1)
+      THROW_TJ();
 
     if (precision <= 8) {
       if ((srcBuf = tj3LoadImage8(handle, argv[1], &w, 1, &h, &pf)) == NULL)
@@ -1374,6 +1393,8 @@ int main(int argc, char *argv[])
       if ((srcBuf = tj3LoadImage16(handle, argv[1], &w, 1, &h, &pf)) == NULL)
         THROW_TJ();
     }
+    if (tj3GetICCProfile(handle, NULL, &iccSize) == -1)
+      THROW_TJ();
     temp = strrchr(argv[1], '.');
     if (temp != NULL) *temp = '\0';
   }

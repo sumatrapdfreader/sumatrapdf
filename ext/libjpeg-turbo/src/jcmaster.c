@@ -22,6 +22,9 @@
 #include "jpeglib.h"
 #include "jpegapicomp.h"
 #include "jcmaster.h"
+#ifdef WITH_PROFILE
+#include "tjutil.h"
+#endif
 
 
 /*
@@ -720,6 +723,10 @@ jinit_c_master_control(j_compress_ptr cinfo, boolean transcode_only)
   my_master_ptr master = (my_master_ptr)cinfo->master;
   boolean empty_huff_tables = TRUE;
   int i;
+
+#ifdef WITH_PROFILE
+  master->pub.total_start = getTime();
+#endif
 
   master->pub.prepare_for_pass = prepare_for_pass;
   master->pub.pass_startup = pass_startup;

@@ -13,6 +13,7 @@
 #define JPEG_INTERNALS
 #include "cdjpeg.h"
 #include <setjmp.h>
+#include <zlib.h>
 
 #define JMESSAGE(code, string)  string,
 
@@ -60,6 +61,13 @@ static void my_output_message(j_common_ptr cinfo)
   array[index + 1] = (unsigned int)(value) >> 8; \
   array[index + 2] = (unsigned int)(value) >> 16; \
   array[index + 3] = (unsigned int)(value) >> 24; \
+}
+
+#define BYTESWAP32(array, index, value) { \
+  array[index] = (unsigned int)(value) >> 24; \
+  array[index + 1] = (unsigned int)(value) >> 16; \
+  array[index + 2] = (unsigned int)(value) >> 8; \
+  array[index + 3] = (unsigned int)(value) & 0xFF; \
 }
 
 
@@ -332,6 +340,159 @@ bailout:
 }
 
 
+static int test_read_PNG(int width, int height, JDIMENSION max_pixels,
+                         int data_precision)
+{
+  struct jpeg_compress_struct cinfo;
+  struct my_error_mgr myerr;
+  struct jpeg_error_mgr *jerr = &myerr.pub;
+  cjpeg_source_ptr src_mgr = NULL;
+  unsigned char ph[33] = { 0 };
+  unsigned int crc;
+  int retval = 0;
+  FILE *file = NULL;
+
+  cinfo.err = jpeg_std_error(jerr);
+  jerr->error_exit = my_error_exit;
+  jerr->output_message = my_output_message;
+
+  if (setjmp(myerr.setjmp_buffer)) {
+    retval = -1;
+    goto bailout;
+  }
+
+  jpeg_create_compress(&cinfo);
+  jerr->addon_message_table = cdjpeg_message_table;
+  jerr->first_addon_message = JMSG_FIRSTADDONCODE;
+  jerr->last_addon_message = JMSG_LASTADDONCODE;
+
+  cinfo.in_color_space = JCS_RGB;
+  jpeg_set_defaults(&cinfo);
+  cinfo.data_precision = data_precision;
+
+  ph[0] = 0x89;                         /* PNG file signature */
+  ph[1] = 'P';
+  ph[2] = 'N';
+  ph[3] = 'G';
+  ph[4] = 13;
+  ph[5] = 10;
+  ph[6] = 26;
+  ph[7] = 10;
+  BYTESWAP32(ph, 8, 13);                        /* Chunk length */
+  ph[12] = 'I';                                 /* Chunk type */
+  ph[13] = 'H';
+  ph[14] = 'D';
+  ph[15] = 'R';
+  BYTESWAP32(ph, 16, width);
+  BYTESWAP32(ph, 20, height);
+  ph[24] = (data_precision > 8 ? 16 : 8);       /* Bit depth */
+  ph[25] = 2;                                   /* Color type
+                                                   (2 = truecolor) */
+  ph[26] = 0;                                   /* Compression method
+                                                   (0 = deflate/inflate) */
+  ph[27] = 0;                                   /* Filter method
+                                                   (0 = adaptive) */
+  ph[28] = 0;                                   /* Interlace method
+                                                   (0 = none) */
+  crc = crc32(0, NULL, 0);                      /* Initialize CRC */
+  crc = crc32(crc, &ph[12], 17);                /* Compute CRC */
+  BYTESWAP32(ph, 29, crc);
+
+  if (data_precision <= 8)
+    src_mgr = jinit_read_png(&cinfo);
+  else if (data_precision <= 12)
+    src_mgr = j12init_read_png(&cinfo);
+#ifdef C_LOSSLESS_SUPPORTED
+  else
+    src_mgr = j16init_read_png(&cinfo);
+#endif
+  if (!src_mgr)
+    return -1;
+  if ((file = fmemopen((void *)&ph, 33, "r")) == NULL)
+    THROW("Can't open file", strerror(errno));
+
+  if (setjmp(myerr.setjmp_buffer)) {
+    retval = -1;
+    goto bailout;
+  }
+
+  src_mgr->input_file = file;
+  src_mgr->max_pixels = max_pixels;
+  (*src_mgr->start_input) (&cinfo, src_mgr);
+
+bailout:
+  if (src_mgr)
+    (*src_mgr->finish_input) (&cinfo, src_mgr);
+  if (file) fclose(file);
+  jpeg_destroy_compress(&cinfo);
+  return retval;
+}
+
+
+static int test_write_PNG(int width, int height, int data_precision)
+{
+  struct jpeg_decompress_struct cinfo;
+  struct my_error_mgr myerr;
+  struct jpeg_error_mgr *jerr = &myerr.pub;
+  djpeg_dest_ptr dest_mgr = NULL;
+  unsigned char ph[33];
+  int retval = 0;
+  FILE *file = NULL;
+
+  cinfo.err = jpeg_std_error(jerr);
+  jerr->error_exit = my_error_exit;
+  jerr->output_message = my_output_message;
+
+  if (setjmp(myerr.setjmp_buffer)) {
+    retval = -1;
+    goto bailout;
+  }
+
+  jpeg_create_decompress(&cinfo);
+  jerr->addon_message_table = cdjpeg_message_table;
+  jerr->first_addon_message = JMSG_FIRSTADDONCODE;
+  jerr->last_addon_message = JMSG_LASTADDONCODE;
+
+  cinfo.out_color_space = JCS_RGB;
+  cinfo.quantize_colors = FALSE;
+  cinfo.image_width = width;
+  cinfo.image_height = height;
+  cinfo.scale_num = cinfo.scale_denom = 1;
+  cinfo.data_precision = data_precision;
+  cinfo.global_state = DSTATE_READY;
+
+  if (data_precision <= 8)
+    dest_mgr = jinit_write_png(&cinfo);
+  else if (data_precision <= 12)
+    dest_mgr = j12init_write_png(&cinfo);
+#ifdef D_LOSSLESS_SUPPORTED
+  else
+    dest_mgr = j16init_write_png(&cinfo);
+#endif
+  if (!dest_mgr) {
+    retval = -1;
+    goto bailout;
+  }
+  if ((file = fmemopen((void *)&ph, 33, "w")) == NULL)
+    THROW("Can't open file", strerror(errno));
+
+  if (setjmp(myerr.setjmp_buffer)) {
+    retval = -1;
+    goto bailout;
+  }
+
+  dest_mgr->output_file = file;
+  (*dest_mgr->start_output) (&cinfo, dest_mgr);
+
+bailout:
+  if (dest_mgr)
+    (*dest_mgr->finish_output) (&cinfo, dest_mgr);
+  jpeg_destroy_decompress(&cinfo);
+  if (file) fclose(file);
+  return retval;
+}
+
+
 static int test_read_PPM(int width, int height, JDIMENSION max_pixels,
                          int data_precision)
 {
@@ -485,8 +646,7 @@ static int test_read_TGA(int width, int height, JDIMENSION max_pixels,
 
   th[0] = 0;                            /* ID length */
   th[1] = 0;                            /* Color map type */
-  th[2] = 2;                            /* Image type
-                                           (2 = uncompressed true color) */
+  th[2] = 2;                            /* Image type (2 = uncompressed RGB) */
   th[3] = th[4] = 0;                    /* Color map first entry index */
   th[5] = th[6] = 0;                    /* Color map length */
   th[7] = 0;                            /* Color map entry size (bits) */
@@ -706,6 +866,50 @@ int main(void)
             TRUE, -1, "Maximum supported image dimension is 65500 pixels");
   TESTWRITE(GIF, JPEG_MAX_DIMENSION, JPEG_MAX_DIMENSION, "interlaced", TRUE, 0,
             "");
+
+  fprintf(stderr, "\n");
+
+  /***************************************************************************/
+
+  fprintf(stderr, "Testing PNG reader ...\n");
+
+  TESTREAD(PNG, JPEG_MAX_DIMENSION, JPEG_MAX_DIMENSION + 1, 0, "8-bit", 8, -1,
+           "Maximum supported image dimension is 65500 pixels");
+  TESTREAD(PNG, JPEG_MAX_DIMENSION + 1, JPEG_MAX_DIMENSION, 0, "12-bit", 12,
+           -1, "Maximum supported image dimension is 65500 pixels");
+  TESTREAD(PNG, JPEG_MAX_DIMENSION, JPEG_MAX_DIMENSION + 1, 0, "16-bit", 16,
+           -1, "Maximum supported image dimension is 65500 pixels");
+  TESTREAD(PNG, JPEG_MAX_DIMENSION, JPEG_MAX_DIMENSION, 0, "16-bit", 16, -1,
+           "libspng error: end of stream");
+  TESTREAD(PNG, JPEG_MAX_DIMENSION + 1, JPEG_MAX_DIMENSION, 0, "17-bit", 17,
+           -1, "Unsupported JPEG data precision 17");
+
+  TESTREAD(PNG, JPEG_MAX_DIMENSION, 15268L, 1000000000, "8-bit", 8, -1,
+           "Maximum supported image dimension is 1000000000 pixels");
+  TESTREAD(PNG, JPEG_MAX_DIMENSION, 15267L, 1000000000, "8-bit", 8, -1,
+           "libspng error: end of stream");
+  TESTREAD(PNG, 1527L, JPEG_MAX_DIMENSION, 100000000, "12-bit", 12, -1,
+           "Maximum supported image dimension is 100000000 pixels");
+  TESTREAD(PNG, 1526L, JPEG_MAX_DIMENSION, 100000000, "12-bit", 12, -1,
+           "libspng error: end of stream");
+  TESTREAD(PNG, 1000L, 1001L, 1000000, "16-bit", 16, -1,
+           "Maximum supported image dimension is 1000000 pixels");
+  TESTREAD(PNG, 1000L, 1000L, 1000000, "16-bit", 16, -1,
+           "libspng error: end of stream");
+
+  fprintf(stderr, "\n");
+
+  fprintf(stderr, "Testing PNG writer ...\n");
+
+  TESTWRITE(PNG, JPEG_MAX_DIMENSION, JPEG_MAX_DIMENSION + 1, "8-bit", 8,
+            -1, "Maximum supported image dimension is 65500 pixels");
+  TESTWRITE(PNG, JPEG_MAX_DIMENSION + 1, JPEG_MAX_DIMENSION, "12-bit", 12,
+            -1, "Maximum supported image dimension is 65500 pixels");
+  TESTWRITE(PNG, JPEG_MAX_DIMENSION, JPEG_MAX_DIMENSION + 1, "16-bit", 16,
+            -1, "Maximum supported image dimension is 65500 pixels");
+  TESTWRITE(PNG, JPEG_MAX_DIMENSION, JPEG_MAX_DIMENSION, "16-bit", 16, 0, "");
+  TESTWRITE(PNG, JPEG_MAX_DIMENSION + 1, JPEG_MAX_DIMENSION, "17-bit", 17,
+            -1, "Unsupported JPEG data precision 17");
 
   fprintf(stderr, "\n");
 

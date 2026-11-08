@@ -23,6 +23,9 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jerror.h"
+#if !defined(_MSC_VER) || _MSC_VER > 1600
+#include <stdint.h>
+#endif
 
 void jpeg_mem_dest_tj(j_compress_ptr cinfo, unsigned char **outbuffer,
                       size_t *outsize, boolean alloc);
@@ -91,12 +94,23 @@ empty_mem_output_buffer(j_compress_ptr cinfo)
 
   if (!dest->alloc) ERREXIT(cinfo, JERR_BUFFER_SIZE);
 
-  /* Try to allocate new buffer with double size */
+  /* Try to allocate new buffer with double size
+   *
+   * NOTE: The following check isn't actually necessary.  On 64-bit systems,
+   * the maximum theoretical JPEG size is
+   * 65500 * 65500 * cinfo->num_components * sizeof(DCTELEM) bytes, which is of
+   * course much less than 8 exabytes (SIZE_MAX / 2).  On 32-bit systems,
+   * malloc() will never return a buffer >= 2 GB, so the malloc() call will
+   * fail before 32-bit integer overflow/wraparound can occur.  The sole
+   * purpose of this code is to shut up automated code analysis tools.
+   */
+  if (dest->bufsize > SIZE_MAX / 2)
+    ERREXIT1(cinfo, JERR_OUT_OF_MEMORY, 13);
   nextsize = dest->bufsize * 2;
   nextbuffer = (JOCTET *)MALLOC(nextsize);
 
   if (nextbuffer == NULL)
-    ERREXIT1(cinfo, JERR_OUT_OF_MEMORY, 10);
+    ERREXIT1(cinfo, JERR_OUT_OF_MEMORY, 12);
 
   memcpy(nextbuffer, dest->buffer, dest->bufsize);
 
@@ -175,7 +189,7 @@ jpeg_mem_dest_tj(j_compress_ptr cinfo, unsigned char **outbuffer,
   dest->pub.init_destination = init_mem_destination;
   dest->pub.empty_output_buffer = empty_mem_output_buffer;
   dest->pub.term_destination = term_mem_destination;
-  if (dest->buffer == *outbuffer && *outbuffer != NULL && alloc)
+  if (dest->buffer == *outbuffer && *outbuffer != NULL && alloc && dest->alloc)
     reused = TRUE;
   dest->outbuffer = outbuffer;
   dest->outsize = outsize;

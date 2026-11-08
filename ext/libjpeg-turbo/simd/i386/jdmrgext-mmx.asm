@@ -1,5 +1,5 @@
 ;
-; Merged upsampling/color conversion (32-bit MMX)
+; Merged Upsampling/Color Conversion (32-bit MMX)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ; Copyright (C) 2016, 2024-2025, D. R. Commander.

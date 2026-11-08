@@ -34,7 +34,7 @@
 #define PACKAGE_NAME  "libjpeg-turbo"
 
 /* Version number of package */
-#define VERSION  "3.1.4.1"
+#define VERSION  "3.2.1"
 
 /* The size of `size_t', as computed by sizeof. */
 #ifdef _WIN64
@@ -105,4 +105,17 @@
 #define WITH_SIMD 1
 #endif
 
+/* Which SIMD extensions were built; a jsimdconst.h constant (NONE without SIMD). */
+#if !defined(WITH_SIMD)
+#define SIMD_ARCHITECTURE  NONE
+#elif defined(_M_X64) || defined(__x86_64__)
+#define SIMD_ARCHITECTURE  X86_64
+#else
+#define SIMD_ARCHITECTURE  I386
 #endif
+
+/* #undef WITH_SIMDE */
+
+#endif
+
+/* #undef WITH_PROFILE */

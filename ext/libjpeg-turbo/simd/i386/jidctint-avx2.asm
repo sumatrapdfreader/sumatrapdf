@@ -1,5 +1,5 @@
 ;
-; Accurate integer IDCT (32-bit AVX2)
+; Accurate Integer Inverse DCT (32-bit AVX2)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ; Copyright (C) 2009, 2016, 2018, 2020, 2024-2025, D. R. Commander.

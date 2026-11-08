@@ -104,12 +104,34 @@
 #endif
 
 
+/* When decompressing an 8-bit-per-sample lossy JPEG image, we allow the caller
+ * to request 12-bit-per-sample output in order to facilitate shadow recovery
+ * in underexposed images.  This is accomplished by using the 12-bit-per-sample
+ * decompression pipeline and multiplying the DCT coefficients from the
+ * 8-bit-per-sample JPEG image by 16 (the equivalent of left shifting by 4
+ * bits.)
+ */
+
+#if BITS_IN_JSAMPLE == 12
+#define SCALING_FACTOR \
+  JLONG scaling_factor = (cinfo->master->jpeg_data_precision == 8 && \
+                          cinfo->data_precision == 12 ? 16 : 1);
+#else
+#define SCALING_FACTOR
+#endif
+
+
 /* Dequantize a coefficient by multiplying it by the multiplier-table
  * entry; produce an int result.  In this module, both inputs and result
  * are 16 bits or less, so either int or short multiply will work.
  */
 
+#if BITS_IN_JSAMPLE == 8
 #define DEQUANTIZE(coef, quantval)  (((ISLOW_MULT_TYPE)(coef)) * (quantval))
+#else
+#define DEQUANTIZE(coef, quantval) \
+  (((ISLOW_MULT_TYPE)(coef)) * (quantval) * scaling_factor)
+#endif
 
 
 /*
@@ -132,6 +154,7 @@ _jpeg_idct_4x4(j_decompress_ptr cinfo, jpeg_component_info *compptr,
   int ctr;
   int workspace[DCTSIZE * 4];   /* buffers data between passes */
   SHIFT_TEMPS
+  SCALING_FACTOR
 
   /* Pass 1: process columns from input, store into work array. */
 
@@ -289,6 +312,7 @@ _jpeg_idct_2x2(j_decompress_ptr cinfo, jpeg_component_info *compptr,
   int ctr;
   int workspace[DCTSIZE * 2];   /* buffers data between passes */
   SHIFT_TEMPS
+  SCALING_FACTOR
 
   /* Pass 1: process columns from input, store into work array. */
 
@@ -395,6 +419,7 @@ _jpeg_idct_1x1(j_decompress_ptr cinfo, jpeg_component_info *compptr,
   ISLOW_MULT_TYPE *quantptr;
   _JSAMPLE *range_limit = IDCT_range_limit(cinfo);
   SHIFT_TEMPS
+  SCALING_FACTOR
 
   /* We hardly need an inverse DCT routine for this: just take the
    * average sample value, which is one-eighth of the DC coefficient.

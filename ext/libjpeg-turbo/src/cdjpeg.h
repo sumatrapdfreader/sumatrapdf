@@ -5,7 +5,7 @@
  * Copyright (C) 1994-1997, Thomas G. Lane.
  * Modified 2019 by Guido Vollbeding.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2017, 2019, 2021-2022, D. R. Commander.
+ * Copyright (C) 2017, 2019, 2021-2022, 2026, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -13,8 +13,19 @@
  * cjpeg and djpeg.  It is NOT used by the core JPEG library.
  */
 
+/* Uncomment this to make djpeg process more than one scanline at a time when
+ * writing PBMPLUS (PPM/PGM) files, which exercises esoteric code paths in the
+ * library that would otherwise be difficult to test.
+ *
+#define DJPEG_MULTILINE
+ */
+
 #define JPEG_CJPEG_DJPEG        /* define proper options in jconfig.h */
+#ifdef DJPEG_MULTILINE
+#define JPEG_INTERNALS
+#else
 #define JPEG_INTERNAL_OPTIONS   /* cjpeg.c,djpeg.c need to see xxx_SUPPORTED */
+#endif
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jerror.h"             /* get library error codes too */
@@ -29,6 +40,16 @@ typedef struct cjpeg_source_struct *cjpeg_source_ptr;
 
 struct cjpeg_source_struct {
   void (*start_input) (j_compress_ptr cinfo, cjpeg_source_ptr sinfo);
+  /* Return the ICC profile (if any) embedded in the packed-pixel image.
+   *
+   * The pointer returned by this method will be freed in the body of the
+   * finish_input() method, so calling applications should make a copy of the
+   * ICC profile if they want to store it for later use.  This method must be
+   * called after the start_input() method.
+   */
+  boolean (*read_icc_profile) (j_compress_ptr cinfo, cjpeg_source_ptr sinfo,
+                               JOCTET **icc_data_ptr,
+                               unsigned int *icc_data_len);
   JDIMENSION (*get_pixel_rows) (j_compress_ptr cinfo, cjpeg_source_ptr sinfo);
   void (*finish_input) (j_compress_ptr cinfo, cjpeg_source_ptr sinfo);
 
@@ -55,6 +76,15 @@ struct djpeg_dest_struct {
    * The color map will be ready at this time, if one is needed.
    */
   void (*start_output) (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo);
+  /* Embed an ICC profile in the packed-pixel image.
+   *
+   * The pointer passed to this method will be freed in the body of the
+   * finish_output() method.  This method must be called before the
+   * start_output() method.
+   */
+  void (*write_icc_profile) (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
+                             const JOCTET *icc_data_ptr,
+                             unsigned int icc_data_len);
   /* Emit the specified number of pixel rows from the buffer. */
   void (*put_pixel_rows) (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
                           JDIMENSION rows_supplied);
@@ -117,6 +147,16 @@ EXTERN(cjpeg_source_ptr) jinit_read_gif(j_compress_ptr cinfo);
 EXTERN(djpeg_dest_ptr) jinit_write_gif(j_decompress_ptr cinfo, boolean is_lzw);
 EXTERN(djpeg_dest_ptr) j12init_write_gif(j_decompress_ptr cinfo,
                                          boolean is_lzw);
+EXTERN(cjpeg_source_ptr) jinit_read_png(j_compress_ptr cinfo);
+EXTERN(cjpeg_source_ptr) j12init_read_png(j_compress_ptr cinfo);
+#ifdef C_LOSSLESS_SUPPORTED
+EXTERN(cjpeg_source_ptr) j16init_read_png(j_compress_ptr cinfo);
+#endif
+EXTERN(djpeg_dest_ptr) jinit_write_png(j_decompress_ptr cinfo);
+EXTERN(djpeg_dest_ptr) j12init_write_png(j_decompress_ptr cinfo);
+#ifdef D_LOSSLESS_SUPPORTED
+EXTERN(djpeg_dest_ptr) j16init_write_png(j_decompress_ptr cinfo);
+#endif
 EXTERN(cjpeg_source_ptr) jinit_read_ppm(j_compress_ptr cinfo);
 EXTERN(cjpeg_source_ptr) j12init_read_ppm(j_compress_ptr cinfo);
 #ifdef C_LOSSLESS_SUPPORTED

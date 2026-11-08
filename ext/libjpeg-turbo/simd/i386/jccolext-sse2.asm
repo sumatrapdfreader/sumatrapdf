@@ -1,5 +1,5 @@
 ;
-; Colorspace conversion (32-bit SSE2)
+; RGB-to-YCbCr Color Conversion (32-bit SSE2)
 ;
 ; Copyright (C) 2016, 2024-2025, D. R. Commander.
 ;

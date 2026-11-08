@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2011-2012, 2014-2015, 2017, 2019, 2021-2025
- *           D. R. Commander.  All Rights Reserved.
+ * Copyright (C) 2011-2012, 2014-2015, 2017, 2019, 2021-2026 D. R. Commander
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -36,6 +35,7 @@
  * - Expanding the input image when cropping
  * - Wiping a region of the input image
  * - Dropping another JPEG image into the input image
+ * - Lossless rolling
  * - Progress reporting
  * - Debug output
  */
@@ -312,6 +312,8 @@ int main(int argc, char **argv)
     else if (subsamp == TJSAMP_440) subsamp = TJSAMP_422;
     else if (subsamp == TJSAMP_411) subsamp = TJSAMP_441;
     else if (subsamp == TJSAMP_441) subsamp = TJSAMP_411;
+    else if (subsamp == TJSAMP_410) subsamp = TJSAMP_24;
+    else if (subsamp == TJSAMP_24) subsamp = TJSAMP_410;
   }
 
   if (tj3Set(tjInstance, TJPARAM_PROGRESSIVE, progressive) < 0)

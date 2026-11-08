@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025-2026, D. R. Commander.  All Rights Reserved.
+ * Copyright (C) 2025-2026, D. R. Commander.
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the authors be held liable for any damages
@@ -19,20 +19,49 @@
  */
 
 #include <stdio.h>
-#define JPEG_INTERNALS
-#include "../src/jinclude.h"
-#include "../src/jpeglib.h"
-#include "../src/jdct.h"
-#include "../src/jsimddct.h"
-#include "../src/jsimd.h"
+#include "jsimddct.h"
+#include "jsimd.h"
 #include "../src/jpegapicomp.h"
+
+static const char *instrset_name(int instrset) {
+  switch (instrset) {
+    case JSIMD_NONE:
+      return "none";
+    case JSIMD_MMX:
+      return "MMX";
+    case JSIMD_3DNOW:
+      return "3DNow!";
+    case JSIMD_SSE:
+      return "SSE";
+    case JSIMD_SSE2:
+      return "SSE2";
+    case JSIMD_NEON:
+      return "Neon";
+    case JSIMD_RVV:
+      return "RVV";
+    case JSIMD_ALTIVEC:
+      return "AltiVec";
+    case JSIMD_AVX2:
+      return "AVX2";
+    case JSIMD_MMI:
+      return "MMI";
+    default:
+      return "Unknown";
+  }
+}
 
 
 #define C_COVERAGE_TEST(f) \
-  printf(#f " -- %s\n", f() ? "YES" : "no")
+  printf(#f " -- %s\n", instrset_name(f(&cinfo)))
+
+#define C_COVERAGE_TEST2(f, ptr) \
+  printf(#f " -- %s\n", instrset_name(f(&cinfo, &ptr)))
 
 #define D_COVERAGE_TEST(f) \
-  printf(#f " -- %s\n", f() ? "YES" : "no")
+  printf(#f " -- %s\n", instrset_name(f(&dinfo)))
+
+#define D_COVERAGE_TEST2(f, ptr) \
+  printf(#f " -- %s\n", instrset_name(f(&dinfo, &ptr)))
 
 
 int main(void)
@@ -40,6 +69,17 @@ int main(void)
   struct jpeg_compress_struct cinfo;
   struct jpeg_decompress_struct dinfo;
   struct jpeg_error_mgr jerr;
+
+  convsamp_method_ptr convsamp_method;
+  float_convsamp_method_ptr convsamp_float_method;
+  forward_DCT_method_ptr fdct_method;
+  float_DCT_method_ptr fdct_float_method;
+  quantize_method_ptr quantize_method;
+  float_quantize_method_ptr quantize_float_method;
+  void (*encode_mcu_AC_first_method)
+    (const JCOEF *, const int *, int, int, UJCOEF *, size_t *);
+  int (*encode_mcu_AC_refine_method)
+    (const JCOEF *, const int *, int, int, UJCOEF *, size_t *);
 
   cinfo.err = jpeg_std_error(&jerr);
   jpeg_create_compress(&cinfo);
@@ -72,47 +112,38 @@ int main(void)
   jinit_inverse_dct(&dinfo);
 #endif
 
-  C_COVERAGE_TEST(jsimd_can_rgb_ycc);
-  C_COVERAGE_TEST(jsimd_can_rgb_gray);
-  D_COVERAGE_TEST(jsimd_can_ycc_rgb);
-  D_COVERAGE_TEST(jsimd_can_ycc_rgb565);
-  C_COVERAGE_TEST(jsimd_can_h2v1_downsample);
-  C_COVERAGE_TEST(jsimd_can_h2v2_downsample);
-#ifdef __mips__
-  C_COVERAGE_TEST(jsimd_can_h2v2_smooth_downsample);
+  C_COVERAGE_TEST(jsimd_set_rgb_ycc);
+  C_COVERAGE_TEST(jsimd_set_rgb_gray);
+  D_COVERAGE_TEST(jsimd_set_ycc_rgb);
+  D_COVERAGE_TEST(jsimd_set_ycc_rgb565);
+  C_COVERAGE_TEST(jsimd_set_h2v1_downsample);
+  C_COVERAGE_TEST(jsimd_set_h2v2_downsample);
+  D_COVERAGE_TEST(jsimd_set_h2v1_upsample);
+  D_COVERAGE_TEST(jsimd_set_h2v2_upsample);
+  D_COVERAGE_TEST(jsimd_set_h2v1_fancy_upsample);
+  D_COVERAGE_TEST(jsimd_set_h2v2_fancy_upsample);
+#if SIMD_ARCHITECTURE == ARM || SIMD_ARCHITECTURE == ARM64
+  D_COVERAGE_TEST(jsimd_set_h1v2_fancy_upsample);
 #endif
-  D_COVERAGE_TEST(jsimd_can_h2v1_upsample);
-  D_COVERAGE_TEST(jsimd_can_h2v2_upsample);
-#ifdef __mips__
-  D_COVERAGE_TEST(jsimd_can_int_upsample);
-#endif
-  D_COVERAGE_TEST(jsimd_can_h2v1_fancy_upsample);
-  D_COVERAGE_TEST(jsimd_can_h2v2_fancy_upsample);
-#if defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) || \
-    defined(_M_ARM64) || defined(_M_ARM64EC)
-  D_COVERAGE_TEST(jsimd_can_h1v2_fancy_upsample);
-#endif
-  D_COVERAGE_TEST(jsimd_can_h2v1_merged_upsample);
-  D_COVERAGE_TEST(jsimd_can_h2v2_merged_upsample);
-  C_COVERAGE_TEST(jsimd_can_convsamp);
-  C_COVERAGE_TEST(jsimd_can_convsamp_float);
-  C_COVERAGE_TEST(jsimd_can_fdct_islow);
-  C_COVERAGE_TEST(jsimd_can_fdct_ifast);
-  C_COVERAGE_TEST(jsimd_can_fdct_float);
-  C_COVERAGE_TEST(jsimd_can_quantize);
-  C_COVERAGE_TEST(jsimd_can_quantize_float);
-  D_COVERAGE_TEST(jsimd_can_idct_islow);
-  D_COVERAGE_TEST(jsimd_can_idct_ifast);
-  D_COVERAGE_TEST(jsimd_can_idct_float);
-  D_COVERAGE_TEST(jsimd_can_idct_2x2);
-  D_COVERAGE_TEST(jsimd_can_idct_4x4);
-#ifdef __mips__
-  D_COVERAGE_TEST(jsimd_can_idct_6x6);
-  D_COVERAGE_TEST(jsimd_can_idct_12x12);
-#endif
-  C_COVERAGE_TEST(jsimd_can_huff_encode_one_block);
-  C_COVERAGE_TEST(jsimd_can_encode_mcu_AC_first_prepare);
-  C_COVERAGE_TEST(jsimd_can_encode_mcu_AC_refine_prepare);
+  D_COVERAGE_TEST(jsimd_set_h2v1_merged_upsample);
+  D_COVERAGE_TEST(jsimd_set_h2v2_merged_upsample);
+  C_COVERAGE_TEST2(jsimd_set_convsamp, convsamp_method);
+  C_COVERAGE_TEST2(jsimd_set_convsamp_float, convsamp_float_method);
+  C_COVERAGE_TEST2(jsimd_set_fdct_islow, fdct_method);
+  C_COVERAGE_TEST2(jsimd_set_fdct_ifast, fdct_method);
+  C_COVERAGE_TEST2(jsimd_set_fdct_float, fdct_float_method);
+  C_COVERAGE_TEST2(jsimd_set_quantize, quantize_method);
+  C_COVERAGE_TEST2(jsimd_set_quantize_float, quantize_float_method);
+  D_COVERAGE_TEST(jsimd_set_idct_islow);
+  D_COVERAGE_TEST(jsimd_set_idct_ifast);
+  D_COVERAGE_TEST(jsimd_set_idct_float);
+  D_COVERAGE_TEST(jsimd_set_idct_2x2);
+  D_COVERAGE_TEST(jsimd_set_idct_4x4);
+  C_COVERAGE_TEST(jsimd_set_huff_encode_one_block);
+  C_COVERAGE_TEST2(jsimd_set_encode_mcu_AC_first_prepare,
+                   encode_mcu_AC_first_method);
+  C_COVERAGE_TEST2(jsimd_set_encode_mcu_AC_refine_prepare,
+                   encode_mcu_AC_refine_method);
 
   jpeg_abort_compress(&cinfo);
   jpeg_destroy_compress(&cinfo);

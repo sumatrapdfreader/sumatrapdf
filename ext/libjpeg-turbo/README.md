@@ -2,19 +2,17 @@ Background
 ==========
 
 libjpeg-turbo is a JPEG image codec that uses SIMD instructions to accelerate
-baseline JPEG compression and decompression on x86, x86-64, Arm, PowerPC, and
-MIPS systems, as well as progressive JPEG compression on x86, x86-64, and Arm
-systems.  On such systems, libjpeg-turbo is generally 2-6x as fast as libjpeg,
-all else being equal.  On other types of systems, libjpeg-turbo can still
-outperform libjpeg by a significant amount, by virtue of its highly-optimized
-Huffman coding routines.  In many cases, the performance of libjpeg-turbo
-rivals that of proprietary high-speed JPEG codecs.
+baseline and progressive JPEG compression and decompression on systems with
+common CPU architectures.  On such systems, libjpeg-turbo is generally 2-6x as
+fast as libjpeg, all else being equal.  On other types of systems,
+libjpeg-turbo can still outperform libjpeg by a significant amount, by virtue
+of its highly-optimized Huffman coding routines.  In many cases, the
+performance of libjpeg-turbo rivals that of proprietary high-speed JPEG codecs.
 
 libjpeg-turbo implements both the traditional libjpeg API as well as the less
 powerful but more straightforward TurboJPEG API.  libjpeg-turbo also features
 colorspace extensions that allow it to compress from/decompress to 32-bit and
-big-endian pixel buffers (RGBX, XBGR, etc.), as well as a full-featured Java
-interface.
+big-endian pixel buffers (RGBX, XBGR, etc.)
 
 libjpeg-turbo was originally based on libjpeg/SIMD, an MMX-accelerated
 derivative of libjpeg v6b developed by Miyasaka Masaru.  The TigerVNC and
@@ -67,12 +65,11 @@ JPEG images:
   JPEG images in memory.  It also provides some functionality that would not be
   straightforward to achieve using the underlying libjpeg API, such as
   generating planar YUV images and performing multiple simultaneous lossless
-  transforms on an image.  The Java interface for libjpeg-turbo is written on
-  top of the TurboJPEG API.  The TurboJPEG API is recommended for first-time
+  transforms on an image.  The TurboJPEG API is recommended for first-time
   users of libjpeg-turbo.  Refer to [tjcomp.c](src/tjcomp.c),
   [tjdecomp.c](src/tjdecomp.c), [tjtran.c](src/tjtran.c),
-  [TJComp.java](java/TJComp.java), [TJDecomp.java](java/TJDecomp.java), and
-  [TJTran.java](java/TJTran.java) for examples of its usage and to
+  [TJComp.java](jna/TJComp.java), [TJDecomp.java](jna/TJDecomp.java), and
+  [TJTran.java](jna/TJTran.java) for examples of its usage and to
   <https://libjpeg-turbo.org/Documentation/Documentation> for API
   documentation.
 
@@ -167,6 +164,9 @@ supported and which aren't.
 ### Support for libjpeg v7 and v8 Features
 
 #### Fully supported
+
+Note that these features are supported regardless of whether libjpeg v7 or v8
+API/ABI emulation is enabled.
 
 - **libjpeg API: IDCT scaling extensions in decompressor**<br>
   libjpeg-turbo supports IDCT scaling with scaling factors of 1/8, 1/4, 3/8,

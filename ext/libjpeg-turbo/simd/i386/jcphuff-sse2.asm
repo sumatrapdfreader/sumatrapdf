@@ -1,5 +1,5 @@
 ;
-; Prepare data for progressive Huffman encoding (32-bit SSE2)
+; Data Preparation for Progressive Huffman Encoding (32-bit SSE2)
 ;
 ; Copyright (C) 2016, 2018, Matthieu Darbois.
 ; Copyright (C) 2025, D. R. Commander.

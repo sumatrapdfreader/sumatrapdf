@@ -6,7 +6,6 @@
  * libjpeg-turbo Modifications:
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
  * Copyright (C) 2010, 2015-2016, 2022, 2024-2026, D. R. Commander.
- * Copyright (C) 2014, MIPS Technologies, Inc., California.
  * Copyright (C) 2015, Google, Inc.
  * Copyright (C) 2019-2020, Arm Limited.
  * For conditions of distribution and use, see the accompanying README.ijg
@@ -27,8 +26,13 @@
 
 #include "jinclude.h"
 #include "jdsample.h"
-#include "jsimd.h"
+#ifdef WITH_SIMD
+#include "../simd/jsimd.h"
+#endif
 #include "jpegapicomp.h"
+#ifdef WITH_PROFILE
+#include "tjutil.h"
+#endif
 
 
 
@@ -76,9 +80,17 @@ sep_upsample(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
       /* Invoke per-component upsample method.  Notice we pass a POINTER
        * to color_buf[ci], so that fullsize_upsample can change it.
        */
+#ifdef WITH_PROFILE
+      cinfo->master->start = getTime();
+#endif
       (*upsample->methods[ci]) (cinfo, compptr,
         input_buf[ci] + (*in_row_group_ctr * upsample->rowgroup_height[ci]),
         upsample->color_buf + ci);
+#ifdef WITH_PROFILE
+      cinfo->master->upsample_elapsed += getTime() - cinfo->master->start;
+      cinfo->master->upsample_msamples +=
+        (double)cinfo->output_width * cinfo->max_v_samp_factor / 1000000.;
+#endif
     }
     upsample->next_row_out = 0;
   }
@@ -97,10 +109,18 @@ sep_upsample(j_decompress_ptr cinfo, _JSAMPIMAGE input_buf,
   if (num_rows > out_rows_avail)
     num_rows = out_rows_avail;
 
+#ifdef WITH_PROFILE
+  cinfo->master->start = getTime();
+#endif
   (*cinfo->cconvert->_color_convert) (cinfo, upsample->color_buf,
                                       (JDIMENSION)upsample->next_row_out,
                                       output_buf + *out_row_ctr,
                                       (int)num_rows);
+#ifdef WITH_PROFILE
+  cinfo->master->cconvert_elapsed += getTime() - cinfo->master->start;
+  cinfo->master->cconvert_mpixels +=
+    (double)cinfo->output_width * num_rows / 1000000.;
+#endif
 
   /* Adjust counts */
   *out_row_ctr += num_rows;
@@ -485,14 +505,14 @@ _jinit_upsampler(j_decompress_ptr cinfo)
       /* Special cases for 2h1v upsampling */
       if (do_fancy && compptr->downsampled_width > 2) {
 #ifdef WITH_SIMD
-        if (jsimd_can_h2v1_fancy_upsample())
+        if (jsimd_set_h2v1_fancy_upsample(cinfo))
           upsample->methods[ci] = jsimd_h2v1_fancy_upsample;
         else
 #endif
           upsample->methods[ci] = h2v1_fancy_upsample;
       } else {
 #ifdef WITH_SIMD
-        if (jsimd_can_h2v1_upsample())
+        if (jsimd_set_h2v1_upsample(cinfo))
           upsample->methods[ci] = jsimd_h2v1_upsample;
         else
 #endif
@@ -501,10 +521,8 @@ _jinit_upsampler(j_decompress_ptr cinfo)
     } else if (h_in_group == h_out_group &&
                v_in_group * 2 == v_out_group && do_fancy) {
       /* Non-fancy upsampling is handled by the generic method */
-#if defined(WITH_SIMD) && (defined(__arm__) || defined(__aarch64__) || \
-                           defined(_M_ARM) || defined(_M_ARM64) || \
-                           defined(_M_ARM64EC))
-      if (jsimd_can_h1v2_fancy_upsample())
+#if defined(WITH_SIMD) && (SIMD_ARCHITECTURE == ARM64 || SIMD_ARCHITECTURE == ARM)
+      if (jsimd_set_h1v2_fancy_upsample(cinfo))
         upsample->methods[ci] = jsimd_h1v2_fancy_upsample;
       else
 #endif
@@ -515,7 +533,7 @@ _jinit_upsampler(j_decompress_ptr cinfo)
       /* Special cases for 2h2v upsampling */
       if (do_fancy && compptr->downsampled_width > 2) {
 #ifdef WITH_SIMD
-        if (jsimd_can_h2v2_fancy_upsample())
+        if (jsimd_set_h2v2_fancy_upsample(cinfo))
           upsample->methods[ci] = jsimd_h2v2_fancy_upsample;
         else
 #endif
@@ -523,7 +541,7 @@ _jinit_upsampler(j_decompress_ptr cinfo)
         upsample->pub.need_context_rows = TRUE;
       } else {
 #ifdef WITH_SIMD
-        if (jsimd_can_h2v2_upsample())
+        if (jsimd_set_h2v2_upsample(cinfo))
           upsample->methods[ci] = jsimd_h2v2_upsample;
         else
 #endif
@@ -532,12 +550,7 @@ _jinit_upsampler(j_decompress_ptr cinfo)
     } else if ((h_out_group % h_in_group) == 0 &&
                (v_out_group % v_in_group) == 0) {
       /* Generic integral-factors upsampling method */
-#if defined(WITH_SIMD) && defined(__mips__)
-      if (jsimd_can_int_upsample())
-        upsample->methods[ci] = jsimd_int_upsample;
-      else
-#endif
-        upsample->methods[ci] = int_upsample;
+      upsample->methods[ci] = int_upsample;
       upsample->h_expand[ci] = (UINT8)(h_out_group / h_in_group);
       upsample->v_expand[ci] = (UINT8)(v_out_group / v_in_group);
     } else

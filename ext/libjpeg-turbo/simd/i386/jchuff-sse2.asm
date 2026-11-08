@@ -1,5 +1,5 @@
 ;
-; Huffman entropy encoding (32-bit SSE2)
+; Huffman Encoding (32-bit SSE2)
 ;
 ; Copyright (C) 2009-2011, 2014-2017, 2019, 2024-2025, D. R. Commander.
 ; Copyright (C) 2015, Matthieu Darbois.

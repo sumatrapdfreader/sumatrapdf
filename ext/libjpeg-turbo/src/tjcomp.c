@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2011-2012, 2014-2015, 2017, 2019, 2021-2025
- *           D. R. Commander.  All Rights Reserved.
+ * Copyright (C) 2011-2012, 2014-2015, 2017, 2019, 2021-2026 D. R. Commander
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -84,7 +83,7 @@
 
 
 static const char *subsampName[TJ_NUMSAMP] = {
-  "444", "422", "420", "GRAY", "440", "411", "441"
+  "444", "422", "420", "GRAY", "440", "411", "441", "410", "24"
 };
 
 
@@ -107,6 +106,8 @@ static void usage(char *programName)
   printf("    Memory limit (in megabytes) for intermediate buffers used with progressive\n");
   printf("    JPEG compression, lossless JPEG compression, and Huffman table optimization\n");
   printf("    [default = no limit]\n");
+  printf("-noicc\n");
+  printf("    Do not transfer the embedded ICC profile (if any) from a PNG input image\n");
   printf("-precision N\n");
   printf("    Create a JPEG image with N-bit data precision [N = 2..16; default = 8; if N\n");
   printf("    is not 8 or 12, then -lossless must also be specified] (-precision 12\n");
@@ -138,7 +139,7 @@ static void usage(char *programName)
   printf("-rgb\n");
   printf("    Create a JPEG image that uses the RGB colorspace instead of the YCbCr\n");
   printf("    colorspace\n");
-  printf("-subsamp {444|422|440|420|411|441}\n");
+  printf("-subsamp {444|422|440|420|411|441|410|24}\n");
   printf("    Create a JPEG image that uses the specified chrominance subsampling level\n");
   printf("    [default = %s]\n\n", subsampName[DEFAULT_SUBSAMP]);
 
@@ -149,11 +150,11 @@ static void usage(char *programName)
 int main(int argc, char **argv)
 {
   int i, retval = 0;
-  int arithmetic = -1, colorspace = -1, fastDCT = -1, losslessPSV = -1,
-    losslessPt = -1, maxMemory = -1, optimize = -1, pixelFormat = TJPF_UNKNOWN,
-    precision = 8, progressive = -1, quality = DEFAULT_QUALITY,
-    restartIntervalBlocks = -1, restartIntervalRows = -1,
-    subsamp = DEFAULT_SUBSAMP;
+  int arithmetic = -1, colorspace = TJCS_DEFAULT, fastDCT = -1,
+    losslessPSV = -1, losslessPt = -1, maxMemory = -1, noICC = 0,
+    optimize = -1, pixelFormat = TJPF_UNKNOWN, precision = 8, progressive = -1,
+    quality = DEFAULT_QUALITY, restartIntervalBlocks = -1,
+    restartIntervalRows = -1, subsamp = DEFAULT_SUBSAMP;
   char *iccFilename = NULL;
   tjhandle tjInstance = NULL;
   void *srcBuf = NULL;
@@ -186,8 +187,10 @@ int main(int argc, char **argv)
 
       if (tempi < 0) usage(argv[0]);
       maxMemory = tempi;
-    } else if (MATCH_ARG(argv[i], "-optimize", 2) ||
-               MATCH_ARG(argv[i], "-optimise", 2))
+    } else if (MATCH_ARG(argv[i], "-noicc", 4))
+      noICC = 1;
+    else if (MATCH_ARG(argv[i], "-optimize", 2) ||
+             MATCH_ARG(argv[i], "-optimise", 2))
       optimize = 1;
     else if (MATCH_ARG(argv[i], "-precision", 4) && i < argc - 1) {
       int tempi = atoi(argv[++i]);
@@ -231,6 +234,10 @@ int main(int argc, char **argv)
         subsamp = TJSAMP_411;
       else if (MATCH_ARG(argv[i], "441", 3))
         subsamp = TJSAMP_441;
+      else if (MATCH_ARG(argv[i], "410", 3))
+        subsamp = TJSAMP_410;
+      else if (MATCH_ARG(argv[i], "24", 2))
+        subsamp = TJSAMP_24;
       else
         usage(argv[0]);
     } else break;
@@ -277,6 +284,8 @@ int main(int argc, char **argv)
     THROW_TJ("setting TJPARAM_RESTARTROWS");
   if (maxMemory >= 0 && tj3Set(tjInstance, TJPARAM_MAXMEMORY, maxMemory) < 0)
     THROW_TJ("setting TJPARAM_MAXMEMORY");
+  if (noICC && tj3Set(tjInstance, TJPARAM_SAVEMARKERS, 0) < 0)
+    THROW_TJ("setting TJPARAM_SAVEMARKERS");
 
   if (precision <= 8) {
     if ((srcBuf = tj3LoadImage8(tjInstance, argv[i], &width, 1, &height,
@@ -292,10 +301,9 @@ int main(int argc, char **argv)
       THROW_TJ("loading input image");
   }
 
-  if (pixelFormat == TJPF_GRAY && colorspace < 0)
+  if (pixelFormat == TJPF_GRAY && colorspace == TJCS_DEFAULT)
     colorspace = TJCS_GRAY;
-  if (colorspace >= 0 &&
-      tj3Set(tjInstance, TJPARAM_COLORSPACE, colorspace) < 0)
+  if (tj3Set(tjInstance, TJPARAM_COLORSPACE, colorspace) < 0)
     THROW_TJ("setting TJPARAM_COLORSPACE");
 
   if (iccFilename) {

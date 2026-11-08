@@ -1,5 +1,5 @@
 ;
-; Accurate integer FDCT (32-bit MMX)
+; Accurate Integer Forward DCT (32-bit MMX)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ; Copyright (C) 2016, 2020, 2024-2025, D. R. Commander.

@@ -113,3 +113,8 @@ TURBOJPEG_3.1
     tj3SetICCProfile;
     tj3TransformBufSize;
 } TURBOJPEG_3;
+
+TURBOJPEG_3.2
+{
+    tj3InitVersion;
+} TURBOJPEG_3.1;

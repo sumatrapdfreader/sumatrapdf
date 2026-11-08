@@ -1,5 +1,5 @@
 ;
-; Sample data conversion and quantization (32-bit SSE & MMX)
+; Floating Point Sample Conversion and Quantization (32-bit 3DNow! & MMX)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ; Copyright (C) 2016, 2024-2025, D. R. Commander.
@@ -20,17 +20,17 @@
 ; Load data into workspace, applying unsigned->signed conversion
 ;
 ; GLOBAL(void)
-; jsimd_convsamp_float_sse(JSAMPARRAY sample_data, JDIMENSION start_col,
-;                          FAST_FLOAT *workspace)
+; jsimd_convsamp_float_3dnow(JSAMPARRAY sample_data, JDIMENSION start_col,
+;                            FAST_FLOAT *workspace)
 
 %define sample_data  ebp + 8            ; JSAMPARRAY sample_data
 %define start_col    ebp + 12           ; JDIMENSION start_col
 %define workspace    ebp + 16           ; FAST_FLOAT *workspace
 
     align       32
-    GLOBAL_FUNCTION(jsimd_convsamp_float_sse)
+    GLOBAL_FUNCTION(jsimd_convsamp_float_3dnow)
 
-EXTN(jsimd_convsamp_float_sse):
+EXTN(jsimd_convsamp_float_3dnow):
     push        ebp
     mov         ebp, esp
     push        ebx
@@ -70,12 +70,17 @@ EXTN(jsimd_convsamp_float_sse):
 
     psrad       mm4, (DWORD_BIT - BYTE_BIT)  ; mm4 = (01)
     psrad       mm2, (DWORD_BIT - BYTE_BIT)  ; mm2 = (23)
-    cvtpi2ps    xmm0, mm4                    ; xmm0 = (01**)
-    cvtpi2ps    xmm1, mm2                    ; xmm1 = (23**)
+    pi2fd       mm4, mm4
+    pi2fd       mm2, mm2
     psrad       mm5, (DWORD_BIT - BYTE_BIT)  ; mm5 = (45)
     psrad       mm0, (DWORD_BIT - BYTE_BIT)  ; mm0 = (67)
-    cvtpi2ps    xmm2, mm5                    ; xmm2 = (45**)
-    cvtpi2ps    xmm3, mm0                    ; xmm3 = (67**)
+    pi2fd       mm5, mm5
+    pi2fd       mm0, mm0
+
+    movq        MMWORD [MMBLOCK(0, 0, edi, SIZEOF_FAST_FLOAT)], mm4
+    movq        MMWORD [MMBLOCK(0, 1, edi, SIZEOF_FAST_FLOAT)], mm2
+    movq        MMWORD [MMBLOCK(0, 2, edi, SIZEOF_FAST_FLOAT)], mm5
+    movq        MMWORD [MMBLOCK(0, 3, edi, SIZEOF_FAST_FLOAT)], mm0
 
     punpcklwd   mm6, mm3                ; mm6 = (***8***9)
     punpckhwd   mm3, mm3                ; mm3 = (***a***b)
@@ -84,29 +89,24 @@ EXTN(jsimd_convsamp_float_sse):
 
     psrad       mm6, (DWORD_BIT - BYTE_BIT)  ; mm6 = (89)
     psrad       mm3, (DWORD_BIT - BYTE_BIT)  ; mm3 = (ab)
-    cvtpi2ps    xmm4, mm6                    ; xmm4 = (89**)
-    cvtpi2ps    xmm5, mm3                    ; xmm5 = (ab**)
+    pi2fd       mm6, mm6
+    pi2fd       mm3, mm3
     psrad       mm4, (DWORD_BIT - BYTE_BIT)  ; mm4 = (cd)
     psrad       mm1, (DWORD_BIT - BYTE_BIT)  ; mm1 = (ef)
-    cvtpi2ps    xmm6, mm4                    ; xmm6 = (cd**)
-    cvtpi2ps    xmm7, mm1                    ; xmm7 = (ef**)
+    pi2fd       mm4, mm4
+    pi2fd       mm1, mm1
 
-    movlhps     xmm0, xmm1              ; xmm0 = (0123)
-    movlhps     xmm2, xmm3              ; xmm2 = (4567)
-    movlhps     xmm4, xmm5              ; xmm4 = (89ab)
-    movlhps     xmm6, xmm7              ; xmm6 = (cdef)
-
-    movaps      XMMWORD [XMMBLOCK(0, 0, edi, SIZEOF_FAST_FLOAT)], xmm0
-    movaps      XMMWORD [XMMBLOCK(0, 1, edi, SIZEOF_FAST_FLOAT)], xmm2
-    movaps      XMMWORD [XMMBLOCK(1, 0, edi, SIZEOF_FAST_FLOAT)], xmm4
-    movaps      XMMWORD [XMMBLOCK(1, 1, edi, SIZEOF_FAST_FLOAT)], xmm6
+    movq        MMWORD [MMBLOCK(1, 0, edi, SIZEOF_FAST_FLOAT)], mm6
+    movq        MMWORD [MMBLOCK(1, 1, edi, SIZEOF_FAST_FLOAT)], mm3
+    movq        MMWORD [MMBLOCK(1, 2, edi, SIZEOF_FAST_FLOAT)], mm4
+    movq        MMWORD [MMBLOCK(1, 3, edi, SIZEOF_FAST_FLOAT)], mm1
 
     add         esi, byte 2 * SIZEOF_JSAMPROW
     add         edi, byte 2 * DCTSIZE * SIZEOF_FAST_FLOAT
     dec         ecx
     jnz         near .convloop
 
-    emms                                ; empty MMX state
+    femms                               ; empty MMX/3DNow! state
 
     pop         edi
     pop         esi
@@ -121,17 +121,17 @@ EXTN(jsimd_convsamp_float_sse):
 ; Quantize/descale the coefficients, and store into coef_block
 ;
 ; GLOBAL(void)
-; jsimd_quantize_float_sse(JCOEFPTR coef_block, FAST_FLOAT *divisors,
-;                          FAST_FLOAT *workspace)
+; jsimd_quantize_float_3dnow(JCOEFPTR coef_block, FAST_FLOAT *divisors,
+;                            FAST_FLOAT *workspace)
 
 %define coef_block  ebp + 8             ; JCOEFPTR coef_block
 %define divisors    ebp + 12            ; FAST_FLOAT *divisors
 %define workspace   ebp + 16            ; FAST_FLOAT *workspace
 
     align       32
-    GLOBAL_FUNCTION(jsimd_quantize_float_sse)
+    GLOBAL_FUNCTION(jsimd_quantize_float_3dnow)
 
-EXTN(jsimd_quantize_float_sse):
+EXTN(jsimd_quantize_float_3dnow):
     push        ebp
     mov         ebp, esp
 ;   push        ebx                     ; unused
@@ -140,54 +140,76 @@ EXTN(jsimd_quantize_float_sse):
     push        esi
     push        edi
 
+    mov         eax, 0x4B400000         ; (float)0x00C00000 (rndint_magic)
+    movd        mm7, eax
+    punpckldq   mm7, mm7                ; mm7 = { 12582912.0F 12582912.0F }
+
     mov         esi, POINTER [workspace]
     mov         edx, POINTER [divisors]
     mov         edi, JCOEFPTR [coef_block]
     mov         eax, DCTSIZE2 / 16
     ALIGNX      16, 7
 .quantloop:
-    movaps      xmm0, XMMWORD [XMMBLOCK(0, 0, esi, SIZEOF_FAST_FLOAT)]
-    movaps      xmm1, XMMWORD [XMMBLOCK(0, 1, esi, SIZEOF_FAST_FLOAT)]
-    mulps       xmm0, XMMWORD [XMMBLOCK(0, 0, edx, SIZEOF_FAST_FLOAT)]
-    mulps       xmm1, XMMWORD [XMMBLOCK(0, 1, edx, SIZEOF_FAST_FLOAT)]
-    movaps      xmm2, XMMWORD [XMMBLOCK(1, 0, esi, SIZEOF_FAST_FLOAT)]
-    movaps      xmm3, XMMWORD [XMMBLOCK(1, 1, esi, SIZEOF_FAST_FLOAT)]
-    mulps       xmm2, XMMWORD [XMMBLOCK(1, 0, edx, SIZEOF_FAST_FLOAT)]
-    mulps       xmm3, XMMWORD [XMMBLOCK(1, 1, edx, SIZEOF_FAST_FLOAT)]
+    movq        mm0, MMWORD [MMBLOCK(0, 0, esi, SIZEOF_FAST_FLOAT)]
+    movq        mm1, MMWORD [MMBLOCK(0, 1, esi, SIZEOF_FAST_FLOAT)]
+    pfmul       mm0, MMWORD [MMBLOCK(0, 0, edx, SIZEOF_FAST_FLOAT)]
+    pfmul       mm1, MMWORD [MMBLOCK(0, 1, edx, SIZEOF_FAST_FLOAT)]
+    movq        mm2, MMWORD [MMBLOCK(0, 2, esi, SIZEOF_FAST_FLOAT)]
+    movq        mm3, MMWORD [MMBLOCK(0, 3, esi, SIZEOF_FAST_FLOAT)]
+    pfmul       mm2, MMWORD [MMBLOCK(0, 2, edx, SIZEOF_FAST_FLOAT)]
+    pfmul       mm3, MMWORD [MMBLOCK(0, 3, edx, SIZEOF_FAST_FLOAT)]
 
-    movhlps     xmm4, xmm0
-    movhlps     xmm5, xmm1
+    pfadd       mm0, mm7                ; mm0 = (00 ** 01 **)
+    pfadd       mm1, mm7                ; mm1 = (02 ** 03 **)
+    pfadd       mm2, mm7                ; mm0 = (04 ** 05 **)
+    pfadd       mm3, mm7                ; mm1 = (06 ** 07 **)
 
-    cvtps2pi    mm0, xmm0
-    cvtps2pi    mm1, xmm1
-    cvtps2pi    mm4, xmm4
-    cvtps2pi    mm5, xmm5
+    movq        mm4, mm0
+    punpcklwd   mm0, mm1                ; mm0 = (00 02 ** **)
+    punpckhwd   mm4, mm1                ; mm4 = (01 03 ** **)
+    movq        mm5, mm2
+    punpcklwd   mm2, mm3                ; mm2 = (04 06 ** **)
+    punpckhwd   mm5, mm3                ; mm5 = (05 07 ** **)
 
-    movhlps     xmm6, xmm2
-    movhlps     xmm7, xmm3
+    punpcklwd   mm0, mm4                ; mm0 = (00 01 02 03)
+    punpcklwd   mm2, mm5                ; mm2 = (04 05 06 07)
 
-    cvtps2pi    mm2, xmm2
-    cvtps2pi    mm3, xmm3
-    cvtps2pi    mm6, xmm6
-    cvtps2pi    mm7, xmm7
+    movq        mm6, MMWORD [MMBLOCK(1, 0, esi, SIZEOF_FAST_FLOAT)]
+    movq        mm1, MMWORD [MMBLOCK(1, 1, esi, SIZEOF_FAST_FLOAT)]
+    pfmul       mm6, MMWORD [MMBLOCK(1, 0, edx, SIZEOF_FAST_FLOAT)]
+    pfmul       mm1, MMWORD [MMBLOCK(1, 1, edx, SIZEOF_FAST_FLOAT)]
+    movq        mm3, MMWORD [MMBLOCK(1, 2, esi, SIZEOF_FAST_FLOAT)]
+    movq        mm4, MMWORD [MMBLOCK(1, 3, esi, SIZEOF_FAST_FLOAT)]
+    pfmul       mm3, MMWORD [MMBLOCK(1, 2, edx, SIZEOF_FAST_FLOAT)]
+    pfmul       mm4, MMWORD [MMBLOCK(1, 3, edx, SIZEOF_FAST_FLOAT)]
 
-    packssdw    mm0, mm4
-    packssdw    mm1, mm5
-    packssdw    mm2, mm6
-    packssdw    mm3, mm7
+    pfadd       mm6, mm7                ; mm0 = (10 ** 11 **)
+    pfadd       mm1, mm7                ; mm4 = (12 ** 13 **)
+    pfadd       mm3, mm7                ; mm0 = (14 ** 15 **)
+    pfadd       mm4, mm7                ; mm4 = (16 ** 17 **)
+
+    movq        mm5, mm6
+    punpcklwd   mm6, mm1                ; mm6 = (10 12 ** **)
+    punpckhwd   mm5, mm1                ; mm5 = (11 13 ** **)
+    movq        mm1, mm3
+    punpcklwd   mm3, mm4                ; mm3 = (14 16 ** **)
+    punpckhwd   mm1, mm4                ; mm1 = (15 17 ** **)
+
+    punpcklwd   mm6, mm5                ; mm6 = (10 11 12 13)
+    punpcklwd   mm3, mm1                ; mm3 = (14 15 16 17)
 
     movq        MMWORD [MMBLOCK(0, 0, edi, SIZEOF_JCOEF)], mm0
-    movq        MMWORD [MMBLOCK(0, 1, edi, SIZEOF_JCOEF)], mm1
-    movq        MMWORD [MMBLOCK(1, 0, edi, SIZEOF_JCOEF)], mm2
+    movq        MMWORD [MMBLOCK(0, 1, edi, SIZEOF_JCOEF)], mm2
+    movq        MMWORD [MMBLOCK(1, 0, edi, SIZEOF_JCOEF)], mm6
     movq        MMWORD [MMBLOCK(1, 1, edi, SIZEOF_JCOEF)], mm3
 
     add         esi, byte 16 * SIZEOF_FAST_FLOAT
     add         edx, byte 16 * SIZEOF_FAST_FLOAT
     add         edi, byte 16 * SIZEOF_JCOEF
     dec         eax
-    jnz         short .quantloop
+    jnz         near .quantloop
 
-    emms                                ; empty MMX state
+    femms                               ; empty MMX/3DNow! state
 
     pop         edi
     pop         esi

@@ -63,9 +63,9 @@ jbig2dec        0.20
   https://github.com/ArtifexSoftware/jbig2dec/commits/artifex
   amalgamated into ext/a-jbig2dec by cmd/amalgam.ts -jbig2dec, see ext/a-jbig2dec/version.txt
 
-libjpeg-turbo   3.1.4.1    2026-03-27
+libjpeg-turbo   3.2.1      2026-10-27
   https://github.com/libjpeg-turbo/libjpeg-turbo/tags
-  https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.1.4.1
+  https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.2.1
   vendored src/ + simd/ (x86/x86-64 NASM); jconfig.h, jconfigint.h, jversion.h
   hand-generated (v8 API). See ext/libjpeg-turbo/src/jconfig.h
 

@@ -6,8 +6,7 @@
  * Modified 2002-2010 by Guido Vollbeding.
  * libjpeg-turbo Modifications:
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2010, 2015, 2022, 2026, D. R. Commander.
- * Copyright (C) 2013, MIPS Technologies, Inc., California.
+ * Copyright (C) 2010, 2015, 2022, 2025-2026, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -25,7 +24,9 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jdct.h"               /* Private declarations for DCT subsystem */
-#include "jsimddct.h"
+#ifdef WITH_SIMD
+#include "../simd/jsimddct.h"
+#endif
 #include "jpegapicomp.h"
 
 
@@ -117,7 +118,7 @@ start_pass(j_decompress_ptr cinfo)
       break;
     case 2:
 #ifdef WITH_SIMD
-      if (jsimd_can_idct_2x2())
+      if (jsimd_set_idct_2x2(cinfo))
         method_ptr = jsimd_idct_2x2;
       else
 #endif
@@ -130,7 +131,7 @@ start_pass(j_decompress_ptr cinfo)
       break;
     case 4:
 #ifdef WITH_SIMD
-      if (jsimd_can_idct_4x4())
+      if (jsimd_set_idct_4x4(cinfo))
         method_ptr = jsimd_idct_4x4;
       else
 #endif
@@ -142,11 +143,6 @@ start_pass(j_decompress_ptr cinfo)
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 6:
-#if defined(WITH_SIMD) && defined(__mips__)
-      if (jsimd_can_idct_6x6())
-        method_ptr = jsimd_idct_6x6;
-      else
-#endif
       method_ptr = _jpeg_idct_6x6;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
@@ -160,7 +156,7 @@ start_pass(j_decompress_ptr cinfo)
 #ifdef DCT_ISLOW_SUPPORTED
       case JDCT_ISLOW:
 #ifdef WITH_SIMD
-        if (jsimd_can_idct_islow())
+        if (jsimd_set_idct_islow(cinfo))
           method_ptr = jsimd_idct_islow;
         else
 #endif
@@ -171,7 +167,7 @@ start_pass(j_decompress_ptr cinfo)
 #ifdef DCT_IFAST_SUPPORTED
       case JDCT_IFAST:
 #ifdef WITH_SIMD
-        if (jsimd_can_idct_ifast())
+        if (jsimd_set_idct_ifast(cinfo))
           method_ptr = jsimd_idct_ifast;
         else
 #endif
@@ -182,7 +178,7 @@ start_pass(j_decompress_ptr cinfo)
 #ifdef DCT_FLOAT_SUPPORTED
       case JDCT_FLOAT:
 #ifdef WITH_SIMD
-        if (jsimd_can_idct_float())
+        if (jsimd_set_idct_float(cinfo))
           method_ptr = jsimd_idct_float;
         else
 #endif
@@ -209,11 +205,6 @@ start_pass(j_decompress_ptr cinfo)
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
     case 12:
-#if defined(WITH_SIMD) && defined(__mips__)
-      if (jsimd_can_idct_12x12())
-        method_ptr = jsimd_idct_12x12;
-      else
-#endif
       method_ptr = _jpeg_idct_12x12;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;

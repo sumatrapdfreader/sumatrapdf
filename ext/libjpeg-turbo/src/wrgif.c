@@ -487,6 +487,13 @@ put_raw_pixel_rows(j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
 }
 
 
+METHODDEF(void)
+write_icc_profile_gif(j_decompress_ptr cinfo, djpeg_dest_ptr dinfo,
+                      const JOCTET *icc_data_ptr, unsigned int icc_data_len)
+{
+}
+
+
 /*
  * Finish up at the end of the file.
  */
@@ -537,6 +544,7 @@ _jinit_write_gif(j_decompress_ptr cinfo, boolean is_lzw)
                                 sizeof(gif_dest_struct));
   dest->cinfo = cinfo;          /* make back link for subroutines */
   dest->pub.start_output = start_output_gif;
+  dest->pub.write_icc_profile = write_icc_profile_gif;
   dest->pub.finish_output = finish_output_gif;
   dest->pub.calc_buffer_dimensions = calc_buffer_dimensions_gif;
 

@@ -1,5 +1,5 @@
 ;
-; Grayscale colorspace conversion (64-bit SSE2)
+; RGB-to-Grayscale Color Conversion (64-bit SSE2)
 ;
 ; Copyright (C) 2011, 2016, 2024-2025, D. R. Commander.
 ; Copyright (C) 2018, Matthias Räncker.

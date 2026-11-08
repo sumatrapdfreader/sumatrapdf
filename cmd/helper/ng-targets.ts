@@ -909,7 +909,7 @@ export const targets: Target[] = [
       "ext/libjpeg-turbo/src/jpeg_nbits.c",
       // 8-bit precision wrappers; each #includes ../<name>.c
       "ext/libjpeg-turbo/src/wrapper/*-8.c",
-      "ext/libjpeg-turbo/simd/x86_64/jsimd.c",
+      "ext/libjpeg-turbo/simd/jsimd.c",
     ],
     // the readers/writers belong to cjpeg/djpeg, not to the library
     exclude: [

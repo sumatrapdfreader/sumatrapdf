@@ -1,5 +1,5 @@
 ;
-; Fast integer IDCT (32-bit MMX)
+; Fast Integer Inverse DCT (32-bit MMX)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ; Copyright (C) 2016, 2024-2025, D. R. Commander.

@@ -1,5 +1,5 @@
 ;
-; Fast integer FDCT (64-bit SSE2)
+; Fast Integer Forward DCT (64-bit SSE2)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ; Copyright (C) 2009, 2016, 2024-2025, D. R. Commander.
