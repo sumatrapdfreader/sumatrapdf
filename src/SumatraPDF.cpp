@@ -1193,6 +1193,39 @@ void ShowWinScrollBar(HWND hwnd, int bar, BOOL show) {
     }
 }
 
+// SetScrollInfo with redraw repaints the bar (and starts comctl32's thumb fade)
+// on every call, even for the same values; scrolling calls this on every step.
+// Skip it when nothing changed, and when only the position did, redraw only if
+// the thumb moved: the position is in document pixels, the thumb in track pixels.
+static void SetCanvasScrollInfo(HWND hwnd, int bar, SCROLLINFO* si, BOOL redraw) {
+    SCROLLINFO cur{};
+    cur.cbSize = sizeof(cur);
+    cur.fMask = SIF_ALL;
+    bool haveCur = GetScrollInfo(hwnd, bar, &cur) != FALSE;
+    bool sameRange = haveCur && cur.nMin == si->nMin && cur.nMax == si->nMax && cur.nPage == si->nPage;
+    // SIF_DISABLENOSCROLL also sets the enabled state of a bar that can't scroll
+    bool canScroll = (int)si->nPage <= si->nMax - si->nMin;
+    if (sameRange && (canScroll || !(si->fMask & SIF_DISABLENOSCROLL)) && cur.nPos == si->nPos) {
+        return;
+    }
+    if (!redraw || !sameRange) {
+        SetScrollInfo(hwnd, bar, si, redraw);
+        return;
+    }
+    LONG objId = bar == SB_VERT ? OBJID_VSCROLL : OBJID_HSCROLL;
+    SCROLLBARINFO before{};
+    before.cbSize = sizeof(before);
+    bool haveBefore = GetScrollBarInfo(hwnd, objId, &before) != FALSE;
+    SetScrollInfo(hwnd, bar, si, FALSE);
+    SCROLLBARINFO after{};
+    after.cbSize = sizeof(after);
+    bool thumbMoved = !haveBefore || !GetScrollBarInfo(hwnd, objId, &after) || before.xyThumbTop != after.xyThumbTop ||
+                      before.xyThumbBottom != after.xyThumbBottom;
+    if (thumbMoved) {
+        SetScrollInfo(hwnd, bar, si, TRUE);
+    }
+}
+
 // About / empty window has no document: no native or overlay bars (issue #6062).
 static void HideCanvasScrollbars(MainWindow* win) {
     if (!win) {
@@ -1301,7 +1334,7 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
 
     bool showHScroll = (viewPort.dx < canvas.dx) && !hideScrollbar;
     if (useOverlay) {
-        SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, FALSE);
+        SetCanvasScrollInfo(win->hwndCanvas, SB_HORZ, &si, FALSE);
         // SetScrollInfo's last arg is redraw, not visibility, and a non-empty
         // range re-shows the window scrollbar -- hide it explicitly so overlay
         // mode doesn't show both the window scrollbar and the overlay one
@@ -1321,7 +1354,7 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
         if (showHScroll) {
             si.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
         }
-        SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
+        SetCanvasScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
         ShowWinScrollBar(win->hwndCanvas, SB_HORZ, showHScroll);
         si.fMask = SIF_ALL;
     }
@@ -1356,7 +1389,7 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
     BOOL showWinScrollbar = showScrollbar && !useOverlay;
 
     if (useOverlay || hideScrollbar) {
-        SetScrollInfo(win->hwndCanvas, SB_VERT, &si, FALSE);
+        SetCanvasScrollInfo(win->hwndCanvas, SB_VERT, &si, FALSE);
         // hide the window scrollbar explicitly (see SB_HORZ note above)
         ShowWinScrollBar(win->hwndCanvas, SB_VERT, FALSE);
     } else {
@@ -1370,7 +1403,7 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
         if (wantV) {
             si.fMask = SIF_ALL | SIF_DISABLENOSCROLL;
         }
-        SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+        SetCanvasScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
         ShowWinScrollBar(win->hwndCanvas, SB_VERT, wantV);
         // Dark scrollbar theme is applied at canvas create / theme change —
         // not on every UpdateScrollbars. SetWindowTheme mid-update re-enters
