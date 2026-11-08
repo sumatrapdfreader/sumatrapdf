@@ -215,6 +215,9 @@ struct WindowTab {
     WindowTab(const WindowTab&) = delete;
     WindowTab& operator=(const WindowTab&) = delete;
     ~WindowTab();
+#if !defined(SUMATRA_NG)
+    void DropPendingLoad();
+#endif
 
     bool IsAboutTab() const;
     bool IsPinnedHomeTab() const;

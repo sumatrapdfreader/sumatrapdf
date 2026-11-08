@@ -3773,6 +3773,8 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
         tab->loadState = WindowTab::LoadState::LoadedPending;
         // a background reload of a previously failed tab succeeded
         UpdateTabIsError(tab);
+        // a newer load of the same tab replaces one still waiting to attach
+        tab->DropPendingLoad();
         tab->pendingLoadArgs = args;
         d->args = nullptr;
         args->onFinished.Call(true);
@@ -4109,6 +4111,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
             if (args->targetTab && !IsCurrentTab(win, args->targetTab)) {
                 WindowTab* tab = args->targetTab;
                 tab->loadState = WindowTab::LoadState::LoadedPending;
+                tab->DropPendingLoad();
                 tab->pendingLoadArgs = args;
                 args->onFinished.Call(true);
                 return;

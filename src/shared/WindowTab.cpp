@@ -113,6 +113,22 @@ bool WindowTab::IsNonDocumentTab() const {
     return IsAboutTab() || IsFavoritesTab();
 }
 
+#if !defined(SUMATRA_NG)
+// frees a finished background load that was never attached
+void WindowTab::DropPendingLoad() {
+    if (!pendingLoadArgs) {
+        return;
+    }
+    // LoadArgs dtor releases any leftover engine; drop ctrl first so we do
+    // not double-delete through both paths if both were set
+    delete pendingLoadArgs->ctrl;
+    pendingLoadArgs->ctrl = nullptr;
+    SafeEngineRelease(&pendingLoadArgs->engine);
+    delete pendingLoadArgs;
+    pendingLoadArgs = nullptr;
+}
+#endif
+
 WindowTab::~WindowTab() {
     logf("~WindowTab: 0x%p, dm: 0x%p\n", this, AsFixed());
 #if !defined(SUMATRA_NG)
@@ -165,14 +181,7 @@ WindowTab::~WindowTab() {
     DeleteControllerAsync(ctrl);
     ctrl = nullptr;
 #if !defined(SUMATRA_NG)
-    if (pendingLoadArgs) {
-        // LoadArgs dtor releases any leftover engine; drop ctrl first so we do
-        // not double-delete through both paths if both were set
-        delete pendingLoadArgs->ctrl;
-        pendingLoadArgs->ctrl = nullptr;
-        SafeEngineRelease(&pendingLoadArgs->engine);
-    }
-    delete pendingLoadArgs;
+    DropPendingLoad();
 #endif
     DeleteOpenCacheCopyOf(this, filePath);
     str::Free(filePath);
