@@ -134,8 +134,17 @@ struct BrowserView {
 
 static Vec<BrowserView*> gBrowserViews;
 
+// Asked while building every frame's command context, so the answer is kept
+// for two seconds: finding the WebView2 runtime reads the registry each time.
 bool BrowserViewAvailable() {
-    return wry::WebViewAvailable();
+    static double checkedAt = -1;
+    static bool available = false;
+    double now = gp::TimeNow();
+    if (checkedAt < 0 || now - checkedAt >= 2.0) {
+        available = wry::WebViewAvailable();
+        checkedAt = now;
+    }
+    return available;
 }
 
 static wry::WebView* Raw(BrowserView* bv) {
