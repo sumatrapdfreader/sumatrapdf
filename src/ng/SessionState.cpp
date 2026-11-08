@@ -306,6 +306,10 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
         if (state) {
             SetTabState(curr, state);
         }
+        // the borrowed state is applied; gInitialSessionData that owns it can go
+        // away on the next save, as orig's LoadDocumentFinish does
+        curr->tabState = nullptr;
+        tab->tabState = nullptr;
     } else if (curr == tab) {
         tab->loadState = WindowTab::LoadState::Error;
     }
