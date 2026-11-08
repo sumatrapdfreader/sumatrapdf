@@ -1204,6 +1204,16 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         SetTabState(win->CurrentTab(), state);
         DeleteTabState(state);
     }
+    // the restored state is the non-fullscreen layout: enter presentation /
+    // F11's again (leaving first, as entering twice is a no-op)
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (win->InPresentation()) {
+            dm->SetInPresentation(false);
+            dm->SetInPresentation(true);
+        } else if (win->IsFullScreen()) {
+            dm->ApplyFullscreenDisplayMode(true);
+        }
+    }
     // reopening reads the file again: slow on a network / cloud drive
     logf("ReloadDocument: reloaded in %.1f ms\n", TimeSinceInMs(timeStart));
 }
@@ -1860,6 +1870,12 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
 
     logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)TimeSinceInMs(timeStart), ctrl->PageCount(), fullPath);
 
+    // as orig: a document loaded in presentation / F11 takes their layout
+    if (win->InPresentation()) {
+        ctrl->SetInPresentation(true);
+    } else if (win->IsFullScreen() && dm) {
+        dm->ApplyFullscreenDisplayMode(true);
+    }
     win->currPageNo = ctrl->CurrentPageNo();
     if (win->InPresentation()) {
         // orig's LoadModelIntoTab: presentation mode has its own sidebar state
