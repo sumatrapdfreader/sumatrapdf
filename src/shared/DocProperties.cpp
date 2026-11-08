@@ -140,7 +140,3 @@ TempStr PropNameTemp(DocProp prop) {
     }
     return SeqStrByIndex(gPropNames, idx);
 }
-
-DocProp PropFromName(Str name) {
-    return (DocProp)(SeqStrIndex(gPropNames, name) + 1);
-}

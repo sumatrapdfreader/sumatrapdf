@@ -167,16 +167,6 @@ static bool IsSep(WCHAR c) {
     return c == kPathSepWChar || (OS_WIN && c == L'/');
 }
 
-bool IsDriveRoot(Str path) {
-    if (!path.s) {
-        return false;
-    }
-    while (path.len > 3 && IsSep(path.s[path.len - 1])) {
-        path.len--;
-    }
-    return path.len == 3 && path.s[1] == ':' && IsSep(path.s[2]);
-}
-
 // the Str / WStr path helpers share these bodies
 
 template <typename S>

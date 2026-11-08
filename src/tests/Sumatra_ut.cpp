@@ -60,7 +60,6 @@ void UpdateCheckDecisionTest();
 
 // in src/base/tests/
 void ArchiveTest();
-void AppendStoreTest();
 void BaseUtilTest();
 void ByteOrderTests();
 void ClipboardImageTest();
@@ -702,7 +701,6 @@ int RunAppUnitTests(bool forAi) {
     printf("Running unit tests\n");
 
     ArchiveTest();
-    AppendStoreTest();
     BaseUtilTest();
     ByteOrderTests();
     ClipboardImageTest();

@@ -80,5 +80,4 @@ void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists = fa
 void FreeProps(Props& props);
 
 TempStr PropNameTemp(DocProp prop);
-DocProp PropFromName(Str name);
 Str PdfInfoKeyFromProp(DocProp prop);

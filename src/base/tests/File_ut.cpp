@@ -46,12 +46,6 @@ void FileUtilTest() {
     utassert(path::IsInDir(StrL("C:\\Temp\\sum17E3.tmp.exe"), StrL("C:\\Temp")));
     utassert(path::IsInDir(StrL("C:\\Temp\\a"), StrL("C:\\Temp\\")));
     utassert(!path::IsInDir(StrL("C:\\Temporary\\a"), StrL("C:\\Temp")));
-    utassert(path::IsDriveRoot(StrL("C:\\")));
-    utassert(path::IsDriveRoot(StrL("C:/")));
-    utassert(path::IsDriveRoot(StrL("C:\\\\")));
-    utassert(!path::IsDriveRoot(StrL("C:")));
-    utassert(!path::IsDriveRoot(StrL("C:\\Windows")));
-    utassert(!path::IsDriveRoot(StrL("file.exe")));
     dirName = path::GetDirTemp(StrL("/etc"));
     utassert(str::Eq(dirName, StrL("/")));
 

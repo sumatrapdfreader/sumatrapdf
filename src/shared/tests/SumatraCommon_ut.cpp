@@ -375,13 +375,7 @@ void DocPropertiesTest() {
     utassert(str::Eq(PropNameTemp(DocProp::Title), StrL("title")));
     utassert(str::Eq(PropNameTemp(DocProp::FocalLength35mm), StrL("focalLength35mm")));
     utassert(str::Eq(PropNameTemp(DocProp::ImagePath), StrL("imagePath")));
-    utassert(PropFromName(StrL("title")) == DocProp::Title);
-    utassert(PropFromName(StrL("focalLength35mm")) == DocProp::FocalLength35mm);
-    utassert(PropFromName(StrL("imagePath")) == DocProp::ImagePath);
-    // a couple more, plus unknown/None
     utassert(str::Eq(PropNameTemp(DocProp::CreationDate), StrL("creationDate")));
-    utassert(PropFromName(StrL("modDate")) == DocProp::ModificationDate);
-    utassert(PropFromName(StrL("bogusPropName")) == DocProp::None);
 }
 
 void ParseFileArgsTest() {

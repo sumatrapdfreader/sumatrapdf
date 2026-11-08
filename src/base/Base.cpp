@@ -1007,63 +1007,6 @@ void RestoreArenaSavepoint(ArenaSavepoint temp) {
     }
 }
 
-// ArenaPtrCompress / ArenaPtrUncompress: store a pointer as a u32 offset from
-// the first block in the arena chain. The head has basePos 0; each chained
-// block has basePos = sum of previous blocks' reserved. nullptr compresses to 0.
-// Pointers must belong to this arena (any block). Offsets beyond u32 fail.
-
-// Walk current -> prev to find the block whose reserved range contains ptr.
-static Arena* ArenaFindBlockContaining(Arena* arena, const void* ptr) {
-    for (Arena* block = arena->current; block; block = block->prev) {
-        char* base = (char*)block;
-        if ((const char*)ptr >= base && (const char*)ptr < base + block->reserved) {
-            return block;
-        }
-    }
-    return nullptr;
-}
-
-// Walk current -> prev to find the block whose basePos range contains offset.
-static Arena* ArenaFindBlockForOffset(Arena* arena, u64 offset) {
-    for (Arena* block = arena->current; block; block = block->prev) {
-        if (offset >= block->basePos && offset < block->basePos + block->reserved) {
-            return block;
-        }
-    }
-    return nullptr;
-}
-
-u32 ArenaPtrCompress(Arena* arena, void* ptr) {
-    if (!arena || !ptr) {
-        return 0;
-    }
-    ScopedMutex cs(&arena->lock);
-    Arena* block = ArenaFindBlockContaining(arena, ptr);
-    if (!block) {
-        ReportIf(true);
-        return 0;
-    }
-    u64 off = block->basePos + (u64)((char*)ptr - (char*)block);
-    if (off > 0xffffffffull) {
-        ReportIf(true);
-        return 0;
-    }
-    return (u32)off;
-}
-
-void* ArenaPtrUncompress(Arena* arena, u32 compressed) {
-    if (!arena || compressed == 0) {
-        return nullptr;
-    }
-    ScopedMutex cs(&arena->lock);
-    Arena* block = ArenaFindBlockForOffset(arena, compressed);
-    if (!block) {
-        ReportIf(true);
-        return nullptr;
-    }
-    return (char*)block + (compressed - block->basePos);
-}
-
 void* Arena::Alloc(int size) {
     if (size <= 0) {
         return nullptr;
@@ -1682,9 +1625,6 @@ int NormalizeWSInPlace(WStr s) {
 #define _stricmp strcasecmp
 #define _strnicmp strncasecmp
 #endif
-
-// StrArena: u32 handle from ArenaPtrCompress. Arena layout is unsigned LEB128
-// length, length bytes of payload, trailing 0 for C APIs. 0 is the null handle.
 
 // Unicode lowercase for one BMP code unit. ASCII is a fast path; Windows uses
 // CharLowerW, other platforms a Latin/Cyrillic/Greek table then towlower.
@@ -2355,15 +2295,6 @@ int IndexOf(Str buf, Str toFind) {
         }
     }
     return -1;
-}
-
-// offset just past the first occurrence of needle in s, or -1 if not found
-int IndexOfAfter(Str s, Str needle) {
-    int idx = IndexOf(s, needle);
-    if (idx < 0) {
-        return -1;
-    }
-    return idx + needle.len;
 }
 
 // Splits s around the first occurrence of sep (Go's strings.Cut). When sep is
@@ -3067,22 +2998,6 @@ TempStr MimeTypeFromExtTemp(Str ext, Str imgExt) {
 }
 
 // unsigned LEB128 of zigzag-encoded i64
-static int VarIntEncode(u8* dst, i64 val) {
-    u64 n = ((u64)val << 1) ^ (u64)(val >> 63);
-    int i = 0;
-    for (;;) {
-        u8 b = (u8)(n & 0x7f);
-        n >>= 7;
-        if (n) {
-            b |= 0x80;
-        }
-        dst[i++] = b;
-        if (!n) {
-            return i;
-        }
-    }
-}
-
 static bool VarIntDecode(const u8*& p, i64* out) {
     u64 n = 0;
     int shift = 0;
@@ -3110,18 +3025,6 @@ static int SeqStrNumEntryEndOff(SeqStrNum strs, int off) {
         p++;
     }
     return next + (int)(p - (const u8*)(strs + next)) + 1;
-}
-
-void SeqStrNumAppend(str::Builder* b, Str s, i64 num) {
-    b->Append(s);
-    b->AppendChar('\0');
-    u8 buf[12];
-    int n = VarIntEncode(buf, num);
-    b->Append(Str((char*)buf, n));
-}
-
-void SeqStrNumFinish(str::Builder* b) {
-    b->AppendChar('\0');
 }
 
 TempStr SeqStrNumAt(SeqStrNum strs, int off, i64* numOut) {
@@ -3156,13 +3059,14 @@ bool SeqStrNumAdvance(SeqStrNum strs, int& off, int* idxInOut) {
     return true;
 }
 
-static int SeqStrNumIndexBy(SeqStrNum strs, Str toFind, i64* numOut, bool (*eq)(Str, Str)) {
+// index of toFind (compared with str::EqIS), its number in *numOut; -1 if missing
+int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
     if (len(toFind) == 0) {
         return -1;
     }
     int off = 0;
     for (int idx = 0; strs && strs[off]; idx++) {
-        if (eq(SeqStrNumAt(strs, off), toFind)) {
+        if (str::EqIS(SeqStrNumAt(strs, off), toFind)) {
             if (numOut) {
                 SeqStrNumAt(strs, off, numOut);
             }
@@ -3173,26 +3077,6 @@ static int SeqStrNumIndexBy(SeqStrNum strs, Str toFind, i64* numOut, bool (*eq)(
         }
     }
     return -1;
-}
-
-int SeqStrNumIndex(SeqStrNum strs, Str toFind, i64* numOut) {
-    return SeqStrNumIndexBy(strs, toFind, numOut, str::Eq);
-}
-
-int SeqStrNumIndexIS(SeqStrNum strs, Str toFind, i64* numOut) {
-    return SeqStrNumIndexBy(strs, toFind, numOut, str::EqIS);
-}
-
-TempStr SeqStrNumByIndex(SeqStrNum strs, int idx, i64* numOut) {
-    ReportIf(idx < 0);
-    int off = 0;
-    while (idx > 0) {
-        if (!SeqStrNumAdvance(strs, off)) {
-            return {};
-        }
-        idx--;
-    }
-    return SeqStrNumAt(strs, off, numOut);
 }
 
 TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
@@ -3578,25 +3462,6 @@ namespace str {
 // UTF-8 Str → fixed WCHAR buffer (converts then BufSet).
 int BufSet(WCHAR* dst, int dstCchSize, Str src) {
     return wstr::BufSet(WStr(dst, dstCchSize), ToWStrTemp(src));
-}
-
-// append as much of s at the end of dst (which must be properly null-terminated)
-// as will fit.
-int BufAppend(Str dst, Str s) {
-    int dstCch = dst.len;
-    ReportIf(0 == dstCch);
-
-    int currDstCchLen = len(dst.s);
-    if (currDstCchLen + 1 >= dstCch) {
-        return 0;
-    }
-    int left = dstCch - currDstCchLen - 1;
-    int toCopy = std::min(left, s.len);
-
-    memcpy(dst.s + currDstCchLen, s.s, (size_t)toCopy);
-    dst.s[currDstCchLen + toCopy] = '\0';
-
-    return toCopy;
 }
 
 } // namespace str
