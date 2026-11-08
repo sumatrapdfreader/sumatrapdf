@@ -326,8 +326,8 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state) {
         RestoreLazyTabOnStartup(win, state);
         return;
     }
+    // a failed load already shows its error tab (or asks for a password)
     if (!LoadDocument(win, state->filePath, LoadPrefs::DontSave)) {
-        RestoreMissingTabOnStartup(win, state);
         return;
     }
     SetTabState(win->CurrentTab(), state);
