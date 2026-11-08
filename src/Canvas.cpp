@@ -886,8 +886,21 @@ void CancelDrag(MainWindow* win) {
     }
     auto pt = win->dragPrevPos;
     auto [x, y] = pt;
-    StopMouseDrag(win, x, y, true);
+    // as ng: a selection ends as aborted, so a rectangle edit reverts
+    bool selecting = win->mouseAction == MouseAction::Selecting || win->mouseAction == MouseAction::SelectingText;
+    if (selecting && win->AsFixed()) {
+        OnSelectionStop(win, x, y, true);
+    } else {
+        StopMouseDrag(win, x, y, true);
+    }
     win->mouseAction = MouseAction::None;
+    // a press on selected text / an image waits for a move to start an OLE
+    // drag; without this a later button-less move would start one
+    win->dragStartPending = false;
+    win->textDragPending = false;
+    win->imageDragPending = false;
+    win->imageDragElement = nullptr;
+    win->imageDragPageNo = -1;
     win->linkOnLastButtonDown = nullptr;
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
