@@ -363,6 +363,29 @@ static const StructInfo gAntiGravityInfo = {
     false};
 static_assert(dimof(gAntiGravityFields) == 5);
 
+static const FieldInfo gCustomAIFields[] = {
+    {offsetof(CustomAI, name), SettingType::String, (intptr_t)"Custom AI"},
+    {offsetof(CustomAI, baseURL), SettingType::String, (intptr_t)""},
+    {offsetof(CustomAI, apiKeyEnv), SettingType::String, (intptr_t)"CUSTOM_AI_API_KEY"},
+    {offsetof(CustomAI, apiKey), SettingType::String, (intptr_t)"", true},
+    {offsetof(CustomAI, model), SettingType::String, (intptr_t)""},
+    {offsetof(CustomAI, models), SettingType::String, (intptr_t)""},
+    {offsetof(CustomAI, includeCurrentPage), SettingType::Bool, false},
+    {offsetof(CustomAI, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
+};
+static const StructInfo gCustomAIInfo = {
+    sizeof(CustomAI),
+    (u16)dimof(gCustomAIFields),
+    gCustomAIFields,
+    "Name\0BaseURL\0ApiKeyEnv\0ApiKey\0Model\0Models\0IncludeCurrentPage\0BgColor",
+    "display name of the OpenAI-compatible chat provider\0OpenAI-compatible API base URL, such as "
+    "https://api.deepseek.com/v1\0environment variable holding the API key; takes precedence over ApiKey\0API key "
+    "stored in plain text; prefer ApiKeyEnv to keep it outside settings\0model ID accepted by the provider\0additional "
+    "model IDs, comma-separated\0send the current page's text to the configured provider with each "
+    "question\0background color of the custom AI chat panel",
+    false};
+static_assert(dimof(gCustomAIFields) == 8);
+
 static const FieldInfo gAIChatFields[] = {
     {offsetof(AIChat, fontName), SettingType::String, (intptr_t)""},
     {offsetof(AIChat, fontSize), SettingType::Int, 0},
@@ -1195,6 +1218,7 @@ static const FieldInfo gSettingsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, antiGravity), SettingType::Struct, (intptr_t)&gAntiGravityInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(Settings, customAI), SettingType::Struct, (intptr_t)&gCustomAIInfo},
     {offsetof(Settings, aiChat), SettingType::Struct, (intptr_t)&gAIChatInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, aiChatSidebarDx), SettingType::Int, 0, true},
@@ -1271,11 +1295,11 @@ const StructInfo gSettingsInfo = {
     "\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption\0SelectionTool"
     "bar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0FitWidthPercent\0\0FixedPageUI\0\0"
     "EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0Ant"
-    "iGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0Ext"
-    "ernalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0"
-    "\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos"
-    "\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpda"
-    "teCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
+    "iGravity\0\0CustomAI\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotati"
+    "ons\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0S"
+    "hortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0"
+    "WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeO"
+    "fLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file uses page 1 — "
     "taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content, fit visible or percent like "
@@ -1436,12 +1460,13 @@ const StructInfo gSettingsInfo = {
     "true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0customization options for HTML UI. "
     "If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0settings for "
     "the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat "
-    "sidebar\0\0settings for the Antigravity chat sidebar\0\0appearance of the AI chat sidebar, shared by all "
-    "backends\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
-    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
-    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
-    "DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity\0\0default values for annotations in PDF "
-    "documents\0\0list of additional external viewers for various file types. See [docs for more "
+    "sidebar\0\0settings for the Antigravity chat sidebar\0\0settings for an OpenAI-compatible Chat Completions "
+    "provider\0appearance of the AI chat sidebar, shared by all backends\0\0width of the AI chat sidebar (0 = use "
+    "default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for "
+    "selection translation; empty uses OS UI language\0remembered source language for selection translation; empty "
+    "means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or "
+    "Antigravity\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various "
+    "file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
@@ -1464,7 +1489,7 @@ const StructInfo gSettingsInfo = {
     "Set from File / Link SumatraPDF Web. Do not share the settings file.\0an empty value means the public SumatraPDF "
     "Web site. The dialog does not edit it.\0\0Settings below are not recognized by the current version",
     false};
-static_assert(dimof(gSettingsFields) == 191);
+static_assert(dimof(gSettingsFields) == 192);
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

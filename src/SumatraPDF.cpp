@@ -10899,6 +10899,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnAIChatToggle(win, (int)AIChatBackend::Codex);
             break;
 
+        case CmdAIChatWithCustomAPI:
+            OnAIChatToggle(win, (int)AIChatBackend::CustomAPI);
+            break;
+
         case CmdAIChatWithAntiGravity:
             logf("CmdAIChatWithAntiGravity dispatched\n");
             OnAIChatToggle(win, (int)AIChatBackend::AntiGravity);

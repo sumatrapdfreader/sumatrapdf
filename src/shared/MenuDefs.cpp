@@ -388,6 +388,10 @@ MenuDef menuDefView[] = {
         CmdAIChatWithAntiGravity,
     },
     {
+        TrN("Custom AI"),
+        CmdAIChatWithCustomAPI,
+    },
+    {
         {},
         0,
     },
@@ -1080,6 +1084,10 @@ MenuDef menuDefDocumentAIChat[] = {
     {
         TrN("Antigravity"),
         CmdAIChatWithAntiGravity,
+    },
+    {
+        TrN("Custom AI"),
+        CmdAIChatWithCustomAPI,
     },
     {
         {},

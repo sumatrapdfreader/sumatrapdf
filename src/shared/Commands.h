@@ -374,8 +374,9 @@ enum {
     CmdEditFavorites = 568,
     CmdCloseMissingTabs = 569,
     CmdViewAsHex = 570,
+    CmdAIChatWithCustomAPI = 571,
 
-    CmdLast = 570,
+    CmdLast = 571,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

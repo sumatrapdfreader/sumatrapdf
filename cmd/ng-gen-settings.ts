@@ -747,6 +747,27 @@ const antiGravity: Field[] = [
   field("BgColor", Color, "#ffffff", "background color of the Antigravity chat panel"),
 ];
 
+const customAI: Field[] = [
+  field("Name", Str, "Custom AI", "display name of the OpenAI-compatible chat provider"),
+  field("BaseURL", Str, "", "OpenAI-compatible API base URL, such as https://api.deepseek.com/v1"),
+  field(
+    "ApiKeyEnv",
+    Str,
+    "CUSTOM_AI_API_KEY",
+    "environment variable holding the API key; takes precedence over ApiKey",
+  ),
+  field("ApiKey", Str, "", "API key stored in plain text; prefer ApiKeyEnv to keep it outside settings").internal(),
+  field("Model", Str, "", "model ID accepted by the provider"),
+  field("Models", Str, "", "additional model IDs, comma-separated"),
+  field(
+    "IncludeCurrentPage",
+    Bool,
+    false,
+    "send the current page's text to the configured provider with each question",
+  ),
+  field("BgColor", Color, "#ffffff", "background color of the custom AI chat panel"),
+];
+
 const aiChat: Field[] = [
   field("FontName", Str, "", "font of the chat messages; empty uses Segoe UI"),
   field("FontSize", Int, 0, "font size of the chat messages in pixels; 0 means the default (13)"),
@@ -2212,6 +2233,7 @@ const globalPrefs: Field[] = [
   emptyLine(),
   struct("AntiGravity", antiGravity, "settings for the Antigravity chat sidebar").ver("3.7"),
   emptyLine(),
+  struct("CustomAI", customAI, "settings for an OpenAI-compatible Chat Completions provider").ver("3.7"),
   struct("AIChat", aiChat, "appearance of the AI chat sidebar, shared by all backends").ver("3.7"),
   emptyLine(),
   field(
@@ -2425,6 +2447,7 @@ const globalPrefsLayout = [
   "GrokBuild",
   "CodexBuild",
   "AntiGravity",
+  "CustomAI",
   "AIChat",
   "EBookUI",
   "ComicBookUI",

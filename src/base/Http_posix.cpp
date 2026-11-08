@@ -363,3 +363,63 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
 }
 
 #endif
+
+#if defined(GPUI_HAVE_CURL) && GPUI_HAVE_CURL
+struct HttpStreamState {
+    CURL* curl;
+    HttpStreamSink* sink;
+    bool gotStatus = false;
+};
+
+static size_t WriteStream(char* bytes, size_t size, size_t count, void* context) {
+    auto* state = (HttpStreamState*)context;
+    size_t n = size * count;
+    if (n > INT_MAX || state->sink->IsCanceled()) return 0;
+    if (!state->gotStatus) {
+        long status = 0;
+        curl_easy_getinfo(state->curl, CURLINFO_RESPONSE_CODE, &status);
+        state->sink->OnStatus((int)status);
+        state->gotStatus = true;
+    }
+    return state->sink->OnData(Str(bytes, (int)n)) ? n : 0;
+}
+
+static int CancelStream(void* context, curl_off_t, curl_off_t, curl_off_t, curl_off_t) {
+    return ((HttpStreamSink*)context)->IsCanceled() ? 1 : 0;
+}
+
+bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpStreamCancel*) {
+    if (sink->IsCanceled()) return false;
+    CURL* curl = curl_easy_init();
+    if (!curl) return false;
+    SetCurlDefaults(curl, url);
+    constexpr long kStreamTimeoutSecs = 180;
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, kStreamTimeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, kHttpTimeoutSecs);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
+    curl_slist* list = AppendHeaders(nullptr, headers);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.s);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len(body));
+    HttpStreamState state{curl, sink};
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStream);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &state);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, CancelStream);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, sink);
+    CURLcode code = curl_easy_perform(curl);
+    if (!state.gotStatus) {
+        long status = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+        sink->OnStatus((int)status);
+    }
+    curl_slist_free_all(list);
+    curl_easy_cleanup(curl);
+    return code == CURLE_OK && !sink->IsCanceled();
+}
+#else
+bool HttpPostStream(Str, Str, Str, HttpStreamSink*, HttpStreamCancel*) {
+    return false;
+}
+#endif

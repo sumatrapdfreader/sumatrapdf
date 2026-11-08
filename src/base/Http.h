@@ -37,3 +37,24 @@ bool HttpDownloadWithHeaders(Str url, Str extraHeaders, Str destPath, HttpRsp* r
 constexpr int kMaxUrlEncodedLen = 8192;
 
 TempStr URLEncodeMayTruncateTemp(Str s, int maxEncodedLen = 0, bool* didTruncateOut = nullptr);
+
+struct HttpStreamSink {
+    virtual ~HttpStreamSink() = default;
+    virtual void OnStatus(int status) = 0;
+    virtual bool OnData(Str bytes) = 0;
+    virtual bool IsCanceled() = 0;
+};
+
+struct HttpStreamCancel {
+    void Cancel();
+    bool IsCanceled();
+
+  private:
+    AtomicBool canceled = 0;
+#if OS_WIN
+    AtomicPtr request = nullptr;
+    friend bool HttpPostStream(Str, Str, Str, HttpStreamSink*, HttpStreamCancel*);
+#endif
+};
+
+bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpStreamCancel* cancel);

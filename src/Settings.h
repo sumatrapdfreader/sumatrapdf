@@ -580,6 +580,29 @@ struct AntiGravity {
     ParsedColor bgColor;
 };
 
+// settings for an OpenAI-compatible Chat Completions provider
+struct CustomAI {
+    // display name of the OpenAI-compatible chat provider
+    Str name;
+    // OpenAI-compatible API base URL, such as https://api.deepseek.com/v1
+    Str baseURL;
+    // environment variable holding the API key; takes precedence over
+    // ApiKey
+    Str apiKeyEnv;
+    // API key stored in plain text; prefer ApiKeyEnv to keep it outside
+    // settings
+    Str apiKey;
+    // model ID accepted by the provider
+    Str model;
+    // additional model IDs, comma-separated
+    Str models;
+    // send the current page's text to the configured provider with each
+    // question
+    bool includeCurrentPage;
+    // background color of the custom AI chat panel
+    ParsedColor bgColor;
+};
+
 // appearance of the AI chat sidebar, shared by all backends
 struct AIChat {
     // font of the chat messages; empty uses Segoe UI
@@ -1069,6 +1092,8 @@ struct Settings {
     CodexBuild codexBuild;
     // settings for the Antigravity chat sidebar
     AntiGravity antiGravity;
+    // settings for an OpenAI-compatible Chat Completions provider
+    CustomAI customAI;
     // appearance of the AI chat sidebar, shared by all backends
     AIChat aiChat;
     // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and

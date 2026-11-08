@@ -6707,6 +6707,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             OnAIChatToggle(win, (int)AIChatBackend::Codex);
             break;
 
+        case CmdAIChatWithCustomAPI:
+            OnAIChatToggle(win, (int)AIChatBackend::CustomAPI);
+            break;
+
         case CmdAIChatWithAntiGravity:
             OnAIChatToggle(win, (int)AIChatBackend::AntiGravity);
             break;

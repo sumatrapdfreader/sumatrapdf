@@ -381,6 +381,7 @@ const commandsRaw = [
     "CmdEditFavorites", "Edit Favorites...",
     "CmdCloseMissingTabs", "Close Tabs of Missing Files",
     "CmdViewAsHex", "View As Hex",
+    "CmdAIChatWithCustomAPI", "Custom AI chat...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

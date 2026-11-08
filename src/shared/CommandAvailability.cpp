@@ -497,7 +497,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdAIChatWithClaudeCode || cmdId == CmdAIChatWithGrokBuild || cmdId == CmdAIChatWithOpenAICodex ||
-        cmdId == CmdAIChatWithAntiGravity) {
+        cmdId == CmdAIChatWithAntiGravity || cmdId == CmdAIChatWithCustomAPI) {
         if (!ctx.aiChatAvailable) {
             return CommandVisibility::Hide;
         }

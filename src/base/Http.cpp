@@ -809,3 +809,70 @@ ExitDl:
 }
 
 #endif
+
+#if OS_WIN
+bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpStreamCancel* cancel) {
+    URL_COMPONENTS parts{};
+    parts.dwStructSize = sizeof(parts);
+    parts.dwSchemeLength = parts.dwHostNameLength = parts.dwUrlPathLength = parts.dwExtraInfoLength = (DWORD)-1;
+    TempWStr wide = ToWStrTemp(url);
+    if (!InternetCrackUrlW(wide.s, 0, 0, &parts) || sink->IsCanceled()) return false;
+    TempWStr host = str::DupTemp(WStr(parts.lpszHostName, (int)parts.dwHostNameLength));
+    TempWStr path = str::DupTemp(WStr(parts.lpszUrlPath, (int)(parts.dwUrlPathLength + parts.dwExtraInfoLength)));
+    HINTERNET session =
+        WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!session) return false;
+    HINTERNET connect = WinHttpConnect(session, host.s, parts.nPort, 0);
+    DWORD flags = parts.nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0;
+    HINTERNET request = connect ? WinHttpOpenRequest(connect, L"POST", path.s, nullptr, WINHTTP_NO_REFERER,
+                                                     WINHTTP_DEFAULT_ACCEPT_TYPES, flags)
+                                : nullptr;
+    bool ok = false;
+    if (request) {
+        AtomicPtrExchange(&cancel->request, request);
+        if (cancel->IsCanceled()) cancel->Cancel();
+        constexpr int kConnectTimeoutMs = 30000;
+        constexpr int kStreamTimeoutMs = 180000;
+        WinHttpSetTimeouts(request, kConnectTimeoutMs, kConnectTimeoutMs, kConnectTimeoutMs, kStreamTimeoutMs);
+        DWORD policy = WINHTTP_OPTION_REDIRECT_POLICY_NEVER;
+        TempWStr wideHeaders = ToWStrTemp(headers);
+        if (WinHttpSetOption(request, WINHTTP_OPTION_REDIRECT_POLICY, &policy, sizeof(policy)) &&
+            WinHttpSendRequest(request, wideHeaders.s, (DWORD)len(wideHeaders), (void*)body.s, (DWORD)len(body),
+                               (DWORD)len(body), 0) &&
+            WinHttpReceiveResponse(request, nullptr)) {
+            DWORD status = 0, size = sizeof(status);
+            if (WinHttpQueryHeaders(request, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                    WINHTTP_HEADER_NAME_BY_INDEX, &status, &size, WINHTTP_NO_HEADER_INDEX)) {
+                sink->OnStatus((int)status);
+                char bytes[4096];
+                DWORD received;
+                while (!sink->IsCanceled()) {
+                    if (!WinHttpReadData(request, bytes, sizeof(bytes), &received)) break;
+                    if (received == 0) {
+                        ok = true;
+                        break;
+                    }
+                    if (!sink->OnData(Str(bytes, (int)received))) break;
+                }
+            }
+        }
+        HINTERNET live = (HINTERNET)AtomicPtrExchange(&cancel->request, nullptr);
+        if (live) WinHttpCloseHandle(live);
+    }
+    if (connect) WinHttpCloseHandle(connect);
+    WinHttpCloseHandle(session);
+    return ok && !sink->IsCanceled();
+}
+#endif
+
+void HttpStreamCancel::Cancel() {
+    AtomicBoolSet(&canceled, true);
+#if OS_WIN
+    HINTERNET live = (HINTERNET)AtomicPtrExchange(&request, nullptr);
+    if (live) WinHttpCloseHandle(live);
+#endif
+}
+
+bool HttpStreamCancel::IsCanceled() {
+    return AtomicBoolGet(&canceled);
+}
