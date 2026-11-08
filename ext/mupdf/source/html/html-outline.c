@@ -116,8 +116,20 @@ static fz_link *load_link_flow(fz_context *ctx, fz_html_flow *flow, fz_link *hea
 
 static fz_link *load_link_box(fz_context *ctx, fz_html_box *box, fz_link *head, int page, float page_h, const char *dir, const char *file)
 {
+	float page_y0 = page * page_h;
+	float page_y1 = (page + 1) * page_h;
+
 	while (box)
 	{
+		/* SumatraPDF: a laid out block or flow box encloses its lines, so one
+		 * entirely above or below the page has no link on it. Without this
+		 * every page walked the whole document. */
+		if ((box->type == BOX_FLOW || fz_html_box_has_boxes(box)) &&
+			(box->s.layout.b < page_y0 || box->s.layout.y > page_y1))
+		{
+			box = box->next;
+			continue;
+		}
 		if (box->type == BOX_FLOW)
 			head = load_link_flow(ctx, box->u.flow.head, head, page, page_h, dir, file);
 		if (box->down)
