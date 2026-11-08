@@ -511,6 +511,14 @@ bool IsEpubDoc(WindowTab* tab) {
     return GuessFileTypeFromName(tab->filePath, true) == FileType::Epub;
 }
 
+// a loaded document MuPDF opened that isn't a PDF: XPS, EPUB, FB2, ... Extract
+// Pages writes its pages to a new PDF (#6509)
+bool IsMupdfNonPdfDoc(WindowTab* tab) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    return engine && engine->kind == kindEngineMupdf && !EngineMupdfIsPdf(engine);
+}
+
 // Convert CAJ to PDF is offered once caj2pdf opened the file
 bool IsCajDoc(WindowTab* tab) {
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;

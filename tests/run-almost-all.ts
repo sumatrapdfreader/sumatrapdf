@@ -255,6 +255,7 @@ import { testit as reloadKeepsFullscreenLayout } from "./reload-keeps-fullscreen
 import { testit as closeWindowWithDialog } from "./close-window-with-dialog.ts";
 import { testit as captionCaptureLoss } from "./caption-capture-loss.ts";
 import { testit as menuBarArmedDeactivate } from "./menu-bar-armed-deactivate.ts";
+import { testit as issue6509 } from "./issue-6509.ts";
 import { testit as f7EndsPlacement } from "./f7-ends-placement.ts";
 import { testit as findUiOneAtATime } from "./find-ui-one-at-a-time.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
@@ -1110,6 +1111,7 @@ export const tests: NamedTest[] = [
   ["close-window-with-dialog", closeWindowWithDialog],
   ["caption-capture-loss", captionCaptureLoss],
   ["menu-bar-armed-deactivate", menuBarArmedDeactivate],
+  ["issue-6509", issue6509],
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
 ];

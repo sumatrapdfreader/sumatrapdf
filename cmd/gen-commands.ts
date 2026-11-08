@@ -219,7 +219,7 @@ const commandsRaw = [
     "CmdPdfCompress", "Compress PDF...",
     "CmdPdfDecompress", "Decompress PDF...",
     "CmdPdfDeletePages", "Delete Pages From PDF...",
-    "CmdPdfExtractPages", "Extract Pages From PDF...",
+    "CmdPdfExtractPages", "Extract Pages...",
     "CmdPdfEncrypt", "Encrypt PDF...",
     "CmdPdfDecrypt", "Decrypt PDF...",
     "CmdPdfBake", "Bake PDF File...",

@@ -248,4 +248,5 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data);
 
 bool IsPdfDoc(WindowTab* tab);
 bool IsEpubDoc(WindowTab* tab);
+bool IsMupdfNonPdfDoc(WindowTab* tab);
 bool IsCajDoc(WindowTab* tab);

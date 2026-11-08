@@ -1099,7 +1099,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdDocumentShowOutline,
     },
     {
-        TrN("Extract Pages From PDF"),
+        TrN("Extract Pages"),
         CmdPdfExtractPages,
     },
     {

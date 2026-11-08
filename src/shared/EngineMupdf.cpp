@@ -12454,6 +12454,233 @@ int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, 
     return nPages;
 }
 
+// --- Extract Pages for documents that aren't PDF (#6509) ---
+
+// index in sel of the page a link or bookmark points at, -1 if not extracted
+static int ExtractedPageIdx(fz_context* ctx, fz_document* doc, const Vec<Location>& sel, const char* uri) {
+    fz_link_dest dest = fz_resolve_link_dest(ctx, doc, uri);
+    if (dest.loc.page < 0) {
+        return -1;
+    }
+    Location loc{dest.loc.chapter + 1, dest.loc.page + 1};
+    for (int i = 0; i < len(sel); i++) {
+        if (sel[i] == loc) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// a link's uri in the new PDF: external ones as they are, internal ones only
+// when they point at an extracted page
+static char* ExtractedLinkUri(fz_context* ctx, fz_document* doc, const Vec<Location>& sel, const char* uri) {
+    if (!uri) {
+        return nullptr;
+    }
+    if (fz_is_external_link(ctx, uri)) {
+        return fz_strdup(ctx, uri);
+    }
+    int idx = ExtractedPageIdx(ctx, doc, sel, uri);
+    if (idx < 0) {
+        return nullptr;
+    }
+    fz_link_dest dest = fz_resolve_link_dest(ctx, doc, uri);
+    dest.loc = fz_make_location(0, idx);
+    return pdf_new_uri_from_explicit_dest(ctx, dest);
+}
+
+static void AddExtractedLinks(fz_context* ctx, fz_document* doc, pdf_document* pdf, const Vec<Location>& sel,
+                              int pageIdx, fz_link* links) {
+    pdf_page* page = pdf_load_page(ctx, pdf, pageIdx);
+    for (fz_link* l = links; l; l = l->next) {
+        char* uri = nullptr;
+        fz_var(uri);
+        fz_try(ctx) {
+            uri = ExtractedLinkUri(ctx, doc, sel, l->uri);
+            if (uri) {
+                fz_drop_link(ctx, pdf_create_link(ctx, page, l->rect, uri));
+            }
+        }
+        fz_always(ctx) {
+            fz_free(ctx, uri);
+        }
+        fz_catch(ctx) {
+            // one broken link shouldn't fail the extraction
+            fz_report_error(ctx);
+        }
+    }
+    fz_drop_page(ctx, (fz_page*)page);
+}
+
+// the bookmarks that point at extracted pages; one that doesn't is left out
+// and its children move up to its place
+static void AddExtractedOutline(fz_context* ctx, fz_document* doc, const Vec<Location>& sel, fz_outline_iterator* iter,
+                                fz_outline* o) {
+    for (; o; o = o->next) {
+        char* uri = o->uri ? ExtractedLinkUri(ctx, doc, sel, o->uri) : nullptr;
+        if (!uri) {
+            AddExtractedOutline(ctx, doc, sel, iter, o->down);
+            continue;
+        }
+        fz_outline_item item{};
+        item.title = o->title;
+        item.uri = uri;
+        item.is_open = o->is_open;
+        fz_try(ctx) {
+            fz_outline_iterator_insert(ctx, iter, &item);
+        }
+        fz_always(ctx) {
+            fz_free(ctx, uri);
+        }
+        fz_catch(ctx) {
+            fz_rethrow(ctx);
+        }
+        if (!o->down) {
+            continue;
+        }
+        // insert leaves iter after the new item: step onto it, then into it
+        fz_outline_iterator_prev(ctx, iter);
+        fz_outline_iterator_down(ctx, iter);
+        AddExtractedOutline(ctx, doc, sel, iter, o->down);
+        fz_outline_iterator_up(ctx, iter);
+        fz_outline_iterator_next(ctx, iter);
+    }
+}
+
+// Writes the given pages (1-based, as the viewer numbers them) of an open
+// document that isn't a PDF -- XPS, EPUB as laid out, FB2, ... -- to a new PDF
+// as vector content, keeping text, the links between kept pages and the
+// bookmarks to them. A PDF goes through pdfclean instead, which keeps more.
+bool EngineMupdfExtractPagesToPdf(EngineBase* engine, const Vec<int>& pages, Str destPath) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->_doc || e->pdfdoc || len(pages) == 0 || len(destPath) == 0) {
+        return false;
+    }
+    fz_context* ctx = e->Ctx();
+    if (!ctx) {
+        return false;
+    }
+
+    // locations first: loading a page lays out its chapter, which renumbers
+    // the pages after it
+    Vec<Location> sel;
+    for (int pageNo : pages) {
+        Location loc = e->LocationFromPageNo(pageNo);
+        if (!loc.IsValid()) {
+            return false;
+        }
+        VecAppend(sel, loc);
+    }
+
+    // fz_throw longjmps past destructors, so every lock is taken outside fz_try
+    pdf_document* pdf = nullptr;
+    fz_try(ctx) {
+        pdf = pdf_create_document(ctx);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return false;
+    }
+
+    // per extracted page, in the new page's coordinates; added once every page
+    // exists, since a link can point at a later one
+    Vec<fz_link*> links;
+    bool ok = true;
+    for (Location loc : sel) {
+        FzPageInfo* pageInfo = e->GetFzPageInfo(loc, false, nullptr);
+        if (!pageInfo) {
+            ok = false;
+            break;
+        }
+        // as RenderPage: a restyle drops fz_page under these locks
+        ScopedMutex cs(&e->renderLock);
+        ScopedRecursiveMutex docScope(&e->docLock);
+        fz_page* page = pageInfo->page;
+        if (!page) {
+            ok = false;
+            break;
+        }
+        pdf_obj* resources = nullptr;
+        fz_buffer* contents = nullptr;
+        pdf_obj* pageObj = nullptr;
+        fz_device* dev = nullptr;
+        fz_link* pageLinks = nullptr;
+        fz_var(resources);
+        fz_var(contents);
+        fz_var(pageObj);
+        fz_var(dev);
+        fz_var(pageLinks);
+        fz_try(ctx) {
+            fz_rect box = fz_bound_page_box(ctx, page, FZ_CROP_BOX);
+            fz_matrix ctm = fz_translate(-box.x0, -box.y0);
+            box = fz_transform_rect(box, ctm);
+            dev = pdf_page_write(ctx, pdf, box, &resources, &contents);
+            fz_run_page(ctx, page, dev, ctm, nullptr);
+            fz_close_device(ctx, dev);
+            pageObj = pdf_add_page(ctx, pdf, box, 0, resources, contents);
+            pdf_insert_page(ctx, pdf, -1, pageObj);
+            pageLinks = fz_load_links(ctx, page);
+            for (fz_link* l = pageLinks; l; l = l->next) {
+                l->rect = fz_transform_rect(l->rect, ctm);
+            }
+        }
+        fz_always(ctx) {
+            fz_drop_device(ctx, dev);
+            pdf_drop_obj(ctx, pageObj);
+            pdf_drop_obj(ctx, resources);
+            fz_drop_buffer(ctx, contents);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            ok = false;
+        }
+        if (!ok) {
+            fz_drop_link(ctx, pageLinks);
+            break;
+        }
+        VecAppend(links, pageLinks);
+    }
+
+    if (ok) {
+        ScopedRecursiveMutex docScope(&e->docLock);
+        fz_outline* outline = nullptr;
+        fz_outline_iterator* iter = nullptr;
+        fz_var(outline);
+        fz_var(iter);
+        fz_try(ctx) {
+            for (int i = 0; i < len(sel); i++) {
+                AddExtractedLinks(ctx, e->_doc, pdf, sel, i, links[i]);
+            }
+            outline = fz_load_outline(ctx, e->_doc);
+            if (outline) {
+                iter = pdf_new_outline_iterator(ctx, pdf);
+                AddExtractedOutline(ctx, e->_doc, sel, iter, outline);
+            }
+            pdf_write_options opts{};
+            pdf_parse_write_options(ctx, &opts, "compress");
+            pdf_save_document(ctx, pdf, CStrTemp(destPath), &opts);
+        }
+        fz_always(ctx) {
+            fz_drop_outline_iterator(ctx, iter);
+            fz_drop_outline(ctx, outline);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            ok = false;
+        }
+    }
+
+    for (fz_link* l : links) {
+        fz_drop_link(ctx, l);
+    }
+    pdf_drop_document(ctx, pdf);
+    if (!ok) {
+        logf("EngineMupdfExtractPagesToPdf: failed for '%s'\n", destPath);
+        file::Delete(destPath);
+    }
+    return ok;
+}
+
 TempStr EngineMupdfGetPdfInfo(Str path, Str password) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx) {

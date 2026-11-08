@@ -218,7 +218,7 @@ const CommandInfo gCommands[] = {
     {CmdPdfCompress, "CmdPdfCompress\0", StrL("Compress PDF...")},
     {CmdPdfDecompress, "CmdPdfDecompress\0", StrL("Decompress PDF...")},
     {CmdPdfDeletePages, "CmdPdfDeletePages\0", StrL("Delete Pages From PDF...")},
-    {CmdPdfExtractPages, "CmdPdfExtractPages\0", StrL("Extract Pages From PDF...")},
+    {CmdPdfExtractPages, "CmdPdfExtractPages\0", StrL("Extract Pages...")},
     {CmdPdfEncrypt, "CmdPdfEncrypt\0", StrL("Encrypt PDF...")},
     {CmdPdfDecrypt, "CmdPdfDecrypt\0", StrL("Decrypt PDF...")},
     {CmdPdfBake, "CmdPdfBake\0", StrL("Bake PDF File...")},

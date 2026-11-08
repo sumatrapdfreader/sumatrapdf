@@ -254,6 +254,18 @@ TempStr DefaultPdfDestPathTemp(Str srcPath) {
     return MakeUniqueFilePathTemp(pdfPath);
 }
 
+// Extract Pages from XPS, EPUB, ... (IsMupdfNonPdfDoc): the pages of the open
+// document as laid out, written to a new PDF (#6509)
+bool ExtractPagesToNewPdf(WindowTab* tab, const Vec<int>& pages, Str destPath) {
+    if (!IsMupdfNonPdfDoc(tab)) {
+        return false;
+    }
+    // the destination folder may not exist yet (issue #6424)
+    dir::CreateForFile(destPath);
+    logf("ExtractPagesToNewPdf: %d pages from '%s' to '%s'\n", len(pages), tab->filePath, destPath);
+    return EngineMupdfExtractPagesToPdf(tab->GetEngine(), pages, destPath);
+}
+
 // Same conversion as File → Convert to PDF (issue #4118).
 bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath) {
     if (!engine || !engine->isImageCollection || len(destPath) == 0) {
@@ -367,6 +379,12 @@ TempStr ExtractPdfPagesResultTemp(Str destPath, Str pagesSpec, int annotsOnly, i
     Vec<int> parsedPages;
     if (!ParseDeletePages(pagesSpec, pageCount, parsedPages)) {
         return finish(1, str::DupTemp(StrL("ERROR bad-pages")));
+    }
+    if (IsMupdfNonPdfDoc(tab)) {
+        if (!ExtractPagesToNewPdf(tab, parsedPages, destPath)) {
+            return finish(1, str::DupTemp(StrL("ERROR extract")));
+        }
+        return finish(0, str::DupTemp(StrL("OK")));
     }
     if (annotsOnly) {
         if (!KeepOnlyPagesWithAnnotations(engine, parsedPages)) {

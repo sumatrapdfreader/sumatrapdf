@@ -827,6 +827,24 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
+    // XPS, EPUB, ...: MuPDF draws the pages of the open document into a new PDF
+    WindowTab* docTab = FindTabByFilePath(srcPath, win);
+    if (isExtract && IsMupdfNonPdfDoc(docTab)) {
+        HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
+        bool ok = ExtractPagesToNewPdf(docTab, parsedPages, destPath);
+        SetCursor(prev);
+        if (!ok) {
+            MessageBoxWarning(hwnd, Tr("Failed to save a file"), Tr("Extract Pages"));
+            return;
+        }
+        MainWindow* w = win;
+        TempStr path = str::DupTemp(destPath);
+        Close();
+        LoadArgs args(path, w);
+        StartLoadDocument(&args);
+        return;
+    }
+
     WindowTab* sourceTab = isExtract ? FindTabByFilePath(srcPath, win) : nullptr;
     EngineBase* sourceEngine = sourceTab ? sourceTab->GetEngine() : nullptr;
 
@@ -915,14 +933,17 @@ void PdfDeletePageDialog::PreTranslate(WindowBase::PreTranslateEvent* ev) {
 
 bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractArg) {
     isExtract = isExtractArg;
-    Str title = isExtract ? Tr("Extract Pages From PDF") : Tr("Delete Pages From PDF");
+    // from XPS, EPUB, ... the pages go to a new PDF next to the document
+    bool toNewPdf = isExtract && IsMupdfNonPdfDoc(tab);
+    Str title = isExtract ? Tr("Extract Pages") : Tr("Delete Pages From PDF");
     if (!CreateToolDialog(w, tab, title)) {
         return false;
     }
     pageCount = w->ctrl ? w->ctrl->PageCount() : 0;
     int currentPage = w->ctrl ? w->ctrl->CurrentPageNo() : 1;
     AddPagesLine(fmt("%d", currentPage));
-    AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    TempStr destPath = toNewPdf ? DefaultPdfDestPathTemp(srcPath) : MakeUniqueFilePathTemp(srcPath);
+    AddFilesBlock(destPath, L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
 
     Str actionText = isExtract ? Tr("Extract Pages") : Tr("Delete Pages");
     AddFooter(actionText, PageRangeHint());
@@ -945,7 +966,9 @@ void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract) {
     if (!tab || len(tab->filePath) == 0) {
         return;
     }
-    if (!IsPdfDoc(tab)) {
+    // extract also works for XPS, EPUB, ...; delete rewrites the PDF itself
+    bool canExtract = isExtract && IsMupdfNonPdfDoc(tab);
+    if (!IsPdfDoc(tab) && !canExtract) {
         return;
     }
 

@@ -723,8 +723,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (!ctx.isPdf) {
         if (cmdId == CmdPdfShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
-            cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdToggleEditPDF ||
-            cmdId == CmdMergePDF || cmdId == CmdRunPDFScript) {
+            cmdId == CmdTogglePageBoxes || cmdId == CmdToggleEditPDF || cmdId == CmdMergePDF ||
+            cmdId == CmdRunPDFScript) {
+            return CommandVisibility::Hide;
+        }
+        // XPS, EPUB, ... (anything MuPDF opened) extract to a new PDF (#6509)
+        if (cmdId == CmdPdfExtractPages && ctx.engineKind != kindEngineMupdf) {
             return CommandVisibility::Hide;
         }
     }
