@@ -6282,8 +6282,11 @@ enum class StextRun {
 };
 
 // WholePage includes annotations and widgets so their text can be selected and searched (issue #1649).
+// list: the page's display list, replayed instead of running the page. An
+// ebook page shapes its text on every run, so this saves a shaping pass; only
+// for pages without annotations, since the list has those too.
 static fz_stext_page* NewStextPage(fz_context* ctx, fz_page* page, const fz_stext_options* options, fz_cookie* cookie,
-                                   StextRun run) {
+                                   StextRun run, fz_display_list* list = nullptr) {
     if (!page) {
         return nullptr;
     }
@@ -6292,7 +6295,9 @@ static fz_stext_page* NewStextPage(fz_context* ctx, fz_page* page, const fz_stex
     fz_var(dev);
     fz_try(ctx) {
         dev = fz_new_stext_device(ctx, text, options);
-        if (run == StextRun::Contents) {
+        if (list) {
+            fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, cookie);
+        } else if (run == StextRun::Contents) {
             fz_run_page_contents(ctx, page, dev, fz_identity, cookie);
         } else {
             fz_run_page(ctx, page, dev, fz_identity, cookie);
@@ -6393,8 +6398,16 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
     fz_stext_page* stext = nullptr;
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions(kImageTextPageFlags);
+    // a pdf page's list includes its annotations, which Contents leaves out
+    fz_display_list* list = e->pdfdoc ? nullptr : pageInfo->displayList;
     fz_try(ctx) {
-        stext = NewStextPage(ctx, page, &opts, cookie, StextRun::Contents);
+        stext = NewStextPage(ctx, page, &opts, cookie, StextRun::Contents, list);
+        // a list built before the chapter's layout finished is empty, while the
+        // page would already run with content: don't cache that as the text
+        if (list && stext && !stext->first_block) {
+            fz_drop_stext_page(ctx, stext);
+            stext = NewStextPage(ctx, page, &opts, cookie, StextRun::Contents, nullptr);
+        }
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -7483,7 +7496,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fzcookie = (fz_cookie*)cookie->GetData();
     }
 
-    FzPageInfo* pageInfo = GetFzPageInfo(loc, false, fzcookie);
+    // quick first: the display list built below lets the full load extract
+    // the text from it instead of running the page again
+    FzPageInfo* pageInfo = GetFzPageInfo(loc, true, fzcookie);
     if (!pageInfo) {
         return nullptr;
     }
@@ -7541,6 +7556,13 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         if (useCache) {
             keptList = GetOrBuildPageDisplayList(pageInfo, ctx);
         }
+    }
+
+    // the text and links of the page, loaded here, on the render thread, so
+    // the UI thread finds them ready
+    if (!GetFzPageInfo(loc, false, fzcookie)) {
+        fz_drop_display_list(ctx, keptList);
+        return nullptr;
     }
 
     fz_colorspace* csRgb = fz_device_rgb(ctx);
