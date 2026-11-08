@@ -1969,6 +1969,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     DocController* prevCtrl = win->ctrl;
     tab->ctrl = ctrl;
     win->ctrl = tab->ctrl;
+    // a Discard answered for the previous document doesn't cover this one
+    tab->askedToSaveAnnotations = false;
 
     // Reload/replace swaps the document; clear any tip for the previous page.
     win->DeleteToolTip();
@@ -5494,7 +5496,10 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     // if list not empty, only close the tabs not on the list
     if (!canCloseWindow) {
         win->isBeingClosed = false;
+        // the tabs stay open: ask again on their next close, even those
+        // answered with Discard above
         for (auto& tab : win->Tabs()) {
+            tab->askedToSaveAnnotations = false;
             if (tab->AsFixed()) {
                 tab->AsFixed()->pauseRendering = false;
             }

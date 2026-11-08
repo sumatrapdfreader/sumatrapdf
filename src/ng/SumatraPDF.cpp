@@ -1637,6 +1637,8 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
         DeleteControllerAsync(prev);
         reuseTab->SetFilePath(fullPath);
         reuseTab->ctrl = ctrl;
+        // a Discard answered for the previous document doesn't cover this one
+        reuseTab->askedToSaveAnnotations = false;
         reuseTab->everPaintedPage = false;
         reuseTab->loadState = WindowTab::LoadState::None;
         win->currentTabTemp = reuseTab;
@@ -2347,6 +2349,20 @@ static bool GoToFileInBrowserView(MainWindow* win, Str path) {
 }
 
 // pathToDelete is removed from disk once another document has loaded
+struct NextPrevLoadCtx {
+    MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    bool forward = true;
+    Str path;         // owned
+    Str pathToDelete; // owned
+    ~NextPrevLoadCtx() {
+        str::Free(path);
+        str::Free(pathToDelete);
+    }
+};
+
+static void LoadNextPrevFile(NextPrevLoadCtx* c, bool canProceed);
+
 void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     if (!win || win->IsCurrentTabAbout() || !CanAccessDisk() || gPluginMode) {
         return;
@@ -2398,10 +2414,31 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     if (len(pathToDelete) == 0 && GoToFileInBrowserView(win, chosen)) {
         return;
     }
-    UpdateTabFileDisplayStateForTab(tab);
-    TempStr chosenCopy = str::DupTemp(chosen);
+
+    // the load replaces the document: offer to save its annotations first
+    auto* c = new NextPrevLoadCtx;
+    c->win = win;
+    c->tab = tab;
+    c->forward = forward;
+    c->path = str::Dup(chosen);
+    c->pathToDelete = str::Dup(pathToDelete);
+    MaybeSaveAnnotations(tab, MkFunc1(LoadNextPrevFile, c));
+}
+
+static void LoadNextPrevFile(NextPrevLoadCtx* c, bool canProceed) {
+    MainWindow* win = c->win;
+    WindowTab* tab = c->tab;
+    bool forward = c->forward;
+    TempStr chosenCopy = str::DupTemp(c->path);
     // the load resets the temp arena and may free the pending request
-    Str toDelete = str::Dup(pathToDelete);
+    Str toDelete = str::Dup(c->pathToDelete);
+    delete c;
+    bool stillCurrent = IsMainWindowValidAndNotClosing(win) && win->CurrentTab() == tab;
+    if (!canProceed || !stillCurrent) {
+        str::Free(toDelete);
+        return;
+    }
+    UpdateTabFileDisplayStateForTab(tab);
     if (!LoadDocument(win, chosenCopy, LoadPrefs::Save, LoadReuse::CurrentTab)) {
         // orig advances from the load callback. Stay put when this was the last file.
         gFilesFailedToOpen.Append(chosenCopy);
@@ -3429,9 +3466,19 @@ struct PendingCloseWindow {
 
 static void ContinueCloseWindow(PendingCloseWindow* p);
 
+// a close was cancelled: tabs answered with Discard stay open, so ask again
+static void ResetSavePrompts(const Vec<WindowTab*>& tabs) {
+    for (WindowTab* tab : tabs) {
+        if (IsWindowTabValid(tab)) {
+            tab->askedToSaveAnnotations = false;
+        }
+    }
+}
+
 static void OnCloseWindowAfterSavePrompt(PendingCloseWindow* p, bool canClose) {
     MainWindow* win = p->win;
     if (!canClose) {
+        ResetSavePrompts(p->tabs);
         if (IsMainWindowValid(win)) {
             win->isClosePending = false;
         }
@@ -3825,6 +3872,7 @@ static void ContinueExit(PendingExit* p);
 
 static void OnExitSavePromptDone(PendingExit* p, bool canClose) {
     if (!canClose) {
+        ResetSavePrompts(p->tabs);
         gExitPending = false;
         delete p;
         return;
