@@ -161,8 +161,8 @@ void EngineMupdfCancelLoadAllAnnotations(EngineBase* engine) {
     if (!e) {
         return;
     }
+    // the load thread reads annotLoadDoneCb: leave it alone, the flag is enough
     AtomicIntSet(&e->annotLoadCancel, 1);
-    e->annotLoadDoneCb = {};
 }
 
 // lets the UI ask without pulling in mupdf headers (declared in EngineAll.h)
@@ -10706,13 +10706,11 @@ void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firs
     if (!e || !e->pdfdoc) {
         return;
     }
+    // a running load thread reads annotLoadDoneCb, so set it only before it starts
+    if (e->annotLoadDone || e->annotLoadStarted) {
+        return;
+    }
     e->annotLoadDoneCb = onProgress;
-    if (e->annotLoadDone) {
-        return;
-    }
-    if (e->annotLoadStarted) {
-        return;
-    }
     bool allLoaded = true;
     {
         // PDF is always single-chapter (annotations are PDF-only)

@@ -511,7 +511,8 @@ bool SameRectF(RectF a, RectF b) {
 }
 
 void OnAnnotsProgress(WindowTab* tab) {
-    if (!tab || !IsMainWindowValidAndNotClosing(tab->win)) {
+    // posted from the load thread: the tab may have closed since
+    if (!IsWindowTabValid(tab) || !IsMainWindowValidAndNotClosing(tab->win)) {
         return;
     }
     RefreshAnnotFilterAnnotations(tab->win);
