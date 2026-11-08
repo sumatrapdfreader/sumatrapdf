@@ -1885,6 +1885,17 @@ static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted = false) {
     win->MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
+// every way out of middle-click auto-scroll: the speeds and the cursor go
+// with the mode
+static void StopAutoScroll(MainWindow* win) {
+    win->mouseAction = MouseAction::None;
+    win->xScrollSpeed = 0;
+    win->yScrollSpeed = 0;
+    win->xScrollAccum = 0;
+    win->yScrollAccum = 0;
+    CanvasSetCursor(win, (int)gp::CursorKind::Arrow);
+}
+
 static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y) {
     if (win->mouseAction == MouseAction::None) {
         win->mouseAction = MouseAction::Scrolling;
@@ -1897,7 +1908,7 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y) {
         win->xScrollAccum = 0;
         win->yScrollAccum = 0;
     } else if (win->mouseAction == MouseAction::Scrolling) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
     }
 }
 
@@ -1906,7 +1917,7 @@ static void OnMouseMiddleButtonUp(MainWindow* win) {
     // releasing it ends the scroll; releasing without moving leaves auto-scroll
     // latched on, which is what dragStartPending still being set means
     if (win->mouseAction == MouseAction::Scrolling && !win->dragStartPending) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
     }
 }
 
@@ -2674,7 +2685,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
         return;
     }
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
         return;
     }
     if (win->mouseAction != MouseAction::None) {
@@ -3115,12 +3126,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, gp::Ctx* cx, int x, int y) {
 
     // Left-up during middle-click auto-scroll mode stops auto-scroll
     if (MouseAction::Scrolling == ma) {
-        win->mouseAction = MouseAction::None;
-        win->xScrollSpeed = 0;
-        win->yScrollSpeed = 0;
-        win->xScrollAccum = 0;
-        win->yScrollAccum = 0;
-        CanvasSetCursor(win, kCurArrow);
+        StopAutoScroll(win);
         return;
     }
 
@@ -3580,12 +3586,7 @@ void DocCanvasAutoScrollTick(MainWindow* win, int elapsedMs) {
     // WM_KILLFOCUS; the tick sees the frame without the focus, or inactive
     bool lostFocus = !AppShellIsFrameFocused(win) || (win->gpuiWin && !win->gpuiWin->active);
     if (lostFocus) {
-        win->mouseAction = MouseAction::None;
-        win->xScrollSpeed = 0;
-        win->yScrollSpeed = 0;
-        win->xScrollAccum = 0;
-        win->yScrollAccum = 0;
-        CanvasSetCursor(win, kCurArrow);
+        StopAutoScroll(win);
         return;
     }
     float scale = (float)elapsedMs / 20.0f;
@@ -3794,7 +3795,7 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
         return;
     }
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
     } else if (win->mouseAction != MouseAction::None) {
         return;
     }

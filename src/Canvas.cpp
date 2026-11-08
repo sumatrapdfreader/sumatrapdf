@@ -845,6 +845,8 @@ void FinishAnnotationNudge(MainWindow* win) {
     ToolbarUpdateStateForWindow(win, true);
 }
 
+static void StopAutoScroll(MainWindow* win);
+
 static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
     if (GetCapture() != win->hwndCanvas) {
         return;
@@ -1531,7 +1533,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     RefHoverOnCanvasLeftButtonDown(win->refHover, win->hwndCanvas);
 
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
         return;
     }
 
@@ -1874,13 +1876,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // Also covers the crash-report case of a left-up after the down was lost
     // (different hwnd, focus change, etc.) — just reset cleanly.
     if (MouseAction::Scrolling == ma) {
-        win->mouseAction = MouseAction::None;
-        win->xScrollSpeed = 0;
-        win->yScrollSpeed = 0;
-        win->xScrollAccum = 0;
-        win->yScrollAccum = 0;
-        KillTimer(win->hwndCanvas, kAutoScrollTimerID);
-        SetCanvasCursor(win, IDC_ARROW);
+        StopAutoScroll(win);
         return;
     }
 
@@ -2175,6 +2171,18 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     }
 }
 
+// every way out of middle-click auto-scroll: the speeds, the timer and the
+// cursor go with the mode, or a quick restart scrolls at the old speed
+static void StopAutoScroll(MainWindow* win) {
+    win->mouseAction = MouseAction::None;
+    win->xScrollSpeed = 0;
+    win->yScrollSpeed = 0;
+    win->xScrollAccum = 0;
+    win->yScrollAccum = 0;
+    KillTimer(win->hwndCanvas, kAutoScrollTimerID);
+    SetCanvasCursor(win, IDC_ARROW);
+}
+
 static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM /*key*/) {
     // Handle message by recording placement then moving document as mouse moves.
 
@@ -2187,7 +2195,7 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM /*key*
         win->dragStart = Point(x, y);
         SetCanvasCursor(win, IDC_SIZEALL);
     } else if (win->mouseAction == MouseAction::Scrolling) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
     }
 }
 
@@ -2218,8 +2226,7 @@ static void OnMouseMiddleButtonUp(MainWindow* win, WPARAM /*key*/) {
     // releasing it ends the scroll; releasing without moving leaves auto-scroll
     // latched on, which is what dragStartPending still being set means
     if (win->mouseAction == MouseAction::Scrolling && !win->dragStartPending) {
-        win->mouseAction = MouseAction::None;
-        SetCanvasCursor(win, IDC_ARROW);
+        StopAutoScroll(win);
     }
 }
 
@@ -2234,7 +2241,7 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
         return;
     }
     if (MouseAction::Scrolling == win->mouseAction) {
-        win->mouseAction = MouseAction::None;
+        StopAutoScroll(win);
     } else if (win->mouseAction != MouseAction::None) {
         return;
     }
@@ -5315,12 +5322,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // stop middle-button auto-scroll when the canvas loses focus, e.g.
             // the user clicked the bookmarks/menu or minimized the window (#3203)
             if (win->mouseAction == MouseAction::Scrolling) {
-                win->mouseAction = MouseAction::None;
-                win->xScrollSpeed = 0;
-                win->yScrollSpeed = 0;
-                win->xScrollAccum = 0;
-                win->yScrollAccum = 0;
-                KillTimer(hwnd, kAutoScrollTimerID);
+                StopAutoScroll(win);
             }
             return DefWindowProc(hwnd, msg, wp, lp);
 
