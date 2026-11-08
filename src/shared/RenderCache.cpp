@@ -978,17 +978,29 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     }
 }
 
+// a request that won't be rendered still gets its callback, as aborted: a
+// caller can own data that only the callback frees (RenderThumbnail)
+static void CallRenderAborted(PageRenderRequest* req) {
+    req->abort = true;
+    req->bmp = nullptr;
+    req->errorCode = 0;
+    if (req->renderFinishedCb.IsValid()) {
+        req->renderFinishedCb.Call(req);
+    }
+}
+
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                          const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain) {
     rcLogf("RenderCache::Render: pageNo %d\n", pageNo);
     ReportIf(!dm);
-    if (!dm || dm->pauseRendering) {
-        return false;
-    }
     ReportIf(!renderFinishedCb.IsValid());
-
     ReportIf(!(tile || pageRect));
-    if (!tile && !pageRect) {
+    if (!dm || dm->pauseRendering || (!tile && !pageRect)) {
+        PageRenderRequest refused;
+        refused.dm = dm;
+        refused.pageNo = pageNo;
+        refused.renderFinishedCb = renderFinishedCb;
+        CallRenderAborted(&refused);
         return false;
     }
 
@@ -1001,12 +1013,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     bool queueWasFull = requestCount == kMaxPageRequests;
     if (queueWasFull) {
         /* queue is full -> remove the oldest items on the queue */
-        if (requests[0].renderFinishedCb.IsValid()) {
-            requests[0].abort = true;
-            requests[0].bmp = nullptr;
-            requests[0].errorCode = 0;
-            requests[0].renderFinishedCb.Call(&requests[0]);
-        }
+        CallRenderAborted(&requests[0]);
         // PageRenderRequest holds a Func1, so it isn't trivially copyable and
         // memmove() over it is undefined; shift with assignment instead
         for (int i = 0; i < kMaxPageRequests - 1; i++) {
@@ -1336,11 +1343,13 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
         PageRenderRequest* req = &(requests[i]);
         bool shouldRemove = req->dm == dm && (pageNo == kRenderCacheAllPages || req->pageNo == pageNo) &&
                             (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, *tile, 0.5));
+        if (shouldRemove) {
+            CallRenderAborted(req);
+        }
         if (i != curPos) {
             requests[curPos] = requests[i];
         }
         if (shouldRemove) {
-            // don't call renderFinishedCb for cleared requests - treat as aborted
             requestCount--;
         } else {
             curPos++;
@@ -1386,7 +1395,7 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
     }
 
     if (req.dm->pauseRendering) {
-        // aborted due to pause - do nothing
+        CallRenderAborted(&req);
         return true;
     }
 
@@ -1417,6 +1426,7 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
     if (RenderWasDropped(cache, req)) {
         // aborted or colors changed mid-render - discard result
         FreePixmap(bmp);
+        CallRenderAborted(&req);
         return true;
     }
     auto durMs = TimeSinceInMs(timeStart);
@@ -1465,7 +1475,7 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
         if (RenderWasDropped(cache, req)) {
             // colors changed while recoloring - discard result
             FreePixmap(bmp);
-            req.bmp = nullptr;
+            CallRenderAborted(&req);
             return true;
         }
         cache->Add(req, bmp);
