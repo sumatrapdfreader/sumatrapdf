@@ -3191,4 +3191,105 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL
     this->SetWindowPos(hWnd, nullptr, x, y, cx, cy, uFlags);
 }
 
+// Build id of a PE file: the CodeView PDB GUID and age (what symbol servers key
+// on, new on every link), or timestamp and image size without a debug directory.
+// Maps the file and touches only its headers, unlike hashing the whole exe.
+static TempStr PeBuildIdFromImage(const u8* d, size_t size) {
+    auto in = [&](size_t off, size_t n) { return off <= size && n <= size - off; };
+    if (!in(0, sizeof(IMAGE_DOS_HEADER))) {
+        return {};
+    }
+    auto dos = (const IMAGE_DOS_HEADER*)d;
+    if (dos->e_magic != IMAGE_DOS_SIGNATURE) {
+        return {};
+    }
+    size_t ntOff = (size_t)dos->e_lfanew;
+    size_t fileHdrOff = ntOff + sizeof(DWORD);
+    size_t optOff = fileHdrOff + sizeof(IMAGE_FILE_HEADER);
+    if (!in(ntOff, sizeof(DWORD)) || *(const DWORD*)(d + ntOff) != IMAGE_NT_SIGNATURE || !in(optOff, sizeof(WORD))) {
+        return {};
+    }
+    auto fh = (const IMAGE_FILE_HEADER*)(d + fileHdrOff);
+    if (!in(optOff, fh->SizeOfOptionalHeader)) {
+        return {};
+    }
+
+    const IMAGE_DATA_DIRECTORY* dirs;
+    DWORD nDirs;
+    DWORD sizeOfImage;
+    WORD magic = *(const WORD*)(d + optOff);
+    if (magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC && fh->SizeOfOptionalHeader >= sizeof(IMAGE_OPTIONAL_HEADER64)) {
+        auto o = (const IMAGE_OPTIONAL_HEADER64*)(d + optOff);
+        dirs = o->DataDirectory;
+        nDirs = o->NumberOfRvaAndSizes;
+        sizeOfImage = o->SizeOfImage;
+    } else if (magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC && fh->SizeOfOptionalHeader >= sizeof(IMAGE_OPTIONAL_HEADER32)) {
+        auto o = (const IMAGE_OPTIONAL_HEADER32*)(d + optOff);
+        dirs = o->DataDirectory;
+        nDirs = o->NumberOfRvaAndSizes;
+        sizeOfImage = o->SizeOfImage;
+    } else {
+        return {};
+    }
+    TempStr res = fmt("%08x%08x", (u32)fh->TimeDateStamp, (u32)sizeOfImage);
+    if (nDirs <= IMAGE_DIRECTORY_ENTRY_DEBUG) {
+        return res;
+    }
+
+    // the debug directory is given as an RVA: locate its section for the file offset
+    IMAGE_DATA_DIRECTORY dbg = dirs[IMAGE_DIRECTORY_ENTRY_DEBUG];
+    size_t secOff = optOff + fh->SizeOfOptionalHeader;
+    if (!in(secOff, (size_t)fh->NumberOfSections * sizeof(IMAGE_SECTION_HEADER))) {
+        return res;
+    }
+    auto secs = (const IMAGE_SECTION_HEADER*)(d + secOff);
+    size_t dbgOff = 0;
+    for (int i = 0; i < fh->NumberOfSections; i++) {
+        const IMAGE_SECTION_HEADER& s = secs[i];
+        if (dbg.VirtualAddress >= s.VirtualAddress && dbg.VirtualAddress < s.VirtualAddress + s.SizeOfRawData) {
+            dbgOff = (size_t)dbg.VirtualAddress - s.VirtualAddress + s.PointerToRawData;
+            break;
+        }
+    }
+    if (dbgOff == 0 || !in(dbgOff, dbg.Size)) {
+        return res;
+    }
+
+    struct CvRsds {
+        DWORD sig;
+        GUID guid;
+        DWORD age;
+    };
+    constexpr DWORD kRsdsSig = 0x53445352; // "RSDS"
+    auto entries = (const IMAGE_DEBUG_DIRECTORY*)(d + dbgOff);
+    int nEntries = (int)(dbg.Size / sizeof(IMAGE_DEBUG_DIRECTORY));
+    for (int i = 0; i < nEntries; i++) {
+        const IMAGE_DEBUG_DIRECTORY& e = entries[i];
+        if (e.Type != IMAGE_DEBUG_TYPE_CODEVIEW || !in(e.PointerToRawData, sizeof(CvRsds))) {
+            continue;
+        }
+        auto cv = (const CvRsds*)(d + e.PointerToRawData);
+        if (cv->sig != kRsdsSig) {
+            continue;
+        }
+        char hex[33];
+        auto g = (const u8*)&cv->guid;
+        for (int k = 0; k < 16; k++) {
+            sprintf_s(hex + 2 * k, 3, "%02x", g[k]);
+        }
+        return fmt("%s%x", Str(hex), (u32)cv->age);
+    }
+    return res;
+}
+
+TempStr GetPeBuildIdTemp(Str path) {
+    file::Mapping m;
+    if (!file::MemoryMap(path, &m)) {
+        return {};
+    }
+    TempStr res = PeBuildIdFromImage(m.data, (size_t)m.size);
+    file::MemoryUnmap(&m);
+    return res;
+}
+
 #endif

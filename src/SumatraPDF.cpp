@@ -9384,9 +9384,9 @@ TempStr GetSumatraBuildSpecificDirTemp() {
         return {};
     }
     char id[7] = "000000";
-    Str sha1 = Sha1OfAppExe();
-    if (sha1) {
-        str::BufSet(Str(id, dimof(id)), sha1);
+    Str buildId = BuildIdOfAppExe();
+    if (buildId) {
+        str::BufSet(Str(id, dimof(id)), buildId);
     }
     return path::JoinTemp(dataDir, Str(id));
 }

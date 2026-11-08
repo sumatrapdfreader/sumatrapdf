@@ -6,7 +6,6 @@
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
 #include "base/Win.h"
-#include "base/Crypto.h"
 #include "base/Launch.h"
 
 #include "gui/UIModels.h"
@@ -447,35 +446,18 @@ Rect GetDefaultWindowPos() {
     return r;
 }
 
-// cache because calculating sha1 of the whole executable
-// might be relatively expensive
-// sha1 is 20 bytes => 40 hex chars + null terminator
-static char gAppSha1[41]{};
-
-// return hex version of sha1 of app's executable (pointer to cached value)
-// nullptr if there was an error
-Str Sha1OfAppExe() {
-    if (gAppSha1[0]) {
-        return Str(gAppSha1);
+// build id of the running exe (see GetPeBuildIdTemp), cached; empty on error
+Str BuildIdOfAppExe() {
+    static Str id;
+    if (id) {
+        return id;
     }
-
-    TempStr appPath = GetSelfExePathTemp();
-    if (len(appPath) == 0) {
+    TempStr res = GetPeBuildIdTemp(GetSelfExePathTemp());
+    if (len(res) == 0) {
         return {};
     }
-    Str d = file::ReadFile(appPath);
-    if (len(d) == 0) {
-        return {};
-    }
-
-    u8 sha1[20]{};
-    CalcSHA1Digest(d, sha1);
-    str::Free(d);
-
-    for (size_t i = 0; i < 20; i++) {
-        sprintf_s(&gAppSha1[2 * i], 3, "%02x", sha1[i]);
-    }
-    return Str(gAppSha1);
+    id = str::Dup(res);
+    return id;
 }
 
 TempStr GetWebViewDataDirTemp() {
@@ -485,9 +467,9 @@ TempStr GetWebViewDataDirTemp() {
     }
     dir = path::JoinTemp(dir, StrL("SumatraPDF-data"));
     char id[7] = "000000";
-    Str sha1 = Sha1OfAppExe();
-    if (sha1) {
-        str::BufSet(Str(id, dimof(id)), sha1);
+    Str buildId = BuildIdOfAppExe();
+    if (buildId) {
+        str::BufSet(Str(id, dimof(id)), buildId);
     }
     dir = path::JoinTemp(dir, Str(id));
     return path::JoinTemp(dir, fmt("webview-%d", (int)GetCurrentProcessId()));

@@ -459,4 +459,6 @@ inline ULONG ComRelease(AtomicInt* refCount, F del) {
     return res;
 }
 
+TempStr GetPeBuildIdTemp(Str path);
+
 #endif // OS_WIN

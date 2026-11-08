@@ -114,9 +114,10 @@ bool IsInstallerOrUninstallerExe() {
     return str::ContainsI(exeName, StrL("uninstall")) || str::ContainsI(exeName, StrL("install"));
 }
 
+// no PE header here: sha1 of the exe stands in for the build id
 static char gAppSha1[41]{};
 
-Str Sha1OfAppExe() {
+Str BuildIdOfAppExe() {
     if (gAppSha1[0]) {
         return Str(gAppSha1);
     }
@@ -137,9 +138,9 @@ Str Sha1OfAppExe() {
 TempStr GetWebViewDataDirTemp() {
     TempStr dir = path::JoinTemp(GetAppDataDirTemp(), StrL("SumatraPDF-data"));
     char id[7] = "000000";
-    Str sha1 = Sha1OfAppExe();
-    if (sha1) {
-        str::BufSet(Str(id, dimof(id)), sha1);
+    Str buildId = BuildIdOfAppExe();
+    if (buildId) {
+        str::BufSet(Str(id, dimof(id)), buildId);
     }
     dir = path::JoinTemp(dir, Str(id));
     return path::JoinTemp(dir, fmt("webview-%d", CurrentProcessId()));
@@ -242,7 +243,7 @@ void DetectTextEditors(Vec<TextEditor*>& out) {
 bool AppToolsPosix_UnitTests() {
     TempStr shell = FindInPathTemp(StrL("sh"), StrL("/bin:/usr/bin"));
     TempStr absent = FindInPathTemp(StrL("sumatrapdf-ng-no-such-editor"), StrL("/bin:/usr/bin"));
-    Str sha1 = Sha1OfAppExe();
+    Str sha1 = BuildIdOfAppExe();
     return file::Exists(shell) && len(absent) == 0 && len(sha1) == 40 &&
            str::ContainsChar(StrL("0123456789abcdef"), sha1.s[0]) &&
            IsUntrustedFile({}, StrL("https://example.org/file.pdf")) &&
