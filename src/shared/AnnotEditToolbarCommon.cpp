@@ -896,6 +896,14 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
     }
     Annotation* keepSelected = annot == tab->selectedAnnotation ? nullptr : tab->selectedAnnotation;
 
+    // deleting the annotation being moved or resized (Delete mid-drag) ends that
+    // gesture first; otherwise the drag goes on as a pan of the page
+    MainWindow* win = tab->win;
+    bool resizingIt = win && win->annotationBeingResized && annot == tab->selectedAnnotation;
+    if (win && (win->annotationBeingDragged == annot || resizingIt)) {
+        CancelDrag(win);
+    }
+
     DetachAnnotationFromUI(annot);
     DeleteAnnotation(annot);
     RefreshAnnotationLists(tab);
