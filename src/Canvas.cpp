@@ -72,6 +72,7 @@
 
 #include "RefHover.h"
 #include "Canvas.h"
+#include "HexView.h"
 #include "PageGridDialogCommon.h"
 #include "MeasurementToolbar.h"
 #include "SumatraLog.h"
@@ -4713,7 +4714,25 @@ static Color LoadErrorTextColor() {
     return MkRgb(0xef, 0x9a, 0x9a);
 }
 
+// "Open in hex view" under the error, unless the file is gone
+static void DrawLoadErrorHexLink(MainWindow* win, Gfx* gfx, Rect rc, bool hasReason, PlatformFont* font) {
+    WindowTab* tab = win->CurrentTab();
+    if (!file::Exists(tab->filePath) || !CanAccessDisk()) {
+        return;
+    }
+    Str txt = Tr("Open in hex view");
+    Size sz = gfx->MeasureText(txt, font);
+    int lineDy = PlatformFontMeasureText(font, txt).dy;
+    // the error line's y, then past it (and the reason) with a blank line's gap
+    int nameY = rc.y + (rc.dy - (hasReason ? lineDy : 0) - lineDy) / 2;
+    int y = nameY + lineDy * (hasReason ? 2 : 1) + lineDy / 2;
+    Rect r(rc.x + (rc.dx - sz.dx) / 2, y, sz.dx, sz.dy);
+    gfx->DrawTextAt(txt, r.TL(), gfxTextSingleLine | gfxTextNoClip, font, ThemeWindowLinkColor());
+    win->loadErrorHexLinkRc = r;
+}
+
 static void OnPaintDocumentStatus(MainWindow* win) {
+    win->loadErrorHexLinkRc = {};
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
     SetLayout(hdc, 0);
@@ -4780,6 +4799,7 @@ static void OnPaintDocumentStatus(MainWindow* win) {
                 gfx->DrawText(reason, bottom, flags, fontRightTxt, LoadErrorTextColor());
             }
             DrawLoadErrorLine(gfx, top, name, fontRightTxt, LoadErrorTextColor());
+            DrawLoadErrorHexLink(win, gfx, rc, len(reason) > 0, fontRightTxt);
         }
     }
     delete gfx;
@@ -4799,6 +4819,17 @@ static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPAR
 
         case WM_SETCURSOR:
             win->DeleteToolTip();
+            if (win->loadErrorHexLinkRc.Contains(HwndGetCursorPos(hwnd))) {
+                SetCursorCached(IDC_HAND);
+                return TRUE;
+            }
+            return DefWindowProc(hwnd, msg, wp, lp);
+
+        case WM_LBUTTONUP:
+            if (win->loadErrorHexLinkRc.Contains(Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)))) {
+                HwndSendCommand(win->hwndFrame, CmdViewAsHex);
+                return 0;
+            }
             return DefWindowProc(hwnd, msg, wp, lp);
 
         default:
@@ -5336,6 +5367,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 if (win->IsCurrentTabAbout()) {
                     HomePageRelayout(win);
                 }
+                HexViewUpdateScrollbars(win);
                 // fully invalidate since layout depends on size
                 // (replaces CS_HREDRAW | CS_VREDRAW which caused transparent flash)
                 HwndInvalidate(hwnd);
@@ -5382,6 +5414,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
 
             HomePageHideSearch(win);
+            if (win->CurrentTab() && win->CurrentTab()->IsHexTab()) {
+                return WndProcCanvasHex(win, hwnd, msg, wp, lp);
+            }
             return WndProcCanvasLoadError(win, hwnd, msg, wp, lp);
     }
 }

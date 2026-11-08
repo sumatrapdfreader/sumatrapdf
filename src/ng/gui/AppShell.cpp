@@ -42,6 +42,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Tabs.h"
+#include "HexView.h"
 #include "gui/NativeFileDlg.h"
 #include "gui/AppShell.h"
 #include "gui/WasmBridge.h"
@@ -159,6 +160,7 @@ struct ShellView {
     static void OnExternalDrop(ShellView* self, gp::Ctx* cx, const gp::DropEvent* ev);
     static void OnNotifClose(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t key);
     static void OnNotifLink(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t packed);
+    static void OnOpenInHexView(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*);
 };
 
 // ng: one per MainWindow (step 10b). Every listener is bound to this window's
@@ -1971,6 +1973,9 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     if (currTab && currTab->IsFavoritesTab()) {
         return SidebarBuildFavTab(win, cx);
     }
+    if (currTab && currTab->IsHexTab()) {
+        return HexViewBuild(win, cx);
+    }
     if (browser && !overlayUp) {
         gp::El* box = gp::Div(cx->a)->Flex1()->W(gp::kFill)->Bg(ThemeGpuiCanvasBg());
         int clipTop = 0;
@@ -1991,6 +1996,16 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
             TempStr reason = CajErrorReasonTemp(tab->filePath);
             if (len(reason) > 0) {
                 canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, reason))->Font(16)->Fg(th.foreground));
+            }
+            // looking at the bytes can tell why; not when the file is gone
+            if (file::Exists(tab->filePath) && CanAccessDisk()) {
+                canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, Tr("Open in hex view")))
+                                  ->Font(16)
+                                  ->Fg(ToGpui(ThemeWindowLinkColor()))
+                                  ->Underline()
+                                  ->Cursor(gp::CursorKind::Pointer)
+                                  ->PathClick(GStrL("load-error-hex"))
+                                  ->OnClick(gp::ListenTo(ShellViewOf(win), &ShellView::OnOpenInHexView)));
             }
             return canvas;
         }
@@ -2311,6 +2326,11 @@ void ShellView::OnNotifClose(ShellView*, gp::Ctx* cx, const gp::ClickEvent*, int
         logf("NotificationClose: '%s'\n", n->msg);
         CloseNotification(n, NotifCloseReason::User);
     }
+    gp::Notify(cx);
+}
+
+void ShellView::OnOpenInHexView(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*) {
+    ExecuteCmd(self->win, CmdViewAsHex);
     gp::Notify(cx);
 }
 
@@ -2992,6 +3012,12 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     // Ctrl + Enter is no accelerator and reaches orig's canvas as a key
     bool homeKey = !ev->shift && !ev->alt && (!ev->ctrl || ev->vk == VK_RETURN);
     if (homeKey && win->IsCurrentTabAbout() && HomePageOnKeyDown(win, ev->vk, ev->ctrl)) {
+        mut->propagate = false;
+        gp::Notify(cx);
+        return;
+    }
+    bool plainKey = !ev->shift && !ev->alt && !ev->ctrl;
+    if (plainKey && HexViewOnKeyDown(win, ev->vk)) {
         mut->propagate = false;
         gp::Notify(cx);
         return;

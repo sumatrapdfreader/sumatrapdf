@@ -123,6 +123,9 @@
     <ClInclude Include="..\src\FindWindow.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\HexView.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ImageSaveCropResize.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -424,6 +427,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\HangDetector.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\HexViewCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\HomePage.h">
@@ -831,6 +837,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GoToPageDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\HexView.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\HomePage.cpp">
@@ -1332,6 +1341,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\HangDetector.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\HexViewCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\HomePageCommon.cpp">

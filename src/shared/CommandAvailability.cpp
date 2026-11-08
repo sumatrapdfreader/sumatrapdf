@@ -605,6 +605,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    // works on a failed load too: that is when looking at the bytes helps
+    if (cmdId == CmdViewAsHex) {
+        bool canView = !ctx.isHexTab && len(ctx.filePath) > 0 && CanAccessDisk();
+        return canView ? MapForSurface(CommandVisibility::Show, surface) : CommandVisibility::Hide;
+    }
+
     if (CmdWorksWithoutDocument(cmdId)) {
         return MapForSurface(CommandVisibility::Show, surface);
     }

@@ -60,7 +60,7 @@ void SetTabGroupFiles(TabGroup* group, MainWindow* win) {
     }
     VecReset(*group->tabFiles);
     for (WindowTab* tab : win->Tabs()) {
-        if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+        if (tab->IsAboutTab() || tab->IsHexTab() || len(tab->filePath) == 0) {
             continue;
         }
         auto* tf = AllocStruct<TabFile>();

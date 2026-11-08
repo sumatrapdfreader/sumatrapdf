@@ -373,8 +373,9 @@ enum {
     CmdTocCollapseChapter = 567,
     CmdEditFavorites = 568,
     CmdCloseMissingTabs = 569,
+    CmdViewAsHex = 570,
 
-    CmdLast = 569,
+    CmdLast = 570,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

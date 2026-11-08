@@ -148,6 +148,8 @@ export const sharedFiles = [
   "src/shared/FormFieldsCommon.cpp",
   "src/shared/GlobalHotkeysCommon.h",
   "src/shared/GlobalHotkeysCommon_win.cpp",
+  "src/shared/HexViewCommon.cpp",
+  "src/shared/HexViewCommon.h",
   "src/shared/HomePageCommon.cpp",
   "src/shared/HomePageCommon.h",
   "src/shared/OpenFromUrlCommon.cpp",

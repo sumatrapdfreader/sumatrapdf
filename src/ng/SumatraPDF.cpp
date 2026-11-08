@@ -75,6 +75,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Tabs.h"
+#include "HexView.h"
 #include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/NativeFileDlg.h"
@@ -5540,6 +5541,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         case CmdUndo:
         case CmdRedo:
             UndoRedoInTab(tab, cmdId == CmdRedo);
+            break;
+
+        case CmdViewAsHex:
+            ViewTabAsHex(tab);
             break;
 
         case CmdDuplicateInNewTab:

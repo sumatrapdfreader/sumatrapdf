@@ -96,8 +96,8 @@ static void RememberSessionState() {
         }
         SessionData* windowState = NewSessionData();
         for (WindowTab* tab : win->Tabs()) {
-            if (len(tab->filePath) == 0) {
-                // home page tab
+            if (len(tab->filePath) == 0 || tab->IsHexTab()) {
+                // home page or hex view tab
                 continue;
             }
             Str fp = tab->filePath;
@@ -134,7 +134,7 @@ static void RememberSessionState() {
         int selectedDocOrdinal = 1;
         WindowTab* cur = win->CurrentTab();
         for (WindowTab* tab : win->Tabs()) {
-            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+            if (tab->IsAboutTab() || tab->IsHexTab() || len(tab->filePath) == 0) {
                 continue;
             }
             docOrdinal++;

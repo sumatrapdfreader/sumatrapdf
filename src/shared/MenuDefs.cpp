@@ -284,6 +284,10 @@ MenuDef menuDefView[] = {
         CmdToggleColumnsWholePage,
     },
     {
+        TrN("View As &Hex"),
+        CmdViewAsHex,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

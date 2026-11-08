@@ -30,6 +30,7 @@
 #include "AnnotEditToolbar.h"
 #endif
 #include "AIChatCommon.h"
+#include "HexViewCommon.h"
 #include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {
@@ -109,9 +110,13 @@ bool WindowTab::IsFavoritesTab() const {
     return type == WindowTab::Type::Favorites;
 }
 
-// About or Favorites: no document controller
+bool WindowTab::IsHexTab() const {
+    return type == WindowTab::Type::HexView;
+}
+
+// About, Favorites or hex view: no document controller
 bool WindowTab::IsNonDocumentTab() const {
-    return IsAboutTab() || IsFavoritesTab();
+    return IsAboutTab() || IsFavoritesTab() || IsHexTab();
 }
 
 #if !defined(SUMATRA_NG)
@@ -172,6 +177,8 @@ WindowTab::~WindowTab() {
     FileWatcherUnsubscribe(watcher);
     watcher = nullptr;
     delete selectionOnPage;
+    HexViewFree(hex);
+    hex = nullptr;
 #if !defined(SUMATRA_NG)
     // technically we only need to clear ctrl == gMostRecentlyOpenedDoc
     // but gMostRecentlyOpenedDoc is only for dde commands
@@ -254,6 +261,10 @@ Str WindowTab::GetTabTitle() const {
             return Tr("Favorites");
         }
         return StrL("");
+    }
+    if (IsHexTab()) {
+        Str name = gSettings->fullPathInTitle ? filePath : path::GetBaseNameTemp(filePath);
+        return fmt("%s (hex)", name);
     }
     TempStr embeddedFileName = ParseEmbeddedPdfName(filePath).fileName;
     if (embeddedFileName) {

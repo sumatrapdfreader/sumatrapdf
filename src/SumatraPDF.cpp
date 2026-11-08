@@ -107,6 +107,7 @@
 #include "SidebarPanel.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
+#include "HexView.h"
 #include "Toolbar.h"
 #include "SvgIcons.h"
 #include "FindBar.h"
@@ -1693,6 +1694,9 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     if (tab->IsAboutTab()) {
         titlePath = StrL("Home");
     }
+    if (tab->IsHexTab()) {
+        titlePath = tab->GetTabTitle();
+    }
     TempStr embeddedFileName = ParseEmbeddedPdfName(titlePath).fileName;
     if (embeddedFileName) {
         titlePath = embeddedFileName;
@@ -1755,7 +1759,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
 
     UpdateFindbox(win);
 
-    if (win->CurrentTab()->IsAboutTab()) {
+    if (win->CurrentTab()->IsAboutTab() || win->CurrentTab()->IsHexTab()) {
         SetFrameTitleForTab(win->CurrentTab(), false);
     }
     HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
@@ -4472,6 +4476,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
     }
     tab->canvasRc = win->canvasRc;
+    HexViewUpdateScrollbars(win);
 
     win->showSelection = tab->selectionOnPage != nullptr;
     ResetSelectionToolbarDismissed(win);
@@ -6841,7 +6846,7 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
 // Favorites-only must not reserve a tab row (issue #5861)
 static bool WinHasFileTabs(MainWindow* win) {
     for (WindowTab* tab : win->Tabs()) {
-        if (!tab->IsNonDocumentTab()) {
+        if (!tab->IsNonDocumentTab() || tab->IsHexTab()) {
             return true;
         }
     }
@@ -10687,6 +10692,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdDuplicateInNewWindow:
             DuplicateInNewWindow(win);
+            break;
+
+        case CmdViewAsHex:
+            ViewTabAsHex(tab);
             break;
 
         case CmdDuplicateInNewTab:
@@ -15153,6 +15162,12 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
         MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
         bool isFrameOrCanvas = win && (msg.hwnd == win->hwndFrame || msg.hwnd == win->hwndCanvas);
         if (isFrameOrCanvas && IsBrowserDocController(win->ctrl) && IsBrowserScrollKey(msg.wParam)) {
+            return false;
+        }
+        // the hex view scrolls with them; send them to the canvas, where it lives
+        WindowTab* tab = isFrameOrCanvas ? win->CurrentTab() : nullptr;
+        if (tab && tab->IsHexTab() && IsBrowserScrollKey(msg.wParam)) {
+            msg.hwnd = win->hwndCanvas;
             return false;
         }
     }

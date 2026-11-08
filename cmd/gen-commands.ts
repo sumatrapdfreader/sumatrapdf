@@ -380,6 +380,7 @@ const commandsRaw = [
     "CmdTocCollapseChapter", "Bookmarks: Collapse Chapter",
     "CmdEditFavorites", "Edit Favorites...",
     "CmdCloseMissingTabs", "Close Tabs of Missing Files",
+    "CmdViewAsHex", "View As Hex",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
