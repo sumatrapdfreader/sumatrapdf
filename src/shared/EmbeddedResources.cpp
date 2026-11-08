@@ -35,6 +35,8 @@ extern "C" const u8 gEmbeddedLzsaEnd[];
 
 static lzma::SimpleArchive gEmbeddedArchive{};
 static bool gEmbeddedTried = false;
+// render threads load fonts from it while the ui thread reads other files
+static Mutex gEmbeddedMutex;
 
 #if OS_WIN
 // PdfPreview.dll, PdfFilter.dll and sumatrapdf-tool.exe carry no archive of
@@ -63,6 +65,9 @@ Str GetEmbeddedLzsa() {
 }
 
 bool EnsureEmbeddedArchiveLoaded() {
+    // without the lock a second thread saw gEmbeddedTried before the parse
+    // finished and took the archive for empty
+    AutoUnlockMutex lock(&gEmbeddedMutex);
     if (gEmbeddedTried) {
         return gEmbeddedArchive.filesCount > 0;
     }
