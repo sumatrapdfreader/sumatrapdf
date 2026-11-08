@@ -71,8 +71,7 @@ libjpeg-turbo   3.2.1      2026-10-27
 
 djvudec         main       2026-11-08
   https://github.com/kjk/djvudec
-  commit f0412eea9fe2f8d633104aab99b0e009b586b181 plus the uncommitted
-  render.c change (bitonal coverage accumulated per ink run)
+  commit d0625e738913da8a293d585720219733110454f9
   amalgamated dist/djvu.c + dist/djvu.h only
 
 libwebp         1.6.0      2025-06-30
