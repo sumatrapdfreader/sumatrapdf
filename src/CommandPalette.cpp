@@ -104,6 +104,8 @@ struct CommandPaletteWnd : WindowBase, PaletteSources {
     bool thumbnailMode = false;
     bool smartTabMode = false;
     bool stickyMode = false;
+    // closing: a delete is posted, so it must not be reused
+    bool deleteScheduled = false;
 
     void PreTranslate(WindowBase::PreTranslateEvent*);
     void OnKeyDown(KeyEvent*);
@@ -246,7 +248,8 @@ void CommandPaletteWnd::SetThumbnailMode(ThumbnailMode mode) {
 }
 
 void SafeDeleteCommandPaletteWnd() {
-    if (!gCommandPaletteWnd) {
+    // a delete posted for an earlier palette must not take a newer one
+    if (!gCommandPaletteWnd || !gCommandPaletteWnd->deleteScheduled) {
         return;
     }
 
@@ -292,7 +295,11 @@ void ScheduleDeleteAndExecCommand(i32 cmdId) {
     if (!gCommandPaletteWnd) {
         return;
     }
-    gCmdIdToExecOnClose = cmdId;
+    // a later close request (deactivation) must not drop the picked command
+    if (cmdId != 0) {
+        gCmdIdToExecOnClose = cmdId;
+    }
+    gCommandPaletteWnd->deleteScheduled = true;
     if (IsMainWindowValidAndNotClosing(gCommandPaletteWnd->win)) {
         HighlightTab(gCommandPaletteWnd->win, nullptr);
     }
@@ -1160,11 +1167,16 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
 
 void RunCommandPalette(MainWindow* win, Str prefix, int smartTabAdvance) {
     if (gCommandPaletteWnd) {
-        if (gCommandPaletteWnd->hwnd && IsWindow(gCommandPaletteWnd->hwnd)) {
-            HwndSetFocus(gCommandPaletteWnd->hwnd);
+        CommandPaletteWnd* prev = gCommandPaletteWnd;
+        bool alive = prev->hwnd && IsWindow(prev->hwnd) && !prev->deleteScheduled;
+        if (alive) {
+            HwndSetFocus(prev->hwnd);
             return;
         }
-        ScheduleDeleteAndExecCommand();
+        // gone or closing: delete it now, so its posted delete can't take the
+        // palette created below
+        prev->deleteScheduled = true;
+        SafeDeleteCommandPaletteWnd();
     }
 
     gCursorPosLParam = 0;
