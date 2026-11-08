@@ -16815,19 +16815,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // gRedrawLog = true;
     }
 
-#if IS_DEBUG
-    if (gIsDebugBuild || gIsPreReleaseBuild) {
-        if (flags.tester) {
-            extern int TesterMain(); // in Tester.cpp
-            return TesterMain();
-        }
-        if (flags.regress) {
-            extern int RegressMain(); // in Regress.cpp
-            return RegressMain();
-        }
-    }
-#endif
-
     if (flags.showHelp && IsInstallerButNotInstalled()) {
         ShowInstallerHelp();
         HandleRedirectedConsoleOnShutdown();
@@ -16988,22 +16975,10 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     }
 
 #if IS_DEBUG
-    if (flags.testApp) {
-        // in TestApp.cpp
-        extern void TestApp();
-        TestApp();
-        return 0;
-    }
     if (flags.testPlugin) {
         // in TestPlugin.cpp
         extern void TestPlugin(WStr cmdLine);
         TestPlugin(WStr(GetCommandLineW()));
-        return 0;
-    }
-    if (flags.testPreview) {
-        // in TestPreview.cpp
-        extern void TestPreview(WStr cmdLine);
-        TestPreview(WStr(GetCommandLineW()));
         return 0;
     }
 #endif

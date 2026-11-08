@@ -90,8 +90,6 @@ struct Flags {
     // installer: starts the install immediately and launches the app at end
     bool fastInstall = false;
     bool invertColors = false;
-    bool regress = false;
-    bool tester = false;
     // -new-window: each file in its own new window (not a tab of an existing one)
     bool inNewWindow = false;
     // -new-window-tabs: one new window, all files as tabs in that window
@@ -106,9 +104,7 @@ struct Flags {
     bool quickLookAgent = false;
     bool testRenderPage = false;
     bool testExtractPage = false;
-    bool testApp = false;
     bool testPlugin = false;
-    bool testPreview = false;
     bool dumpExif = false;  // -dump-exif
     bool dumpChm = false;   // -dump-chm
     bool unitTests = false; // -unit-tests (debug builds only)

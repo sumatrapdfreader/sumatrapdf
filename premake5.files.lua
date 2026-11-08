@@ -469,7 +469,6 @@ function sumatrapdf_files()
     "Tabs.*",
     "TabsCommon.*",
     "TabGroupsManage.*",
-    "Tester.*",
     "Tests.cpp",
     "TextSearch.*",
     "TextSelection.*",
@@ -490,19 +489,10 @@ function sumatrapdf_files()
   })
   filter { "configurations:Debug or DebugFull" }
   files_in_dir("src", {
-    "regress/Regress.*",
     "TestPlugin.cpp",
-    "TestPreview.cpp",
   })
   files_in_dir("src/tests", {
     "*.cpp",
-  })
-  files_in_dir("src/testcode", {
-    "test-app.h",
-    "TestApp.cpp",
-    "TestLayout.cpp",
-    --"TestLice.cpp",
-    "TestTab.cpp",
   })
   files_in_dir("src/gui/tests", {
     "*.cpp",

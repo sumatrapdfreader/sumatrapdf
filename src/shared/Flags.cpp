@@ -30,25 +30,24 @@ enum class Arg {
     Help3 = 8, ExitWhenDone = 9, ExitOnPrint = 10, Restrict = 11,
     Presentation = 12, FullScreen = 13, InvertColors = 14, InvertColors2 = 15,
     Console = 16, Install = 17, UnInstall = 18, WithFilter = 19,
-    WithSearch = 20, WithPreview = 21, Rand = 22, Regress = 23,
-    Extract = 24, Tester = 25, TestApp = 26, TestPlugin = 27,
-    TestPreview = 28, NewWindow = 29, Log = 30, LogToFile = 31,
-    CrashOnOpen = 32, ReuseInstance = 33, EscToExit = 34, ArgEnumPrinters = 35,
-    ListPrinters = 36, SleepMs = 37, PrintTo = 38, PrintSilent = 39,
-    PrintSettings = 40, InverseSearch = 41, ForwardSearch1 = 42, ForwardSearch2 = 43,
-    NamedDest = 44, NamedDest2 = 45, Page = 46, View = 47,
-    Zoom = 48, Scroll = 49, AppData = 50, Plugin = 51,
-    StressTest = 52, N = 53, Max = 54, MaxFiles = 55,
-    Render = 56, ExtractText = 57, Bench = 58, Dir = 59,
-    InstallDir = 60, Lang = 61, UpdateSelfTo = 62, ArgDeleteFile = 63,
-    BgCol = 64, BgCol2 = 65, FwdSearchOffset = 66, FwdSearchWidth = 67,
-    FwdSearchColor = 68, FwdSearchPermanent = 69, MangaMode = 70, Search = 71,
-    AllUsers = 72, AllUsers2 = 73, RunInstallNow = 74, Adobe = 75,
-    DDE = 76, Pwd = 77, SetColorRange = 78, UpgradeFrom = 79,
-    ForTesting = 80, QuickLook = 81, QuickLookAgent = 82, WindowPos = 83,
-    DumpExif = 84, DumpChm = 85, Control = 86, UnitTests = 87,
-    ForAi = 88, NewWindowTabs = 89, HtmlBackend = 90, NoDesktopShortcut = 91,
-    StartPerfLog = 92, LogPerfFile = 93, ConfigureRestrictedUse = 94, WithThumbnails = 95,
+    WithSearch = 20, WithPreview = 21, Rand = 22, Extract = 23,
+    TestPlugin = 24, NewWindow = 25, Log = 26, LogToFile = 27,
+    CrashOnOpen = 28, ReuseInstance = 29, EscToExit = 30, ArgEnumPrinters = 31,
+    ListPrinters = 32, SleepMs = 33, PrintTo = 34, PrintSilent = 35,
+    PrintSettings = 36, InverseSearch = 37, ForwardSearch1 = 38, ForwardSearch2 = 39,
+    NamedDest = 40, NamedDest2 = 41, Page = 42, View = 43,
+    Zoom = 44, Scroll = 45, AppData = 46, Plugin = 47,
+    StressTest = 48, N = 49, Max = 50, MaxFiles = 51,
+    Render = 52, ExtractText = 53, Bench = 54, Dir = 55,
+    InstallDir = 56, Lang = 57, UpdateSelfTo = 58, ArgDeleteFile = 59,
+    BgCol = 60, BgCol2 = 61, FwdSearchOffset = 62, FwdSearchWidth = 63,
+    FwdSearchColor = 64, FwdSearchPermanent = 65, MangaMode = 66, Search = 67,
+    AllUsers = 68, AllUsers2 = 69, RunInstallNow = 70, Adobe = 71,
+    DDE = 72, Pwd = 73, SetColorRange = 74, UpgradeFrom = 75,
+    ForTesting = 76, QuickLook = 77, QuickLookAgent = 78, WindowPos = 79,
+    DumpExif = 80, DumpChm = 81, Control = 82, UnitTests = 83,
+    ForAi = 84, NewWindowTabs = 85, HtmlBackend = 86, NoDesktopShortcut = 87,
+    StartPerfLog = 88, LogPerfFile = 89, ConfigureRestrictedUse = 90, WithThumbnails = 91,
 };
 
 static SeqStrings gArgNames =
@@ -57,9 +56,8 @@ static SeqStrings gArgNames =
     "help\0" "exit-when-done\0" "exit-on-print\0" "restrict\0"
     "presentation\0" "fullscreen\0" "invertcolors\0" "invert-colors\0"
     "console\0" "install\0" "uninstall\0" "with-filter\0"
-    "with-search\0" "with-preview\0" "rand\0" "regress\0"
-    "x\0" "tester\0" "testapp\0" "test-plugin\0"
-    "test-preview\0" "new-window\0" "log\0" "log-to-file\0"
+    "with-search\0" "with-preview\0" "rand\0" "x\0"
+    "test-plugin\0" "new-window\0" "log\0" "log-to-file\0"
     "crash-on-open\0" "reuse-instance\0" "esc-to-exit\0" "enum-printers\0"
     "list-printers\0" "sleep-ms\0" "print-to\0" "t\0"
     "print-settings\0" "inverse-search\0" "forward-search\0" "fwdsearch\0"
@@ -564,30 +562,13 @@ static void ParseFlagNodes(Arena* a, StrNode* firstArg, Flags& i, Str toolNames)
             i.stressRandomizeFiles = true;
             continue;
         }
-        if (arg == Arg::Regress) {
-            i.regress = true;
-            continue;
-        }
         if (arg == Arg::Extract) {
             i.justExtractFiles = true;
-            continue;
-        }
-        if (arg == Arg::Tester) {
-            i.tester = true;
-            continue;
-        }
-        if (arg == Arg::TestApp) {
-            i.testApp = true;
             continue;
         }
         if (arg == Arg::TestPlugin) {
             i.testPlugin = true;
             // remaining args are for the plugin test
-            break;
-        }
-        if (arg == Arg::TestPreview) {
-            i.testPreview = true;
-            // remaining args are for the preview test
             break;
         }
         if (arg == Arg::NewWindow) {

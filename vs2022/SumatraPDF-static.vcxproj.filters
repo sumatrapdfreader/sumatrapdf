@@ -37,9 +37,6 @@
     <Filter Include="src\gui\win">
       <UniqueIdentifier>{9E7B1B1E-0A31-9413-9325-8EEAFFD98A17}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\regress">
-      <UniqueIdentifier>{F7CE8947-6384-023D-EC78-FC13582DF940}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\shared">
       <UniqueIdentifier>{D3351079-BFED-51C6-28F5-2A2214CCECB6}</UniqueIdentifier>
     </Filter>
@@ -48,9 +45,6 @@
     </Filter>
     <Filter Include="src\shared\tests">
       <UniqueIdentifier>{F5F2F2BB-E1EB-110E-0A1E-F792F675F119}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\testcode">
-      <UniqueIdentifier>{D744682D-C3A7-F7D1-6C2D-3088586FC354}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\tests">
       <UniqueIdentifier>{CF8328B6-3BEE-DC2C-842C-8ED2F0D5BA81}</UniqueIdentifier>
@@ -699,9 +693,6 @@
     <ClInclude Include="..\src\shared\gui\UIModels.h">
       <Filter>src\shared\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\testcode\test-app.h">
-      <Filter>src\testcode</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\uia\DocumentProvider.h">
       <Filter>src\uia</Filter>
     </ClInclude>
@@ -986,12 +977,6 @@
     <ClCompile Include="..\src\TestPlugin.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\TestPreview.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\Tester.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Tests.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1150,9 +1135,6 @@
     </ClCompile>
     <ClCompile Include="..\src\gui\win\WindowBase.cpp">
       <Filter>src\gui\win</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\regress\Regress.cpp">
-      <Filter>src\regress</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIAntiGravity.cpp">
       <Filter>src\shared</Filter>
@@ -1654,15 +1636,6 @@
     </ClCompile>
     <ClCompile Include="..\src\shared\tests\TextSelection_ut.cpp">
       <Filter>src\shared\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\testcode\TestApp.cpp">
-      <Filter>src\testcode</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\testcode\TestLayout.cpp">
-      <Filter>src\testcode</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\testcode\TestTab.cpp">
-      <Filter>src\testcode</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\ShortcutParse_ut.cpp">
       <Filter>src\tests</Filter>
