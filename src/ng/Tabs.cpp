@@ -44,6 +44,10 @@
 #include "SumatraDialogs.h"
 #include "gui/AppShell.h"
 #include "gui/TabsUI.h"
+#include "gui/DocCanvas.h"
+#include "AnnotPlacement.h"
+#include "LinkFollow.h"
+#include "SelectTextKeyboard.h"
 
 #include "SessionState.h"
 #include "AIChatCommon.h"
@@ -149,6 +153,16 @@ void LoadModelIntoTab(WindowTab* tab) {
         return;
     }
     MainWindow* win = tab->win;
+    // as orig: the modes hold page positions of the outgoing document; end them
+    // while win->ctrl is still that document
+    if (win->currentTabTemp && win->currentTabTemp != tab) {
+        StopKeyboardLinkFollowing(win);
+        StopSelectTextWithKeyboard(win);
+        CancelAnnotationPlacement(win);
+        if (win->mouseAction != MouseAction::None || win->annotationBeingDragged || win->annotationBeingResized) {
+            CanvasCancelDrag(win);
+        }
+    }
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
     // this canvas size was already applied to the previous document

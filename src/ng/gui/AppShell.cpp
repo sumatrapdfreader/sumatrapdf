@@ -810,6 +810,8 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
                    win->ctrl ? win->ctrl->CurrentPageNo() : 0, IsFindUIVisible(win) ? 1 : 0, win->showSelection ? 1 : 0,
                    tab && tab->selectedAnnotation ? 1 : 0, (int)win->InPresentation(), win->IsFullScreen() ? 1 : 0,
                    (int)win->mouseAction));
+    out.Append(
+        fmt(" placing=%d textSelectMode=%d", IsPlacingAnnotation(win) ? 1 : 0, win->textSelectModeActive ? 1 : 0));
     int tocItems = 0;
     if (win->ctrl) {
         TocTree* tree = win->ctrl->GetToc();
