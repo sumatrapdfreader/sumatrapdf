@@ -179,6 +179,9 @@ class EngineMupdf : public EngineBase {
     fz_context* _ctx = nullptr;
     fz_locks_context fz_locks_ctx;
     int displayDPI{96};
+    // 1 when the last page render palettized: the next one then renders into
+    // a plain buffer rather than a DIB that would be thrown away
+    AtomicInt renderPalettized = 0;
     fz_document* _doc = nullptr;
     pdf_document* pdfdoc = nullptr;
     // chapter-major page info; index [chapter - 1] is that chapter's pages

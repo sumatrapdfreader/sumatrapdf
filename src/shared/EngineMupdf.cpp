@@ -2065,20 +2065,34 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap, b
 }
 #endif
 
-// A page render paints straight into the BGRA Pixmap the cache keeps (a DIB
-// section on Windows), through a mupdf pixmap that borrows its memory. The
-// finished page then needs no conversion from RGB and no copy, which was as
-// much work as drawing it.
+// A page render paints straight into the BGRA Pixmap the cache keeps, through
+// a mupdf pixmap that borrows its memory. The finished page then needs no
+// conversion from RGB and no copy, which was as much work as drawing it.
+// On Windows the cache wants a DIB section (BitBlt is faster than pushing DIB
+// bits), unless the page palettizes, in which case the 32-bit buffer is
+// thrown away; a document's pages mostly go one way, so the last outcome
+// picks the kind of buffer for the next page.
+enum class RenderBuffer {
+    Dib,
+    Plain,
+};
+
 struct PageRenderTarget {
     Pixmap* pixmap = nullptr;
     fz_pixmap* fz = nullptr;
+    RenderBuffer kind = RenderBuffer::Plain;
 };
 
-static bool NewRenderTarget(fz_context* ctx, fz_irect bounds, PageRenderTarget& t) {
+static bool NewRenderTarget(fz_context* ctx, fz_irect bounds, RenderBuffer kind, PageRenderTarget& t) {
     int w = bounds.x1 - bounds.x0;
     int h = bounds.y1 - bounds.y0;
+    t.kind = kind;
 #if OS_WIN
-    t.pixmap = AllocPixmapDIB(w, h);
+    if (kind == RenderBuffer::Dib) {
+        t.pixmap = AllocPixmapDIB(w, h);
+    } else {
+        t.pixmap = AllocPixmap(w, h, PixmapFormat::BGRA8, false);
+    }
 #else
     t.pixmap = AllocPixmap(w, h, PixmapFormat::BGRA8, false);
 #endif
@@ -2106,18 +2120,38 @@ static void FreeRenderTarget(fz_context* ctx, PageRenderTarget& t) {
     t.pixmap = nullptr;
 }
 
+#if OS_WIN
+// the same pixels in a DIB section, for a page that was expected to palettize
+// and didn't
+static Pixmap* PixmapToDib(Pixmap* p) {
+    Pixmap* dib = AllocPixmapDIB(p->width, p->height);
+    if (!dib) {
+        return p;
+    }
+    CopyPixmapRows(dib, p->data, p->stride);
+    FreePixmap(p);
+    return dib;
+}
+#endif
+
 // the rendered page for the cache: palettized when it has few enough colors
-// (a quarter of the memory), otherwise the target itself
-static Pixmap* FinishRenderTarget(fz_context* ctx, PageRenderTarget& t, bool preserveAlpha) {
+// (a quarter of the memory), otherwise the target itself. palettizedOut says
+// which, for the next render's choice of buffer
+static Pixmap* FinishRenderTarget(fz_context* ctx, PageRenderTarget& t, bool preserveAlpha, bool* palettizedOut) {
     Pixmap* res = t.pixmap;
     t.pixmap = nullptr;
+    *palettizedOut = false;
 #if OS_WIN
     if (!preserveAlpha) {
         RenderedBitmap* pal = TryRenderAsPaletteImage(t.fz, PixelOrder::Bgr);
         if (pal) {
             FreePixmap(res);
             res = PixmapFromRenderedBitmap(pal);
+            *palettizedOut = true;
         }
+    }
+    if (!*palettizedOut && t.kind == RenderBuffer::Plain) {
+        res = PixmapToDib(res);
     }
 #endif
     fz_drop_pixmap(ctx, t.fz);
@@ -7632,7 +7666,11 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     }
 
     PageRenderTarget target;
-    if (!NewRenderTarget(ctx, ibounds, target)) {
+    // a transparent backdrop is never palettized
+    bool expectPalette = !args.transparentBackdrop && AtomicIntGet(&renderPalettized) != 0;
+    RenderBuffer bufKind = expectPalette ? RenderBuffer::Plain : RenderBuffer::Dib;
+    bool palettized = false;
+    if (!NewRenderTarget(ctx, ibounds, bufKind, target)) {
         fz_drop_display_list(ctx, keptList);
         return nullptr;
     }
@@ -7667,7 +7705,10 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 if (CadEnhanceActive() && cadRasterDominant) {
                     PdfCadEnhancePixmap(ctx, target.fz, zoom, true);
                 }
-                pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop);
+                pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop, &palettized);
+                if (!args.transparentBackdrop) {
+                    AtomicIntSet(&renderPalettized, palettized ? 1 : 0);
+                }
                 MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
             }
         }
@@ -7722,7 +7763,10 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 if (CadEnhanceActive() && cadRasterDominant) {
                     PdfCadEnhancePixmap(ctx, target.fz, zoom, true);
                 }
-                pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop);
+                pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop, &palettized);
+                if (!args.transparentBackdrop) {
+                    AtomicIntSet(&renderPalettized, palettized ? 1 : 0);
+                }
                 MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
             }
         }
@@ -7747,7 +7791,10 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             fz_run_page_contents(ctx, page, dev, fz_identity, nullptr);
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
-            pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop);
+            pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop, &palettized);
+            if (!args.transparentBackdrop) {
+                AtomicIntSet(&renderPalettized, palettized ? 1 : 0);
+            }
             MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
