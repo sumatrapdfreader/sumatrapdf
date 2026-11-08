@@ -1221,10 +1221,56 @@ static float StextLineHeight(const fz_stext_line* line) {
     return 10.f;
 }
 
+// Width of the first word of line. A CJK character is a word of its own, as
+// those scripts wrap anywhere.
+static float FirstWordWidth(const fz_stext_line* line) {
+    constexpr int kFirstCjkRune = 0x2E80;
+    bool started = false;
+    float x0 = 0;
+    float x1 = 0;
+    for (fz_stext_char* c = line->first_char; c; c = c->next) {
+        if (c->c == ' ' || c->c == '\t') {
+            if (started) {
+                break;
+            }
+            continue;
+        }
+        fz_rect r = fz_rect_from_quad(c->quad);
+        if (!started) {
+            x0 = r.x0;
+            started = true;
+        }
+        x1 = r.x1;
+        if (c->c >= kFirstCjkRune) {
+            break;
+        }
+    }
+    return started ? x1 - x0 : 0;
+}
+
+// The last non-space character of line ends a sentence, a statement or a
+// bracketed / quoted part: . : ; ! ? ) ] } " ' and their CJK forms.
+static bool EndsSentence(const fz_stext_line* line) {
+    int last = 0;
+    for (fz_stext_char* c = line->first_char; c; c = c->next) {
+        if (c->c != ' ' && c->c != '\t') {
+            last = c->c;
+        }
+    }
+    static const int kEnders[] = {'.',    ':',    ';',    '!',    '?',    ')',    ']',    '}',    '"',    '\'',
+                                  0x2026, 0x201D, 0x2019, 0x3002, 0xFF01, 0xFF1F, 0xFF1A, 0xFF1B, 0x300D, 0x300F};
+    for (int e : kEnders) {
+        if (last == e) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // True when nextLine is a soft wrap of the same paragraph (reflow/ebook copy
 // should join with a space, not a newline — #5793).
 // FB2/HTML reflow lines typically share a ~0.25–0.35em gap; paragraph spacing
-// is larger (~0.5em+). Mid-line soft wraps also nearly fill the block width.
+// is larger (~0.5em+).
 static bool IsSoftLineBreak(const fz_stext_line* line, const fz_stext_line* nextLine, const fz_stext_block* block) {
     if (!line || !nextLine || !block) {
         return false;
@@ -1238,12 +1284,19 @@ static bool IsSoftLineBreak(const fz_stext_line* line, const fz_stext_line* next
     if (gap > h * 0.55f) {
         return false;
     }
-    // Soft wraps usually fill most of the block width; a short line is the
-    // end of a paragraph (or a title), so keep a hard newline after it.
+    // Soft wraps usually fill most of the block width; a short line is the end
+    // of a paragraph (or a title), so keep a hard newline after it. Unless it is
+    // ragged-right text: the next line's first word didn't fit after it and the
+    // line doesn't end a sentence or a statement (code).
     float blockW = block->bbox.x1 - block->bbox.x0;
     float lineW = line->bbox.x1 - line->bbox.x0;
     if (blockW > 1.f && lineW < blockW * 0.82f) {
-        return false;
+        float room = block->bbox.x1 - line->bbox.x1;
+        float spaceW = h * 0.3f;
+        bool nextWordFits = room > FirstWordWidth(nextLine) + spaceW;
+        if (nextWordFits || EndsSentence(line)) {
+            return false;
+        }
     }
     // New paragraphs often start with a larger left indent (text-indent).
     float dx = nextLine->bbox.x0 - line->bbox.x0;
