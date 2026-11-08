@@ -180,6 +180,13 @@ void CloseSavePathDialog() {
     }
 }
 
+// cancel it while its window, about to close, is still valid
+void CloseSavePathDialogFor(MainWindow* win) {
+    if (gSave.args && gSave.args->win == win) {
+        CloseSavePathDialog();
+    }
+}
+
 void ShowSavePathDialog(SavePathArgs* args) {
     if (!args) {
         return;

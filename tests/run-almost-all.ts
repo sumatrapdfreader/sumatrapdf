@@ -252,6 +252,7 @@ import { testit as backgroundTabReload } from "./background-tab-reload.ts";
 import { testit as sessionRestoreBrokenFile } from "./session-restore-broken-file.ts";
 import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
 import { testit as reloadKeepsFullscreenLayout } from "./reload-keeps-fullscreen-layout.ts";
+import { testit as closeWindowWithDialog } from "./close-window-with-dialog.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
@@ -1102,6 +1103,7 @@ export const tests: NamedTest[] = [
   ["session-restore-broken-file", sessionRestoreBrokenFile],
   ["tab-switch-presentation", tabSwitchPresentation],
   ["reload-keeps-fullscreen-layout", reloadKeepsFullscreenLayout],
+  ["close-window-with-dialog", closeWindowWithDialog],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

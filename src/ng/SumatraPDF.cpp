@@ -3849,6 +3849,10 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
         AppShellInvalidate(win);
         return;
     }
+    // their close callbacks use win; the tool window layer would run them
+    // only after it's deleted
+    CloseSavePathDialogFor(win);
+    DlgWindowsCloseFor(win);
     VecRemove(gWindows, win);
     AppShellCloseWindow(win);
     delete win;
