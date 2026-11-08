@@ -4921,10 +4921,13 @@ struct ShowErrorData {
     Str path;
 };
 
+// signing can pump messages (smart card PIN prompt), so the tab may be gone
 static void ShowSaveAnnotationError(ShowErrorData* d, Str err) {
-    auto* tab = d->tab;
-    auto path = d->path;
-    ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, err);
+    MainWindow* win = FindMainWindowByTab(d->tab);
+    if (!win) {
+        return;
+    }
+    ShowSavedAnnotationsFailedNotification(win->hwndCanvas, d->path, err);
 }
 
 bool SaveAnnotationsToExistingFile(WindowTab* tab) {
@@ -4940,11 +4943,16 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
             return false;
         }
     }
+    engine->AddRef();
+    AutoCall releaseEngine(SafeEngineRelease<EngineBase>, &engine);
     Str path = engine->FilePath();
     tab->ignoreNextAutoReload = true;
     ShowErrorData data{tab, path};
     auto fn = MkFunc1(ShowSaveAnnotationError, &data);
     bool ok = EngineMupdfSaveUpdated(engine, {}, fn);
+    if (GetLiveTabEngine(tab, &win) != engine) {
+        return ok;
+    }
     if (!ok) {
         tab->ignoreNextAutoReload = false;
         return false;
@@ -5043,8 +5051,8 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     ShowErrorData data{tab, dstFilePath};
     auto fn = MkFunc1(ShowSaveAnnotationError, &data);
     ok = EngineMupdfSaveUpdated(engine, dstFilePath, fn);
-    if (!ok) {
-        return false;
+    if (!ok || GetLiveTabEngine(tab, &win) != engine) {
+        return ok;
     }
 
     // Capture selection before the engine (and Annotation*) is torn down.
