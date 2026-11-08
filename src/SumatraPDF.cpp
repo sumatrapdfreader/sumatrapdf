@@ -4483,7 +4483,13 @@ void LoadModelIntoTab(WindowTab* tab) {
         } else {
             if (tab->reloadOnFocus) {
                 tab->reloadOnFocus = false;
-                ReloadDocument(win, true);
+                if (tab->ignoreNextAutoReload) {
+                    // our own save's watcher event, not consumed by the timer
+                    // because the tab lost focus first
+                    tab->ignoreNextAutoReload = false;
+                } else {
+                    ReloadDocument(win, true);
+                }
             }
         }
     }
