@@ -80,7 +80,6 @@ struct AIChatTabState {
     AIChatAPIRequest* apiRequest = nullptr;
     str::Builder apiMessages;
     str::Builder apiReply;
-    Str apiInput;
     Str apiIdentity;
     bool apiFailed = false;
     void* process = nullptr;

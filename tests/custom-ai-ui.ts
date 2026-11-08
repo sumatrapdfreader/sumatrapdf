@@ -3,6 +3,19 @@ import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, ROOT, USE_NG, cmdId, pollUntil, runStandalone, writeAppdata } from "./util.ts";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation.ts";
 import {
+  BM_SETCHECK,
+  BST_CHECKED,
+  CB_SETCURSEL,
+  CBN_SELCHANGE,
+  ES_MULTILINE,
+  GWL_STYLE,
+  MK_LBUTTON,
+  VK_RETURN,
+  WM_COMMAND,
+  WM_KEYDOWN,
+  WM_LBUTTONDOWN,
+  WM_LBUTTONUP,
+  WM_MOUSEMOVE,
   enumChildWindows,
   getClassName,
   getParentWindow,
@@ -13,21 +26,7 @@ import {
   sendMessage,
   sendText,
   waitForTopWindow,
-  WM_KEYDOWN,
-  WM_COMMAND,
 } from "./winapi.ts";
-
-const kWindowStyle = -16;
-const kMultiline = 4;
-const kReturnKey = 13;
-const kSelectItem = 0x014e;
-const kSelectionChanged = 1;
-const kMouseMove = 0x0200;
-const kMouseDown = 0x0201;
-const kMouseUp = 0x0202;
-const kLeftButton = 1;
-const kSetChecked = 0x00f1;
-const kChecked = 1;
 
 type ChatBody = { model: string; messages: { role: string; content: string }[] };
 
@@ -79,7 +78,7 @@ export async function testit(): Promise<void> {
               if (
                 isWindowVisible(hwnd) &&
                 /edit/i.test(getClassName(hwnd)) &&
-                getWindowLong(hwnd, kWindowStyle) & kMultiline
+                getWindowLong(hwnd, GWL_STYLE) & ES_MULTILINE
               )
                 input = hwnd;
               return true;
@@ -91,7 +90,7 @@ export async function testit(): Promise<void> {
         );
         const send = async (message: string, count: number) => {
           sendText(input, message);
-          sendMessage(input, WM_KEYDOWN, kReturnKey, 0);
+          sendMessage(input, WM_KEYDOWN, VK_RETURN, 0);
           await pollUntil(
             async () => requests.length,
             (n) => n === count,
@@ -120,8 +119,8 @@ export async function testit(): Promise<void> {
           return true;
         });
         if (!session) throw new Error("Missing Custom AI session/Stop controls");
-        sendMessage(session, kSelectItem, 0, 0); // CB_SETCURSEL: New Session
-        sendMessage(panel, WM_COMMAND, kSelectionChanged << 16, session); // CBN_SELCHANGE
+        sendMessage(session, CB_SETCURSEL, 0, 0); // New Session
+        sendMessage(panel, WM_COMMAND, CBN_SELCHANGE << 16, session);
         await send("new session", 3);
         await idle();
         if (requests[2]!.messages.length !== 1) throw new Error("New Session retained the previous conversation");
@@ -134,9 +133,9 @@ export async function testit(): Promise<void> {
         const x = +stop[1]! + Math.floor(+stop[3]! / 2);
         const y = +stop[2]! + Math.floor(+stop[4]! / 2);
         const point = (y << 16) | (x & 0xffff);
-        sendMessage(panel, kMouseMove, 0, point);
-        sendMessage(panel, kMouseDown, kLeftButton, point);
-        sendMessage(panel, kMouseUp, 0, point);
+        sendMessage(panel, WM_MOUSEMOVE, 0, point);
+        sendMessage(panel, WM_LBUTTONDOWN, MK_LBUTTON, point);
+        sendMessage(panel, WM_LBUTTONUP, 0, point);
         await idle();
         await pollUntil(
           async () => pending === undefined,
@@ -157,7 +156,7 @@ export async function testit(): Promise<void> {
           return true;
         });
         if (!includePage) throw new Error("Missing page text checkbox");
-        sendMessage(includePage, kSetChecked, kChecked, 0);
+        sendMessage(includePage, BM_SETCHECK, BST_CHECKED, 0);
         await send("read this page", 6);
         await idle();
         if (!/zlib/i.test(requests[5]!.messages.at(-1)!.content)) throw new Error("Missing opted-in page text");

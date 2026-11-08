@@ -353,4 +353,28 @@ Key = Value";
         utassert(str::Eq(empty->sub->name, StrL("old")) && 5 == empty->sub->size);
         FreeStruct(&gSutOptRootInfo, empty);
     }
+
+    // a secret field is saved like any other, but SerializeOpt::NoSecrets
+    // drops it, also a copy carried over from prevData
+    struct SutSecret {
+        Str user;
+        Str token;
+    };
+    static const FieldInfo gSutSecretFields[] = {
+        {offsetof(SutSecret, user), SettingType::String, 0},
+        {offsetof(SutSecret, token), SettingType::String, 0, false, true},
+    };
+    static const StructInfo gSutSecretInfo = {sizeof(SutSecret), 2, gSutSecretFields, "User\0Token"};
+    {
+        auto* s = (SutSecret*)DeserializeStruct(&gSutSecretInfo, StrL(kUtf8Bom "User = me\r\nToken = hunter2\r\n"));
+        utassert(s && str::Eq(s->token, StrL("hunter2")));
+        Str all = SerializeStruct(&gSutSecretInfo, s);
+        utassert(str::Contains(all, StrL("Token = hunter2")));
+        Str safe = SerializeStruct(&gSutSecretInfo, s, all, SerializeOpt::NoSecrets);
+        utassert(str::Contains(safe, StrL("User = me")));
+        utassert(!str::Contains(safe, StrL("hunter2")) && !str::Contains(safe, StrL("Token")));
+        str::Free(all);
+        str::Free(safe);
+        FreeStruct(&gSutSecretInfo, s);
+    }
 }

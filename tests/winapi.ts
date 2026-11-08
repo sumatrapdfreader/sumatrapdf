@@ -329,6 +329,11 @@ export const WM_CONTEXTMENU = 0x007b;
 export const WM_KILLFOCUS = 0x0008;
 export const WM_COMMAND = 0x0111;
 export const WM_SYSCOMMAND = 0x0112;
+export const CB_SETCURSEL = 0x014e;
+export const CBN_SELCHANGE = 1;
+export const BM_SETCHECK = 0x00f1;
+export const BST_CHECKED = 1;
+export const ES_MULTILINE = 0x0004;
 export const SC_CLOSE = 0xf060;
 export const WM_COPYDATA = 0x004a;
 // virtual-key / mouse-button flags

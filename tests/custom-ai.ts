@@ -1,6 +1,9 @@
 import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, runStandalone, tmpPath, writeAppdata } from "./util.ts";
 
+// AIChatBackend::CustomAPI in src/shared/AIChatTypes.h
+const kCustomAPIBackend = 4;
+
 export async function testit(): Promise<void> {
   const secret = "local-test-key-not-for-a-real-provider";
   let unexpected = 0;
@@ -66,12 +69,16 @@ export async function testit(): Promise<void> {
       EXE,
       async (client) => {
         const ok = await client.request(ControlCommand.TestAIChat, [
-          4,
+          kCustomAPIBackend,
           tmpPath("document.pdf"),
           'hello "quoted"\ntext',
         ]);
         if (ok[0] !== 0 || !String(ok[1]).includes("你好 world")) throw new Error(`stream: ${ok}`);
-        const cr = await client.request(ControlCommand.TestAIChat, [4, tmpPath("document.pdf"), "cr-only"]);
+        const cr = await client.request(ControlCommand.TestAIChat, [
+          kCustomAPIBackend,
+          tmpPath("document.pdf"),
+          "cr-only",
+        ]);
         if (cr[0] !== 0 || !String(cr[1]).includes("你好 world")) throw new Error(`CR stream: ${cr}`);
         for (const [prompt, expected] of [
           ["unauthorized", "HTTP 401"],
@@ -81,7 +88,11 @@ export async function testit(): Promise<void> {
           ["malformed", "invalid streaming event"],
           ["empty", "no assistant text"],
         ]) {
-          const result = await client.request(ControlCommand.TestAIChat, [4, tmpPath("document.pdf"), prompt]);
+          const result = await client.request(ControlCommand.TestAIChat, [
+            kCustomAPIBackend,
+            tmpPath("document.pdf"),
+            prompt,
+          ]);
           if (result[0] === 0 || !String(result[1]).startsWith("FAIL:")) throw new Error(`${prompt}: ${result}`);
           if (!String(result[1]).includes(expected)) throw new Error(`${prompt}: missing error detail: ${result[1]}`);
           if (String(result[1]).includes(secret)) throw new Error("API key leaked into test output");
@@ -98,7 +109,11 @@ export async function testit(): Promise<void> {
     await withControlledSumatra(
       EXE,
       async (client) => {
-        const result = await client.request(ControlCommand.TestAIChat, [4, tmpPath("document.pdf"), "direct key"]);
+        const result = await client.request(ControlCommand.TestAIChat, [
+          kCustomAPIBackend,
+          tmpPath("document.pdf"),
+          "direct key",
+        ]);
         if (result[0] !== 0) throw new Error(`Configured API key was not used: ${result[1]}`);
       },
       ["-appdata", directKey],

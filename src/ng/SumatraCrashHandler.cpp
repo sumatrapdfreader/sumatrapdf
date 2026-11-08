@@ -184,7 +184,7 @@ static void CaptureSettings() {
     Settings* gp = NewSettings(prefsData);
     DeleteFileStates(gp->fileStates);
     gp->fileStates = new Vec<FileState*>();
-    Str d = SerializeSettings(gp, {});
+    Str d = SerializeSettings(gp, {}, SerializeOpt::NoSecrets);
     CrashHandlerSetSettings(d);
     str::Free(d);
     DeleteSettings(gp);

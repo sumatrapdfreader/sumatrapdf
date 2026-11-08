@@ -30,22 +30,22 @@ bool AIChatPathIs(Str path, Str name) {
     return path.len > 0 && path.s[0] == '/' && str::EqI(Str(path.s + 1, path.len - 1), name);
 }
 
-// providerId is an AIChatBackend value.
+// providerId is an AIChatBackend value
 AIChatProvider* GetAIChatProvider(int providerId) {
-    if (providerId == 0) {
-        return GetClaudeCodeProvider();
+    switch ((AIChatBackend)providerId) {
+        case AIChatBackend::Claude:
+            return GetClaudeCodeProvider();
+        case AIChatBackend::Grok:
+            return GetGrokBuildProvider();
+        case AIChatBackend::Codex:
+            return GetCodexBuildProvider();
+        case AIChatBackend::AntiGravity:
+            return GetAntiGravityProvider();
+        case AIChatBackend::CustomAPI:
+            return GetCustomAIProvider();
+        default:
+            return nullptr;
     }
-    if (providerId == 1) {
-        return GetGrokBuildProvider();
-    }
-    if (providerId == 2) {
-        return GetCodexBuildProvider();
-    }
-    if (providerId == 3) {
-        return GetAntiGravityProvider();
-    }
-    if (providerId == (int)AIChatBackend::CustomAPI) return GetCustomAIProvider();
-    return nullptr;
 }
 
 AIChatProvider* CurrentProvider(MainWindow* win) {

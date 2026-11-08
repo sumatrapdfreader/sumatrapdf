@@ -580,8 +580,6 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
-  ["custom-ai", customAI],
-  ["custom-ai-ui", customAIUI],
   ["issue-6412", issue6412],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-1909", issue1909],
@@ -1122,6 +1120,8 @@ export const tests: NamedTest[] = [
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
   ["codex-provider", codexProvider],
+  ["custom-ai", customAI],
+  ["custom-ai-ui", customAIUI],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

@@ -97,7 +97,8 @@ Favorite* NewFavorite(int pageNo, Str name = {}, Str pageLabel = {});
 void DeleteFavorite(Favorite* fav);
 
 Settings* NewSettings(Str);
-Str SerializeSettings(Settings* prefs, Str prevData);
+enum class SerializeOpt;
+Str SerializeSettings(Settings* prefs, Str prevData, SerializeOpt opt);
 void DeleteSettings(Settings*);
 
 SessionData* NewSessionData();

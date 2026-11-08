@@ -9,6 +9,7 @@
 #include <dwmapi.h>
 #include "gui/Dpi.h"
 #include "base/File.h"
+#include "base/SettingsUtil.h"
 #include "base/FileWatcher.h"
 #include "base/GuessFileType.h"
 #include "base/SquareTreeParser.h"
@@ -16704,7 +16705,7 @@ static void CaptureSettings() {
     DeleteFileStates(gp->fileStates);
     gp->fileStates = new Vec<FileState*>();
     // TODO: also sessionData?
-    Str d = SerializeSettings(gp, {});
+    Str d = SerializeSettings(gp, {}, SerializeOpt::NoSecrets);
     CrashHandlerSetSettings(d);
     str::Free(d);
     DeleteSettings(gp);

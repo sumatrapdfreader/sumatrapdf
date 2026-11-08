@@ -586,8 +586,7 @@ struct CustomAI {
     // environment variable holding the API key; takes precedence over
     // ApiKey
     Str apiKeyEnv;
-    // API key stored in plain text; prefer ApiKeyEnv to keep it outside
-    // settings
+    // API key; prefer ApiKeyEnv, which keeps it out of this file
     Str apiKey;
     // model ID accepted by the provider
     Str model;
