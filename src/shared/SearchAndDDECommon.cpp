@@ -1097,6 +1097,8 @@ static void FreeFindMatchPaintCacheEntries() {
 
 void InvalidateFindMatchPaintCache() {
     FreeFindMatchPaintCacheEntries();
+    gFindMatchPaintCache.win = nullptr;
+    gFindMatchPaintCache.dm = nullptr;
     gFindMatchPaintCache.firstPage = 0;
     gFindMatchPaintCache.lastPage = 0;
     gFindMatchPaintCache.countEpoch = 0;
@@ -1104,6 +1106,8 @@ void InvalidateFindMatchPaintCache() {
 
 void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int firstPage, int lastPage) {
     FreeFindMatchPaintCacheEntries();
+    gFindMatchPaintCache.win = win;
+    gFindMatchPaintCache.dm = dm;
     gFindMatchPaintCache.firstPage = firstPage;
     gFindMatchPaintCache.lastPage = lastPage;
     gFindMatchPaintCache.countEpoch = win->findCountEpoch;
@@ -2819,8 +2823,9 @@ void PaintAllFindMatches(MainWindow* win, PaintRef ctx) {
         return;
     }
 
-    if (gFindMatchPaintCache.countEpoch != win->findCountEpoch || gFindMatchPaintCache.firstPage != firstPage ||
-        gFindMatchPaintCache.lastPage != lastPage) {
+    FindMatchPaintCache& cache = gFindMatchPaintCache;
+    bool stale = cache.win != win || cache.dm != dm || cache.countEpoch != win->findCountEpoch;
+    if (stale || cache.firstPage != firstPage || cache.lastPage != lastPage) {
         RebuildFindMatchPaintCache(win, dm, firstPage, lastPage);
     }
 

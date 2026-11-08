@@ -81,6 +81,9 @@ struct FindMatchPaintRects {
 };
 
 struct FindMatchPaintCache {
+    // one cache for all windows: countEpoch counts per window
+    MainWindow* win = nullptr;
+    DisplayModel* dm = nullptr;
     int firstPage = 0;
     int lastPage = 0;
     int countEpoch = 0;
