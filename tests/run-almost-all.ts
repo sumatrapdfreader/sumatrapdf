@@ -246,6 +246,7 @@ import { testit as issue6505 } from "./issue-6505.ts";
 import { testit as issue6506 } from "./issue-6506.ts";
 import { testit as copyJoinLines } from "./copy-join-lines.ts";
 import { testit as tabSwitchEndsModes } from "./tab-switch-ends-modes.ts";
+import { testit as scrollbarCaptureLoss } from "./scrollbar-capture-loss.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
@@ -1090,6 +1091,7 @@ export const tests: NamedTest[] = [
   ["issue-6506", issue6506],
   ["copy-join-lines", copyJoinLines],
   ["tab-switch-ends-modes", tabSwitchEndsModes],
+  ["scrollbar-capture-loss", scrollbarCaptureLoss],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
