@@ -1112,9 +1112,13 @@ bool IsInTempDir(Str path) {
     if (len(dir) > 0 && !IsSep(dir.s[len(dir) - 1])) {
         dir = str::JoinTemp(dir, StrL("\\"));
     }
-    // long form of the parent: GetLongPathName() fails for a file that doesn't exist
     TempStr p = NormalizeTemp(path);
-    p = path::JoinTemp(LongPathTemp(path::GetDirTemp(p)), path::GetBaseNameTemp(p));
+    // long form of the parent: GetLongPathName() fails for a file that doesn't
+    // exist. Only 8.3 names (with a '~') have one; skipping the rest saves a
+    // network round trip per file on a UNC path
+    if (str::IndexOfChar(p, '~') >= 0) {
+        p = path::JoinTemp(LongPathTemp(path::GetDirTemp(p)), path::GetBaseNameTemp(p));
+    }
     return len(p) > len(dir) && str::StartsWithI(p, dir);
 }
 
@@ -1662,7 +1666,17 @@ bool SetZoneIdentifier(Str filePath, int zoneId) {
 
 bool DeleteZoneIdentifier(Str filePath) {
     TempStr path = str::JoinTemp(filePath, StrL(":Zone.Identifier"));
-    return Delete(path);
+    if (DeleteFileW(CWStrTemp(path))) {
+        return true;
+    }
+    DWORD err = GetLastError();
+    // no stream, or a file system without streams (a NAS share answers
+    // ERROR_INVALID_NAME): nothing to delete, nothing worth a log line
+    if (err == ERROR_FILE_NOT_FOUND || err == ERROR_INVALID_NAME) {
+        return true;
+    }
+    LogLastError(err);
+    return false;
 }
 
 bool Rename(Str newPath, Str oldPath) {

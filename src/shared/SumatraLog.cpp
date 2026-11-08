@@ -276,26 +276,47 @@ void DestroyLogging() {
 void LogParentProcessChain() {}
 #else
 
-// Parent PID of process `pid` via Toolhelp snapshot, or 0 on failure.
-static DWORD GetProcessParentPid(DWORD pid) {
-    if (pid == 0) {
-        return 0;
-    }
-    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (INVALID_HANDLE_VALUE == snap) {
-        return 0;
-    }
-    PROCESSENTRY32W pe{};
-    pe.dwSize = sizeof(pe);
-    if (!Process32FirstW(snap, &pe)) {
-        return 0;
-    }
-    do {
-        if (pe.th32ProcessID == pid) {
-            return pe.th32ParentProcessID;
+using NtQueryInformationProcessFn = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+
+static NtQueryInformationProcessFn NtQip() {
+    static NtQueryInformationProcessFn fn = nullptr;
+    static bool tried = false;
+    if (!tried) {
+        tried = true;
+        HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+        if (ntdll) {
+            fn = (NtQueryInformationProcessFn)GetProcAddress(ntdll, "NtQueryInformationProcess");
         }
-    } while (Process32NextW(snap, &pe));
-    return 0;
+    }
+    return fn;
+}
+
+// Parent PID of process `pid`, or 0 on failure. ProcessBasicInformation is a
+// single query; a Toolhelp snapshot walks every process and thread on the
+// machine (~15 ms per hop here)
+static DWORD GetProcessParentPid(DWORD pid) {
+    if (pid == 0 || !NtQip()) {
+        return 0;
+    }
+    AutoCloseHandle hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc.IsValid()) {
+        return 0;
+    }
+    struct {
+        PVOID exitStatus;
+        PVOID pebBaseAddress;
+        PVOID affinityMask;
+        PVOID basePriority;
+        ULONG_PTR uniqueProcessId;
+        ULONG_PTR inheritedFromUniqueProcessId;
+    } pbi{};
+    const ULONG kProcessBasicInformation = 0;
+    ULONG n = 0;
+    LONG status = NtQip()(hProc, kProcessBasicInformation, &pbi, sizeof(pbi), &n);
+    if (status != 0) {
+        return 0;
+    }
+    return (DWORD)pbi.inheritedFromUniqueProcessId;
 }
 
 static TempStr GetProcessImagePathTemp(DWORD pid) {
@@ -328,16 +349,7 @@ static TempStr GetProcessCommandLineTemp(DWORD pid) {
     if (pid == 0) {
         return {};
     }
-    using NtQueryInformationProcessFn = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
-    static NtQueryInformationProcessFn ntQip = nullptr;
-    static bool tried = false;
-    if (!tried) {
-        tried = true;
-        HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
-        if (ntdll) {
-            ntQip = (NtQueryInformationProcessFn)GetProcAddress(ntdll, "NtQueryInformationProcess");
-        }
-    }
+    NtQueryInformationProcessFn ntQip = NtQip();
     if (!ntQip) {
         return {};
     }

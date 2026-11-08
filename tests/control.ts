@@ -169,6 +169,10 @@ export enum ControlCommand {
   TestPerfStats = 161,
   // ng only: the state of the canvas overlays
   TestOverlayState = 162,
+  // [timeoutMs]: blocks until the home page painted after startup
+  WaitHomePainted = 163,
+  // [idx]: select tab idx; idx < 0 only reports the current tab and count
+  TestSelectTab = 164,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -601,6 +605,31 @@ export class ControlClient {
       throw new Error(`WaitRenderIdle failed: ${info || code}`);
     }
     return info;
+  }
+
+  async waitForHomePainted(timeoutMs = 15000): Promise<string> {
+    const res = await this.request(ControlCommand.WaitHomePainted, [timeoutMs * SLOW_BUILD_FACTOR]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const info = String(res[1] ?? "");
+    if (code !== 0) {
+      throw new Error(`WaitHomePainted failed: ${info || code}`);
+    }
+    return info;
+  }
+
+  // Selects tab idx (none when idx < 0) and reports the selected tab and count.
+  async selectTab(idx = -1): Promise<{ idx: number; count: number }> {
+    const res = await this.request(ControlCommand.TestSelectTab, [idx]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const info = String(res[1] ?? "");
+    if (code !== 0) {
+      throw new Error(`TestSelectTab failed: ${info || code}`);
+    }
+    const m = /idx=(-?\d+) count=(\d+)/.exec(info);
+    if (!m) {
+      throw new Error(`TestSelectTab: unexpected result '${info}'`);
+    }
+    return { idx: parseInt(m[1]!, 10), count: parseInt(m[2]!, 10) };
   }
 
   async waitForSessionRestored(timeoutMs = 15000): Promise<string> {

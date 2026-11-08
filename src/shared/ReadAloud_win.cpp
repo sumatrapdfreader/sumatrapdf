@@ -1611,6 +1611,11 @@ bool TtsSetVoiceById(Str voiceId) {
     return true;
 }
 
+// true once a speech engine was created (a voice was set or text spoken)
+bool TtsIsInitialized() {
+    return gTtsBackend != TtsBackend::Unknown;
+}
+
 Str TtsGetVoiceId() {
     return gTtsVoiceId;
 }

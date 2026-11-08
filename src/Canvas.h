@@ -3,6 +3,9 @@
 
 void UpdateDeltaPerLine();
 
+// home page paints since start, read by -dbg-control WaitHomePainted
+extern int gHomePagePaintCount;
+
 LRESULT CALLBACK WndProcCanvas(HWND, UINT, WPARAM, LPARAM);
 LRESULT WndProcCanvasAbout(MainWindow*, HWND, UINT, WPARAM, LPARAM);
 bool IsDragDistance(int x1, int x2, int y1, int y2);

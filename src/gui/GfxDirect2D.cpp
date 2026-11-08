@@ -98,8 +98,12 @@ struct D2DTargetSlot {
 
 static D2DTargetSlot gD2DSlots[kD2DTargetPool];
 
+// Software, not hardware: a DC render target copies its whole surface through
+// GDI interop on every BeginDraw and EndDraw, which was 90% of a toolbar or
+// tab bar paint, and its D3D device cost the first paint ~100 ms of driver
+// loading. The software rasterizer draws the same pixels straight into the DC
 static D2D1_RENDER_TARGET_PROPERTIES D2DDcTargetProps() {
-    return D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
+    return D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_SOFTWARE,
                                         D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE), 96.0f,
                                         96.0f, D2D1_RENDER_TARGET_USAGE_NONE, D2D1_FEATURE_LEVEL_DEFAULT);
 }

@@ -287,6 +287,11 @@ static bool AccelIsForCmd(const Accel& a, int cmdId) {
     if (a.cmd == cmdId) {
         return true;
     }
+    // only a custom command can alias cmdId; the list walk below is per
+    // accelerator per menu item, so skip it for built-in ids
+    if (a.cmd < (int)CmdFirstCustom) {
+        return false;
+    }
     CustomCommand* cmd = FindCustomCommand(a.cmd);
     return cmd && cmd->origId == cmdId;
 }

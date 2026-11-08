@@ -242,6 +242,10 @@ bool TtsSetVoiceById(Str voiceId) {
     return true;
 }
 
+bool TtsIsInitialized() {
+    return true;
+}
+
 Str TtsGetVoiceId() {
     return gTtsVoiceId;
 }

@@ -409,6 +409,9 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {
+    // off the UI thread: SymInitialize walks every loaded module (~45 ms).
+    // A crash signaled meanwhile waits for it, dbghelp::Initialize serializes
+    InitializeDbgHelp();
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed) {
         return 0;
@@ -730,8 +733,6 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     AtomicBoolSet(&gCrashHandlerStarted, false);
 
     BuildSystemInfo();
-    // do it now so that a crash doesn't have to load dbghelp and its symbols
-    InitializeDbgHelp();
 
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {

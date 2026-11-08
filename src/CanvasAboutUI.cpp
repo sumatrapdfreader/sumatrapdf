@@ -22,6 +22,8 @@
 #include "AppSettings.h"
 #include "Canvas.h"
 
+int gHomePagePaintCount = 0;
+
 static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
@@ -50,6 +52,7 @@ static void OnPaintAbout(MainWindow* win) {
 
     EndPaint(win->hwndCanvas, &ps);
     if (drawHome) {
+        gHomePagePaintCount++;
         HomePageRepaintWinScrollbar(win);
     }
     win->ShowFrameRateDur(TimeSinceInMs(t));

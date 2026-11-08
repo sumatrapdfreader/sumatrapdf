@@ -35,6 +35,7 @@
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
 #include "Canvas.h"
+#include "Tabs.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
 #include "Selection.h"
@@ -693,6 +694,10 @@ enum class ControlCmd : u16 {
     TestImageReplace = 160,
     // 161, 162: ng only (TestPerfStats, TestOverlayState); tests/lint-control-ids.ts
     // checks ids mean the same command in both apps and tests/control.ts
+    // [timeoutMs]: blocks until the home page painted after startup
+    WaitHomePainted = 163,
+    // [idx]: select tab idx; idx < 0 only reports the current tab and count
+    TestSelectTab = 164,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1755,6 +1760,27 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestSelectTab: {
+            if (len(gWindows) == 0 || !gWindows[0]) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            MainWindow* win = gWindows[0];
+            i32 idx = -1;
+            IntArg(req, 0, idx);
+            int nTabs = len(win->Tabs());
+            if (idx >= nTabs) {
+                AppendTestResult(req, 1, fmt("bad tab index %d, count=%d", idx, nTabs));
+                break;
+            }
+            if (idx >= 0) {
+                TabsSelect(win, idx);
+            }
+            int curr = win->tabsCtrl ? win->tabsCtrl->GetSelected() : -1;
+            AppendTestResult(req, 0, fmt("idx=%d count=%d", curr, nTabs));
+            break;
+        }
+
         case ControlCmd::TestCurrentTab: {
             if (len(gWindows) == 0 || !gWindows[0]) {
                 AppendTestResult(req, 2, StrL("NOTREADY no-window"));
@@ -2378,7 +2404,46 @@ void SnapshotSessionRestore(ControlRequest* req) {
     req->done.Set();
 }
 
+// Snapshot for WaitHomePainted: the home page has been painted at least once
+// after startup finished.
+static void SnapshotHomePainted(ControlRequest* req) {
+    req->idleState = RenderIdleState::NotReady;
+    int n = gHomePagePaintCount;
+    Str why = gIsStartup ? StrL("startup") : (n == 0 ? StrL("not-painted") : StrL("painted"));
+    if (!gIsStartup && n > 0) {
+        req->idleState = RenderIdleState::Idle;
+    }
+    str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), fmt("%s n=%d", why, n));
+    req->done.Set();
+}
+
+// Block on the control thread until the home page's first paint. Optional
+// first int arg is the timeout.
+static void RunWaitHomePainted(ControlRequest* req) {
+    i32 timeoutMs = 15000;
+    IntArg(req, 0, timeoutMs);
+    u64 deadline = GetTickCount64() + (u64)std::max(timeoutMs, 1);
+    for (;;) {
+        req->done.Reset();
+        uitask::Post(MkFunc0<ControlRequest>(SnapshotHomePainted, req), "WaitHomePainted");
+        req->done.Wait();
+        if (req->idleState == RenderIdleState::Idle) {
+            AppendTestResult(req, 0, Str(req->idleInfo));
+            return;
+        }
+        if (GetTickCount64() >= deadline) {
+            AppendTestResult(req, 1, fmt("timeout %s", Str(req->idleInfo)));
+            return;
+        }
+        SleepInMs(20);
+    }
+}
+
 static void RunControlOnUi(ControlRequest* req) {
+    if ((ControlCmd)req->cmd == ControlCmd::WaitHomePainted) {
+        RunWaitHomePainted(req);
+        return;
+    }
     uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
     req->done.Wait();
 }

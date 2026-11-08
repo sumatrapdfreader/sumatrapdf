@@ -3614,14 +3614,15 @@ bool AreLoadThreadsActive() {
     return gLoadThreadsActive > 0 || AreThumbnailThreadsActive();
 }
 
+// LoadedPending is not pending: that tab's document is loaded and attaches
+// when the tab is selected, which may be never
 bool HasPendingDocumentLoads() {
     if (gLoadThreadsActive > 0 || len(gLoadQueue) > 0) {
         return true;
     }
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            if (tab->loadState == WindowTab::LoadState::Loading ||
-                tab->loadState == WindowTab::LoadState::LoadedPending) {
+            if (tab->loadState == WindowTab::LoadState::Loading) {
                 return true;
             }
         }

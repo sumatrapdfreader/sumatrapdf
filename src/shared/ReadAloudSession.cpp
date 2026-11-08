@@ -1304,7 +1304,11 @@ bool ApplyReadAloudVoiceFromSettings() {
 
     Str voiceId = gSettings->readAloudVoiceId;
     if (len(voiceId) == 0) {
-        TtsSetVoiceById(StrL(""));
+        // the default voice needs no reset while no engine exists; creating
+        // one costs ~30 ms of startup
+        if (TtsIsInitialized()) {
+            TtsSetVoiceById(StrL(""));
+        }
         return false;
     }
 

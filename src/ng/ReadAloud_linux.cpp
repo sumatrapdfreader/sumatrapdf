@@ -347,6 +347,10 @@ bool TtsSetVoiceById(Str voiceId) {
     return true;
 }
 
+bool TtsIsInitialized() {
+    return gTtsConnection != nullptr;
+}
+
 Str TtsGetVoiceId() {
     return gTtsVoiceId;
 }

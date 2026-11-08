@@ -75,8 +75,8 @@ export async function testit(): Promise<void> {
   seedSettings();
   const { proc, client, frame } = await launchControlled(["-appdata", APPDATA], { saveSettings: true });
   try {
-    // not waitForSessionRestored: it reports "loading" as long as a tab is
-    // parked as LoadedPending, which is exactly the state this test needs
+    // not waitForSessionRestored: it returns once the loads finish, before
+    // the second tab is parked as LoadedPending, the state this test needs
     await client.waitForRenderIdle(60000);
     // let the second tab's load finish and park as LoadedPending
     await sleep(1000 * SLOW_BUILD_FACTOR);

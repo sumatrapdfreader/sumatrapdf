@@ -94,6 +94,7 @@ static Str ExceptionNameFromCode(DWORD excCode) {
 }
 
 static BOOL gSymInitializeOk = FALSE;
+static Mutex gInitMutex;
 
 static bool CanStackWalk() {
     bool ok = DynSymCleanup && DynSymGetOptions && DynSymSetOptions && DynStackWalk64 && DynSymFunctionTableAccess64 &&
@@ -140,8 +141,14 @@ bool HasSymbols() {
 // the library (needed in crash dump where we re-initialize dbghelp.dll after
 // downloading symbols)
 bool Initialize(WStr symPathW, bool force) {
+    AutoUnlockMutex lock(&gInitMutex);
     if (gSymInitializeOk && !force) {
         return true;
+    }
+    // the crash handler initializes on its dump thread; a caller that gets
+    // here first must not pin an empty symbol path
+    if (len(symPathW) == 0) {
+        symPathW = ToWStrTemp(GetSelfExeDirTemp());
     }
 
     bool needsCleanup = gSymInitializeOk;

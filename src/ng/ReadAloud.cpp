@@ -122,6 +122,9 @@ Vec<TtsVoiceInfo> TtsGetVoices() {
 bool TtsSetVoiceById(Str) {
     return false;
 }
+bool TtsIsInitialized() {
+    return false;
+}
 Str TtsGetVoiceId() {
     return Str();
 }
