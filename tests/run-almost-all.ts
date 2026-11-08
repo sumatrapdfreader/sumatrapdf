@@ -254,6 +254,7 @@ import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
 import { testit as reloadKeepsFullscreenLayout } from "./reload-keeps-fullscreen-layout.ts";
 import { testit as closeWindowWithDialog } from "./close-window-with-dialog.ts";
 import { testit as captionCaptureLoss } from "./caption-capture-loss.ts";
+import { testit as menuBarArmedDeactivate } from "./menu-bar-armed-deactivate.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
@@ -1106,6 +1107,7 @@ export const tests: NamedTest[] = [
   ["reload-keeps-fullscreen-layout", reloadKeepsFullscreenLayout],
   ["close-window-with-dialog", closeWindowWithDialog],
   ["caption-capture-loss", captionCaptureLoss],
+  ["menu-bar-armed-deactivate", menuBarArmedDeactivate],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

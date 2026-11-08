@@ -3466,6 +3466,11 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     bool nativeMenu = gp::AppHasMenuBar();
     // orig's WM_EXITMENULOOP: hide the menu bar again if it was shown only
     // temporarily
+    // as win32's menu loop: switching away lets go of the keyboard-armed bar,
+    // or the keys typed after coming back would go to it
+    if (self->menuArmedIdx >= 0 && cx->win && !cx->win->active) {
+        self->menuArmedIdx = -1;
+    }
     if (self->menuArmedIdx >= 0) {
         // a click on a title opened its menu: the bar is no longer just armed
         auto* mbOpen = (gpc::AppMenuBarState*)gp::EntityGet(cx->app, self->menuBarState.id);
