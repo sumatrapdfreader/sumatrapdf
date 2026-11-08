@@ -9,6 +9,7 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "RenderCache.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "FileHistory.h"
 #include "SumatraPDF.h"

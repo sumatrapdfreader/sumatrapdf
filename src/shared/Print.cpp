@@ -109,6 +109,7 @@ PaperFormat GetPaperFormatFromSizeApprox(SizeF size) {
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"

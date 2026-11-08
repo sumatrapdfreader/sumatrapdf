@@ -20,6 +20,7 @@
 #include "SumatraPDF.h"
 #include "SumatraConfig.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Translations.h"
 #include "Flags.h"

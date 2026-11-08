@@ -53,6 +53,9 @@ struct FieldInfo {
     // app-managed / deprecated setting: serialized like any other, but hidden
     // from the advanced settings dialog
     bool internal = false;
+    // credential: SerializeOpt::NoSecrets leaves it out (crash reports), the
+    // advanced settings dialog doesn't edit it
+    bool secret = false;
     // enum (string) setting: the allowed values, nullptr-terminated. Loading
     // replaces any other value with the default
     const char** enumValues = nullptr;
@@ -75,6 +78,11 @@ struct StructInfo {
     bool couldBeTemporary = false;
 };
 
-Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData = {});
+enum class SerializeOpt {
+    All,
+    NoSecrets,
+};
+
+Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData = {}, SerializeOpt opt = SerializeOpt::All);
 void* DeserializeStruct(const StructInfo* info, Str data, void* strct = nullptr);
 void FreeStruct(const StructInfo* info, void* strct);

@@ -18,6 +18,7 @@
 #include "AppSettings.h"
 #include "Translations.h"
 
+#include "AIChatTypes.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 

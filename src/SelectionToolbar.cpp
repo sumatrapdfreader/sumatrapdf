@@ -23,6 +23,7 @@
 #include "TextSelection.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Canvas.h"
 #include "Selection.h"

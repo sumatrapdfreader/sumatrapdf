@@ -193,6 +193,13 @@ AntiGravity [
 	BgColor = #ffffff
 ]
 
+CustomAI [
+	Name = Custom AI
+	ApiKeyEnv = CUSTOM_AI_API_KEY
+	IncludeCurrentPage = false
+	BgColor = #ffffff
+]
+
 AIChat [
 	FontSize = 0
 	LineSpacing = 0

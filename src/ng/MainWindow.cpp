@@ -36,6 +36,7 @@
 #include "Tabs.h"
 #include "ReadingAutoScroll.h"
 #include "ReadAloud.h"
+#include "AIChatTypes.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "OverlayScrollbar.h"

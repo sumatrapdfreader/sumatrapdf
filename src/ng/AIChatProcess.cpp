@@ -8,6 +8,7 @@
 #include "base/Win.h"
 #endif
 
+#include "AIChatTypes.h"
 #include "AIChatCommon.h"
 
 #if OS_POSIX && !OS_WASM

@@ -26,6 +26,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Commands.h"
 #include "AppTools.h"

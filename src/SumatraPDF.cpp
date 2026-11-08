@@ -9,6 +9,7 @@
 #include <dwmapi.h>
 #include "gui/Dpi.h"
 #include "base/File.h"
+#include "base/SettingsUtil.h"
 #include "base/FileWatcher.h"
 #include "base/GuessFileType.h"
 #include "base/SquareTreeParser.h"
@@ -70,6 +71,7 @@
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "UpdateCheck.h"
 #include "resource.h"
@@ -10899,6 +10901,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnAIChatToggle(win, (int)AIChatBackend::Codex);
             break;
 
+        case CmdAIChatWithCustomAPI:
+            OnAIChatToggle(win, (int)AIChatBackend::CustomAPI);
+            break;
+
         case CmdAIChatWithAntiGravity:
             logf("CmdAIChatWithAntiGravity dispatched\n");
             OnAIChatToggle(win, (int)AIChatBackend::AntiGravity);
@@ -16700,7 +16706,7 @@ static void CaptureSettings() {
     DeleteFileStates(gp->fileStates);
     gp->fileStates = new Vec<FileState*>();
     // TODO: also sessionData?
-    Str d = SerializeSettings(gp, {});
+    Str d = SerializeSettings(gp, {}, SerializeOpt::NoSecrets);
     CrashHandlerSetSettings(d);
     str::Free(d);
     DeleteSettings(gp);

@@ -1,6 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct AIChatAPIRequest;
 struct SelectionOnPage;
 struct MainWindow;
 struct DocController;
@@ -71,8 +72,14 @@ struct ReadingBarTab {
 
 // per-tab state of one AI chat provider (see AIChatPanel.cpp)
 struct AIChatTabState {
+    ~AIChatTabState();
     Str sessionId;
     str::Builder chatLog;
+    AIChatAPIRequest* apiRequest = nullptr;
+    str::Builder apiMessages;
+    str::Builder apiReply;
+    Str apiIdentity;
+    bool apiFailed = false;
     void* process = nullptr;
     // the running turn, 0 if none: its updates are routed by this
     int turnId = 0;
@@ -140,7 +147,7 @@ struct WindowTab {
     Str readAloudText;
     // per-provider AI chat state, indexed by AIChatBackend
     // (0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)
-    AIChatTabState aiChat[4];
+    AIChatTabState aiChat[kAIChatProviderCount];
     Type type = Type::None;
     LoadState loadState = LoadState::None;
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons

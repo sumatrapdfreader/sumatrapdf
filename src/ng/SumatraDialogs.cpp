@@ -35,6 +35,7 @@
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
 #include "gui/PlatformFont.h"
+#include "AIChatTypes.h"
 #include "AIChatCommon.h"
 #include "SelectionTranslate.h"
 #include "SimpleBrowserWindow.h"

@@ -380,6 +380,7 @@ const CommandInfo gCommands[] = {
     {CmdEditFavorites, "CmdEditFavorites\0", StrL("Edit Favorites...")},
     {CmdCloseMissingTabs, "CmdCloseMissingTabs\0", StrL("Close Tabs of Missing Files")},
     {CmdViewAsHex, "CmdViewAsHex\0", StrL("View As Hex")},
+    {CmdAIChatWithCustomAPI, "CmdAIChatWithCustomAPI\0", StrL("Custom AI chat...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

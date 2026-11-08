@@ -68,8 +68,8 @@ static const FieldInfo gPageGridFields[] = {
     {offsetof(PageGrid, offsetY), SettingType::Float, (intptr_t)"0"},
     {offsetof(PageGrid, slant), SettingType::Float, (intptr_t)"90"},
     {offsetof(PageGrid, color), SettingType::Color, (intptr_t)"#8080ff"},
-    {offsetof(PageGrid, style), SettingType::String, (intptr_t)"dots", false, gEnumPageGridStyle, nullptr},
-    {offsetof(PageGrid, units), SettingType::String, (intptr_t)"in", false, gEnumPageGridUnits, nullptr},
+    {offsetof(PageGrid, style), SettingType::String, (intptr_t)"dots", false, false, gEnumPageGridStyle, nullptr},
+    {offsetof(PageGrid, units), SettingType::String, (intptr_t)"in", false, false, gEnumPageGridUnits, nullptr},
 };
 static const StructInfo gPageGridInfo = {
     sizeof(PageGrid),
@@ -130,8 +130,8 @@ static const FieldInfo gEBookUIFields[] = {
     {offsetof(EBookUI, ignoreDocumentCSS), SettingType::Bool, false},
     {offsetof(EBookUI, customCSS), SettingType::String, 0},
     {offsetof(EBookUI, windowBgCol), SettingType::Color, (intptr_t)""},
-    {offsetof(EBookUI, defaultDisplayMode), SettingType::String, (intptr_t)"", false, gEnumEBookUIDefaultDisplayMode,
-     "the global DefaultDisplayMode"},
+    {offsetof(EBookUI, defaultDisplayMode), SettingType::String, (intptr_t)"", false, false,
+     gEnumEBookUIDefaultDisplayMode, "the global DefaultDisplayMode"},
 };
 static const StructInfo gEBookUIInfo = {
     sizeof(EBookUI),
@@ -198,7 +198,7 @@ static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, limitToWindowWidth), SettingType::Bool, false},
     {offsetof(ComicBookUI, limitToWindowHeight), SettingType::Bool, false},
     {offsetof(ComicBookUI, autoRotateWidePages), SettingType::Bool, false},
-    {offsetof(ComicBookUI, defaultDisplayMode), SettingType::String, (intptr_t)"", false,
+    {offsetof(ComicBookUI, defaultDisplayMode), SettingType::String, (intptr_t)"", false, false,
      gEnumComicBookUIDefaultDisplayMode, "the global DefaultDisplayMode"},
     {offsetof(ComicBookUI, defaultZoom), SettingType::String, (intptr_t)""},
     {offsetof(ComicBookUI, landscapeAsSpread), SettingType::Bool, true},
@@ -363,6 +363,29 @@ static const StructInfo gAntiGravityInfo = {
     false};
 static_assert(dimof(gAntiGravityFields) == 5);
 
+static const FieldInfo gCustomAIFields[] = {
+    {offsetof(CustomAI, name), SettingType::String, (intptr_t)"Custom AI"},
+    {offsetof(CustomAI, baseURL), SettingType::String, (intptr_t)""},
+    {offsetof(CustomAI, apiKeyEnv), SettingType::String, (intptr_t)"CUSTOM_AI_API_KEY"},
+    {offsetof(CustomAI, apiKey), SettingType::String, (intptr_t)"", false, true},
+    {offsetof(CustomAI, model), SettingType::String, (intptr_t)""},
+    {offsetof(CustomAI, models), SettingType::String, (intptr_t)""},
+    {offsetof(CustomAI, includeCurrentPage), SettingType::Bool, false},
+    {offsetof(CustomAI, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
+};
+static const StructInfo gCustomAIInfo = {
+    sizeof(CustomAI),
+    (u16)dimof(gCustomAIFields),
+    gCustomAIFields,
+    "Name\0BaseURL\0ApiKeyEnv\0ApiKey\0Model\0Models\0IncludeCurrentPage\0BgColor",
+    "display name of the OpenAI-compatible chat provider\0OpenAI-compatible API base URL, such as "
+    "https://api.deepseek.com/v1\0environment variable holding the API key; takes precedence over ApiKey\0API key; "
+    "prefer ApiKeyEnv, which keeps it out of this file\0model ID accepted by the provider\0additional model IDs, "
+    "comma-separated\0send the current page's text to the configured provider with each question\0background color of "
+    "the custom AI chat panel",
+    false};
+static_assert(dimof(gCustomAIFields) == 8);
+
 static const FieldInfo gAIChatFields[] = {
     {offsetof(AIChat, fontName), SettingType::String, (intptr_t)""},
     {offsetof(AIChat, fontSize), SettingType::Int, 0},
@@ -395,7 +418,7 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, freeTextOpacity), SettingType::Int, 100},
     {offsetof(Annotations, freeTextSize), SettingType::Int, 12},
     {offsetof(Annotations, freeTextBorderWidth), SettingType::Int, 1},
-    {offsetof(Annotations, freeTextAlignment), SettingType::String, (intptr_t)"left", false,
+    {offsetof(Annotations, freeTextAlignment), SettingType::String, (intptr_t)"left", false, false,
      gEnumAnnotationsFreeTextAlignment, nullptr},
     {offsetof(Annotations, presetColors), SettingType::String,
      (intptr_t)"#ffff00 #8bf05d #99defa #f199d2 #e24745 #ff0000 #0000ff #000000"},
@@ -412,7 +435,7 @@ static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, stampColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, caretColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, fileAttachmentColor), SettingType::Color, (intptr_t)""},
-    {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)"", false, gEnumAnnotationsTextIconType,
+    {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)"", false, false, gEnumAnnotationsTextIconType,
      "note"},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, signatureImage), SettingType::String, 0},
@@ -501,10 +524,10 @@ static_assert(dimof(gForwardSearchFields) == 4);
 static const char* gEnumPrinterDefaultsPrintScale[] = {"shrink", "fit", "none", nullptr};
 static const char* gEnumPrinterDefaultsCollate[] = {"default", "collate", "nocollate", nullptr};
 static const FieldInfo gPrinterDefaultsFields[] = {
-    {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t)"shrink", false,
+    {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t)"shrink", false, false,
      gEnumPrinterDefaultsPrintScale, nullptr},
-    {offsetof(PrinterDefaults, collate), SettingType::String, (intptr_t)"default", false, gEnumPrinterDefaultsCollate,
-     nullptr},
+    {offsetof(PrinterDefaults, collate), SettingType::String, (intptr_t)"default", false, false,
+     gEnumPrinterDefaultsCollate, nullptr},
     {offsetof(PrinterDefaults, printDpi), SettingType::Float, (intptr_t)"0"},
     {offsetof(PrinterDefaults, autoRotate), SettingType::Bool, true},
 };
@@ -526,10 +549,10 @@ static const char* gEnumFullscreenDisplayMode[] = {
     "continuous", "continuous facing", "continuous book view", nullptr};
 static const FieldInfo gFullscreenFields[] = {
     {offsetof(Fullscreen, showToolbar), SettingType::Bool, false, true},
-    {offsetof(Fullscreen, toolbar), SettingType::String, (intptr_t)"hide", false, gEnumFullscreenToolbar,
+    {offsetof(Fullscreen, toolbar), SettingType::String, (intptr_t)"hide", false, false, gEnumFullscreenToolbar,
      "show or hide, from Fullscreen.ShowToolbar"},
     {offsetof(Fullscreen, showMenubar), SettingType::Bool, false},
-    {offsetof(Fullscreen, displayMode), SettingType::String, (intptr_t)"", false, gEnumFullscreenDisplayMode,
+    {offsetof(Fullscreen, displayMode), SettingType::String, (intptr_t)"", false, false, gEnumFullscreenDisplayMode,
      "single page in presentation, the current layout in windowed fullscreen"},
 };
 static const StructInfo gFullscreenInfo = {
@@ -848,9 +871,9 @@ const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, tocState), SettingType::IntArray, 0},
     {offsetof(FileState, filePath), SettingType::String, 0},
     {offsetof(FileState, decryptionKey), SettingType::String, 0},
-    {offsetof(FileState, sidebarView), SettingType::String, 0, false, gEnumFileStateSidebarView, "bookmarks"},
-    {offsetof(FileState, displayMode), SettingType::String, (intptr_t)"automatic", false, gEnumFileStateDisplayMode,
-     nullptr},
+    {offsetof(FileState, sidebarView), SettingType::String, 0, false, false, gEnumFileStateSidebarView, "bookmarks"},
+    {offsetof(FileState, displayMode), SettingType::String, (intptr_t)"automatic", false, false,
+     gEnumFileStateDisplayMode, nullptr},
     {offsetof(FileState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(FileState, bgCol), SettingType::Color, (intptr_t)""},
     {offsetof(FileState, tabCol), SettingType::Color, (intptr_t)""},
@@ -939,14 +962,14 @@ static const char* gEnumTabStateDisplayMode[] = {
 static const char* gEnumTabStateSidebarView[] = {"", "bookmarks", "thumbnails", nullptr};
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::String, 0},
-    {offsetof(TabState, displayMode), SettingType::String, (intptr_t)"automatic", false, gEnumTabStateDisplayMode,
-     nullptr},
+    {offsetof(TabState, displayMode), SettingType::String, (intptr_t)"automatic", false, false,
+     gEnumTabStateDisplayMode, nullptr},
     {offsetof(TabState, pageNo), SettingType::String, (intptr_t)"1"},
     {offsetof(TabState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(TabState, rotation), SettingType::Int, 0},
     {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_2_Info},
     {offsetof(TabState, showToc), SettingType::Bool, true},
-    {offsetof(TabState, sidebarView), SettingType::String, 0, false, gEnumTabStateSidebarView, "bookmarks"},
+    {offsetof(TabState, sidebarView), SettingType::String, 0, false, false, gEnumTabStateSidebarView, "bookmarks"},
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
 };
 const StructInfo gTabStateInfo = {
@@ -1044,7 +1067,7 @@ static const FieldInfo gSettingsFields[] = {
     {(size_t)-1, SettingType::Comment,
      (intptr_t)"For documentation, see https://www.sumatrapdfreader.org/settings/settings3-7.html"},
     {(size_t)-1, SettingType::Comment, 0},
-    {offsetof(Settings, defaultDisplayMode), SettingType::String, (intptr_t)"automatic", false,
+    {offsetof(Settings, defaultDisplayMode), SettingType::String, (intptr_t)"automatic", false, false,
      gEnumSettingsDefaultDisplayMode, nullptr},
     {offsetof(Settings, defaultZoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(Settings, disableJavaScript), SettingType::Bool, false},
@@ -1058,12 +1081,14 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, noHomeTab), SettingType::Bool, false},
     {offsetof(Settings, noCaj2pdfConverterDownload), SettingType::Bool, false, OS_WASM != 0},
     {offsetof(Settings, homePageSortByFrequentlyRead), SettingType::Bool, false},
-    {offsetof(Settings, homePageViewMode), SettingType::String, (intptr_t)"thumbnails", false,
+    {offsetof(Settings, homePageViewMode), SettingType::String, (intptr_t)"thumbnails", false, false,
      gEnumSettingsHomePageViewMode, nullptr},
-    {offsetof(Settings, thumbnailsType), SettingType::String, (intptr_t)"full", false, gEnumSettingsThumbnailsType,
-     nullptr},
-    {offsetof(Settings, filePicker), SettingType::String, (intptr_t)"", OS_WASM != 0, gEnumSettingsFilePicker, "os"},
-    {offsetof(Settings, printerUI), SettingType::String, (intptr_t)"", OS_WASM != 0, gEnumSettingsPrinterUI, "auto"},
+    {offsetof(Settings, thumbnailsType), SettingType::String, (intptr_t)"full", false, false,
+     gEnumSettingsThumbnailsType, nullptr},
+    {offsetof(Settings, filePicker), SettingType::String, (intptr_t)"", OS_WASM != 0, false, gEnumSettingsFilePicker,
+     "os"},
+    {offsetof(Settings, printerUI), SettingType::String, (intptr_t)"", OS_WASM != 0, false, gEnumSettingsPrinterUI,
+     "auto"},
     {offsetof(Settings, reloadModifiedDocuments), SettingType::Bool, true, OS_WASM != 0},
     {offsetof(Settings, showSignatureStatus), SettingType::Bool, true},
     {offsetof(Settings, ofdTrustedCertificates), SettingType::StringArray, 0},
@@ -1084,15 +1109,16 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, showTips), SettingType::Bool, true},
     {offsetof(Settings, customColors), SettingType::String, 0, true},
     {offsetof(Settings, showToolbar), SettingType::Bool, true, true},
-    {offsetof(Settings, toolbar), SettingType::String, (intptr_t)"show", false, gEnumSettingsToolbar,
+    {offsetof(Settings, toolbar), SettingType::String, (intptr_t)"show", false, false, gEnumSettingsToolbar,
      "show or hide, from ShowToolbar"},
-    {offsetof(Settings, toolbarPosition), SettingType::String, (intptr_t)"top", false, gEnumSettingsToolbarPosition,
-     nullptr},
-    {offsetof(Settings, pageInfoLocation), SettingType::String, (intptr_t)"notification", false,
+    {offsetof(Settings, toolbarPosition), SettingType::String, (intptr_t)"top", false, false,
+     gEnumSettingsToolbarPosition, nullptr},
+    {offsetof(Settings, pageInfoLocation), SettingType::String, (intptr_t)"notification", false, false,
      gEnumSettingsPageInfoLocation, nullptr},
     {offsetof(Settings, searchUIFloating), SettingType::Bool, false},
     {offsetof(Settings, showFavorites), SettingType::Bool, false},
-    {offsetof(Settings, sidebarBottomView), SettingType::String, 0, false, gEnumSettingsSidebarBottomView, "favorites"},
+    {offsetof(Settings, sidebarBottomView), SettingType::String, 0, false, false, gEnumSettingsSidebarBottomView,
+     "favorites"},
     {offsetof(Settings, showSidebarMiddle), SettingType::Bool, false},
     {offsetof(Settings, sortFavoritesByName), SettingType::Bool, false},
     {offsetof(Settings, favoritesManualOrder), SettingType::Bool, false},
@@ -1101,8 +1127,8 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, showThumbnailsIfNoToc), SettingType::Bool, false},
     {offsetof(Settings, sidebarOnRight), SettingType::Bool, false},
     {offsetof(Settings, sidebarAutoHide), SettingType::Bool, false},
-    {offsetof(Settings, sidebarWindowSize), SettingType::String, (intptr_t)"", false, gEnumSettingsSidebarWindowSize,
-     "keep"},
+    {offsetof(Settings, sidebarWindowSize), SettingType::String, (intptr_t)"", false, false,
+     gEnumSettingsSidebarWindowSize, "keep"},
     {offsetof(Settings, showLinks), SettingType::Bool, false},
     {offsetof(Settings, highlightFormFields), SettingType::Bool, true},
     {offsetof(Settings, clickEdgeToTurnPage), SettingType::Bool, false},
@@ -1122,7 +1148,8 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, autoGenerateTOC), SettingType::Bool, false},
     {offsetof(Settings, showStartPage), SettingType::Bool, true},
     {offsetof(Settings, sidebarDx), SettingType::Int, 0, true},
-    {offsetof(Settings, scrollbars), SettingType::String, (intptr_t)"smart", false, gEnumSettingsScrollbars, nullptr},
+    {offsetof(Settings, scrollbars), SettingType::String, (intptr_t)"smart", false, false, gEnumSettingsScrollbars,
+     nullptr},
     {offsetof(Settings, scrollbarInSinglePage), SettingType::Bool, false},
     {offsetof(Settings, smoothScroll), SettingType::Bool, true},
     {offsetof(Settings, scrollLineAmount), SettingType::Int, 16},
@@ -1142,10 +1169,11 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, tabWidth), SettingType::Int, 300},
     {offsetof(Settings, tabsEqualWidth), SettingType::Bool, false},
     {offsetof(Settings, theme), SettingType::String, (intptr_t)"Light"},
-    {offsetof(Settings, helpTheme), SettingType::String, (intptr_t)"app", false, gEnumSettingsHelpTheme, nullptr},
+    {offsetof(Settings, helpTheme), SettingType::String, (intptr_t)"app", false, false, gEnumSettingsHelpTheme,
+     nullptr},
     {offsetof(Settings, lastLightTheme), SettingType::String, (intptr_t)"", true},
     {offsetof(Settings, lastDarkTheme), SettingType::String, (intptr_t)"", true},
-    {offsetof(Settings, documentColorsFollowTheme), SettingType::String, (intptr_t)"off", false,
+    {offsetof(Settings, documentColorsFollowTheme), SettingType::String, (intptr_t)"off", false, false,
      gEnumSettingsDocumentColorsFollowTheme, nullptr},
     {offsetof(Settings, tocDy), SettingType::Int, 0, true},
     {offsetof(Settings, sidebarMiddleDy), SettingType::Int, 0, true},
@@ -1156,7 +1184,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, treeFontSize), SettingType::Int, 0},
     {offsetof(Settings, uIFontSize), SettingType::Int, 0},
     {offsetof(Settings, disableAntiAlias), SettingType::Bool, false},
-    {offsetof(Settings, engineeringDrawingEnhance), SettingType::String, (intptr_t)"off", false,
+    {offsetof(Settings, engineeringDrawingEnhance), SettingType::String, (intptr_t)"off", false, false,
      gEnumSettingsEngineeringDrawingEnhance, nullptr},
     {offsetof(Settings, disableAutoLinks), SettingType::Bool, false},
     {offsetof(Settings, useSysColors), SettingType::Bool, false},
@@ -1192,13 +1220,15 @@ static const FieldInfo gSettingsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, antiGravity), SettingType::Struct, (intptr_t)&gAntiGravityInfo, OS_WASM != 0},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(Settings, customAI), SettingType::Struct, (intptr_t)&gCustomAIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, aiChat), SettingType::Struct, (intptr_t)&gAIChatInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, aiChatSidebarDx), SettingType::Int, 0, true},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, translateToLang), SettingType::String, (intptr_t)"", true},
     {offsetof(Settings, translateFromLang), SettingType::String, (intptr_t)"", true},
-    {offsetof(Settings, translateEngine), SettingType::String, (intptr_t)"", true, gEnumSettingsTranslateEngine,
+    {offsetof(Settings, translateEngine), SettingType::String, (intptr_t)"", true, false, gEnumSettingsTranslateEngine,
      "the first available engine"},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, annotations), SettingType::Struct, (intptr_t)&gAnnotationsInfo},
@@ -1268,11 +1298,11 @@ const StructInfo gSettingsInfo = {
     "\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption\0SelectionTool"
     "bar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0FitWidthPercent\0\0FixedPageUI\0\0"
     "EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0Ant"
-    "iGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0Ext"
-    "ernalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0"
-    "\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos"
-    "\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpda"
-    "teCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
+    "iGravity\0\0CustomAI\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annota"
+    "tions\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0"
+    "\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowStat"
+    "e\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0Ti"
+    "meOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI file uses page "
     "1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content or percent like 100%\0if "
@@ -1431,12 +1461,12 @@ const StructInfo gSettingsInfo = {
     "available\0\0customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
     "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
     "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat "
-    "sidebar\0\0appearance of the AI chat sidebar, shared by all backends\0\0width of the AI chat sidebar (0 = use "
-    "default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for "
-    "selection translation; empty uses OS UI language\0remembered source language for selection translation; empty "
-    "means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or "
-    "Antigravity\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various "
-    "file types. See [docs for more "
+    "sidebar\0\0settings for an OpenAI-compatible Chat Completions provider\0\0appearance of the AI chat sidebar, "
+    "shared by all backends\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and "
+    "OpenAI Codex (internal)\0\0remembered destination language for selection translation; empty uses OS UI "
+    "language\0remembered source language for selection translation; empty means Auto\0remembered engine for Translate "
+    "Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity\0\0default values for annotations "
+    "in PDF documents\0\0list of additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "
@@ -1458,7 +1488,7 @@ const StructInfo gSettingsInfo = {
     "File / Link SumatraPDF Web. Do not share the settings file.\0an empty value means the public SumatraPDF Web site. "
     "The dialog does not edit it.\0\0Settings below are not recognized by the current version",
     false};
-static_assert(dimof(gSettingsFields) == 191);
+static_assert(dimof(gSettingsFields) == 193);
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

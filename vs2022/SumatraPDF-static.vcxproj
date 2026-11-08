@@ -1439,9 +1439,11 @@
     <ClInclude Include="..\src\gui\win\WebView.h" />
     <ClInclude Include="..\src\gui\win\WinGui.h" />
     <ClInclude Include="..\src\resource.h" />
+    <ClInclude Include="..\src\shared\AIChatAPI.h" />
     <ClInclude Include="..\src\shared\AIChatCommon.h" />
     <ClInclude Include="..\src\shared\AIChatPanel.h" />
     <ClInclude Include="..\src\shared\AIChatPanelCommon.h" />
+    <ClInclude Include="..\src\shared\AIChatTypes.h" />
     <ClInclude Include="..\src\shared\Accelerators.h" />
     <ClInclude Include="..\src\shared\AdvancedSettingsDialogCommon.h" />
     <ClInclude Include="..\src\shared\AnnotEditToolbar.h" />
@@ -2082,6 +2084,7 @@
     <ClCompile Include="..\src\gui\win\WebView.cpp" />
     <ClCompile Include="..\src\gui\win\WindowBase.cpp" />
     <ClCompile Include="..\src\shared\AIAntiGravity.cpp" />
+    <ClCompile Include="..\src\shared\AIChatAPI.cpp" />
     <ClCompile Include="..\src\shared\AIChatCommon.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

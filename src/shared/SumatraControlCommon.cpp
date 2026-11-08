@@ -22,6 +22,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "TextSelection.h"
 #include "Selection.h"

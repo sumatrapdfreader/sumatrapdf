@@ -243,6 +243,9 @@
     <ClInclude Include="..\src\resource.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\AIChatAPI.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\AIChatCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -250,6 +253,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AIChatPanelCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\AIChatTypes.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Accelerators.h">
@@ -1149,6 +1155,9 @@
       <Filter>src\gui\win</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIAntiGravity.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AIChatAPI.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIChatCommon.cpp">

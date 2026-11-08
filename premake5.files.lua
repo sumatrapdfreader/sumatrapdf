@@ -335,6 +335,8 @@ function sumatrapdf_files()
     "MarkdownToc.*",
     "EmbeddedResources.*",
     "AIChatCommon.*",
+    "AIChatAPI.*",
+    "AIChatTypes.h",
     "AIChatPanel.*",
     "AIChatPanelCommon.*",
     "AIAntiGravity.*",

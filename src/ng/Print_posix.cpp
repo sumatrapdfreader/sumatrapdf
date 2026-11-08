@@ -36,6 +36,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Selection.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"

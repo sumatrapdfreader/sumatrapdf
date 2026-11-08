@@ -33,6 +33,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Theme.h"
 #include "SumatraConfig.h"

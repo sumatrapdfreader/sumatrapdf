@@ -38,6 +38,7 @@ extern "C" {
 #include "Translations.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Canvas.h"
 #include "Commands.h"

@@ -473,7 +473,7 @@ static bool StructIsTemporary(const StructInfo* info, const void* data) {
 }
 
 static void SerializeStructRec(str::Builder& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
-                               int indent = 0) {
+                               SerializeOpt opt, int indent = 0) {
     const u8* base = (const u8*)data;
     const char* fieldName = info->fieldNames;
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += len(fieldName) + 1) {
@@ -490,7 +490,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
             out.Append(fieldNameStr);
             out.Append(StrL(" [\r\n"));
             SerializeStructRec(out, GetSubstruct(field), base + field.offset,
-                               prevNode ? prevNode->GetChild(fieldNameStr) : nullptr, indent + 1);
+                               prevNode ? prevNode->GetChild(fieldNameStr) : nullptr, opt, indent + 1);
             Indent(out, indent);
             out.Append(StrL("]\r\n"));
         } else if (SettingType::StructPtr == field.type) {
@@ -501,7 +501,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
                 out.Append(fieldNameStr);
                 out.Append(StrL(" [\r\n"));
                 SerializeStructRec(out, GetSubstruct(field), sub, prevNode ? prevNode->GetChild(fieldNameStr) : nullptr,
-                                   indent + 1);
+                                   opt, indent + 1);
                 Indent(out, indent);
                 out.Append(StrL("]\r\n"));
             }
@@ -519,7 +519,7 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
                     }
                     Indent(out, indent + 1);
                     out.Append(StrL("[\r\n"));
-                    SerializeStructRec(out, elemInfo, elem, nullptr, indent + 2);
+                    SerializeStructRec(out, elemInfo, elem, nullptr, opt, indent + 2);
                     Indent(out, indent + 1);
                     out.Append(StrL("]\r\n"));
                 }
@@ -533,6 +533,8 @@ static void SerializeStructRec(str::Builder& out, const StructInfo* info, const 
                 out.Append(FieldDefaultStr(field));
             }
             out.Append(StrL("\r\n"));
+        } else if (field.secret && opt == SerializeOpt::NoSecrets) {
+            // dropped; marked known below so a copy in prevData isn't kept either
         } else {
             int offset = len(out);
             Indent(out, indent);
@@ -612,13 +614,13 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
     return base;
 }
 
-Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData) {
+Str SerializeStruct(const StructInfo* info, const void* strct, Str prevData, SerializeOpt opt) {
     str::Builder out;
     // UTF-8 BOM and CRLF. Windows 7 Notepad only breaks lines on CRLF and
     // only treats the file as UTF-8 when a BOM is present (issue #6264).
     out.Append(StrL(kUtf8Bom));
     SquareTreeNode* root = ParseSquareTree(prevData);
-    SerializeStructRec(out, info, strct, root);
+    SerializeStructRec(out, info, strct, root, opt);
     delete root;
     return out.TakeStr();
 }

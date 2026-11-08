@@ -73,6 +73,7 @@
 #include "SumatraPDF.h"
 #include "SumatraLog.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Tabs.h"
 #include "HexView.h"
@@ -6705,6 +6706,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdAIChatWithOpenAICodex:
             OnAIChatToggle(win, (int)AIChatBackend::Codex);
+            break;
+
+        case CmdAIChatWithCustomAPI:
+            OnAIChatToggle(win, (int)AIChatBackend::CustomAPI);
             break;
 
         case CmdAIChatWithAntiGravity:

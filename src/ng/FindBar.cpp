@@ -30,6 +30,7 @@
 #include "Translations.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"

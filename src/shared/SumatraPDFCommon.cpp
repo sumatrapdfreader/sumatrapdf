@@ -50,6 +50,7 @@
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "AnnotPlacement.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "UpdateCheck.h"
 #include "Commands.h"

@@ -42,6 +42,7 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraConfig.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "AnnotFilterToolbar.h"

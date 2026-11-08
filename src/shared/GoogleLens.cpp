@@ -25,6 +25,7 @@
 #include "PngOptimizer.h"
 #include "Selection.h"
 #include "Translations.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "GoogleLens.h"
 

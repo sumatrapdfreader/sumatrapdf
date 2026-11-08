@@ -24,6 +24,7 @@
 #include "Theme.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "AppTools.h"
 #include "AnnotFilterToolbar.h"

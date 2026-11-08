@@ -19,6 +19,8 @@
 import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type SuiteOptions } from "./util.ts";
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
+import { testit as customAIUI } from "./custom-ai-ui.ts";
+import { testit as customAI } from "./custom-ai.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as lintControlIds } from "./lint-control-ids.ts";
 import { testit as lintPostedTasks } from "./lint-posted-tasks.ts";
@@ -1118,6 +1120,8 @@ export const tests: NamedTest[] = [
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
   ["codex-provider", codexProvider],
+  ["custom-ai", customAI],
+  ["custom-ai-ui", customAIUI],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

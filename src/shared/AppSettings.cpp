@@ -33,6 +33,7 @@
 #include "FileHistory.h"
 #include "SumatraPDF.h"
 #if !defined(SUMATRA_NG)
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "DisplayModel.h"
@@ -472,7 +473,7 @@ static void UpdateCrashHandlerSettings() {
     Vec<FileState*> empty;
     Vec<FileState*>* saved = gSettings->fileStates;
     gSettings->fileStates = &empty;
-    Str d = SerializeSettings(gSettings, {});
+    Str d = SerializeSettings(gSettings, {}, SerializeOpt::NoSecrets);
     gSettings->fileStates = saved;
     CrashHandlerSetSettings(d);
     str::Free(d);
@@ -683,7 +684,7 @@ static bool SaveSettings(bool force) {
     // while these bytes still match the last in-memory snapshot
     bool missing = !file::Exists(path);
     TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
-    Str prefs = SerializeSettings(gSettings, prevPrefs);
+    Str prefs = SerializeSettings(gSettings, prevPrefs, SerializeOpt::All);
     AutoCall freePrefs((void (*)(Str))str::Free, prefs);
     ReportIf(len(prefs) == 0);
     if (len(prefs) == 0) {
@@ -1432,7 +1433,7 @@ static void CollectSettingFieldsInStruct(Vec<SettingField>& out, const StructInf
             comment = Str(fieldComment);
             fieldComment += len(comment) + 1;
         }
-        if (field.internal || field.type == SettingType::Comment || field.offset == (size_t)-1) {
+        if (field.internal || field.secret || field.type == SettingType::Comment || field.offset == (size_t)-1) {
             continue;
         }
         int offset = baseOffset + (int)field.offset;
@@ -1714,7 +1715,7 @@ static SeqStrings kFileStateKeepNoPerDoc =
 
 // prevData is used to preserve fields that exists in prevField but not in Settings
 // caller has to free()
-Str SerializeSettings(Settings* prefs, Str prevData) {
+Str SerializeSettings(Settings* prefs, Str prevData, SerializeOpt opt) {
     Vec<FileState*>* allFileStates = prefs->fileStates;
     Vec<FileState*> withFavorites;
 
@@ -1762,7 +1763,7 @@ Str SerializeSettings(Settings* prefs, Str prevData) {
         gFileStateInfo.fieldNames = keepNames;
         gFileStateInfo.fieldCount = (u16)nKeep;
 
-        Str serialized = SerializeStruct(&gSettingsInfo, prefs, prevData);
+        Str serialized = SerializeStruct(&gSettingsInfo, prefs, prevData, opt);
 
         gFileStateInfo.fields = savedFields;
         gFileStateInfo.fieldNames = savedNames;
@@ -1771,7 +1772,7 @@ Str SerializeSettings(Settings* prefs, Str prevData) {
         return serialized;
     }
 
-    return SerializeStruct(&gSettingsInfo, prefs, prevData);
+    return SerializeStruct(&gSettingsInfo, prefs, prevData, opt);
 }
 
 void DeleteSettings(Settings* gp) {

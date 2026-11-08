@@ -11,16 +11,6 @@ struct PlatformFont;
 struct WindowTab;
 struct WebViewResourceResult;
 
-constexpr int kAIChatProviderCount = 4;
-
-enum class AIChatBackend {
-    Claude,
-    Grok,
-    Codex,
-    AntiGravity,
-    None,
-};
-
 struct AIChatSessionInfo {
     Str sessionId;
     Str display;
@@ -143,7 +133,7 @@ struct AIChatProvider {
     // via AIChatPostUpdate / AIChatStreamSetSessionId
     virtual void ParseStreamLine(Str line, AIChatStreamCtx* ctx) = 0;
 
-    bool IsInstalled() { return len(FindExecutableTemp()) > 0; }
+    virtual bool IsInstalled() { return len(FindExecutableTemp()) > 0; }
 };
 
 bool IsAIChatAllowed();

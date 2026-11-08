@@ -28,6 +28,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "AppSettings.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Flags.h"
 #include "Commands.h"

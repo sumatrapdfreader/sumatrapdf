@@ -34,6 +34,8 @@ class Field {
   // saved & deserialized like any setting, but hidden from the advanced
   // settings dialog (app-managed / deprecated-for-migration values)
   Internal = false;
+  // a credential: left out of crash reports and not edited in the dialog
+  Secret = false;
   // not written by genStructMarkdown or genStructHTML. .internal() does not do this
   OmitFromDocs = false;
   DocComment: string;
@@ -59,6 +61,10 @@ class Field {
   }
   internal(): this {
     this.Internal = true;
+    return this;
+  }
+  secret(): this {
+    this.Secret = true;
     return this;
   }
   omitFromDocs(): this {
@@ -745,6 +751,27 @@ const antiGravity: Field[] = [
       "etc. in headless print mode (agy cannot prompt for permissions with -p)",
   ),
   field("BgColor", Color, "#ffffff", "background color of the Antigravity chat panel"),
+];
+
+const customAI: Field[] = [
+  field("Name", Str, "Custom AI", "display name of the OpenAI-compatible chat provider"),
+  field("BaseURL", Str, "", "OpenAI-compatible API base URL, such as https://api.deepseek.com/v1"),
+  field(
+    "ApiKeyEnv",
+    Str,
+    "CUSTOM_AI_API_KEY",
+    "environment variable holding the API key; takes precedence over ApiKey",
+  ),
+  field("ApiKey", Str, "", "API key; prefer ApiKeyEnv, which keeps it out of this file").secret(),
+  field("Model", Str, "", "model ID accepted by the provider"),
+  field("Models", Str, "", "additional model IDs, comma-separated"),
+  field(
+    "IncludeCurrentPage",
+    Bool,
+    false,
+    "send the current page's text to the configured provider with each question",
+  ),
+  field("BgColor", Color, "#ffffff", "background color of the custom AI chat panel"),
 ];
 
 const aiChat: Field[] = [
@@ -2212,6 +2239,8 @@ const globalPrefs: Field[] = [
   emptyLine(),
   struct("AntiGravity", antiGravity, "settings for the Antigravity chat sidebar").ver("3.7"),
   emptyLine(),
+  struct("CustomAI", customAI, "settings for an OpenAI-compatible Chat Completions provider").ver("3.7"),
+  emptyLine(),
   struct("AIChat", aiChat, "appearance of the AI chat sidebar, shared by all backends").ver("3.7"),
   emptyLine(),
   field(
@@ -2425,6 +2454,7 @@ const globalPrefsLayout = [
   "GrokBuild",
   "CodexBuild",
   "AntiGravity",
+  "CustomAI",
   "AIChat",
   "EBookUI",
   "ComicBookUI",
@@ -2842,14 +2872,17 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     } else if (struc.StructName === "Settings" && desktopOnlySettings.has(field.Name)) {
       dataLine.push("OS_WASM != 0");
     }
+    // positional FieldInfo initializers: internal, secret, enumValues, enumEmpty
+    if (field.Secret) {
+      while (dataLine.length < 4) dataLine.push("false");
+      dataLine.push("true");
+    }
     if (field.EnumValues) {
       if (field.Type !== Str) {
         throw new Error(`${field.Name}: only a string setting can be an enum`);
       }
       enumArrays.push(enumArrayDef(fullName, field));
-      if (dataLine.length === 3) {
-        dataLine.push("false");
-      }
+      while (dataLine.length < 5) dataLine.push("false");
       dataLine.push(enumArrayName(fullName, field));
       dataLine.push(field.EnumEmpty !== null ? `"${escapeCStr(field.EnumEmpty)}"` : "nullptr");
     }

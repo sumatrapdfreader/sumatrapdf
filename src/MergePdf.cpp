@@ -26,6 +26,7 @@
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "SumatraPDF.h"
 #include "SumatraConfig.h"

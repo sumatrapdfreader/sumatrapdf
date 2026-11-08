@@ -33,6 +33,7 @@
 #include "MainWindow.h"
 #include "ReadingBar.h"
 #include "ReadingAutoScroll.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Notifications.h"
 #include "Translations.h"

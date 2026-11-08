@@ -19,6 +19,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Commands.h"
 #include "ExternalViewers.h"
@@ -386,6 +387,10 @@ MenuDef menuDefView[] = {
     {
         TrN("Antigravity chat"),
         CmdAIChatWithAntiGravity,
+    },
+    {
+        TrN("Custom AI"),
+        CmdAIChatWithCustomAPI,
     },
     {
         {},
@@ -1080,6 +1085,10 @@ MenuDef menuDefDocumentAIChat[] = {
     {
         TrN("Antigravity"),
         CmdAIChatWithAntiGravity,
+    },
+    {
+        TrN("Custom AI"),
+        CmdAIChatWithCustomAPI,
     },
     {
         {},

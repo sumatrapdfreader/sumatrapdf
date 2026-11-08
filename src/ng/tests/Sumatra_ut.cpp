@@ -20,6 +20,7 @@
 #include "DisplayMode.h"
 #include "Flags.h"
 #include "Commands.h"
+#include "AIChatTypes.h"
 #include "AIChatCommon.h"
 #include "SystemFonts.h"
 
