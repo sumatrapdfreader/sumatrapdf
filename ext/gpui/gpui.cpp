@@ -102038,7 +102038,10 @@ static Notification NotificationOwnedCopy(const Notification& item) {
 }
 
 NotificationListState::~NotificationListState() {
-    NotificationStopAdvancing(this);
+
+    isAdvancing = false;
+    advanceTimer = 0;
+    advanceWin = nullptr;
     for (int i = 0; i < items.len; i++) {
         NotificationFreeOwned(&items[i]);
     }
@@ -261479,8 +261482,16 @@ Str WebViewVersionTemp() {
 }
 
 bool WebViewAvailable() {
-    RuntimeInfo rt;
-    return FindRuntime(&rt) || FindRuntime(&rt, nullptr, false);
+    constexpr ULONGLONG kCacheMs = 2000;
+    static ULONGLONG checkedAt = 0;
+    static bool available = false;
+    ULONGLONG now = GetTickCount64();
+    if (checkedAt == 0 || now - checkedAt >= kCacheMs) {
+        RuntimeInfo rt;
+        available = FindRuntime(&rt) || FindRuntime(&rt, nullptr, false);
+        checkedAt = now ? now : 1;
+    }
+    return available;
 }
 
 template <typename I, typename A1, typename A2>
