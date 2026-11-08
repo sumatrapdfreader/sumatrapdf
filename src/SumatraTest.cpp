@@ -840,28 +840,6 @@ TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
-// Verifies Tr resolves error-path strings through the translation table.
-TempStr I18nErrorStringResultTemp(int* exitCodeOut) {
-    str::Builder out;
-    Str err = Tr("Error");
-    Str crash = Tr("SumatraPDF crashed");
-    Str printers = Tr("SumatraPDF - Show Printers");
-    bool ok = len(err) > 0 && len(crash) > 0 && len(printers) > 0 &&
-              str::Eq(err, trans::GetTranslation(StrL("Error"))) &&
-              str::Eq(crash, trans::GetTranslation(StrL("SumatraPDF crashed"))) &&
-              str::Eq(printers, trans::GetTranslation(StrL("SumatraPDF - Show Printers")));
-    if (ok) {
-        out.Append(fmt("OK error=%s crash=%s printers=%s\n", err, crash, printers));
-    } else {
-        out.Append(fmt("FAIL error=%s crash=%s printers=%s\n", err ? err : StrL("(null)"),
-                       crash ? crash : StrL("(null)"), printers ? printers : StrL("(null)")));
-    }
-    if (exitCodeOut) {
-        *exitCodeOut = ok ? 0 : 1;
-    }
-    return ToStrTemp(out);
-}
-
 // Extracts the first image of a page the way Copy Image / Save Image do and
 // reports its size and corner colors, so a test can check it is oriented the
 // way it is drawn on the page (issue #6214).

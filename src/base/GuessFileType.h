@@ -98,5 +98,3 @@ TempStr GetExtForFileTypeTemp(FileType);
 bool IsOfficeFileType(FileType);
 
 int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft);
-
-TempStr FileKindResultTemp(Str path, Str expectedExt, int* exitCodeOut = nullptr);

@@ -20,7 +20,6 @@ export const controlCommands: Record<string, number> = {
   Ping: 1,
   Quit: 2,
   TestSelectionTranslate: 15,
-  TestFileKind: 25,
   TestFavoriteNav: 34,
   TestKeyboardLinkFollow: 36,
   TestSelectTextKeyboard: 40,

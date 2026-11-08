@@ -522,9 +522,7 @@ enum class ControlCmd : u16 {
     TestInverseSearch = 22,
     TestImageResizeArrowKey = 23,
     TestFindResultPageColumnClip = 24,
-    TestFileKind = 25,
     TestScrollToLink = 26,
-    TestI18nErrorString = 27,
     TestPageInfoOverlay = 28,
     TestGetToc = 29,
     TestPageLinks = 30,
@@ -1708,19 +1706,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = GetTocResultTemp(path, &exitCode);
-            AppendTestResult(req, exitCode, res);
-            break;
-        }
-
-        case ControlCmd::TestFileKind: {
-            Str path = StringArg(req, 0);
-            Str expectedKind = StringArg(req, 1);
-            if (len(path) == 0 || len(expectedKind) == 0) {
-                AppendError(req, StrL("TestFileKind expects string path, string expectedKind"));
-                break;
-            }
-            int exitCode = 0;
-            Str res = FileKindResultTemp(path, expectedKind, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

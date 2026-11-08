@@ -23,7 +23,6 @@ TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut = nullptr);
 TempStr SelectWordEdgesResultTemp(Str word, int* exitCodeOut = nullptr);
 TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut = nullptr);
 TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut = nullptr);
-TempStr I18nErrorStringResultTemp(int* exitCodeOut = nullptr);
 TempStr GetTocResultTemp(Str path, int* exitCodeOut = nullptr);
 TempStr MigrateTabResultTemp(int srcWin, int tabIdx, int dstWin, int* exitCodeOut);
 TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut = nullptr, const PointF* hit = nullptr);
