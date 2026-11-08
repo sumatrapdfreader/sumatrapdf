@@ -1362,14 +1362,16 @@ void RenderCache::AbortCurrentRequest(int threadIdx) {
     UpdateRenderInfo();
 }
 
-// AbortCurrentRequest sets req.abort from another thread, under requestAccess
+void RenderCache::BumpDarkModeEpoch() {
+    ScopedRecursiveMutex scope(&requestAccess);
+    darkModeEpoch++;
+}
+
+// AbortCurrentRequest sets req.abort and BumpDarkModeEpoch the epoch from
+// another thread, both under requestAccess
 static bool RenderWasDropped(RenderCache* cache, PageRenderRequest& req) {
-    bool aborted;
-    {
-        ScopedRecursiveMutex scope(&cache->requestAccess);
-        aborted = req.abort;
-    }
-    return aborted || req.darkModeEpoch != cache->darkModeEpoch;
+    ScopedRecursiveMutex scope(&cache->requestAccess);
+    return req.abort || req.darkModeEpoch != cache->darkModeEpoch;
 }
 
 // Renders one queued request into the cache. Returns false when the queue was

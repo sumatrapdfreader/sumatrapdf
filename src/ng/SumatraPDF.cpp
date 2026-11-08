@@ -277,7 +277,7 @@ void UpdateDocumentColors() {
     gRenderCache->textColor = text;
     gRenderCache->backgroundColor = bg;
     gRenderCache->linkColor = link;
-    gRenderCache->darkModeEpoch++;
+    gRenderCache->BumpDarkModeEpoch();
 
     // ng: orig also regenerates the chm / markdown previews here; their browser
     // host is step 11b
@@ -362,7 +362,7 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
             if (dm && dm->GetEngine()) {
                 dm->GetEngine()->disableAntiAlias = p->disableAntiAlias;
             }
-            gRenderCache->darkModeEpoch++;
+            gRenderCache->BumpDarkModeEpoch();
             w->RedrawAll(true);
         }
     }

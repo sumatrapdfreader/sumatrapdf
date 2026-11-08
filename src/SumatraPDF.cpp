@@ -4672,7 +4672,7 @@ void UpdateDocumentColors() {
     gRenderCache->textColor = text;
     gRenderCache->backgroundColor = bg;
     gRenderCache->linkColor = link;
-    gRenderCache->darkModeEpoch++;
+    gRenderCache->BumpDarkModeEpoch();
 
     // abort in-flight renders before restyle drops fz_page (ApplyReflowThemeCss)
     // also drop the engines' cached dark-mode analyses / processed images
@@ -12073,7 +12073,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleTransparencyGrid();
             // cached tiles were rendered opaque; bump epoch so they are not reused
             if (gRenderCache) {
-                gRenderCache->darkModeEpoch++;
+                gRenderCache->BumpDarkModeEpoch();
             }
             for (auto& w : gWindows) {
                 w->RedrawAll(true);
