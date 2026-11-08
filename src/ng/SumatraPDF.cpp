@@ -4756,8 +4756,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         }
         win->windowStateBeforePresentation = win->isMaximized ? WIN_STATE_MAXIMIZED : WIN_STATE_NORMAL;
         win->windowMode = WindowMode::Presentation;
-        // hack: this tells OnMouseMove() to hide the cursor immediately
-        win->dragPrevPos = Point(-2, -3);
+        win->hideCursorOnNextMove = true;
         win->presCursorHide.Arm(1);
     } else {
         win->windowMode = WindowMode::FullScreen;

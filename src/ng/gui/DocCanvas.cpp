@@ -3418,8 +3418,8 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
         }
         if (!win->dragPrevPos.Eq(x, y)) {
             AppShellShowCursor(win, true);
-            // hack: hide the cursor immediately the first time (EnterFullScreen)
-            win->presCursorHide.Arm(win->dragPrevPos.Eq(-2, -3) ? 1 : kHideCursorDelayInMs);
+            win->presCursorHide.Arm(win->hideCursorOnNextMove ? 1 : kHideCursorDelayInMs);
+            win->hideCursorOnNextMove = false;
         }
     }
     if (gLaserPointer && !kLaserPointerIsCursor) {

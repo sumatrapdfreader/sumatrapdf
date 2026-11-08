@@ -1195,8 +1195,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                     SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
                 }
             }
-            if (win->dragPrevPos.Eq(-2, -3)) {
-                // hack: hide cursor immediately. see EnterFullScreen
+            if (win->hideCursorOnNextMove) {
+                win->hideCursorOnNextMove = false;
                 SetTimer(win->hwndCanvas, kHideCursorTimerID, 1, nullptr);
             } else {
                 // logf("OnMouseMove: starting kHideCursorTimerID\n");

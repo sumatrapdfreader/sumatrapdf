@@ -423,6 +423,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
        cursor. A delta between previous and current is by how much we
        moved */
     Point dragPrevPos;
+    // presentation just started: the next mouse move hides the cursor at once
+    bool hideCursorOnNextMove = false;
     /* when dragging, mouse x/y position when dragging was started */
     Point dragStart;
 
