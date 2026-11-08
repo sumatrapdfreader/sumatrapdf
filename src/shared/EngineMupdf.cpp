@@ -6502,7 +6502,22 @@ FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
 // Maybe: when loading fully, cache extracted text in FzPageInfo
 // so that we don't have to re-do fz_new_stext_page_from_page() when doing search
 FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* cookie) {
-    return GetFzPageInfo(LocationFromPageNo(pageNo), loadQuick, cookie);
+    Location loc = LocationFromPageNo(pageNo);
+    // a chapter not laid out yet counts as one placeholder page, so a page
+    // number past that is unknown until the chapters before it are laid out
+    // (a fresh engine in BenchLoadPage / TestPageLinks); past the end it stays
+    // invalid and is not a page
+    for (int c = 1; !loc.IsValid() && pageNo >= 1 && c <= ChapterCount(); c++) {
+        if (IsChapterLaidOut(c)) {
+            continue;
+        }
+        ChapterPageCount(c);
+        loc = LocationFromPageNo(pageNo);
+    }
+    if (!loc.IsValid()) {
+        return nullptr;
+    }
+    return GetFzPageInfo(loc, loadQuick, cookie);
 }
 
 FzPageInfo* EngineMupdf::GetFzPageInfo(Location loc, bool loadQuick, fz_cookie* cookie) {

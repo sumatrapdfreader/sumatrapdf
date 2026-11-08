@@ -410,6 +410,7 @@ import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
 import { testit as hwheelHome } from "./hwheel-home.ts";
 import { testit as tabMenuClose } from "./tab-menu-close.ts";
 import { testit as chapterNav } from "./chapter-nav.ts";
+import { testit as pageLinksFreshEngine } from "./page-links-fresh-engine.ts";
 import { testit as mouseButtonShortcuts } from "./mouse-button-shortcuts.ts";
 import { testit as issue6483 } from "./issue-6483.ts";
 import { testit as issue6485 } from "./issue-6485.ts";
@@ -1122,6 +1123,7 @@ export const tests: NamedTest[] = [
   ["codex-provider", codexProvider],
   ["custom-ai", customAI],
   ["custom-ai-ui", customAIUI],
+  ["page-links-fresh-engine", pageLinksFreshEngine],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
