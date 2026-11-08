@@ -25,6 +25,17 @@ RefHoverState* RefHoverCreate(HWND hwndCanvas) {
     return s;
 }
 
+// the shown strip and the engine it was hit-tested with: kept, the engine
+// would hold a closed document's file open
+static void RefHoverReleaseShown(RefHoverState* s) {
+    FreePixmap(s->bmp);
+    s->bmp = nullptr;
+    if (s->hitEngine) {
+        s->hitEngine->Release();
+        s->hitEngine = nullptr;
+    }
+}
+
 void RefHoverDestroy(RefHoverState* s) {
     if (!s) {
         return;
@@ -35,12 +46,7 @@ void RefHoverDestroy(RefHoverState* s) {
         DestroyWindow(s->hwndPopup);
         s->hwndPopup = nullptr;
     }
-    FreePixmap(s->bmp);
-    s->bmp = nullptr;
-    if (s->hitEngine) {
-        s->hitEngine->Release();
-        s->hitEngine = nullptr;
-    }
+    RefHoverReleaseShown(s);
     RefHoverFreeLookupCache(s);
     delete s;
 }
@@ -88,6 +94,7 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
         ShowWindow(s->hwndPopup, SW_HIDE);
         s->displayed.destPage = -1;
     }
+    RefHoverReleaseShown(s);
 }
 
 static constexpr UINT kRefHoverHidePollMs = 150;

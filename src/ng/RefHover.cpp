@@ -49,12 +49,9 @@ RefHoverState* RefHoverCreate(MainWindow* win) {
     return s;
 }
 
-void RefHoverDestroy(RefHoverState* s) {
-    if (!s) {
-        return;
-    }
-    RefHoverUnregisterLiveState(s);
-    RefHoverDropQueuedRender(s);
+// the shown strip and the engine it was hit-tested with: kept, the engine
+// would hold a closed document's file open
+static void RefHoverReleaseShown(RefHoverState* s) {
     RefHoverFreeRenderImage(s);
     FreePixmap(s->bmp);
     s->bmp = nullptr;
@@ -62,6 +59,15 @@ void RefHoverDestroy(RefHoverState* s) {
         s->hitEngine->Release();
         s->hitEngine = nullptr;
     }
+}
+
+void RefHoverDestroy(RefHoverState* s) {
+    if (!s) {
+        return;
+    }
+    RefHoverUnregisterLiveState(s);
+    RefHoverDropQueuedRender(s);
+    RefHoverReleaseShown(s);
     RefHoverFreeLookupCache(s);
     delete s;
 }
@@ -110,6 +116,7 @@ void RefHoverHide(RefHoverState* s) {
         s->displayed.destPage = -1;
         AppShellInvalidate(s->win);
     }
+    RefHoverReleaseShown(s);
 }
 
 static constexpr int kRefHoverHidePollMs = 150;

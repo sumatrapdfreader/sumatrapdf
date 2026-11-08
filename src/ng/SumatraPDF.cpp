@@ -3087,6 +3087,8 @@ static void CloseDocumentInCurrentTab(MainWindow* win) {
     DeleteOldSelectionInfo(win, true);
     RemoveNotificationsForGroup(win, kNotifPageInfo);
     RemoveNotificationsForGroup(win, kNotifCursorPos);
+    // as orig: the citation popup belongs to the document going away
+    RefHoverHide(win->refHover);
     DocController* prev = tab->ctrl;
     tab->ctrl = nullptr;
     win->ctrl = nullptr;
