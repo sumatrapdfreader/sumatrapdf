@@ -33,15 +33,8 @@
 
 #include "SumatraLog.h"
 
-// ng: the automation channel switches these off to get the port's own
-// dialogs, which it can answer (TestSavePathDialog)
-static bool gNativeDlgOff = false;
-// the frame whose dialog is up, for the automation channel
-static HWND gDlgOwner = nullptr;
-static bool gDlgIsSave = false;
-
 bool NativeFileDlgEnabled() {
-    return !gNativeDlgOff;
+    return true;
 }
 
 // orig builds its filters with \1 in place of \0 so the string functions
@@ -109,10 +102,7 @@ static void SaveFileDlgNow(SavePathArgs* args) {
     }
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    gDlgOwner = hwnd;
-    gDlgIsSave = true;
     bool ok = (TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn));
-    gDlgOwner = nullptr;
     wstr::Free(filterW);
     wstr::Free(titleW);
     wstr::Free(defExtW);
@@ -170,10 +160,7 @@ bool NativeOpenFileDlg(MainWindow* win, Str filter, Str initialPath, bool multiS
     if (multiSelect) {
         ofn.Flags |= OFN_ALLOWMULTISELECT | OFN_EXPLORER;
     }
-    gDlgOwner = hwnd;
-    gDlgIsSave = false;
     bool ok = GetOpenFileNameW(&ofn);
-    gDlgOwner = nullptr;
     wstr::Free(filterW);
     if (!ok) {
         return false;
@@ -216,10 +203,7 @@ bool NativeOpenDocsDlg(MainWindow* win, StrVec* pathsOut) {
     dlg->SetFileTypes((UINT)len(filters.specs), VecData(filters.specs));
     dlg->SetFileTypeIndex(1); // "All supported documents" (1-based)
 
-    gDlgOwner = hwnd;
-    gDlgIsSave = false;
     hr = dlg->Show(hwnd);
-    gDlgOwner = nullptr;
     if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
         return false;
     }
@@ -259,86 +243,4 @@ bool NativeOpenDocsDlg(MainWindow* win, StrVec* pathsOut) {
         pathsOut->Append(path);
     }
     return len(*pathsOut) > 0;
-}
-
-// the dialog a frame owns while one of the calls above is in its message loop
-static HWND FindOpenDialog() {
-    if (!gDlgOwner) {
-        return nullptr;
-    }
-    HWND popup = GetWindow(gDlgOwner, GW_ENABLEDPOPUP);
-    if (!popup || popup == gDlgOwner) {
-        return nullptr;
-    }
-    return popup;
-}
-
-static BOOL CALLBACK FindNameEdit(HWND hwnd, LPARAM lp) {
-    WCHAR cls[64]{};
-    GetClassNameW(hwnd, cls, dimof(cls));
-    if (!wstr::Eq(WStr(cls), WStrL(L"Edit"))) {
-        return TRUE;
-    }
-    // the address bar has an edit too; the file name is the other one
-    for (HWND p = GetParent(hwnd); p; p = GetParent(p)) {
-        GetClassNameW(p, cls, dimof(cls));
-        if (wstr::Eq(WStr(cls), WStrL(L"Address Band Root"))) {
-            return TRUE;
-        }
-    }
-    *(HWND*)lp = hwnd;
-    return FALSE;
-}
-
-// ng: for the automation channel, which cannot type into a system dialog.
-//   off | on        the port's own dialogs / Windows' (the default)
-//   state           whether a dialog is up, its window and kind
-//   cancel          Cancel in the dialog that is up
-//   accept <name>   put <name> in its file-name field and press the default button
-TempStr NativeFileDlgTestTemp(MainWindow*, Str what, Str arg) {
-    if (str::Eq(what, StrL("off")) || str::Eq(what, StrL("on"))) {
-        gNativeDlgOff = str::Eq(what, StrL("off"));
-        return fmt("OK native=%d", gNativeDlgOff ? 0 : 1);
-    }
-    HWND dlg = FindOpenDialog();
-    if (str::Eq(what, StrL("state"))) {
-        return fmt("OK native=%d open=%d save=%d hwnd=%d", gNativeDlgOff ? 0 : 1, dlg ? 1 : 0,
-                   dlg && gDlgIsSave ? 1 : 0, (int)(INT_PTR)dlg);
-    }
-    if (!dlg) {
-        return StrL("NOTREADY no-dialog");
-    }
-    if (str::Eq(what, StrL("cancel"))) {
-        PostMessageW(dlg, WM_COMMAND, IDCANCEL, 0);
-        return StrL("OK");
-    }
-    if (str::Eq(what, StrL("accept"))) {
-        // a save dialog opens in the folder the user last saved to: a test
-        // must say where it writes
-        if (gDlgIsSave && !path::IsAbsolute(arg)) {
-            return StrL("ERR save-needs-absolute-path");
-        }
-        HWND edit = nullptr;
-        EnumChildWindows(dlg, FindNameEdit, (LPARAM)&edit);
-        if (!edit) {
-            return StrL("ERR no-name-edit");
-        }
-        SendMessageW(edit, WM_SETTEXT, 0, (LPARAM)CWStrTemp(arg));
-        // the dialog takes the name from the combo box's notification
-        HWND combo = GetParent(edit);
-        SendMessageW(GetParent(combo), WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(combo), CBN_EDITCHANGE), (LPARAM)combo);
-        // never press the button on a name that is not the one asked for
-        WCHAR got[1024]{};
-        SendMessageW(edit, WM_GETTEXT, dimof(got), (LPARAM)got);
-        if (!str::Eq(ToUtf8Temp(WStr(got)), arg)) {
-            return StrL("ERR name-not-set");
-        }
-        HWND btn = GetDlgItem(dlg, IDOK);
-        if (!btn) {
-            return StrL("ERR no-default-button");
-        }
-        PostMessageW(btn, BM_CLICK, 0, 0);
-        return StrL("OK");
-    }
-    return StrL("ERR what");
 }

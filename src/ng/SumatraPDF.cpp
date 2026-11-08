@@ -7267,11 +7267,6 @@ int GpuiMain(int argc, char** argv) {
     // must follow InitializePolicies(): it asks whether we may use the network
     InstallSumatraCrashHandler(gFlags->forTesting);
     gCrashOnOpen = gFlags->crashOnOpen;
-#if OS_WIN
-    if (len(gFlags->installRegRoot) > 0) {
-        SetInstallRegistryTestRoot(gFlags->installRegRoot);
-    }
-#endif
     // the installer / uninstaller modes of the exe: their own window, no
     // settings, no document model (orig runs them from WinMain the same way)
     if (gFlags->uninstall) {

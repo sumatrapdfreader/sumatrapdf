@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 // Support for Truevision TGA files
-// (as e.g. produced by EngineDump and mudraw)
+// (as e.g. produced by mudraw)
 // spec: http://www.gamers.org/dEngine/quake3/TGA.ps.gz
 
 struct Pixmap;

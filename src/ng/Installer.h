@@ -111,12 +111,6 @@ void LogNonDefaultRegisteredExtensions();
 void CollectNonDefaultRegisteredExtensions(StrVec& out);
 void LaunchDefaultAppDialogForExtension(Str ext);
 
-// ng: orig writes to the real HKLM / HKCU. `-install-reg-root <key>` points
-// both of them at subkeys of HKCU\<key> for this process
-// (RegOverridePredefKey), so an installer run can be exercised without
-// touching the user's file associations.
-bool SetInstallRegistryTestRoot(Str keyName);
-
 #else
 
 inline bool IsOurExeInstalled() {

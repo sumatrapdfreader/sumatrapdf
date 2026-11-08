@@ -250,7 +250,6 @@ bool IsVirtCtrlOfKind(VirtCtrl*, Kind);
 // and hit-tests those itself. A tree of only HWND controls yields none
 void CollectVirtCtrls(ILayout* root, Vec<VirtCtrl*>& out);
 void AppendVirtTreeDump(str::Builder& out, Str classFilter);
-bool AppendVirtHit(str::Builder& out, Str className, int x, int y);
 
 // One stop in a window's Tab ring: exactly one of the two is set. The ring is
 // the layout order, so an Edit and a virtual button sitting in the same VBox

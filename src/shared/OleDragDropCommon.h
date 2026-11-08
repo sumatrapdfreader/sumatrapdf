@@ -3,11 +3,6 @@
 
 // --- shared by OleDragDropCommon_win.cpp, orig's Canvas.cpp and ng's gui/OleDragDrop_win.cpp ---
 
-// for the automation channel, which must never drop anything on whatever
-// window the real cursor is over: the drag is cancelled by its drop source as
-// soon as OLE asks, as if Esc was pressed
-extern bool gTestCancelDrag;
-
 void FinishDragDrop(IDataObject* dataObj);
 HGLOBAL EncodeBitmapToPngGlobal(HBITMAP hbmp);
 HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge);
@@ -50,7 +45,7 @@ class TextDropSource : public IDropSource {
         return r;
     }
     STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override {
-        if (fEscapePressed || gTestCancelDrag) {
+        if (fEscapePressed) {
             return DRAGDROP_S_CANCEL;
         }
         if (!(grfKeyState & MK_LBUTTON)) {
@@ -122,7 +117,7 @@ class ImageDropSource : public IDropSource {
         return r;
     }
     STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override {
-        if (fEscapePressed || gTestCancelDrag) {
+        if (fEscapePressed) {
             return DRAGDROP_S_CANCEL;
         }
         if (!(grfKeyState & MK_LBUTTON)) {

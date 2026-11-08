@@ -596,7 +596,6 @@ enum class ControlCmd : u16 {
     TestSelectionToolbar = 73,
     TestMarkupAnnots = 74,
     TestCmykImageSave = 75,
-    TestContextMenuPoint = 76,
     TestFindWindowContents = 77,
     TestFindUiState = 78,
     TestRenderViewPrint = 79,
@@ -621,7 +620,6 @@ enum class ControlCmd : u16 {
     TestReadingBar = 98,
     TestSeedTextSelection = 99,
     TestTtsEngineCrash = 100,
-    StartPerfLog = 101,
     StopPerfLog = 102,
     WaitSessionRestored = 103,
     TestNavFiles = 104,
@@ -1602,18 +1600,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
-        case ControlCmd::TestContextMenuPoint: {
-            Str name = StringArg(req, 0);
-            int cmdId = GetCommandIdByName(name);
-            if (cmdId <= 0) {
-                AppendError(req, StrL("TestContextMenuPoint expects a command name"));
-                break;
-            }
-            Str res = CommandUsesContextMenuPoint(cmdId) ? StrL("1") : StrL("0");
-            AppendTestResult(req, 0, res);
-            break;
-        }
-
         case ControlCmd::TestMarkdownTocNavigate: {
             i32 destNo = 0;
             i32 minScrollY = 1;
@@ -1853,22 +1839,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestVirtTree: {
-            Str action = StringArg(req, 0);
             str::Builder out;
-            if (str::Eq(action, StrL("hit"))) {
-                Str cls = StringArg(req, 1);
-                i32 x = 0;
-                i32 y = 0;
-                if (len(cls) == 0 || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
-                    AppendError(req, StrL("TestVirtTree hit expects string class, int x, int y"));
-                    break;
-                }
-                if (!AppendVirtHit(out, cls, x, y)) {
-                    out.Append(StrL("NONE\n"));
-                }
-            } else {
-                AppendVirtTreeDump(out, action);
-            }
+            AppendVirtTreeDump(out, StringArg(req, 0));
             AppendTestResult(req, 0, ToStrTemp(out));
             break;
         }
@@ -2291,11 +2263,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendTestResult(req, exitCode, res);
             break;
         }
-
-        case ControlCmd::StartPerfLog:
-            StartPerfLog();
-            AppendTestResult(req, 0, StrL("OK"));
-            break;
 
         case ControlCmd::StopPerfLog:
             StopPerfLog();

@@ -829,23 +829,6 @@ void AppendVirtTreeDump(str::Builder& out, Str classFilter) {
     }
 }
 
-bool AppendVirtHit(str::Builder& out, Str className, int x, int y) {
-    for (VirtRoot* root : gLiveVirtRoots) {
-        Str cls;
-        if (!VirtRootMatches(root, className, cls)) {
-            continue;
-        }
-        ILayout* el = ElementFromPoint(root, Point{x, y}, nullptr, 0);
-        VirtCtrl* w = el ? el->AsVirtCtrl() : nullptr;
-        if (!w) {
-            continue;
-        }
-        AppendVirtLine(out, cls, root->hwnd, w);
-        return true;
-    }
-    return false;
-}
-
 ILayout* ElementFromPoint(VirtRoot* root, Point ptWindow, Point* ptLocalOut, u32 flags) {
     if (!root || len(root->tops) == 0 || !root->bounds.Contains(ptWindow)) {
         return nullptr;

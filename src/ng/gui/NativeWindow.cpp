@@ -458,66 +458,6 @@ static HCURSOR NativeCursorWanted(HWND hwnd) {
     return NativeCursorGet(win->nativeCursor);
 }
 
-TempStr NativeCursorTestTemp(MainWindow* win, Str bmpPath) {
-    HWND hwnd = AppShellNativeHwnd(win);
-    if (!hwnd) {
-        return StrL("ERR no-window");
-    }
-    HCURSOR cur = NativeCursorWanted(hwnd);
-    LRESULT handled = SendMessageW(hwnd, WM_SETCURSOR, (WPARAM)hwnd, MAKELPARAM(HTCLIENT, WM_MOUSEMOVE));
-    int dx = 0;
-    int dy = 0;
-    int hotX = 0;
-    int hotY = 0;
-    ICONINFO ii{};
-    if (cur && GetIconInfo(cur, &ii)) {
-        BITMAP bm{};
-        GetObject(ii.hbmColor ? ii.hbmColor : ii.hbmMask, sizeof(bm), &bm);
-        dx = bm.bmWidth;
-        dy = ii.hbmColor ? bm.bmHeight : bm.bmHeight / 2;
-        hotX = (int)ii.xHotspot;
-        hotY = (int)ii.yHotspot;
-        DeleteObject(ii.hbmColor);
-        DeleteObject(ii.hbmMask);
-    }
-    if (cur && dx > 0 && dy > 0 && len(bmpPath) > 0) {
-        BITMAPINFO bmi{};
-        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        bmi.bmiHeader.biWidth = dx;
-        bmi.bmiHeader.biHeight = -dy;
-        bmi.bmiHeader.biPlanes = 1;
-        bmi.bmiHeader.biBitCount = 32;
-        bmi.bmiHeader.biCompression = BI_RGB;
-        void* bits = nullptr;
-        HDC hdc = CreateCompatibleDC(nullptr);
-        HBITMAP dib = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
-        if (dib && bits) {
-            HGDIOBJ prev = SelectObject(hdc, dib);
-            // on a mid gray, so that black, white and translucent parts all show
-            RECT rc{0, 0, dx, dy};
-            HBRUSH br = CreateSolidBrush(RGB(0xa0, 0xa0, 0xa0));
-            FillRect(hdc, &rc, br);
-            DeleteObject(br);
-            DrawIconEx(hdc, 0, 0, cur, dx, dy, 0, nullptr, DI_NORMAL);
-            GdiFlush();
-            BITMAPFILEHEADER fh{};
-            fh.bfType = 0x4d42;
-            fh.bfOffBits = sizeof(fh) + sizeof(BITMAPINFOHEADER);
-            fh.bfSize = fh.bfOffBits + (DWORD)(dx * dy * 4);
-            str::Builder data;
-            data.Append(Str((char*)&fh, (int)sizeof(fh)));
-            data.Append(Str((char*)&bmi.bmiHeader, (int)sizeof(BITMAPINFOHEADER)));
-            data.Append(Str((char*)bits, dx * dy * 4));
-            file::WriteFile(bmpPath, ToStrTemp(data));
-            SelectObject(hdc, prev);
-        }
-        DeleteObject(dib);
-        DeleteDC(hdc);
-    }
-    return fmt("OK native=%d active=%d handled=%d size=%dx%d hot=%d,%d", (int)win->nativeCursor, cur ? 1 : 0,
-               (int)handled, dx, dy, hotX, hotY);
-}
-
 void AppShellApplyNativeCursor(MainWindow* win) {
     HWND hwnd = AppShellNativeHwnd(win);
     if (!hwnd || !AppShellNativeCursorActive(win)) {

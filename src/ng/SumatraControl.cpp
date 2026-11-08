@@ -571,7 +571,6 @@ enum class ControlCmd : u16 {
     TestSelectionToolbar = 73,
     TestMarkupAnnots = 74,
     TestCmykImageSave = 75,
-    TestContextMenuPoint = 76,
     TestFindWindowContents = 77,
     TestFindUiState = 78,
     TestRenderViewPrint = 79,
@@ -603,7 +602,6 @@ enum class ControlCmd : u16 {
     // orig's. 105 is TestSaveFileAs.
     TestImageOrientation = 106,
     // orig's
-    StartPerfLog = 101,
     StopPerfLog = 102,
     // orig's. The session restore the tests wait on.
     WaitSessionRestored = 103,
@@ -619,29 +617,16 @@ enum class ControlCmd : u16 {
     // orig's. A wheel while CloseWindow is in progress.
     TestWheelWhileClosing = 116,
     TestMainMenu = 117,
-    // ng: shows the "no longer the default app" bar for the given extensions
-    // (".pdf,.epub"); the real check needs an installation and a UserChoice
-    TestDefaultAppNotif = 118,
     // 119 / 120: retired (StartPerfLog / StopPerfLog before they moved to orig's ids)
     // ng: not orig's; gpui input with modifiers / hover / a held button, and
     // one line of shell state to check it against
     TestInput = 121,
     TestUiState = 122,
-    // ng: Windows; exercises the OLE drag source / drop target in-process
-    TestOleDragDrop = 123,
-    // ng: Windows; the system file dialogs: off / on / state / cancel / accept
-    TestNativeFileDlg = 124,
     // ng: not one of orig's; the tool windows (gui/ToolWindow.h) and input
     // into one of them
     TestToolWindow = 125,
-    // ng: Windows; the system message boxes: on / off / state / answer <id>
-    TestNativeMsgBox = 126,
     // ng: the page context menu at a canvas point, same rows as TestMainMenu
     TestContextMenuAt = 127,
-    // ng: not one of orig's; answers the open save-path dialog, which orig
-    // does not have (it uses GetSaveFileNameW, which no script can drive).
-    // 103 is WaitSessionRestored.
-    TestSavePathDialog = 128,
     // ng: DDE execute grammar ([GotoPageWord], [Open], ...). Orig receives
     // these as WM_COPYDATA; macOS has no such message.
     TestDdeExecute = 129,
@@ -2823,17 +2808,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
-        case ControlCmd::TestSavePathDialog: {
-            Str path = StringArg(req, 0);
-            if (!IsSavePathDialogVisible()) {
-                AppendTestResult(req, 2, StrL("NOTREADY no-dialog"));
-                break;
-            }
-            bool ok = TestFinishSavePathDialog(path);
-            AppendTestResult(req, 0, fmt("OK done=%d path=%s", ok ? 1 : 0, path));
-            break;
-        }
-
         case ControlCmd::TestCurrentTab: {
             MainWindow* win = FirstWindow();
             if (!win) {
@@ -2886,21 +2860,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendTestResult(req, 0, fmt("cmd=%s vis=%s", name, visName));
             break;
         }
-
-#if OS_WIN
-        case ControlCmd::TestDefaultAppNotif: {
-            MainWindow* win = FirstWindow();
-            if (!win) {
-                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
-                break;
-            }
-            StrVec exts;
-            Split(&exts, StringArg(req, 0), StrL(","), true);
-            ShowDefaultAppNotification(win, exts);
-            AppendTestResult(req, 0, fmt("OK exts=%d", len(exts)));
-            break;
-        }
-#endif
 
         case ControlCmd::TestAdvSettingsRows: {
             Str action = StringArg(req, 0);
@@ -3072,35 +3031,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendTestResult(req, 0, res);
             break;
         }
-
-#if OS_WIN
-        case ControlCmd::TestNativeMsgBox: {
-            i32 id = 0;
-            IntArg(req, 1, id);
-            AppendTestResult(req, 0, NativeMsgBoxTestTemp(StringArg(req, 0), id));
-            break;
-        }
-
-        case ControlCmd::TestNativeFileDlg: {
-            AppendTestResult(req, 0, NativeFileDlgTestTemp(FirstWindow(), StringArg(req, 0), StringArg(req, 1)));
-            break;
-        }
-
-        case ControlCmd::TestOleDragDrop: {
-            i32 x = 0, y = 0;
-            IntArg(req, 2, x);
-            IntArg(req, 3, y);
-            if (str::Eq(StringArg(req, 0), StrL("cursor"))) {
-                AppendTestResult(req, 0, NativeCursorTestTemp(FirstWindow(), StringArg(req, 1)));
-                break;
-            }
-            // ng: a fifth argument names the tool window to drop on
-            AppendTestResult(
-                req, 0,
-                OleDragDropTestTemp(FirstWindow(), StringArg(req, 0), StringArg(req, 1), x, y, StringArg(req, 4)));
-            break;
-        }
-#endif
 
         case ControlCmd::TestToolbarButtons: {
             int exitCode = 0;
@@ -3338,11 +3268,6 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendTestResult(req, 0, StrL("OK"));
             break;
         }
-
-        case ControlCmd::StartPerfLog:
-            StartPerfLog();
-            AppendTestResult(req, 0, StrL("OK"));
-            break;
 
         case ControlCmd::StopPerfLog:
             StopPerfLog();
@@ -3722,7 +3647,6 @@ void StartSumatraControl(Str pipeName) {
     logf("StartSumatraControl: pipe '%s'\n", pipeName);
 #if OS_WIN
     // a script cannot answer a system message box: it gets the port's own
-    // until it asks for the system's (TestNativeMsgBox on)
     NativeMsgBoxSetEnabled(false);
 #endif
     auto* arg = new ControlThreadArg{str::Dup(pipeName)};

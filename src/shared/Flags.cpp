@@ -44,12 +44,11 @@ enum class Arg {
     BgCol = 64, BgCol2 = 65, FwdSearchOffset = 66, FwdSearchWidth = 67,
     FwdSearchColor = 68, FwdSearchPermanent = 69, MangaMode = 70, Search = 71,
     AllUsers = 72, AllUsers2 = 73, RunInstallNow = 74, Adobe = 75,
-    DDE = 76, Pwd = 77, EngineDump = 78, SetColorRange = 79,
-    UpgradeFrom = 80, ForTesting = 81, QuickLook = 82, QuickLookAgent = 83,
-    WindowPos = 84, DumpExif = 85, DumpChm = 86, Control = 87,
-    UnitTests = 88, ForAi = 89, NewWindowTabs = 90, HtmlBackend = 91,
-    InstallRegRoot = 92, NoDesktopShortcut = 93, StartPerfLog = 94, LogPerfFile = 95,
-    ConfigureRestrictedUse = 96, WithThumbnails = 97,
+    DDE = 76, Pwd = 77, SetColorRange = 78, UpgradeFrom = 79,
+    ForTesting = 80, QuickLook = 81, QuickLookAgent = 82, WindowPos = 83,
+    DumpExif = 84, DumpChm = 85, Control = 86, UnitTests = 87,
+    ForAi = 88, NewWindowTabs = 89, HtmlBackend = 90, NoDesktopShortcut = 91,
+    StartPerfLog = 92, LogPerfFile = 93, ConfigureRestrictedUse = 94, WithThumbnails = 95,
 };
 
 static SeqStrings gArgNames =
@@ -72,12 +71,11 @@ static SeqStrings gArgNames =
     "bgcolor\0" "bg-color\0" "fwdsearch-offset\0" "fwdsearch-width\0"
     "fwdsearch-color\0" "fwdsearch-permanent\0" "manga-mode\0" "search\0"
     "all-users\0" "allusers\0" "run-install-now\0" "a\0"
-    "dde\0" "pwd\0" "engine-dump\0" "set-color-range\0"
-    "upgrade-from\0" "for-testing\0" "quicklook\0" "quicklook-agent\0"
-    "window-pos\0" "dump-exif\0" "dump-chm\0" "dbg-control\0"
-    "unit-tests\0" "for-ai\0" "new-window-tabs\0" "html-backend\0"
-    "install-reg-root\0" "no-desktop-shortcut\0" "start-perf-log\0" "log-perf-file\0"
-    "configure-restricted-use\0" "with-thumbnails\0";
+    "dde\0" "pwd\0" "set-color-range\0" "upgrade-from\0"
+    "for-testing\0" "quicklook\0" "quicklook-agent\0" "window-pos\0"
+    "dump-exif\0" "dump-chm\0" "dbg-control\0" "unit-tests\0"
+    "for-ai\0" "new-window-tabs\0" "html-backend\0" "no-desktop-shortcut\0"
+    "start-perf-log\0" "log-perf-file\0" "configure-restricted-use\0" "with-thumbnails\0";
 // clang-format on
 // @gen-end flags
 
@@ -739,10 +737,6 @@ static void ParseFlagNodes(Arena* a, StrNode* firstArg, Flags& i, Str toolNames)
         }
         if (arg == Arg::HtmlBackend) {
             i.htmlBackend = str::Dup(a, param);
-            continue;
-        }
-        if (arg == Arg::InstallRegRoot) {
-            i.installRegRoot = str::Dup(a, param);
             continue;
         }
         if (arg == Arg::LogPerfFile) {

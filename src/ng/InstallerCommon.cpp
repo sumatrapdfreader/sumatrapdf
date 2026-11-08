@@ -51,42 +51,6 @@ Color kColorMsgFailed = gCol1;
 Str gMsg;
 Color gMsgColor = gCol5;
 
-// ng: with -install-reg-root the shortcuts go here instead of the Desktop /
-// Start Menu, so a test run can't overwrite the ones of a real installation
-static Str gShortcutTestDir;
-
-// ng: -install-reg-root. RegOverridePredefKey points HKCU and HKLM at subkeys
-// of a throwaway key for this process only, so every LoggedWriteRegStr() below
-// lands there instead of in the user's hive and nothing else has to change.
-bool SetInstallRegistryTestRoot(Str keyName) {
-    struct {
-        HKEY predef;
-        const char* sub;
-    } roots[] = {{HKEY_CURRENT_USER, "HKCU"}, {HKEY_LOCAL_MACHINE, "HKLM"}};
-    for (auto& r : roots) {
-        TempStr key = str::JoinTemp(keyName, StrL("\\"), Str(r.sub));
-        HKEY hkey = nullptr;
-        LSTATUS st =
-            RegCreateKeyExW(HKEY_CURRENT_USER, CWStrTemp(key), 0, nullptr, 0, KEY_ALL_ACCESS, nullptr, &hkey, nullptr);
-        if (st != ERROR_SUCCESS) {
-            logf("SetInstallRegistryTestRoot: RegCreateKeyExW('%s') failed with %d\n", key, (int)st);
-            return false;
-        }
-        st = RegOverridePredefKey(r.predef, hkey);
-        RegCloseKey(hkey);
-        if (st != ERROR_SUCCESS) {
-            logf("SetInstallRegistryTestRoot: RegOverridePredefKey('%s') failed with %d\n", key, (int)st);
-            return false;
-        }
-        logf("SetInstallRegistryTestRoot: %s -> HKCU\\%s\n", Str(r.sub), key);
-    }
-    TempStr dir = path::JoinTemp(GetTempDirTemp(), StrL("SumatraPDF-ng-test-shortcuts"));
-    dir::CreateAll(dir);
-    gShortcutTestDir = str::Dup(GetPermArena(), dir);
-    logf("SetInstallRegistryTestRoot: shortcuts -> '%s'\n", gShortcutTestDir);
-    return true;
-}
-
 void SetMsg(Str msg, Color color) {
     gMsg = str::Dup(GetPermArena(), msg);
     gMsgColor = color;
@@ -96,9 +60,6 @@ void SetMsg(Str msg, Color color) {
 void GetPrevInstallShellExt(PreviousInstallationInfo*) {}
 
 TempStr GetShortcutPathTemp(int csidl) {
-    if (gShortcutTestDir) {
-        return path::JoinTemp(gShortcutTestDir, fmt("%s-%d.lnk", StrL(kAppName), csidl));
-    }
     TempStr dir = GetSpecialFolderTemp(csidl, false);
     if (len(dir) == 0) {
         return {};

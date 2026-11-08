@@ -180,16 +180,6 @@ void CloseSavePathDialog() {
     }
 }
 
-// ng: the automation channel's stand-in for typing a name and pressing Save.
-// An empty path is Cancel. Returns false when no dialog is up.
-bool TestFinishSavePathDialog(Str path) {
-    if (!gSave.visible) {
-        return false;
-    }
-    FinishSavePathDialog(str::DupTemp(path));
-    return true;
-}
-
 void ShowSavePathDialog(SavePathArgs* args) {
     if (!args) {
         return;

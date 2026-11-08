@@ -104,7 +104,6 @@ void ShowSavePathDialog(SavePathArgs* args);
 void CloseSavePathDialog();
 bool IsSavePathDialogVisible();
 // -dbg-control's stand-in for picking a name in the dialog ({} is Cancel)
-bool TestFinishSavePathDialog(Str path);
 gpui::El* SavePathDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
 void ShowGoToPageDialog(MainWindow* win);

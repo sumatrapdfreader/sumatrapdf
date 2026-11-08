@@ -42,23 +42,10 @@
 
 #include "SumatraLog.h"
 
-static HRESULT gLastDragResult = E_FAIL;
-static int gLastDragTextLen = 0;
-
 // ng: orig calls DoDragDrop from the canvas' WM_MOUSEMOVE. Here the mouse move
 // is in the middle of gpui's dispatch, and DoDragDrop runs a message loop of
 // its own, so the drag starts from the ui task queue once gpui has unwound.
 static bool CanStartDrag(MainWindow* win) {
-    if (gTestCancelDrag) {
-        // OLE asks the drop source when there is mouse or keyboard input:
-        // give it some, so the source gets to cancel
-        HWND hwnd = AppShellNativeHwnd(win);
-        POINT p{};
-        GetCursorPos(&p);
-        ScreenToClient(hwnd, &p);
-        PostMessageW(hwnd, WM_MOUSEMOVE, 0, MAKELPARAM(p.x, p.y));
-        return true;
-    }
     // the button came up between the mouse move and now: nothing to drag, and
     // OLE would sit in its loop until the next input to notice
     int vk = GetSystemMetrics(SM_SWAPBUTTON) ? VK_RBUTTON : VK_LBUTTON;
@@ -84,9 +71,8 @@ static void TextDragDropNow(MainWindow* win) {
     TextDataObject* dataObj = new TextDataObject(wtext);
     TextDropSource* dropSrc = new TextDropSource();
     DWORD dwEffect = 0;
-    gLastDragTextLen = len(wtext);
-    gLastDragResult = DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
-    logf("StartTextDragDrop: %d chars, hr 0x%x, effect %d\n", gLastDragTextLen, (int)gLastDragResult, (int)dwEffect);
+    HRESULT hr = DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
+    logf("StartTextDragDrop: %d chars, hr 0x%x, effect %d\n", len(wtext), (int)hr, (int)dwEffect);
     dropSrc->Release();
     FinishDragDrop(dataObj);
     AppShellAfterNativeDrag(win);
@@ -161,9 +147,8 @@ static void ImageDragDropNow(MainWindow* win) {
     }
 
     DWORD dwEffect = 0;
-    gLastDragTextLen = 0;
-    gLastDragResult = DoDragDrop(dataObj, src, DROPEFFECT_COPY, &dwEffect);
-    logf("StartImageDragDrop: hr 0x%x, effect %d\n", (int)gLastDragResult, (int)dwEffect);
+    HRESULT hr = DoDragDrop(dataObj, src, DROPEFFECT_COPY, &dwEffect);
+    logf("StartImageDragDrop: hr 0x%x, effect %d\n", (int)hr, (int)dwEffect);
 
     if (dropSrc) {
         dropSrc->EndImageListDrag();
@@ -392,72 +377,4 @@ void RevokeCanvasDropTarget(HWND hwndCanvas) {
             RevokeDragDrop(hwndCanvas);
         }
     }
-}
-
-// ng: the automation channel's way to exercise the code above without moving
-// the real cursor or dropping on another program. `what`:
-//   cancel <on|off>     drags are cancelled by their drop source at once
-//   last                the result of the last drag
-//   text <text>         DragEnter + DragLeave with CF_UNICODETEXT at (x, y)
-//   over <path>         DragEnter + DragOver with the file, left hovering
-//   leave               DragLeave
-//   drop <path>         DragEnter + DragOver + Drop with the file
-// (x, y) are window dips.
-TempStr OleDragDropTestTemp(MainWindow* win, Str what, Str arg, int x, int y, Str toolWindow) {
-    if (str::Eq(what, StrL("cancel"))) {
-        gTestCancelDrag = str::Eq(arg, StrL("on"));
-        return fmt("OK cancel=%d", gTestCancelDrag ? 1 : 0);
-    }
-    if (str::Eq(what, StrL("last"))) {
-        Str res = StrL("other");
-        if (gLastDragResult == DRAGDROP_S_CANCEL) {
-            res = StrL("cancel");
-        } else if (gLastDragResult == DRAGDROP_S_DROP) {
-            res = StrL("drop");
-        } else if (gLastDragResult == E_FAIL) {
-            res = StrL("none");
-        }
-        return fmt("OK drag=%s chars=%d hr=0x%x", res, gLastDragTextLen, (int)gLastDragResult);
-    }
-    HWND hwnd = AppShellNativeHwnd(win);
-    if (len(toolWindow) > 0) {
-        hwnd = ToolWindowHwnd(ToolWindowFind(toolWindow));
-    }
-    CanvasDropTarget* target = nullptr;
-    for (const RegisteredTarget& rt : gDropTargets) {
-        if (rt.hwnd == hwnd) {
-            target = rt.target;
-        }
-    }
-    if (!target) {
-        return StrL("ERR no-drop-target");
-    }
-    float scale = (float)DpiGetForHwnd(hwnd) / 96.f;
-    POINT p{(LONG)((float)x * scale), (LONG)((float)y * scale)};
-    ClientToScreen(hwnd, &p);
-    POINTL pt{p.x, p.y};
-    DWORD effect = DROPEFFECT_COPY;
-    if (str::Eq(what, StrL("leave"))) {
-        target->DragLeave();
-        return StrL("OK");
-    }
-    IDataObject* dataObj = nullptr;
-    if (str::Eq(what, StrL("text"))) {
-        dataObj = new TextDataObject(ToWStrTemp(arg));
-    } else {
-        dataObj = GetDataObjectForFile(arg, hwnd);
-    }
-    if (!dataObj) {
-        return StrL("ERR no-data-object");
-    }
-    target->DragEnter(dataObj, MK_LBUTTON, pt, &effect);
-    DWORD enterEffect = effect;
-    if (str::Eq(what, StrL("text"))) {
-        target->DragLeave();
-    } else if (str::Eq(what, StrL("drop"))) {
-        effect = DROPEFFECT_COPY;
-        target->Drop(dataObj, 0, pt, &effect);
-    }
-    dataObj->Release();
-    return fmt("OK enter=%d effect=%d", (int)enterEffect, (int)effect);
 }

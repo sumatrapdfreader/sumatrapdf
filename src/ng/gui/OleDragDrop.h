@@ -14,7 +14,4 @@ void RegisterCanvasDropTarget(HWND hwnd);
 void RevokeCanvasDropTarget(HWND hwnd);
 // orig's OnDropFiles, for WM_DROPFILES and for an OLE drop (gui/NativeWindow.cpp)
 bool AppShellOnDropFiles(HWND hwnd, HDROP hdrop, POINT ptDrop, bool inClient, bool dragFinish);
-// for the automation channel; see the .cpp
-// `toolWindow`: the name of the tool window to drop on instead of the frame
-TempStr OleDragDropTestTemp(MainWindow* win, Str what, Str arg, int x, int y, Str toolWindow = {});
 #endif

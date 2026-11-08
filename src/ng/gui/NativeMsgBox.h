@@ -15,8 +15,6 @@ void NativeMsgBoxSetEnabled(bool enabled);
 void NativeMsgBox(MainWindow* win, Str text, Str caption, uint flags, Func1<int> onResult);
 // orig's ShouldSaveAnnotationsDialog; onChoice gets a SaveChoice
 void NativeUnsavedDialog(MainWindow* win, Str fileName, Func1<int> onChoice);
-// -dbg-control's TestNativeMsgBox: on | off | state | answer <button id>
-TempStr NativeMsgBoxTestTemp(Str what, int arg);
 #else
 inline bool NativeMsgBoxEnabled() {
     return false;

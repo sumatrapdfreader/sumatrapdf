@@ -31,17 +31,6 @@
 
 static bool gNativeMsgBoxOff = false;
 
-enum class NativeBoxKind {
-    None,
-    MessageBox,
-    TaskDialog,
-};
-
-// the box that is up, for the automation channel
-static HWND gBoxOwner = nullptr;
-static NativeBoxKind gBoxKind = NativeBoxKind::None;
-static int gBoxDepth = 0;
-
 bool NativeMsgBoxEnabled() {
     return !gNativeMsgBoxOff && ToolWindowsAvailable();
 }
@@ -62,21 +51,6 @@ static HWND OwnerHwnd(MainWindow* win) {
     return AppShellNativeHwnd(win);
 }
 
-struct NativeBoxScope {
-    HWND prevOwner;
-    NativeBoxKind prevKind;
-    NativeBoxScope(HWND owner, NativeBoxKind kind) : prevOwner(gBoxOwner), prevKind(gBoxKind) {
-        gBoxOwner = owner;
-        gBoxKind = kind;
-        gBoxDepth++;
-    }
-    ~NativeBoxScope() {
-        gBoxOwner = prevOwner;
-        gBoxKind = prevKind;
-        gBoxDepth--;
-    }
-};
-
 struct NativeMsgBoxArgs {
     MainWindow* win = nullptr;
     WStr text;
@@ -89,11 +63,7 @@ struct NativeMsgBoxArgs {
 // resets the temp arena
 static void NativeMsgBoxRun(NativeMsgBoxArgs* args) {
     HWND owner = OwnerHwnd(args->win);
-    int res = IDCANCEL;
-    {
-        NativeBoxScope scope(owner, NativeBoxKind::MessageBox);
-        res = MessageBoxW(owner, args->text.s, args->caption.s, args->flags);
-    }
+    int res = MessageBoxW(owner, args->text.s, args->caption.s, args->flags);
     logf("NativeMsgBox: result %d\n", res);
     Func1<int> onResult = args->onResult;
     MainWindow* win = args->win;
@@ -165,11 +135,7 @@ static void NativeUnsavedRun(NativeUnsavedArgs* args) {
     cfg.hwndParent = owner;
 
     int pressed = 0;
-    HRESULT hr = E_FAIL;
-    {
-        NativeBoxScope scope(owner, NativeBoxKind::TaskDialog);
-        hr = TaskDialogIndirect(&cfg, &pressed, nullptr, nullptr);
-    }
+    HRESULT hr = TaskDialogIndirect(&cfg, &pressed, nullptr, nullptr);
     // as orig: a dialog that could not be shown discards
     SaveChoice choice = SaveChoice::Discard;
     if (hr == S_OK) {
@@ -204,59 +170,4 @@ void NativeUnsavedDialog(MainWindow* win, Str fileName, Func1<int> onChoice) {
     args->mainInstr = ToWStr(fmt(Tr("Unsaved changes in '%s'").s, fileName));
     args->onChoice = onChoice;
     uitask::Post(MkFunc0(NativeUnsavedRun, args), "NativeUnsavedDialog");
-}
-
-// the box its owner is disabled for
-static HWND FindOpenBox() {
-    if (gBoxDepth == 0 || !gBoxOwner) {
-        return nullptr;
-    }
-    HWND popup = GetWindow(gBoxOwner, GW_ENABLEDPOPUP);
-    if (!popup || popup == gBoxOwner) {
-        return nullptr;
-    }
-    return popup;
-}
-
-// ng: for the automation channel.
-//   on | off          Windows' boxes / the port's own dialogs (the channel's default)
-//   state             whether a box is up, its window, kind and caption
-//   answer <id>       presses the button with that id (IDOK 1, IDCANCEL 2,
-//                     IDYES 6, IDNO 7; the task dialog's 100 - 102)
-TempStr NativeMsgBoxTestTemp(Str what, int arg) {
-    if (str::Eq(what, StrL("on")) || str::Eq(what, StrL("off"))) {
-        gNativeMsgBoxOff = str::Eq(what, StrL("off"));
-        return fmt("OK native=%d", gNativeMsgBoxOff ? 0 : 1);
-    }
-    HWND box = FindOpenBox();
-    if (str::Eq(what, StrL("state"))) {
-        WCHAR caption[256]{};
-        RECT rc{};
-        if (box) {
-            GetWindowTextW(box, caption, dimof(caption));
-            GetWindowRect(box, &rc);
-        }
-        return fmt("OK native=%d open=%d kind=%d hwnd=%d owner=%d size=%d,%d caption='%s'", gNativeMsgBoxOff ? 0 : 1,
-                   box ? 1 : 0, box ? (int)gBoxKind : 0, (int)(INT_PTR)box, (int)(INT_PTR)(box ? gBoxOwner : nullptr),
-                   (int)(rc.right - rc.left), (int)(rc.bottom - rc.top), ToUtf8Temp(WStr(caption)));
-    }
-    if (!box) {
-        return StrL("NOTREADY no-box");
-    }
-    if (str::Eq(what, StrL("answer"))) {
-        if (gBoxKind == NativeBoxKind::TaskDialog) {
-            PostMessageW(box, TDM_CLICK_BUTTON, (WPARAM)arg, 0);
-            return StrL("OK");
-        }
-        // the one button of an MB_OK box has the id IDCANCEL
-        if (!GetDlgItem(box, arg)) {
-            if (arg != IDOK || !GetDlgItem(box, IDCANCEL)) {
-                return StrL("ERR no-such-button");
-            }
-            arg = IDCANCEL;
-        }
-        PostMessageW(box, WM_COMMAND, (WPARAM)arg, 0);
-        return StrL("OK");
-    }
-    return StrL("ERR what");
 }

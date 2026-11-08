@@ -131,7 +131,6 @@ struct Flags {
     // -html-backend ie|webview2: force the embedded browser hosting CHM /
     // markdown. Empty (the default) picks WebView2 when it's installed.
     Str htmlBackend;
-    Str installRegRoot;
     Str perfLogFile;           // -log-perf-file <path>
     bool startPerfLog = false; // -start-perf-log (profile builds)
 
