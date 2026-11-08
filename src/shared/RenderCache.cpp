@@ -1400,6 +1400,12 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
     }
 
     ReportIf(req.abortCookie != nullptr);
+    // an abort before the engine publishes its cookie can't stop the render:
+    // don't start one that's already dropped
+    if (RenderWasDropped(cache, req)) {
+        CallRenderAborted(&req);
+        return true;
+    }
     EngineBase* engine = req.dm->GetEngine();
 
     RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
