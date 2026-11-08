@@ -347,16 +347,23 @@ void RefreshLazyTabStatePointers() {
         if (gInitialSessionData && sdIdx < len(*gInitialSessionData)) {
             sd = (*gInitialSessionData)[sdIdx++];
         }
-        int tsIdx = 0;
         for (WindowTab* tab : win->Tabs()) {
             if (len(tab->filePath) == 0) {
                 continue;
             }
+            // by path, not position: the snapshot skips tabs that had no state
             TabState* ts = nullptr;
-            if (sd && tsIdx < len(*sd->tabStates)) {
-                ts = (*sd->tabStates)[tsIdx];
+            if (sd) {
+                for (TabState* cand : *sd->tabStates) {
+                    if (str::Eq(cand->filePath, tab->filePath)) {
+                        ts = cand;
+                        break;
+                    }
+                }
             }
-            tsIdx++;
+            if (!ts) {
+                ts = FindSessionTabState(tab->filePath);
+            }
             if (!tab->ctrl && tab->tabState) {
                 // null when the new snapshot has nothing to borrow: the old one
                 // was just freed and must not be left dangling
