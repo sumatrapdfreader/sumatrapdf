@@ -412,8 +412,10 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             }
             // update tooltip before SetTabDirty (which rebuilds tooltips via LayoutTabs).
             // Must use MakeTabTooltipTemp (path+size); path-only overwrote size here.
+            // Only when the dirty flag changes: the tooltip stats the file, and
+            // this runs on every page change
             TabInfo* ti = win->tabsCtrl->GetTab(i);
-            if (ti && tab && tab->filePath) {
+            if (ti && tab && tab->filePath && (dirty != ti->isDirty || len(ti->tooltip) == 0)) {
                 TempStr tooltip = MakeTabTooltipTemp(tab->filePath, dirty);
                 str::ReplaceWithCopy(&ti->tooltip, tooltip);
             }

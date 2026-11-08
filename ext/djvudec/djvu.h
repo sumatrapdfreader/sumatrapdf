@@ -48,8 +48,9 @@ void djvu_init(void);
 /* Pass NULL for alloc/free to use the default malloc/free.
    lock/unlock are optional serialization hooks (required for per-page
    caching). When supplied, shared JB2 dictionaries are decoded lazily on
-   first use (serialized via the hooks) instead of eagerly at djvu_doc_open,
-   and concurrent renders on the same djvu_doc are safe.
+   first use (serialized via the hooks) instead of eagerly at djvu_doc_open.
+   Concurrent renders on the same djvu_doc are safe either way: without hooks
+   the dicts are fully decoded at open and read lock-free afterwards.
    Pass NULL for error to silently ignore diagnostics. */
 djvu_ctx *djvu_ctx_new(djvu_alloc_cb alloc, djvu_free_cb free_cb,
                        djvu_lock_cb lock, djvu_unlock_cb unlock,
@@ -70,7 +71,11 @@ void djvu_ctx_free(djvu_ctx *ctx);
 void djvu_ctx_set_cache_per_page(djvu_ctx *ctx, int enable);
 /* Legacy alias: enable=1 turns on per-page caching. */
 void djvu_ctx_set_lazy_iw44(djvu_ctx *ctx, int enable);
+/* Debug: skip the color composite. Compound pages render as the gray JB2
+   mask, and photo-only pages fail to render. */
 void djvu_ctx_set_no_compose(djvu_ctx *ctx, int enable);
+/* Debug: decode at most max_chunks IW44 refinement chunks per layer
+   (0 = all; negative values are treated as 0). */
 void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks);
 /* When enabled, color render output (DJVU_FORMAT_RGB24) is written in B,G,R
    byte order instead of R,G,B. The image is still tagged DJVU_FORMAT_RGB24
@@ -102,7 +107,8 @@ void djvu_abort_request(djvu_abort *ab);
 /* ----- documents ----- */
 
 /* Open a document over an in-memory buffer (NOT copied; must remain valid
-   until djvu_doc_close). Returns NULL on failure (diagnostics via error cb). */
+   until djvu_doc_close). Returns NULL on failure. Format errors are reported
+   via the error cb; NULL ctx/data, len < 16 and allocation failure are not. */
 djvu_doc *djvu_doc_open(djvu_ctx *ctx, const uint8_t *data, size_t len);
 void djvu_doc_close(djvu_doc *doc);
 
@@ -218,7 +224,8 @@ int djvu_doc_page_by_name(djvu_doc *doc, const char *name);
 /* ----- text ----- */
 
 /* Returns malloc'd (via ctx allocator) NUL-terminated UTF-8 page text,
-   or NULL if the page has no text. Free with djvu_text_destroy. */
+   or NULL if the page has no text chunk (an empty text chunk yields "").
+   Free with djvu_text_destroy. */
 char *djvu_page_text(djvu_doc *doc, int page_no);
 void djvu_text_destroy(djvu_ctx *ctx, char *text);
 

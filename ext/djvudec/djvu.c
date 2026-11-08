@@ -37,7 +37,9 @@ void djvu_ctx_free(djvu_ctx *ctx);
 void djvu_ctx_set_cache_per_page(djvu_ctx *ctx, int enable);
 
 void djvu_ctx_set_lazy_iw44(djvu_ctx *ctx, int enable);
+
 void djvu_ctx_set_no_compose(djvu_ctx *ctx, int enable);
+
 void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks);
 
 void djvu_ctx_set_bgr(djvu_ctx *ctx, int enable);
@@ -7402,18 +7404,36 @@ typedef struct {
     int sub;
 } bitonal_acc_ctx;
 
-static void bitonal_accum_ink(void *user, int px, int py)
+static void acc_add(uint8_t *cell, int n)
+{
+    int v = *cell + n;
+    *cell = (uint8_t)(v > 255 ? 255 : v);
+}
+
+static void bitonal_accum_run(void *user, int x0, int x1, int py)
 {
     bitonal_acc_ctx *c = (bitonal_acc_ctx *)user;
-    int cx, cy;
-    size_t cell;
+    int cy, cx0, cx1, xmax;
+    uint8_t *row;
 
-    if (px < 0 || py < 0 || py >= c->h) return;
-    cx = px / c->sub;
+    if (py < 0 || py >= c->h) return;
     cy = c->sh - 1 - py / c->sub;
-    if (cx >= c->sw || cy < 0) return;
-    cell = (size_t)cy * c->sw + cx;
-    if (c->acc[cell] < 255) c->acc[cell]++;
+    if (cy < 0) return;
+    if (x0 < 0) x0 = 0;
+    xmax = c->sw * c->sub;
+    if (x1 > xmax) x1 = xmax;
+    if (x0 >= x1) return;
+    row = c->acc + (size_t)cy * c->sw;
+    cx0 = x0 / c->sub;
+    cx1 = (x1 - 1) / c->sub;
+    if (cx0 == cx1) {
+        acc_add(row + cx0, x1 - x0);
+        return;
+    }
+    acc_add(row + cx0, (cx0 + 1) * c->sub - x0);
+    for (cx0++; cx0 < cx1; cx0++)
+        acc_add(row + cx0, c->sub);
+    acc_add(row + cx1, x1 - cx1 * c->sub);
 }
 
 static djvu_image *render_bitonal(djvu_ctx *ctx, jb2_image *img, int subsample)
@@ -7476,8 +7496,8 @@ static djvu_image *render_bitonal(djvu_ctx *ctx, jb2_image *img, int subsample)
                 return NULL;
             }
             if (s && djvu_bm_has_pixels(&s->bm))
-                djvu_bm_visit_ink(&s->bm, b->left, b->bottom,
-                                  bitonal_accum_ink, &c);
+                djvu_bm_visit_ink_runs(&s->bm, b->left, b->bottom,
+                                        bitonal_accum_run, &c);
         }
         for (k = 0; k < n; k++) out->data[k] = lut[acc[k]];
         djvu_free(ctx, acc);

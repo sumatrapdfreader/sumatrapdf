@@ -448,11 +448,37 @@ static int DjvuDecPickSubsample(int uprightW, int uprightH, int targetDx, int ta
     return std::max(1, std::min(limit(uprightW, targetDx), limit(uprightH, targetDy)));
 }
 
-static inline u8 BilinearByte(float v00, float v10, float v01, float v11, float tx, float ty) {
-    float v0 = v00 + ((v10 - v00) * tx);
-    float v1 = v01 + ((v11 - v01) * tx);
-    float v = v0 + ((v1 - v0) * ty);
-    return (u8)ClampI((int)lroundf(v), 0, 255);
+// 8.8 fixed point bilinear weights; w1 + w0 == 256
+constexpr int kBilinearShift = 8;
+constexpr int kBilinearOne = 1 << kBilinearShift;
+
+// source index and weight of the next sample for one destination coordinate
+struct BilinearTap {
+    int i0;
+    int i1;
+    int w1;
+};
+
+// dst coordinate -> source position, pixel centers aligned
+static BilinearTap BilinearTapFor(int dst, int dstOffset, double scale, int srcSize) {
+    double srcF = (((double)(dstOffset + dst) + 0.5) * scale) - 0.5;
+    if (srcF < 0) {
+        srcF = 0;
+    }
+    int i0 = (int)srcF;
+    if (i0 > srcSize - 1) {
+        i0 = srcSize - 1;
+    }
+    int i1 = std::min(i0 + 1, srcSize - 1);
+    int w1 = (int)((srcF - (double)i0) * kBilinearOne + 0.5);
+    return {i0, i1, std::min(w1, kBilinearOne)};
+}
+
+static inline u8 BilinearByte(int v00, int v10, int v01, int v11, int wx, int wy) {
+    int v0 = (v00 << kBilinearShift) + ((v10 - v00) * wx);
+    int v1 = (v01 << kBilinearShift) + ((v11 - v01) * wx);
+    int v = (v0 << kBilinearShift) + ((v1 - v0) * wy);
+    return (u8)((v + (1 << (2 * kBilinearShift - 1))) >> (2 * kBilinearShift));
 }
 
 // Map decoded page pixels into the target pixmap with bilinear filtering. The
@@ -489,28 +515,37 @@ static Pixmap* ScaleDjvuPixelsToPixmap(const u8* src, int srcDx, int srcDy, int 
 
     double sx = (double)srcDx / (double)full.dx;
     double sy = (double)srcDy / (double)full.dy;
+    // the horizontal taps are the same for every row
+    AutoFree<BilinearTap> xTaps(AllocArray<BilinearTap>(screen.dx));
+    if (!xTaps) {
+        FreePixmap(res);
+        return nullptr;
+    }
+    for (int x = 0; x < screen.dx; x++) {
+        xTaps[x] = BilinearTapFor(x, screen.x - full.x, sx, srcDx);
+    }
     for (int y = 0; y < screen.dy; y++) {
-        float srcYf = (float)((((screen.y - full.y) + y + 0.5) * sy) - 0.5);
-        int y0 = ClampI((int)floorf(srcYf), 0, srcDy - 1);
-        int y1 = ClampI(y0 + 1, 0, srcDy - 1);
-        float ty = srcYf - (float)y0;
+        BilinearTap ty = BilinearTapFor(y, screen.y - full.y, sy, srcDy);
+        const u8* row0 = src + ((size_t)ty.i0 * srcDx * comp);
+        const u8* row1 = src + ((size_t)ty.i1 * srcDx * comp);
         u8* dst = res->data + ((size_t)y * res->stride);
-        for (int x = 0; x < screen.dx; x++) {
-            float srcXf = (float)((((screen.x - full.x) + x + 0.5) * sx) - 0.5);
-            int x0 = ClampI((int)floorf(srcXf), 0, srcDx - 1);
-            int x1 = ClampI(x0 + 1, 0, srcDx - 1);
-            float tx = srcXf - (float)x0;
-            size_t off00 = (((size_t)y0 * srcDx) + x0) * comp;
-            size_t off10 = (((size_t)y0 * srcDx) + x1) * comp;
-            size_t off01 = (((size_t)y1 * srcDx) + x0) * comp;
-            size_t off11 = (((size_t)y1 * srcDx) + x1) * comp;
-            for (int c = 0; c < comp; c++) {
-                dst[c] = BilinearByte(src[off00 + c], src[off10 + c], src[off01 + c], src[off11 + c], tx, ty);
+        if (comp == 1) {
+            for (int x = 0; x < screen.dx; x++, dst += 3) {
+                const BilinearTap& tx = xTaps[x];
+                u8 g = BilinearByte(row0[tx.i0], row0[tx.i1], row1[tx.i0], row1[tx.i1], tx.w1, ty.w1);
+                dst[0] = dst[1] = dst[2] = g;
             }
-            if (comp == 1) {
-                dst[1] = dst[2] = dst[0];
+            continue;
+        }
+        for (int x = 0; x < screen.dx; x++, dst += 3) {
+            const BilinearTap& tx = xTaps[x];
+            const u8* p00 = row0 + ((size_t)tx.i0 * 3);
+            const u8* p10 = row0 + ((size_t)tx.i1 * 3);
+            const u8* p01 = row1 + ((size_t)tx.i0 * 3);
+            const u8* p11 = row1 + ((size_t)tx.i1 * 3);
+            for (int c = 0; c < 3; c++) {
+                dst[c] = BilinearByte(p00[c], p10[c], p01[c], p11[c], tx.w1, ty.w1);
             }
-            dst += 3;
         }
     }
     return res;

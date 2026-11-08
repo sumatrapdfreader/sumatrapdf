@@ -204,7 +204,7 @@ void HwndBase::SetText(Str s) {
         s = StrL("");
     }
     HwndSetText(hwnd, s);
-    HwndRepaintNow(hwnd); // TODO: move inside HwndSetText()?
+    HwndInvalidate(hwnd);
 }
 
 TempStr HwndBase::GetTextTemp() {
