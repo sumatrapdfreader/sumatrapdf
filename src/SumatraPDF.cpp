@@ -5182,6 +5182,11 @@ bool MaybeSaveAnnotations(WindowTab* tab) {
     if (!tab) {
         return true;
     }
+    // text typed into a free text box is not in the document until committed;
+    // teardown would commit it only after this prompt, into a closing engine
+    if (tab->win && IsEditingFreeTextInPlace(tab->win)) {
+        EndFreeTextInPlaceEdit(true);
+    }
     // TODO: hacky because CloseCurrentTab() can call CloseWindow() and
     // they both ask to save annotations
     // Could determine in CloseCurrentTab() if will CloseWindow() and

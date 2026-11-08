@@ -2820,6 +2820,15 @@ bool AnnotationsNeedSavePrompt(WindowTab* tab) {
     if (!tab || tab->askedToSaveAnnotations) {
         return false;
     }
+    // edits typed into a free text box or the contents editor are not in the
+    // document until committed; teardown would commit them only after the
+    // prompt, into a closing engine
+    if (tab->win && IsEditingFreeTextInPlace(tab->win)) {
+        EndFreeTextInPlaceEdit(true);
+    }
+    if (tab->win && IsEditingAnnotContents(tab->win)) {
+        EndAnnotContentsEdit(true);
+    }
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return false;
