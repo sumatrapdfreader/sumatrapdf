@@ -1971,6 +1971,8 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     win->ctrl = tab->ctrl;
     // a Discard answered for the previous document doesn't cover this one
     tab->askedToSaveAnnotations = false;
+    // the new document paints its theme background until its first page renders
+    tab->everPaintedPage = false;
 
     // Reload/replace swaps the document; clear any tip for the previous page.
     win->DeleteToolTip();
