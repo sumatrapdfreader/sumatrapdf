@@ -674,9 +674,14 @@ void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool raste
     if (!pix || !rasterDominant) {
         return;
     }
-    // we read s[0], s[1], s[2] as R, G, B, so anything else (e.g. CMYK, which
-    // also passes an n >= 3 test) would be misinterpreted
-    if (!fz_colorspace_is_rgb(ctx, pix->colorspace)) {
+    // the channels are read by position, so anything but RGB or BGR (e.g.
+    // CMYK, which also passes an n >= 3 test) would be misinterpreted
+    int ir = 0;
+    int ib = 2;
+    if (fz_colorspace_type(ctx, pix->colorspace) == FZ_COLORSPACE_BGR) {
+        ir = 2;
+        ib = 0;
+    } else if (!fz_colorspace_is_rgb(ctx, pix->colorspace)) {
         return;
     }
 
@@ -688,9 +693,9 @@ void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool raste
     int n = pix->n;
     for (int y = 0; y < pix->h; y++) {
         for (int x = 0; x < pix->w; x++) {
-            float fr = (float)s[0] / 255.f;
+            float fr = (float)s[ir] / 255.f;
             float fg = (float)s[1] / 255.f;
-            float fb = (float)s[2] / 255.f;
+            float fb = (float)s[ib] / 255.f;
             if (fr > 0.96f && fg > 0.96f && fb > 0.96f) {
                 s += n;
                 continue;
@@ -710,9 +715,9 @@ void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool raste
                 outB *= factor;
             }
 
-            s[0] = CadClampByte(outR * 255.f);
+            s[ir] = CadClampByte(outR * 255.f);
             s[1] = CadClampByte(outG * 255.f);
-            s[2] = CadClampByte(outB * 255.f);
+            s[ib] = CadClampByte(outB * 255.f);
             s += n;
         }
         s += pix->stride - ((size_t)pix->w * n);

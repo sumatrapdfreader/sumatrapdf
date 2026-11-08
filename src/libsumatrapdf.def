@@ -265,6 +265,7 @@ EXPORTS
 	fz_drop_page
 
 	fz_colorspace_is_rgb
+	fz_colorspace_type
 
 	fz_colorspace_is_cmyk
 

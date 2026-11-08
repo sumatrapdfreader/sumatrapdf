@@ -1837,9 +1837,14 @@ static LinkRectList* LinkifyText(Utf8PageText pageText, Rect* coords) {
     return list;
 }
 
+enum class PixelOrder {
+    Rgb,
+    Bgr,
+};
+
 // try to produce an 8-bit palette for saving some memory
 #if OS_WIN
-static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
+static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap, PixelOrder order) {
     int w = pixmap->w;
     int h = pixmap->h;
     int stride = ((w + 3) / 4) * 4;
@@ -1915,8 +1920,9 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
                     k = paletteSize++;
                     hashKey[slot] = px;
                     hashIdx[slot] = (i16)k;
-                    // palette is BGR0 (RGBQUAD layout); source is RGBA, so swap R and B
-                    palette[k] = ((px & 0xFFu) << 16) | (px & 0xFF00u) | ((px >> 16) & 0xFFu);
+                    // palette is BGR0 (RGBQUAD layout): a BGRA source matches, RGBA swaps R and B
+                    palette[k] =
+                        order == PixelOrder::Bgr ? px : ((px & 0xFFu) << 16) | (px & 0xFF00u) | ((px >> 16) & 0xFFu);
                     break;
                 }
                 if (hashKey[slot] == px) {
@@ -2006,7 +2012,7 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap, b
         return nullptr;
     }
     if (!preserveAlpha && pixmap->n == 4 && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
-        RenderedBitmap* res = TryRenderAsPaletteImage(pixmap);
+        RenderedBitmap* res = TryRenderAsPaletteImage(pixmap, PixelOrder::Rgb);
         if (res) {
             return res;
         }
@@ -2059,10 +2065,69 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap, b
 }
 #endif
 
-static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool preserveAlpha = false) {
+// A page render paints straight into the BGRA Pixmap the cache keeps (a DIB
+// section on Windows), through a mupdf pixmap that borrows its memory. The
+// finished page then needs no conversion from RGB and no copy, which was as
+// much work as drawing it.
+struct PageRenderTarget {
+    Pixmap* pixmap = nullptr;
+    fz_pixmap* fz = nullptr;
+};
+
+static bool NewRenderTarget(fz_context* ctx, fz_irect bounds, PageRenderTarget& t) {
+    int w = bounds.x1 - bounds.x0;
+    int h = bounds.y1 - bounds.y0;
 #if OS_WIN
-    return PixmapFromRenderedBitmap(NewRenderedFzPixmap(ctx, pixmap, preserveAlpha));
+    t.pixmap = AllocPixmapDIB(w, h);
 #else
+    t.pixmap = AllocPixmap(w, h, PixmapFormat::BGRA8, false);
+#endif
+    if (!t.pixmap) {
+        return false;
+    }
+    // mupdf lays rows out at w * 4 bytes, like our BGRA8
+    ReportIf(t.pixmap->stride != w * 4);
+    fz_try(ctx) {
+        t.fz = fz_new_pixmap_with_bbox_and_data(ctx, fz_device_bgr(ctx), bounds, nullptr, 1, t.pixmap->data);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        FreePixmap(t.pixmap);
+        t.pixmap = nullptr;
+        return false;
+    }
+    return true;
+}
+
+static void FreeRenderTarget(fz_context* ctx, PageRenderTarget& t) {
+    fz_drop_pixmap(ctx, t.fz);
+    t.fz = nullptr;
+    FreePixmap(t.pixmap);
+    t.pixmap = nullptr;
+}
+
+// the rendered page for the cache: palettized when it has few enough colors
+// (a quarter of the memory), otherwise the target itself
+static Pixmap* FinishRenderTarget(fz_context* ctx, PageRenderTarget& t, bool preserveAlpha) {
+    Pixmap* res = t.pixmap;
+    t.pixmap = nullptr;
+#if OS_WIN
+    if (!preserveAlpha) {
+        RenderedBitmap* pal = TryRenderAsPaletteImage(t.fz, PixelOrder::Bgr);
+        if (pal) {
+            FreePixmap(res);
+            res = PixmapFromRenderedBitmap(pal);
+        }
+    }
+#endif
+    fz_drop_pixmap(ctx, t.fz);
+    t.fz = nullptr;
+    return res;
+}
+
+#if !OS_WIN
+// an image's pixmap as a Pixmap; page renders paint into a PageRenderTarget
+static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap) {
     fz_pixmap* bgrPixmap = NewBgrPixmap(ctx, pixmap);
     if (!bgrPixmap) {
         return nullptr;
@@ -2083,8 +2148,8 @@ static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool pr
     }
     fz_drop_pixmap(ctx, bgrPixmap);
     return res;
-#endif
 }
+#endif
 
 static TocItem* NewTocItemWithDestination(Arena* arena, TocItem* parent, Str title, IPageDestination* dest) {
     auto* res = AllocTocItem(arena, title, 0);
@@ -7565,13 +7630,16 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         return nullptr;
     }
 
-    fz_colorspace* csRgb = fz_device_rgb(ctx);
-    fz_pixmap* pix = nullptr;
+    PageRenderTarget target;
+    if (!NewRenderTarget(ctx, ibounds, target)) {
+        fz_drop_display_list(ctx, keptList);
+        return nullptr;
+    }
     fz_device* dev = nullptr;
     Pixmap* pixmap = nullptr;
 
     fz_var(dev);
-    fz_var(pix);
+    fz_var(target);
     fz_var(pixmap);
 
     if (keptList) {
@@ -7581,9 +7649,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         // after-free. Hold renderLock to serialize.
         ScopedMutex rls(&renderLock);
         fz_try(ctx) {
-            pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            ClearRenderedPagePixmap(ctx, pix, args);
-            dev = fz_new_draw_device(ctx, ctm, pix);
+            ClearRenderedPagePixmap(ctx, target.fz, args);
+            dev = fz_new_draw_device(ctx, ctm, target.fz);
             fz_device* drawDev = dev;
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
@@ -7597,9 +7664,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             } else {
                 fz_close_device(ctx, dev);
                 if (CadEnhanceActive() && cadRasterDominant) {
-                    PdfCadEnhancePixmap(ctx, pix, zoom, true);
+                    PdfCadEnhancePixmap(ctx, target.fz, zoom, true);
                 }
-                pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+                pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop);
                 MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
             }
         }
@@ -7607,9 +7674,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             if (dev) {
                 fz_drop_device(ctx, dev);
             }
-            if (pix) {
-                fz_drop_pixmap(ctx, pix);
-            }
+            FreeRenderTarget(ctx, target);
             fz_drop_display_list(ctx, keptList);
         }
         fz_catch(ctx) {
@@ -7638,9 +7703,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     if (pdfdoc) {
         fz_try(ctx) {
             pdfpage = pdf_page_from_fz_page(ctx, page);
-            pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            ClearRenderedPagePixmap(ctx, pix, args);
-            dev = fz_new_draw_device(ctx, ctm, pix);
+            ClearRenderedPagePixmap(ctx, target.fz, args);
+            dev = fz_new_draw_device(ctx, ctm, target.fz);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
             }
@@ -7655,9 +7719,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             } else {
                 fz_close_device(ctx, dev);
                 if (CadEnhanceActive() && cadRasterDominant) {
-                    PdfCadEnhancePixmap(ctx, pix, zoom, true);
+                    PdfCadEnhancePixmap(ctx, target.fz, zoom, true);
                 }
-                pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+                pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop);
                 MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
             }
         }
@@ -7665,7 +7729,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             if (dev) {
                 fz_drop_device(ctx, dev);
             }
-            fz_drop_pixmap(ctx, pix);
+            FreeRenderTarget(ctx, target);
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
@@ -7674,20 +7738,19 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         }
     } else {
         fz_try(ctx) {
-            pix = fz_new_pixmap_with_bbox(ctx, csRgb, ibounds, nullptr, 1);
-            ClearRenderedPagePixmap(ctx, pix, args);
-            dev = fz_new_draw_device(ctx, ctm, pix);
+            ClearRenderedPagePixmap(ctx, target.fz, args);
+            dev = fz_new_draw_device(ctx, ctm, target.fz);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
             }
             fz_run_page_contents(ctx, page, dev, fz_identity, nullptr);
             fz_close_device(ctx, dev);
             fz_drop_device(ctx, dev);
-            pixmap = NewPixmapFromFzPixmap(ctx, pix, args.transparentBackdrop);
+            pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop);
             MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
-            fz_drop_pixmap(ctx, pix);
+            FreeRenderTarget(ctx, target);
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
