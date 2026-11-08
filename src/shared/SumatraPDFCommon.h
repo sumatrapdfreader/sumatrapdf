@@ -69,12 +69,19 @@ void CollectHistoryFilesInDir(Str dir, StrVec& out);
 void InsertSortedNatural(StrVec* v, Str s);
 struct PendingNextPrevNav {
     MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
     bool forward = true;
+    Str path;         // owned
     Str pathToDelete; // owned
-    ~PendingNextPrevNav() { str::Free(pathToDelete); }
+    ~PendingNextPrevNav() {
+        str::Free(path);
+        str::Free(pathToDelete);
+    }
 };
 extern PendingNextPrevNav* gPendingNextPrevNav;
 void ClearPendingNextPrevNav();
+void DeferNextPrevNav(MainWindow* win, WindowTab* tab, bool forward, Str pathToDelete);
+void ReplayPendingNextPrevNav();
 bool IsAtDocumentBottom(MainWindow* win);
 void OnNextFileHintClosed(NotificationClosedEvent* ev);
 void ToggleMangaMode(MainWindow* win);

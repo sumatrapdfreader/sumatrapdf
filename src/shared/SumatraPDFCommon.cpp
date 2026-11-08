@@ -1037,6 +1037,38 @@ void ClearPendingNextPrevNav() {
     gPendingNextPrevNav = nullptr;
 }
 
+// next / prev file asked for while the folder scan runs: done when it ends
+void DeferNextPrevNav(MainWindow* win, WindowTab* tab, bool forward, Str pathToDelete) {
+    ClearPendingNextPrevNav();
+    auto* p = new PendingNextPrevNav;
+    p->win = win;
+    p->tab = tab;
+    p->forward = forward;
+    p->path = str::Dup(tab->filePath);
+    p->pathToDelete = str::Dup(pathToDelete);
+    gPendingNextPrevNav = p;
+}
+
+// the scan ended: navigate, unless the user moved to another tab or document
+// meanwhile, which the request no longer applies to
+void ReplayPendingNextPrevNav() {
+    PendingNextPrevNav* p = gPendingNextPrevNav;
+    if (!p) {
+        return;
+    }
+    gPendingNextPrevNav = nullptr;
+    AutoDelete delP(p);
+    MainWindow* win = p->win;
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (tab != p->tab || win->IsCurrentTabAbout() || !str::Eq(tab->filePath, p->path)) {
+        return;
+    }
+    OpenNextPrevFileInFolder(win, p->forward, p->pathToDelete);
+}
+
 bool IsAtDocumentBottom(MainWindow* win) {
     DocController* ctrl = win->ctrl;
     if (!ctrl) {

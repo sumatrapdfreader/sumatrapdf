@@ -2129,15 +2129,7 @@ static void FinishNextPrevDirScan(NextPrevDirScan* r) {
     gNextPrevDirReady = true;
     gNextPrevDirScanning = false;
 
-    if (!gPendingNextPrevNav) {
-        return;
-    }
-    PendingNextPrevNav* p = gPendingNextPrevNav;
-    gPendingNextPrevNav = nullptr;
-    if (IsMainWindowValidAndNotClosing(p->win) && !p->win->IsCurrentTabAbout()) {
-        OpenNextPrevFileInFolder(p->win, p->forward, p->pathToDelete);
-    }
-    delete p;
+    ReplayPendingNextPrevNav();
 }
 
 static void NextPrevDirScanThread(NextPrevDirScan* req) {
@@ -2393,12 +2385,7 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     Str path = tab->filePath;
     StrVec* files = GetNextPrevFilesReady(path);
     if (!files) {
-        ClearPendingNextPrevNav();
-        auto* p = new PendingNextPrevNav;
-        p->win = win;
-        p->forward = forward;
-        p->pathToDelete = str::Dup(pathToDelete);
-        gPendingNextPrevNav = p;
+        DeferNextPrevNav(win, tab, forward, pathToDelete);
         logf("OpenNextPrevFileInFolder: folder scan in progress, deferring\n");
         return;
     }
