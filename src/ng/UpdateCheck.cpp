@@ -167,6 +167,7 @@ static void OpenDownloadPage(UpdateInfo* updateInfo) {
 }
 
 static void OnInstallAnswer(UpdateInfo* updateInfo, int res) {
+    gUpdateCheckInProgress = false;
     AutoDelete delInfo(updateInfo);
     Str installerPath = updateInfo->installerPath;
     bool didDownloadInstaller = file::Exists(installerPath);
@@ -220,6 +221,8 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     TempStr content = fmt("%s\n\n%s", mainInstr, fmt(fmtStr.s, currentVersion, ver));
     logf("NotifyUserOfUpdate: %s -> %s\n", currentVersion, ver);
 
+    // as orig's modal dialog: no other check starts until this is answered
+    gUpdateCheckInProgress = true;
     uint flags = MbYesNo | MbIconInformation;
     MsgBox(updateInfo->win, content, Tr("SumatraPDF Update"), flags,
            MkFunc1<UpdateInfo, int>(OnInstallAnswer, updateInfo));
