@@ -844,6 +844,10 @@ static void ChapterLayoutThread(ChapterLayoutJob* job) {
     int id = job->job;
     delete job;
     AutoRelease release(engine);
+    // shutdown waits for this thread: laying out uses fonts it frees
+    defer {
+        AtomicIntDec(&gDangerousThreadCount);
+    };
 
     int total = engine->ChapterCount();
     {
@@ -885,6 +889,7 @@ void EngineBase::StartBackgroundChapterLayout() {
     }
     int id = AtomicIntInc(&layoutJob);
     AddRef();
+    AtomicIntInc(&gDangerousThreadCount);
     auto* job = new ChapterLayoutJob();
     job->engine = this;
     job->job = id;
