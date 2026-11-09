@@ -3231,9 +3231,10 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
     SyncWithEngineLayout();
     if (engine->HasChapters()) {
         // step before every page of the row on screen (Facing / Book view)
-        int first = FirstPageInRow(CurrentPageNo());
-        Location target = CurrentLocation();
+        Location cur = CurrentLocation();
+        Location target = cur;
         int pageNo;
+        int first;
         do {
             Location prev = engine->PrevLocation(target);
             if (prev == target) {
@@ -3242,6 +3243,9 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
             }
             target = prev;
             pageNo = PageNoFromLocation(target);
+            // PrevLocation lays out the prior chapter on demand, which shifts
+            // the flat numbers of the pages after it, so this is recomputed
+            first = FirstPageInRow(PageNoFromLocation(cur));
         } while (pageNo >= first);
         pageNo = FirstPageInRow(pageNo);
         int sy = scrollY;

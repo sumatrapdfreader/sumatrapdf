@@ -33,6 +33,7 @@ struct ChapterTable {
     int PageNoFromLocation(Location loc);
     int Generation();
     void BumpGeneration();
+    int Epoch();
     void Reset();
 
   private:
@@ -43,6 +44,7 @@ struct ChapterTable {
     };
     Vec<Entry> entries;
     AtomicInt generation = 0;
+    AtomicInt epoch = 0;
 
     int CountLocked(int idx);
     void ResetLocked();

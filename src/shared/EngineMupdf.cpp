@@ -5488,7 +5488,7 @@ int EngineMupdf::LayOutChapter(int chapter) {
     }
     // Captured before the count. ApplyReflowThemeCss resets under pagesLock,
     // so a count started against the previous layout is dropped below.
-    int gen = chapters.Generation();
+    int epoch = chapters.Epoch();
 
     auto* ctx = Ctx();
     int n = 1;
@@ -5524,7 +5524,7 @@ int EngineMupdf::LayOutChapter(int chapter) {
     bool staleBox = false;
     {
         ScopedRecursiveMutex pagesScope(&pagesLock);
-        if (chapters.Generation() != gen) {
+        if (chapters.Epoch() != epoch) {
             return chapters.PageCount(chapter);
         }
         if (chapter >= 1 && chapter <= len(chapterPages)) {

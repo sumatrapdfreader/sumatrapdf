@@ -15,6 +15,7 @@ void ChapterTable::ResetLocked() {
         entries[i] = {i + 1, false};
     }
     AtomicIntInc(&generation);
+    AtomicIntInc(&epoch);
 }
 
 // nChapters <= 1 still creates one chapter, so callers can always route page
@@ -117,6 +118,12 @@ int ChapterTable::Generation() {
 // the pages changed without their count changing, e.g. reordered
 void ChapterTable::BumpGeneration() {
     AtomicIntInc(&generation);
+}
+
+// bumped only when the table is reset (a restyle re-paginates everything),
+// unlike the generation, which every laid-out chapter moves
+int ChapterTable::Epoch() {
+    return AtomicIntGet(&epoch);
 }
 
 void ChapterTable::Reset() {
