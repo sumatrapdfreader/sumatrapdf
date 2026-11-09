@@ -3027,6 +3027,31 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     return true;
 }
 
+// orig's AppendJsMenuItems: the items from i on that are at least `level`
+// deep; a submenu title gets its deeper items as a submenu
+static void AppendJsMenuItems(MenuModel* model, PageDestinationJsMenu* dest, int& i, int level) {
+    while (i < len(dest->items) && dest->Level(i) >= level) {
+        int idx = i++;
+        MenuItemModel it;
+        Str item = dest->items[idx];
+        if (str::Eq(item, StrL("-"))) {
+            it.separator = true;
+            VecAppend(model->items, it);
+            continue;
+        }
+        // && keeps a & from becoming an access-key marker
+        it.title = str::Dup(str::ReplaceTemp(item, StrL("&"), StrL("&&")));
+        it.titleOwned = true;
+        if (dest->IsSubmenu(idx)) {
+            it.submenu = new MenuModel();
+            AppendJsMenuItems(it.submenu, dest, i, dest->Level(idx) + 1);
+        } else {
+            it.cmdId = kJsMenuItemCmdFirst + idx;
+        }
+        VecAppend(model->items, it);
+    }
+}
+
 // orig's LinkHandler::GotoLink shows a JavaScript menu link's items in a popup
 // at the cursor; picking one runs RunJsMenuItem()
 static void OpenJsMenuPopup(MainWindow* win, gp::Ctx* cx, int x, int y, PageDestinationJsMenu* dest) {
@@ -3035,22 +3060,12 @@ static void OpenJsMenuPopup(MainWindow* win, gp::Ctx* cx, int x, int y, PageDest
     ui->jsMenu = new PageDestinationJsMenu();
     ui->jsMenu->items = dest->items;
     ui->jsMenu->returns = dest->returns;
+    ui->jsMenu->levels = dest->levels;
 
     DeleteMenuModel(ui->ctxMenu);
     auto* model = new MenuModel();
-    for (int i = 0; i < len(dest->items); i++) {
-        MenuItemModel it;
-        Str item = dest->items[i];
-        if (str::Eq(item, StrL("-"))) {
-            it.separator = true;
-        } else {
-            // && keeps a & from becoming an access-key marker
-            it.title = str::Dup(str::ReplaceTemp(item, StrL("&"), StrL("&&")));
-            it.titleOwned = true;
-            it.cmdId = kJsMenuItemCmdFirst + i;
-        }
-        VecAppend(model->items, it);
-    }
+    int itemIdx = 0;
+    AppendJsMenuItems(model, dest, itemIdx, 0);
     ui->ctxMenu = model;
     AppShellInvalidate(win);
     float k = CanvasScale(win);

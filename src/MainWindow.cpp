@@ -517,6 +517,27 @@ static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
     str::Free(data);
 }
 
+// Appends the JavaScript menu's items from i on that are at least `level` deep;
+// a submenu title gets its deeper items as a submenu. Item i has command id i + 1
+static void AppendJsMenuItems(HMENU menu, PageDestinationJsMenu* dest, int& i, int level) {
+    while (i < len(dest->items) && dest->Level(i) >= level) {
+        int idx = i++;
+        Str item = dest->items[idx];
+        if (str::Eq(item, StrL("-"))) {
+            AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+            continue;
+        }
+        TempWStr title = ToWStrTemp(MenuToSafeStringTemp(item));
+        if (!dest->IsSubmenu(idx)) {
+            AppendMenuW(menu, MF_STRING, (UINT)(idx + 1), title.s);
+            continue;
+        }
+        HMENU sub = CreatePopupMenu();
+        AppendJsMenuItems(sub, dest, i, dest->Level(idx) + 1);
+        AppendMenuW(menu, MF_POPUP, (UINT_PTR)sub, title.s);
+    }
+}
+
 void LinkHandler::GotoLink(IPageDestination* dest) {
     ReportIf(!win || win->linkHandler != this);
     if (!dest || !win || !win->IsDocLoaded()) {
@@ -561,18 +582,13 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         if (!menu) {
             return;
         }
-        for (int i = 0; i < len(menuDest->items); i++) {
-            Str item = menuDest->items[i];
-            if (str::Eq(item, StrL("-"))) {
-                AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
-                continue;
-            }
-            AppendMenuW(menu, MF_STRING, (UINT)(i + 1), CWStrTemp(MenuToSafeStringTemp(item)));
-        }
+        int itemIdx = 0;
+        AppendJsMenuItems(menu, menuDest, itemIdx, 0);
         POINT pt{};
         GetCursorPos(&pt);
         int cmd =
             TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+        // also destroys the submenus
         DestroyMenu(menu);
         if (cmd < 1 || cmd > len(menuDest->items)) {
             return;

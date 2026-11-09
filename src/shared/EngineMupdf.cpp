@@ -2839,6 +2839,83 @@ static bool DocJsDefinesMenuFunction(fz_context* ctx, pdf_document* doc, Str nam
     return found;
 }
 
+static int PageNoFromPdfDest(fz_context* ctx, pdf_document* doc, pdf_obj* dest);
+
+// true when js is a script object's JavaScript holding Xpedition's string table
+static bool XpStringsFromJsObj(fz_context* ctx, pdf_obj* jsObj, StrVec& strings) {
+    if (pdf_is_dict(ctx, jsObj)) {
+        jsObj = pdf_dict_get(ctx, jsObj, PDF_NAME(JS));
+    }
+    if (!jsObj) {
+        return false;
+    }
+    char* js = pdf_load_stream_or_string_as_utf8(ctx, jsObj);
+    bool ok = ParseXpeditionStrings(Str(js), strings);
+    fz_free(ctx, js);
+    if (!ok) {
+        strings.Reset();
+    }
+    return ok;
+}
+
+// Xpedition's string table, from the catalog's /OpenAction script or a
+// document-level one (issue #6517)
+static void DocXpeditionStrings(fz_context* ctx, pdf_document* doc, StrVec& strings) {
+    pdf_obj* tree = nullptr;
+    fz_var(tree);
+    fz_try(ctx) {
+        pdf_obj* root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
+        pdf_obj* open = pdf_dict_gets(ctx, root, "OpenAction");
+        bool found = false;
+        if (pdf_name_eq(ctx, pdf_dict_get(ctx, open, PDF_NAME(S)), PDF_NAME(JavaScript))) {
+            found = XpStringsFromJsObj(ctx, open, strings);
+        }
+        if (!found) {
+            tree = pdf_load_name_tree(ctx, doc, PDF_NAME(JavaScript));
+            int n = pdf_dict_len(ctx, tree);
+            for (int i = 0; i < n && !found; i++) {
+                found = XpStringsFromJsObj(ctx, pdf_dict_get_val(ctx, tree, i), strings);
+            }
+        }
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(ctx, tree);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        strings.Reset();
+    }
+}
+
+// Xpedition jumps return named dest "[{n}]"; turn them into "#<0-based page>"
+// that GetJsMenuAction understands, or nothing when the dest doesn't exist
+static void ResolveXpNamedDests(fz_context* ctx, pdf_document* doc, PageDestinationJsMenu* menu) {
+    StrVec resolved;
+    for (int i = 0; i < len(menu->returns); i++) {
+        Str ret = menu->returns[i];
+        if (!str::StartsWith(ret, StrL("[{"))) {
+            resolved.Append(ret);
+            continue;
+        }
+        int pageNo = 0;
+        pdf_obj* name = nullptr;
+        fz_var(name);
+        fz_try(ctx) {
+            name = pdf_new_string(ctx, ret.s, (size_t)len(ret));
+            pageNo = PageNoFromPdfDest(ctx, doc, name);
+        }
+        fz_always(ctx) {
+            pdf_drop_obj(ctx, name);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            pageNo = 0;
+        }
+        resolved.Append(pageNo > 0 ? fmt("#%d", pageNo - 1) : TempStr{});
+    }
+    menu->returns = resolved;
+}
+
 // Altium schematic PDFs (and similar) put component metadata on /Link annots
 // whose action is Acrobat JavaScript: either app.popUpMenu("...") inline, or a
 // call to a named ShowCompProps_* function in catalog /Names /JavaScript.
@@ -2868,6 +2945,9 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
     // the menu function last checked by DocJsDefinesMenuFunction, and its answer
     Str menuFnChecked;
     bool menuFnIsMenu = false;
+    // Xpedition's string table, loaded for the first _c() link
+    StrVec xpStrings;
+    bool xpStringsLoaded = false;
     for (int i = 0; i < n; i++) {
         char* js = nullptr;
         fz_rect rect{};
@@ -2906,6 +2986,21 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
                 fz_free(ctx, namedJs);
             }
         }
+        // Xpedition: the call's index arrays select strings from the document's table
+        auto* dest = new PageDestinationJsMenu();
+        if (str::Eq(name, StrL("_c")) && len(items) == 0) {
+            if (!xpStringsLoaded) {
+                xpStringsLoaded = true;
+                DocXpeditionStrings(ctx, doc, xpStrings);
+            }
+            if (ParseXpeditionMenu(Str(js), xpStrings, dest)) {
+                ResolveXpNamedDests(ctx, doc, dest);
+                items = dest->items;
+                returns = dest->returns;
+            } else {
+                VecReset(dest->levels);
+            }
+        }
         // KiCad: the items are the call's arguments, the function lives in any script
         if (name && len(items) == 0 && ParseJsMenuCallItems(Str(js), items, returns)) {
             if (!str::Eq(name, menuFnChecked)) {
@@ -2919,9 +3014,9 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
         }
         fz_free(ctx, js);
         if (len(items) == 0) {
+            delete dest;
             continue;
         }
-        auto* dest = new PageDestinationJsMenu();
         dest->items = items;
         dest->returns = returns;
         dest->rect = ToRectF(rect);

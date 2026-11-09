@@ -236,16 +236,23 @@ struct PageDestinationJsMenu : IPageDestination {
     StrVec items;
     // what picking each item returns (KiCad, issue #6503); empty when unknown
     StrVec returns;
+    // submenu depth of each item, 0 = top; an item followed by a deeper one is
+    // that submenu's title (Xpedition, issue #6517). Empty when flat
+    Vec<int> levels;
     Str tooltip;
 
     PageDestinationJsMenu();
     ~PageDestinationJsMenu() override;
 
     Str GetValue() override;
+    int Level(int i);
+    bool IsSubmenu(int i);
 };
 
 bool ParseJsMenuCallItems(Str js, StrVec& items, StrVec& returns);
 bool JsDefinesMenuFunction(Str js, Str name);
+bool ParseXpeditionStrings(Str docJs, StrVec& strings);
+bool ParseXpeditionMenu(Str linkJs, StrVec& strings, PageDestinationJsMenu* menu);
 
 struct JsMenuAction {
     Str url;

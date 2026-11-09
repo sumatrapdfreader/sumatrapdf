@@ -290,6 +290,273 @@ bool JsDefinesMenuFunction(Str js, Str name) {
     return false;
 }
 
+// Xpedition: var t = ['Symbol :', 'Property :', 'Push Schematic', ...], the
+// string table its menu builder _b._c() indexes into
+bool ParseXpeditionStrings(Str docJs, StrVec& strings) {
+    if (str::IndexOf(docJs, StrL("popUpMenu")) < 0 || str::IndexOf(docJs, StrL("_c")) < 0) {
+        return false;
+    }
+    int idx = str::IndexOf(docJs, StrL("var t"));
+    if (idx < 0) {
+        return false;
+    }
+    const char* p = docJs.s + idx + 5;
+    const char* end = docJs.s + len(docJs);
+    if (p < end && IsJsIdentChar(*p)) {
+        return false;
+    }
+    SkipJsWs(p, end);
+    if (p >= end || *p != '=') {
+        return false;
+    }
+    p++;
+    SkipJsWs(p, end);
+    if (p >= end || *p != '[') {
+        return false;
+    }
+    p++;
+
+    while (p < end) {
+        SkipJsWs(p, end);
+        if (p < end && *p == ',') {
+            p++;
+            continue;
+        }
+        if (p >= end || *p == ']') {
+            break;
+        }
+        str::Builder s;
+        if (!ParseJsQuotedString(p, end, s)) {
+            return false;
+        }
+        strings.Append(ToStr(s));
+    }
+    return p < end && len(strings) > 0;
+}
+
+// One entry of an Xpedition index array: 3, or a pair [6, 7]
+struct XpEntry {
+    int a = -1;
+    int b = -1;
+};
+
+// An argument of _b._c(): an index array, or a scalar ('', '1', 3)
+struct XpArg {
+    bool isArray = false;
+    Str scalar;
+    Vec<XpEntry> entries;
+};
+
+// a JS number, or a quoted one ('7')
+static bool ParseJsInt(const char*& p, const char* end, int& out) {
+    SkipJsWs(p, end);
+    if (p < end && (*p == '"' || *p == '\'')) {
+        str::Builder b;
+        if (!ParseJsQuotedString(p, end, b)) {
+            return false;
+        }
+        Str s = ToStr(b);
+        if (len(s) == 0 || !str::IsDigit(s.s[0])) {
+            return false;
+        }
+        out = ParseInt(s);
+        return true;
+    }
+    if (p >= end || !str::IsDigit(*p)) {
+        return false;
+    }
+    out = 0;
+    while (p < end && str::IsDigit(*p)) {
+        out = out * 10 + (*p - '0');
+        p++;
+    }
+    return true;
+}
+
+// [3, [6, 7], ...]
+static bool ParseXpEntries(const char*& p, const char* end, Vec<XpEntry>& entries) {
+    if (p >= end || *p != '[') {
+        return false;
+    }
+    p++;
+    while (p < end) {
+        SkipJsWs(p, end);
+        if (p < end && *p == ',') {
+            p++;
+            continue;
+        }
+        if (p < end && *p == ']') {
+            p++;
+            return true;
+        }
+        XpEntry e;
+        if (p < end && *p == '[') {
+            // a pair: [key, value]
+            p++;
+            if (!ParseJsInt(p, end, e.a)) {
+                return false;
+            }
+            SkipJsWs(p, end);
+            if (p >= end || *p != ',') {
+                return false;
+            }
+            p++;
+            if (!ParseJsInt(p, end, e.b)) {
+                return false;
+            }
+            SkipJsWs(p, end);
+            if (p >= end || *p != ']') {
+                return false;
+            }
+            p++;
+        } else if (!ParseJsInt(p, end, e.a)) {
+            return false;
+        }
+        VecAppend(entries, e);
+    }
+    return false;
+}
+
+// a literal at p: [..], '..' or a number
+static bool ParseXpLiteral(const char*& p, const char* end, XpArg& arg) {
+    SkipJsWs(p, end);
+    if (p >= end) {
+        return false;
+    }
+    if (*p == '[') {
+        arg.isArray = true;
+        return ParseXpEntries(p, end, arg.entries);
+    }
+    const char* start = p;
+    if (*p == '"' || *p == '\'') {
+        str::Builder ignored;
+        if (!ParseJsQuotedString(p, end, ignored)) {
+            return false;
+        }
+        // the text between the quotes; the string table holds no escapes we need
+        arg.scalar = Str((char*)start + 1, (int)(p - start) - 2);
+        return true;
+    }
+    while (p < end && str::IsDigit(*p)) {
+        p++;
+    }
+    arg.scalar = Str((char*)start, (int)(p - start));
+    return p > start;
+}
+
+// the value of `var <name> = <literal>` in js
+static bool ParseXpVar(Str js, Str name, XpArg& arg) {
+    TempStr needle = fmt("var %s", name);
+    const char* end = js.s + len(js);
+    int idx = str::IndexOf(js, needle);
+    while (idx >= 0) {
+        const char* p = js.s + idx + len(needle);
+        SkipJsWs(p, end);
+        if (p < end && *p == '=') {
+            p++;
+            return ParseXpLiteral(p, end, arg);
+        }
+        int next = str::IndexOf(Str((char*)p, (int)(end - p)), needle);
+        idx = next < 0 ? -1 : (int)(p - js.s) + next;
+    }
+    return false;
+}
+
+// one argument of _b._c(...): a literal, or a variable the link script set
+static bool ParseXpArg(Str js, const char*& p, const char* end, XpArg& arg) {
+    SkipJsWs(p, end);
+    if (p >= end || !IsJsIdentStart(*p)) {
+        return ParseXpLiteral(p, end, arg);
+    }
+    const char* start = p;
+    while (p < end && IsJsIdentChar(*p)) {
+        p++;
+    }
+    return ParseXpVar(js, Str((char*)start, (int)(p - start)), arg);
+}
+
+static void XpAppendItem(PageDestinationJsMenu* menu, Str item, int level, Str ret) {
+    menu->items.Append(item);
+    menu->returns.Append(ret);
+    VecAppend(menu->levels, level);
+}
+
+// What _c() shows for one index array entry: t[a], or "t[a] = t[b]" for a pair
+static TempStr XpEntryText(StrVec& strings, XpEntry e, bool isPair) {
+    int n = len(strings);
+    Str a = e.a >= 0 && e.a < n ? strings[e.a] : Str{};
+    if (!isPair) {
+        return str::DupTemp(a);
+    }
+    Str b = e.b >= 0 && e.b < n ? strings[e.b] : Str{};
+    return fmt("%s = %s", a, b);
+}
+
+// A submenu: the first entry is its title, the others its items. jumps picks
+// _c()'s jj_ form, where a pair is [item, page] going to named dest "[{page}]"
+static void XpAppendSubmenu(PageDestinationJsMenu* menu, StrVec& strings, XpArg& arg, bool jumps) {
+    for (int i = 0; i < len(arg.entries); i++) {
+        XpEntry e = arg.entries[i];
+        bool isPair = e.b >= 0;
+        TempStr text = XpEntryText(strings, e, isPair && !jumps);
+        TempStr ret = jumps && isPair && i > 0 ? fmt("[{%d}]", e.b) : TempStr{};
+        XpAppendItem(menu, text, i == 0 ? 0 : 1, ret);
+    }
+}
+
+// Siemens Xpedition (SCH2PDF): a link runs _b._c(symbol, prop, page, jumps)
+// with index arrays into the document's string table. _c() shows nested menus:
+// symbol [title, item], prop [title, items...], "Push Schematic" going to
+// 0-based page `page` when it isn't '', and jumps [title, [item, dest]...].
+// Named dest returns stay "[{n}]" for the engine to resolve (issue #6517).
+bool ParseXpeditionMenu(Str linkJs, StrVec& strings, PageDestinationJsMenu* menu) {
+    constexpr int kPushSchematicStr = 2;
+    Str name = ExtractJsCallName(linkJs);
+    if (!menu || len(strings) <= kPushSchematicStr || !str::Eq(name, StrL("_c"))) {
+        return false;
+    }
+    const char* p = name.s + len(name);
+    const char* end = linkJs.s + len(linkJs);
+    SkipJsWs(p, end);
+    if (p >= end || *p != '(') {
+        return false;
+    }
+    p++;
+
+    constexpr int kArgs = 4;
+    XpArg args[kArgs];
+    for (int i = 0; i < kArgs; i++) {
+        if (!ParseXpArg(linkJs, p, end, args[i])) {
+            return false;
+        }
+        SkipJsWs(p, end);
+        char want = i == kArgs - 1 ? ')' : ',';
+        if (p >= end || *p != want) {
+            return false;
+        }
+        p++;
+    }
+    XpArg& symbol = args[0];
+    XpArg& prop = args[1];
+    XpArg& page = args[2];
+    XpArg& jumps = args[3];
+    if (!symbol.isArray || !prop.isArray || page.isArray || !jumps.isArray) {
+        return false;
+    }
+
+    // _c() always shows the symbol submenu, from its first two entries
+    if (len(symbol.entries) >= 2) {
+        XpAppendItem(menu, XpEntryText(strings, symbol.entries[0], false), 0, {});
+        XpAppendItem(menu, XpEntryText(strings, symbol.entries[1], false), 1, {});
+    }
+    XpAppendSubmenu(menu, strings, prop, false);
+    if (len(page.scalar) > 0 && str::IsDigit(page.scalar.s[0])) {
+        XpAppendItem(menu, strings[kPushSchematicStr], 0, fmt("#%s", page.scalar));
+    }
+    XpAppendSubmenu(menu, strings, jumps, true);
+    return len(menu->items) > 0;
+}
+
 // What picking item i of a JavaScript menu does: launch a URL, or go to a page.
 JsMenuAction GetJsMenuAction(PageDestinationJsMenu* dest, int i) {
     JsMenuAction res;
@@ -373,10 +640,23 @@ Str PageDestinationJsMenu::GetValue() {
         if (len(b) > 0) {
             b.AppendChar('\n');
         }
+        // submenu items indented under their title
+        for (int lvl = Level(i); lvl > 0; lvl--) {
+            b.Append(StrL("  "));
+        }
         b.Append(it);
     }
     tooltip = b.TakeStr();
     return tooltip;
+}
+
+int PageDestinationJsMenu::Level(int i) {
+    return i >= 0 && i < len(levels) ? levels[i] : 0;
+}
+
+// true when item i is the title of a submenu: the next item is deeper
+bool PageDestinationJsMenu::IsSubmenu(int i) {
+    return i + 1 < len(items) && Level(i + 1) > Level(i);
 }
 
 IPageDestination* NewSimpleDest(Arena* arena, int pageNo, RectF rect, float zoom, Str value) {

@@ -1001,6 +1001,14 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut, const PointF
                 }
             }
             valueShown = fmt("%s actions=%s", valueShown, ToStr(actions));
+            if (len(menu->levels) > 0) {
+                // submenu depth of each item: levels=0,1,0
+                str::Builder levels;
+                for (int i = 0; i < len(menu->levels); i++) {
+                    levels.Append(fmt(i > 0 ? ",%d" : "%d", menu->levels[i]));
+                }
+                valueShown = fmt("%s levels=%s", valueShown, ToStr(levels));
+            }
         }
         RectF src = el->GetRect();
         RectF destRc = dest->GetRect();
