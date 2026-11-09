@@ -267,6 +267,8 @@ async function main(): Promise<void> {
     const embedFonts = !web && !opts.noEmbedFonts;
     if (!embedFonts) console.log("not embedding built-in fonts");
     if (!web) await genDocsForBuild();
+    const { ensureTranslationsForBuild } = await import("./trans-dl");
+    await ensureTranslationsForBuild();
     const host = hostPlatform();
     const packFlags: BuildFlags = { debug: false, asan: false, clang: false, clean: false, verbose: flags.verbose };
     const packTc = findToolchain(root, host, false, fail);

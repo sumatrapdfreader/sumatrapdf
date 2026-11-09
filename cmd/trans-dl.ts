@@ -6,6 +6,9 @@
  *   (the build's prebuild, cmd/pack-embedded-prebuild.cmd, packs it with
  *   markdown-it/pele/manual into out/<cfg>/embedded[-static].lzsa = IDR_EMBEDDED_PAK)
  *
+ * Without an upload secret, use public edit history to build a read-only cache.
+ * Builds reuse a valid cache; missing translations stop the build on download failure.
+ *
  * Flow:
  *   1. Extract Tr() / TrN() strings from src + command names + home page tips
  *   2. POST them to /api/dltransfor (marks active strings; returns sha1 + translations)
@@ -32,8 +35,8 @@
  *   bun cmd/trans-dl.ts --max-submit N  # cap AI submissions (for testing; fixes always run)
  */
 
-import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from "node:fs";
-import { join, extname } from "node:path";
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, renameSync } from "node:fs";
+import { join, extname, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { commands, commandAltDescs } from "./gen-commands";
@@ -244,13 +247,6 @@ function tryGetTransSecret(): string {
     console.log("Got TRANS_UPLOAD_SECRET");
   }
   return s;
-}
-
-/** Minimal empty cache when we cannot talk to apptranslator (no secret). */
-function writeEmptyTranslations(): void {
-  mkdirSync(workDir, { recursive: true });
-  writeFileSync(translationsTxtPath, "", "utf-8");
-  console.log(`Wrote empty ${translationsTxtPath} (translations skipped)`);
 }
 
 interface DownloadResult {
@@ -543,13 +539,14 @@ type ServerHistory = Map<string, Map<string, string>>;
 
 const kHistoryRecordTrans = "t";
 const kHistoryRecordFields = 6; // t, time, user, lang, english, translation
+const kHistoryTimeoutMs = 30000;
 
 // GET /api/dltranshist returns the whole edits log, oldest first, so the
 // last edit of a (lang, english) pair wins
 async function downloadHistory(server: string): Promise<ServerHistory> {
   const timeStart = performance.now();
   const uri = `${server}/api/dltranshist?app=${encodeURIComponent(APP_NAME)}&size=0`;
-  const resp = await fetch(uri);
+  const resp = await fetch(uri, { signal: AbortSignal.timeout(kHistoryTimeoutMs) });
   if (!resp.ok) {
     const body = await resp.text();
     throw new Error(`dltranshist HTTP ${resp.status}: ${body.slice(0, 200)}`);
@@ -1340,7 +1337,7 @@ async function fillMissingWithAiAndSubmit(
 }
 
 // Write languages complete enough for the binary to .work/translations.txt
-function writeTranslationsForBinary(pt: ParsedTranslations, downloadSha1: string): void {
+function writeTranslationsForBinary(pt: ParsedTranslations, downloadSha1: string, path = translationsTxtPath): void {
   const { perLang, allStrings } = pt;
   const nStrings = allStrings.length;
   const langsToSkip = new Set<string>();
@@ -1387,13 +1384,50 @@ function writeTranslationsForBinary(pt: ParsedTranslations, downloadSha1: string
     }
   }
 
-  mkdirSync(workDir, { recursive: true });
   const content = out.join("\n") + "\n";
-  writeFileSync(translationsTxtPath, content, "utf-8");
-  console.log(`Wrote ${translationsTxtPath} of size ${content.length}`);
+  if (!hasTranslations(content)) throw new Error("No usable translations downloaded");
+  mkdirSync(dirname(path), { recursive: true });
+  const temp = `${path}.${process.pid}.tmp`;
+  writeFileSync(temp, content, "utf-8");
+  renameSync(temp, path);
+  console.log(`Wrote ${path} of size ${content.length}`);
   console.log(`not translated langs: ${notTranslated}`);
   console.log(`good langs: ${goodLangs}`);
   console.log(`fully translated langs: ${fullyTranslated}`);
+}
+
+function hasTranslations(text: string): boolean {
+  return /^AppTranslator: SumatraPDF\r?\n[0-9a-f]{40}\r?\n/.test(text) && /^[a-z]{2,3}(?:-[a-z]+)?:.+/m.test(text);
+}
+
+export async function ensureTranslationsForBuild(
+  path = translationsTxtPath,
+  strings?: string[],
+  server = process.env["APPTRANSLATOR_URL"] ?? DEFAULT_SERVER,
+): Promise<void> {
+  if (existsSync(path) && hasTranslations(readFileSync(path, "utf8"))) return;
+
+  // Public history needs no upload secret and never changes server translations.
+  const history = await downloadHistory(server);
+  const allStrings = strings ?? extractStringsToTranslate();
+  const perLang: ServerHistory = new Map();
+  for (const [lang, entries] of history) {
+    const active = new Map<string, string>();
+    for (const english of allStrings) {
+      const translation = entries.get(english);
+      if (!translation) continue;
+      const fixed = fixPalettePrefix(
+        english,
+        `${lang}:${fixTranslation(translation).replaceAll("\r", "\\r").replaceAll("\n", "\\n")}`,
+      );
+      active.set(english, fixed.slice(fixed.indexOf(":") + 1));
+    }
+    if (active.size) perLang.set(lang, active);
+  }
+  const sha1 = createHash("sha1")
+    .update(JSON.stringify([...perLang].map(([lang, entries]) => [lang, [...entries]])))
+    .digest("hex");
+  writeTranslationsForBinary({ perLang, allStrings, fromServer: perLang }, sha1, path);
 }
 
 async function main() {
@@ -1405,8 +1439,8 @@ async function main() {
 
   const secret = tryGetTransSecret();
   if (!secret) {
-    console.log("TRANS_UPLOAD_SECRET not set; skipping download/AI");
-    writeEmptyTranslations();
+    console.log("TRANS_UPLOAD_SECRET not set; using read-only public translations");
+    await ensureTranslationsForBuild(translationsTxtPath, undefined, args.server);
     return;
   }
 

@@ -353,6 +353,8 @@ async function runBuild(opts: BuildOptions): Promise<void> {
     // the exe embeds the manual from .work/docs (ci / daily do this themselves)
     const { genDocsForBuild } = await import("./gen-docs");
     await genDocsForBuild();
+    const { ensureTranslationsForBuild } = await import("./trans-dl");
+    await ensureTranslationsForBuild();
   }
   if (mode === "windows") {
     const config = opts.config ?? "debug";

@@ -19,6 +19,8 @@
 import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type SuiteOptions } from "./util.ts";
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
+import { testit as languageSwitch } from "./language-switch.ts";
+import { testit as translationsBuild } from "./translations-build.ts";
 import { testit as customAIUI } from "./custom-ai-ui.ts";
 import { testit as customAI } from "./custom-ai.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
@@ -581,6 +583,8 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["translations-build", translationsBuild],
+  ["language-switch", languageSwitch],
   ["issue-6412", issue6412],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-1909", issue1909],
