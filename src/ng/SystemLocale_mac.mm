@@ -3,8 +3,11 @@
 
 #include "base/Base.h"
 
+// ng: objc's BOOL (pulled in by CoreFoundation in Objective-C++) is bool; ours is int
 #include "base/MacTypesHide.h"
+#define BOOL MacObjcBool
 #include <CoreFoundation/CoreFoundation.h>
+#undef BOOL
 #include "base/MacTypesShow.h"
 
 #include "Translations.h"
