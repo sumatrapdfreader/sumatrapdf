@@ -136,6 +136,11 @@ Gdiplus::Bitmap* NewGdiplusBitmapFromPixmap(Pixmap* px) {
         FreePixmap(px);
         return nullptr;
     }
+    // a decoded opaque image as 32bppRGB: GDI+ then copies it instead of
+    // alpha-blending every pixel when drawn
+    if (fmt == PixelFormat32bppARGB && !px->hasAlpha) {
+        fmt = PixelFormat32bppRGB;
+    }
     auto* bmp = new PixmapBackedBitmap(px, fmt);
     if (bmp->GetLastStatus() != Gdiplus::Ok) {
         delete bmp; // also frees px
@@ -168,6 +173,7 @@ Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp) {
         memcpy(px->data + ((size_t)y * px->stride), (u8*)bd.Scan0 + ((size_t)y * bd.Stride), (size_t)w * 4);
     }
     bmp->UnlockBits(&bd);
+    px->hasAlpha = Gdiplus::IsAlphaPixelFormat(bmp->GetPixelFormat()) != 0;
     px->xres = bmp->GetHorizontalResolution();
     px->yres = bmp->GetVerticalResolution();
     return px;

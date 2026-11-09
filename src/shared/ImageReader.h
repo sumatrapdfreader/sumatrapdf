@@ -11,6 +11,7 @@ constexpr i64 kMaxDecodedPixmapBytes = 512LL * 1024 * 1024;
 struct fz_context;
 fz_context* fz_new_context_windows(size_t maxStore = kFzStoreUnlimited);
 void fz_drop_context_windows(fz_context* ctx);
+void FreeImageCtxPool();
 
 struct Pixmap;
 struct RenderedBitmap;

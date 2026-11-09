@@ -14627,6 +14627,7 @@ static void ShutdownCleanup() {
     TtsRelease();
     FreeHomePageTips();
     DestroySvgPixmapIconsCache();
+    FreeImageCtxPool();
     DisconnectLastDragDataObject();
 
     gAllowedFileTypes.Reset();

@@ -375,6 +375,46 @@ void fz_drop_context_windows(fz_context* ctx) {
 
 static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix);
 
+// Decoding contexts are pooled: a fresh context parses the default ICC
+// profiles and the first conversion builds an lcms link, which together cost
+// more than decoding a typical ebook image. A pooled context keeps both in its
+// store across images and threads. The store is small so cached decoded
+// pixmaps don't pile up; a link weighs 1000 bytes there and survives.
+constexpr size_t kImageCtxStoreSize = 8 << 20;
+constexpr int kMaxPooledImageCtx = 8;
+
+static Mutex gImageCtxLock;
+static Vec<fz_context*> gImageCtxPool;
+
+static fz_context* AcquireImageCtx() {
+    {
+        ScopedMutex lock(&gImageCtxLock);
+        if (len(gImageCtxPool) > 0) {
+            return VecPop(gImageCtxPool);
+        }
+    }
+    return fz_new_context_windows(kImageCtxStoreSize);
+}
+
+static void ReleaseImageCtx(fz_context* ctx) {
+    {
+        ScopedMutex lock(&gImageCtxLock);
+        if (len(gImageCtxPool) < kMaxPooledImageCtx) {
+            VecAppend(gImageCtxPool, ctx);
+            return;
+        }
+    }
+    fz_drop_context_windows(ctx);
+}
+
+void FreeImageCtxPool() {
+    ScopedMutex lock(&gImageCtxLock);
+    for (fz_context* ctx : gImageCtxPool) {
+        fz_drop_context_windows(ctx);
+    }
+    VecReset(gImageCtxPool);
+}
+
 // fz_image::orientation, in MuPDF's numbering, as the EXIF Orientation value
 int FzOrientationToExif(u8 fzOrientation) {
     static const u8 kExif[9] = {0, 1, 8, 3, 6, 2, 5, 4, 7};
@@ -569,7 +609,7 @@ Pixmap* PixmapFromDataFz(Str d) {
         return nullptr;
     }
 
-    fz_context* ctx = fz_new_context_windows();
+    fz_context* ctx = AcquireImageCtx();
     if (!ctx) {
         return nullptr;
     }
@@ -590,7 +630,7 @@ Pixmap* PixmapFromDataFz(Str d) {
         result = PixmapFromImageData(ctx, data, n);
     }
 
-    fz_drop_context_windows(ctx);
+    ReleaseImageCtx(ctx);
 
     return result;
 }
@@ -600,12 +640,12 @@ static Pixmap* PixmapFromDataFzAny(Str d) {
     if (len(d) <= 0 || len(d) > INT_MAX) {
         return nullptr;
     }
-    fz_context* ctx = fz_new_context_windows();
+    fz_context* ctx = AcquireImageCtx();
     if (!ctx) {
         return nullptr;
     }
     Pixmap* result = PixmapFromImageData(ctx, (const u8*)d.s, (size_t)len(d));
-    fz_drop_context_windows(ctx);
+    ReleaseImageCtx(ctx);
     return result;
 }
 #endif
