@@ -228,7 +228,7 @@ struct PageDestination : IPageDestination {
     Str GetName() override;
 };
 
-bool ParseJsPopUpMenuItems(Str js, StrVec& items);
+bool ParseJsPopUpMenuItems(Str js, StrVec& items, Vec<int>& levels);
 Str ExtractJsCallName(Str js);
 
 // JavaScript app.popUpMenu items (Altium schematic PDFs, issue #1198).
@@ -257,6 +257,7 @@ bool ParseXpeditionMenu(Str linkJs, StrVec& strings, PageDestinationJsMenu* menu
 struct JsMenuAction {
     Str url;
     int pageNo = 0;
+    Str copyText;
 };
 JsMenuAction GetJsMenuAction(PageDestinationJsMenu*, int i);
 

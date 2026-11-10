@@ -259,6 +259,7 @@ import { testit as captionCaptureLoss } from "./caption-capture-loss.ts";
 import { testit as menuBarArmedDeactivate } from "./menu-bar-armed-deactivate.ts";
 import { testit as issue6509 } from "./issue-6509.ts";
 import { testit as issue6517 } from "./issue-6517.ts";
+import { testit as issue3940 } from "./issue-3940.ts";
 import { testit as f7EndsPlacement } from "./f7-ends-placement.ts";
 import { testit as findUiOneAtATime } from "./find-ui-one-at-a-time.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
@@ -1120,6 +1121,7 @@ export const tests: NamedTest[] = [
   ["menu-bar-armed-deactivate", menuBarArmedDeactivate],
   ["issue-6509", issue6509],
   ["issue-6517", issue6517],
+  ["issue-3940", issue3940],
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
   ["codex-provider", codexProvider],

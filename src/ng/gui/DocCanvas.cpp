@@ -3073,7 +3073,7 @@ static void OpenJsMenuPopup(MainWindow* win, gp::Ctx* cx, int x, int y, PageDest
 }
 
 // item cmdId - kJsMenuItemCmdFirst of the JavaScript menu was picked: launch its
-// URL or go to its page. false for any other command
+// URL, go to its page or copy its text. false for any other command
 static bool RunJsMenuItem(MainWindow* win, int cmdId) {
     PageDestinationJsMenu* menu = Ui(win)->jsMenu;
     int i = cmdId - kJsMenuItemCmdFirst;
@@ -3085,6 +3085,9 @@ static bool RunJsMenuItem(MainWindow* win, int cmdId) {
         win->linkHandler->LaunchURL(action.url);
     } else if (action.pageNo > 0 && win->ctrl && win->ctrl->ValidPageNo(action.pageNo)) {
         win->ctrl->GoToPage(action.pageNo, true);
+    } else if (len(action.copyText) > 0) {
+        CopyTextToClipboard(win, action.copyText);
+        ShowTemporaryNotification(win, Tr("Copied to clipboard"));
     }
     return true;
 }

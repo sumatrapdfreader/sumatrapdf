@@ -146,32 +146,54 @@ static bool ParseJsQuotedString(const char*& p, const char* end, str::Builder& b
     return true;
 }
 
-static bool SkipJsNested(const char*& p, const char* end, char open, char close) {
-    if (p >= end || *p != open) {
-        return false;
-    }
-    int depth = 1;
-    p++;
-    while (p < end && depth > 0) {
+// Menu entries up to `close`: a string is an item at `level`; an array is a
+// submenu, its first string the title and the rest its items (issue #3940):
+// popUpMenu('A', ['Sub', 'B', 'C']) => A(0) Sub(0) B(1) C(1)
+static void ParseJsMenuEntries(const char*& p, const char* end, char close, int level, StrVec& items,
+                               Vec<int>& levels) {
+    while (p < end) {
+        SkipJsWs(p, end);
+        if (p >= end) {
+            return;
+        }
+        if (*p == close) {
+            p++;
+            return;
+        }
         if (*p == '"' || *p == '\'') {
-            str::Builder ignored;
-            if (!ParseJsQuotedString(p, end, ignored)) {
-                return false;
+            str::Builder item;
+            if (!ParseJsQuotedString(p, end, item)) {
+                p = end;
+                return;
             }
+            items.Append(ToStr(item));
+            VecAppend(levels, level);
             continue;
         }
-        if (*p == open) {
-            depth++;
-        } else if (*p == close) {
-            depth--;
+        if (*p != '[') {
+            p++;
+            continue;
         }
         p++;
+        SkipJsWs(p, end);
+        int itemsLevel = level;
+        if (p < end && (*p == '"' || *p == '\'')) {
+            str::Builder title;
+            if (!ParseJsQuotedString(p, end, title)) {
+                p = end;
+                return;
+            }
+            items.Append(ToStr(title));
+            VecAppend(levels, level);
+            itemsLevel = level + 1;
+        }
+        ParseJsMenuEntries(p, end, ']', itemsLevel, items, levels);
     }
-    return depth == 0;
 }
 
-// Collect the quoted arguments of app.popUpMenu(...) / app.popUpMenuEx(...).
-bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
+// Collect the items of app.popUpMenu(...) / app.popUpMenuEx(...) and their
+// submenu depth; levels is left empty when there are no submenus.
+bool ParseJsPopUpMenuItems(Str js, StrVec& items, Vec<int>& levels) {
     const Str menuCall = StrL("popUpMenu");
     int idx = str::IndexOf(js, menuCall);
     if (idx < 0) {
@@ -187,26 +209,13 @@ bool ParseJsPopUpMenuItems(Str js, StrVec& items) {
         return false;
     }
     p++;
-    while (p < end) {
-        SkipJsWs(p, end);
-        if (p >= end || *p == ')') {
-            break;
-        }
-        if (*p == '[') {
-            if (!SkipJsNested(p, end, '[', ']')) {
-                break;
-            }
-            continue;
-        }
-        if (*p == '"' || *p == '\'') {
-            str::Builder item;
-            if (!ParseJsQuotedString(p, end, item)) {
-                break;
-            }
-            items.Append(ToStr(item));
-            continue;
-        }
-        p++;
+    ParseJsMenuEntries(p, end, ')', 0, items, levels);
+    bool hasSubmenu = false;
+    for (int level : levels) {
+        hasSubmenu |= level > 0;
+    }
+    if (!hasSubmenu) {
+        VecReset(levels);
     }
     return len(items) > 0;
 }
@@ -557,7 +566,8 @@ bool ParseXpeditionMenu(Str linkJs, StrVec& strings, PageDestinationJsMenu* menu
     return len(menu->items) > 0;
 }
 
-// What picking item i of a JavaScript menu does: launch a URL, or go to a page.
+// What picking item i of a JavaScript menu does: launch a URL, go to a page,
+// or else copy the item's text (issue #3940).
 JsMenuAction GetJsMenuAction(PageDestinationJsMenu* dest, int i) {
     JsMenuAction res;
     if (!dest || i < 0 || i >= len(dest->items)) {
@@ -571,6 +581,8 @@ JsMenuAction GetJsMenuAction(PageDestinationJsMenu* dest, int i) {
             res.pageNo = ParseInt(Str(ret.s + 1, len(ret) - 1)) + 1;
         } else if (IsExternalUrl(ret) || str::StartsWithI(ret, StrL("ftp://"))) {
             res.url = ret;
+        } else {
+            res.copyText = dest->items[i];
         }
         return res;
     }
@@ -584,7 +596,9 @@ JsMenuAction GetJsMenuAction(PageDestinationJsMenu* dest, int i) {
     }
     if (IsExternalUrl(url) || str::StartsWithI(url, StrL("ftp://"))) {
         res.url = url;
+        return res;
     }
+    res.copyText = dest->items[i];
     return res;
 }
 

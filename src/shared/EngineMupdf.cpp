@@ -2977,12 +2977,13 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
         }
         StrVec items;
         StrVec returns;
-        ParseJsPopUpMenuItems(Str(js), items);
+        Vec<int> levels;
+        ParseJsPopUpMenuItems(Str(js), items, levels);
         Str name = len(items) == 0 ? ExtractJsCallName(Str(js)) : Str{};
         if (name) {
             char* namedJs = LookupNamedJavaScript(ctx, doc, name);
             if (namedJs) {
-                ParseJsPopUpMenuItems(Str(namedJs), items);
+                ParseJsPopUpMenuItems(Str(namedJs), items, levels);
                 fz_free(ctx, namedJs);
             }
         }
@@ -3019,6 +3020,9 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
         }
         dest->items = items;
         dest->returns = returns;
+        if (len(levels) > 0) {
+            dest->levels = levels;
+        }
         dest->rect = ToRectF(rect);
         auto* pel = new PageElementDestination(dest);
         pel->pageNo = pageNo;

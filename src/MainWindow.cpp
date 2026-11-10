@@ -32,6 +32,7 @@
 #include "DisplayModel.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
+#include "Translations.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "TextSelection.h"
@@ -598,6 +599,8 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
             LaunchURL(action.url);
         } else if (action.pageNo > 0 && win->ctrl->ValidPageNo(action.pageNo)) {
             win->ctrl->GoToPage(action.pageNo, true);
+        } else if (len(action.copyText) > 0 && CopyTextToClipboard(action.copyText)) {
+            ShowTemporaryNotification(win, Tr("Copied to clipboard"));
         }
         return;
     }
