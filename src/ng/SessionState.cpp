@@ -226,7 +226,7 @@ void SetTabState(WindowTab* tab, TabState* state) {
 
     tab->tocState = *state->tocState;
     tab->sidebarContent = SidebarContentFromStr(state->sidebarView, SidebarContent::Bookmarks);
-    SetSidebarVisibility(win, state->showToc, gSettings->showFavorites);
+    SetTocVisibility(win, state->showToc);
 
     DisplayMode displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
     if (displayMode != DisplayMode::Automatic) {

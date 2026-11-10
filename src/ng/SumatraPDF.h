@@ -49,6 +49,7 @@ enum class SidebarResizeFrame {
 };
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites,
                           SidebarResizeFrame resizeFrame = SidebarResizeFrame::Keep);
+void SetTocVisibility(MainWindow* win, bool tocVisible, SidebarResizeFrame = SidebarResizeFrame::Keep);
 
 void UpdateWindowTitle(MainWindow* win);
 void RebuildMenuBar(MainWindow* win);

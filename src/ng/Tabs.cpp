@@ -191,7 +191,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     FindBarReposition(win);
     // orig's LoadModelIntoTab: presentation mode has a sidebar state of its own
     bool showToc = win->InPresentation() ? tab->showTocPresentation : tab->showToc;
-    SetSidebarVisibility(win, showToc, gSettings->showFavorites);
+    SetTocVisibility(win, showToc);
     UpdateWindowTitle(win);
     RebuildMenuBar(win);
     ReadingAutoScrollSyncToTab(tab);

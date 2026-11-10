@@ -1881,7 +1881,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
         tab->sidebarContent = SidebarContent::Thumbnails;
         showToc = true;
     }
-    SetSidebarVisibility(win, showToc, gSettings->showFavorites);
+    SetTocVisibility(win, showToc);
     MaybeShowTemporaryFileNotification(win, tab);
 
     UpdateWindowTitle(win);
@@ -2044,7 +2044,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data) {
     if (data && data->sidebarDx > 0) {
         win->sidebarDx = data->sidebarDx;
     }
-    SetSidebarVisibility(win, false, gSettings->showFavorites);
+    SetTocVisibility(win, false);
     return win;
 }
 
@@ -4228,6 +4228,10 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     AppShellInvalidate(win);
 }
 
+void SetTocVisibility(MainWindow* win, bool tocVisible, SidebarResizeFrame resizeFrame) {
+    SetSidebarVisibility(win, tocVisible, gSettings->showFavorites, resizeFrame);
+}
+
 // --- view and zoom ----------------------------------------------------------
 
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous) {
@@ -4803,7 +4807,7 @@ void ExitFullScreen(MainWindow* win) {
     }
 
     bool tocVisible = win->CurrentTab() && win->CurrentTab()->showToc;
-    SetSidebarVisibility(win, tocVisible, gSettings->showFavorites);
+    SetTocVisibility(win, tocVisible);
     win->isMenuBarVisible = win->menuBarVisibleBeforeFS;
     ShowOrHideToolbar(win);
 
@@ -6092,30 +6096,22 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleLinks:
             gSettings->showLinks = !gSettings->showLinks;
-            for (MainWindow* w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdToggleImages:
             ToggleShowImageOutlines();
-            for (MainWindow* w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdToggleTransparencyGrid:
             ToggleTransparencyGrid();
-            for (MainWindow* w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdDebugShowFitContentArea:
             ToggleShowFitContentArea();
-            for (MainWindow* w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdTogglePageBoxes:
@@ -6133,9 +6129,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleHighlightFormFields:
             gSettings->highlightFormFields = !gSettings->highlightFormFields;
-            for (MainWindow* w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdToggleDisableLinks:
@@ -6344,7 +6338,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             win->CurrentTab()->showToc = true;
             fixed->StartHeadingToc(HeadingTocStart::Always);
             if (!EngineMupdfHeadingTocPending(fixed->GetEngine())) {
-                SetSidebarVisibility(win, true, gSettings->showFavorites);
+                SetTocVisibility(win, true);
             }
             break;
         }
@@ -7534,7 +7528,7 @@ int GpuiMain(int argc, char** argv) {
         win->isQuickLook = true;
         ApplyExplorerQuickLookChrome(win);
     }
-    SetSidebarVisibility(win, false, gSettings->showFavorites);
+    SetTocVisibility(win, false);
     ShowMaybeDelayedNotifications(win);
 
     // keep the session we started with alive (a lazily restored tab still

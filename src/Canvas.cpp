@@ -3165,7 +3165,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         if (!bmpDC) {
             continue;
         }
-        SelectObject(bmpDC, gBitmapReloadingCue);
+        HGDIOBJ prevBmp = SelectObject(bmpDC, gBitmapReloadingCue);
         int size = DpiScale(16);
         int cx = std::min(bounds.dx, 2 * size);
         int cy = std::min(bounds.dy, 2 * size);
@@ -3174,6 +3174,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         int dxDest = std::min(cx, size);
         int dyDest = std::min(cy, size);
         StretchBlt(hdc, x, y, dxDest, dyDest, bmpDC, 0, 0, 16, 16, SRCCOPY);
+        SelectObject(bmpDC, prevBmp);
         DeleteDC(bmpDC);
     }
 

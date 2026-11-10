@@ -241,7 +241,7 @@ void ExpandTocToCurrentPage(MainWindow* win) {
     }
     // make sure the bookmarks (table of contents) sidebar is visible
     if (!win->uiState.tocVisible) {
-        SetSidebarVisibility(win, true, gSettings->showFavorites);
+        SetTocVisibility(win, true);
     }
     TocTree* tm = CurrentTocTree(win);
     if (!win->tocLoaded || !win->uiState.tocVisible || !tm) {
