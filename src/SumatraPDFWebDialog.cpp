@@ -947,22 +947,9 @@ bool SumatraPDFWebWnd::Create(MainWindow* mainWin) {
     PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
     SetFont(fontText);
     bool isRtl = IsUIRtl();
-    {
-        CreateCustomArgs args;
-        args.owner = win ? win->hwndFrame : nullptr;
-        args.title = Tr("Link SumatraPDF Web");
-        args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = fontText;
-        args.isRtl = isRtl;
-        args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        CreateCustom(args);
-    }
-    if (!hwnd) {
+    if (!CreateToolDialog(this, win ? win->hwndFrame : nullptr, Tr("Link SumatraPDF Web"), fontText, colTxt, colBg)) {
         return false;
     }
-    SetColors(colTxt, colBg);
 
     Str saved = (gSettings && len(gSettings->onlineApiKey) > 0) ? gSettings->onlineApiKey : Str{};
 
@@ -1029,9 +1016,7 @@ bool SumatraPDFWebWnd::Create(MainWindow* mainWin) {
     vbox->AddChild(foot);
     layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(520), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    SizeToLayout(this, layout, DpiScale(520), 0, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
     UpdateFileButtons();

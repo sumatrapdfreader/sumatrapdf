@@ -210,7 +210,7 @@ static bool RequestedTopVisible(MainWindow* win) {
 
 // shows the panels again as they are to be for the current tab
 void ApplySidebarPanels(MainWindow* win) {
-    SetSidebarVisibility(win, RequestedTopVisible(win), gSettings->showFavorites);
+    SetTocVisibility(win, RequestedTopVisible(win));
 }
 
 static void OnViewClick(SidebarPanel* p, SidebarView v);
@@ -229,7 +229,7 @@ void ShowSidebarView(MainWindow* win, SidebarView v) {
         if (tab) {
             tab->showToc = true;
         }
-        SetSidebarVisibility(win, true, gSettings->showFavorites, SidebarResizeFrame::Adjust);
+        SetTocVisibility(win, true, SidebarResizeFrame::Adjust);
         FocusSidebarPanel(win->sidebarTop);
         return;
     }
@@ -267,7 +267,7 @@ static void HideSidebarPanel(SidebarPanel* p) {
             SetPanelView(p, middle->view);
         }
         gSettings->showSidebarMiddle = false;
-        SetSidebarVisibility(win, RequestedTopVisible(win), gSettings->showFavorites, SidebarResizeFrame::Adjust);
+        SetTocVisibility(win, RequestedTopVisible(win), SidebarResizeFrame::Adjust);
         if (focused && p != middle) {
             FocusSidebarPanel(p);
         }
@@ -290,7 +290,7 @@ static void OnViewClick(SidebarPanel* p, SidebarView v) {
         return;
     }
     SetPanelView(p, v);
-    SetSidebarVisibility(win, RequestedTopVisible(win), gSettings->showFavorites);
+    SetTocVisibility(win, RequestedTopVisible(win));
     FocusSidebarPanel(p);
 }
 

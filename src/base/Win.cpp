@@ -16,12 +16,6 @@
 #include "base/Win.h"
 #include "base/Launch.h"
 
-//--- bool / BOOL
-
-bool ToBool(BOOL b) {
-    return b ? true : false;
-}
-
 //--- subclass ids
 
 static AtomicInt gSubclassId = 0;
@@ -83,6 +77,10 @@ void HwndCenterDialog(HWND hDlg, HWND hParent) {
 
 // change size of the window to have a given client size
 void HwndResizeClientSize(HWND hwnd, int dx, int dy) {
+    Size client = HwndClientRect(hwnd).Size();
+    if (client.dx == dx && client.dy == dy) {
+        return;
+    }
     Rect rc = HwndWindowRect(hwnd);
     int x = rc.x;
     int y = rc.y;
@@ -106,28 +104,6 @@ void HwndPositionInCenterOf(HWND hwnd, HWND hwndRelative) {
     Rect r2 = {x, y, r.dx, r.dy};
     r = ShiftRectToWorkArea(r2, hwndRelative, true);
     SetWindowPos(hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-}
-
-void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu) {
-    WINDOWINFO wi{};
-    wi.cbSize = sizeof(wi);
-    ::GetWindowInfo(hwnd, &wi);
-
-    RECT r{};
-    r.right = dx;
-    r.bottom = dy;
-    DWORD style = wi.dwStyle;
-    DWORD exStyle = wi.dwExStyle;
-    AdjustWindowRectEx(&r, style, hasMenu, exStyle);
-    if ((dx == RectDx(wi.rcClient)) && (dy == RectDy(wi.rcClient))) {
-        return;
-    }
-
-    dx = RectDx(r);
-    dy = RectDy(r);
-    int x = wi.rcWindow.left;
-    int y = wi.rcWindow.top;
-    MoveWindow(hwnd, x, y, dx, dy, TRUE);
 }
 
 //--- HWND: screen / work area / placement
@@ -470,16 +446,16 @@ bool HwndIsRtl(HWND hwnd) {
     return bit::IsMaskSet<DWORD>(style, WS_EX_LAYOUTRTL);
 }
 
+static void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
+    HwndSetWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
+}
+
 void HwndSetRtl(HWND hwnd, bool isRtl) {
     HwndSetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 
 void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable) {
     HwndSetWindowStyle(hwnd, flags, enable, GWL_STYLE);
-}
-
-void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
-    HwndSetWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
 }
 
 //--- HWND: text / font / icon / paint
@@ -966,12 +942,11 @@ int MsgBox(HWND hwnd, Str text, Str caption, UINT flags) {
     return MessageBoxW(hwnd, textW, captionW, flags);
 }
 
-void MessageBoxWarningSimple(HWND hwnd, WStr msg, WStr title) {
-    uint type = MB_OK | MB_ICONEXCLAMATION;
+void MsgBoxWarning(HWND hwnd, Str msg, Str title) {
     if (len(title) == 0) {
-        title = WStrL(L"Warning");
+        title = StrL("Warning");
     }
-    MessageBoxW(hwnd, msg.s, title.s, type);
+    MsgBox(hwnd, msg, title, MB_OK | MB_ICONEXCLAMATION);
 }
 
 //--- GDI: draw / measure
@@ -1035,16 +1010,6 @@ static Rect HdcMeasureWithDrawText(HDC hdc, Str s, Rect r, uint format, HFONT fo
     return HdcMeasureWithDrawText(hdc, ToWStrTemp(s), r, format, font);
 }
 
-bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, WStr text) {
-    RECT r = ToRECT(rect);
-    RECT* rectPtr = rect.IsEmpty() ? nullptr : &r;
-    return ExtTextOutW(hdc, pos.x, pos.y, options, rectPtr, text.s, (uint)text.len, nullptr) != 0;
-}
-
-bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, Str text) {
-    return HdcExTextOut(hdc, pos, options, rect, ToWStrTemp(text));
-}
-
 // uses the same logic as HdcDrawText
 // maxDx limits the width, used when measuring text wrapped with DT_WORDBREAK
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font) {
@@ -1101,13 +1066,13 @@ Size HdcGetTextExtentPoint32(HDC hdc, Str str) {
 
 //--- GDI: handles / bitmaps / pixmaps
 
-bool DeleteObjectSafe(HGDIOBJ* h) {
+static bool DeleteObjectSafe(HGDIOBJ* h) {
     if (!h || !*h) {
         return false;
     }
     auto res = ::DeleteObject(*h);
     *h = nullptr;
-    return ToBool(res);
+    return tobool(res);
 }
 
 bool DeleteBrushSafe(HBRUSH* br) {
@@ -1491,7 +1456,7 @@ TempStr MenuToSafeStringTemp(Str s) {
 
 //--- keyboard state
 
-bool IsKeyPressed(int key) {
+static bool IsKeyPressed(int key) {
     SHORT state = GetKeyState(key);
     SHORT isDown = (SHORT)(state & 0x8000);
     return isDown != 0;
@@ -2622,7 +2587,7 @@ bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
     return ERROR_SUCCESS == res;
 }
 
-bool WriteRegNone(HKEY hkey, Str key, Str valName) {
+static bool WriteRegNone(HKEY hkey, Str key, Str valName) {
     WCHAR* keyW = CWStrTemp(key);
     WCHAR* valNameW = CWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
@@ -3100,29 +3065,6 @@ static const DWORD groupsToCheck[] = {
     DOMAIN_ALIAS_RID_POWER_USERS,
     DOMAIN_ALIAS_RID_ADMINS,
 };
-
-bool RenderedBitmap::Blit(HDC hdc, Rect target) {
-    return BlitHBITMAP(hbmp, hdc, target);
-}
-
-int LbInsertString(HWND hwnd, int idx, WStr text) {
-    return (int)SendMessageW(hwnd, LB_INSERTSTRING, (WPARAM)idx, (LPARAM)CWStrTemp(text));
-}
-
-int LbInsertString(HWND hwnd, int idx, Str text) {
-    return LbInsertString(hwnd, idx, ToWStrTemp(text));
-}
-
-void LvSetItemText(HWND hwnd, int i, int iSub, WStr text) {
-    LVITEMW item = {};
-    item.iSubItem = iSub;
-    item.pszText = CWStrTemp(text);
-    SendMessageW(hwnd, LVM_SETITEMTEXTW, (WPARAM)i, (LPARAM)&item);
-}
-
-void LvSetItemText(HWND hwnd, int i, int iSub, Str text) {
-    LvSetItemText(hwnd, i, iSub, ToWStrTemp(text));
-}
 
 void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags) {
     hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);

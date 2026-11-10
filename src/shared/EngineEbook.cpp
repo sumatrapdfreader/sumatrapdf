@@ -142,9 +142,6 @@ class EngineEbook : public EngineBase {
 
     bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int pageNo) override;
-    // make RenderCache request larger tiles than per default
-    bool HasClipOptimizations(int pageNo) override;
-
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
     bool HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) override {
@@ -159,8 +156,6 @@ class EngineEbook : public EngineBase {
     IPageDestination* GetNamedDest(Str name) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* el) override;
     Str GetImageDataForPageElement(IPageElement* el) override;
-
-    bool BenchLoadPage(int pageNo) override;
 
     // resolves a ToC/link url to a destination without laying out a chapter
     // just to build the ToC; chaptered engines (EngineMobi) override this
@@ -331,15 +326,6 @@ Str EngineEbook::GetFileData() {
 
 bool EngineEbook::SaveFileAs(Str dstPath) {
     return SaveFileOrData(FilePath(), sourceData, dstPath);
-}
-
-// make RenderCache request larger tiles than per default
-bool EngineEbook::HasClipOptimizations(int) {
-    return false;
-}
-
-bool EngineEbook::BenchLoadPage(int) {
-    return true;
 }
 
 #if OS_WIN

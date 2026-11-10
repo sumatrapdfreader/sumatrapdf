@@ -87,22 +87,9 @@ bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
     Color colBg = ThemeWindowControlBackgroundColor();
     PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
     SetFont(fontText);
-    {
-        CreateCustomArgs args;
-        args.owner = win ? win->hwndFrame : nullptr;
-        args.title = Tr("Change Scrollbar");
-        args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = fontText;
-        args.isRtl = IsUIRtl();
-        args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        CreateCustom(args);
-    }
-    if (!hwnd) {
+    if (!CreateToolDialog(this, win ? win->hwndFrame : nullptr, Tr("Change Scrollbar"), fontText, colTxt, colBg)) {
         return false;
     }
-    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -128,9 +115,7 @@ bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
     vbox->AddChild(NewDlgFooter(btnCancel, btnOk));
     layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(kScrollbarDlgDx), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    SizeToLayout(this, layout, DpiScale(kScrollbarDlgDx), 0, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
     SetIsVisible(true);

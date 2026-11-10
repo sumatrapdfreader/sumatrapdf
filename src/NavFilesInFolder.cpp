@@ -1265,7 +1265,7 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin, Str filePath) {
     }
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     // pick up the virtual controls so we paint them and they get their input
-    DoLayout(HwndClientRect(hwnd).Size());
+    DoLayout();
     PositionNavFilesWnd(hwnd, mainWin->hwndFrame, docked, placeLeft);
 
     if (selIdx >= 0) {

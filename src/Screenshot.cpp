@@ -343,7 +343,7 @@ bool SetHotkeyWnd::Create(HWND owner) {
     int minDx = DpiScale(kHotkeyDlgDx);
     LayoutAndSizeToContent(layout, minDx, 0, hwnd);
     // pick up the virtual controls so we paint them and they get their input
-    DoLayout(HwndClientRect(hwnd).Size());
+    DoLayout();
     HwndCenterDialog(hwnd, owner);
     UpdateTheme();
 

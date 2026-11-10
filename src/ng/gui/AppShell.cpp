@@ -557,10 +557,7 @@ static bool ForwardTestWheelToBrowser(MainWindow* win, int delta, int mods) {
     if (!win) {
         return false;
     }
-    BrowserDocController* doc = win->AsChm();
-    if (!doc) {
-        doc = win->AsMarkdown();
-    }
+    BrowserDocController* doc = win->AsBrowser();
     if (!doc || !doc->docView) {
         return false;
     }
@@ -1931,29 +1928,19 @@ static BrowserView* UpdateBrowserViews(MainWindow* win, bool overlayUp) {
     WindowTab* currTab = win->CurrentTab();
     BrowserView* curr = nullptr;
     for (WindowTab* tab : win->Tabs()) {
-        ChmModel* cm = tab->AsChm();
-        MarkdownModel* mm = tab->AsMarkdown();
-        if (!cm && !mm) {
+        BrowserDocController* bd = tab->AsBrowser();
+        if (!bd) {
             continue;
         }
         // ng: the webview is an OS child window and covers whatever gpui draws
         // under it, so a palette or a dialog (which orig puts in a window of
         // its own, above the browser) hides it while it is up
         if (tab != currTab || overlayUp) {
-            if (cm) {
-                cm->RemoveParentWindow();
-            } else {
-                mm->RemoveParentWindow();
-            }
+            bd->RemoveParentWindow();
             continue;
         }
-        if (cm) {
-            cm->SetParentWindow(win, nullptr);
-            curr = cm->docView;
-        } else {
-            mm->SetParentWindow(win, nullptr);
-            curr = mm->docView;
-        }
+        bd->SetParentWindow(win, nullptr);
+        curr = bd->docView;
     }
     return curr;
 }

@@ -1259,7 +1259,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     dx = std::max(dx, minDx);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     // pick up the virtual controls so we paint them and they get their input
-    DoLayout(HwndClientRect(hwnd).Size());
+    DoLayout();
     gAdvSettingsLastClientDx = HwndClientRect(hwnd).dx;
     gAdvSettingsLastClientDy = HwndClientRect(hwnd).dy;
     PositionDialog(hwnd, win->hwndFrame);
@@ -1737,9 +1737,7 @@ bool RestrictedUseWnd::Create(MainWindow* mainWin) {
 
     layout = new Padding(vbox, DpiScaledInsets(4, 8));
     UpdateButtons();
-    LayoutAndSizeToContent(layout, DpiScale(520), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    SizeToLayout(this, layout, DpiScale(520), 0, win ? win->hwndFrame : nullptr);
     UpdateTheme();
     SetIsVisible(true);
     vroot->SetFocus(list);

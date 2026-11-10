@@ -80,6 +80,10 @@ MarkdownModel* MainWindow::AsMarkdown() const {
     return ctrl ? ctrl->AsMarkdown() : nullptr;
 }
 
+BrowserDocController* MainWindow::AsBrowser() const {
+    return ctrl ? ctrl->AsBrowser() : nullptr;
+}
+
 bool MainWindow::InPresentation() const {
     return windowMode >= WindowMode::Presentation;
 }
@@ -348,14 +352,9 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     }
     // TODO: this seems like a hack, there should be a better way
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/3499
-    ChmModel* chm = win->ctrl->AsChm();
-    if (chm) {
-        chm->HandleLink(dest, nullptr);
-        return;
-    }
-    MarkdownModel* md = win->ctrl->AsMarkdown();
-    if (md) {
-        md->HandleLink(dest, nullptr);
+    BrowserDocController* browser = win->ctrl->AsBrowser();
+    if (browser) {
+        browser->HandleLink(dest, nullptr);
         return;
     }
     Location loc = win->ctrl->ResolveDest(dest);
@@ -468,7 +467,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     if (ctx.tab) {
         ctx.autoScrollOn = ctx.tab->autoScroll.on;
         ctx.readingBarOn = ctx.tab->readingBar.on;
-        ctx.isChm = ctx.tab->AsChm() || ctx.tab->AsMarkdown();
+        ctx.isChm = ctx.tab->AsBrowser();
         Str currentPath = win->ctrl ? win->ctrl->GetFilePath() : ctx.filePath;
         ctx.isMarkdown = str::EndsWithI(currentPath, StrL(".md")) || str::EndsWithI(currentPath, StrL(".markdown"));
         EngineBase* engine = ctx.tab->GetEngine();
@@ -516,8 +515,8 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         ctx.hasRedactMarks = EngineHasRedactMarksNoWait(engine);
         ctx.hasUserRedactMarks = EngineHasUserRedactMarks(engine);
-        ctx.canUndo = EngineMupdfCanUndoNoWait(engine);
-        ctx.canRedo = EngineMupdfCanRedoNoWait(engine);
+        ctx.canUndo = EngineCanUndoRedo(engine, UndoDir::Undo, EngineWait::NoWait);
+        ctx.canRedo = EngineCanUndoRedo(engine, UndoDir::Redo, EngineWait::NoWait);
         ctx.isCursorOnPage = dm->GetPageNoByPoint(cursorPos) > 0;
         ctx.annotationUnderCursor = AnnotationUnderCursor(win, dm, cursorPos);
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);

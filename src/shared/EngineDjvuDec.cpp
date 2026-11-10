@@ -155,10 +155,8 @@ class EngineDjvuDec : public EngineBase {
     Str GetFileData() override;
     bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int pageNo) override;
-    bool HasClipOptimizations(int pageNo) override;
 
     TempStr GetPropertyTemp(DocProp prop) override;
-    bool BenchLoadPage(int pageNo) override;
 
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
@@ -382,16 +380,8 @@ RectF EngineDjvuDec::PageMediabox(int pageNo) {
     return pages[pageNo - 1]->mediabox;
 }
 
-bool EngineDjvuDec::HasClipOptimizations(int /*pageNo*/) {
-    return false;
-}
-
 TempStr EngineDjvuDec::GetPropertyTemp(DocProp /*prop*/) {
     return {};
-}
-
-bool EngineDjvuDec::BenchLoadPage(int /*pageNo*/) {
-    return true;
 }
 
 constexpr int kGrayChannels = 1;

@@ -12,6 +12,7 @@ struct DocController;
 struct DocControllerCallback;
 struct ChmModel;
 struct MarkdownModel;
+struct BrowserDocController;
 struct DisplayModel;
 struct MenuModel;
 struct NotificationWnd;
@@ -202,6 +203,7 @@ struct MainWindow {
     DisplayModel* AsFixed() const;
     ChmModel* AsChm() const;
     MarkdownModel* AsMarkdown() const;
+    BrowserDocController* AsBrowser() const;
 
     // owned by CurrentTab()
     DocController* ctrl = nullptr;

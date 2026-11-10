@@ -514,8 +514,8 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
         }
         out.Append(fmt("page1text=%s\n", ToStrTemp(collapsed)));
     }
-    int canUndo = EngineMupdfCanUndo(engine) ? 1 : 0;
-    int canRedo = EngineMupdfCanRedo(engine) ? 1 : 0;
+    int canUndo = EngineCanUndoRedo(engine, UndoDir::Undo, EngineWait::Wait) ? 1 : 0;
+    int canRedo = EngineCanUndoRedo(engine, UndoDir::Redo, EngineWait::Wait) ? 1 : 0;
     int modified = EngineHasUnsavedAnnotations(engine) ? 1 : 0;
     out.Append(fmt("undo canUndo=%d canRedo=%d modified=%d\n", canUndo, canRedo, modified));
     bool hasNotification = GetNotificationForGroup(gWindows[0]->hwndCanvas, kNotifAnnotation) != nullptr;
@@ -2017,7 +2017,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 if (PageGrid* pg = PageGridPrefs()) {
                     pg->slant = PageGridClampSlant((float)deg);
                 }
-                RedrawPageGridWindows();
+                RedrawAllWindows();
             } else if (str::EqI(action, StrL("probe-grid"))) {
                 MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
                 AppendTestResult(req, 0, PageGridProbeTemp(win ? win->AsFixed() : nullptr));

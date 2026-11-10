@@ -409,7 +409,7 @@ static void ApplyLive() {
     str::ReplaceWithCopy(&pg->units, SeqStrByIndex(kPageGridUnitTok, gPageGrid.unitIdx));
     SetColorText(pg->color, SerializeColorTemp(gPageGrid.currentColor));
     SetShowPageGrid(gPageGrid.showGrid);
-    RedrawPageGridWindows();
+    RedrawAllWindows();
 }
 
 // orig's OnUnitsChanged: the values keep their length, the numbers change
@@ -515,7 +515,7 @@ void ClosePageGridDialog() {
         gPageGrid.win = nullptr;
     }
     WriteSnapToPrefs();
-    RedrawPageGridWindows();
+    RedrawAllWindows();
     FreePageGridInputs();
     AppShellInvalidate(gPageGrid.win);
 }

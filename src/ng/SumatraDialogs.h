@@ -260,7 +260,7 @@ TempStr PageGridStateTemp();
 bool ShowPageGrid();
 void TogglePageGrid();
 void SetShowPageGrid(bool);
-void RedrawPageGridWindows();
+void RedrawAllWindows();
 struct DisplayModel;
 namespace gpui {
 struct PaintCtx;

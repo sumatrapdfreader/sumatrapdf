@@ -290,14 +290,14 @@ void FindBarWnd::Layout(int forceBarDx) {
         int clientDx = std::max(forceBarDx - nonClientDx, layout->MinIntrinsicWidth(0));
         inLayout = true;
         LayoutAndSizeToContent(layout, clientDx, 0, hwnd);
-        DoLayout(HwndClientRect(hwnd).Size());
+        DoLayout();
         inLayout = false;
     } else {
         int extra = DpiScale(kFindBarDefaultEditDx - kFindBarMinEditDx);
         int minDx = layout->MinIntrinsicWidth(0) + extra;
         inLayout = true;
         LayoutAndSizeToContent(layout, minDx, 0, hwnd);
-        DoLayout(HwndClientRect(hwnd).Size());
+        DoLayout();
         inLayout = false;
     }
     Rect wr = HwndWindowRect(hwnd);

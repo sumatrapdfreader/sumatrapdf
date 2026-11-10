@@ -1468,10 +1468,7 @@ bool ForwardBrowserMsg(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     if (!win || !BrowserNavMsg(msg, wp)) {
         return false;
     }
-    BrowserDocController* doc = win->AsChm();
-    if (!doc) {
-        doc = win->AsMarkdown();
-    }
+    BrowserDocController* doc = win->AsBrowser();
     if (!doc) {
         return false;
     }
@@ -1496,10 +1493,7 @@ bool ScrollBrowserDocKey(MainWindow* win, int vk) {
         default:
             return false;
     }
-    BrowserDocController* doc = win ? win->AsChm() : nullptr;
-    if (!doc && win) {
-        doc = win->AsMarkdown();
-    }
+    BrowserDocController* doc = win ? win->AsBrowser() : nullptr;
     // no browser view (none on this system): the keys keep their commands
     if (!doc || !doc->docView) {
         return false;
@@ -6180,10 +6174,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             if (!tab || !HasPermission(Perm::CopySelection)) {
                 break;
             }
-            if (tab->AsChm()) {
-                tab->AsChm()->CopySelection();
-            } else if (tab->AsMarkdown()) {
-                tab->AsMarkdown()->CopySelection();
+            if (tab->AsBrowser()) {
+                tab->AsBrowser()->CopySelection();
                 break;
             }
             if (tab->selectionOnPage) {
@@ -6437,7 +6429,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdTogglePageGrid:
             TogglePageGrid();
-            RedrawPageGridWindows();
+            RedrawAllWindows();
             break;
 
         case CmdConfigurePageGrid:

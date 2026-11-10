@@ -108,22 +108,9 @@ bool GetPasswordWnd::Create() {
     PlatformFont* fontQuery = DlgUiFont(kToolDlgQueryFontPx);
     SetFont(fontText);
     bool isRtl = IsUIRtl();
-    {
-        CreateCustomArgs args;
-        args.owner = hwndParent;
-        args.title = Tr("Enter password");
-        args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = fontText;
-        args.isRtl = isRtl;
-        args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        CreateCustom(args);
-    }
-    if (!hwnd) {
+    if (!CreateToolDialog(this, hwndParent, Tr("Enter password"), fontText, colTxt, colBg)) {
         return false;
     }
-    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -183,9 +170,7 @@ bool GetPasswordWnd::Create() {
     vbox->AddChild(NewDlgFooter(btnCancel, btnOk));
     layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(kPasswordDlgDx), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, hwndParent);
+    SizeToLayout(this, layout, DpiScale(kPasswordDlgDx), 0, hwndParent);
     UpdateTheme();
 
     SetIsVisible(true);

@@ -78,10 +78,8 @@ void FindFirst(MainWindow* win) {
         return;
     }
     // IE backend: fall back to the browser's own find dialog
-    if (win->AsChm()) {
-        win->AsChm()->FindInCurrentPage();
-    } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->FindInCurrentPage();
+    if (win->AsBrowser()) {
+        win->AsBrowser()->FindInCurrentPage();
         return;
     }
 

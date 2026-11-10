@@ -96,6 +96,8 @@ struct KeyEvent {
     bool didHandle = false;
 };
 
+struct GfxDoubleBuffer;
+
 // The win32 plumbing WindowBase and ControlBase share: the HWND and its
 // window-proc glue, subclassing, font, colors, an optional layout tree, and
 // the single HWND -> object list used to route messages to both kinds
@@ -111,11 +113,7 @@ struct HwndBase {
     Color bgBrushColor = kColorUnset;
     Color textColor = kColorUnset;
 
-    HDC gfxDoubleBufferHdc = nullptr;
-    HBITMAP gfxDoubleBufferBitmap = nullptr;
-    HGDIOBJ gfxDoubleBufferPrevBitmap = nullptr;
-    int gfxDoubleBufferDx = 0;
-    int gfxDoubleBufferDy = 0;
+    GfxDoubleBuffer* gfxDoubleBuffer = nullptr;
 
     // the layout of our children, if we have one. It can hold HWND controls
     // (ControlBase) and virtual ones (VirtCtrl) side by side

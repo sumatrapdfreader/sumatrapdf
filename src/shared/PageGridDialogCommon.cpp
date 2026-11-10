@@ -124,7 +124,7 @@ TempStr PageGridStateTemp() {
                pg->units.s ? pg->units : StrL(""), ShowTransparencyGrid() ? 1 : 0);
 }
 
-void RedrawPageGridWindows() {
+void RedrawAllWindows() {
     for (MainWindow* w : gWindows) {
         if (w) {
             w->RedrawAll(true);
@@ -597,7 +597,7 @@ void PageGridDragMove(DisplayModel* dm, int x, int y) {
     }
     PageGridApplyDrag(dm, x, y);
     PageGridDialogSyncFromPrefs();
-    RedrawPageGridWindows();
+    RedrawAllWindows();
 }
 
 bool PageGridDragActive() {
@@ -610,7 +610,7 @@ void PageGridDragEnd() {
     }
     gPageGridDrag.active = false;
     PageGridDialogSyncFromPrefs();
-    RedrawPageGridWindows();
+    RedrawAllWindows();
     if (IsPageGridDialogOpen() || !HasPermission(Perm::SavePreferences)) {
         return;
     }
@@ -638,7 +638,7 @@ void PageGridDragCancel() {
         pg->offsetY = gPageGridDrag.offY;
     }
     PageGridDialogSyncFromPrefs();
-    RedrawPageGridWindows();
+    RedrawAllWindows();
 }
 
 TempStr PageGridProbeTemp(DisplayModel* dm) {

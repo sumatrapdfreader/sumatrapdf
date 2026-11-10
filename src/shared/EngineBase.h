@@ -585,7 +585,7 @@ class EngineBase {
     void InvalidateTextForPage(int pageNo);
     virtual void ReleaseTextExtractionThreadContext() {}
     // pages where clipping doesn't help are rendered in larger tiles
-    virtual bool HasClipOptimizations(int pageNo) = 0;
+    virtual bool HasClipOptimizations(int /*pageNo*/) { return false; }
 
     // access to various document properties (such as Author, Title, etc.)
     virtual TempStr GetPropertyTemp(DocProp prop) = 0;
@@ -619,7 +619,7 @@ class EngineBase {
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
-    virtual bool BenchLoadPage(int pageNo) = 0;
+    virtual bool BenchLoadPage(int /*pageNo*/) { return true; }
 
     Str FilePath() const;
 

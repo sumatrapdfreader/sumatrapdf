@@ -981,7 +981,7 @@ void ControllerCallbackHandler::TocChanged(DocController* ctrl) {
         return;
     }
     if (tab->showToc) {
-        SetSidebarVisibility(win, true, gSettings->showFavorites);
+        SetTocVisibility(win, true);
     }
 }
 
@@ -2135,11 +2135,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 win->uiaProvider->OnDocumentLoad(dm);
             }
         } else if (IsBrowserDocController(win->ctrl)) {
-            if (win->AsChm()) {
-                win->AsChm()->SetParentWindow(win, win->hwndCanvas);
-            } else {
-                win->AsMarkdown()->SetParentWindow(win, win->hwndCanvas);
-            }
+            win->AsBrowser()->SetParentWindow(win, win->hwndCanvas);
             FillCanvasThemeBackground(win->hwndCanvas);
             win->ctrl->SetDisplayMode(displayMode);
             // Markdown treats each .md in the directory as a "page". When the
@@ -2276,7 +2272,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         tab->sidebarView = SidebarView::Thumbnails;
         showToc = true;
     }
-    SetSidebarVisibility(win, showToc, gSettings->showFavorites);
+    SetTocVisibility(win, showToc);
     MaybeShowTemporaryFileNotification(win, tab);
     MaybeShowSignatureStatus(win, tab);
     if (dm) {
@@ -3081,7 +3077,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data, bool showWin) {
 
     // always set up toolbar and sidebar, even if we defer showing
     ShowOrHideToolbar(win);
-    SetSidebarVisibility(win, false, gSettings->showFavorites);
+    SetTocVisibility(win, false);
     ToolbarUpdateStateForWindow(win, true);
 
     if (showWin) {
@@ -4384,11 +4380,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
     if (gSettings->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab() &&
         tab->loadState == WindowTab::LoadState::None) {
-        NotificationCreateArgs args;
-        args.win = win;
-        args.msg = fmt(Tr("Loading...").s);
-        args.warning = true;
-        ShowNotification(args);
+        ShowWarningNotification(win, Tr("Loading..."), kNotifNoTimeout);
         // Use ShowMainWindow so SW_SHOW does not drop a pending maximize (#5529)
         ShowMainWindow(win, gSettings->windowState);
         // display the notification ASAP
@@ -4444,7 +4436,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     // all-match highlights if find UI is still open.
     InvalidateFindForDocumentChange(win);
 
-    bool isBrowserTab = win->AsChm() || win->AsMarkdown();
+    bool isBrowserTab = win->AsBrowser() != nullptr;
     if (isBrowserTab) {
         // wipe before SetParentHwnd shows the WebView2: the canvas has
         // WS_CLIPCHILDREN, so once the (transparent-background) webview is
@@ -4469,9 +4461,9 @@ void LoadModelIntoTab(WindowTab* tab) {
     PickAnotherRandomTip();
 
     if (win->InPresentation()) {
-        SetSidebarVisibility(win, tab->showTocPresentation, gSettings->showFavorites);
+        SetTocVisibility(win, tab->showTocPresentation);
     } else {
-        SetSidebarVisibility(win, tab->showToc, gSettings->showFavorites);
+        SetTocVisibility(win, tab->showToc);
     }
 
     // Leaving Favorites tab: restore canvas size/visibility before SetViewPortSize
@@ -4485,10 +4477,8 @@ void LoadModelIntoTab(WindowTab* tab) {
     // show the webview only now, when the toolbar/sidebar layout is final:
     // showing it earlier (at the previous tab's canvas geometry) made it
     // visibly jump when e.g. the Home tab has no toolbar or ToC sidebar
-    if (win->AsChm()) {
-        win->AsChm()->SetParentWindow(win, win->hwndCanvas);
-    } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->SetParentWindow(win, win->hwndCanvas);
+    if (win->AsBrowser()) {
+        win->AsBrowser()->SetParentWindow(win, win->hwndCanvas);
     }
 
     DisplayModel* dm = win->AsFixed();
@@ -4730,13 +4720,9 @@ void UpdateDocumentColors() {
                 }
                 continue;
             }
-            MarkdownModel* mm = tab->AsMarkdown();
-            if (mm) {
-                mm->UpdateTheme();
-            }
-            ChmModel* chm = tab->AsChm();
-            if (chm) {
-                chm->UpdateTheme();
+            BrowserDocController* browser = tab->AsBrowser();
+            if (browser) {
+                browser->UpdateTheme();
             }
         }
     }
@@ -4830,10 +4816,8 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     if (!wasntFixed) {
         FillCanvasThemeBackground(win->hwndCanvas);
     }
-    if (win->AsChm()) {
-        win->AsChm()->RemoveParentWindow();
-    } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->RemoveParentWindow();
+    if (win->AsBrowser()) {
+        win->AsBrowser()->RemoveParentWindow();
     }
     ClearTocBox(win);
     ClearSidebarThumbnails(win);
@@ -4876,11 +4860,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         bool hadReading = !deleteModel && (GetReadAloudSourceTab() == currentTab || CanContinueReadAloud(currentTab));
         ResetReadAloudStateForTab(currentTab);
         if (hadReading && win->hwndCanvas) {
-            NotificationCreateArgs args;
-            args.win = win;
-            args.msg = Tr("Reading stopped");
-            args.timeoutMs = 2000;
-            ShowNotification(args);
+            ShowTemporaryNotification(win, Tr("Reading stopped"), 2000);
         }
         // Compact toolbar / filter list hold non-owning Annotation* into the
         // engine about to die.
@@ -4907,9 +4887,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // capture, LoadModelIntoTab left the canvas capturing the mouse after the
     // previous tab's button-down (cf. OnSelectionStop).
     win->mouseAction = MouseAction::None;
-    if (win->hwndCanvas && GetCapture() == win->hwndCanvas) {
-        ReleaseCapture();
-    }
+    CanvasSetCapture(win, false);
 
     DeletePropertiesWindow(win->hwndFrame);
 
@@ -4925,7 +4903,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     }
 
     if (!keepUIEnabled) {
-        SetSidebarVisibility(win, false, gSettings->showFavorites);
+        SetTocVisibility(win, false);
         ToolbarUpdateStateForWindow(win, true);
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
@@ -8331,10 +8309,8 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     RepositionAnnotEditToolbar(win);
     // show menu bar rebar after layout positions it correctly
     ShowMenuBarRebar(win);
-    if (win->AsChm()) {
-        BrowserViewRefreshSurface(win->AsChm()->docView);
-    } else if (win->AsMarkdown()) {
-        BrowserViewRefreshSurface(win->AsMarkdown()->docView);
+    if (win->AsBrowser()) {
+        BrowserViewRefreshSurface(win->AsBrowser()->docView);
     }
     EndFrameRedrawSuppression(win);
 
@@ -8415,7 +8391,7 @@ void ExitFullScreen(MainWindow* win) {
 
     BeginFrameRedrawSuppression(win);
     bool tocVisible = win->CurrentTab() && win->CurrentTab()->showToc;
-    SetSidebarVisibility(win, tocVisible, gSettings->showFavorites);
+    SetTocVisibility(win, tocVisible);
 
     if (win->tabsVisible) {
         win->tabsCtrl->SetIsVisible(true);
@@ -8643,11 +8619,7 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
     // TODO: not sure how this interacts with accelerators
     if (isChm) {
         if (ChmForwardKey(key)) {
-            if (win->AsChm()) {
-                win->AsChm()->PassUIMsg(WM_KEYDOWN, key, lp);
-            } else {
-                win->AsMarkdown()->PassUIMsg(WM_KEYDOWN, key, lp);
-            }
+            win->AsBrowser()->PassUIMsg(WM_KEYDOWN, key, lp);
             return true;
         }
     }
@@ -9173,6 +9145,11 @@ void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible, 
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiSidebarDirty);
 }
 
+// Sets the top panel; the bottom panel (favorites) keeps its app-wide setting.
+void SetTocVisibility(MainWindow* win, bool tocVisible, SidebarResizeFrame resizeFrame) {
+    SetSidebarVisibility(win, tocVisible, gSettings->showFavorites, resizeFrame);
+}
+
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
 constexpr const char* kSelectionPositionStr = "${selectionposition}";
@@ -9319,11 +9296,7 @@ static bool CopyOrCutAnnotationInTab(WindowTab* tab, LPARAM lp, bool cut) {
     if (ok && cut && tab->win) {
         // a cut annotation stays on the page until the paste removes it, so
         // without this Ctrl+X looks like it did nothing
-        NotificationCreateArgs args;
-        args.win = tab->win;
-        args.msg = Tr("Annotation cut. Paste to move it.");
-        args.timeoutMs = 3000;
-        ShowNotification(args);
+        ShowTemporaryNotification(tab->win, Tr("Annotation cut. Paste to move it."), 3000);
     }
     return ok;
 }
@@ -9340,10 +9313,8 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     if (!HasPermission(Perm::CopySelection)) {
         return;
     }
-    if (tab->AsChm()) {
-        tab->AsChm()->CopySelection();
-    } else if (tab->AsMarkdown()) {
-        tab->AsMarkdown()->CopySelection();
+    if (tab->AsBrowser()) {
+        tab->AsBrowser()->CopySelection();
         return;
     }
     if (tab->selectionOnPage) {
@@ -9355,11 +9326,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
         return;
     }
     if (tab->AsFixed()) {
-        NotificationCreateArgs args;
-        args.win = tab->win;
-        args.msg = Tr("Select content with Ctrl+left mouse button");
-        args.timeoutMs = 2000;
-        ShowNotification(args);
+        ShowTemporaryNotification(tab->win, Tr("Select content with Ctrl+left mouse button"), 2000);
     }
 }
 
@@ -9512,6 +9479,26 @@ static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
 // defined below; used by UseTabs transitions
 static void ApplyMenuBarVisibility(MainWindow* win);
 
+enum class TitlebarTabs {
+    Off,
+    On
+};
+
+// Switches win between tabs-in-titlebar and classic chrome (menu, toolbar, tabs).
+static void ApplyTitlebarChrome(MainWindow* win, TitlebarTabs mode) {
+    bool on = mode == TitlebarTabs::On;
+    if (on) {
+        // drop native menu before switching to tabs-in-titlebar (menu becomes rebar)
+        SetMenu(win->hwndFrame, nullptr);
+    } else {
+        DestroyMenuBarRebar(win);
+    }
+    SetTabsInTitlebar(win, on);
+    ApplyMenuBarVisibility(win);
+    ShowOrHideToolbar(win);
+    ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
+}
+
 static void TransitionToNoTabs() {
     StrVec paths;
 
@@ -9530,11 +9517,7 @@ static void TransitionToNoTabs() {
     }
     if (!hasFiles) {
         for (MainWindow* w : gWindows) {
-            DestroyMenuBarRebar(w);
-            SetTabsInTitlebar(w, false);
-            ApplyMenuBarVisibility(w);
-            ShowOrHideToolbar(w);
-            ScheduleUiUpdate(w, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
+            ApplyTitlebarChrome(w, TitlebarTabs::Off);
             w->RedrawAllIncludingNonClient();
         }
         return;
@@ -9548,11 +9531,7 @@ static void TransitionToNoTabs() {
         MainWindow* win;
         if (i == 0 && surviving) {
             win = surviving;
-            DestroyMenuBarRebar(win);
-            SetTabsInTitlebar(win, false);
-            ApplyMenuBarVisibility(win);
-            ShowOrHideToolbar(win);
-            ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
+            ApplyTitlebarChrome(win, TitlebarTabs::Off);
         } else {
             win = CreateAndShowMainWindow(nullptr);
             if (!win) {
@@ -9585,12 +9564,7 @@ static void TransitionToTabs() {
     }
     if (!hasFiles) {
         for (MainWindow* w : gWindows) {
-            // drop native menu before switching to tabs-in-titlebar (menu becomes rebar)
-            SetMenu(w->hwndFrame, nullptr);
-            SetTabsInTitlebar(w, true);
-            ApplyMenuBarVisibility(w);
-            ShowOrHideToolbar(w);
-            ScheduleUiUpdate(w, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
+            ApplyTitlebarChrome(w, TitlebarTabs::On);
             w->RedrawAllIncludingNonClient();
         }
         return;
@@ -10565,6 +10539,25 @@ static void ToggleSidebarViewCmd(MainWindow* win, CustomCommand* cmd, SidebarVie
 // orig disables Undo / Redo instead of saying why nothing happens
 void UndoRedoUnavailable(MainWindow*, bool) {}
 
+enum class AnnotsView {
+    Show,
+    Hide
+};
+
+// Keeps the tab and its engine in sync; rerenders only on change.
+static void SetTabAnnotsView(MainWindow* win, WindowTab* tab, AnnotsView view) {
+    bool hide = view == AnnotsView::Hide;
+    if (tab->hideAnnotations == hide) {
+        return;
+    }
+    tab->hideAnnotations = hide;
+    EngineBase* engine = tab->GetEngine();
+    if (engine) {
+        engine->hideAnnotations = hide;
+    }
+    MainWindowRerender(win);
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
     int invokedCmdId = cmdId;
@@ -11433,7 +11426,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             win->CurrentTab()->showToc = true;
             fixed->StartHeadingToc(HeadingTocStart::Always);
             if (!EngineMupdfHeadingTocPending(fixed->GetEngine())) {
-                SetSidebarVisibility(win, true, gSettings->showFavorites);
+                SetTocVisibility(win, true);
             }
             break;
         }
@@ -12084,16 +12077,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleLinks:
             gSettings->showLinks = !gSettings->showLinks;
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdToggleHighlightFormFields:
             gSettings->highlightFormFields = !gSettings->highlightFormFields;
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdToggleDisableLinks:
@@ -12113,9 +12102,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             // not a setting like showLinks: this is a debug aid, so it lasts
             // for the session and doesn't end up in everyone's settings file
             ToggleShowImageOutlines();
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdToggleTransparencyGrid:
@@ -12124,14 +12111,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (gRenderCache) {
                 gRenderCache->BumpDarkModeEpoch();
             }
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdTogglePageGrid:
             TogglePageGrid();
-            RedrawPageGridWindows();
+            RedrawAllWindows();
             break;
 
         case CmdMeasure:
@@ -12145,41 +12130,24 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdDebugShowFitContentArea:
             // like CmdToggleImages: session-only debug aid, not a setting
             ToggleShowFitContentArea();
-            for (auto& w : gWindows) {
-                w->RedrawAll(true);
-            }
+            RedrawAllWindows();
             break;
 
         case CmdToggleShowAnnotations:
             if (tab) {
-                tab->hideAnnotations = !tab->hideAnnotations;
-                EngineBase* engine = tab->GetEngine();
-                if (engine) {
-                    engine->hideAnnotations = tab->hideAnnotations;
-                }
-                MainWindowRerender(win);
+                SetTabAnnotsView(win, tab, tab->hideAnnotations ? AnnotsView::Show : AnnotsView::Hide);
             }
             break;
 
         case CmdShowAnnotations:
-            if (tab && tab->hideAnnotations) {
-                tab->hideAnnotations = false;
-                EngineBase* engine = tab->GetEngine();
-                if (engine) {
-                    engine->hideAnnotations = false;
-                }
-                MainWindowRerender(win);
+            if (tab) {
+                SetTabAnnotsView(win, tab, AnnotsView::Show);
             }
             break;
 
         case CmdHideAnnotations:
-            if (tab && !tab->hideAnnotations) {
-                tab->hideAnnotations = true;
-                EngineBase* engine = tab->GetEngine();
-                if (engine) {
-                    engine->hideAnnotations = true;
-                }
-                MainWindowRerender(win);
+            if (tab) {
+                SetTabAnnotsView(win, tab, AnnotsView::Hide);
             }
             break;
 
@@ -14353,11 +14321,8 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             if (!win->IsDocLoaded()) {
                 break;
             }
-            if (win->AsChm()) {
-                return win->AsChm()->PassUIMsg(msg, wp, lp);
-            }
-            if (win->AsMarkdown()) {
-                return win->AsMarkdown()->PassUIMsg(msg, wp, lp);
+            if (win->AsBrowser()) {
+                return win->AsBrowser()->PassUIMsg(msg, wp, lp);
             }
             ReportIf(!win->AsFixed());
             // Pass the message to the canvas' window procedure
@@ -14828,7 +14793,7 @@ static void SetTabState(WindowTab* tab, TabState* state) {
 
     tab->tocState = *state->tocState;
     tab->sidebarView = SidebarViewFromStr(state->sidebarView, SidebarView::Bookmarks);
-    SetSidebarVisibility(win, state->showToc, gSettings->showFavorites);
+    SetTocVisibility(win, state->showToc);
 
     DisplayMode displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
     if (displayMode != DisplayMode::Automatic) {

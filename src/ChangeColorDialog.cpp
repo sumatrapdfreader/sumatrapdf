@@ -265,7 +265,7 @@ void ChangeColorWnd::UpdateOpacityValue() {
     }
     opacityValue->SetText(fmt("%d", (int)opacity));
     if (hwnd && layout) {
-        DoLayout(HwndClientRect(hwnd).Size());
+        DoLayout();
         HwndInvalidate(hwnd);
     }
 }
@@ -737,7 +737,7 @@ void ChangeColorWnd::Relayout() {
         return;
     }
     LayoutAndSizeToContent(layout, DpiScale(kColorDlgDx), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
+    DoLayout();
 }
 
 void ChangeColorWnd::RelayoutRadios() {
@@ -853,23 +853,11 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
     PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
     SetFont(fontText);
     bool isRtl = IsUIRtl();
-    {
-        CreateCustomArgs args;
-        // owned by the main window, so it can't end up behind it
-        args.owner = mainWin ? mainWin->hwndFrame : nullptr;
-        args.title = colorsArgs ? colorsArgs->title : Tr("Change Background Color");
-        args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = fontText;
-        args.isRtl = isRtl;
-        args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        CreateCustom(args);
-    }
-    if (!hwnd) {
+    // owned by the main window, so it can't end up behind it
+    if (!CreateToolDialog(this, mainWin ? mainWin->hwndFrame : nullptr,
+                          colorsArgs ? colorsArgs->title : Tr("Change Background Color"), fontText, colTxt, colBg)) {
         return false;
     }
-    SetColors(colTxt, colBg);
     LoadColors();
 
     auto* vbox = new VBox();
@@ -975,9 +963,7 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
     SyncOpacityFromColor();
     UpdateEditFromColor();
 
-    LayoutAndSizeToContent(layout, DpiScale(kColorDlgDx), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    SizeToLayout(this, layout, DpiScale(kColorDlgDx), 0, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
     SetIsVisible(true);

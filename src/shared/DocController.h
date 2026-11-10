@@ -4,6 +4,7 @@
 struct DocController;
 struct ChmModel;
 struct MarkdownModel;
+struct BrowserDocController;
 struct DisplayModel;
 struct IPageElement;
 struct IPageDestination;
@@ -192,11 +193,14 @@ struct DocController {
     virtual DisplayModel* AsFixed() { return nullptr; }
     virtual ChmModel* AsChm() { return nullptr; }
     virtual MarkdownModel* AsMarkdown() { return nullptr; }
+    virtual BrowserDocController* AsBrowser() { return nullptr; }
 };
 
 struct BrowserDocController : DocController {
     explicit BrowserDocController(DocControllerCallback* cb);
     ~BrowserDocController() override;
+
+    BrowserDocController* AsBrowser() override { return this; }
 
     int PageCount() const override;
     int CurrentPageNo() const override;
@@ -282,5 +286,5 @@ struct BrowserDocController : DocController {
 };
 
 inline bool IsBrowserDocController(DocController* ctrl) {
-    return ctrl && (ctrl->AsChm() || ctrl->AsMarkdown());
+    return ctrl && ctrl->AsBrowser();
 }

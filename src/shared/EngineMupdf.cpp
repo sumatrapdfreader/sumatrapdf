@@ -10509,7 +10509,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
     if (!epdf || !epdf->pdfdoc) {
         return false;
     }
-    if (!EngineMupdfHasUnsavedAnnotations(engine)) {
+    if (!EngineHasUnsavedAnnotations(engine)) {
         return false;
     }
 
@@ -10794,11 +10794,14 @@ bool EngineMupdfTryGetLoadedAnnotations(EngineBase* engine, Vec<Annotation*>& an
 
 // Load each page just far enough to read its annots (not stext/links). Callers
 // that need the complete list now (tests, matching after reload) use this.
-void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
+bool EngineGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) {
     VecClear(annotsOut);
     EngineMupdf* e = AsEngineMupdf(engine);
-    if (!e || !e->pdfdoc) {
-        return;
+    if (!e) {
+        return false;
+    }
+    if (!e->pdfdoc) {
+        return true;
     }
     for (int i = 1; i <= e->pageCount; i++) {
         FzPageInfo* pi = e->GetFzPageInfo(i, true);
@@ -10807,6 +10810,7 @@ void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) 
         }
         VecAppendVec(annotsOut, pi->annotations);
     }
+    return true;
 }
 
 static void AnnotLoadFinished(EngineMupdf* e) {
@@ -10986,7 +10990,7 @@ void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firs
     SafeCloseThreadHandle(&th);
 }
 
-bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
+bool EngineHasUnsavedAnnotations(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     return epdf && epdf->pdfdoc && epdf->modifiedAnnotations;
 }
@@ -10994,9 +10998,9 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
 // redaction marks the user made in this session. Marks that came with the
 // file don't count: they surface only as their page gets loaded, so the button
 // would appear out of nowhere when an annotation is selected
-bool EngineMupdfHasUserRedactMarks(EngineBase* engine) {
+bool EngineHasUserRedactMarks(EngineBase* engine) {
     EngineMupdf* e = AsEngineMupdf(engine);
-    return e && e->createdRedactMark && EngineMupdfHasRedactMarks(engine);
+    return e && e->createdRedactMark && EngineHasRedactMarks(engine);
 }
 
 static bool HasRedactAnnot(const Vec<Annotation*>& annots) {
@@ -11008,7 +11012,7 @@ static bool HasRedactAnnot(const Vec<Annotation*>& annots) {
     return false;
 }
 
-bool EngineMupdfHasRedactMarks(EngineBase* engine) {
+bool EngineHasRedactMarks(EngineBase* engine) {
     Vec<Annotation*> annots;
     EngineMupdfGetLoadedAnnotations(engine, annots);
     return HasRedactAnnot(annots);
@@ -11017,7 +11021,7 @@ bool EngineMupdfHasRedactMarks(EngineBase* engine) {
 // For menu and toolbar state, which is rebuilt on every page change: a render
 // holds pagesLock for as long as the page takes, and waiting for it froze
 // navigation (#6362). While it is held, answers what it last saw.
-bool EngineMupdfHasRedactMarksNoWait(EngineBase* engine) {
+bool EngineHasRedactMarksNoWait(EngineBase* engine) {
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e) {
         return false;
@@ -11401,22 +11405,9 @@ void EngineMupdfEndOperation(EngineBase* engine) {
     }
 }
 
-bool EngineMupdfCanUndo(EngineBase* engine) {
-    EngineMupdf* e = AsEngineMupdf(engine);
-    int pos = EngineMupdfUndoPos(e, nullptr);
-    return pos > 0;
-}
-
-bool EngineMupdfCanRedo(EngineBase* engine) {
-    EngineMupdf* e = AsEngineMupdf(engine);
-    int steps = 0;
-    int pos = EngineMupdfUndoPos(e, &steps);
-    return pos >= 0 && pos < steps;
-}
-
-// For menu and toolbar state, rebuilt on every page change: a render holds
-// docLock for as long as the page takes to draw (#6362). While it is held,
-// answers what it last saw.
+// NoWait is for menu and toolbar state, rebuilt on every page change: a render
+// holds docLock for as long as the page takes to draw (#6362). While it is
+// held, answers what it last saw.
 static int UndoPosNoWait(EngineMupdf* e, int* stepsOut) {
     if (!e) {
         *stepsOut = 0;
@@ -11430,15 +11421,13 @@ static int UndoPosNoWait(EngineMupdf* e, int* stepsOut) {
     return e->undoPosSeen;
 }
 
-bool EngineMupdfCanUndoNoWait(EngineBase* engine) {
+bool EngineCanUndoRedo(EngineBase* engine, UndoDir dir, EngineWait wait) {
+    EngineMupdf* e = AsEngineMupdf(engine);
     int steps = 0;
-    int pos = UndoPosNoWait(AsEngineMupdf(engine), &steps);
-    return pos > 0;
-}
-
-bool EngineMupdfCanRedoNoWait(EngineBase* engine) {
-    int steps = 0;
-    int pos = UndoPosNoWait(AsEngineMupdf(engine), &steps);
+    int pos = wait == EngineWait::Wait ? EngineMupdfUndoPos(e, &steps) : UndoPosNoWait(e, &steps);
+    if (dir == UndoDir::Undo) {
+        return pos > 0;
+    }
     return pos >= 0 && pos < steps;
 }
 
@@ -11671,16 +11660,17 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
     return ok;
 }
 
-// Step one operation back (or forward with redo). Returns false if there was
+// Step one operation back (or forward with UndoDir::Redo). Returns false if there was
 // nothing to step to. The wrappers in removedOut are detached from the document
 // already; the caller must take them out of the UI and delete them.
-static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>& removedOut) {
+bool EngineUndoRedo(EngineBase* engine, UndoDir dir, Vec<Annotation*>& removedOut) {
+    bool redo = dir == UndoDir::Redo;
     VecReset(removedOut);
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
         return false;
     }
-    bool can = redo ? EngineMupdfCanRedo(engine) : EngineMupdfCanUndo(engine);
+    bool can = EngineCanUndoRedo(engine, dir, EngineWait::Wait);
     if (!can) {
         return false;
     }
@@ -11698,7 +11688,7 @@ static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>&
         }
         fz_catch(ctx) {
             fz_report_error(ctx);
-            logf("EngineMupdfUndoRedo: pdf_%s() failed\n", redo ? StrL("redo") : StrL("undo"));
+            logf("EngineUndoRedo: pdf_%s() failed\n", redo ? StrL("redo") : StrL("undo"));
         }
     }
     if (!ok) {
@@ -11706,14 +11696,6 @@ static bool EngineMupdfUndoRedo(EngineBase* engine, bool redo, Vec<Annotation*>&
     }
     SyncPagesAfterUndoRedo(e, removedOut);
     return true;
-}
-
-bool EngineMupdfUndo(EngineBase* engine, Vec<Annotation*>& removedOut) {
-    return EngineMupdfUndoRedo(engine, false, removedOut);
-}
-
-bool EngineMupdfRedo(EngineBase* engine, Vec<Annotation*>& removedOut) {
-    return EngineMupdfUndoRedo(engine, true, removedOut);
 }
 
 // The journal knows exactly whether the document differs from the file, which
@@ -12202,8 +12184,8 @@ static FzPageInfo* GetPdfPageInfo(EngineMupdf* engine, int pageNo) {
     return engine->GetFzPageInfoCanFail(pageNo);
 }
 
-Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, float padding,
-                                          Annotation* preferredAnnot) {
+Annotation* EngineGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, float padding,
+                                     Annotation* preferredAnnot) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     FzPageInfo* pi = GetPdfPageInfo(epdf, pageNo);
     if (!pi) {
@@ -12214,9 +12196,9 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     return FindAnnotAtPos(pi->annotations, pos, padding, preferredAnnot);
 }
 
-// Like EngineMupdfGetAnnotationAtPos but for form fields (widgets), which live
+// Like EngineGetAnnotationAtPos but for form fields (widgets), which live
 // in their own list. Returns the smallest widget containing pos, or null.
-Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos) {
+Annotation* EngineGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     FzPageInfo* pi = GetPdfPageInfo(epdf, pageNo);
     if (!pi) {

@@ -297,7 +297,7 @@ void PropertiesWnd::SizeToContent() {
     auto sizeForLines = [&](int lines) {
         int wantedDy = ((lines + 1) * PlatformFontLineHeight(propsFont)) + (2 * padDy) + footerDy;
         ShowScrollBar(editProps->hwnd, SB_VERT, wantedDy > maxDy);
-        ResizeHwndToClientArea(hwnd, std::min(wantedDx, maxDx), std::min(wantedDy, maxDy), false);
+        HwndResizeClientSize(hwnd, std::min(wantedDx, maxDx), std::min(wantedDy, maxDy));
         DoLayout();
     };
     sizeForLines(nLines);

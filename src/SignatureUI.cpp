@@ -455,22 +455,9 @@ bool SignatureWnd::Create(MainWindow* w, const PdfSigEntry* e) {
     PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
     SetFont(fontText);
     bool isRtl = IsUIRtl();
-    {
-        CreateCustomArgs args;
-        args.owner = win->hwndFrame;
-        args.title = Tr("Signature Properties");
-        args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = fontText;
-        args.isRtl = isRtl;
-        args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        CreateCustom(args);
-    }
-    if (!hwnd) {
+    if (!CreateToolDialog(this, win->hwndFrame, Tr("Signature Properties"), fontText, colTxt, colBg)) {
         return false;
     }
-    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -517,9 +504,7 @@ bool SignatureWnd::Create(MainWindow* w, const PdfSigEntry* e) {
     vbox->AddChild(NewDlgFooter(nullptr, close, cert));
     layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(kSigDialogDx), DpiScale(kSigDialogDy), hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win->hwndFrame);
+    SizeToLayout(this, layout, DpiScale(kSigDialogDx), DpiScale(kSigDialogDy), win->hwndFrame);
     UpdateTheme();
     SetIsVisible(true);
     return true;

@@ -663,7 +663,7 @@ static void MessageBoxWarningCond(bool show, Str msg, Str title) {
         return;
     }
 #if defined(SUMATRA_NG)
-    MessageBoxWarningSimple(nullptr, ToWStrTemp(msg), ToWStrTemp(title));
+    MsgBoxWarning(nullptr, msg, title);
 #else
     MessageBoxWarning(nullptr, msg, title);
 #endif
@@ -1670,12 +1670,8 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     Vec<PRINTPAGERANGE> ranges;
     Vec<SelectionOnPage>* sel;
 
-    if (win->AsChm()) {
-        win->AsChm()->PrintCurrentPage(true);
-        return;
-    }
-    if (win->AsMarkdown()) {
-        win->AsMarkdown()->PrintCurrentPage(true);
+    if (win->AsBrowser()) {
+        win->AsBrowser()->PrintCurrentPage(true);
         return;
     }
     DisplayModel* dm = win->AsFixed();

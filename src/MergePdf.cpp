@@ -1788,9 +1788,7 @@ bool InsertPosWnd::Create(HWND owner, Str what, int n, int afterPage) {
     vbox->AddChild(new Padding(footer, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
     layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(kInsertDlgDx), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, owner);
+    SizeToLayout(this, layout, DpiScale(kInsertDlgDx), 0, owner);
     UpdateTheme();
     SetIsVisible(true);
     if (hasPage) {

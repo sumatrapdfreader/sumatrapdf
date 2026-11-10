@@ -236,14 +236,14 @@ void CommandPaletteWnd::SetThumbnailMode(ThumbnailMode mode) {
         listBox->SetIsVisible(false);
         thumbnailCtrl->SetIsVisible(true);
         thumbnailMode = true;
-        DoLayout(HwndClientRect(hwnd).Size());
+        DoLayout();
         thumbnailCtrl->Activate();
     } else {
         thumbnailCtrl->Deactivate();
         thumbnailCtrl->SetIsVisible(false);
         listBox->SetIsVisible(true);
         thumbnailMode = false;
-        DoLayout(HwndClientRect(hwnd).Size());
+        DoLayout();
     }
     EditSetFocus(editQuery);
 }
@@ -1143,7 +1143,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     // the help rows are virtual controls: pick them up so we paint them and
     // they get their input
-    DoLayout(HwndClientRect(hwnd).Size());
+    DoLayout();
     if (str::StartsWith(prefix, Str(kPalettePrefixThumbnails))) {
         SetThumbnailMode(ThumbnailMode::Enabled);
     }

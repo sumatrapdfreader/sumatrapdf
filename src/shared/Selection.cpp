@@ -992,10 +992,8 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
         return;
     }
 
-    if (win->AsChm()) {
-        win->AsChm()->SelectAll();
-    } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->SelectAll();
+    if (win->AsBrowser()) {
+        win->AsBrowser()->SelectAll();
         return;
     }
     if (!win->AsFixed()) {

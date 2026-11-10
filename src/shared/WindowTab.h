@@ -8,6 +8,7 @@ struct DocController;
 struct DisplayModel;
 struct ChmModel;
 struct MarkdownModel;
+struct BrowserDocController;
 class EngineBase;
 struct TocTree;
 struct TabState;
@@ -245,6 +246,7 @@ struct WindowTab {
 
     ChmModel* AsChm() const;
     MarkdownModel* AsMarkdown() const;
+    BrowserDocController* AsBrowser() const;
 
     Str GetTabTitle() const;
     bool IsDocLoaded() const;

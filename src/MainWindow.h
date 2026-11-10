@@ -101,6 +101,7 @@ struct DocController;
 struct DocControllerCallback;
 struct ChmModel;
 struct MarkdownModel;
+struct BrowserDocController;
 struct DisplayModel;
 struct WindowTab;
 
@@ -251,6 +252,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     DisplayModel* AsFixed() const;
     ChmModel* AsChm() const;
     MarkdownModel* AsMarkdown() const;
+    BrowserDocController* AsBrowser() const;
 
     // TODO: use CurrentTab()->ctrl instead
     DocController* ctrl = nullptr; // owned by CurrentTab()

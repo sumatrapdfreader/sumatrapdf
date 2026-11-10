@@ -140,6 +140,7 @@ enum class SidebarResizeFrame {
 };
 void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible,
                           SidebarResizeFrame = SidebarResizeFrame::Keep);
+void SetTocVisibility(MainWindow* win, bool tocVisible, SidebarResizeFrame = SidebarResizeFrame::Keep);
 void RememberFavTreeExpansionState(MainWindow* win);
 void AdvanceFocus(MainWindow* win);
 void SetCurrentLanguageAndRefreshUI(Str langCode);

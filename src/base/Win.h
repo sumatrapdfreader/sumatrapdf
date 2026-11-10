@@ -6,8 +6,6 @@ constexpr UINT DRAGQUERY_NUMFILES = 0xFFFFFFFF;
 
 //--- bool / BOOL
 
-bool ToBool(BOOL b);
-
 inline BOOL toBOOL(bool b) {
     return b ? TRUE : FALSE;
 }
@@ -31,7 +29,6 @@ Rect HwndMapLtrClientRectToScreen(HWND hwnd, Rect r);
 int HwndMapChildXForRtlParent(HWND parent, int ltrX, int childDx);
 void HwndMoveWindow(HWND hwnd, Rect* r);
 void HwndResizeClientSize(HWND, int, int);
-void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 Rect ChildPosWithinParent(HWND);
 
 //--- HWND: screen / work area / placement
@@ -72,7 +69,6 @@ void HwndToForeground(HWND hwnd);
 
 bool HwndIsWindowStyleSet(HWND hwnd, DWORD flags);
 void HwndSetWindowStyle(HWND hwnd, DWORD flags, bool enable);
-void HwndSetWindowExStyle(HWND hwnd, DWORD flags, bool enable);
 bool HwndIsRtl(HWND hwnd);
 void HwndSetRtl(HWND hwnd, bool isRtl);
 
@@ -120,17 +116,12 @@ bool EditHandleCtrlBack(HWND hwnd, WPARAM ch);
 
 int LbAddString(HWND hwnd, WStr text);
 int LbAddString(HWND hwnd, Str text);
-int LbInsertString(HWND hwnd, int idx, WStr text);
-int LbInsertString(HWND hwnd, int idx, Str text);
 int LbGetCurrentSelection(HWND hwnd);
 bool LbSetCurrentSelection(HWND hwnd, int idx);
 TempWStr LbGetTextTemp(HWND hwnd, int idx);
 void LbSetItemHeight(HWND hwnd, int idx, int height);
 
 //--- list view
-
-void LvSetItemText(HWND hwnd, int i, int iSub, WStr text);
-void LvSetItemText(HWND hwnd, int i, int iSub, Str text);
 
 //--- combo box
 // all no-op (or return a zero value) on a null hwnd. gui/win/WinGui.h overloads
@@ -175,8 +166,8 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
 
 //--- dialogs / message boxes
 
-void MessageBoxWarningSimple(HWND hwnd, WStr msg, WStr title = WStr());
 int MsgBox(HWND, Str text, Str caption, UINT flags);
+void MsgBoxWarning(HWND hwnd, Str msg, Str title = Str());
 HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr = nullptr);
 void ShowTextInWindowDialog(Str title, Str text);
 
@@ -189,8 +180,6 @@ int HdcDrawText(HDC hdc, Str s, const Rect& r, uint format, HFONT font = nullptr
 int HdcDrawText(HDC hdc, WStr s, const Rect& r, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, Str s, const Point& pos, uint format, HFONT font = nullptr);
 int HdcDrawText(HDC hdc, WStr s, const Point& pos, uint format, HFONT font = nullptr);
-bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, Str text);
-bool HdcExTextOut(HDC hdc, Point pos, uint options, const Rect& rect, WStr text);
 Size HdcMeasureText(HDC hdc, Str s, int maxDx, uint format, HFONT font);
 void HdcDrawCenteredText(HDC hdc, Rect r, Str txt, bool isRTL = false);
 Size HdcGetTextExtentPoint32(HDC hdc, Str str);
@@ -203,7 +192,6 @@ bool GetNonClientMetricsForDpi(int dpi, NONCLIENTMETRICS* ncm);
 
 //--- GDI: handles / bitmaps / pixmaps
 
-bool DeleteObjectSafe(HGDIOBJ*);
 bool DeleteBrushSafe(HBRUSH*);
 
 struct RenderedBitmap;
@@ -223,7 +211,6 @@ struct RenderedBitmap {
     RenderedBitmap* Clone() const;
     HBITMAP GetBitmap() const;
     bool IsValid();
-    bool Blit(HDC hdc, Rect target);
 };
 
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
@@ -294,7 +281,6 @@ TempStr MenuToSafeStringTemp(Str s);
 
 //--- keyboard state
 
-bool IsKeyPressed(int key);
 bool IsShiftPressed();
 bool IsAltPressed();
 void SetTestSaveFileName(Str path);
@@ -397,7 +383,6 @@ bool WriteRegStr(HKEY keySub, Str keyName, Str valName, Str value);
 bool LoggedWriteRegStr(HKEY keySub, Str keyName, Str valName, Str value);
 bool ReadRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD& value);
 bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value);
-bool WriteRegNone(HKEY hkey, Str key, Str valName);
 bool LoggedWriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value);
 bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName);
 bool CreateRegKey(HKEY keySub, Str keyName);

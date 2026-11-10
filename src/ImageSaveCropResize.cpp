@@ -35,7 +35,7 @@ ImageEditHost gImageEditHost;
 
 // A warning box. The host may have a styled one, but a plain one is fine here.
 static void WarnBox(HWND hwnd, Str msg, Str title) {
-    MessageBoxWarningSimple(hwnd, ToWStrTemp(msg), ToWStrTemp(title));
+    MsgBoxWarning(hwnd, msg, title);
 }
 
 static PlatformFont* ImageEditFont(HWND hwnd) {

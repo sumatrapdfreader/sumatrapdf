@@ -222,9 +222,9 @@ class EngineMupdf : public EngineBase {
     // set when a Redact annotation is created in this editing session. Apply
     // Redactions is offered for marks the user made, not for marks that came
     // with the file (which only show up as pages get loaded, see
-    // EngineMupdfHasUserRedactMarks)
+    // EngineHasUserRedactMarks)
     bool createdRedactMark = false;
-    // what EngineMupdfHasRedactMarksNoWait last saw, for when a render holds pagesLock
+    // what EngineHasRedactMarksNoWait last saw, for when a render holds pagesLock
     bool hasRedactMarksSeen = false;
     // what UndoPosNoWait last saw, for when a render holds docLock
     int undoPosSeen = -1;

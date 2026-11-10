@@ -479,12 +479,8 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
     if (!HasPermission(Perm::PrinterAccess) || !win->IsDocLoaded()) {
         return;
     }
-    if (win->AsChm()) {
-        win->AsChm()->PrintCurrentPage(true);
-        return;
-    }
-    if (win->AsMarkdown()) {
-        win->AsMarkdown()->PrintCurrentPage(true);
+    if (win->AsBrowser()) {
+        win->AsBrowser()->PrintCurrentPage(true);
         return;
     }
     DisplayModel* dm = win->AsFixed();

@@ -160,10 +160,8 @@ WindowTab::~WindowTab() {
     // Full browser teardown next (not mere hide). DestroyWindow pumps; with
     // win->ctrl already nulled (and isBeingClosed on window close), canvas
     // re-entry must not touch a freed DisplayModel.
-    if (AsChm()) {
-        AsChm()->DestroyParentWindow();
-    } else if (AsMarkdown()) {
-        AsMarkdown()->DestroyParentWindow();
+    if (AsBrowser()) {
+        AsBrowser()->DestroyParentWindow();
     }
     if (hwndPDFInfo) {
         DestroyWindow(hwndPDFInfo);
@@ -232,6 +230,10 @@ ChmModel* WindowTab::AsChm() const {
 
 MarkdownModel* WindowTab::AsMarkdown() const {
     return ctrl ? ctrl->AsMarkdown() : nullptr;
+}
+
+BrowserDocController* WindowTab::AsBrowser() const {
+    return ctrl ? ctrl->AsBrowser() : nullptr;
 }
 
 Kind WindowTab::GetEngineType() const {

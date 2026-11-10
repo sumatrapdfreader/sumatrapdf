@@ -412,18 +412,12 @@ void GfxDestroyDoubleBuffer(HwndBase* w) {
     if (!w) {
         return;
     }
-    GfxDoubleBuffer b{};
-    b.hdc = w->gfxDoubleBufferHdc;
-    b.bitmap = w->gfxDoubleBufferBitmap;
-    b.prevBitmap = w->gfxDoubleBufferPrevBitmap;
-    b.dx = w->gfxDoubleBufferDx;
-    b.dy = w->gfxDoubleBufferDy;
-    GfxDestroyDoubleBuffer(&b);
-    w->gfxDoubleBufferHdc = b.hdc;
-    w->gfxDoubleBufferBitmap = b.bitmap;
-    w->gfxDoubleBufferPrevBitmap = b.prevBitmap;
-    w->gfxDoubleBufferDx = b.dx;
-    w->gfxDoubleBufferDy = b.dy;
+    if (!w->gfxDoubleBuffer) {
+        return;
+    }
+    GfxDestroyDoubleBuffer(w->gfxDoubleBuffer);
+    delete w->gfxDoubleBuffer;
+    w->gfxDoubleBuffer = nullptr;
 }
 
 // Keep one bitmap. A repaint at the same client size reuses it; resizing
@@ -471,17 +465,8 @@ Gfx* GfxCreateWithDoubleBuffer(HwndBase* w, HDC hdc) {
     if (!w || !w->hwnd) {
         return GfxCreate(hdc);
     }
-    GfxDoubleBuffer b{};
-    b.hdc = w->gfxDoubleBufferHdc;
-    b.bitmap = w->gfxDoubleBufferBitmap;
-    b.prevBitmap = w->gfxDoubleBufferPrevBitmap;
-    b.dx = w->gfxDoubleBufferDx;
-    b.dy = w->gfxDoubleBufferDy;
-    Gfx* gfx = GfxCreateWithDoubleBuffer(w->hwnd, hdc, &b);
-    w->gfxDoubleBufferHdc = b.hdc;
-    w->gfxDoubleBufferBitmap = b.bitmap;
-    w->gfxDoubleBufferPrevBitmap = b.prevBitmap;
-    w->gfxDoubleBufferDx = b.dx;
-    w->gfxDoubleBufferDy = b.dy;
-    return gfx;
+    if (!w->gfxDoubleBuffer) {
+        w->gfxDoubleBuffer = new GfxDoubleBuffer();
+    }
+    return GfxCreateWithDoubleBuffer(w->hwnd, hdc, w->gfxDoubleBuffer);
 }

@@ -876,9 +876,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted);
 void CancelDrag(MainWindow* win) {
     if (PageGridDragActive()) {
         PageGridDragCancel();
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         SetCanvasCursor(win, IDC_ARROW);
         return;
     }
@@ -1036,9 +1034,7 @@ static bool OnTouchLongPress(MainWindow* win, int x, int y) {
         win->mouseAction = MouseAction::None;
         win->dragStartPending = false;
         win->selectingByWord = false;
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         KillTimer(win->hwndCanvas, kSelectSmoothScrollTimerID);
     }
 
@@ -1222,9 +1218,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
         // threshold met: initiate OLE drag-drop of selected text
         win->textDragPending = false;
         win->dragStartPending = false;
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         StartTextDragDrop(win);
         return;
     }
@@ -1235,9 +1229,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
         }
         win->imageDragPending = false;
         win->dragStartPending = false;
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         StartImageDragDrop(win);
         win->imageDragElement = nullptr;
         win->imageDragPageNo = -1;
@@ -1449,9 +1441,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     CancelAnnotationResizeRerender(win);
 
     // Release mouse capture and reset cursor
-    if (GetCapture() == win->hwndCanvas) {
-        ReleaseCapture();
-    }
+    CanvasSetCapture(win, false);
     SetCanvasCursor(win, IDC_ARROW);
 
     if (aborted || !annot) {
@@ -1820,9 +1810,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     if (PageGridDragActive()) {
         PageGridDragMove(dm, x, y);
         PageGridDragEnd();
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         return;
     }
 
@@ -1840,9 +1828,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // can be adjusted again (issue #538)
     if (win->touchSelDragging != TouchSelHandle::None) {
         win->touchSelDragging = TouchSelHandle::None;
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         return;
     }
 
@@ -1850,9 +1836,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     if (win->textDragPending) {
         win->textDragPending = false;
         win->dragStartPending = false;
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         DeleteOldSelectionInfo(win, true);
         return;
     }
@@ -1863,9 +1847,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         win->imageDragElement = nullptr;
         win->imageDragPageNo = -1;
         win->dragStartPending = false;
-        if (GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
+        CanvasSetCapture(win, false);
         return;
     }
 

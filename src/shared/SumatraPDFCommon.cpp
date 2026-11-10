@@ -868,7 +868,7 @@ Annotation* FindMatchingAnnotation(WindowTab* tab, const SavedAnnotSel& key) {
         return nullptr;
     }
     Vec<Annotation*> annots;
-    EngineMupdfGetAnnotations(engine, annots);
+    EngineGetAnnotations(engine, annots);
     for (Annotation* a : annots) {
         if (a->pageNo == key.pageNo && a->type == key.type && a->bounds == key.bounds) {
             return a;
@@ -2678,7 +2678,8 @@ void UndoRedoInTab(WindowTab* tab, bool redo) {
     if (!engine || !EngineSupportsAnnotations(engine)) {
         return;
     }
-    bool can = redo ? EngineMupdfCanRedo(engine) : EngineMupdfCanUndo(engine);
+    UndoDir dir = redo ? UndoDir::Redo : UndoDir::Undo;
+    bool can = EngineCanUndoRedo(engine, dir, EngineWait::Wait);
     if (!can) {
         UndoRedoUnavailable(win, redo);
         return;
@@ -2693,7 +2694,7 @@ void UndoRedoInTab(WindowTab* tab, bool redo) {
     }
 
     Vec<Annotation*> removed;
-    bool ok = redo ? EngineMupdfRedo(engine, removed) : EngineMupdfUndo(engine, removed);
+    bool ok = EngineUndoRedo(engine, dir, removed);
     for (Annotation* a : removed) {
         DetachAnnotationFromUI(a);
         DeleteAnnotation(a);

@@ -117,7 +117,6 @@ class EngineImages : public EngineBase {
     Str GetFileData() override;
     bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int /*pageNo*/) override { return {}; }
-    bool HasClipOptimizations(int /*pageNo*/) override { return false; }
 
     Vec<IPageElement*> GetElements(int pageNo) override;
     IPageElement* GetElementAtPos(int pageNo, PointF pt) override;

@@ -199,22 +199,9 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     fontQuery = DlgUiFont(kToolDlgQueryFontPx);
     fontMeta = DlgUiFont(kToolDlgMetaFontPx);
     SetFont(fontText);
-    {
-        CreateCustomArgs args;
-        args.owner = win ? win->hwndFrame : nullptr;
-        args.title = Tr("Go to page");
-        args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = fontText;
-        args.isRtl = IsUIRtl();
-        args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        CreateCustom(args);
-    }
-    if (!hwnd) {
+    if (!CreateToolDialog(this, win ? win->hwndFrame : nullptr, Tr("Go to page"), fontText, colTxt, colBg)) {
         return false;
     }
-    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -235,9 +222,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     vbox->AddChild(NewDlgFooter(btnCancel, btnGo));
     layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(kGoToDlgDx), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    SizeToLayout(this, layout, DpiScale(kGoToDlgDx), 0, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
     SetIsVisible(true);
@@ -260,7 +245,7 @@ void ShowGoToPageDialog(MainWindow* win) {
     if (gGoToPageWnd) {
         gGoToPageWnd->SetTarget(win);
         if (gGoToPageWnd->hwnd) {
-            gGoToPageWnd->DoLayout(HwndClientRect(gGoToPageWnd->hwnd).Size());
+            gGoToPageWnd->DoLayout();
             HwndInvalidate(gGoToPageWnd->hwnd);
         }
         HwndSetFocus(gGoToPageWnd->hwnd);

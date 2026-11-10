@@ -9,6 +9,7 @@ struct Edit;
 struct Gfx;
 struct Checkbox;
 struct PlatformFont;
+struct WindowBase;
 enum class VirtButtonStyle;
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
@@ -124,6 +125,8 @@ VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButto
 void SetDlgButtonEnabled(VirtButton* b, DlgButtonStyle style, bool enabled);
 // the dialogs' UI font at `px`
 PlatformFont* DlgUiFont(int px);
+bool CreateToolDialog(WindowBase* w, HWND owner, Str title, PlatformFont* font, Color txt, Color bg);
+void SizeToLayout(WindowBase* w, ILayout* layout, int minDx, int minDy, HWND centerOn);
 VirtText* NewDlgLabel(Str s, PlatformFont* font, Color col, int dy, bool prefix = false);
 VirtText* NewDlgCaption(Str s, PlatformFont* font, Color col);
 ILayout* NewDlgUnderlined(ILayout* field);

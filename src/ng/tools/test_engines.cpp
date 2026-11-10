@@ -195,7 +195,7 @@ static bool ListAnnots(Str path) {
         return false;
     }
     Vec<Annotation*> annots;
-    EngineMupdfGetAnnotations(engine, annots);
+    EngineGetAnnotations(engine, annots);
     for (Annotation* a : annots) {
         RectF r = GetBounds(a);
         Str name = AnnotationReadableNameTemp(a->type);

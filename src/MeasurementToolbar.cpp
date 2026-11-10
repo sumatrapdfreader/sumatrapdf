@@ -485,9 +485,7 @@ bool MeasurementToolbar::Create(MainWindow* mainWin) {
     }
     unitEdit->SetText(unit);
     SetMode();
-    LayoutAndSizeToContent(layout, DpiScale(440), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win->hwndFrame);
+    SizeToLayout(this, layout, DpiScale(440), 0, win->hwndFrame);
     UpdateTheme();
     SetIsVisible(true);
     return true;

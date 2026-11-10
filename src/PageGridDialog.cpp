@@ -227,7 +227,7 @@ void PageGridWnd::ApplyLive() {
     if (cbShow) {
         SetShowPageGrid(cbShow->IsChecked());
     }
-    RedrawPageGridWindows();
+    RedrawAllWindows();
 }
 
 void PageGridWnd::OnUnitsChanged() {
@@ -329,7 +329,7 @@ void PageGridWnd::LoadFromPrefs() {
 
 void PageGridWnd::OnCancel(VirtMouseEvent*) {
     WriteSnapToPrefs();
-    RedrawPageGridWindows();
+    RedrawAllWindows();
     ScheduleDelete();
 }
 
@@ -398,22 +398,9 @@ bool PageGridWnd::Create(MainWindow* mainWin) {
     PlatformFont* fontMeta = DlgUiFont(kToolDlgMetaFontPx);
     SetFont(fontText);
     bool isRtl = IsUIRtl();
-    {
-        CreateCustomArgs args;
-        args.owner = win ? win->hwndFrame : nullptr;
-        args.title = Tr("Page Grid");
-        args.visible = false;
-        args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = fontText;
-        args.isRtl = isRtl;
-        args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        CreateCustom(args);
-    }
-    if (!hwnd) {
+    if (!CreateToolDialog(this, win ? win->hwndFrame : nullptr, Tr("Page Grid"), fontText, colTxt, colBg)) {
         return false;
     }
-    SetColors(colTxt, colBg);
 
     // every row is a muted label in one column, then its control
     Vec<VirtText*> labels;
@@ -516,9 +503,7 @@ bool PageGridWnd::Create(MainWindow* mainWin) {
     vbox->AddChild(NewDlgFooter(btnCancel, btnOk, btnReset));
     layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(kGridDlgDx), 0, hwnd);
-    DoLayout(HwndClientRect(hwnd).Size());
-    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    SizeToLayout(this, layout, DpiScale(kGridDlgDx), 0, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
     LoadFromPrefs();

@@ -522,7 +522,7 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     layout = columns;
 
     OnExample();
-    ResizeHwndToClientArea(hwnd, DpiScale(kScriptDlgDx), DpiScale(kScriptDlgDy), false);
+    HwndResizeClientSize(hwnd, DpiScale(kScriptDlgDx), DpiScale(kScriptDlgDy));
     DoLayout();
     HwndCenterDialog(hwnd, owner->hwndFrame);
     HwndEnsureOnScreen(hwnd);

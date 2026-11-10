@@ -30,6 +30,7 @@
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "Canvas.h"
+#include "CanvasCommon.h"
 #include "Selection.h"
 #include "SelectTextKeyboard.h"
 #include "Commands.h"
@@ -157,9 +158,7 @@ void PlacementRunCreateCmd(MainWindow* win, int cmdId, Point pt) {
 }
 
 void PlacementReleaseMouse(MainWindow* win) {
-    if (GetCapture() == win->hwndCanvas) {
-        ReleaseCapture();
-    }
+    CanvasSetCapture(win, false);
 }
 
 void RestoreCanvasCursor(MainWindow* win) {
@@ -172,9 +171,7 @@ void ReleasePlacementCapture(MainWindow* win) {
     if (!win || !win->annotPlacement.mouseDown) {
         return;
     }
-    if (GetCapture() == win->hwndCanvas) {
-        ReleaseCapture();
-    }
+    CanvasSetCapture(win, false);
 }
 
 static void OnPlacementNotifClosed(MainWindow* win, NotificationClosedEvent* ev) {

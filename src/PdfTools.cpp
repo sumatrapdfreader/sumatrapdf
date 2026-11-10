@@ -426,7 +426,7 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
         clientW = std::max(gToolDlgLastClientDx, DpiScale(kToolDlgMinDx));
     }
     Size size = layout->Layout(ExpandHeight(clientW));
-    ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+    HwndResizeClientSize(hwnd, size.dx, size.dy);
     windowDy = HwndWindowRect(hwnd).dy;
     // positions everything and picks up the virtual controls to paint
     DoLayout(size);
