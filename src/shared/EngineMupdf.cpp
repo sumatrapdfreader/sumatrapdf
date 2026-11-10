@@ -10606,6 +10606,68 @@ bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
     return ok;
 }
 
+// Write a copy of the live PDF (with unsaved annotations) whose page i+1 shows
+// only cropBoxes[i], set as its CropBox; an empty box keeps the page as is.
+// Boxes are in PageMediabox() space. The open document is not changed.
+bool EngineMupdfSaveCropped(EngineBase* engine, Str path, const Vec<RectF>& cropBoxes) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc || len(path) == 0) {
+        return false;
+    }
+    auto* ctx = epdf->Ctx();
+    ScopedRecursiveMutex scope(&epdf->docLock);
+    fz_buffer* buf = nullptr;
+    fz_output* out = nullptr;
+    fz_stream* stm = nullptr;
+    pdf_document* copy = nullptr;
+    pdf_page* page = nullptr;
+    bool ok = false;
+    fz_var(buf);
+    fz_var(out);
+    fz_var(stm);
+    fz_var(copy);
+    fz_var(page);
+    fz_var(ok);
+    fz_try(ctx) {
+        pdf_write_options opts = gPdfDefaultWriteOptions;
+        opts.do_incremental = 0;
+        buf = fz_new_buffer(ctx, 1024 * 1024);
+        out = fz_new_output_with_buffer(ctx, buf);
+        pdf_write_document(ctx, epdf->pdfdoc, out, &opts);
+        fz_close_output(ctx, out);
+
+        stm = fz_open_buffer(ctx, buf);
+        copy = pdf_open_document_with_stream(ctx, stm);
+        int n = std::min(pdf_count_pages(ctx, copy), len(cropBoxes));
+        for (int i = 0; i < n; i++) {
+            RectF r = cropBoxes[i];
+            if (r.IsEmpty()) {
+                continue;
+            }
+            page = pdf_load_page(ctx, copy, i);
+            fz_rect box = {r.x, r.y, r.x + r.dx, r.y + r.dy};
+            pdf_set_page_box(ctx, page, FZ_CROP_BOX, box);
+            fz_drop_page(ctx, (fz_page*)page);
+            page = nullptr;
+        }
+        opts.do_compress = 1;
+        pdf_save_document(ctx, copy, CStrTemp(path), &opts);
+        ok = true;
+    }
+    fz_always(ctx) {
+        fz_drop_page(ctx, (fz_page*)page);
+        pdf_drop_document(ctx, copy);
+        fz_drop_stream(ctx, stm);
+        fz_drop_output(ctx, out);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("EngineMupdfSaveCropped: saving '%s' failed: '%s'\n", path, Str(fz_caught_message(ctx)));
+    }
+    return ok;
+}
+
 // caller must hold pagesLock (protects pages[] and pageInfo->images)
 // returns 1 or 0, or -1 while the page isn't fully loaded
 static int HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {

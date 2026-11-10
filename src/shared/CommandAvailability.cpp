@@ -730,7 +730,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (cmdId == CmdPdfShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
             cmdId == CmdTogglePageBoxes || cmdId == CmdToggleEditPDF || cmdId == CmdMergePDF ||
-            cmdId == CmdRunPDFScript) {
+            cmdId == CmdRunPDFScript || cmdId == CmdSaveTrimmedPagesAs) {
             return CommandVisibility::Hide;
         }
         // XPS, EPUB, ... (anything MuPDF opened) extract to a new PDF (#6509)
@@ -882,6 +882,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
     if (cmdId == CmdPasteAnnotation) {
         return HasCopiedAnnotation() ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
+    }
+
+    if (cmdId == CmdSaveTrimmedPagesAs) {
+        return ctx.hasTrimmedPages ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile) || (cmdId == CmdDiscardChanges)) {

@@ -2012,6 +2012,48 @@ void ToggleReadColumns(MainWindow* win) {
     }
 }
 
+// a PDF shown trimmed, by Trim Pages To Selection or Trim Empty Margins
+bool CanSaveTrimmedPages(MainWindow* win) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm || !EngineMupdfIsPdf(dm->GetEngine())) {
+        return false;
+    }
+    return !dm->GetUserCrop().IsEmpty() || dm->GetTrimEmptyMargins();
+}
+
+// "foo.pdf" => "foo trimmed.pdf", next to it
+TempStr TrimmedPagesPathTemp(Str srcPath) {
+    TempStr seed = IsOpenCachePath(srcPath) ? path::GetBaseNameTemp(srcPath) : str::DupTemp(srcPath);
+    return fmt("%s trimmed.pdf", path::GetPathNoExtTemp(seed));
+}
+
+// Save the PDF with each page's CropBox set to the part the view shows, so
+// every viewer shows it trimmed. Content outside stays in the file (#6520)
+bool SaveTrimmedPages(MainWindow* win, Str dstPath) {
+    if (!CanSaveTrimmedPages(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm->GetEngine();
+    RectF userCrop = dm->GetUserCrop();
+    Vec<RectF> boxes;
+    for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
+        RectF mb = engine->PageMediabox(pageNo);
+        RectF box;
+        if (userCrop.IsEmpty()) {
+            box = engine->PageContentBox(pageNo).Intersect(mb);
+        } else {
+            box = {mb.x + userCrop.x * mb.dx, mb.y + userCrop.y * mb.dy, userCrop.dx * mb.dx, userCrop.dy * mb.dy};
+        }
+        VecAppend(boxes, box);
+    }
+
+    bool ok = EngineMupdfSaveCropped(engine, dstPath, boxes);
+    Str msg = ok ? Str(fmt(Tr("Saved trimmed pages to '%s'").s, dstPath)) : Tr("Failed to save a file");
+    ShowTemporaryNotification(win, msg);
+    return ok;
+}
+
 void ShowWholePages(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {

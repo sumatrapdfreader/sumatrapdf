@@ -56,6 +56,8 @@ struct AppCommandCtx {
     bool supportsAnnots = false;
     bool hideAnnotations = false;
     bool hasUnsavedAnnotations = false;
+    // Trim Pages To Selection or Trim Empty Margins is on
+    bool hasTrimmedPages = false;
     // any redaction mark in the loaded pages, including marks that came with
     // the file
     bool hasRedactMarks = false;

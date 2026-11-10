@@ -277,6 +277,10 @@ MenuDef menuDefView[] = {
         CmdShowWholePages,
     },
     {
+        TrN("Save Trimmed Pages As..."),
+        CmdSaveTrimmedPagesAs,
+    },
+    {
         TrN("Read &Columns"),
         CmdToggleReadColumns,
     },

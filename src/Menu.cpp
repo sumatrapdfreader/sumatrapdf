@@ -877,6 +877,7 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
         MenuSetEnabled(win->menu, CmdToggleTrimEmptyMargins, true);
         MenuSetChecked(win->menu, CmdToggleMirror, dm->GetMirror());
         MenuSetEnabled(win->menu, CmdShowWholePages, !dm->GetUserCrop().IsEmpty());
+        MenuSetEnabled(win->menu, CmdSaveTrimmedPagesAs, !dm->GetUserCrop().IsEmpty() || dm->GetTrimEmptyMargins());
         MenuSetChecked(win->menu, CmdToggleReadColumns, dm->GetReadColumns());
         MenuSetEnabled(win->menu, CmdToggleColumnsWholePage, dm->GetReadColumns());
         MenuSetChecked(win->menu, CmdToggleColumnsWholePage, dm->ShowsColumnsWholePage());

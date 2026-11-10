@@ -182,6 +182,7 @@ EXPORTS
 	fz_new_image_from_compressed_buffer
 
 	pdf_save_document
+	pdf_set_page_box
 
 	pdf_redact_page
 

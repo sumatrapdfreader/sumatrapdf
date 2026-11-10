@@ -381,6 +381,7 @@ const CommandInfo gCommands[] = {
     {CmdCloseMissingTabs, "CmdCloseMissingTabs\0", StrL("Close Tabs of Missing Files")},
     {CmdViewAsHex, "CmdViewAsHex\0", StrL("View As Hex")},
     {CmdAIChatWithCustomAPI, "CmdAIChatWithCustomAPI\0", StrL("Custom AI chat...")},
+    {CmdSaveTrimmedPagesAs, "CmdSaveTrimmedPagesAs\0", StrL("Save Trimmed Pages As...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

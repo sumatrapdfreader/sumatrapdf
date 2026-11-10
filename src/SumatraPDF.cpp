@@ -5019,6 +5019,43 @@ static void InvokeInverseSearch(WindowTab* tab) {
     OnInverseSearch(win, pt.x, pt.y);
 }
 
+// ask where to save a copy of the PDF that keeps the view's trim (#6520)
+static void SaveTrimmedPagesAs(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !CanSaveTrimmedPages(win)) {
+        return;
+    }
+    WCHAR dstFileName[MAX_PATH + 1]{};
+    TempStr suggested = TrimmedPagesPathTemp(tab->filePath);
+    wstr::BufSet(WStr(dstFileName, dimof(dstFileName)), ToWStrTemp(suggested));
+
+    TempStr filter = fmt("%s\1*.pdf\1\1*.*\1", Tr("PDF documents"));
+    str::TransCharsInPlace(filter, StrL("\1"), StrL("\0"));
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = win->hwndFrame;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = CWStrTemp(filter);
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = L".pdf";
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
+        return;
+    }
+    // the dialog pumps messages: the tab may be gone
+    if (!IsMainWindowValid(win) || win->CurrentTab() != tab) {
+        return;
+    }
+    TempStr dstPath = ToUtf8Temp(dstFileName);
+    if (path::IsSame(dstPath, tab->filePath)) {
+        // the open file can't be replaced while it's read from
+        ShowTemporaryNotification(win, Tr("Failed to save a file"));
+        return;
+    }
+    SaveTrimmedPages(win, dstPath);
+}
+
 // returns true if saved successully
 bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     MainWindow* win = nullptr;
@@ -11154,6 +11191,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdShowWholePages:
             ShowWholePages(win);
+            break;
+
+        case CmdSaveTrimmedPagesAs:
+            SaveTrimmedPagesAs(win);
             break;
 
         case CmdToggleReadColumns:

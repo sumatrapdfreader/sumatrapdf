@@ -2714,6 +2714,36 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     return true;
 }
 
+static void OnTrimmedPathPicked(WindowTab* tab, SavePathArgs* args) {
+    MainWindow* win = nullptr;
+    EngineBase* engine = GetLiveTabEngine(tab, &win);
+    if (len(args->path) == 0 || !engine || !IsCurrentTab(win, tab)) {
+        return;
+    }
+    if (path::IsSame(args->path, tab->filePath)) {
+        // the open file can't be replaced while it's read from
+        ShowTemporaryNotification(win, Tr("Failed to save a file"));
+        return;
+    }
+    SaveTrimmedPages(win, args->path);
+}
+
+// ask where to save a copy of the PDF that keeps the view's trim (#6520)
+static void SaveTrimmedPagesAs(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !CanSaveTrimmedPages(win)) {
+        return;
+    }
+    auto* args = new SavePathArgs();
+    args->win = win;
+    args->title = str::Dup(Tr("Save As"));
+    args->initialPath = str::Dup(TrimmedPagesPathTemp(tab->filePath));
+    args->defExt = str::Dup(StrL(".pdf"));
+    args->filter = str::Dup(fmt("%s\1*.pdf\1\1*.*\1", Tr("PDF documents")));
+    args->onDone = MkFunc1(OnTrimmedPathPicked, tab);
+    ShowSavePathDialog(args);
+}
+
 // what the save-as dialog's answer is applied to
 struct SaveAnnotsCtx {
     WindowTab* tab = nullptr;
@@ -6004,6 +6034,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdShowWholePages:
             ShowWholePages(win);
+            break;
+
+        case CmdSaveTrimmedPagesAs:
+            SaveTrimmedPagesAs(win);
             break;
 
         case CmdToggleReadColumns:

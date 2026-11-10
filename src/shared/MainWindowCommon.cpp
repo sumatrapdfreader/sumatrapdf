@@ -513,6 +513,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.hasDrawnRectSelection = ctx.hasSelection && IsDrawnRectSelection(win);
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
+        ctx.hasTrimmedPages = !dm->GetUserCrop().IsEmpty() || dm->GetTrimEmptyMargins();
         ctx.hasRedactMarks = EngineHasRedactMarksNoWait(engine);
         ctx.hasUserRedactMarks = EngineHasUserRedactMarks(engine);
         ctx.canUndo = EngineCanUndoRedo(engine, UndoDir::Undo, EngineWait::NoWait);
