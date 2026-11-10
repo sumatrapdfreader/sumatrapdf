@@ -99653,6 +99653,10 @@ PopupMenu* PopupMenu::MaxH(float v) {
     maxH = v;
     return this;
 }
+PopupMenu* PopupMenu::MaxW(float v) {
+    maxW = v;
+    return this;
+}
 PopupMenu* PopupMenu::Scrollable(bool v) {
     scrollable = v;
     return this;
@@ -99741,7 +99745,7 @@ static float PopupMenuWidth(Ctx* cx, PopupMenu* menu) {
         }
     }
 
-    float maxW = Rems(cx, 31.25f);
+    float maxW = menu->maxW > 0 ? menu->maxW : Rems(cx, 31.25f);
     if (menuW > maxW) {
         menuW = maxW;
     }
@@ -100011,7 +100015,9 @@ El* PopupMenu::IntoEl() {
         if (it.element) {
             left->Child(it.element);
         } else {
-            left->Child(TextEl(a, it.label)->Font(14)->Fg(fg));
+
+            left->Child(
+                TextEl(a, it.label)->Font(14)->Fg(fg)->Wrap()->W(kFill));
         }
         row->Child(left);
 

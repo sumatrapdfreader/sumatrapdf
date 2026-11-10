@@ -4142,8 +4142,20 @@ void DocCanvasView::OnMenuAction(DocCanvasView* self, gp::Ctx* cx, const gp::Act
     gp::Notify(cx);
 }
 
+// a JavaScript menu item can be long (#6518): like a Win32 menu, the width
+// is capped by the window, not GPUI's 500px; longer labels wrap
+static float CanvasMenuMaxW(gp::Ctx* cx) {
+    constexpr float kMargin = 16;
+    float winW = cx->win ? gp::WindowSize(cx->win).dipW : 0;
+    return winW - 2 * kMargin;
+}
+
 static gpc::PopupMenu* CanvasPopupFromModel(gp::Ctx* cx, MenuModel* model, Str id) {
     gpc::PopupMenu* menu = gpc::PopupMenu::New(cx, GpuiDup(cx->a, id))->MinW(220);
+    float maxW = CanvasMenuMaxW(cx);
+    if (maxW > 0) {
+        menu->MaxW(maxW);
+    }
     if (!model) {
         return menu;
     }

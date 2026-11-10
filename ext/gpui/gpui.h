@@ -29056,6 +29056,8 @@ struct PopupMenu {
     float minW = 0;
 
     float maxH = 0;
+
+    float maxW = 0;
     bool scrollable = false;
     bool externalLinkIcon = true;
 
@@ -29089,6 +29091,7 @@ struct PopupMenu {
     PopupMenu* WithSize(UiSize s);
     PopupMenu* MinW(float v);
     PopupMenu* MaxH(float v);
+    PopupMenu* MaxW(float v);
     PopupMenu* Scrollable(bool v = true);
     PopupMenu* CheckSide(Side s);
     PopupMenu* ActionContext(const char* ctx);
