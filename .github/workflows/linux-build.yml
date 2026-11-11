@@ -1,0 +1,127 @@
+
+name: Build SumatraPDF Linux
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - linux-port
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Build Linux x86_64
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel \
+            git \
+            bun \
+            pkgconf \
+            libx11 \
+            cairo \
+            pango \
+            gdk-pixbuf2 \
+            glib2 \
+            openssl \
+            zstd
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Verify Linux build script
+        run: |
+          test -f cmd/ng-build.ts
+          bun --version
+          gcc --version
+
+      - name: Compile SumatraPDF
+        run: |
+          bun cmd/ng-build.ts -linux -rel
+
+      - name: Verify executable
+        run: |
+          test -x out/linux/rel/SumatraPDF
+          file out/linux/rel/SumatraPDF
+          ldd out/linux/rel/SumatraPDF
+
+      - name: Create portable tar.zst
+        run: |
+          mkdir -p dist
+
+          tar --zstd -cvf \
+            dist/SumatraPDF-linux-x86_64.tar.zst \
+            -C out/linux/rel \
+            SumatraPDF
+
+      - name: Prepare Arch package
+        run: |
+          mkdir -p packaging
+
+          cp out/linux/rel/SumatraPDF packaging/
+
+          cat > packaging/PKGBUILD <<'EOF'
+          pkgname=sumatrapdf-linux
+          pkgver=0.1.0
+          pkgrel=1
+          pkgdesc="SumatraPDF native Linux PDF reader"
+          arch=('x86_64')
+          url="https://github.com/sumatrapdfreader/sumatrapdf"
+          license=('custom')
+          depends=('glibc' 'gcc-libs' 'libx11'
+                   'cairo' 'pango' 'gdk-pixbuf2'
+                   'glib2' 'openssl')
+          source=('SumatraPDF')
+          sha256sums=('SKIP')
+          options=('!strip' '!debug')
+
+          package() {
+            install -Dm755 "$srcdir/SumatraPDF" \
+              "$pkgdir/usr/bin/sumatrapdf"
+
+            install -d "$pkgdir/usr/share/applications"
+
+            cat > "$pkgdir/usr/share/applications/sumatrapdf.desktop" <<'DESKTOP'
+          [Desktop Entry]
+          Type=Application
+          Name=SumatraPDF
+          Comment=Lightweight PDF reader
+          Exec=sumatrapdf %F
+          Icon=application-pdf
+          Terminal=false
+          Categories=Office;Viewer;
+          MimeType=application/pdf;
+          StartupNotify=true
+          DESKTOP
+          }
+          EOF
+
+      - name: Build Arch package
+        run: |
+          useradd -m builder
+          chown -R builder:builder packaging
+
+          runuser -u builder -- \
+            bash -c 'cd packaging && makepkg --noconfirm'
+
+          cp packaging/*.pkg.tar.zst dist/
+
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: SumatraPDF-Linux-x86_64
+          path: dist/*.tar.zst
+          if-no-files-found: error
+          retention-days: 30
