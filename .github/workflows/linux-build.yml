@@ -1,0 +1,233 @@
+
+name: Build SumatraPDF Linux (3.6.1 Base)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - linux-port
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Linux x86_64
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm --needed \
+            base-devel \
+            git \
+            bun \
+            pkgconf \
+            libx11 \
+            cairo \
+            pango \
+            gdk-pixbuf2 \
+            glib2 \
+            openssl \
+            zstd \
+            file \
+            shadow
+
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Verify SumatraPDF 3.6.1 ancestry
+        shell: bash
+        run: |
+          git config --global --add safe.directory \
+            "$GITHUB_WORKSPACE"
+
+          git fetch --no-tags \
+            https://github.com/sumatrapdfreader/sumatrapdf.git \
+            refs/tags/3.6.1rel:refs/tags/upstream-3.6.1rel
+
+          RELEASE_COMMIT=$(git rev-parse \
+            'refs/tags/upstream-3.6.1rel^{commit}')
+
+          echo "Official release: $RELEASE_COMMIT"
+          echo "Building commit: $(git rev-parse HEAD)"
+
+          if ! git merge-base --is-ancestor \
+            "$RELEASE_COMMIT" HEAD; then
+            echo "::error::Fork does not contain the official 3.6.1 release commit."
+            echo "Use a branch containing both the release history and Linux port."
+            exit 1
+          fi
+
+          echo "Verified: 3.6.1 is an ancestor."
+
+      - name: Check native Linux compatibility
+        shell: bash
+        run: |
+          test -f cmd/ng-build.ts || {
+            echo "::error::Missing cmd/ng-build.ts"
+            exit 1
+          }
+
+          test -d src/ng || {
+            echo "::error::Missing src/ng"
+            exit 1
+          }
+
+          echo "Native Linux source is present."
+          echo "This does not establish Windows 3.6.1 feature parity."
+
+      - name: Run Linux unit tests
+        run: |
+          bun cmd/ng-build.ts -linux -dbg test_util -run -- -for-ai
+
+      - name: Test document rendering
+        shell: bash
+        run: |
+          bun cmd/ng-build.ts -linux -dbg test_engines
+          mkdir -p out/parity-tests
+          engine=./out/linux/dbg/test_engines
+          for input in zlib.3.pdf test.epub test.cbz test.djvu test.png; do
+            "$engine" "docs/test/$input" "out/parity-tests/$input.png" 1
+            test -s "out/parity-tests/$input.png"
+          done
+
+      - name: Test Linux print-to-PDF
+        shell: bash
+        run: |
+          bun cmd/ng-build.ts -linux -dbg SumatraPDF
+          ./out/linux/dbg/SumatraPDF -for-testing -silent \
+            -print-to PDF \
+            -print-settings "1,landscape,dpi=72,output=out/parity-tests/printed.pdf" \
+            docs/test/zlib.3.pdf
+          ./out/linux/dbg/test_engines \
+            out/parity-tests/printed.pdf \
+            out/parity-tests/printed.png 1 \
+            | tee out/parity-tests/print-result.txt
+          grep -q 'pages: 1' out/parity-tests/print-result.txt
+
+      - name: Build SumatraPDF
+        run: |
+          bun cmd/ng-build.ts -linux -rel
+
+      - name: Verify executable
+        shell: bash
+        run: |
+          BIN=out/linux/rel/SumatraPDF
+
+          test -x "$BIN"
+
+          file "$BIN"
+          file "$BIN" | grep -q 'ELF 64-bit'
+
+          ldd "$BIN" | tee dependencies.txt
+
+          if grep -q 'not found' dependencies.txt; then
+            echo "::error::Missing runtime libraries"
+            exit 1
+          fi
+
+      - name: Create portable tar.zst
+        run: |
+          mkdir -p dist
+
+          tar --zstd -cf \
+            dist/SumatraPDF-ng-linux-x86_64.tar.zst \
+            -C out/linux/rel \
+            SumatraPDF
+
+      - name: Prepare Arch package
+        shell: bash
+        run: |
+          mkdir -p packaging
+
+          cp out/linux/rel/SumatraPDF packaging/
+
+          cp src/ng/linux/sumatrapdf.desktop packaging/
+          cp src/ng/linux/icons/sumatrapdf-*.png packaging/
+
+          cat > packaging/PKGBUILD <<'EOF'
+          pkgname=sumatrapdf-ng-local
+          pkgver=0.1.0
+          pkgrel=1
+          pkgdesc="Native Linux SumatraPDF ng"
+          arch=('x86_64')
+          url="https://github.com/sumatrapdfreader/sumatrapdf"
+          license=('GPL-3.0-only')
+          depends=('glibc' 'gcc-libs' 'libx11'
+                   'cairo' 'pango' 'gdk-pixbuf2'
+                   'glib2' 'openssl')
+          source=('SumatraPDF' 'sumatrapdf.desktop'
+                  'sumatrapdf-16.png' 'sumatrapdf-24.png'
+                  'sumatrapdf-32.png' 'sumatrapdf-48.png'
+                  'sumatrapdf-64.png' 'sumatrapdf-128.png'
+                  'sumatrapdf-256.png')
+          sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP'
+                      'SKIP' 'SKIP' 'SKIP' 'SKIP')
+          options=('!strip' '!debug')
+
+          package() {
+            install -Dm755 "$srcdir/SumatraPDF" \
+              "$pkgdir/usr/bin/sumatrapdf"
+
+            install -Dm644 "$srcdir/sumatrapdf.desktop" \
+              "$pkgdir/usr/share/applications/sumatrapdf.desktop"
+
+            for size in 16 24 32 48 64 128 256; do
+              install -Dm644 "$srcdir/sumatrapdf-$size.png" \
+                "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/sumatrapdf.png"
+            done
+          }
+          EOF
+
+          sed -i \
+            "s/^pkgrel=1$/pkgrel=${GITHUB_RUN_NUMBER}/" \
+            packaging/PKGBUILD
+
+      - name: Build Arch Linux package
+        shell: bash
+        run: |
+          useradd -m builder
+
+          chown -R builder:builder packaging
+
+          runuser -u builder -- \
+            bash -c 'cd "$1" && makepkg --noconfirm --nodeps' \
+            _ "$GITHUB_WORKSPACE/packaging"
+
+          cp packaging/*.pkg.tar.zst dist/
+
+      - name: Record build information
+        shell: bash
+        run: |
+          {
+            echo "Application: SumatraPDF ng"
+            echo "Platform: Linux x86_64"
+            echo "Official base tag: 3.6.1rel"
+            echo "Source commit: $(git rev-parse HEAD)"
+            echo "Source branch: ${GITHUB_REF_NAME}"
+            echo "GitHub run: ${GITHUB_RUN_NUMBER}"
+            echo ""
+            echo "Native version differs from Windows 3.6.1."
+            echo "Feature parity has not been verified."
+          } > dist/BUILD-INFO.txt
+
+          cp dependencies.txt dist/
+
+          echo 'Linux smoke tests: unit, rendering, print-to-PDF' >> dist/BUILD-INFO.txt
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: SumatraPDF-Linux-x86_64
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
