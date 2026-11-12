@@ -1,5 +1,5 @@
 
-name: Build SumatraPDF Linux
+name: Build SumatraPDF Linux (3.6.1 Base)
 
 on:
   workflow_dispatch:
@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  build-linux:
-    name: Build Linux x86_64
+  build:
+    name: Linux x86_64
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -34,94 +34,169 @@ jobs:
             gdk-pixbuf2 \
             glib2 \
             openssl \
-            zstd
+            zstd \
+            file \
+            shadow
 
-      - name: Checkout source
+      - name: Checkout fork
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
 
-      - name: Verify Linux build script
+      - name: Verify SumatraPDF 3.6.1 ancestry
+        shell: bash
         run: |
-          test -f cmd/ng-build.ts
-          bun --version
-          gcc --version
+          git config --global --add safe.directory \
+            "$GITHUB_WORKSPACE"
 
-      - name: Compile SumatraPDF
+          git fetch --no-tags \
+            https://github.com/sumatrapdfreader/sumatrapdf.git \
+            refs/tags/3.6.1rel:refs/tags/upstream-3.6.1rel
+
+          RELEASE_COMMIT=$(git rev-parse \
+            'refs/tags/upstream-3.6.1rel^{commit}')
+
+          echo "Official release: $RELEASE_COMMIT"
+          echo "Building commit: $(git rev-parse HEAD)"
+
+          if ! git merge-base --is-ancestor \
+            "$RELEASE_COMMIT" HEAD; then
+            echo "::error::Fork does not contain the official 3.6.1 release commit."
+            echo "Use a branch containing both the release history and Linux port."
+            exit 1
+          fi
+
+          echo "Verified: 3.6.1 is an ancestor."
+
+      - name: Check native Linux compatibility
+        shell: bash
+        run: |
+          test -f cmd/ng-build.ts || {
+            echo "::error::Missing cmd/ng-build.ts"
+            exit 1
+          }
+
+          test -d src/ng || {
+            echo "::error::Missing src/ng"
+            exit 1
+          }
+
+          echo "Native Linux source is present."
+          echo "This does not establish Windows 3.6.1 feature parity."
+
+      - name: Build SumatraPDF
         run: |
           bun cmd/ng-build.ts -linux -rel
 
       - name: Verify executable
+        shell: bash
         run: |
-          test -x out/linux/rel/SumatraPDF
-          file out/linux/rel/SumatraPDF
-          ldd out/linux/rel/SumatraPDF
+          BIN=out/linux/rel/SumatraPDF
+
+          test -x "$BIN"
+
+          file "$BIN"
+          file "$BIN" | grep -q 'ELF 64-bit'
+
+          ldd "$BIN" | tee dependencies.txt
+
+          if grep -q 'not found' dependencies.txt; then
+            echo "::error::Missing runtime libraries"
+            exit 1
+          fi
 
       - name: Create portable tar.zst
         run: |
           mkdir -p dist
 
-          tar --zstd -cvf \
-            dist/SumatraPDF-linux-x86_64.tar.zst \
+          tar --zstd -cf \
+            dist/SumatraPDF-ng-linux-x86_64.tar.zst \
             -C out/linux/rel \
             SumatraPDF
 
       - name: Prepare Arch package
+        shell: bash
         run: |
           mkdir -p packaging
 
           cp out/linux/rel/SumatraPDF packaging/
 
-          cat > packaging/PKGBUILD <<'EOF'
-          pkgname=sumatrapdf-linux
-          pkgver=0.1.0
-          pkgrel=1
-          pkgdesc="SumatraPDF native Linux PDF reader"
-          arch=('x86_64')
-          url="https://github.com/sumatrapdfreader/sumatrapdf"
-          license=('custom')
-          depends=('glibc' 'gcc-libs' 'libx11'
-                   'cairo' 'pango' 'gdk-pixbuf2'
-                   'glib2' 'openssl')
-          source=('SumatraPDF')
-          sha256sums=('SKIP')
-          options=('!strip' '!debug')
-
-          package() {
-            install -Dm755 "$srcdir/SumatraPDF" \
-              "$pkgdir/usr/bin/sumatrapdf"
-
-            install -d "$pkgdir/usr/share/applications"
-
-            cat > "$pkgdir/usr/share/applications/sumatrapdf.desktop" <<'DESKTOP'
+          cat > packaging/sumatrapdf.desktop <<'EOF'
           [Desktop Entry]
           Type=Application
           Name=SumatraPDF
-          Comment=Lightweight PDF reader
+          Comment=Native Linux document reader
           Exec=sumatrapdf %F
           Icon=application-pdf
           Terminal=false
           Categories=Office;Viewer;
           MimeType=application/pdf;
           StartupNotify=true
-          DESKTOP
+          EOF
+
+          cat > packaging/PKGBUILD <<'EOF'
+          pkgname=sumatrapdf-ng-local
+          pkgver=0.1.0
+          pkgrel=1
+          pkgdesc="Native Linux SumatraPDF ng"
+          arch=('x86_64')
+          url="https://github.com/sumatrapdfreader/sumatrapdf"
+          license=('GPL-3.0-only')
+          depends=('glibc' 'gcc-libs' 'libx11'
+                   'cairo' 'pango' 'gdk-pixbuf2'
+                   'glib2' 'openssl')
+          source=('SumatraPDF' 'sumatrapdf.desktop')
+          sha256sums=('SKIP' 'SKIP')
+          options=('!strip' '!debug')
+
+          package() {
+            install -Dm755 "$srcdir/SumatraPDF" \
+              "$pkgdir/usr/bin/sumatrapdf"
+
+            install -Dm644 "$srcdir/sumatrapdf.desktop" \
+              "$pkgdir/usr/share/applications/sumatrapdf.desktop"
           }
           EOF
 
-      - name: Build Arch package
+          sed -i \
+            "s/^pkgrel=1$/pkgrel=${GITHUB_RUN_NUMBER}/" \
+            packaging/PKGBUILD
+
+      - name: Build Arch Linux package
+        shell: bash
         run: |
           useradd -m builder
+
           chown -R builder:builder packaging
 
           runuser -u builder -- \
-            bash -c 'cd packaging && makepkg --noconfirm'
+            bash -c 'cd "$1" && makepkg --noconfirm --nodeps' \
+            _ "$GITHUB_WORKSPACE/packaging"
 
           cp packaging/*.pkg.tar.zst dist/
 
-      - name: Upload Linux packages
+      - name: Record build information
+        shell: bash
+        run: |
+          {
+            echo "Application: SumatraPDF ng"
+            echo "Platform: Linux x86_64"
+            echo "Official base tag: 3.6.1rel"
+            echo "Source commit: $(git rev-parse HEAD)"
+            echo "Source branch: ${GITHUB_REF_NAME}"
+            echo "GitHub run: ${GITHUB_RUN_NUMBER}"
+            echo ""
+            echo "Native version differs from Windows 3.6.1."
+            echo "Feature parity has not been verified."
+          } > dist/BUILD-INFO.txt
+
+          cp dependencies.txt dist/
+
+      - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: SumatraPDF-Linux-x86_64
-          path: dist/*.tar.zst
+          path: dist/
           if-no-files-found: error
           retention-days: 30
