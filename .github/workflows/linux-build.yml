@@ -85,6 +85,35 @@ jobs:
           echo "Native Linux source is present."
           echo "This does not establish Windows 3.6.1 feature parity."
 
+      - name: Run Linux unit tests
+        run: |
+          bun cmd/ng-build.ts -linux -dbg test_util -run -- -for-ai
+
+      - name: Test document rendering
+        shell: bash
+        run: |
+          bun cmd/ng-build.ts -linux -dbg test_engines
+          mkdir -p out/parity-tests
+          engine=./out/linux/dbg/test_engines
+          for input in zlib.3.pdf test.epub test.cbz test.djvu test.png; do
+            "$engine" "docs/test/$input" "out/parity-tests/$input.png" 1
+            test -s "out/parity-tests/$input.png"
+          done
+
+      - name: Test Linux print-to-PDF
+        shell: bash
+        run: |
+          bun cmd/ng-build.ts -linux -dbg SumatraPDF
+          ./out/linux/dbg/SumatraPDF -for-testing -silent \
+            -print-to PDF \
+            -print-settings "1,landscape,dpi=72,output=out/parity-tests/printed.pdf" \
+            docs/test/zlib.3.pdf
+          ./out/linux/dbg/test_engines \
+            out/parity-tests/printed.pdf \
+            out/parity-tests/printed.png 1 \
+            | tee out/parity-tests/print-result.txt
+          grep -q 'pages: 1' out/parity-tests/print-result.txt
+
       - name: Build SumatraPDF
         run: |
           bun cmd/ng-build.ts -linux -rel
@@ -122,18 +151,8 @@ jobs:
 
           cp out/linux/rel/SumatraPDF packaging/
 
-          cat > packaging/sumatrapdf.desktop <<'EOF'
-          [Desktop Entry]
-          Type=Application
-          Name=SumatraPDF
-          Comment=Native Linux document reader
-          Exec=sumatrapdf %F
-          Icon=application-pdf
-          Terminal=false
-          Categories=Office;Viewer;
-          MimeType=application/pdf;
-          StartupNotify=true
-          EOF
+          cp src/ng/linux/sumatrapdf.desktop packaging/
+          cp src/ng/linux/icons/sumatrapdf-*.png packaging/
 
           cat > packaging/PKGBUILD <<'EOF'
           pkgname=sumatrapdf-ng-local
@@ -146,8 +165,13 @@ jobs:
           depends=('glibc' 'gcc-libs' 'libx11'
                    'cairo' 'pango' 'gdk-pixbuf2'
                    'glib2' 'openssl')
-          source=('SumatraPDF' 'sumatrapdf.desktop')
-          sha256sums=('SKIP' 'SKIP')
+          source=('SumatraPDF' 'sumatrapdf.desktop'
+                  'sumatrapdf-16.png' 'sumatrapdf-24.png'
+                  'sumatrapdf-32.png' 'sumatrapdf-48.png'
+                  'sumatrapdf-64.png' 'sumatrapdf-128.png'
+                  'sumatrapdf-256.png')
+          sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP' 'SKIP'
+                      'SKIP' 'SKIP' 'SKIP' 'SKIP')
           options=('!strip' '!debug')
 
           package() {
@@ -156,6 +180,11 @@ jobs:
 
             install -Dm644 "$srcdir/sumatrapdf.desktop" \
               "$pkgdir/usr/share/applications/sumatrapdf.desktop"
+
+            for size in 16 24 32 48 64 128 256; do
+              install -Dm644 "$srcdir/sumatrapdf-$size.png" \
+                "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/sumatrapdf.png"
+            done
           }
           EOF
 
@@ -192,6 +221,8 @@ jobs:
           } > dist/BUILD-INFO.txt
 
           cp dependencies.txt dist/
+
+          echo 'Linux smoke tests: unit, rendering, print-to-PDF' >> dist/BUILD-INFO.txt
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
