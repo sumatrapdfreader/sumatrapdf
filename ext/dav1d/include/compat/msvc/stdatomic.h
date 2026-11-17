@@ -32,7 +32,14 @@
 #pragma warning(push)
 #pragma warning(disable:4067)    /* newline for __has_include_next */
 
-#if defined(__clang__) && __has_include_next(<stdatomic.h>)
+/* MSVC 14.52+ rejects __has_include_next() in a #if even when short-circuited */
+#ifdef __clang__
+#define DAV1D_HAS_CLANG_STDATOMIC __has_include_next(<stdatomic.h>)
+#else
+#define DAV1D_HAS_CLANG_STDATOMIC 0
+#endif
+
+#if DAV1D_HAS_CLANG_STDATOMIC
    /* use the clang stdatomic.h with clang-cl*/
 #  include_next <stdatomic.h>
 #else /* ! stdatomic.h */
