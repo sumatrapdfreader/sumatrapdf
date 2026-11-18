@@ -432,6 +432,11 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     int blTol = (lineTol / 2 > 3) ? lineTol / 2 : 3;
     int cursorBL = coords[cursorIdx].y + coords[cursorIdx].dy;
     int cursorX = coords[cursorIdx].x;
+    // A watermark letter is several times the line height, and its rotated
+    // bbox can put its baseline within blTol of this line, splicing it into
+    // the list. Keep only glyphs of comparable height.
+    int cursorH = coords[cursorIdx].dy;
+    int maxGlyphH = cursorH > 0 ? (cursorH * 2) + 4 : 24;
 
     // Group by baseline and sort by x; keep the run overlapping [refLo, refHi].
     // Column gutters and scattered watermark baselines split unrelated text.
@@ -440,6 +445,9 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     auto buildSegment = [&](int targetBL, int refLo, int refHi, int (&out)[kSegCap]) -> int {
         int cnt = 0;
         for (int i = 0; i < textLen && cnt < kSegCap; i++) {
+            if (coords[i].dy > maxGlyphH) {
+                continue;
+            }
             if (abs((coords[i].y + coords[i].dy) - targetBL) <= blTol) {
                 out[cnt++] = i;
             }
@@ -486,6 +494,9 @@ bool DetectNumericCitationInPageText(WStr text, const Rect* coords, int textLen,
     // Adjacent lines must overlap the cursor line's x-range to stay in its column.
     int prevBL = INT_MIN, nextBL = INT_MAX;
     for (int i = 0; i < textLen; i++) {
+        if (coords[i].dy > maxGlyphH) {
+            continue;
+        }
         int gx = coords[i].x;
         int gxr = gx + coords[i].dx;
         if (gxr < curLo - kColGap || gx > curHi + kColGap) {
