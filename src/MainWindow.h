@@ -531,6 +531,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     HwndSlot* canvasSlot = nullptr;
     HwndSlot* aiChatSlot = nullptr;
     HwndSlot* tabsSlot = nullptr;
+    // the same tab strip as a column left of the sidebar (VerticalTabs)
+    HwndSlot* tabsVSlot = nullptr;
     HwndSlot* menuSlot = nullptr;
     HwndSlot* toolbarTopSlot = nullptr;
     HwndSlot* toolbarBottomSlot = nullptr;
@@ -600,6 +602,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
             WindowMode windowMode = WindowMode::Normal;
             bool tabsInTitlebar = false;
             bool tabsVisible = false;
+            bool tabsVertical = false;
+            int tabsVerticalDx = 0;
             bool isToolbarVisible = false;
             bool isToolbarOverlay = false;
             bool sidebarTopVisible = false;

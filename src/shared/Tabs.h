@@ -12,6 +12,19 @@ void UpdateTabWidth(MainWindow*);
 void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
 void SetTabInfoColor(WindowTab*);
 void UpdateTabIsError(WindowTab*);
+
+// vertical tabs: the strip is a column left of the sidebar (VerticalTabs setting)
+bool UseVerticalTabs();
+int VerticalTabsDx();
+void ToggleVerticalTabs(MainWindow*);
+
+// tab groups
+void TabGroupNewFromTab(MainWindow*, WindowTab*);
+void TabGroupRemoveTab(MainWindow*, WindowTab*);
+void TabGroupToggleCollapsed(MainWindow*, WindowTab*);
+void TabGroupRenameOfTab(MainWindow*, WindowTab*);
+void TabGroupSaveToState(WindowTab*, TabState*);
+void TabGroupsRestore(MainWindow*, SessionData*);
 #endif
 
 void SaveCurrentWindowTab(MainWindow*);

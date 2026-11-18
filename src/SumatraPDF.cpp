@@ -2662,6 +2662,7 @@ static void CreateFrameLayout(MainWindow* win) {
     win->aiChatSlot = new HwndSlot();
     win->tabsSlot = new HwndSlot();
     win->tabsSlot->mapRtlX = true;
+    win->tabsVSlot = new HwndSlot();
     win->menuSlot = new HwndSlot();
     win->menuSlot->mapRtlX = true;
     win->toolbarTopSlot = new HwndSlot();
@@ -2690,6 +2691,7 @@ static void CreateFrameLayout(MainWindow* win) {
 
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::Stretch;
+    row->AddChild(win->tabsVSlot);
     row->AddChild(sidebar);
     row->AddChild(win->sidebarSplitter);
     row->AddChild(content, 1);
@@ -6884,7 +6886,8 @@ using UILayout = MainWindow::UIState::Layout;
 
 static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
     return s1->rc == s2->rc && s1->windowMode == s2->windowMode && s1->tabsInTitlebar == s2->tabsInTitlebar &&
-           s1->tabsVisible == s2->tabsVisible && s1->isToolbarVisible == s2->isToolbarVisible &&
+           s1->tabsVisible == s2->tabsVisible && s1->tabsVertical == s2->tabsVertical &&
+           s1->tabsVerticalDx == s2->tabsVerticalDx && s1->isToolbarVisible == s2->isToolbarVisible &&
            s1->isToolbarOverlay == s2->isToolbarOverlay && s1->sidebarTopVisible == s2->sidebarTopVisible &&
            s1->sidebarBottomVisible == s2->sidebarBottomVisible &&
            s1->sidebarMiddleVisible == s2->sidebarMiddleVisible && s1->favoritesAsTab == s2->favoritesAsTab &&
@@ -7055,6 +7058,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.windowMode = win->windowMode;
     curState.tabsInTitlebar = win->tabsInTitlebar;
     curState.tabsVisible = win->tabsVisible;
+    curState.tabsVertical = UseVerticalTabs();
+    curState.tabsVerticalDx = VerticalTabsDx();
     curState.isToolbarVisible = win->isToolbarVisible;
     curState.isToolbarOverlay = win->isToolbarOverlay;
     curState.sidebarTopVisible = win->uiState.sidebarTopVisible;
@@ -7204,7 +7209,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool aiChatVisible = !favAsTab && win->uiState.aiChatVisible && win->hwndAiChatBox;
     bool showCaption = !win->IsFullScreenOrPresentation() && win->tabsInTitlebar && gSettings->showCaption;
     bool showingMenuBar = IsShowingMenuBarRebar(win);
-    bool showTabsBar = !win->IsFullScreenOrPresentation() && !win->tabsInTitlebar && win->tabsVisible;
+    bool vertTabs = UseVerticalTabs();
+    // the vertical strip takes the tabs out of the caption and the horizontal bar
+    bool showTabsV = !win->IsFullScreenOrPresentation() && vertTabs && win->tabsVisible;
+    bool showTabsBar = !win->IsFullScreenOrPresentation() && !win->tabsInTitlebar && win->tabsVisible && !vertTabs;
+    if (win->tabsCtrl) {
+        win->tabsCtrl->SetVertical(vertTabs);
+    }
     bool showMenuRebar = showingMenuBar && (!win->tabsInTitlebar || win->IsFullScreen());
     bool showToolbar = win->isToolbarVisible;
     bool toolbarBottom = showToolbar && ToolbarAtBottom();
@@ -7222,6 +7233,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     SetVis(win->captionLayout, showCaption);
     SetVis(win->tabsSlot, showTabsBar);
+    SetVis(win->tabsVSlot, showTabsV);
+    win->tabsVSlot->dx = VerticalTabsDx();
     SetVis(win->menuSlot, showMenuRebar);
     SetVis(win->toolbarTopSlot, showToolbar && !toolbarBottom);
     SetVis(win->toolbarBottomSlot, showToolbar && toolbarBottom);
@@ -7350,12 +7363,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool capTwoRow = showCaption && showingMenuBar;
     bool capHasFileTabs = showCaption && WinHasFileTabs(win);
     BindSlot(win->tabsSlot, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, updateToolbars && showTabsBar);
+    BindSlot(win->tabsVSlot, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, updateToolbars && showTabsV);
     BindSlot(win->menuSlot, win->hwndMenuReBar, &dh, updateToolbars && showMenuRebar);
     BindSlot(win->capMenuSlot, win->hwndMenuReBar, &dh, updateToolbars && capTwoRow);
     BindSlot(win->capTabsRow1, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh,
-             updateToolbars && showCaption && !capTwoRow);
+             updateToolbars && showCaption && !capTwoRow && !vertTabs);
     BindSlot(win->capTabsRow2, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh,
-             updateToolbars && capTwoRow && capHasFileTabs);
+             updateToolbars && capTwoRow && capHasFileTabs && !vertTabs);
     BindSlot(win->toolbarTopSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && !toolbarBottom);
     BindSlot(win->toolbarBottomSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && toolbarBottom);
     BindSlot(win->sigBarSlot, hwndSigBar, &dh, showSigBar);
@@ -7400,7 +7414,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     HwndSlot* chromeSlots[] = {
-        win->tabsSlot,         win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot, win->capMenuSlot,
+        win->tabsSlot,         win->tabsVSlot,   win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot, win->capMenuSlot,
         win->capTabsRow1,      win->capTabsRow2, win->sidebarTopSlot, win->sidebarMiddleSlot, win->sidebarBottomSlot,
         win->favoritesTabSlot, win->canvasSlot,  win->aiChatSlot,     win->sigBarSlot,        win->pageInfoBarSlot};
     for (HwndSlot* s : chromeSlots) {
@@ -11197,6 +11211,26 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SaveTrimmedPagesAs(win);
             break;
 
+        case CmdToggleVerticalTabs:
+            ToggleVerticalTabs(win);
+            break;
+
+        case CmdTabGroupNew:
+            TabGroupNewFromTab(win, win->CurrentTab());
+            break;
+
+        case CmdTabGroupRemove:
+            TabGroupRemoveTab(win, win->CurrentTab());
+            break;
+
+        case CmdTabGroupToggle:
+            TabGroupToggleCollapsed(win, win->CurrentTab());
+            break;
+
+        case CmdTabGroupRename:
+            TabGroupRenameOfTab(win, win->CurrentTab());
+            break;
+
         case CmdToggleReadColumns:
             ToggleReadColumns(win);
             break;
@@ -12906,8 +12940,10 @@ void RelayoutCaption(MainWindow* win) {
     bool hasFileTabs = WinHasFileTabs(win);
     DeferWinPosHelper dh;
     BindSlot(win->capMenuSlot, win->hwndMenuReBar, &dh, twoRow);
-    BindSlot(win->capTabsRow1, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, !twoRow);
-    BindSlot(win->capTabsRow2, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, twoRow && hasFileTabs);
+    bool vertTabs = UseVerticalTabs();
+    BindSlot(win->capTabsRow1, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh, !twoRow && !vertTabs);
+    BindSlot(win->capTabsRow2, win->tabsCtrl ? win->tabsCtrl->hwnd : nullptr, &dh,
+             twoRow && hasFileTabs && !vertTabs);
     int dy = win->captionLayout->MinIntrinsicHeight(rc.dx);
     if (dy <= 0) {
         dy = rc.dy;
@@ -17380,6 +17416,7 @@ ContinueOpenWindow:
                 }
                 TabsSelect(win, selectIdx);
             }
+            TabGroupsRestore(win, data);
             if (gSettings->lazyLoading) {
                 // trigger loading of the document
                 ReloadDocument(win, false);

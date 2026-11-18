@@ -321,6 +321,507 @@ void CloseAllTabs(MainWindow* win) {
     CloseCollectedTabs(win, toClose);
 }
 
+//--- vertical tabs
+
+bool UseVerticalTabs() {
+    return gSettings && gSettings->verticalTabs && SettingsUseTabs();
+}
+
+// physical pixels; the setting is in logical (96 DPI) units like TabWidth
+int VerticalTabsDx() {
+    return DpiScale(limitValue(gSettings->verticalTabsWidth, 120, 600));
+}
+
+void ToggleVerticalTabs(MainWindow* win) {
+    gSettings->verticalTabs = !gSettings->verticalTabs;
+    for (MainWindow* w : gWindows) {
+        if (w->tabsCtrl) {
+            w->tabsCtrl->SetVertical(UseVerticalTabs());
+        }
+        ScheduleUiUpdate(w, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
+    }
+    ScheduleSaveSettings();
+    (void)win;
+}
+
+//--- tab groups
+
+struct TabGroupColor {
+    const char* name;
+    Color color;
+};
+
+// Chrome's palette
+static const TabGroupColor kTabGroupColors[] = {
+    {"Blue", MkRgb(0x1a, 0x73, 0xe8)},   {"Red", MkRgb(0xd9, 0x30, 0x25)},    {"Yellow", MkRgb(0xf2, 0xa6, 0x00)},
+    {"Green", MkRgb(0x18, 0x80, 0x38)},  {"Pink", MkRgb(0xd0, 0x18, 0x84)},   {"Purple", MkRgb(0x8e, 0x44, 0xd8)},
+    {"Cyan", MkRgb(0x00, 0x8b, 0x9a)},   {"Orange", MkRgb(0xe8, 0x71, 0x0a)}, {"Grey", MkRgb(0x5f, 0x63, 0x68)},
+};
+constexpr int kNTabGroupColors = dimofi(kTabGroupColors);
+
+// the first color no group has, so that groups next to each other look different
+static Color NextGroupColor(TabsCtrl* tabs) {
+    for (int i = 0; i < kNTabGroupColors; i++) {
+        bool used = false;
+        for (TabGroupInfo* g : tabs->groups) {
+            if (g->color == kTabGroupColors[i].color) {
+                used = true;
+                break;
+            }
+        }
+        if (!used) {
+            return kTabGroupColors[i].color;
+        }
+    }
+    return kTabGroupColors[len(tabs->groups) % kNTabGroupColors].color;
+}
+
+// group names are what a restored session finds its groups by, so they are unique
+static TempStr UniqueGroupNameTemp(TabsCtrl* tabs, Str wanted, int exceptGroupId) {
+    TempStr name = str::DupTemp(wanted);
+    for (int n = 2; n < 1000; n++) {
+        TabGroupInfo* g = tabs->FindGroupByName(name);
+        if (!g || g->id == exceptGroupId) {
+            return name;
+        }
+        name = fmt("%s %d", wanted, n);
+    }
+    return name;
+}
+
+static TempStr NewGroupNameTemp(TabsCtrl* tabs) {
+    for (int n = 1; n < 1000; n++) {
+        TempStr name = fmt("Group %d", n);
+        if (!tabs->FindGroupByName(name)) {
+            return name;
+        }
+    }
+    return str::DupTemp(StrL("Group"));
+}
+
+void TabGroupNewFromTab(MainWindow* win, WindowTab* tab) {
+    if (!win || !win->tabsCtrl || !tab || tab->IsAboutTab()) {
+        return;
+    }
+    TabsCtrl* tabs = win->tabsCtrl;
+    int idx = win->GetTabIdx(tab);
+    if (idx < 0) {
+        return;
+    }
+    int gid = tabs->NewGroup(NewGroupNameTemp(tabs), NextGroupColor(tabs));
+    tabs->SetTabGroup(idx, gid);
+    // nothing joined (a tab that can't be grouped): don't keep an empty group
+    tabs->FixGroups();
+    tabs->RebuildTabCtrls();
+    tabs->LayoutTabs();
+    ScheduleSaveSettings();
+}
+
+void TabGroupRemoveTab(MainWindow* win, WindowTab* tab) {
+    if (!win || !win->tabsCtrl || !tab) {
+        return;
+    }
+    win->tabsCtrl->SetTabGroup(win->GetTabIdx(tab), 0);
+    ScheduleSaveSettings();
+}
+
+void TabGroupToggleCollapsed(MainWindow* win, WindowTab* tab) {
+    if (!win || !win->tabsCtrl || !tab) {
+        return;
+    }
+    TabGroupInfo* g = win->tabsCtrl->GroupOfTab(win->GetTabIdx(tab));
+    if (g) {
+        win->tabsCtrl->ToggleGroupCollapsed(g->id);
+    }
+}
+
+//--- a minimal modal "type a name" window
+
+struct PromptState {
+    HWND hwndEdit = nullptr;
+    bool done = false;
+    bool ok = false;
+};
+
+constexpr const WCHAR* kPromptClassName = L"SumatraTabGroupPrompt";
+constexpr int kPromptEditId = 100;
+
+static LRESULT CALLBACK PromptWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    PromptState* st = (PromptState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    switch (msg) {
+        case WM_NCCREATE: {
+            CREATESTRUCT* cs = (CREATESTRUCT*)lp;
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+            break;
+        }
+        case WM_COMMAND:
+            if (!st) {
+                break;
+            }
+            if (LOWORD(wp) == IDOK) {
+                st->ok = true;
+                st->done = true;
+            } else if (LOWORD(wp) == IDCANCEL) {
+                st->done = true;
+            }
+            return 0;
+        case WM_CLOSE:
+            if (st) {
+                st->done = true;
+            }
+            return 0;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+// returns the text the user typed, or {} when they cancelled
+static TempStr PromptForTextTemp(HWND hwndParent, Str title, Str initial) {
+    static ATOM atom = 0;
+    if (!atom) {
+        WNDCLASSEXW wc = {};
+        wc.cbSize = sizeof(wc);
+        wc.lpfnWndProc = PromptWndProc;
+        wc.hInstance = GetInstance();
+        wc.hCursor = GetCachedCursor(IDC_ARROW);
+        wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+        wc.lpszClassName = kPromptClassName;
+        atom = RegisterClassExW(&wc);
+    }
+    PromptState st;
+    int dx = DpiScale(340);
+    int dy = DpiScale(118);
+    DWORD style = WS_POPUP | WS_CAPTION | WS_SYSMENU;
+    HWND hwnd = CreateWindowExW(WS_EX_DLGMODALFRAME, kPromptClassName, CWStrTemp(title), style, CW_USEDEFAULT,
+                                CW_USEDEFAULT, dx, dy, hwndParent, nullptr, GetInstance(), &st);
+    if (!hwnd) {
+        return {};
+    }
+    HFONT font = GetAppFont() ? GetAppFont()->GetHFont() : nullptr;
+    int pad = DpiScale(12);
+    RECT rcClient;
+    GetClientRect(hwnd, &rcClient);
+    int cw = rcClient.right - rcClient.left;
+    int editDy = DpiScale(24);
+    int btnDx = DpiScale(80);
+    int btnDy = DpiScale(26);
+    st.hwndEdit = CreateWindowExW(WS_EX_CLIENTEDGE, L"EDIT", CWStrTemp(initial),
+                                  WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, pad, pad, cw - 2 * pad, editDy,
+                                  hwnd, (HMENU)(INT_PTR)kPromptEditId, GetInstance(), nullptr);
+    int btnY = pad + editDy + pad;
+    HWND ok = CreateWindowExW(0, L"BUTTON", L"OK", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON,
+                              cw - 2 * btnDx - pad - DpiScale(8), btnY, btnDx, btnDy, hwnd, (HMENU)(INT_PTR)IDOK,
+                              GetInstance(), nullptr);
+    HWND cancel = CreateWindowExW(0, L"BUTTON", L"Cancel", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+                                  cw - btnDx - pad, btnY, btnDx, btnDy, hwnd, (HMENU)(INT_PTR)IDCANCEL, GetInstance(),
+                                  nullptr);
+    if (font) {
+        HwndSetFont(st.hwndEdit, font);
+        HwndSetFont(ok, font);
+        HwndSetFont(cancel, font);
+    }
+    HwndCenterDialog(hwnd, hwndParent);
+    if (hwndParent) {
+        EnableWindow(hwndParent, FALSE);
+    }
+    ShowWindow(hwnd, SW_SHOW);
+    SetFocus(st.hwndEdit);
+    SendMessageW(st.hwndEdit, EM_SETSEL, 0, -1);
+
+    MSG m;
+    while (!st.done && GetMessageW(&m, nullptr, 0, 0) > 0) {
+        if (m.message == WM_KEYDOWN && (m.wParam == VK_RETURN || m.wParam == VK_ESCAPE) &&
+            (m.hwnd == st.hwndEdit || m.hwnd == hwnd)) {
+            st.ok = m.wParam == VK_RETURN;
+            st.done = true;
+            break;
+        }
+        if (IsDialogMessageW(hwnd, &m)) {
+            continue;
+        }
+        TranslateMessage(&m);
+        DispatchMessageW(&m);
+    }
+    TempStr res = {};
+    if (st.ok) {
+        res = str::DupTemp(HwndGetTextTemp(st.hwndEdit));
+    }
+    if (hwndParent) {
+        EnableWindow(hwndParent, TRUE);
+    }
+    DestroyWindow(hwnd);
+    if (hwndParent) {
+        SetForegroundWindow(hwndParent);
+    }
+    return res;
+}
+
+static void TabGroupRename(MainWindow* win, int groupId) {
+    TabsCtrl* tabs = win->tabsCtrl;
+    TabGroupInfo* g = tabs->FindGroup(groupId);
+    if (!g) {
+        return;
+    }
+    TempStr cur = str::DupTemp(g->name);
+    TempStr name = PromptForTextTemp(win->hwndFrame, StrL("Rename Tab Group"), cur);
+    if (!IsMainWindowValidAndNotClosing(win) || !win->tabsCtrl->FindGroup(groupId)) {
+        return;
+    }
+    // trim, and a group needs a name to be found again when a session is restored
+    name = str::DupTemp(name);
+    while (len(name) > 0 && (name.s[0] == ' ' || name.s[0] == '\t')) {
+        name = Str(name.s + 1, name.len - 1);
+    }
+    while (len(name) > 0 && (name.s[len(name) - 1] == ' ' || name.s[len(name) - 1] == '\t')) {
+        name = Str(name.s, name.len - 1);
+    }
+    if (len(name) == 0) {
+        return;
+    }
+    name = UniqueGroupNameTemp(tabs, name, groupId);
+    tabs->SetGroupNameAndColor(groupId, name, g->color);
+    ScheduleSaveSettings();
+}
+
+void TabGroupRenameOfTab(MainWindow* win, WindowTab* tab) {
+    if (!win || !win->tabsCtrl || !tab) {
+        return;
+    }
+    TabGroupInfo* g = win->tabsCtrl->GroupOfTab(win->GetTabIdx(tab));
+    if (g) {
+        TabGroupRename(win, g->id);
+    }
+}
+
+// a tab and its group in the right-click menus
+enum {
+    kMenuGrpNew = 41000,
+    kMenuGrpRemove,
+    kMenuGrpRename,
+    kMenuGrpCollapse,
+    kMenuGrpUngroup,
+    kMenuGrpCloseAll,
+    kMenuVerticalTabs,
+    kMenuGrpAddBase = 41100,   // + index in TabsCtrl::groups
+    kMenuGrpColorBase = 41300, // + index in kTabGroupColors
+};
+
+static void AppendGroupMenuItems(HMENU popup, TabsCtrl* tabs, bool forTab, TabGroupInfo* group) {
+    AppendMenuW(popup, MF_SEPARATOR, 0, nullptr);
+    if (forTab) {
+        AppendMenuW(popup, MF_STRING, kMenuGrpNew, L"Add Tab to New Group");
+        HMENU sub = CreatePopupMenu();
+        int nGroups = len(tabs->groups);
+        int nAdded = 0;
+        for (int i = 0; i < nGroups; i++) {
+            TabGroupInfo* g = tabs->groups[i];
+            if (g == group) {
+                continue;
+            }
+            AppendMenuW(sub, MF_STRING, kMenuGrpAddBase + i, CWStrTemp(g->name));
+            nAdded++;
+        }
+        if (nAdded > 0) {
+            AppendMenuW(popup, MF_POPUP, (UINT_PTR)sub, L"Add Tab to Group");
+        } else {
+            DestroyMenu(sub);
+        }
+        if (group) {
+            AppendMenuW(popup, MF_STRING, kMenuGrpRemove, L"Remove from Group");
+        }
+    }
+    if (group) {
+        AppendMenuW(popup, MF_SEPARATOR, 0, nullptr);
+        AppendMenuW(popup, MF_STRING, kMenuGrpRename, L"Rename Group...");
+        AppendMenuW(popup, MF_STRING, kMenuGrpCollapse, group->collapsed ? L"Expand Group" : L"Collapse Group");
+        HMENU colors = CreatePopupMenu();
+        for (int i = 0; i < kNTabGroupColors; i++) {
+            UINT flags = MF_STRING | (kTabGroupColors[i].color == group->color ? MF_CHECKED : 0);
+            AppendMenuW(colors, flags, kMenuGrpColorBase + i, CWStrTemp(Str(kTabGroupColors[i].name)));
+        }
+        AppendMenuW(popup, MF_POPUP, (UINT_PTR)colors, L"Group Color");
+        AppendMenuW(popup, MF_STRING, kMenuGrpUngroup, L"Ungroup");
+        AppendMenuW(popup, MF_STRING, kMenuGrpCloseAll, L"Close Group");
+    }
+}
+
+static void AppendVerticalTabsItem(HMENU popup) {
+    AppendMenuW(popup, MF_SEPARATOR, 0, nullptr);
+    UINT flags = MF_STRING | (UseVerticalTabs() ? MF_CHECKED : 0);
+    AppendMenuW(popup, flags, kMenuVerticalTabs, L"Vertical Tabs");
+}
+
+// Runs the group / vertical tabs commands of the menus built above.
+// `tab` is the tab that was right-clicked (null for a group's chip or the bar)
+static bool HandleGroupMenuCmd(MainWindow* win, WindowTab* tab, int groupId, int cmdId) {
+    TabsCtrl* tabs = win->tabsCtrl;
+    if (cmdId == kMenuVerticalTabs) {
+        ToggleVerticalTabs(win);
+        return true;
+    }
+    if (cmdId >= kMenuGrpAddBase && cmdId < kMenuGrpAddBase + 200) {
+        int i = cmdId - kMenuGrpAddBase;
+        if (tab && i < len(tabs->groups)) {
+            tabs->SetTabGroup(win->GetTabIdx(tab), tabs->groups[i]->id);
+            ScheduleSaveSettings();
+        }
+        return true;
+    }
+    if (cmdId >= kMenuGrpColorBase && cmdId < kMenuGrpColorBase + kNTabGroupColors) {
+        TabGroupInfo* g = tabs->FindGroup(groupId);
+        if (g) {
+            tabs->SetGroupNameAndColor(groupId, g->name, kTabGroupColors[cmdId - kMenuGrpColorBase].color);
+            ScheduleSaveSettings();
+        }
+        return true;
+    }
+    switch (cmdId) {
+        case kMenuGrpNew:
+            TabGroupNewFromTab(win, tab);
+            return true;
+        case kMenuGrpRemove:
+            TabGroupRemoveTab(win, tab);
+            return true;
+        case kMenuGrpRename:
+            TabGroupRename(win, groupId);
+            return true;
+        case kMenuGrpCollapse:
+            tabs->ToggleGroupCollapsed(groupId);
+            return true;
+        case kMenuGrpUngroup:
+            tabs->RemoveGroup(groupId);
+            ScheduleSaveSettings();
+            return true;
+        case kMenuGrpCloseAll: {
+            Vec<WindowTab*> toClose;
+            for (int i = 0; i < tabs->TabCount(); i++) {
+                if (tabs->GetTab(i)->groupId == groupId) {
+                    VecAppend(toClose, win->GetTab(i));
+                }
+            }
+            CloseCollectedTabs(win, toClose);
+            return true;
+        }
+    }
+    return false;
+}
+
+// right-click on a group's chip
+static void GroupHeaderContextMenu(MainWindow* win, TabsCtrl* tabs, int groupId, VirtMouseEvent* ev) {
+    TabGroupInfo* g = tabs->FindGroup(groupId);
+    if (!g) {
+        return;
+    }
+    HMENU popup = CreatePopupMenu();
+    AppendGroupMenuItems(popup, tabs, false, g);
+    AppendVerticalTabsItem(popup);
+    Point pt = HwndClientToScreen(tabs->hwnd, ev->ptWindow);
+    ev->didHandle = true;
+    int cmdId = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+    DestroyMenu(popup);
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    HandleGroupMenuCmd(win, nullptr, groupId, cmdId);
+}
+
+// right-click on the strip, not on a tab
+static void StripContextMenu(MainWindow* win, TabsCtrl* tabs, VirtMouseEvent* ev) {
+    HMENU popup = CreatePopupMenu();
+    UINT flags = MF_STRING | (UseVerticalTabs() ? MF_CHECKED : 0);
+    AppendMenuW(popup, flags, kMenuVerticalTabs, L"Vertical Tabs");
+    Point pt = HwndClientToScreen(tabs->hwnd, ev->ptWindow);
+    ev->didHandle = true;
+    int cmdId = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+    DestroyMenu(popup);
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    HandleGroupMenuCmd(win, nullptr, 0, cmdId);
+}
+
+//--- groups in saved sessions
+
+// the group of the tab goes into the session, so that it comes back
+void TabGroupSaveToState(WindowTab* tab, TabState* ts) {
+    str::Free(ts->groupName);
+    str::Free(ts->groupColor);
+    ts->groupName = {};
+    ts->groupColor = {};
+    ts->groupCollapsed = false;
+    MainWindow* win = tab ? tab->win : nullptr;
+    if (!win || !win->tabsCtrl) {
+        return;
+    }
+    TabGroupInfo* g = win->tabsCtrl->GroupOfTab(win->GetTabIdx(tab));
+    if (!g || len(g->name) == 0) {
+        return;
+    }
+    ts->groupName = str::Dup(g->name);
+    ts->groupColor = str::Dup(SerializeColorTemp(g->color));
+    ts->groupCollapsed = g->collapsed;
+}
+
+// Recreates the groups of a restored window. The tabs are in the order of the
+// session's TabStates (some may be missing: a file that is gone)
+void TabGroupsRestore(MainWindow* win, SessionData* data) {
+    if (!win || !win->tabsCtrl || !data) {
+        return;
+    }
+    bool any = false;
+    for (TabState* st : *data->tabStates) {
+        if (len(st->groupName) > 0) {
+            any = true;
+            break;
+        }
+    }
+    if (!any) {
+        return;
+    }
+    TabsCtrl* tabs = win->tabsCtrl;
+    Vec<WindowTab*> wtabs = win->Tabs();
+    int nTabs = len(wtabs);
+    int next = 0;
+    Vec<int> collapsed;
+    for (TabState* st : *data->tabStates) {
+        if (len(st->filePath) == 0) {
+            continue;
+        }
+        WindowTab* tab = nullptr;
+        for (int k = next; k < nTabs; k++) {
+            WindowTab* t = wtabs[k];
+            if (t->IsAboutTab() || len(t->filePath) == 0) {
+                continue;
+            }
+            if (str::EqI(t->filePath, st->filePath)) {
+                tab = t;
+                next = k + 1;
+                break;
+            }
+        }
+        if (!tab || len(st->groupName) == 0) {
+            continue;
+        }
+        TabGroupInfo* g = tabs->FindGroupByName(st->groupName);
+        int gid = g ? g->id : 0;
+        if (!g) {
+            Color col = kTabGroupColors[0].color;
+            ParseColor(&col, st->groupColor);
+            gid = tabs->NewGroup(st->groupName, col);
+        }
+        tabs->SetTabGroup(win->GetTabIdx(tab), gid);
+        if (st->groupCollapsed) {
+            VecAppend(collapsed, gid);
+        }
+    }
+    // the group of the selected tab stays open
+    TabGroupInfo* selectedGroup = tabs->GroupOfTab(tabs->GetSelected());
+    for (int gid : collapsed) {
+        if (!selectedGroup || selectedGroup->id != gid) {
+            tabs->SetGroupCollapsed(gid, true);
+        }
+    }
+}
+
 // TODO: add "Move to another window" sub-menu
 static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(tabsCtrl->hwnd);
@@ -329,7 +830,12 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
     }
     TabsCtrl::MouseState tabState = tabsCtrl->TabStateFromMousePosition(ev->ptWindow);
     int tabIdx = tabState.tabIdx;
+    if (tabState.headerGroupId != 0) {
+        GroupHeaderContextMenu(win, tabsCtrl, tabState.headerGroupId, ev);
+        return;
+    }
     if (tabIdx < 0) {
+        StripContextMenu(win, tabsCtrl, ev);
         return;
     }
 
@@ -376,6 +882,10 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
         DeleteMenu(popup, CmdDiscardChanges, MF_BYCOMMAND);
         RemoveBadMenuSeparators(popup);
     }
+    TabGroupInfo* tabGroup = tabsCtrl->GroupOfTab(tabIdx);
+    int tabGroupId = tabGroup ? tabGroup->id : 0;
+    AppendGroupMenuItems(popup, tabsCtrl, true, tabGroup);
+    AppendVerticalTabsItem(popup);
     // handled: the menu loop can close the window and free tabsCtrl, so the
     // event must not bubble up to it
     ev->didHandle = true;
@@ -383,6 +893,9 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
     int cmdId = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     DestroyMenu(popup);
     if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    if (HandleGroupMenuCmd(win, tabUnderMouse, tabGroupId, cmdId)) {
         return;
     }
     switch (cmdId) {
@@ -772,7 +1285,16 @@ void MoveTab(MainWindow* win, int dir) {
     if (win->GetTab(idx)->IsPinnedHomeTab() || win->GetTab(newIdx)->IsPinnedHomeTab()) {
         return;
     }
-    win->tabsCtrl->SwapTabs(idx, newIdx);
-    win->tabsCtrl->SetSelected(newIdx);
-    win->tabsCtrl->LayoutTabs();
+    TabsCtrl* tabsCtrl = win->tabsCtrl;
+    TabInfo* moved = tabsCtrl->GetTab(idx);
+    int otherGroupId = tabsCtrl->GetTab(newIdx)->groupId;
+    tabsCtrl->SwapTabs(idx, newIdx);
+    // a tab moved past the edge of a group joins it, or leaves its own
+    if (!moved->fitToLabel) {
+        moved->groupId = otherGroupId;
+    }
+    tabsCtrl->FixGroups();
+    tabsCtrl->RebuildTabCtrls();
+    tabsCtrl->SetSelected(VecFind(tabsCtrl->tabs, moved));
+    tabsCtrl->LayoutTabs();
 }

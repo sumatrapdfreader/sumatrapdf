@@ -11,6 +11,7 @@
 
 #include <aclapi.h>
 #include <float.h> // for _clearfp / _controlfp_s in MaskFpExceptions
+#include <intrin.h> // for __cpuid
 #include <mlang.h>
 #include "base/Pixmap.h"
 #include "base/Win.h"

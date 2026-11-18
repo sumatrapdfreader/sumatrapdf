@@ -12,6 +12,7 @@ struct TabsCtrl;
 struct TabInfo;
 struct TabCtrl;
 struct TabsPlusBtn;
+struct TabGroupHeader;
 struct VirtRoot;
 struct VirtCloseButton;
 struct VirtMouseEvent;
@@ -31,9 +32,24 @@ struct TabInfo {
     bool fitToLabel = false;
     UINT_PTR userData = 0;
     Color tabColor = (Color)0xfeffffff; // kColorUnset; use default tab color
+    // id of the TabGroupInfo (in TabsCtrl::groups) this tab belongs to, 0 if none.
+    // The tabs of a group are always next to each other
+    int groupId = 0;
 
     TabInfo() = default;
     ~TabInfo();
+};
+
+// a named, colored group of neighbouring tabs, like in Chrome. A collapsed
+// group only shows its header chip
+struct TabGroupInfo {
+    int id = 0;
+    Str name;
+    Color color = (Color)0;
+    bool collapsed = false;
+
+    TabGroupInfo() = default;
+    ~TabGroupInfo();
 };
 
 // Tab bar as a virtual control: owns TabCtrl children, paints and hit-tests
@@ -56,6 +72,8 @@ struct TabsCtrl : VirtCtrl {
         // used to make drag&drop determine a better position for drop
         bool inRightHalf = false;
         TabInfo* tabInfo = nullptr;
+        // != 0 when the mouse is over the header chip of that group
+        int headerGroupId = 0;
     };
 
     struct SelectionChangingEvent {
@@ -114,6 +132,17 @@ struct TabsCtrl : VirtCtrl {
     // the "+" after the tabs, always there
     TabsPlusBtn* plusBtn = nullptr;
     int selectedIdx = -1;
+
+    // tab groups. Their header chips are laid out before the first tab of the group
+    Vec<TabGroupInfo*> groups;
+    Vec<TabGroupHeader*> headerCtrls;
+    int nextGroupId = 1;
+
+    // false: tabs run left to right in a bar. true: they are rows in a column
+    // that scrolls (scrollY) when it doesn't fit
+    bool vertical = false;
+    int scrollY = 0;
+    int contentDy = 0;
 
     // tracking state of which tab is highlighted etc.
     int tabHighlighted = -1;
@@ -184,6 +213,27 @@ struct TabsCtrl : VirtCtrl {
     bool IsValidIdx(int idx);
 
     void SetHighlighted(int idx);
+
+    // tab groups
+    TabGroupInfo* FindGroup(int groupId);
+    TabGroupInfo* GroupOfTab(int idx);
+    TabGroupInfo* FindGroupByName(Str name);
+    int NewGroup(Str name, Color color);
+    // the tab moves next to the other tabs of the group (groupId 0: leaves its group)
+    void SetTabGroup(int idx, int groupId);
+    void RemoveGroup(int groupId);
+    void ToggleGroupCollapsed(int groupId);
+    void SetGroupCollapsed(int groupId, bool collapsed);
+    void SetGroupNameAndColor(int groupId, Str name, Color color);
+    bool IsTabHidden(int idx);
+    int GroupFirstIdx(int groupId);
+    int GroupLastIdx(int groupId);
+    int GroupTabCount(int groupId);
+    // drops empty groups, makes the members of every group contiguous
+    void FixGroups();
+    void SetVertical(bool);
+    void ScrollBy(int dy);
+    void EnsureVisible(int idx);
 
     void LayoutTabs();
     void ScheduleRepaint();

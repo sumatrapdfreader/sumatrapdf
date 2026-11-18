@@ -491,6 +491,9 @@ TabState* CloneTabState(const TabState* src) {
     dst->showToc = src->showToc;
     str::ReplaceWithCopy(&dst->sidebarView, src->sidebarView);
     dst->tocState = new Vec<int>(*src->tocState);
+    str::ReplaceWithCopy(&dst->groupName, src->groupName);
+    str::ReplaceWithCopy(&dst->groupColor, src->groupColor);
+    dst->groupCollapsed = src->groupCollapsed;
     return dst;
 }
 
@@ -569,7 +572,9 @@ static void RememberSessionState() {
                     src = FindSessionTabState(fp);
                 }
                 if (src) {
-                    VecAppend(*windowState->tabStates, CloneTabState(src));
+                    TabState* clone = CloneTabState(src);
+                    TabGroupSaveToState(tab, clone);
+                    VecAppend(*windowState->tabStates, clone);
                 }
                 continue;
             }
@@ -579,6 +584,7 @@ static void RememberSessionState() {
             str::ReplaceWithCopy(&fs->sidebarView, SidebarViewToStr(tab->sidebarView));
             *fs->tocState = tab->tocState;
             TabState* ts = NewTabState(fs);
+            TabGroupSaveToState(tab, ts);
             VecAppend(*windowState->tabStates, ts);
             DeleteFileState(fs);
         }
