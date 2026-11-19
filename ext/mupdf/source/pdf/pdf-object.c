@@ -1454,7 +1454,10 @@ void pdf_undo(fz_context *ctx, pdf_document *doc)
 	pdf_drop_page_tree_internal(ctx, doc);
 	pdf_sync_open_pages(ctx, doc);
 	for (frag = entry->head; frag; frag = frag->next)
+	{
 		pdf_purge_object_from_store(ctx, doc, frag->obj_num);
+		pdf_purge_resources_for_object(ctx, doc, frag->obj_num); /* SumatraPDF */
+	}
 }
 
 /* Move forwards in the undo history. Throws an error if we are at the
@@ -1500,7 +1503,10 @@ void pdf_redo(fz_context *ctx, pdf_document *doc)
 	pdf_drop_page_tree_internal(ctx, doc);
 	pdf_sync_open_pages(ctx, doc);
 	for (frag = entry->head; frag; frag = frag->next)
+	{
 		pdf_purge_object_from_store(ctx, doc, frag->obj_num);
+		pdf_purge_resources_for_object(ctx, doc, frag->obj_num); /* SumatraPDF */
+	}
 }
 
 void pdf_discard_journal(fz_context *ctx, pdf_journal *journal)

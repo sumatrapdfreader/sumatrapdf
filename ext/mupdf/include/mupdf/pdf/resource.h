@@ -88,6 +88,8 @@ pdf_obj *pdf_find_image_resource(fz_context *ctx, pdf_document *doc, fz_image *i
 pdf_obj *pdf_insert_image_resource(fz_context *ctx, pdf_document *doc, pdf_image_resource_key *key, pdf_obj *obj);
 void pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc);
 void pdf_purge_local_resources(fz_context *ctx, pdf_document *doc);
+/* SumatraPDF: forget cached font / colorspace / image resources that are object num */
+void pdf_purge_resources_for_object(fz_context *ctx, pdf_document *doc, int num);
 
 typedef struct pdf_function pdf_function;
 

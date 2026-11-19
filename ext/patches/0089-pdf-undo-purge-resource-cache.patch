@@ -1,0 +1,82 @@
+pdf: undo / redo forget cached resources for the objects they swap
+
+The document caches the font, colorspace and image objects it added
+(doc->resources), keyed by digest, so the next appearance reuses them.
+pdf_undo / pdf_redo purged the object store but not these tables. An
+undo that took away an object created in that step, e.g. the font of a
+free text appearance, left the cache pointing at a missing object, and
+the next free text appearance used it: the text drew in a fallback font
+with the wrong glyphs (#6549). Undo / redo now drop table entries for
+every object they swap.
+---
+diff --git a/include/mupdf/pdf/resource.h b/include/mupdf/pdf/resource.h
+index 921338baee..bc62460102 100644
+--- a/include/mupdf/pdf/resource.h
++++ b/include/mupdf/pdf/resource.h
+@@ -88,6 +88,8 @@ pdf_obj *pdf_find_image_resource(fz_context *ctx, pdf_document *doc, fz_image *i
+ pdf_obj *pdf_insert_image_resource(fz_context *ctx, pdf_document *doc, pdf_image_resource_key *key, pdf_obj *obj);
+ void pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc);
+ void pdf_purge_local_resources(fz_context *ctx, pdf_document *doc);
++/* SumatraPDF: forget cached font / colorspace / image resources that are object num */
++void pdf_purge_resources_for_object(fz_context *ctx, pdf_document *doc, int num);
+ 
+ typedef struct pdf_function pdf_function;
+ 
+diff --git a/source/pdf/pdf-object.c b/source/pdf/pdf-object.c
+index 452bebfe40..3c2b398b1f 100644
+--- a/source/pdf/pdf-object.c
++++ b/source/pdf/pdf-object.c
+@@ -1454,7 +1454,10 @@ void pdf_undo(fz_context *ctx, pdf_document *doc)
+ 	pdf_drop_page_tree_internal(ctx, doc);
+ 	pdf_sync_open_pages(ctx, doc);
+ 	for (frag = entry->head; frag; frag = frag->next)
++	{
+ 		pdf_purge_object_from_store(ctx, doc, frag->obj_num);
++		pdf_purge_resources_for_object(ctx, doc, frag->obj_num); /* SumatraPDF */
++	}
+ }
+ 
+ /* Move forwards in the undo history. Throws an error if we are at the
+@@ -1500,7 +1503,10 @@ void pdf_redo(fz_context *ctx, pdf_document *doc)
+ 	pdf_drop_page_tree_internal(ctx, doc);
+ 	pdf_sync_open_pages(ctx, doc);
+ 	for (frag = entry->head; frag; frag = frag->next)
++	{
+ 		pdf_purge_object_from_store(ctx, doc, frag->obj_num);
++		pdf_purge_resources_for_object(ctx, doc, frag->obj_num); /* SumatraPDF */
++	}
+ }
+ 
+ void pdf_discard_journal(fz_context *ctx, pdf_journal *journal)
+diff --git a/source/pdf/pdf-resources.c b/source/pdf/pdf-resources.c
+index 9919ee8dbe..de5d7086fe 100644
+--- a/source/pdf/pdf-resources.c
++++ b/source/pdf/pdf-resources.c
+@@ -187,6 +187,27 @@ pdf_purge_local_resources(fz_context *ctx, pdf_document *doc)
+ 		fz_hash_filter(ctx, doc->resources.images, NULL, purge_local_image_resource);
+ }
+ 
++/* SumatraPDF: undo / redo can take away an object a resource table points to,
++ * e.g. the font created for a free text appearance (#6549). */
++static int purge_resource_for_object(fz_context *ctx, void *state, void *key, int keylen, void *val)
++{
++	if (pdf_to_num(ctx, val) != *(int *)state)
++		return 0;
++	pdf_drop_obj(ctx, val);
++	return 1;
++}
++
++void
++pdf_purge_resources_for_object(fz_context *ctx, pdf_document *doc, int num)
++{
++	if (doc->resources.fonts)
++		fz_hash_filter(ctx, doc->resources.fonts, &num, purge_resource_for_object);
++	if (doc->resources.colorspaces)
++		fz_hash_filter(ctx, doc->resources.colorspaces, &num, purge_resource_for_object);
++	if (doc->resources.images)
++		fz_hash_filter(ctx, doc->resources.images, &num, purge_resource_for_object);
++}
++
+ void
+ pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc)
+ {

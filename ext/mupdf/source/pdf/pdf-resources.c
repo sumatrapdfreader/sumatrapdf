@@ -187,6 +187,27 @@ pdf_purge_local_resources(fz_context *ctx, pdf_document *doc)
 		fz_hash_filter(ctx, doc->resources.images, NULL, purge_local_image_resource);
 }
 
+/* SumatraPDF: undo / redo can take away an object a resource table points to,
+ * e.g. the font created for a free text appearance (#6549). */
+static int purge_resource_for_object(fz_context *ctx, void *state, void *key, int keylen, void *val)
+{
+	if (pdf_to_num(ctx, val) != *(int *)state)
+		return 0;
+	pdf_drop_obj(ctx, val);
+	return 1;
+}
+
+void
+pdf_purge_resources_for_object(fz_context *ctx, pdf_document *doc, int num)
+{
+	if (doc->resources.fonts)
+		fz_hash_filter(ctx, doc->resources.fonts, &num, purge_resource_for_object);
+	if (doc->resources.colorspaces)
+		fz_hash_filter(ctx, doc->resources.colorspaces, &num, purge_resource_for_object);
+	if (doc->resources.images)
+		fz_hash_filter(ctx, doc->resources.images, &num, purge_resource_for_object);
+}
+
 void
 pdf_drop_resource_tables(fz_context *ctx, pdf_document *doc)
 {
