@@ -637,10 +637,10 @@ Str HwndPasswordUI::GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32
     }
     path = path::GetBaseNameTemp(Str(path));
 
-    // check if the window is still valid as it might have been closed by now
+    // the window was closed while the document loaded: its load is discarded, don't ask
     if (!IsWindow(hwnd)) {
-        ReportIf(true);
-        hwnd = GetForegroundWindow();
+        logf("HwndPasswordUI::GetPassword: window closed, not asking for '%s'\n", path);
+        return {};
     }
     // make sure that the password dialog is visible
     HwndToForeground(hwnd);
