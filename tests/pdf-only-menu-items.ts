@@ -33,8 +33,10 @@ export async function testit(): Promise<void> {
           if (v === "show") {
             shown.push(cmd);
           }
-          if (type === "epub" && v !== "hide") {
-            throw new Error(`pdf-only-menu-items: epub still shows ${cmd} vis=${v}`);
+          // any document MuPDF opened extracts pages to a new PDF (#6509)
+          const want = cmd === "CmdPdfExtractPages" ? "show" : "hide";
+          if (type === "epub" && v !== want) {
+            throw new Error(`pdf-only-menu-items: epub ${cmd} vis=${v}, want ${want}`);
           }
         }
         if (type === "pdf" && shown.length === 0) {
