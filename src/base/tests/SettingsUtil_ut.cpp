@@ -185,6 +185,17 @@ Key = Value";
     }
     FreeStruct(&gSutStructInfo, data);
 
+    // builds before #6498's fix wrote the user locale's decimal comma (#6538)
+    data = (SutStruct*)DeserializeStruct(
+        &gSutStructInfo,
+        StrL("FloatingPoint = 7,7\r\nSutStructItems [\r\n\t[\r\n\t\tFloatArray = 8,33 12,5\r\n\t]\r\n]\r\n"));
+    utassert(7.7f == data->floatingPoint);
+    {
+        Vec<float>& fa = *(*data->sutStructItems)[0]->floatArray;
+        utassert(2 == len(fa) && 8.33f == fa[0] && 12.5f == fa[1]);
+    }
+    FreeStruct(&gSutStructInfo, data);
+
     data = (SutStruct*)DeserializeStruct(&gSutStructInfo, Str());
     utassert(data);
     if (!data) {

@@ -340,6 +340,11 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
 
         case SettingType::Float: {
             Str s = !str::IsNull(value) ? value : FieldDefaultStr(field);
+            // builds before #6498's fix wrote the user locale's decimal comma: "8,33"
+            Str num = Str(s.s, SkipNonWhitespaceOff(s, 0));
+            if (str::ContainsChar(num, ',') && !str::ContainsChar(num, '.')) {
+                s = str::ReplaceTemp(num, StrL(","), StrL("."));
+            }
             str::Parse(s, "%f", (float*)fieldPtr);
             break;
         }
