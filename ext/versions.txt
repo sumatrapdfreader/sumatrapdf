@@ -125,6 +125,7 @@ extract         trunk
 dav1d           1.5.4      2026-07-14
   https://code.videolan.org/videolan/dav1d
   https://code.videolan.org/videolan/dav1d/-/tags/1.5.4
+  backported a34e0685 (include/compat/msvc/stdatomic.h: MSVC 19.52 build fix)
 
 heicdec         dist       2026-10-27
   https://github.com/kjk/heicdec

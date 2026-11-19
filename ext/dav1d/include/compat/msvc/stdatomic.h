@@ -32,6 +32,10 @@
 #pragma warning(push)
 #pragma warning(disable:4067)    /* newline for __has_include_next */
 
+#ifndef __has_include_next
+#define __has_include_next(x) 0
+#endif
+
 #if defined(__clang__) && __has_include_next(<stdatomic.h>)
    /* use the clang stdatomic.h with clang-cl*/
 #  include_next <stdatomic.h>
