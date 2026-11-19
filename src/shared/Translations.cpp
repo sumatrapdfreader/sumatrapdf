@@ -279,11 +279,7 @@ Str LangCodeFromLocale(Str locale) {
     }
     TempStr tag = str::DupTemp(Str(locale.s, n));
     str::ToLowerInPlace(tag);
-    for (int i = 0; i < len(tag); i++) {
-        if (tag.s[i] == '_') {
-            tag.s[i] = '-';
-        }
-    }
+    str::TransCharsInPlace(tag, StrL("_"), StrL("-"));
     while (len(tag) > 0) {
         int idx = FindLangIdxByTag(tag);
         if (idx >= 0) {
