@@ -34,6 +34,7 @@
 #include "AppTools.h"
 #include "ExplorerQuickLook.h"
 #include "Selection.h"
+#include "SelectTextKeyboard.h"
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "Favorites.h"
@@ -1213,13 +1214,17 @@ void ShowSearchResult(MainWindow* win, Vec<TextSel>* result, bool goToPage) {
     dm->ShowResultRectToScreen(result);
     InvalidateFindMatchPaintCache();
     StartFindFlash(win, result);
+    // a find's own match (not the DDE GotoPageWord one) carries its glyph range
+    if (result == &dm->textSearch->result) {
+        SelectTextWithKeyboardOnFindResult(win, dm->textSearch);
+    }
     ScheduleRepaint(win, 0);
 }
 
 void ClearSearchResult(MainWindow* win) {
     // clear only the find-match highlights, never the user's text selection:
     // find and selection highlights are tracked independently (issue #5737)
-    ClearFindMatches(win); // also invalidates the find-match paint cache
+    ClearFindMatches(win);          // also invalidates the find-match paint cache
     VecReset(win->findFlash.rects); // also stops the blink
     ScheduleRepaint(win, 0);
 }

@@ -25,7 +25,9 @@
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
+#include "ProgressUpdateUI.h"
 #include "TextSelection.h"
+#include "TextSearch.h"
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
@@ -646,6 +648,31 @@ int RunCaretCmd(MainWindow* win, int cmdId, bool shift) {
         return c.fallbackCmdId;
     }
     return 0;
+}
+
+// A find landed on a match: move the caret there, like Emacs isearch (#6541).
+// Forward ends at the match's end, backward at its start. In visual mode the
+// selection grows to the match, otherwise the match becomes the selection.
+void SelectTextWithKeyboardOnFindResult(MainWindow* win, TextSearch* ts) {
+    if (!SelectTextWithKeyboardActive(win) || !ts || ts->startPage < 1 || ts->endPage < 1) {
+        return;
+    }
+    int loPage = ts->startPage, loGlyph = ts->startGlyph;
+    int hiPage = ts->endPage, hiGlyph = ts->endGlyph;
+    if (loPage > hiPage || (loPage == hiPage && loGlyph > hiGlyph)) {
+        std::swap(loPage, hiPage);
+        std::swap(loGlyph, hiGlyph);
+    }
+    bool forward = ts->forward;
+    if (!win->textSelectModeVisual) {
+        win->textSelectAnchorPage = forward ? loPage : hiPage;
+        win->textSelectAnchorGlyph = forward ? loGlyph : hiGlyph;
+    }
+    win->textSelectPage = forward ? hiPage : loPage;
+    win->textSelectGlyph = forward ? hiGlyph : loGlyph;
+    ApplySelection(win, true);
+    RestartCaretBlink(win);
+    RepaintTextSelect(win);
 }
 
 // 'v' toggles visual mode, 'y' / Ctrl+C copy. Returns true if consumed.
