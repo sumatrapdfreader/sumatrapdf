@@ -1844,3 +1844,18 @@ void FreeParsedThemes(Themes* themes) {
     }
     FreeStruct(&gThemesInfo, themes);
 }
+
+// The *UI.WindowBgCol setting for the canvas around this engine's pages: PDF,
+// DjVu and XPS share FixedPageUI's, reflowed ebooks have EBookUI's (#6543)
+ParsedColor& CanvasBgColSetting(EngineBase* engine) {
+    if (engine->kind == kindEngineComicBooks) {
+        return gSettings->comicBookUI.windowBgCol;
+    }
+    if (engine->isImageCollection) {
+        return gSettings->imageUI.windowBgCol;
+    }
+    if (engine->isReflowable) {
+        return gSettings->eBookUI.windowBgCol;
+    }
+    return gSettings->fixedPageUI.windowBgCol;
+}

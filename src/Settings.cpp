@@ -110,8 +110,8 @@ static const StructInfo gFixedPageUIInfo = {
     "vertical gap between pages (between columns in facing/book view, between rows in continuous view)\0experimental: "
     "instead of a single background color, fade through these colors from the top of the document to the bottom (stops "
     "are spread evenly, at most 3 colors). The shifting background is meant to give a subconscious sense of reading "
-    "progress. Suggested values: #2828aa #28aa28 #aa2828\0if given, sets the canvas background color for PDF "
-    "files\0measurement grid overlay (View > Page Grid). Spacing, slant and style are saved; showing the grid is "
+    "progress. Suggested values: #2828aa #28aa28 #aa2828\0if given, sets the canvas background color for PDF, DjVu and "
+    "XPS files\0measurement grid overlay (View > Page Grid). Spacing, slant and style are saved; showing the grid is "
     "session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize cells with equal width "
     "and height",
     false};

@@ -2934,33 +2934,16 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     // draw comic books and single images on a black background
     // (without frame and shadow)
     bool paintOnBlackWithoutShadow = win->InPresentation() || isImage;
-    bool isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
-    bool isPdf = engine->kind == kindEngineMupdf && str::EqI(engine->defaultExt, StrL(".pdf"));
     Color colDocBg;
     Color colDocTxt = ThemeDocumentColors(colDocBg);
     if (isImage) {
+        // images default to black
         colDocBg = 0x0;
         colDocTxt = 0xffffff;
-        // allow ComicBookUI/ImageUI WindowBgCol to override the default black
-        ParsedColor* bgOverride = nullptr;
-        if (engine->kind == kindEngineComicBooks) {
-            bgOverride = GetPrefsColor(gSettings->comicBookUI.windowBgCol);
-        } else {
-            bgOverride = GetPrefsColor(gSettings->imageUI.windowBgCol);
-        }
-        if (bgOverride->parsedOk) {
-            colDocBg = bgOverride->col;
-        }
-    } else if (isEbook) {
-        ParsedColor* bgOverride = GetPrefsColor(gSettings->eBookUI.windowBgCol);
-        if (bgOverride->parsedOk) {
-            colDocBg = bgOverride->col;
-        }
-    } else if (isPdf) {
-        ParsedColor* bgOverride = GetPrefsColor(gSettings->fixedPageUI.windowBgCol);
-        if (bgOverride->parsedOk) {
-            colDocBg = bgOverride->col;
-        }
+    }
+    ParsedColor* bgOverride = GetPrefsColor(CanvasBgColSetting(engine));
+    if (bgOverride->parsedOk) {
+        colDocBg = bgOverride->col;
     }
 
     // per-document background color from FileState overrides everything

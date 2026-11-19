@@ -774,7 +774,8 @@ struct FixedPageUI {
     // to give a subconscious sense of reading progress. Suggested values:
     // #2828aa #28aa28 #aa2828
     Vec<Str>* gradientColors;
-    // if given, sets the canvas background color for PDF files
+    // if given, sets the canvas background color for PDF, DjVu and XPS
+    // files
     ParsedColor windowBgCol;
     // measurement grid overlay (View > Page Grid). Spacing, slant and
     // style are saved; showing the grid is session-only. Drag a grid line

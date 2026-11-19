@@ -16,6 +16,7 @@ extern int gInitialSessionDataGen;
 extern void (*gRememberSessionStateFn)();
 
 struct PlatformFont;
+class EngineBase;
 
 TempStr GetSettingsPathTemp();
 TempStr GetSettingsFileNameTemp();
@@ -131,3 +132,4 @@ Themes* ParseThemes(Str);
 void FreeParsedThemes(Themes*);
 
 #define GetPrefsColor(name) GetParsedColor(name)
+ParsedColor& CanvasBgColSetting(EngineBase* engine);

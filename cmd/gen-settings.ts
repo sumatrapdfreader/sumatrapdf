@@ -559,7 +559,7 @@ const fixedPageUI: Field[] = [
       "background is meant to give a subconscious sense of reading progress. " +
       "Suggested values: #2828aa #28aa28 #aa2828",
   ),
-  field("WindowBgCol", Color, "", "if given, sets the canvas background color for PDF files").ver("3.7"),
+  field("WindowBgCol", Color, "", "if given, sets the canvas background color for PDF, DjVu and XPS files").ver("3.7"),
   struct(
     "PageGrid",
     pageGrid,

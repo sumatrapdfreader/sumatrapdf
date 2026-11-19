@@ -196,7 +196,7 @@ static void ClassifyTab(WindowTab* t) {
     }
     gColor.isImage = engine->isImageCollection;
     gColor.isCbx = engine->kind == kindEngineComicBooks;
-    gColor.isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
+    gColor.isEbook = engine->isReflowable;
 }
 
 // orig's LoadCurrentColor
@@ -647,7 +647,7 @@ static Str AllFilesLabel() {
     if (gColor.isEbook) {
         return Tr("For all &ebooks");
     }
-    return Tr("For all &PDF files");
+    return Tr("For all &PDF, DjVu and XPS files");
 }
 
 // --- orig's layout, for the dialog in a window of its own -------------------

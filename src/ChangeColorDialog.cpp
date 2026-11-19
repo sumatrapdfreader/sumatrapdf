@@ -42,7 +42,7 @@
 //   RGB:      #f2f2f2____  [preview]
 //   [] [] [] [] ...                  presets, then custom colors
 //   ---------------------------------------------- hairline
-//   (o) This file   ( ) For all PDF files   (the background only)
+//   (o) This file   ( ) For all PDF, DjVu and XPS files   (the background only)
 //   Remove                           [Cancel] [OK]
 constexpr int kColorDlgDx = 420;
 constexpr int kColorAreaDy = 150;
@@ -683,7 +683,7 @@ void ChangeColorWnd::ClassifyTab(WindowTab* t) {
     }
     isImage = engine->isImageCollection;
     isCbx = engine->kind == kindEngineComicBooks;
-    isEbook = engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, StrL(".pdf"));
+    isEbook = engine->isReflowable;
 }
 
 void ChangeColorWnd::LoadCurrentColor() {
@@ -754,7 +754,7 @@ void ChangeColorWnd::RelayoutRadios() {
         radiosLine->SetVisibility(vis);
     }
     if (show && radioAllFiles) {
-        Str label = Tr("For all &PDF files");
+        Str label = Tr("For all &PDF, DjVu and XPS files");
         if (isCbx) {
             label = Tr("For all &comic books");
         } else if (isImage) {
@@ -938,7 +938,7 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
     // this file or every file of its kind
     {
         radioThisFile = NewDlgRadio(hwnd, Tr("&This file"), fontText, true, true);
-        radioAllFiles = NewDlgRadio(hwnd, Tr("For all &PDF files"), fontText, false, false);
+        radioAllFiles = NewDlgRadio(hwnd, Tr("For all &PDF, DjVu and XPS files"), fontText, false, false);
         HBox* row = NewDlgFieldRow();
         row->AddChild(radioThisFile);
         row->AddChild(radioAllFiles);
