@@ -58,6 +58,7 @@
 #include "AppSettings.h"
 #include "AppTools.h"
 #include "RefHover.h"
+#include "CanvasCommon.h"
 #include "ExternalViewers.h"
 #include "Favorites.h"
 #include "FileThumbnails.h"
@@ -1633,15 +1634,162 @@ void TocItemToText(str::Builder& s, TocItem* item, int level) {
     }
 }
 
-// for toggle commands that accept an optional "state" bool arg (issue #5067):
-// returns false if the command asked for a state that already matches the
-// current one (so the toggle should be skipped); true otherwise (no explicit
-// state given, or the requested state differs and a flip is needed)
-bool ShouldToggle(CustomCommand* cmd, bool curState) {
-    if (!GetCommandArg(cmd, kCmdArgState)) {
-        return true; // no explicit state: always toggle
+// Current on/off state of a toggle command (see toggleCommands in
+// cmd/gen-commands.ts). False when it doesn't apply now, e.g. a document
+// setting with no document. The palette and the `state` argument use it.
+bool ToggleCmdState(MainWindow* win, CustomCommand* cmd, int cmdId, bool& on) {
+    if (AppToggleCmdState(win, cmdId, on)) {
+        return true;
     }
-    return GetCommandBoolArg(cmd, kCmdArgState, !curState) != curState;
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    switch (cmdId) {
+        case CmdToggleFullscreen:
+            on = win->IsFullScreen();
+            return true;
+        case CmdTogglePresentationMode:
+            on = win->InPresentation();
+            return true;
+        case CmdToggleToolbar:
+            on = win->IsFullScreen() ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
+            return true;
+        case CmdToggleCaption:
+            on = gSettings->showCaption;
+            return true;
+        case CmdToggleSidebarAutoHide:
+            on = gSettings->sidebarAutoHide;
+            return true;
+        case CmdToggleLinks:
+            on = gSettings->showLinks;
+            return true;
+        case CmdToggleHighlightFormFields:
+            on = gSettings->highlightFormFields;
+            return true;
+        case CmdToggleDisableLinks:
+            on = gSettings->disableLinks;
+            return true;
+        case CmdToggleHoverPreview:
+            on = gSettings->citationHoverDelay >= 0;
+            return true;
+        case CmdToggleAutoRotateWidePages:
+            on = gSettings->comicBookUI.autoRotateWidePages;
+            return true;
+        case CmdToggleGrayscale:
+            on = gSettings->fixedPageUI.grayscale;
+            return true;
+        case CmdToggleFavoritesSort:
+            on = gSettings->sortFavoritesByName;
+            return true;
+        case CmdToggleReadingBarInvert:
+            on = gSettings->readingBar.invert;
+            return true;
+        case CmdToggleToolbarShowReadAloud:
+            on = gSettings->toolbarShowReadAloud;
+            return true;
+        case CmdToggleFilePicker:
+            on = FilePickerIsSumatraPDF();
+            return true;
+        case CmdToggleInverseSearch:
+            on = !gDisableInteractiveInverseSearch;
+            return true;
+        case CmdTogglePreservePdfImages:
+            on = GetPreservePdfImagesInDarkMode();
+            return true;
+        case CmdInvertColors:
+            on = GetInvertPageColors();
+            return true;
+        case CmdToggleKeyboardHelp:
+            on = IsKeyboardHelpVisible();
+            return true;
+        case CmdToggleReadAloud:
+            on = TtsIsSpeaking();
+            return true;
+        case CmdFindToggleMatchCase:
+            on = win->findMatchCase;
+            return true;
+        case CmdFindToggleMatchWholeWord:
+            on = win->findMatchWholeWord;
+            return true;
+        case CmdTogglePageInfo:
+            on = win->pageInfoWanted;
+            return true;
+        case CmdTogglePageBoxes:
+            on = win->showPageBoxes;
+            return true;
+        case CmdToggleEditPDF:
+            on = win->pdfAnnotationsToolbarEnabled;
+            return true;
+        case CmdToggleKeyboardLinkFollowing:
+            on = win->linkFollowActive;
+            return true;
+        case CmdToggleAutomaticallyScroll:
+            on = ReadingAutoScrollIsOn(win);
+            return true;
+        case CmdToggleReadingBar:
+            on = ReadingBarIsOn(win);
+            return true;
+        case CmdSelectTextViaKeyboard:
+            on = SelectTextWithKeyboardActive(win);
+            return true;
+        case CmdToggleBoolSetting: {
+            bool* p = FindSettingsBoolSetting(GetCommandStringArg(cmd, kCmdArgName, {}));
+            on = p && *p;
+            return p != nullptr;
+        }
+        case CmdToggleContinuousView:
+            on = win->ctrl && IsContinuous(win->ctrl->GetDisplayMode());
+            return win->ctrl != nullptr;
+        case CmdToggleShowAnnotations:
+            on = tab && !tab->hideAnnotations;
+            return tab != nullptr;
+    }
+
+    if (!dm) {
+        return false;
+    }
+    switch (cmdId) {
+        case CmdToggleMangaMode:
+            on = dm->GetDisplayR2L();
+            return true;
+        case CmdToggleUniformPageWidth:
+            on = dm->GetUniformPageWidth();
+            return true;
+        case CmdToggleTrimEmptyMargins:
+            on = dm->GetTrimEmptyMargins();
+            return true;
+        case CmdToggleFreePan:
+            on = dm->GetFreePan();
+            return true;
+        case CmdToggleFacingStepOne:
+            on = dm->GetFacingStepOne();
+            return true;
+        case CmdToggleMirror:
+            on = dm->GetMirror();
+            return true;
+        case CmdToggleReadColumns:
+            on = dm->GetReadColumns();
+            return true;
+        case CmdToggleColumnsWholePage:
+            on = dm->ShowsColumnsWholePage();
+            return true;
+        case CmdToggleEngineeringDrawingEnhance:
+            on = EngineMupdfCadEnhanceActive(dm->GetEngine());
+            return true;
+    }
+    return false;
+}
+
+// A toggle command given the state it is already in, e.g. [CmdToggleToolbar off]
+// with the toolbar hidden, does nothing (#5067).
+bool ToggleCmdIsNoOp(MainWindow* win, CustomCommand* cmd, int cmdId) {
+    if (!GetCommandArg(cmd, kCmdArgState)) {
+        return false;
+    }
+    bool on = false;
+    if (!ToggleCmdState(win, cmd, cmdId, on)) {
+        return false;
+    }
+    return GetCommandBoolArg(cmd, kCmdArgState, !on) == on;
 }
 
 // The image file the current tab is showing, or empty when it isn't showing

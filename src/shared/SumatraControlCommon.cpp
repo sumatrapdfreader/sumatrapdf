@@ -616,6 +616,25 @@ TempStr ScrollStateResultTemp(int* exitCodeOut) {
     return fmt("OK page=%d x=%g y=%g visible=%d\n", ss.page, ss.x, ss.y, nVisible);
 }
 
+// "CmdToggleMirror on" => "OK hasState=1 known=1 on=0": whether the definition
+// kept its state argument, and the command's state in the first window
+TempStr ToggleCmdResultTemp(Str definition, int* exitCodeOut) {
+    *exitCodeOut = 2;
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return fmt("NOTREADY no-window\n");
+    }
+    CustomCommand* cmd = CreateCommandFromDefinition(definition);
+    if (!cmd) {
+        return fmt("ERROR can't parse '%s'\n", definition);
+    }
+    bool hasState = GetCommandArg(cmd, kCmdArgState) != nullptr;
+    bool on = false;
+    bool known = ToggleCmdState(win, cmd, cmd->origId, on);
+    *exitCodeOut = 0;
+    return fmt("OK hasState=%d known=%d on=%d\n", (int)hasState, (int)known, (int)on);
+}
+
 TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](Str msg, int code) -> TempStr {

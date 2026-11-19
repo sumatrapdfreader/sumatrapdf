@@ -406,6 +406,8 @@ enum {
 // clang-format on
 // @gen-end cmd-enum
 
+struct MainWindow;
+
 struct CommandArg {
     enum class Type : u16 {
         None,
@@ -491,6 +493,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition);
 CommandArg* GetCommandArg(CustomCommand*, Str argName);
 int GetCommandIntArg(CustomCommand* cmd, Str name, int defValue);
 bool GetCommandBoolArg(CustomCommand* cmd, Str name, bool defValue);
+bool ToggleCmdState(MainWindow* win, CustomCommand* cmd, int cmdId, bool& on);
 Str GetCommandStringArg(CustomCommand* cmd, Str name, Str defValue);
 void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 

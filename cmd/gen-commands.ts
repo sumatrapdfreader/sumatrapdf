@@ -408,6 +408,42 @@ export const commandAltDescs: [string, string][] = [
     ["CmdAdvancedSettings", "Advanced Options..."],
 ];
 
+// Commands that switch something on and off. They take an optional bool
+// `state` argument: [CmdToggleToolbar off] turns it off, and does nothing when
+// it is already off; without it they toggle. Each app's ToggleCmdState() must
+// know their current state.
+const notToggles = new Set([
+  "CmdToggleZoom", // cycles zoom levels
+  "CmdToggleCursorPosition", // cycles units, then off
+  "CmdToggleLightDarkTheme", // picks a theme
+]);
+// prettier-ignore
+const extraToggles = [
+    "CmdFavoriteToggle", "CmdFindToggleMatchCase", "CmdFindToggleMatchWholeWord",
+    "CmdInvertColors", "CmdSelectTextViaKeyboard",
+];
+export const toggleCommands: string[] = [
+  ...commands.filter((c, i) => i % 2 === 0 && c.startsWith("CmdToggle") && !notToggles.has(c)),
+  ...extraToggles,
+];
+
+// [CmdToggleBoolSetting <name>] takes `state` after its name: Commands.cpp lists it by hand
+const toggleOwnArgs = new Set(["CmdToggleBoolSetting"]);
+
+function generateToggleArgs(): string {
+  const lines: string[] = [];
+  for (const c of toggleCommands) {
+    if (!commands.includes(c)) {
+      console.error(`toggleCommands: unknown command '${c}'`);
+      process.exit(1);
+    }
+    if (!toggleOwnArgs.has(c)) {
+      lines.push(`    {${c}, kCmdArgState, CommandArg::Type::Bool}, // default`);
+    }
+  }
+  return lines.join("\n");
+}
+
 function getNames(): string[] {
   const names: string[] = [];
   for (let i = 0; i < commandsRaw.length; i += 2) {
@@ -527,6 +563,12 @@ export function main() {
 
   const arraysCode = generateArrays();
   cppContent = replaceBetweenMarkers(cppContent, "// @gen-start cmd-c", "// @gen-end cmd-c", arraysCode);
+  cppContent = replaceBetweenMarkers(
+    cppContent,
+    "// @gen-start cmd-toggle-args",
+    "// @gen-end cmd-toggle-args",
+    generateToggleArgs(),
+  );
   writeFileSync(cppPath, cppContent, "utf-8");
   console.log("Generated arrays in src/shared/Commands.cpp");
 }

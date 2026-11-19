@@ -709,6 +709,8 @@ enum class ControlCmd : u16 {
     WaitHomePainted = 163,
     // [idx]: select tab idx; idx < 0 only reports the current tab and count
     TestSelectTab = 164,
+    // [definition]: does "CmdToggleX on" parse, and the command's on/off state
+    TestToggleCmd = 165,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1410,6 +1412,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSelectedText: {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestToggleCmd: {
+            int exitCode = 0;
+            Str res = ToggleCmdResultTemp(StringArg(req, 0), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -2277,6 +2277,41 @@ void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
     MaybeShowNextFileScrollHint(win);
 }
 
+// toggle command states that need this app's UI (see ToggleCmdState)
+bool AppToggleCmdState(MainWindow* win, int cmdId, bool& on) {
+    switch (cmdId) {
+        case CmdToggleBookmarks:
+        case CmdToggleTableOfContents:
+            on = SidebarContentVisible(win, SidebarContent::Bookmarks);
+            return true;
+        case CmdToggleThumbnails:
+            on = SidebarContentVisible(win, SidebarContent::Thumbnails);
+            return true;
+        case CmdToggleLayers:
+            on = SidebarContentVisible(win, SidebarContent::Layers);
+            return true;
+        case CmdFavoriteToggle:
+            on = SidebarContentVisible(win, SidebarContent::Favorites);
+            return true;
+        case CmdToggleMenuBar:
+            on = win->IsFullScreen() ? gSettings->fullscreen.showMenubar : win->isMenuBarVisible;
+            return true;
+        case CmdToggleImages:
+            on = ShowImageOutlines();
+            return true;
+        case CmdToggleTransparencyGrid:
+            on = ShowTransparencyGrid();
+            return true;
+        case CmdTogglePageGrid:
+            on = ShowPageGrid();
+            return true;
+        case CmdToggleLaserPointer:
+            on = IsLaserPointerActive();
+            return true;
+    }
+    return false;
+}
+
 // --- the page-info tip, CmdTogglePageInfo (orig SumatraPDF.cpp) ------------
 
 // Light separator between page-info values: space + U+00B7 MIDDLE DOT + space.
@@ -5217,6 +5252,9 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
     if (cmd != nullptr) {
         cmdId = cmd->origId;
     }
+    if (ToggleCmdIsNoOp(win, cmd, cmdId)) {
+        return;
+    }
     // a favorite in the Favorites menu carries its file path and page as args
     if (cmdId == CmdFavorite) {
         GoToFavoriteByCmd(win, cmd);
@@ -5700,15 +5738,11 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdTogglePresentationMode:
-            if (ShouldToggle(cmd, win->InPresentation())) {
-                TogglePresentationMode(win);
-            }
+            TogglePresentationMode(win);
             break;
 
         case CmdToggleFullscreen:
-            if (ShouldToggle(cmd, win->IsFullScreen())) {
-                ToggleFullScreen(win);
-            }
+            ToggleFullScreen(win);
             break;
 
         case CmdPresentationBlackBackground:
@@ -6224,9 +6258,6 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdToggleDisableLinks:
-            if (!ShouldToggle(cmd, gSettings->disableLinks)) {
-                break;
-            }
             gSettings->disableLinks = !gSettings->disableLinks;
             ScheduleSaveSettings();
             if (gSettings->disableLinks) {
@@ -6328,9 +6359,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdSelectTextViaKeyboard:
-            if (ShouldToggle(cmd, SelectTextWithKeyboardActive(win))) {
-                ToggleSelectTextWithKeyboard(win);
-            }
+            ToggleSelectTextWithKeyboard(win);
             break;
 
         // no default shortcut: Ctrl+Shift+Left / Right and friends are taken, so

@@ -10606,13 +10606,59 @@ static void PasteImageFromClipboard(MainWindow* win) {
     }
 }
 
-// shows a sidebar view in a panel, or hides the panel showing it
-static void ToggleSidebarViewCmd(MainWindow* win, CustomCommand* cmd, SidebarView v) {
-    bool shown = IsSidebarViewShown(win, v);
-    if (!ShouldToggle(cmd, shown)) {
-        return;
+// toggle command states that need this app's UI (see ToggleCmdState)
+bool AppToggleCmdState(MainWindow* win, int cmdId, bool& on) {
+    switch (cmdId) {
+        case CmdToggleBookmarks:
+        case CmdToggleTableOfContents:
+            on = IsSidebarViewShown(win, SidebarView::Bookmarks);
+            return true;
+        case CmdToggleThumbnails:
+            on = IsSidebarViewShown(win, SidebarView::Thumbnails);
+            return true;
+        case CmdToggleLayers:
+            on = IsSidebarViewShown(win, SidebarView::Layers);
+            return true;
+        case CmdFavoriteToggle:
+            on = IsSidebarViewShown(win, SidebarView::Favorites);
+            return true;
+        case CmdToggleMenuBar:
+            if (win->IsFullScreen()) {
+                on = gSettings->fullscreen.showMenubar;
+            } else if (win->tabsInTitlebar) {
+                on = IsShowingMenuBarRebar(win);
+            } else {
+                on = GetMenu(win->hwndFrame) != nullptr;
+            }
+            return true;
+        case CmdToggleImages:
+            on = ShowImageOutlines();
+            return true;
+        case CmdToggleTransparencyGrid:
+            on = ShowTransparencyGrid();
+            return true;
+        case CmdTogglePageGrid:
+            on = ShowPageGrid();
+            return true;
+        case CmdToggleLaserPointer:
+            on = IsLaserPointerActive();
+            return true;
+        case CmdTogglePdfPreviewLogging:
+            on = IsPdfPreviewLoggingEnabled();
+            return true;
+        case CmdToggleWindowsPreviewer:
+            on = IsPreviewInstalled();
+            return true;
+        case CmdToggleWindowsSearchFilter:
+            on = IsSearchFilterInstalled();
+            return true;
     }
-    if (shown) {
+    return false;
+}
+
+// shows a sidebar view in a panel, or hides the panel showing it
+static void ToggleSidebarViewCmd(MainWindow* win, SidebarView v) {
+    if (IsSidebarViewShown(win, v)) {
         HideSidebarView(win, v);
         return;
     }
@@ -10672,6 +10718,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     CustomCommand* cmd = FindCustomCommand(cmdId);
     if (cmd != nullptr) {
         cmdId = cmd->origId;
+    }
+    if (ToggleCmdIsNoOp(win, cmd, cmdId)) {
+        return 0;
     }
 
     // a favorite in the Favorites menu carries its file path and page as arguments
@@ -11209,13 +11258,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowViewModeNotification(win, cmdId);
             break;
 
-        case CmdToggleContinuousView: {
-            bool cur = win->ctrl && IsContinuous(win->ctrl->GetDisplayMode());
-            if (ShouldToggle(cmd, cur)) {
-                ToggleContinuousView(win);
-            }
+        case CmdToggleContinuousView:
+            ToggleContinuousView(win);
             break;
-        }
 
         case CmdToggleMangaMode:
             ToggleMangaMode(win);
@@ -11455,12 +11500,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        case CmdToggleMenuBar: {
-            if (ShouldToggle(cmd, gSettings->showMenubar)) {
-                ToggleMenuBar(win, false);
-            }
+        case CmdToggleMenuBar:
+            ToggleMenuBar(win, false);
             break;
-        }
 
         case CmdToggleWindowsPreviewer: {
             PreviousInstallationInfo info;
@@ -11494,11 +11536,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents:
-            ToggleSidebarViewCmd(win, cmd, SidebarView::Bookmarks);
+            ToggleSidebarViewCmd(win, SidebarView::Bookmarks);
             break;
 
         case CmdToggleThumbnails:
-            ToggleSidebarViewCmd(win, cmd, SidebarView::Thumbnails);
+            ToggleSidebarViewCmd(win, SidebarView::Thumbnails);
             break;
 
         case CmdExpandToCurrentPage:
@@ -11758,15 +11800,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdTogglePresentationMode:
-            if (ShouldToggle(cmd, win->InPresentation())) {
-                TogglePresentationMode(win);
-            }
+            TogglePresentationMode(win);
             break;
 
         case CmdToggleFullscreen:
-            if (ShouldToggle(cmd, win->IsFullScreen())) {
-                ToggleFullScreen(win);
-            }
+            ToggleFullScreen(win);
             break;
 
         case CmdRotateLeft:
@@ -12193,14 +12231,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdToggleDisableLinks:
-            if (ShouldToggle(cmd, gSettings->disableLinks)) {
-                gSettings->disableLinks = !gSettings->disableLinks;
-                ScheduleSaveSettings();
-                if (gSettings->disableLinks) {
-                    for (MainWindow* w : gWindows) {
-                        RefHoverHide(w->refHover, w->hwndCanvas);
-                        StopKeyboardLinkFollowing(w);
-                    }
+            gSettings->disableLinks = !gSettings->disableLinks;
+            ScheduleSaveSettings();
+            if (gSettings->disableLinks) {
+                for (MainWindow* w : gWindows) {
+                    RefHoverHide(w->refHover, w->hwndCanvas);
+                    StopKeyboardLinkFollowing(w);
                 }
             }
             break;
@@ -12454,9 +12490,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSelectTextViaKeyboard:
-            if (ShouldToggle(cmd, SelectTextWithKeyboardActive(win))) {
-                ToggleSelectTextWithKeyboard(win);
-            }
+            ToggleSelectTextWithKeyboard(win);
             break;
 
         case CmdPresentationBlackBackground:

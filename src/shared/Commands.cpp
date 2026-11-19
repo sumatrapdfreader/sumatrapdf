@@ -453,23 +453,69 @@ static const ArgSpec argSpecs[] = {
     {CmdSignDocument, kCmdArgCertify, CommandArg::Type::Bool},
 
     // toggle commands accept an optional bool to force a state (issue #5067),
-    // e.g. [CmdToggleFullscreen on] / [CmdToggleToolbar state=off]
-    {CmdToggleContinuousView, kCmdArgState, CommandArg::Type::Bool},   // default
-    {CmdToggleToolbar, kCmdArgState, CommandArg::Type::Bool},          // default
-    {CmdToggleCaption, kCmdArgState, CommandArg::Type::Bool},          // default
-    {CmdToggleMenuBar, kCmdArgState, CommandArg::Type::Bool},          // default
-    {CmdToggleFullscreen, kCmdArgState, CommandArg::Type::Bool},       // default
+    // e.g. [CmdToggleFullscreen on] / [CmdToggleToolbar state=off].
+    // From toggleCommands in cmd/gen-commands.ts
+    // clang-format off
+// @gen-start cmd-toggle-args
+    {CmdToggleContinuousView, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleMangaMode, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleBookmarks, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleTableOfContents, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleFullscreen, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdTogglePresentationMode, kCmdArgState, CommandArg::Type::Bool}, // default
-    {CmdToggleBookmarks, kCmdArgState, CommandArg::Type::Bool},        // default
-    {CmdToggleTableOfContents, kCmdArgState, CommandArg::Type::Bool},  // default
-    {CmdToggleDisableLinks, kCmdArgState, CommandArg::Type::Bool},     // default
-    {CmdSelectTextViaKeyboard, kCmdArgState, CommandArg::Type::Bool},  // default
-#ifndef NO_THUMBNAIL_STATE_ARG
+    {CmdToggleToolbar, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleMenuBar, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdTogglePdfPreviewLogging, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleKeyboardHelp, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleLinks, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleShowAnnotations, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdTogglePageInfo, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleInverseSearch, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleWindowsPreviewer, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleWindowsSearchFilter, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleReadAloud, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleToolbarShowReadAloud, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleEngineeringDrawingEnhance, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdTogglePreservePdfImages, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleFavoritesSort, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleKeyboardLinkFollowing, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleImages, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleFilePicker, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleLaserPointer, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleHoverPreview, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleDisableLinks, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleHighlightFormFields, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdTogglePageBoxes, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleUniformPageWidth, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleTransparencyGrid, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdTogglePageGrid, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleEditPDF, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleTrimEmptyMargins, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleAutomaticallyScroll, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleReadingBar, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleReadingBarInvert, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleFreePan, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleGrayscale, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleThumbnails, kCmdArgState, CommandArg::Type::Bool}, // default
-#endif
+    {CmdToggleAutoRotateWidePages, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleCaption, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleSidebarAutoHide, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleLayers, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleFacingStepOne, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleMirror, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleReadColumns, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleColumnsWholePage, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdFavoriteToggle, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdFindToggleMatchCase, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdFindToggleMatchWholeWord, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdInvertColors, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdSelectTextViaKeyboard, kCmdArgState, CommandArg::Type::Bool}, // default
+// @gen-end cmd-toggle-args
+    // clang-format on
 
     // default string is the setting name, e.g. [CmdToggleBoolSetting Fullscreen.ShowMenubar]
     {CmdToggleBoolSetting, kCmdArgName, CommandArg::Type::String}, // default
+    {CmdToggleBoolSetting, kCmdArgState, CommandArg::Type::Bool},
 
     // extension including leading dot, e.g. [CmdFixDefaultApp .pdf]
     {CmdFixDefaultApp, kCmdArgExt, CommandArg::Type::String}, // default

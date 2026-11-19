@@ -1332,179 +1332,21 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
 }
 
 static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
-    bool isToggle = false;
-    bool newIsOn = false;
-    switch (cmdId) {
-        case CmdToggleInverseSearch: {
-            isToggle = true;
-            newIsOn = !gDisableInteractiveInverseSearch;
-        } break;
-        case CmdToggleFullscreen: {
-            isToggle = true;
-            newIsOn = !(win->IsFullScreenOrPresentation());
-        } break;
-        case CmdToggleToolbar: {
-            isToggle = true;
-            bool currentlyOn =
-                win->IsFullScreen() ? FullscreenToolbarModeFromPrefs() != kToolbarHide : !ToolbarModeIsHidden();
-            newIsOn = !currentlyOn;
-        } break;
-        case CmdToggleMenuBar: {
-            isToggle = true;
-            bool visible = SettingsUseTabs() ? gSettings->showMenubarWithTabs : gSettings->showMenubar;
-            newIsOn = !visible;
-        } break;
-        case CmdToggleCaption: {
-            isToggle = true;
-            newIsOn = !gSettings->showCaption;
-        } break;
-        case CmdToggleSidebarAutoHide: {
-            isToggle = true;
-            newIsOn = !gSettings->sidebarAutoHide;
-        } break;
-        case CmdToggleBookmarks:
-        case CmdToggleTableOfContents: {
-            isToggle = true;
-            newIsOn = !IsSidebarViewShown(win, SidebarView::Bookmarks);
-        } break;
-        case CmdToggleThumbnails: {
-            isToggle = true;
-            newIsOn = !IsSidebarViewShown(win, SidebarView::Thumbnails);
-        } break;
-        case CmdTogglePresentationMode: {
-            isToggle = true;
-            newIsOn = !win->InPresentation();
-        } break;
-        case CmdToggleLinks: {
-            isToggle = true;
-            newIsOn = !gSettings->showLinks;
-        } break;
-        case CmdToggleHighlightFormFields: {
-            isToggle = true;
-            newIsOn = !gSettings->highlightFormFields;
-        } break;
-        case CmdToggleDisableLinks: {
-            isToggle = true;
-            newIsOn = !gSettings->disableLinks;
-        } break;
-        case CmdToggleImages: {
-            isToggle = true;
-            newIsOn = !ShowImageOutlines();
-        } break;
-        case CmdToggleTransparencyGrid: {
-            isToggle = true;
-            newIsOn = !ShowTransparencyGrid();
-        } break;
-        case CmdTogglePageGrid: {
-            isToggle = true;
-            newIsOn = !ShowPageGrid();
-        } break;
-        case CmdToggleLaserPointer: {
-            isToggle = true;
-            newIsOn = !IsLaserPointerActive();
-        } break;
-        case CmdToggleHoverPreview: {
-            isToggle = true;
-            newIsOn = gSettings->citationHoverDelay < 0;
-        } break;
-        case CmdDebugShowFitContentArea: {
-            isToggle = true;
-            newIsOn = !ShowFitContentArea();
-        } break;
-        case CmdToggleShowAnnotations: {
-            WindowTab* tab = win->CurrentTab();
-            if (tab) {
-                isToggle = true;
-                newIsOn = tab->hideAnnotations;
-            }
-        } break;
-        case CmdToggleContinuousView: {
-            if (win->ctrl) {
-                isToggle = true;
-                newIsOn = !IsContinuous(win->ctrl->GetDisplayMode());
-            }
-        } break;
-        case CmdToggleMangaMode: {
-            DisplayModel* dm = win->AsFixed();
-            if (dm) {
-                isToggle = true;
-                newIsOn = !dm->GetDisplayR2L();
-            }
-        } break;
-        case CmdToggleUniformPageWidth: {
-            DisplayModel* dm = win->AsFixed();
-            if (dm) {
-                isToggle = true;
-                newIsOn = !dm->GetUniformPageWidth();
-            }
-        } break;
-        case CmdToggleTrimEmptyMargins: {
-            DisplayModel* dm = win->AsFixed();
-            if (dm) {
-                isToggle = true;
-                newIsOn = !dm->GetTrimEmptyMargins();
-            }
-        } break;
-        case CmdToggleFreePan: {
-            DisplayModel* dm = win->AsFixed();
-            if (dm) {
-                isToggle = true;
-                newIsOn = !dm->GetFreePan();
-            }
-        } break;
-        case CmdToggleFacingStepOne: {
-            DisplayModel* dm = win->AsFixed();
-            if (dm) {
-                isToggle = true;
-                newIsOn = !dm->GetFacingStepOne();
-            }
-        } break;
-        case CmdToggleMirror: {
-            DisplayModel* dm = win->AsFixed();
-            if (dm) {
-                isToggle = true;
-                newIsOn = !dm->GetMirror();
-            }
-        } break;
-        case CmdFindToggleMatchCase: {
-            isToggle = true;
-            newIsOn = !win->findMatchCase;
-        } break;
-        case CmdFindToggleMatchWholeWord: {
-            isToggle = true;
-            newIsOn = !win->findMatchWholeWord;
-        } break;
-        case CmdFavoriteToggle: {
-            isToggle = true;
-            newIsOn = !IsSidebarViewShown(win, SidebarView::Favorites);
-        } break;
-        case CmdTogglePageInfo: {
-            isToggle = true;
-            newIsOn = !win->pageInfoWanted;
-        } break;
-        case CmdTogglePageBoxes: {
-            isToggle = true;
-            newIsOn = !win->showPageBoxes;
-        } break;
-        case CmdTogglePreservePdfImages: {
-            isToggle = true;
-            newIsOn = !GetPreservePdfImagesInDarkMode();
-        } break;
-        case CmdDebugTogglePredictiveRender: {
-            isToggle = true;
-            newIsOn = !gPredictiveRender;
-        } break;
-        case CmdToggleEngineeringDrawingEnhance: {
-            DisplayModel* dm = win->AsFixed();
-            if (dm) {
-                isToggle = true;
-                newIsOn = !EngineMupdfCadEnhanceActive(dm->GetEngine());
-            }
-        } break;
+    bool isOn = false;
+    // these two name the action instead (below)
+    bool namesAction = cmdId == CmdToggleWindowsPreviewer || cmdId == CmdToggleWindowsSearchFilter;
+    bool isToggle = !namesAction && ToggleCmdState(win, nullptr, cmdId, isOn);
+    // debug toggles: not in toggleCommands, so no state argument
+    if (cmdId == CmdDebugShowFitContentArea) {
+        isToggle = true;
+        isOn = ShowFitContentArea();
     }
-
+    if (cmdId == CmdDebugTogglePredictiveRender) {
+        isToggle = true;
+        isOn = gPredictiveRender;
+    }
     if (isToggle) {
-        return str::JoinTemp(s, newIsOn ? StrL(": set to true") : StrL(": set to false"));
+        return str::JoinTemp(s, isOn ? StrL(": set to false") : StrL(": set to true"));
     }
 
     // these two cycle through values rather than on and off, so they name what

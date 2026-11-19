@@ -103,7 +103,7 @@ Str HelpThemePref();
 void ManualOnJsNotify(void*, Str method, Str paramsJson);
 TempStr DocURIToLocalManualUrlTemp(Str docURI);
 void TocItemToText(str::Builder& s, TocItem* item, int level);
-bool ShouldToggle(CustomCommand* cmd, bool curState);
+bool ToggleCmdIsNoOp(MainWindow* win, CustomCommand* cmd, int cmdId);
 Str CurrentImageTabPathTemp(MainWindow* win);
 void PrintCurrentFileDeferred(MainWindow* win);
 void PrintSelectionDeferred(MainWindow* win);
@@ -132,6 +132,7 @@ bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo);
 
 // implemented by each app
 void ShowPageInfoIfWanted(MainWindow* win);
+bool AppToggleCmdState(MainWindow* win, int cmdId, bool& on);
 void ToggleCursorPositionInDoc(MainWindow* win);
 
 extern Str gNextPrevDir;
