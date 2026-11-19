@@ -141,9 +141,19 @@ bool RefHoverTryPlainText(RefHoverState* s, EngineBase* engine, int srcPage, Poi
         s->lookupCache = new RefLookupCache();
     }
 
-    int textLen = 0;
-    Rect* coords = nullptr;
-    TempWStr text = RefHoverPageTextToWStrTemp(engine->GetTextForPage(srcPage, &textLen, &coords));
+    int pageTextLen = 0;
+    Rect* pageCoords = nullptr;
+    TempWStr pageText = RefHoverPageTextToWStrTemp(engine->GetTextForPage(srcPage, &pageTextLen, &pageCoords));
+    if (!pageCoords || len(pageText) == 0) {
+        return false;
+    }
+
+    // A diagonal watermark's tall rotated glyphs can share a citation line's
+    // baseline and break the walk to '[' or the author-year scan; drop them.
+    WCHAR* cleanText = AllocArrayTemp<WCHAR>(len(pageText));
+    Rect* coords = AllocArrayTemp<Rect>(len(pageText));
+    int textLen = StripWatermarkGlyphs(pageText, pageCoords, cleanText, coords);
+    WStr text(cleanText, textLen);
 
     // Try bracketed numbers before ambiguous author-year citations.
     int num = 0;

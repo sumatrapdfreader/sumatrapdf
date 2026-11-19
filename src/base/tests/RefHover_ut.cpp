@@ -550,7 +550,8 @@ static void NumericCitationSrcRectDistinctOnLine() {
 
 // (13x) A diagonal watermark letter crossing a citation list must not break
 // bracket detection or balloon the citation's anchor rect: its tall rotated
-// bbox puts its baseline within the line's baseline tolerance.
+// bbox puts its baseline within the line's baseline tolerance. Hover strips
+// it first (RefHoverTryPlainText), as this does.
 static void NumericCitationWatermarkIgnored() {
     WCHAR text[256];
     Rect coords[256];
@@ -562,7 +563,12 @@ static void NumericCitationWatermarkIgnored() {
     int num = 0;
     Rect src{};
     // cursor on the '1' of "13" (glyph 14 → x = 72 + 14*6 = 156)
-    bool ok = DetectNumericCitationInPageText(WStr(text, n), coords, n, Point{158, 206}, &num, &src);
+    WCHAR cleanText[256];
+    Rect cleanCoords[256];
+    int cleanN = StripWatermarkGlyphs(WStr(text, n), coords, cleanText, cleanCoords);
+    utassert(cleanN == n - 1);
+    bool ok =
+        DetectNumericCitationInPageText(WStr(cleanText, cleanN), cleanCoords, cleanN, Point{158, 206}, &num, &src);
     utassert(ok);
     utassert(num == 13);
     utassert(src.y >= 195);
