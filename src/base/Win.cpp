@@ -2289,6 +2289,29 @@ bool LaunchElevated(Str path, Str cmdline) {
     return LaunchFileShell(path, cmdline, StrL("runas"));
 }
 
+// Run elevated, wait for it to finish and return its exit code. 1 if it
+// couldn't start, e.g. the UAC prompt was declined.
+int RunElevatedAndWait(Str path, Str cmdline) {
+    SHELLEXECUTEINFOW sei{};
+    sei.cbSize = sizeof(sei);
+    sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS;
+    sei.lpVerb = L"runas";
+    sei.lpFile = CWStrTemp(path);
+    sei.lpParameters = CWStrTemp(cmdline);
+    sei.nShow = SW_SHOWNORMAL;
+    if (!ShellExecuteExW(&sei) || !sei.hProcess) {
+        logf("RunElevatedAndWait: ShellExecuteExW failed for '%s' '%s'\n", path, cmdline);
+        LogLastError();
+        return 1;
+    }
+    WaitForSingleObject(sei.hProcess, INFINITE);
+    DWORD exitCode = 1;
+    GetExitCodeProcess(sei.hProcess, &exitCode);
+    CloseHandle(sei.hProcess);
+    logf("RunElevatedAndWait: '%s' exited with %d\n", path, (int)exitCode);
+    return (int)exitCode;
+}
+
 //--- console
 
 enum class ConsoleState {

@@ -2188,9 +2188,9 @@ int RunInstaller() {
                 "prevInstall.needsElevation: %d\n",
                 (int)gCli->silent, (int)gCli->fastInstall, (int)isElevated, (int)gCli->allUsers,
                 (int)gPrevInstall.allUsers);
-            RestartElevatedForAllUsers(&gCliNew);
+            int exitCode = RestartElevatedForAllUsers(&gCliNew);
             ScheduleDeleteTempInstaller();
-            ::ExitProcess(0);
+            ::ExitProcess((UINT)exitCode);
         }
     }
 

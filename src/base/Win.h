@@ -360,6 +360,7 @@ bool LaunchBrowser(Str url);
 void OpenPathInDefaultFileManager(Str path);
 void RunNonElevated(Str exePath);
 bool LaunchElevated(Str path, Str cmdline);
+int RunElevatedAndWait(Str path, Str cmdline);
 
 //--- console
 

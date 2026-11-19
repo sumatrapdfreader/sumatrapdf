@@ -751,9 +751,9 @@ int RunInstaller(Flags* cli) {
         if (needsElevation) {
             logf("Restarting as elevated: gCli->silent: %d, gCli->fastInstall: %d, gCli->allUsers: %d\n",
                  (int)gCli->silent, (int)gCli->fastInstall, (int)gCli->allUsers);
-            RestartElevatedForAllUsers(&gCliNew);
+            int exitCode = RestartElevatedForAllUsers(&gCliNew);
             ScheduleDeleteTempInstaller();
-            ::ExitProcess(0);
+            ::ExitProcess((UINT)exitCode);
         }
     }
 

@@ -40,7 +40,7 @@ void ProcessesUsingInstallation(StrVec& names);
 
 // --- shared by InstallerUtil_win.cpp and each app's Installer.cpp ---
 
-void RestartElevatedForAllUsers(Flags* cli);
+int RestartElevatedForAllUsers(Flags* cli);
 
 // --- shared by InstallerUtil_win.cpp and each app's Uninstaller.cpp ---
 
