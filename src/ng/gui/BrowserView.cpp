@@ -333,7 +333,7 @@ static void OnPageLoad(void* ctx, wry::PageLoadEvent ev, gp::Str url) {
         return;
     }
     ApplyBackground(bv);
-    if (!ColorSkipsPaint(bv->background)) {
+    if (!ColorSkipsPaint(bv->background) && bv->visible) {
         wry::WebView* raw = Raw(bv);
         if (raw) {
             wry::WebViewSetVisible(raw, true);
@@ -836,6 +836,10 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
     str::Free(startUrl);
     if (bv->zoomPercent != 100) {
         wry::WebViewZoom(gp::WebViewRaw(wv), (double)bv->zoomPercent / 100.0);
+    }
+    // hidden before the tick made it (a panel closed right after opening)
+    if (!bv->visible) {
+        gp::WebViewHide(wv);
     }
     logf("BrowserView: webview created, host '%s'\n", bv->virtualHost);
 }

@@ -336,6 +336,7 @@ static const i32 removeIfAnnotsNotSupported[] = {
     CmdPasteAnnotation,
     CmdUndo,
     CmdRedo,
+    CmdAddComment,
     0,
 };
 
@@ -506,6 +507,19 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (!ctx.aiChatSupported) {
             return CommandVisibility::Hide;
         }
+    }
+    // ng's toolbar button: disabled, not removed, where chat is not supported
+    if (cmdId == CmdToggleAIChat) {
+#if defined(SUMATRA_NG)
+        if (!ctx.aiChatAvailable) {
+            return CommandVisibility::Hide;
+        }
+        if (!ctx.aiChatSupported) {
+            return CommandVisibility::Disable;
+        }
+#else
+        return CommandVisibility::Hide;
+#endif
     }
     if (cmdId == CmdTranslateSelectionWithGrokBuild && !ctx.grokInstalled) {
         return CommandVisibility::Hide;
@@ -886,6 +900,17 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (cmdId == CmdSaveTrimmedPagesAs) {
         return ctx.hasTrimmedPages ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
+    }
+
+    // ng only: comments the text selection, or the annotation under the cursor
+    if (cmdId == CmdAddComment) {
+#if defined(SUMATRA_NG)
+        Annotation* annot = ctx.annotationUnderCursor ? ctx.annotationUnderCursor : ctx.selectedAnnotation;
+        bool can = ctx.hasTextSelection || (AnnotationIsLive(annot) && annot->type != AnnotationType::Widget);
+        return can ? CommandVisibility::Show : CommandVisibility::Hide;
+#else
+        return CommandVisibility::Hide;
+#endif
     }
 
     if ((cmdId == CmdSaveAnnotations) || (cmdId == CmdSaveAnnotationsNewFile) || (cmdId == CmdDiscardChanges)) {

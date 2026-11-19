@@ -132,6 +132,8 @@ struct AnnotEditToolbar : AnnotEditToolbarBase {
     // the contents editor: a multi-line text box inside the card
     bool editingContents = false;
     gp::InputState* contentsEdit = nullptr;
+    // Add Comment turned Edit PDF on for this edit: ending it turns it off
+    bool leaveEditPdf = false;
 
     ~AnnotEditToolbar();
 };
@@ -346,6 +348,28 @@ void AnnotContentsKeepOnKillFocus(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
+// back to the mode the user was in before Add Comment; posted, as the edit can
+// end from inside a mode change or a gpui event
+static void LeaveEditPdf(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win) || IsEditingAnnotContents(win)) {
+        return;
+    }
+    if (win->pdfAnnotationsToolbarEnabled) {
+        TogglePdfAnnotationsToolbar(win);
+    }
+    AppShellFocusFrame(win);
+    AnnotTextPopupRefreshHover(win);
+}
+
+void LeaveEditPdfAfterContentsEdit(MainWindow* win) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    if (tb && tb->editingContents) {
+        tb->leaveEditPdf = true;
+        return;
+    }
+    PostForWindow(win, LeaveEditPdf, "LeaveEditPdf");
+}
+
 void EndAnnotContentsEdit(bool accept) {
     AnnotEditToolbar* tb = gEditingTb;
     if (!tb || !tb->editingContents) {
@@ -354,6 +378,10 @@ void EndAnnotContentsEdit(bool accept) {
     tb->editingContents = false;
     gEditingTb = nullptr;
     gContentsEditJustEnded = true;
+    if (tb->leaveEditPdf) {
+        tb->leaveEditPdf = false;
+        PostForWindow(tb->win, LeaveEditPdf, "LeaveEditPdf");
+    }
     Annotation* annot = LiveToolbarAnnot(tb);
     if (accept && annot && tb->contentsEdit) {
         Str now = FromGpui(gp::InputValue(tb->contentsEdit));
@@ -2218,6 +2246,11 @@ void UpdateAnnotationHoverOverlay(MainWindow* win, Point mousePos) {
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
     if (!win || !win->pdfAnnotationsToolbarEnabled || win->mouseAction != MouseAction::None ||
         !AnnotationIsLive(annot) || (tab && annot == tab->selectedAnnotation)) {
+        HideAnnotationHoverOverlay(win);
+        return;
+    }
+    // ng: text markup gets no metadata card, only its comment's (AnnotTextPopup)
+    if (AnnotationIsTextMarkup(annot->type)) {
         HideAnnotationHoverOverlay(win);
         return;
     }

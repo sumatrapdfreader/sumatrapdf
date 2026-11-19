@@ -17,6 +17,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "gui/AppShell.h"
+#include "gui/DocCanvas.h"
 
 // AppKit turns automatic termination back on at the end of launch when it
 // still counts zero windows. Under lldb the app never becomes frontmost, so
@@ -98,6 +99,50 @@ void AppShellHandleOpenDocs() {
                                                        andSelector:@selector(openDocs:withReply:)
                                                      forEventClass:kCoreEventClass
                                                         andEventID:kAEOpenDocuments];
+}
+
+static MainWindow* MainWindowOfNSWindow(NSWindow* nsWin, NSView** viewOut) {
+    for (MainWindow* win : gWindows) {
+        NSView* view = (__bridge NSView*)gp::PlatWindowHandle(win->gpuiWin);
+        if (nsWin && view.window == nsWin) {
+            *viewOut = view;
+            return win;
+        }
+    }
+    return nullptr;
+}
+
+static PinchPhase PinchPhaseOf(NSEvent* event) {
+    NSEventPhase ph = event.phase;
+    if (ph & NSEventPhaseBegan) {
+        return PinchPhase::Begin;
+    }
+    if (ph & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
+        return PinchPhase::End;
+    }
+    return PinchPhase::Change;
+}
+
+// a magnify event over a document zooms it; nil swallows the event
+static NSEvent* OnMagnify(NSEvent* event) {
+    NSView* view = nil;
+    MainWindow* win = MainWindowOfNSWindow(event.window, &view);
+    if (!win) {
+        return event;
+    }
+    // gpui's view is flipped: this is the same point its mouse events carry
+    NSPoint p = [view convertPoint:event.locationInWindow fromView:nil];
+    bool handled = DocCanvasPinch(win, PinchPhaseOf(event), (float)event.magnification, (float)p.x, (float)p.y);
+    return handled ? nil : event;
+}
+
+// gpui's Mac view has no magnifyWithEvent:, so a trackpad pinch would go
+// nowhere. A local monitor sees it before the view does.
+void AppShellHandleMagnify() {
+    [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskMagnify
+                                          handler:^NSEvent*(NSEvent* event) {
+                                              return OnMagnify(event);
+                                          }];
 }
 
 void AppShellOpenDocsReady() {

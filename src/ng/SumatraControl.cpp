@@ -75,6 +75,7 @@
 #include "SelectTextKeyboard.h"
 #include "Notifications.h"
 #include "AIChatCommon.h"
+#include "AIChatPanel.h"
 #include "EutlTrust.h"
 #include "PdfTools.h"
 #include "Tabs.h"
@@ -2746,6 +2747,29 @@ static void ExecuteControlRequest(ControlRequest* req) {
             out.Append(fmt("drawn shapes=%d\n", CanvasOverlayShapesDrawn()));
             out.Append(fmt("commandPalette=%d\n", IsCommandPaletteVisible() ? 1 : 0));
             out.Append(fmt("annotTextPopup=%d\n", IsAnnotationTextPopupShown(win) ? 1 : 0));
+            out.Append(fmt("annotTextPopupHover=%d text=%s\n", IsAnnotationTextPopupFromHover(win) ? 1 : 0,
+                           AnnotationTextPopupText(win)));
+            // the comment card, its buttons and the canvas in dips; CanvasScale converts to frame px
+            out.Append(fmt("annotTextPopupScale=%g canvas=%d,%d,%d,%d ", CanvasScale(win), win->canvasRc.x,
+                           win->canvasRc.y, win->canvasRc.dx, win->canvasRc.dy));
+            out.Append(AnnotTextPopupBoundsTemp(win));
+            // annotation markers in frame px (as TestMarkupAnnots' screen=)
+            Str markNames[] = {StrL("hover"), StrL("selected"), StrL("contextMenu")};
+            for (int k = 0; k < 3; k++) {
+                Vec<Rect> rects;
+                Vec<Rect> segs;
+                AnnotMarkGeometry(win, (AnnotMarkKind)k, rects, segs);
+                out.Append(fmt("mark %s rects=%d segs=%d", markNames[k], len(rects), len(segs)));
+                for (Rect r : rects) {
+                    r = CanvasToFramePx(win, r);
+                    out.Append(fmt(" r=%d,%d,%d,%d", r.x, r.y, r.dx, r.dy));
+                }
+                for (Rect s : segs) {
+                    s = CanvasToFramePx(win, s);
+                    out.Append(fmt(" s=%d,%d,%d,%d", s.x, s.y, s.dx, s.dy));
+                }
+                out.Append(StrL("\n"));
+            }
             AppendTestResult(req, 0, ToStrTemp(out));
             break;
         }
@@ -2984,6 +3008,10 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 if (str::Eq(op, StrL("ctxcmd"))) {
                     WindowContextMenuCommand(FirstWindow(), arg);
                     AppendTestResult(req, 0, StrL("ok"));
+                    break;
+                }
+                if (str::Eq(op, StrL("aichat"))) {
+                    AppendTestResult(req, 0, AIChatPanelStateTemp(FirstWindow()));
                     break;
                 }
                 // mac has no HWND to MoveWindow. x,y,dx,dy then the window index.

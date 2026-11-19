@@ -577,12 +577,30 @@ static bool ForwardTestWheelToBrowser(MainWindow* win, int delta, int mods) {
     return true;
 }
 
+// a trackpad pinch at (x, y) dips: phase 0 begin, 1 change, 2 end;
+// magnification in thousandths. Replies with the zoom and the page point
+// under (x, y) after it, which an anchored pinch keeps.
+static TempStr TestPinchTemp(MainWindow* win, int x, int y, int phase, int milli) {
+    bool handled = DocCanvasPinch(win, (PinchPhase)phase, (float)milli / 1000.f, (float)x, (float)y);
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fmt("OK handled=%d", handled ? 1 : 0);
+    }
+    float k = CanvasScale(win);
+    Point pt((int)(((float)x - (float)win->canvasRc.x) / k), (int)(((float)y - (float)win->canvasRc.y) / k));
+    int pageNo = dm->GetPageNoByPoint(pt);
+    PointF at = pageNo > 0 ? dm->CvtFromScreen(pt, pageNo) : PointF{};
+    return fmt("OK handled=%d zoom=%.2f page=%d at=%.1f,%.1f", handled ? 1 : 0, dm->GetZoomVirtual(true), pageNo, at.x,
+               at.y);
+}
+
 // ng: kinds are key / keyup (a = vk, b = mods: 1 Ctrl, 2 Shift, 4 Alt,
 // 8 auto-repeat), char (a = code point), down / up / click (a, b = x, y in
 // dips; c = button: 0 left, 1 right, 2 middle; d = mods: 1 Ctrl, 2 Shift,
 // 4 Alt, 8 Command), move (c = pressed
-// button + 1, or 0) and wheel (c = delta in 120ths of a notch, 1000000 + delta
-// for a horizontal one). k is dips per unit of a mouse x, y.
+// button + 1, or 0), wheel (c = delta in 120ths of a notch, 1000000 + delta
+// for a horizontal one) and pinch (see TestPinchTemp). k is dips per unit of
+// a mouse x, y.
 TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d, float k) {
     // a modal dialog in a window of its own has the input, as on screen: the
     // main window is disabled, so what a test sends "to the window" is the
@@ -615,6 +633,9 @@ TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d,
     // subclass proc; a real key still toggles from OnKeyDown.
     if (str::Eq(kind, StrL("char")) && SelectTextWithKeyboardOnChar(win, a)) {
         return StrL("OK");
+    }
+    if (str::Eq(kind, StrL("pinch"))) {
+        return TestPinchTemp(win, a, b, c, d);
     }
     return AppShellTestInputGpui(win ? win->gpuiWin : nullptr, kind, a, b, c, d, k);
 }
@@ -655,6 +676,18 @@ TempStr AppShellTestInputGpui(gp::Window* gw, Str kind, int a, int b, int c, int
         float delta = (float)c / 120.f * gp::WheelNotchPixels(gw->app);
         gp::PlatformInput in = gp::InputScrollWheel(x, y, horizontal ? -delta : 0.f, horizontal ? 0.f : delta, false,
                                                     TestMods(d), gp::TouchPhase::Moved);
+        gp::WindowDispatchInput(gw, &in);
+        return StrL("OK");
+    }
+    // a trackpad event with both axes: c = deltaY + 1000000 * mods (as d of
+    // click), d = deltaX, in 120ths of a notch with gpui's signs (positive
+    // scrolls up / left)
+    if (str::Eq(kind, StrL("wheelxy"))) {
+        int mods = (c + 500000) / 1000000;
+        float notch = gp::WheelNotchPixels(gw->app);
+        float dy = (float)(c - mods * 1000000) / 120.f * notch;
+        float dx = (float)d / 120.f * notch;
+        gp::PlatformInput in = gp::InputScrollWheel(x, y, dx, dy, true, TestMods(mods), gp::TouchPhase::Moved);
         gp::WindowDispatchInput(gw, &in);
         return StrL("OK");
     }
@@ -2107,6 +2140,10 @@ static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
         win->sidebarOverlayShown = false;
     }
     gp::El* aiChat = overlayUp ? nullptr : AIChatPanelBuild(win, cx);
+    // its web view would cover the dialog / palette, as UpdateBrowserViews() says
+    if (overlayUp) {
+        AIChatPanelHideView(win);
+    }
     // orig docks the folder picker's window beside the frame; here it is the
     // frame's last column
     gp::El* navFiles = NavFilesUIBuild(win, cx);
@@ -3281,6 +3318,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     AnnotationNudgeTick(win, ms);
     AnnotationResizeRerenderTick(win, ms);
     RefHoverTick(win, ms);
+    AnnotTextPopupTick(win, ms);
     ForwardSearchMarkTick(win, ms);
     ExpireNotifications(win, ms);
     // ng: orig's stress test re-arms a WM_TIMER after every step

@@ -33,3 +33,6 @@ void ToolWinNativeSetMaxClient(gpui::Window* gw, int dx, int dy);
 // the owner takes no clicks or keys while `on`
 void ToolWinNativeSetModal(gpui::Window* gw, gpui::Window* owner, bool on);
 bool ToolWinNativeMouseDown();
+#if OS_DARWIN
+TempStr ToolWinNativeWebViewsTemp(gpui::Window* gw);
+#endif

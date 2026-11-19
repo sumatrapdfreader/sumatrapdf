@@ -36,6 +36,8 @@
 #include "SelectionToolbar.h"
 #include "SvgIcons.h"
 #include "Toolbar.h"
+#include "SumatraDialogs.h"
+#include "ToolbarCommon.h"
 #include "SelectionToolbarCommon.h"
 
 #include "SumatraLog.h"
@@ -53,6 +55,9 @@ struct SelectionToolbar {
     // where the card ended up last frame; gpui reports it one frame late, which
     // is enough to center the card on the selection from the second frame on
     gp::Bounds measured;
+    // each button's laid-out rect, parallel to buttons: the colour drop-down
+    // of Highlight / Add comment hangs off it
+    Vec<gp::Bounds> btnBounds;
 };
 
 static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
@@ -98,6 +103,7 @@ static void ShowSelectionToolbarNow(MainWindow* win) {
     if (!tb->visible) {
         // the buttons may differ from last time: measure them again
         tb->measured = {};
+        VecReset(tb->btnBounds);
     }
     tb->visible = true;
     str::Builder labels;
@@ -197,6 +203,7 @@ void HideSelectionToolbar(MainWindow* win) {
     }
     tb->visible = false;
     tb->tab = nullptr;
+    HideSelectionColorDropdown(win);
     AppShellInvalidate(win);
 }
 
@@ -240,6 +247,7 @@ struct SelToolbarView {
     MainWindow* win = nullptr;
 
     static void OnClick(SelToolbarView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t cmdId);
+    static void OnColorBtnHover(SelToolbarView* self, gp::Ctx* cx, const gp::HoverEvent* ev, int64_t idx);
 };
 
 static gp::Entity<SelToolbarView> gSelToolbarView;
@@ -247,6 +255,24 @@ static gp::Entity<SelToolbarView> gSelToolbarView;
 void SelToolbarView::OnClick(SelToolbarView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t cmdId) {
     InvokeSelectionToolbarCommand(self->win, (int)cmdId);
     gp::Notify(cx);
+}
+
+// resting on Highlight / Add comment opens the annotation buttons' colour
+// drop-down under it, as on the annotation toolbar
+void SelToolbarView::OnColorBtnHover(SelToolbarView* self, gp::Ctx* cx, const gp::HoverEvent* ev, int64_t idx) {
+    SelectionToolbar* tb = self->win ? self->win->selectionToolbar : nullptr;
+    if (!tb || !tb->visible || !VecIsValidIndex(tb->btnBounds, (int)idx) || !VecIsValidIndex(tb->buttons, (int)idx)) {
+        return;
+    }
+    gp::Bounds b = tb->btnBounds[(int)idx];
+    Rect anchor((int)b.x, (int)b.y, (int)(b.w + 0.5f), (int)(b.h + 0.5f));
+    AnnotColorDropdownHover(self->win, tb->buttons[(int)idx].cmdId, anchor, ev->hovered);
+    gp::Notify(cx);
+}
+
+// the buttons that make a highlight in a color the user picks
+static bool HasColorDropdown(int cmdId) {
+    return cmdId == CmdCreateAnnotHighlight || cmdId == CmdAddComment;
 }
 
 // a first guess at the card's width so it can be centered on the selection
@@ -287,7 +313,12 @@ gp::El* SelectionToolbarBuild(MainWindow* win, gp::Ctx* cx) {
                        ->Radius(10)
                        ->Bg(th.tokens.popover)
                        ->Border(1, th.border);
-    for (const SelectionToolbarButton& b : tb->buttons) {
+    // sized before any pointer into it is handed out
+    VecReset(tb->btnBounds);
+    VecAppendBlanks(tb->btnBounds, len(tb->buttons));
+    for (int i = 0; i < len(tb->buttons); i++) {
+        const SelectionToolbarButton& b = tb->buttons[i];
+        tb->btnBounds[i] = {};
         if (b.cmdId == 0) {
             card->Child(gp::Div(cx->a)->W(1)->H(18)->Bg(th.tokens.muted));
             continue;
@@ -306,7 +337,20 @@ gp::El* SelectionToolbarBuild(MainWindow* win, gp::Ctx* cx) {
         } else {
             button->Label(GpuiDup(cx->a, ButtonLabel(b)));
         }
-        card->Child(button->IntoEl());
+        Color col = HasColorDropdown(b.cmdId) ? AnnotColorForCmd(b.cmdId) : kColorUnset;
+        if (col == kColorUnset) {
+            card->Child(button->IntoEl());
+            continue;
+        }
+        // the color its highlight is made in, as a bar under the icon
+        gp::El* group = gp::Div(cx->a)
+                            ->FlexCol()
+                            ->ItemsCenter()
+                            ->BoundsOut(&tb->btnBounds[i])
+                            ->OnHover(gp::Listen(cx, &SelToolbarView::OnColorBtnHover, (intptr_t)i));
+        group->Child(button->IntoEl());
+        group->Child(gp::Div(cx->a)->W(14)->H(3)->Radius(1.5f)->Bg(ToGpui(col)));
+        card->Child(group);
     }
     card->BoundsOut(&tb->measured);
 
@@ -372,6 +416,17 @@ TempStr SelectionToolbarLayoutDumpTemp(MainWindow* win) {
         }
 #endif
         out.Append(fmt("placed=%d,%d,%d,%d\n", x, y, (int)(r.w + 0.5f), (int)(r.h + 0.5f)));
+        // Highlight / Add comment: where to rest the pointer (window dips) and
+        // the color the bar under the icon shows
+        for (int i = 0; i < len(tb->btnBounds) && i < len(tb->buttons); i++) {
+            int cmdId = tb->buttons[i].cmdId;
+            gp::Bounds b = tb->btnBounds[i];
+            if (!HasColorDropdown(cmdId) || b.w <= 0) {
+                continue;
+            }
+            out.Append(fmt("colorbtn cmd=%d rect=%d,%d,%d,%d color=%s\n", cmdId, (int)b.x, (int)b.y, (int)b.w, (int)b.h,
+                           SerializeColorTemp(AnnotColorForCmd(cmdId))));
+        }
     }
     if (!tb) {
         out.Append(StrL("buttons=0\n"));

@@ -61,6 +61,10 @@ struct Toolbar {
     // from the one already up. Crossing Zoom In / Zoom Out does not.
     int hoverGen = 0;
     int hoverPendingCmdId = 0;
+    // a colour drop-down opened from the selection toolbar hangs off that
+    // button's rect (window dips) instead of a toolbar button's; empty otherwise
+    Rect hoverRect;
+    Rect hoverPendingRect;
     Countdown hoverOpen;
     // armed while the open drop-down waits out orig's close grace
     Countdown hoverClose;
@@ -75,6 +79,11 @@ void EnablePdfAnnotationsToolbar(MainWindow*);
 // Annotations.InkColors for the ink button); cmdId 0 gets the presets
 void AnnotPresetColors(int cmdId, Vec<Color>& out);
 void SetAnnotPresetColor(int cmdId, Color col);
+// the selection toolbar's Highlight / Add comment buttons: the pointer resting
+// on `anchor` (window dips) opens the annotation buttons' colour drop-down there
+void AnnotColorDropdownHover(MainWindow*, int cmdId, Rect anchor, bool hovered);
+// the selection toolbar went away: so does a drop-down it opened
+void HideSelectionColorDropdown(MainWindow*);
 
 gpui::El* ToolbarBuild(MainWindow*, gpui::Ctx*);
 // what floats over the canvas: the zoom drop-down a zoom button opens

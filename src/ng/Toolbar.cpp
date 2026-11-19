@@ -52,6 +52,7 @@
 #include "SumatraDialogs.h"
 #include "Toolbar.h"
 #include "ToolbarCommon.h"
+#include "SelectionToolbarCommon.h"
 
 #include "SumatraLog.h"
 
@@ -77,6 +78,8 @@ static bool IsCmdChecked(MainWindow* win, int cmdId) {
             return dm == DisplayMode::Continuous && zoomVirtual == kZoomFitWidth;
         case CmdZoomFitPageAndSinglePage:
             return dm == DisplayMode::SinglePage && zoomVirtual == kZoomFitPage;
+        case CmdToggleAIChat:
+            return win->uiState.aiChatVisible;
         default:
             return false;
     }
@@ -398,6 +401,9 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
                        r.x + r.dx, r.y + r.dy, text));
         bool enabled = bi.cmdId != 0 && IsCmdEnabled(win, bi.cmdId, ctx);
         out.Append(fmt("button-enabled idx=%d enabled=%d text=%s\n", i, enabled ? 1 : 0, text));
+        if (bi.cmdId != 0 && IsCmdChecked(win, bi.cmdId)) {
+            out.Append(fmt("button-checked idx=%d\n", i));
+        }
         if (!hidden[i] && bi.cmdId != 0 && bi.cmdId != PageInfoId && len(bi.toolTip) > 0) {
             out.Append(fmt("tool=%d uid=%d rect=%d,%d,%d,%d\n", toolIdx, bi.cmdId, r.x, r.y, r.x + r.dx, r.y + r.dy));
             toolIdx++;
@@ -614,11 +620,29 @@ void HideToolbarHoverDropdown(MainWindow* win) {
     tb->hoverCmdId = 0;
     tb->hoverAnchorCmdId = 0;
     tb->hoverPendingCmdId = 0;
+    tb->hoverRect = {};
+    tb->hoverPendingRect = {};
     tb->hoverOpen.Cancel();
     tb->hoverClose.Cancel();
     if (tb->ui) {
         FreeHoverItems(tb->ui);
         ResetHoverLock(tb->ui);
+    }
+}
+
+void HideSelectionColorDropdown(MainWindow* win) {
+    Toolbar* tb = win ? win->toolbar : nullptr;
+    if (!tb) {
+        return;
+    }
+    if (!tb->hoverRect.IsEmpty()) {
+        HideToolbarHoverDropdown(win);
+        AppShellInvalidate(win);
+    }
+    if (!tb->hoverPendingRect.IsEmpty()) {
+        tb->hoverPendingCmdId = 0;
+        tb->hoverPendingRect = {};
+        tb->hoverOpen.Cancel();
     }
 }
 
@@ -918,6 +942,12 @@ static Str AnnotButtonTitle(int cmdId) {
     return {};
 }
 
+// Highlight and Add comment keep their setting's opacity (#aarrggbb) when a
+// preset is picked: a swatch changes the color, not how see-through it is
+static bool KeepsAnnotOpacity(int cmdId) {
+    return cmdId == CmdCreateAnnotHighlight || cmdId == CmdAddComment;
+}
+
 // An annotation button's drop-down (orig's BuildAnnotColorsHoverMenu /
 // MakeAnnotColorsPanel): a label, the preset colors as discs with the one the
 // button makes its annotations in ringed, a pencil that opens the color dialog
@@ -925,11 +955,17 @@ static Str AnnotButtonTitle(int cmdId) {
 static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
     Toolbar* tb = Tb(win);
     int cmdId = tb->hoverCmdId;
-    Rect anchor = GetToolbarButtonRect(win, cmdId);
+    bool fromSelection = !tb->hoverRect.IsEmpty();
+    Rect anchor = fromSelection ? tb->hoverRect : GetToolbarButtonRect(win, cmdId);
     if (anchor.IsEmpty()) {
         return nullptr;
     }
+    // a highlight's alpha is HighlightColor's opacity, not a different color:
+    // the presets are matched (and kept) without it
     Color current = AnnotColorForCmd(cmdId);
+    if (KeepsAnnotOpacity(cmdId) && current != kColorUnset) {
+        current &= 0xffffff;
+    }
     EnsureAnnotPresetColor(cmdId, current);
     Vec<Color> colors;
     AnnotPresetColors(cmdId, colors);
@@ -937,6 +973,11 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
         return nullptr;
     }
     ToolbarUI* ui = Ui(win);
+    // the toolbar row may never have been built (toolbar hidden)
+    if (!ui->view.IsValid()) {
+        ui->view = gp::EntityNewState<ToolbarView>(cx->app);
+    }
+    ui->view.Get(cx)->win = win;
     bool hasThickness = cmdId == CmdCreateAnnotInk;
     int width = 0;
     if (hasThickness) {
@@ -1032,8 +1073,22 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
         stripDx = std::max(stripDx, (float)DpiScale(240));
     }
     float x = (float)anchor.x + ((float)anchor.dx - stripDx) / 2;
-    x = limitValue(x, 0.f, std::max(0.f, (float)win->frameRc.dx - stripDx));
-    box->Left(x)->Top((float)anchor.Bottom());
+    float y = (float)anchor.Bottom();
+    float minX = 0;
+    float maxX = (float)win->frameRc.dx;
+    // from the selection toolbar: within the canvas, above the button when
+    // there is no room under it
+    if (fromSelection) {
+        Rect canvas = win->canvasRc;
+        minX = (float)canvas.x;
+        maxX = (float)canvas.Right();
+        float stripDy = ui->hoverBox.h > 1 ? ui->hoverBox.h : (float)DpiScale(64);
+        if (y + stripDy > (float)canvas.Bottom()) {
+            y = std::max((float)anchor.y - stripDy, (float)canvas.y);
+        }
+    }
+    x = limitValue(x, minX, std::max(minX, maxX - stripDx));
+    box->Left(x)->Top(y);
     return box;
 }
 
@@ -1567,6 +1622,7 @@ void ToolbarView::OnButtonUp(ToolbarView* self, gp::Ctx* cx, const gp::MouseUpEv
                 tb->hoverAnchorCmdId = cmdId;
             }
             tb->hoverCmdId = cmdId;
+            tb->hoverRect = {};
         }
         tb->hoverPendingCmdId = 0;
         tb->hoverOpen.Cancel();
@@ -1616,11 +1672,13 @@ void ToolbarView::OnButtonHover(ToolbarView* self, gp::Ctx* cx, const gp::HoverE
             // (its tooltip goes); the strip stays on the button that opened it.
             bool sameStrip = ZoomHoverGroup(tb->hoverAnchorCmdId) && ZoomHoverGroup(cmdId);
             tb->hoverCmdId = cmdId;
+            tb->hoverRect = {};
             if (!sameStrip) {
                 tb->hoverAnchorCmdId = cmdId;
             }
-        } else if (tb->hoverPendingCmdId != cmdId) {
+        } else if (tb->hoverPendingCmdId != cmdId || !tb->hoverPendingRect.IsEmpty()) {
             tb->hoverPendingCmdId = cmdId;
+            tb->hoverPendingRect = {};
             tb->hoverOpen.Arm(kOpenHoverDropdownDelay);
         }
     } else if (tb->hoverCmdId != 0 && !tb->hoverClose.IsArmed()) {
@@ -1741,17 +1799,69 @@ void ToolbarView::OnAnnotSwatch(ToolbarView* self, gp::Ctx* cx, const gp::ClickE
     }
     Toolbar* tb = Tb(win);
     int cmdId = tb->hoverCmdId;
+    bool fromSelection = !tb->hoverRect.IsEmpty();
     Vec<Color> colors;
     AnnotPresetColors(cmdId, colors);
     HideToolbarHoverDropdown(win);
-    if (VecIsValidIndex(colors, (int)idx)) {
-        SetAnnotPresetColor(cmdId, colors[(int)idx]);
-        if (CanCreateAnnotFromSelection(win, cmdId)) {
-            // with text selected, picking a color is also a request to mark it up
-            ExecuteCmd(win, cmdId);
-        }
+    if (!VecIsValidIndex(colors, (int)idx)) {
+        gp::Notify(cx);
+        return;
+    }
+    Color col = colors[(int)idx];
+    Color prev = AnnotColorForCmd(cmdId);
+    if (KeepsAnnotOpacity(cmdId) && prev != kColorUnset) {
+        col = (col & 0xffffff) | (prev & 0xff000000);
+    }
+    SetAnnotPresetColor(cmdId, col);
+    if (fromSelection) {
+        // the selection toolbar's button: mark the selection up in it
+        InvokeSelectionToolbarCommand(win, cmdId);
+    } else if (CanCreateAnnotFromSelection(win, cmdId)) {
+        // with text selected, picking a color is also a request to mark it up
+        ExecuteCmd(win, cmdId);
     }
     gp::Notify(cx);
+}
+
+static bool PointerKeepsHover(MainWindow* win);
+
+void AnnotColorDropdownHover(MainWindow* win, int cmdId, Rect anchor, bool hovered) {
+    if (!IsMainWindowValidAndNotClosing(win) || !CmdIsAnnotColorDropdown(cmdId) || anchor.IsEmpty()) {
+        return;
+    }
+    Toolbar* tb = Tb(win);
+    if (!hovered) {
+        if (tb->hoverPendingCmdId == cmdId) {
+            tb->hoverPendingCmdId = 0;
+            tb->hoverPendingRect = {};
+            tb->hoverOpen.Cancel();
+        }
+        // the pointer may be on its way to the drop-down: OnStripHover cancels
+        if (tb->hoverCmdId != 0 && !tb->hoverClose.IsArmed() && !PointerKeepsHover(win)) {
+            tb->hoverClose.Arm(kCloseHoverDropdownDelayMs);
+        }
+        return;
+    }
+    tb->hoverClose.Cancel();
+    if (tb->hoverCmdId == cmdId && tb->hoverRect == anchor) {
+        return;
+    }
+    // one drop-down is up already: it moves to this button at once
+    if (tb->hoverCmdId != 0) {
+        tb->hoverGen++;
+        ResetHoverLock(tb->ui);
+        FreeHoverItems(tb->ui);
+        tb->hoverCmdId = cmdId;
+        tb->hoverAnchorCmdId = cmdId;
+        tb->hoverRect = anchor;
+        AppShellInvalidate(win);
+        return;
+    }
+    if (tb->hoverPendingCmdId != cmdId || tb->hoverPendingRect != anchor) {
+        tb->hoverPendingCmdId = cmdId;
+        tb->hoverPendingRect = anchor;
+        tb->hoverOpen.Arm(kOpenHoverDropdownDelay);
+    }
 }
 
 // orig's OnAnnotColorsEditClicked
@@ -1810,6 +1920,11 @@ static bool PointKeepsHover(MainWindow* win, float x, float y) {
         return !r.IsEmpty() && x >= (float)r.x && y >= (float)r.y && x < (float)r.x + (float)r.dx &&
                y < (float)r.y + (float)r.dy;
     };
+    // opened from the selection toolbar: its button, not the toolbar's
+    if (!tb->hoverRect.IsEmpty()) {
+        Rect r = tb->hoverRect;
+        return x >= (float)r.x && y >= (float)r.y && x < (float)r.Right() && y < (float)r.Bottom();
+    }
     if (onBtn(tb->hoverAnchorCmdId) || onBtn(tb->hoverCmdId)) {
         return true;
     }
@@ -1938,7 +2053,9 @@ void ToolbarTick(MainWindow* win, int elapsedMs) {
         ResetHoverLock(tb->ui);
         tb->hoverCmdId = tb->hoverPendingCmdId;
         tb->hoverAnchorCmdId = tb->hoverCmdId;
+        tb->hoverRect = tb->hoverPendingRect;
         tb->hoverPendingCmdId = 0;
+        tb->hoverPendingRect = {};
         // orig's TakeHoverButtonTooltip: the drop-down takes the tooltip's place
         if (win->gpuiWin) {
             gp::TooltipRequestHide(win->gpuiWin);

@@ -31,6 +31,7 @@ static const SelectionToolbarButton gCandidateButtons[] = {
     {CmdTranslateSelection, StrL("Translate"), {}, Str(gIconTranslate)},
     {CmdReadAloudSelection, StrL("Read Aloud"), {}, Str(gIconSpeak)},
     {CmdCreateAnnotHighlight, StrL("Highlight"), {}, Str(gIconAnnotHighlight)},
+    {CmdAddComment, TrN("Add comment"), {}, Str(gIconAnnotComment)},
     {CmdCreateAnnotUnderline, StrL("Underline"), {}, Str(gIconAnnotUnderline)},
     {CmdCreateAnnotSquiggly, StrL("Squiggly"), {}, Str(gIconAnnotSquiggly)},
     {CmdCreateAnnotStrikeOut, StrL("Strike Out"), {}, Str(gIconAnnotStrikeOut)},

@@ -304,6 +304,8 @@ struct PageElementImage : IPageElement {
 
 struct PageElementComment : IPageElement {
     Str comment;
+    // an annotation's /Contents, not just its author line
+    bool hasContents = false;
 
     PageElementComment(Str c) {
         kind = kindPageElementComment;

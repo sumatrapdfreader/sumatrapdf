@@ -959,6 +959,13 @@ const annotations: Field[] = [
       "default opacity (00 = transparent, FF = opaque); #rrggbb is fully opaque",
   ),
   field(
+    "CommentColor",
+    Color,
+    "",
+    "color of highlights made by Add Comment (the selection toolbar's comment button, Shift+A). " +
+      "#aarrggbb sets default opacity the same way as HighlightColor. When not set, HighlightColor is used",
+  ).ver("3.7"),
+  field(
     "UnderlineColor",
     Color,
     rgb(0x8b, 0xf0, 0x5d),

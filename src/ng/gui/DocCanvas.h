@@ -20,6 +20,7 @@ struct Pixmap;
 
 struct MainWindow;
 struct DisplayModel;
+struct Annotation;
 enum class NativeCursor;
 struct BitmapCacheEntry;
 
@@ -52,6 +53,15 @@ void DocCanvasContextMenuFromKey(MainWindow* win, gpui::Ctx* cx);
 // document scrolls with the wheel over the tab strip or the toolbar
 void DocCanvasWheelFromFrame(MainWindow* win, gpui::Ctx* cx, const gpui::ScrollWheelEvent* ev);
 void DocCanvasFrameWheel(MainWindow* win, int delta, bool isCtrl, bool isShift, bool isAlt);
+enum class PinchPhase {
+    Begin,
+    Change,
+    End,
+};
+// a trackpad pinch (macOS magnify event) at window point (wx, wy) in dips:
+// magnification is this event's delta (0.1 = 10% bigger). False when the
+// gesture is not the canvas' and should go elsewhere.
+bool DocCanvasPinch(MainWindow* win, PinchPhase phase, float magnification, float wx, float wy);
 void DocCanvasMouseDown(MainWindow* win, int x, int y);
 void DocCanvasMouseUp(MainWindow* win, int x, int y);
 void DocCanvasMouseMove(MainWindow* win, int x, int y);
@@ -130,6 +140,18 @@ void CanvasTickPresentation(MainWindow* win, int ms);
 void StartAutoScrollAtCursor(MainWindow* win);
 // CmdToggleLaserPointer
 void ToggleLaserPointer(MainWindow* win);
+void DocCanvasRefreshHover(MainWindow*);
+// a text markup annotation's lines (page coordinates) for its marker; takes
+// the document lock, so read when the marked annotation changes
+Vec<RectF> ReadAnnotMarkLines(Annotation*);
+enum class AnnotMarkKind {
+    Hover,
+    Selected,
+    ContextMenu,
+};
+// tests: the rects (canvas coordinates) of an annotation marker as paint draws
+// them and, for several (a highlight's lines), the segments of their outline
+void AnnotMarkGeometry(MainWindow*, AnnotMarkKind, Vec<Rect>& rects, Vec<Rect>& segs);
 bool IsLaserPointerActive();
 
 // the canvas overlays (orig's Canvas.cpp): CmdToggleImages,

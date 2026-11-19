@@ -18,3 +18,10 @@ bool IsAnnotationTextPopupShownFor(MainWindow*, Annotation*);
 void RepositionAnnotationTextPopup(MainWindow*);
 void DeleteAnnotationTextPopup(MainWindow*);
 gpui::El* AnnotTextPopupBuild(MainWindow*, gpui::Ctx*);
+// ng only: the card on hovering a commented highlight
+bool IsCommentHoverTarget(MainWindow*, Annotation*);
+bool IsAnnotationTextPopupFromHover(MainWindow*);
+Str AnnotationTextPopupText(MainWindow*);
+TempStr AnnotTextPopupBoundsTemp(MainWindow*);
+void AnnotTextPopupTick(MainWindow*, int elapsedMs);
+void AnnotTextPopupRefreshHover(MainWindow*);

@@ -6376,7 +6376,9 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     if (len(s) == 0) {
         return nullptr;
     }
-    return NewFzComment(s, pageNo, ToRectF(rect));
+    auto* res = (PageElementComment*)NewFzComment(s, pageNo, ToRectF(rect));
+    res->hasContents = len(contents) > 0;
+    return res;
 }
 
 // must be called inside fz_try

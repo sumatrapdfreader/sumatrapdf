@@ -36,6 +36,7 @@
 #include "gui/AppShell.h"
 #include "gui/BrowserView.h"
 #include "gui/DialogWidgets.h"
+#include "gui/ToolWindowPlat.h"
 
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
@@ -91,6 +92,8 @@ struct AIChatPanel {
     Countdown autoSelect;
     // the selects are polled once a frame (see DialogSelect::PollChanged)
     bool initialized = false;
+    // the header's close button, for -dbg-control
+    gp::Bounds closeBounds{};
 };
 
 static Vec<AIChatPanel*> gPanels;
@@ -792,6 +795,43 @@ void OnAIChatToggle(MainWindow* win, int providerId) {
     AppShellInvalidate(win);
 }
 
+// the provider CmdToggleAIChat opens: the one last used in this window, else the
+// first installed CLI (Custom API always counts as installed, so it is skipped).
+// None installed: Claude, whose toggle shows the "not installed" dialog.
+static int ProviderToOpen(MainWindow* win) {
+    AIChatProvider* last = PanelOf(win) ? GetAIChatProvider(win->aiChatProvider) : nullptr;
+    if (last && last->IsInstalled()) {
+        return win->aiChatProvider;
+    }
+    for (int i = 0; i < (int)AIChatBackend::CustomAPI; i++) {
+        AIChatProvider* p = GetAIChatProvider(i);
+        if (p && p->IsInstalled()) {
+            return i;
+        }
+    }
+    return (int)AIChatBackend::Claude;
+}
+
+// CmdToggleAIChat (the toolbar button): close the current tab's panel or open one
+void OnAIChatToggleCurrent(MainWindow* win) {
+    AIChatBackend open = AIChatGetTabPanelOpen(win->CurrentTab());
+    if (open != AIChatBackend::None) {
+        OnAIChatToggle(win, (int)open);
+        return;
+    }
+    OnAIChatToggle(win, ProviderToOpen(win));
+}
+
+// the chat page is a native view over the frame: a frame that does not build
+// the panel does not paint it, so it has to be hidden explicitly. The session
+// and the page stay, so showing the panel again is instant.
+void AIChatPanelHideView(MainWindow* win) {
+    AIChatPanel* p = PanelOf(win);
+    if (p && p->view) {
+        BrowserViewSetVisible(p->view, false);
+    }
+}
+
 // call when switching tabs to update session context
 void OnAIChatTabChanged(MainWindow* win) {
     AIChatPanel* p = PanelOf(win);
@@ -961,11 +1001,9 @@ void AIChatTick(MainWindow* win, int elapsedMs) {
 
 gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
     AIChatPanel* p = PanelOf(win);
-    if (!p || !win->uiState.aiChatVisible) {
-        return nullptr;
-    }
-    AIChatProvider* provider = CurrentProvider(win);
-    if (!provider) {
+    AIChatProvider* provider = p ? CurrentProvider(win) : nullptr;
+    if (!p || !win->uiState.aiChatVisible || !provider) {
+        AIChatPanelHideView(win);
         return nullptr;
     }
     if (!gAIChatView.IsValid()) {
@@ -1017,7 +1055,8 @@ gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
                       ->Compact()
                       ->WithSize(gp::UiSize::Small)
                       ->OnClick(gp::ListenTo(gAIChatView, &AIChatView::OnClose))
-                      ->IntoEl());
+                      ->IntoEl()
+                      ->BoundsOut(&p->closeBounds));
     col->Child(header);
 
     col->Child(p->sessionSel.Build(cx, StrL("aichat-session"), gp::kFill, !enableInput));
@@ -1025,15 +1064,17 @@ gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
     // the chat page
     gp::El* chat = gp::Div(cx->a)->Flex1()->W(gp::kFill)->MinH(0);
     if (p->view) {
+        // shown again after AIChatPanelHideView()
+        bool listOpen = false;
 #if OS_DARWIN
         // the native WebView covers gpui popups: hide it while a list is open
         auto isOpen = [cx](DialogSelect& sel) {
             gpc::SelectState* st = sel.state.Get(cx);
             return st && st->state.open;
         };
-        bool listOpen = isOpen(p->sessionSel) || isOpen(p->modelSel) || isOpen(p->optionSel);
-        BrowserViewSetVisible(p->view, !listOpen);
+        listOpen = isOpen(p->sessionSel) || isOpen(p->modelSel) || isOpen(p->optionSel);
 #endif
+        BrowserViewSetVisible(p->view, !listOpen);
         chat->Child(BrowserViewBuild(p->view, cx));
     }
     col->Child(chat);
@@ -1091,6 +1132,9 @@ TempStr AIChatPanelStateTemp(MainWindow* win) {
     AIChatPanel* p = PanelOf(win);
     if (!p) {
         out.Append(StrL("panel=none\n"));
+#if OS_DARWIN
+        out.Append(win ? ToolWinNativeWebViewsTemp(win->gpuiWin) : TempStr{});
+#endif
         return ToStrTemp(out);
     }
     AIChatProvider* provider = CurrentProvider(win);
@@ -1105,5 +1149,12 @@ TempStr AIChatPanelStateTemp(MainWindow* win) {
         fmt("session=%d model=%s option=%s\n", p->sessionSel.sel, p->modelSel.SelText(), p->optionSel.SelText()));
     out.Append(fmt("working=%d supported=%d\n", AIChatIsWorking(win) ? 1 : 0,
                    IsAIChatSupportedForTab(win->CurrentTab()) ? 1 : 0));
+    gp::Bounds& b = p->closeBounds;
+    AIChatTabState* st = GetTabState(win->CurrentTab(), win->aiChatProvider);
+    out.Append(fmt("view=%d log=%d close=%d,%d,%d,%d\n", p->view ? 1 : 0, st ? len(st->chatLog) : 0, (int)b.x, (int)b.y,
+                   (int)b.w, (int)b.h));
+#if OS_DARWIN
+    out.Append(ToolWinNativeWebViewsTemp(win->gpuiWin));
+#endif
     return ToStrTemp(out);
 }

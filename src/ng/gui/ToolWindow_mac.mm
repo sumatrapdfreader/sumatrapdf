@@ -341,3 +341,28 @@ void ToolWinNativeSetModal(gp::Window* gw, gp::Window* owner, bool on) {
 bool ToolWinNativeMouseDown() {
     return [NSEvent pressedMouseButtons] != 0;
 }
+
+static void AppendWebViews(NSView* v, Class wk, str::Builder& out) {
+    if (wk && [v isKindOfClass:wk]) {
+        NSRect fr = v.frame;
+        out.Append(fmt("webview hidden=%d frame=%d,%d,%d,%d\n", v.hiddenOrHasHiddenAncestor ? 1 : 0, (int)fr.origin.x,
+                       (int)fr.origin.y, (int)fr.size.width, (int)fr.size.height));
+        return;
+    }
+    for (NSView* sub in v.subviews) {
+        AppendWebViews(sub, wk, out);
+    }
+}
+
+// -dbg-control: every WKWebView in the window, as AppKit sees it
+TempStr ToolWinNativeWebViewsTemp(gp::Window* gw) {
+    NSWindow* w = NsWin(gw);
+    str::Builder out;
+    if (w && w.contentView) {
+        AppendWebViews(w.contentView, NSClassFromString(@"WKWebView"), out);
+    }
+    if (len(out) == 0) {
+        out.Append(StrL("webview none\n"));
+    }
+    return ToStrTemp(out);
+}

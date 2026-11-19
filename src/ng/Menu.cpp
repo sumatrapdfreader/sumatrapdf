@@ -140,6 +140,10 @@ static MenuDef menuDefContext[] = {
         CmdShowAnnotationText,
     },
     {
+        TrN("Add &Comment..."),
+        CmdAddComment,
+    },
+    {
         TrN("Save Attachment"),
         CmdSaveAttachment,
     },
@@ -962,6 +966,11 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
         MenuSetText(popup, CmdSearchGoogleLensPage, pageItem);
     }
 
+    // on an annotation that already has a comment, the item edits it
+    if (!ctx->hasSelection && AnnotationHasText(ctx->annotationUnderCursor)) {
+        MenuSetText(popup, CmdAddComment, Tr("Edit &Comment..."));
+    }
+
     // show "Save Attachment" only for file attachment annotations
     {
         bool isFileAttachment = false;
@@ -1042,6 +1051,7 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     }
     MenuRemoveEmptySubmenus(popup);
     RemoveBadMenuSeparators(popup);
+    Annotation* annotUnderEl = ctx->annotationUnderCursor;
     DeleteBuildMenuCtx(ctx);
 
     logf("BuildWindowContextMenu: at %d,%d: %s\n", cursorPos.x, cursorPos.y, MenuRowsTemp(popup));
@@ -1050,6 +1060,17 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     if (pageEl && pageNoUnderEl > 0) {
         win->contextMenuHighlightRect = pageEl->GetRect();
         win->contextMenuHighlightPageNo = pageNoUnderEl;
+        VecClear(win->contextMenuHighlightLines);
+        // a highlight's (underline's, ...) comment: its marked lines, not its box
+        RectF elRect = pageEl->GetRect();
+        bool isMarkup = annotUnderEl && AnnotationIsTextMarkup(annotUnderEl->type) &&
+                        annotUnderEl->pageNo == pageNoUnderEl && pageEl->Is(kindPageElementComment);
+        RectF ar = GetRect(annotUnderEl);
+        bool sameRect = elRect.Contains(PointF(ar.x + ar.dx / 2, ar.y + ar.dy / 2)) &&
+                        ar.Contains(PointF(elRect.x + elRect.dx / 2, elRect.y + elRect.dy / 2));
+        if (isMarkup && sameRect) {
+            win->contextMenuHighlightLines = ReadAnnotMarkLines(annotUnderEl);
+        }
     }
     return popup;
 }
@@ -1154,6 +1175,9 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
             }
             return;
         }
+        case CmdAddComment:
+            AddComment(win, ctx->hasSelection ? nullptr : ctx->annotationUnderCursor);
+            return;
         case CmdShowAnnotationText: {
             Annotation* annot = ctx->annotationUnderCursor;
             if (annot) {

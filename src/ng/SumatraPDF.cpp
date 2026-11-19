@@ -2596,6 +2596,12 @@ void DeleteSelectedAnnotation(MainWindow* win) {
     }
 }
 
+// the comment editor, in Edit PDF only until it closes
+static void StartCommentEdit(MainWindow* win) {
+    StartSelectedAnnotContentsEdit(win);
+    LeaveEditPdfAfterContentsEdit(win);
+}
+
 // orig's FrameOnCommand annotation half. `isPlacementCommit` is orig's
 // kAnnotationPlacementCommandCode, `pt` the canvas point the command applies to
 // (empty when it comes from a menu or the toolbar).
@@ -2605,6 +2611,11 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     }
     CustomCommand* cmd = FindCustomCommand(invokedCmdId);
     int cmdId = cmd ? cmd->origId : invokedCmdId;
+    // Add Comment on a selection is Shift+A: a highlight with its comment editor
+    bool addComment = cmdId == CmdAddComment;
+    if (addComment) {
+        cmdId = CmdCreateAnnotHighlight;
+    }
     WindowTab* tab = win->CurrentTab();
     DisplayModel* dm = win->AsFixed();
     AnnotationType annotType = CmdIdToAnnotationType(cmdId);
@@ -2649,6 +2660,12 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
         }
         AnnotCreateArgs args{annotType};
         SetAnnotCreateArgs(args, cmd);
+        // Add Comment's highlight is in CommentColor (unset: HighlightColor's),
+        // unless the command gives a color
+        ParsedColor* commentCol = GetParsedColor(gSettings->annotations.commentColor);
+        if (addComment && !GetCommandArg(cmd, kCmdArgColor) && commentCol && commentCol->parsedOk) {
+            args.col = *commentCol;
+        }
         lastCreatedAnnot = MakeAnnotationsFromSelection(tab, &args);
     } else {
         if (cmdId == CmdCreateAnnotRedact && !isPlacementCommit && tab) {
@@ -2695,7 +2712,8 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     if (!lastCreatedAnnot) {
         return;
     }
-    bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
+    bool openEdit = addComment || GetCommandBoolArg(cmd, kCmdArgOpenEdit, false);
+    bool editPdfWasOn = win->pdfAnnotationsToolbarEnabled;
     // CmdCreateAnnot* turns on Edit PDF only when the command has `openedit`
     if (openEdit) {
         EnablePdfAnnotationsToolbar(win);
@@ -2721,11 +2739,40 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     // in it rather than make the user find it again
     if (cmdId == CmdCreateAnnotFreeText && lastCreatedAnnot->type == AnnotationType::FreeText) {
         StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
+    } else if (addComment && !editPdfWasOn) {
+        PostForWindow(win, StartCommentEdit, "StartCommentEdit");
     } else if (openEdit) {
         PostForWindow(win, StartSelectedAnnotContentsEdit, "StartAnnotContentsEdit");
     }
     logf("ExecuteAnnotCreateCmd: cmd %d -> annotation type %d on page %d\n", cmdId, (int)lastCreatedAnnot->type,
          lastCreatedAnnot->pageNo);
+}
+
+// Adobe-style comment: edits `annot`'s comment. Without one, the text
+// selection becomes a highlight whose comment is typed right away, else the
+// annotation under the cursor (or the selected one) is edited.
+void AddComment(MainWindow* win, Annotation* annot, int invokedCmdId) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!tab) {
+        return;
+    }
+    if (!annot && tab->selectionOnPage) {
+        ExecuteAnnotCreateCmd(win, invokedCmdId ? invokedCmdId : (int)CmdAddComment, false, Point{});
+        return;
+    }
+    if (!annot) {
+        annot = win->annotationUnderCursor ? win->annotationUnderCursor : tab->selectedAnnotation;
+    }
+    if (!AnnotationIsLive(annot)) {
+        return;
+    }
+    HideAnnotationTextPopup(win);
+    SetSelectedAnnotation(tab, annot);
+    if (win->pdfAnnotationsToolbarEnabled) {
+        StartSelectedAnnotContentsEdit(win);
+        return;
+    }
+    StartCommentEdit(win);
 }
 
 // --- saving annotations -----------------------------------------------------
@@ -5620,6 +5667,11 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ExecuteAnnotCreateCmd(win, invokedCmdId, false, Point{});
             break;
 
+        case CmdAddComment:
+            // a custom command carries the color argument
+            AddComment(win, nullptr, invokedCmdId);
+            break;
+
         case CmdInsertTextSnippet:
             InsertTextSnippet(win, cmd, Point{});
             break;
@@ -6793,6 +6845,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             OnAIChatToggle(win, (int)AIChatBackend::AntiGravity);
             break;
 
+        case CmdToggleAIChat:
+            OnAIChatToggleCurrent(win);
+            break;
+
         case CmdSaveImage:
             ShowImageEditWindow(win, ImageEditMode::Save, CurrentImageTabPathTemp(win));
             break;
@@ -7600,6 +7656,7 @@ int GpuiMain(int argc, char** argv) {
     gp::App* app = gp::AppNew();
 #if OS_DARWIN
     AppShellHandleOpenDocs();
+    AppShellHandleMagnify();
 #endif
     gpc::Init(app);
     // the current theme's colors become gpui's before the first element is built

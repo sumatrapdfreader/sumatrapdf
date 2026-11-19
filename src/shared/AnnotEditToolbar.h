@@ -26,6 +26,7 @@ TempStr AnnotEditToolbarStateTemp(MainWindow*);
 void StartSelectedAnnotContentsEdit(MainWindow*);
 bool IsEditingAnnotContents(MainWindow*);
 void EndAnnotContentsEdit(bool accept);
+void LeaveEditPdfAfterContentsEdit(MainWindow*);
 void AnnotContentsKeepOnKillFocus(MainWindow*);
 bool AnnotContentsEditJustEnded();
 // free text is edited on the page, in a text box over the annotation

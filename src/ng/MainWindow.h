@@ -91,6 +91,16 @@ struct KeyboardLinkTarget {
     int hintLen = 0;
 };
 
+// a text markup annotation's per-line rects (page coordinates), cached for its
+// marker: reading quads takes the document lock. annot is only compared.
+struct Annotation;
+struct AnnotMarkLines {
+    Annotation* annot = nullptr;
+    int pageNo = 0;
+    RectF bounds;
+    Vec<RectF> lines;
+};
+
 // ng: orig keeps the scroll range on the canvas HWND and reads it back with
 // GetScrollInfo(). gpui has no window scrollbars, so UpdateScrollbars fills
 // this in and the overlay scrollbars and OnVScroll / OnHScroll read it. The
@@ -514,6 +524,11 @@ struct MainWindow {
     RefHoverState* refHover = nullptr;
     // the annotation the mouse is over (hover marker in Edit PDF mode)
     Annotation* annotationUnderCursor = nullptr;
+    // its page element has comment text; set by the canvas without locking
+    bool annotUnderCursorHasComment = false;
+    // the text lines the hover / selection marker of a highlight hugs
+    AnnotMarkLines hoverMarkLines;
+    AnnotMarkLines selectedMarkLines;
     // moving an annotation: the one being dragged, its size and the offset of
     // its top-left corner from the pointer
     Annotation* annotationBeingDragged = nullptr;
@@ -551,6 +566,8 @@ struct MainWindow {
     // it is up, and the canvas point every context-menu command works from
     RectF contextMenuHighlightRect;
     int contextMenuHighlightPageNo = 0;
+    // a highlight's (underline's, ...) text lines, marked instead of the rect
+    Vec<RectF> contextMenuHighlightLines;
     Point contextMenuPt;
     bool contextMenuPtValid = false;
 

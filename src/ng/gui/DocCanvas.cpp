@@ -102,6 +102,8 @@ struct DocCanvasUI {
     // last wheel delta that was a fraction of a notch (a precision touchpad)
     TimeStamp wheelFineDeltaTime{};
     bool wheelFineDeltaSeen = false;
+    // sideways travel of a two-axis wheel (a trackpad) short of a pixel
+    int wheelAccumDeltaX = 0;
     // the page context menu, built when it is opened (orig's
     // OnWindowContextMenu), and the popup that shows it
     MenuModel* ctxMenu = nullptr;
@@ -1860,6 +1862,34 @@ void DocCanvasFrameWheel(MainWindow* win, int delta, bool isCtrl, bool isShift, 
     AppShellInvalidate(win);
 }
 
+// The sideways part of a two-axis wheel event (a trackpad slide) pans the page
+// by lines, as Shift+wheel does, and nothing else: no zoom, page turn or
+// citation popup scroll. A page that fits the width stays put.
+static void CanvasWheelPanX(MainWindow* win, int delta) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->NeedHScroll() || MouseAction::Scrolling == win->mouseAction || gDeltaPerLine <= 0) {
+        return;
+    }
+    if (gSettings->invertMouseWheel) {
+        delta = -delta;
+    }
+
+    // by pixels, at the speed of Shift+wheel (lineAmount per gDeltaPerLine):
+    // whole lines would make a slow slide jump. The rest waits for the next
+    // event.
+    int lineAmount = DpiScale(ScrollLineAmount(gSettings->scrollLineAmount));
+    DocCanvasUI* ui = Ui(win);
+    ui->wheelAccumDeltaX += delta * lineAmount;
+    int px = ui->wheelAccumDeltaX / gDeltaPerLine;
+    if (px == 0) {
+        return;
+    }
+    ui->wheelAccumDeltaX -= px * gDeltaPerLine;
+
+    // one move per event; a positive delta goes left, as LineLeft
+    CanvasOnHScroll(win, ScrollMsg::ThumbTrack, win->scrollH.nPos - px);
+}
+
 // --- mouse ------------------------------------------------------------------
 
 // how much slower the document moves than the cursor during middle-button
@@ -2075,12 +2105,17 @@ static void OnSetCursorMouseNone(MainWindow* win, Point pt) {
     Annotation* annot = IsPlacingHighlighterAnnotation(win) ? nullptr : dm->GetAnnotationAtPos(pt, selected);
     if (annot != win->annotationUnderCursor) {
         win->annotationUnderCursor = annot;
+        win->annotUnderCursorHasComment = false;
         AppShellInvalidate(win);
     }
     bool annotEditHover = annot && (win->pdfAnnotationsToolbarEnabled || selected);
 
     int pageNo = 0;
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
+    // for the hover card; a null pageEl (page lock busy) keeps the last answer
+    if (annot && pageEl && pageEl->Is(kindPageElementComment)) {
+        win->annotUnderCursorHasComment = ((PageElementComment*)pageEl)->hasContents;
+    }
     if (pageEl && pageEl->Is(kindPageElementDest) && gSettings->disableLinks) {
         pageEl = nullptr;
     }
@@ -2095,7 +2130,9 @@ static void OnSetCursorMouseNone(MainWindow* win, Point pt) {
     }
     // The Edit PDF hover card and the text popup have the annotation's contents.
     // Do not put the old one-line comment tooltip on top of them.
-    bool annotCardShown = win->pdfAnnotationsToolbarEnabled || IsAnnotationTextPopupShownFor(win, annot);
+    // A commented highlight gets the card on hover instead.
+    bool annotCardShown = win->pdfAnnotationsToolbarEnabled || IsAnnotationTextPopupShownFor(win, annot) ||
+                          IsCommentHoverTarget(win, annot);
     if (annotCardShown && annot && pageEl->Is(kindPageElementComment)) {
         DeleteLinkTooltip(win);
         CanvasSetCursor(win, kCurHand);
@@ -2170,6 +2207,7 @@ static void OnSetCursor(MainWindow* win, Point pt) {
         Annotation* hover = onSelected ? locked : nullptr;
         if (hover != win->annotationUnderCursor) {
             win->annotationUnderCursor = hover;
+            win->annotUnderCursorHasComment = false;
             AppShellInvalidate(win);
         }
         CanvasSetCursor(win, onSelected ? kCurHand : kCurArrow);
@@ -2516,8 +2554,183 @@ static void UpdateAnnotationResize(MainWindow* win, int x, int y, bool isShift) 
 
 constexpr Color kAnnotMarkBlue = MkRgb(0, 80, 200);
 constexpr int kAnnotHandleSize = 6;
+// above this many lines a highlight's marker is a box per line, not one outline
+constexpr int kMaxMarkOutlineRects = 64;
 
-static void PaintHoveredAnnotationMark(MainWindow* win, gp::PaintCtx* ctx, DisplayModel* dm) {
+// A highlight (underline, ...) marks runs of text. Its marker hugs them, the
+// outline of its per-line rects, instead of boxing its bounding rect:
+//
+//          +-------------+
+//   +------+ ... line 1  |      quads: [    ####]
+//   | line 2             |             [########]
+//   | line 3   +---------+             [####    ]
+//   +----------+
+
+// the gap between two lines (their leading) closes, so the lines' outline
+// is one shape at any zoom
+static void CloseMarkLineGaps(Vec<RectF>& lines) {
+    int n = len(lines);
+    for (int i = 0; i < n; i++) {
+        RectF& r = lines[i];
+        float next = 0;
+        for (int j = 0; j < n; j++) {
+            RectF o = lines[j];
+            float gap = o.y - r.Bottom();
+            bool overlapsX = o.x < r.Right() && r.x < o.Right();
+            if (j == i || !overlapsX || gap <= 0 || gap > std::min(r.dy, o.dy) / 2) {
+                continue;
+            }
+            if (next == 0 || o.y < next) {
+                next = o.y;
+            }
+        }
+        if (next > 0) {
+            r.dy = next - r.y;
+        }
+    }
+}
+
+// takes the document lock: call when the marked annotation changes, not per paint
+Vec<RectF> ReadAnnotMarkLines(Annotation* annot) {
+    Vec<RectF> lines = GetQuadPointsAsRect(annot);
+    CloseMarkLineGaps(lines);
+    return lines;
+}
+
+// the lines of a text markup annotation, re-read only when it changes (or
+// another is marked)
+static const Vec<RectF>& MarkLinesOf(AnnotMarkLines& c, Annotation* annot) {
+    bool same = c.annot == annot && c.pageNo == annot->pageNo && c.bounds == annot->bounds;
+    if (same) {
+        return c.lines;
+    }
+    c.annot = annot;
+    c.pageNo = annot->pageNo;
+    c.bounds = annot->bounds;
+    c.lines = ReadAnnotMarkLines(annot);
+    return c.lines;
+}
+
+// annot's marker in screen coordinates, padded: its text lines (a text markup
+// one, with lines), else rect
+static void AnnotMarkRects(DisplayModel* dm, Annotation* annot, RectF rect, AnnotMarkLines* lines, Vec<Rect>& out) {
+    int pad = DisplayModel::kAnnotMarkPadding;
+    if (lines && AnnotationIsTextMarkup(annot->type)) {
+        for (RectF line : MarkLinesOf(*lines, annot)) {
+            Rect r = dm->CvtToScreen(annot->pageNo, line);
+            r.Inflate(pad, pad);
+            VecAppend(out, r);
+        }
+        if (len(out) > 0) {
+            return;
+        }
+    }
+    Rect r = dm->CvtToScreen(annot->pageNo, rect);
+    r.Inflate(pad, pad);
+    VecAppend(out, r);
+}
+
+// sorted, without duplicates
+static void AddMarkCoord(Vec<int>& v, int c) {
+    int i = 0;
+    while (i < len(v) && v[i] < c) {
+        i++;
+    }
+    if (i < len(v) && v[i] == c) {
+        return;
+    }
+    VecInsertAt(v, i, c);
+}
+
+// The outline of the union of rects as horizontal / vertical segments (a
+// segment is a Rect with dx or dy 0). The rects' edges cut the plane into a
+// grid; an outline segment is where a covered cell meets an uncovered one.
+static void MarkOutlineSegments(const Vec<Rect>& rects, Vec<Rect>& segs) {
+    Vec<int> xs;
+    Vec<int> ys;
+    for (Rect r : rects) {
+        AddMarkCoord(xs, r.x);
+        AddMarkCoord(xs, r.Right());
+        AddMarkCoord(ys, r.y);
+        AddMarkCoord(ys, r.Bottom());
+    }
+    int nx = len(xs) - 1;
+    int ny = len(ys) - 1;
+    if (nx <= 0 || ny <= 0) {
+        return;
+    }
+    Vec<u8> covered;
+    u8* cells = VecAppendBlanks(covered, nx * ny);
+    if (!cells) {
+        return;
+    }
+    memset(cells, 0, (size_t)(nx * ny));
+    for (Rect r : rects) {
+        int x0 = VecFind(xs, r.x);
+        int x1 = VecFind(xs, r.Right());
+        int y0 = VecFind(ys, r.y);
+        int y1 = VecFind(ys, r.Bottom());
+        for (int j = y0; j < y1; j++) {
+            for (int i = x0; i < x1; i++) {
+                covered[j * nx + i] = 1;
+            }
+        }
+    }
+    auto cov = [&](int i, int j) -> bool { return i >= 0 && j >= 0 && i < nx && j < ny && covered[j * nx + i]; };
+
+    // horizontal: between cell rows j - 1 and j, runs of differing cells
+    for (int j = 0; j <= ny; j++) {
+        int start = -1;
+        for (int i = 0; i <= nx; i++) {
+            bool edge = i < nx && cov(i, j - 1) != cov(i, j);
+            if (edge && start < 0) {
+                start = i;
+            }
+            if (!edge && start >= 0) {
+                VecAppend(segs, Rect(xs[start], ys[j], xs[i] - xs[start], 0));
+                start = -1;
+            }
+        }
+    }
+    // vertical: between cell columns i - 1 and i
+    for (int i = 0; i <= nx; i++) {
+        int start = -1;
+        for (int j = 0; j <= ny; j++) {
+            bool edge = j < ny && cov(i - 1, j) != cov(i, j);
+            if (edge && start < 0) {
+                start = j;
+            }
+            if (!edge && start >= 0) {
+                VecAppend(segs, Rect(xs[i], ys[start], 0, ys[j] - ys[start]));
+                start = -1;
+            }
+        }
+    }
+}
+
+// one rect is a box; several (a highlight's lines) the outline of their union
+static void PaintMarkRects(gp::PaintCtx* ctx, const Vec<Rect>& rects, Color col) {
+    int n = len(rects);
+    if (n == 1 || n > kMaxMarkOutlineRects) {
+        for (Rect r : rects) {
+            CanvasDrawRect(ctx, r, col, 2);
+        }
+        return;
+    }
+    Vec<Rect> segs;
+    MarkOutlineSegments(rects, segs);
+    // each end grows by half the stroke, so corners close as a box's do
+    constexpr int kHalfStroke = 1;
+    for (Rect s : segs) {
+        int ex = s.dx > 0 ? kHalfStroke : 0;
+        int ey = s.dy > 0 ? kHalfStroke : 0;
+        CanvasDrawLine(ctx, Point{s.x - ex, s.y - ey}, Point{s.Right() + ex, s.Bottom() + ey}, col, 2);
+    }
+}
+
+// the hover marker of the annotation under the cursor (Edit PDF); none when
+// it isn't drawn
+static void HoveredAnnotMarkRects(MainWindow* win, DisplayModel* dm, Vec<Rect>& out) {
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
     Annotation* annot = win ? win->annotationUnderCursor : nullptr;
     if (!win || !win->pdfAnnotationsToolbarEnabled || !tab || !annot || annot == tab->selectedAnnotation) {
@@ -2526,9 +2739,32 @@ static void PaintHoveredAnnotationMark(MainWindow* win, gp::PaintCtx* ctx, Displ
     if (!AnnotationIsLive(annot) || !dm->PageVisible(annot->pageNo)) {
         return;
     }
-    Rect rect = dm->CvtToScreen(annot->pageNo, GetRect(annot));
-    rect.Inflate(DisplayModel::kAnnotMarkPadding, DisplayModel::kAnnotMarkPadding);
-    CanvasDrawRect(ctx, rect, kAnnotMarkBlue, 2);
+    AnnotMarkRects(dm, annot, GetRect(annot), &win->hoverMarkLines, out);
+}
+
+static void PaintHoveredAnnotationMark(MainWindow* win, gp::PaintCtx* ctx, DisplayModel* dm) {
+    Vec<Rect> rects;
+    HoveredAnnotMarkRects(win, dm, rects);
+    PaintMarkRects(ctx, rects, kAnnotMarkBlue);
+}
+
+// the right-clicked element's marker while the context menu is up
+static void ContextMenuMarkRects(MainWindow* win, DisplayModel* dm, Vec<Rect>& out) {
+    int pageNo = win->contextMenuHighlightPageNo;
+    if (pageNo <= 0 || !dm->PageVisible(pageNo)) {
+        return;
+    }
+    if (len(win->contextMenuHighlightLines) == 0) {
+        VecAppend(out, dm->CvtToScreen(pageNo, win->contextMenuHighlightRect));
+        return;
+    }
+    // padded as the hover / selection marker of the same lines
+    int pad = DisplayModel::kAnnotMarkPadding;
+    for (RectF line : win->contextMenuHighlightLines) {
+        Rect r = dm->CvtToScreen(pageNo, line);
+        r.Inflate(pad, pad);
+        VecAppend(out, r);
+    }
 }
 
 static void PaintAnnotHandle(gp::PaintCtx* ctx, Point p) {
@@ -2562,6 +2798,14 @@ static void PaintCurrentEditAnnotationMark(WindowTab* tab, gp::PaintCtx* ctx, Di
         tab->didScrollToSelectedAnnotation = true;
     }
     rect.Inflate(DisplayModel::kAnnotMarkPadding, DisplayModel::kAnnotMarkPadding);
+
+    // a highlight (underline, ...) has no handles; its marker hugs its lines
+    if (win && AnnotationIsTextMarkup(annot->type)) {
+        Vec<Rect> lines;
+        AnnotMarkRects(dm, annot, GetRect(annot), &win->selectedMarkLines, lines);
+        PaintMarkRects(ctx, lines, kAnnotMarkBlue);
+        return;
+    }
 
     auto drawVertexHandles = [&](const Vec<PointF>& pts) {
         for (int i = 0; i < len(pts); i++) {
@@ -2630,6 +2874,29 @@ static void PaintCurrentEditAnnotationMark(WindowTab* tab, gp::PaintCtx* ctx, Di
     PaintAnnotHandle(ctx, Point{right, midY});
     PaintAnnotHandle(ctx, Point{midX, bottom});
     PaintAnnotHandle(ctx, Point{left, midY});
+}
+
+// tests: a marker's rects as paint draws them and the outline of several
+void AnnotMarkGeometry(MainWindow* win, AnnotMarkKind kind, Vec<Rect>& rects, Vec<Rect>& segs) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!dm || !tab) {
+        return;
+    }
+    if (kind == AnnotMarkKind::Hover) {
+        HoveredAnnotMarkRects(win, dm, rects);
+    } else if (kind == AnnotMarkKind::ContextMenu) {
+        ContextMenuMarkRects(win, dm, rects);
+    } else {
+        // the selection marker without the drag previews
+        Annotation* annot = tab->selectedAnnotation;
+        if (annot && AnnotationIsLive(annot) && dm->PageVisible(annot->pageNo)) {
+            AnnotMarkRects(dm, annot, GetRect(annot), &win->selectedMarkLines, rects);
+        }
+    }
+    if (len(rects) > 1 && len(rects) <= kMaxMarkOutlineRects) {
+        MarkOutlineSegments(rects, segs);
+    }
 }
 
 // ng: orig drags an annotation with an XOR'd "move pattern" drawn straight on
@@ -3682,10 +3949,10 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     }
     PaintFormFieldHighlights(win, ctx);
     // draw a highlight rectangle around the element the context menu is on
-    DisplayModel* dmHl = win->AsFixed();
-    if (win->contextMenuHighlightPageNo > 0 && dmHl->PageVisible(win->contextMenuHighlightPageNo)) {
-        Rect rc = dmHl->CvtToScreen(win->contextMenuHighlightPageNo, win->contextMenuHighlightRect);
-        CanvasDrawRect(ctx, rc, MkRgb(0, 100, 255), 2);
+    if (win->contextMenuHighlightPageNo > 0) {
+        Vec<Rect> rects;
+        ContextMenuMarkRects(win, win->AsFixed(), rects);
+        PaintMarkRects(ctx, rects, MkRgb(0, 100, 255));
     }
     if (win->showSelection) {
         PaintSelection(win, ctx);
@@ -3726,7 +3993,16 @@ void DocCanvasView::OnWheel(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWh
     float raw = ev->deltaY != 0 ? ev->deltaY : ev->deltaX;
     bool isShift = ev->modifiers.shift || ev->deltaY == 0;
     int delta = (int)((raw / notch) * kWheelDelta);
-    if (delta == 0) {
+    // a trackpad slide carries both axes: deltaY scrolls, deltaX only pans.
+    // Shift+wheel and a mouse's tilt wheel keep their one axis.
+    int deltaX = 0;
+    if (!ev->modifiers.shift && (ev->deltaY != 0 || ev->precise)) {
+        deltaX = (int)((ev->deltaX / notch) * kWheelDelta);
+        if (ev->deltaY == 0) {
+            delta = 0;
+        }
+    }
+    if (delta == 0 && deltaX == 0) {
         return;
     }
     Point pt;
@@ -3742,7 +4018,13 @@ void DocCanvasView::OnWheel(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWh
     if ((isRightButton || IsRightDragging(win)) && ev->deltaY != 0) {
         isCtrl = true;
     }
-    CanvasOnMouseWheel(win, delta, isCtrl, isShift, ev->modifiers.alt, pt);
+    if (delta != 0) {
+        CanvasOnMouseWheel(win, delta, isCtrl, isShift, ev->modifiers.alt, pt);
+    }
+    // a zoom gesture does not pan
+    if (deltaX != 0 && !isCtrl) {
+        CanvasWheelPanX(win, deltaX);
+    }
     gInMouseWheelScroll = false;
     gp::Notify(cx);
 }
@@ -3755,6 +4037,60 @@ void DocCanvasWheelFromFrame(MainWindow* win, gp::Ctx* cx, const gp::ScrollWheel
     if (view) {
         DocCanvasView::OnWheel(view, cx, ev);
     }
+}
+
+// the trackpad pinch in progress: the zoom it started at and the
+// magnification so far
+struct PinchState {
+    MainWindow* win = nullptr;
+    bool onCanvas = false;
+    float startZoom = 0;
+    float accum = 0;
+};
+static PinchState gPinch;
+
+// a pinch is the canvas' only when it starts over a fixed-layout document
+static void PinchBegin(MainWindow* win, bool onCanvas) {
+    gPinch = PinchState{};
+    gPinch.win = win;
+    gPinch.onCanvas = onCanvas && IsMainWindowValid(win) && win->AsFixed() && win->docCanvas;
+    if (!gPinch.onCanvas) {
+        return;
+    }
+    gPinch.startZoom = win->ctrl->GetZoomVirtual(true);
+    StopSmoothScroll(win);
+    win->dragStartPending = false;
+}
+
+// zoom = startZoom * (1 + magnification so far): the page follows the fingers
+// and stays put under the pointer. Continuous whatever zoomIncrement is, as in
+// Preview. accum is clamped to the zoom limits so reversing acts at once.
+static void PinchZoom(MainWindow* win, float magnification, Point pt) {
+    float lo = kZoomMin / gPinch.startZoom - 1.f;
+    float hi = kZoomMax / gPinch.startZoom - 1.f;
+    gPinch.accum = limitValue(gPinch.accum + magnification, lo, hi);
+    SmartZoom(win, gPinch.startZoom * (1.f + gPinch.accum), &pt, false);
+    AppShellInvalidate(win);
+}
+
+bool DocCanvasPinch(MainWindow* win, PinchPhase phase, float magnification, float wx, float wy) {
+    if (phase == PinchPhase::End) {
+        bool handled = gPinch.win == win && gPinch.onCanvas;
+        gPinch = PinchState{};
+        return handled;
+    }
+
+    Point pt;
+    bool onCanvas = IsMainWindowValid(win) && ToDoc(win, wx, wy, &pt);
+    // a change without its begin (the window was not ours then) starts one
+    if (phase == PinchPhase::Begin || gPinch.win != win) {
+        PinchBegin(win, onCanvas);
+    }
+    if (!gPinch.onCanvas || !IsMainWindowValid(win) || !win->AsFixed()) {
+        return false;
+    }
+    PinchZoom(win, magnification, pt);
+    return true;
 }
 
 // orig's overlay bar forwards the wheel to the canvas (OverlayScrollbar.cpp),
@@ -3969,6 +4305,18 @@ static void CanvasOnMouseLeave(MainWindow* win) {
     }
     HideAnnotationHoverOverlay(win);
     ReadingBarOnMouseLeave(win);
+}
+
+// hit-test the resting pointer again (an annotation or the layout under it
+// changed), so the comment hover card does not wait for a mouse move
+void DocCanvasRefreshHover(MainWindow* win) {
+    if (!win || !win->gpuiWin || !win->AsFixed() || win->mouseAction != MouseAction::None) {
+        return;
+    }
+    Point pt;
+    if (ToDoc(win, win->gpuiWin->mouseX, win->gpuiWin->mouseY, &pt)) {
+        OnSetCursor(win, pt);
+    }
 }
 
 // ng: gpui tells an element that the pointer left it through its hover

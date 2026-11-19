@@ -382,6 +382,8 @@ const CommandInfo gCommands[] = {
     {CmdViewAsHex, "CmdViewAsHex\0", StrL("View As Hex")},
     {CmdAIChatWithCustomAPI, "CmdAIChatWithCustomAPI\0", StrL("Custom AI chat...")},
     {CmdSaveTrimmedPagesAs, "CmdSaveTrimmedPagesAs\0", StrL("Save Trimmed Pages As...")},
+    {CmdAddComment, "CmdAddComment\0", StrL("Add Comment...")},
+    {CmdToggleAIChat, "CmdToggleAIChat\0", StrL("Toggle AI Chat")},
 };
 const int gCommandsCount = dimofi(gCommands);
 
@@ -922,6 +924,11 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     int argCmdId = cmdId;
     if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
         argCmdId = CmdCreateAnnotText;
+#if defined(SUMATRA_NG)
+    } else if (cmdId == CmdAddComment) {
+        // a highlight with its comment: [CmdAddComment #00ff00]
+        argCmdId = CmdCreateAnnotText;
+#endif
     } else if (cmdId == CmdScrollUp || cmdId == CmdScrollDown || cmdId == CmdScrollLeft || cmdId == CmdScrollRight ||
                cmdId == CmdGoToNextPage || cmdId == CmdGoToPrevPage) {
         argCmdId = CmdScrollUp;

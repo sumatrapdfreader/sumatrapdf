@@ -410,6 +410,7 @@ static const char* gEnumAnnotationsTextIconType[] = {"",     "comment",   "help"
                                                      "note", "paragraph", nullptr};
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t)"#ffff00"},
+    {offsetof(Annotations, commentColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, underlineColor), SettingType::Color, (intptr_t)"#8bf05d"},
     {offsetof(Annotations, squigglyColor), SettingType::Color, (intptr_t)"#f199d2"},
     {offsetof(Annotations, strikeOutColor), SettingType::Color, (intptr_t)"#e24745"},
@@ -445,40 +446,42 @@ static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations),
     (u16)dimof(gAnnotationsFields),
     gAnnotationsFields,
-    "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
-    "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0PresetColors\0TextIconColor\0LineColor\0PolyLineColor"
-    "\0SquareColor\0CircleColor\0PolygonColor\0InkColor\0InkColors\0InkBorderWidth\0StampColor\0CaretColor\0FileAttachm"
-    "entColor\0TextIconType\0DefaultAuthor\0SignatureImage\0PopupFontSize",
+    "HighlightColor\0CommentColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColo"
+    "r\0FreeTextOpacity\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0PresetColors\0TextIconColor\0LineColor\0"
+    "PolyLineColor\0SquareColor\0CircleColor\0PolygonColor\0InkColor\0InkColors\0InkBorderWidth\0StampColor\0CaretColor"
+    "\0FileAttachmentColor\0TextIconType\0DefaultAuthor\0SignatureImage\0PopupFontSize",
     "color of newly created highlight annotations. Use an #aarrggbb value to set default opacity (00 = transparent, FF "
-    "= opaque); #rrggbb is fully opaque\0color of newly created underline annotations. #aarrggbb sets default opacity "
-    "the same way as HighlightColor\0color of newly created squiggly underline annotations. #aarrggbb sets default "
-    "opacity the same way as HighlightColor\0color of newly created strike out annotations. #aarrggbb sets default "
-    "opacity the same way as HighlightColor\0text color of newly created free text annotations\0background color of "
-    "newly created free text annotations\0opacity of free text annotation in percent (0-100); 0 - fully transparent "
-    "(invisible), 50 - half transparent, 100 - fully opaque\0font size of free text annotations, in points\0border "
-    "width of free text annotations, in points\0how text is aligned in newly created free text annotations (Text "
-    "Alignment in the compact property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) "
-    "want right\0colors offered by the drop-down on the annotation toolbar's buttons, separated by space. Picking one "
-    "sets the color of new annotations of that type. The color a button currently makes annotations in is added when "
-    "it is missing\0color of newly created text (sticky note) annotations\0color of newly created line annotations. If "
-    "not set, the PDF engine's default (red) is used\0color of newly created polyline annotations. If not set, the PDF "
-    "engine's default (red) is used\0color of newly created square annotations. If not set, the PDF engine's default "
-    "(red) is used\0color of newly created circle annotations. If not set, the PDF engine's default (red) is "
-    "used\0color of newly created polygon annotations. If not set, the PDF engine's default (red) is used\0color of "
-    "newly created ink annotations, as #aarrggbb: the alpha is how translucent the stroke is (00 = transparent, FF = "
-    "opaque), so the color is exactly what ends up on the page\0colors offered by the ink button's drop-down, "
-    "separated by space. Use #aarrggbb values: the alpha is the stroke's opacity. The color ink currently draws in is "
-    "added when it is missing\0width of the stroke of new ink annotations, in points\0color of newly created stamp "
-    "annotations. If not set, the PDF engine's default (red) is used\0color of newly created caret annotations. If not "
-    "set, the PDF engine's default (red) is used\0color of newly created file attachment annotations. If not set, the "
-    "PDF engine's default (red) is used\0icon shown for text (sticky note) annotations: comment, help, insert, key, "
-    "new paragraph, note or paragraph. If not set, note is used\0author recorded on newly created annotations. If not "
-    "set, the Windows user name is used; set it to (none) to leave the author out entirely\0image (e.g. a transparent "
-    ".png of your signature) that Sign With Image stamps on the page. If not set, or the file is missing, Sign With "
-    "Image asks for an image\0font size of the card that shows an annotation's text when it is clicked, in pixels; 0 "
-    "uses UIFontSize. Not scaled by the display scaling",
+    "= opaque); #rrggbb is fully opaque\0color of highlights made by Add Comment (the selection toolbar's comment "
+    "button, Shift+A). #aarrggbb sets default opacity the same way as HighlightColor. When not set, HighlightColor is "
+    "used\0color of newly created underline annotations. #aarrggbb sets default opacity the same way as "
+    "HighlightColor\0color of newly created squiggly underline annotations. #aarrggbb sets default opacity the same "
+    "way as HighlightColor\0color of newly created strike out annotations. #aarrggbb sets default opacity the same way "
+    "as HighlightColor\0text color of newly created free text annotations\0background color of newly created free text "
+    "annotations\0opacity of free text annotation in percent (0-100); 0 - fully transparent (invisible), 50 - half "
+    "transparent, 100 - fully opaque\0font size of free text annotations, in points\0border width of free text "
+    "annotations, in points\0how text is aligned in newly created free text annotations (Text Alignment in the compact "
+    "property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want right\0colors offered "
+    "by the drop-down on the annotation toolbar's buttons, separated by space. Picking one sets the color of new "
+    "annotations of that type. The color a button currently makes annotations in is added when it is missing\0color of "
+    "newly created text (sticky note) annotations\0color of newly created line annotations. If not set, the PDF "
+    "engine's default (red) is used\0color of newly created polyline annotations. If not set, the PDF engine's default "
+    "(red) is used\0color of newly created square annotations. If not set, the PDF engine's default (red) is "
+    "used\0color of newly created circle annotations. If not set, the PDF engine's default (red) is used\0color of "
+    "newly created polygon annotations. If not set, the PDF engine's default (red) is used\0color of newly created ink "
+    "annotations, as #aarrggbb: the alpha is how translucent the stroke is (00 = transparent, FF = opaque), so the "
+    "color is exactly what ends up on the page\0colors offered by the ink button's drop-down, separated by space. Use "
+    "#aarrggbb values: the alpha is the stroke's opacity. The color ink currently draws in is added when it is "
+    "missing\0width of the stroke of new ink annotations, in points\0color of newly created stamp annotations. If not "
+    "set, the PDF engine's default (red) is used\0color of newly created caret annotations. If not set, the PDF "
+    "engine's default (red) is used\0color of newly created file attachment annotations. If not set, the PDF engine's "
+    "default (red) is used\0icon shown for text (sticky note) annotations: comment, help, insert, key, new paragraph, "
+    "note or paragraph. If not set, note is used\0author recorded on newly created annotations. If not set, the "
+    "Windows user name is used; set it to (none) to leave the author out entirely\0image (e.g. a transparent .png of "
+    "your signature) that Sign With Image stamps on the page. If not set, or the file is missing, Sign With Image asks "
+    "for an image\0font size of the card that shows an annotation's text when it is clicked, in pixels; 0 uses "
+    "UIFontSize. Not scaled by the display scaling",
     false};
-static_assert(dimof(gAnnotationsFields) == 27);
+static_assert(dimof(gAnnotationsFields) == 28);
 
 static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},

@@ -298,6 +298,11 @@ ParsedColor* AnnotPresetColorSetting(int cmdId) {
         case CmdAnnotationHighlightBrush:
         case CmdCreateAnnotHighlight:
             return &a.highlightColor;
+#if defined(SUMATRA_NG)
+        // Add Comment's highlights have a color of their own
+        case CmdAddComment:
+            return &a.commentColor;
+#endif
         case CmdCreateAnnotUnderline:
             return &a.underlineColor;
         case CmdCreateAnnotSquiggly:
@@ -370,6 +375,12 @@ Str* AnnotPresetColorList(int cmdId) {
 Color AnnotColorForCmd(int cmdId) {
     ParsedColor* setting = AnnotPresetColorSetting(cmdId);
     Color col = setting ? GetParsedColor(*setting, kColorUnset) : kColorUnset;
+#if defined(SUMATRA_NG)
+    // an unset CommentColor is HighlightColor
+    if (col == kColorUnset && cmdId == CmdAddComment) {
+        return AnnotColorForCmd(CmdCreateAnnotHighlight);
+    }
+#endif
     return col != kColorUnset ? col : AnnotDefaultColor(cmdId);
 }
 
@@ -441,6 +452,10 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconSearch, CmdFindFirst, TrN("Find")},
     {nullptr, 0, {}}, // separator
     {gIconEditAnnotations, CmdToggleEditPDF, TrN("Edit PDF")},
+#if defined(SUMATRA_NG)
+    {nullptr, 0, {}}, // separator
+    {gIconAIChat, CmdToggleAIChat, TrN("AI Chat")},
+#endif
 };
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);

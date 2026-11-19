@@ -789,6 +789,10 @@ struct Annotations {
     // to set default opacity (00 = transparent, FF = opaque); #rrggbb is
     // fully opaque
     ParsedColor highlightColor;
+    // color of highlights made by Add Comment (the selection toolbar's
+    // comment button, Shift+A). #aarrggbb sets default opacity the same
+    // way as HighlightColor. When not set, HighlightColor is used
+    ParsedColor commentColor;
     // color of newly created underline annotations. #aarrggbb sets default
     // opacity the same way as HighlightColor
     ParsedColor underlineColor;

@@ -85,6 +85,8 @@ void SetAnnotCreateArgs(AnnotCreateArgs&, CustomCommand*);
 struct Annotation;
 void DeleteSelectedAnnotation(MainWindow* win);
 void SaveEmbeddedFileAs(MainWindow* win, Annotation* annot, Str fileName);
+// invokedCmdId: a custom CmdAddComment with a color; 0 is the plain command
+void AddComment(MainWindow* win, Annotation* annot, int invokedCmdId = 0);
 // everything changed while an operation is open is one undo step
 void BeginPdfEditOperation(MainWindow* win, const char* name);
 void EndPdfEditOperation(MainWindow* win);
