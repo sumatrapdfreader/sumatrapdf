@@ -10,7 +10,7 @@ does and why. Whole files of our own that are compiled into the `mupdf` project
 are not patches: they live in `src/mupdf/` (see its README) and are not part
 of the vendored tree at all.
 
-**Base revision: mupdf `1.28.5`** (tag `1.28.5`, commit `8ad45e92f`), the
+**Base revision: mupdf `1.28.6`** (tag `1.28.6`, commit `da5f5eb89`), the
 version recorded for mupdf in `ext/versions.txt`. Paths in the patches are
 relative to `ext/mupdf`, so `-p1` from inside that directory.
 
@@ -91,7 +91,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0088-svg-clip-path` | SVG `clip-path` referencing a `<clipPath>` clips the element, so plots stay inside their axes (#6544) |
 | `0089-pdf-undo-purge-resource-cache` | undo / redo drop cached font / colorspace / image resources for the objects they swap, so a free text edited after an undo doesn't use a missing font (#6549) |
 
-That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
+That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these
 patches, and nothing else.
 
 ## Backports
@@ -137,7 +137,7 @@ Applying every patch to a pristine base must reproduce `ext/mupdf` exactly:
 
 ```sh
 mkdir /tmp/check
-git -C ~/src/mupdf -c core.autocrlf=false -c core.eol=lf archive 1.28.5 | tar -x -C /tmp/check
+git -C ~/src/mupdf -c core.autocrlf=false -c core.eol=lf archive 1.28.6 | tar -x -C /tmp/check
 cd /tmp/check
 for p in ~/src/sumatrapdf/ext/patches/*.patch; do git -c core.autocrlf=false apply "$p" || echo "FAIL $p"; done
 diff -r /tmp/check ~/src/sumatrapdf/ext/mupdf   # only reports files we do not vendor
