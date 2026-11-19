@@ -361,6 +361,7 @@ void DisplayModel::SetTrimEmptyMargins(bool enable) {
 
 // Lays the pages out again after the part of them that is shown changed.
 void DisplayModel::RelayoutForTrim() {
+    viewChanges++;
     // restoring a document's remembered state sets this before the first
     // layout, when there is nothing to lay out and no zoom yet; the initial
     // layout picks the flag up on its own
@@ -3026,6 +3027,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 }
 
 void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuous) {
+    viewChanges++;
     if (keepContinuous && IsContinuous(displayMode)) {
         if (newDisplayMode == DisplayMode::SinglePage) {
             newDisplayMode = DisplayMode::Continuous;
@@ -3659,6 +3661,7 @@ float DisplayModel::MaxZoomForDocument() const {
 }
 
 void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
+    viewChanges++;
     if (zoomLevel > 0) {
         zoomLevel = limitValue(zoomLevel, kZoomMin, kZoomMax);
         if (zoomLevel > kZoomMaxDefault) {
@@ -3841,6 +3844,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
        (i.e. 100.0 is original size) or one of virtual values kZoomFitPage,
 kZoomFitWidth or kZoomFitContent, whose real value depends on draw area size */
 void DisplayModel::RotateBy(int newRotation) {
+    viewChanges++;
     newRotation = NormalizeRotation(newRotation);
     ReportIf(0 == newRotation);
     if (0 == newRotation) {

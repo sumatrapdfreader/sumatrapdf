@@ -190,6 +190,9 @@ struct DisplayModel : DocController {
     float MaxZoomForDocument() const;
     void Relayout(float zoomVirtual, int rotation);
     bool ViewportReadyForRelayout() const;
+    // bumped when the user changes display mode, zoom, rotation or trim: canvas
+    // offsets computed before (e.g. a smooth scroll's target) no longer apply
+    int viewChanges = 0;
 
     Rect GetViewPort() const;
     bool NeedHScroll() const;

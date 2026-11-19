@@ -755,6 +755,9 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     LARGE_INTEGER scrollAnimLastTime{};
     bool scrollAnimActive = false;
     bool scrollAnimHiResTimer = false; // timeBeginPeriod(1) while animating
+    // the document and DisplayModel::viewChanges scrollTargetY was computed for
+    DisplayModel* scrollAnimDm = nullptr;
+    int scrollAnimViewChanges = 0;
 
     // suppress Read Aloud user-scroll detection during programmatic follow scrolling
     mutable bool readAloudScrollFromCode = false;

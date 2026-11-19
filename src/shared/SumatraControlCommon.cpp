@@ -596,7 +596,8 @@ bool WriteControlResponse(ControlConn h, ControlRequest* req) {
     return WriteExact(h, ToStr(packet));
 }
 
-// "OK page=<n> x=<x> y=<y>": the first window's scroll position, in page units
+// "OK page=<n> x=<x> y=<y> visible=<n>": the first window's scroll position, in
+// page units, and how many pages are on screen (0 = the view is blank)
 TempStr ScrollStateResultTemp(int* exitCodeOut) {
     *exitCodeOut = 2;
     MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
@@ -605,8 +606,14 @@ TempStr ScrollStateResultTemp(int* exitCodeOut) {
         return fmt("NOTREADY no-doc\n");
     }
     ScrollState ss = dm->GetScrollState();
+    int nVisible = 0;
+    for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
+        if (dm->PageVisible(pageNo)) {
+            nVisible++;
+        }
+    }
     *exitCodeOut = 0;
-    return fmt("OK page=%d x=%g y=%g\n", ss.page, ss.x, ss.y);
+    return fmt("OK page=%d x=%g y=%g visible=%d\n", ss.page, ss.x, ss.y, nVisible);
 }
 
 TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {

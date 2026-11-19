@@ -1131,6 +1131,8 @@ static void StartOrUpdateSmoothScrollY(MainWindow* win, int targetY) {
         return;
     }
     win->scrollTargetY = targetY;
+    win->scrollAnimDm = dm;
+    win->scrollAnimViewChanges = dm->viewChanges;
     if (win->scrollAnimActive) {
         // only the target changes; scrollAnimY keeps going
         return;
@@ -1143,7 +1145,9 @@ static void StartOrUpdateSmoothScrollY(MainWindow* win, int targetY) {
 
 void DocCanvasSmoothScrollTick(MainWindow* win, int elapsedMs) {
     DisplayModel* dm = win->AsFixed();
-    if (!dm || !win->scrollAnimActive) {
+    // another tab, or a new layout (display mode, zoom, rotation): the target is stale
+    bool sameView = dm && dm == win->scrollAnimDm && dm->viewChanges == win->scrollAnimViewChanges;
+    if (!win->scrollAnimActive || !sameView) {
         StopSmoothScroll(win);
         return;
     }

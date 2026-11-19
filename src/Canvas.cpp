@@ -320,6 +320,8 @@ static void StartOrUpdateSmoothScrollY(MainWindow* win, int targetY) {
     }
 
     win->scrollTargetY = targetY;
+    win->scrollAnimDm = dm;
+    win->scrollAnimViewChanges = dm->viewChanges;
     if (!win->scrollAnimActive) {
         win->scrollAnimY = (double)current;
         win->scrollAnimLastTime = TimeGet();
@@ -5061,8 +5063,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
 
         case kSmoothScrollTimerID: {
             DisplayModel* dm = win->AsFixed();
-            // Window/tab may have changed while the timer was running.
-            if (!dm || !win->scrollAnimActive) {
+            // Window/tab may have changed while the timer was running, or the
+            // layout (display mode, zoom, rotation): the target is stale then.
+            bool sameView = dm && dm == win->scrollAnimDm && dm->viewChanges == win->scrollAnimViewChanges;
+            if (!win->scrollAnimActive || !sameView) {
                 StopSmoothScroll(win);
                 break;
             }

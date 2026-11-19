@@ -300,6 +300,9 @@ struct MainWindow {
     int scrollTargetY = 0;
     double scrollAnimY = 0;
     bool scrollAnimActive = false;
+    // the document and DisplayModel::viewChanges scrollTargetY was computed for
+    DisplayModel* scrollAnimDm = nullptr;
+    int scrollAnimViewChanges = 0;
     // a page was still rendering on the last paint, so paint again soon
     bool repaintPending = false;
 
