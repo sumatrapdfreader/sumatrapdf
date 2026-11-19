@@ -184,16 +184,46 @@ static bool CaretScreenRect(MainWindow* win, Rect& out) {
     return CaretScreenRects(win, out, glyph);
 }
 
+// Scroll just enough to show the caret, like a text editor: one line down past
+// the bottom scrolls one line (#6542). In single page mode go to its page first.
 static void ScrollCaretIntoView(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm->PageShown(win->textSelectPage)) {
+        // stepping across a page isn't a history entry
+        bool suppress = dm->stableNavPoint.suppress;
+        dm->stableNavPoint.suppress = true;
+        win->ctrl->GoToPage(win->textSelectPage, false);
+        dm->stableNavPoint.suppress = suppress;
+    }
+
     Rect r;
     if (!CaretScreenRect(win, r)) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
-    // give the caret a bit of context instead of parking it on the very edge
-    int pad = r.dy;
-    Rect withContext{r.x, r.y - pad, r.dx, r.dy + (2 * pad)};
-    dm->ScrollScreenToRect(win->textSelectPage, withContext);
+    // keep a line of context instead of parking the caret on the very edge
+    int pad = r.dy / 2;
+    r.y -= pad;
+    r.dy += 2 * pad;
+    Size view = dm->viewPort.Size();
+
+    int dy = 0;
+    if (r.y < 0) {
+        dy = r.y;
+    } else if (r.y + r.dy > view.dy) {
+        dy = std::min(r.y + r.dy - view.dy, r.y);
+    }
+    int dx = 0;
+    if (r.x < 0) {
+        dx = r.x;
+    } else if (r.x + r.dx > view.dx) {
+        dx = r.x + r.dx - view.dx;
+    }
+    if (dx != 0) {
+        dm->ScrollXBy(dx);
+    }
+    if (dy != 0) {
+        dm->ScrollYBy(dy, false);
+    }
 }
 
 // Push anchor..caret into the document's text selection (or clear it when the
