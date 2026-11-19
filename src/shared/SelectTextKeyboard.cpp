@@ -467,34 +467,36 @@ static bool MoveToLineEdge(MainWindow* win, int dir) {
     return true;
 }
 
-static bool MoveCaret(MainWindow* win, int key, bool isCtrl) {
+static bool MoveCaret(MainWindow* win, CaretMove move) {
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm->GetEngine();
     int page = win->textSelectPage;
     int glyph = win->textSelectGlyph;
 
-    switch (key) {
-        case VK_LEFT:
-        case VK_RIGHT: {
-            int dir = key == VK_RIGHT ? 1 : -1;
-            // Ctrl + Left / Right moves by word, like in a text editor
-            TextSelectUnit unit = isCtrl ? TextSelectUnit::Word : TextSelectUnit::Glyph;
+    switch (move) {
+        case CaretMove::Left:
+        case CaretMove::Right:
+        case CaretMove::WordLeft:
+        case CaretMove::WordRight: {
+            int dir = (move == CaretMove::Right || move == CaretMove::WordRight) ? 1 : -1;
+            bool byWord = move == CaretMove::WordLeft || move == CaretMove::WordRight;
+            TextSelectUnit unit = byWord ? TextSelectUnit::Word : TextSelectUnit::Glyph;
             if (!TextPosMoveBy(engine, page, glyph, unit, dir)) {
                 return false;
             }
             break;
         }
-        case VK_UP:
-        case VK_DOWN: {
-            int dir = key == VK_DOWN ? 1 : -1;
+        case CaretMove::Up:
+        case CaretMove::Down: {
+            int dir = move == CaretMove::Down ? 1 : -1;
             if (!TextPosMoveBy(engine, page, glyph, TextSelectUnit::Line, dir)) {
                 return false;
             }
             break;
         }
-        case VK_PRIOR:
-        case VK_NEXT: {
-            int dir = key == VK_NEXT ? 1 : -1;
+        case CaretMove::PageUp:
+        case CaretMove::PageDown: {
+            int dir = move == CaretMove::PageDown ? 1 : -1;
             int n = LinesPerScreen(win);
             bool moved = false;
             for (int i = 0; i < n; i++) {
@@ -508,23 +510,17 @@ static bool MoveCaret(MainWindow* win, int key, bool isCtrl) {
             }
             break;
         }
-        case VK_HOME:
-        case VK_END: {
-            int dir = key == VK_HOME ? -1 : 1;
-            if (!isCtrl) {
-                return MoveToLineEdge(win, dir);
-            }
-            if (dir < 0) {
-                page = 1;
-                glyph = 0;
-            } else {
-                page = engine->PageCount();
-                glyph = PageTextLen(engine, page);
-            }
+        case CaretMove::LineStart:
+        case CaretMove::LineEnd:
+            return MoveToLineEdge(win, move == CaretMove::LineStart ? -1 : 1);
+        case CaretMove::DocStart:
+            page = 1;
+            glyph = 0;
             break;
-        }
-        default:
-            return false;
+        case CaretMove::DocEnd:
+            page = engine->PageCount();
+            glyph = PageTextLen(engine, page);
+            break;
     }
     if (page == win->textSelectPage && glyph == win->textSelectGlyph) {
         return false;
@@ -534,25 +530,42 @@ static bool MoveCaret(MainWindow* win, int key, bool isCtrl) {
     return true;
 }
 
-static bool IsCaretMoveKey(int key) {
-    return key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_PRIOR || key == VK_NEXT ||
-           key == VK_HOME || key == VK_END;
+// the caret move for a key; false if the key doesn't move the caret
+static bool CaretMoveForKey(int key, bool ctrl, CaretMove* out) {
+    switch (key) {
+        case VK_LEFT:
+            // Ctrl + Left / Right moves by word, like in a text editor
+            *out = ctrl ? CaretMove::WordLeft : CaretMove::Left;
+            return true;
+        case VK_RIGHT:
+            *out = ctrl ? CaretMove::WordRight : CaretMove::Right;
+            return true;
+        case VK_UP:
+            *out = CaretMove::Up;
+            return true;
+        case VK_DOWN:
+            *out = CaretMove::Down;
+            return true;
+        case VK_PRIOR:
+            *out = CaretMove::PageUp;
+            return true;
+        case VK_NEXT:
+            *out = CaretMove::PageDown;
+            return true;
+        case VK_HOME:
+            *out = ctrl ? CaretMove::DocStart : CaretMove::LineStart;
+            return true;
+        case VK_END:
+            *out = ctrl ? CaretMove::DocEnd : CaretMove::LineEnd;
+            return true;
+    }
+    return false;
 }
 
-// Movement keys, handled before they can scroll the view. Returns true if the
-// key was consumed.
-#if defined(SUMATRA_NG)
-bool SelectTextWithKeyboardOnKeyDown(MainWindow* win, int key, bool ctrl, bool shift, bool alt) {
-#else
-bool SelectTextWithKeyboardOnKeyDown(MainWindow* win, int key) {
-    bool ctrl = IsCtrlPressed();
-    bool shift = IsShiftPressed();
-    bool alt = IsAltPressed();
-#endif
+// Move the caret, extending the selection when selecting. False if keyboard
+// selection isn't on (it is stopped when it can no longer continue).
+static bool MoveTextCaret(MainWindow* win, CaretMove move, bool shift) {
     if (!SelectTextWithKeyboardActive(win)) {
-        return false;
-    }
-    if (!IsCaretMoveKey(key) || alt) {
         return false;
     }
     if (!CanSelectTextWithKeyboard(win)) {
@@ -567,7 +580,7 @@ bool SelectTextWithKeyboardOnKeyDown(MainWindow* win, int key) {
         win->textSelectAnchorPage = win->textSelectPage;
         win->textSelectAnchorGlyph = win->textSelectGlyph;
     }
-    if (MoveCaret(win, key, ctrl)) {
+    if (MoveCaret(win, move)) {
         if (!selecting) {
             win->textSelectAnchorPage = win->textSelectPage;
             win->textSelectAnchorGlyph = win->textSelectGlyph;
@@ -578,6 +591,61 @@ bool SelectTextWithKeyboardOnKeyDown(MainWindow* win, int key) {
     RestartCaretBlink(win);
     RepaintTextSelect(win);
     return true;
+}
+
+// Movement keys, handled before they can scroll the view. Returns true if the
+// key was consumed.
+#if defined(SUMATRA_NG)
+bool SelectTextWithKeyboardOnKeyDown(MainWindow* win, int key, bool ctrl, bool shift, bool alt) {
+#else
+bool SelectTextWithKeyboardOnKeyDown(MainWindow* win, int key) {
+    bool ctrl = IsCtrlPressed();
+    bool shift = IsShiftPressed();
+    bool alt = IsAltPressed();
+#endif
+    CaretMove move;
+    if (alt || !CaretMoveForKey(key, ctrl, &move)) {
+        return false;
+    }
+    return MoveTextCaret(win, move, shift);
+}
+
+struct CaretCmd {
+    int cmdId;
+    CaretMove move;
+    // what the matching key does outside keyboard selection
+    int fallbackCmdId;
+};
+
+static const CaretCmd gCaretCmds[] = {
+    {CmdCaretUp, CaretMove::Up, CmdScrollUp},
+    {CmdCaretDown, CaretMove::Down, CmdScrollDown},
+    {CmdCaretLeft, CaretMove::Left, CmdScrollLeft},
+    {CmdCaretRight, CaretMove::Right, CmdScrollRight},
+    {CmdCaretWordLeft, CaretMove::WordLeft, CmdScrollLeft},
+    {CmdCaretWordRight, CaretMove::WordRight, CmdScrollRight},
+    {CmdCaretLineStart, CaretMove::LineStart, CmdGoToFirstPage},
+    {CmdCaretLineEnd, CaretMove::LineEnd, CmdGoToLastPage},
+    {CmdCaretPageUp, CaretMove::PageUp, CmdScrollUpPage},
+    {CmdCaretPageDown, CaretMove::PageDown, CmdScrollDownPage},
+    {CmdCaretDocStart, CaretMove::DocStart, CmdGoToFirstPage},
+    {CmdCaretDocEnd, CaretMove::DocEnd, CmdGoToLastPage},
+};
+
+// A CmdCaret* command moves the keyboard selection caret like the matching key
+// (#6539). Outside keyboard selection it returns the command that key runs
+// there, so one binding (Ctrl+n as Down) works in both. 0 when handled.
+int RunCaretCmd(MainWindow* win, int cmdId, bool shift) {
+    for (const CaretCmd& c : gCaretCmds) {
+        if (c.cmdId != cmdId) {
+            continue;
+        }
+        if (MoveTextCaret(win, c.move, shift)) {
+            return 0;
+        }
+        return c.fallbackCmdId;
+    }
+    return 0;
 }
 
 // 'v' toggles visual mode, 'y' / Ctrl+C copy. Returns true if consumed.

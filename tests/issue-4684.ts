@@ -19,10 +19,10 @@ const VK_HOME = 0x24;
 
 // 2 pages, one line of known text each. The line is long enough that Home/End
 // and a few glyph steps are all within it.
-const LINE1 = "The quick brown fox jumps over the lazy dog";
+export const LINE1 = "The quick brown fox jumps over the lazy dog";
 const LINE2 = "Second page has different words entirely";
 
-function makeTextPdf(): Buffer {
+export function makeTextPdf(): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
   const body: Record<number, Buffer> = {};
   body[1] = enc("<< /Type /Catalog /Pages 2 0 R >>");
@@ -93,13 +93,13 @@ function parseState(dump: string): State {
   };
 }
 
-async function getState(client: ControlClient): Promise<{ state: State; dump: string }> {
+export async function getState(client: ControlClient): Promise<{ state: State; dump: string }> {
   const res = await client.request(ControlCommand.TestSelectTextKeyboard, []);
   const dump = String(res[1] ?? "");
   return { state: parseState(dump), dump };
 }
 
-async function waitForState(
+export async function waitForState(
   client: ControlClient,
   pred: (s: State) => boolean,
   timeoutMs = 4000 * SLOW_BUILD_FACTOR,

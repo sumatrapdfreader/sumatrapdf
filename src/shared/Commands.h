@@ -376,8 +376,20 @@ enum {
     CmdViewAsHex = 570,
     CmdAIChatWithCustomAPI = 571,
     CmdSaveTrimmedPagesAs = 572,
+    CmdCaretUp = 573,
+    CmdCaretDown = 574,
+    CmdCaretLeft = 575,
+    CmdCaretRight = 576,
+    CmdCaretWordLeft = 577,
+    CmdCaretWordRight = 578,
+    CmdCaretLineStart = 579,
+    CmdCaretLineEnd = 580,
+    CmdCaretPageUp = 581,
+    CmdCaretPageDown = 582,
+    CmdCaretDocStart = 583,
+    CmdCaretDocEnd = 584,
 
-    CmdLast = 572,
+    CmdLast = 584,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

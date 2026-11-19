@@ -383,6 +383,18 @@ const commandsRaw = [
     "CmdViewAsHex", "View As Hex",
     "CmdAIChatWithCustomAPI", "Custom AI chat...",
     "CmdSaveTrimmedPagesAs", "Save Trimmed Pages As...",
+    "CmdCaretUp", "Move Caret Up",
+    "CmdCaretDown", "Move Caret Down",
+    "CmdCaretLeft", "Move Caret Left",
+    "CmdCaretRight", "Move Caret Right",
+    "CmdCaretWordLeft", "Move Caret One Word Left",
+    "CmdCaretWordRight", "Move Caret One Word Right",
+    "CmdCaretLineStart", "Move Caret To Line Start",
+    "CmdCaretLineEnd", "Move Caret To Line End",
+    "CmdCaretPageUp", "Move Caret Page Up",
+    "CmdCaretPageDown", "Move Caret Page Down",
+    "CmdCaretDocStart", "Move Caret To Document Start",
+    "CmdCaretDocEnd", "Move Caret To Document End",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

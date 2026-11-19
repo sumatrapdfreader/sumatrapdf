@@ -382,6 +382,18 @@ const CommandInfo gCommands[] = {
     {CmdViewAsHex, "CmdViewAsHex\0", StrL("View As Hex")},
     {CmdAIChatWithCustomAPI, "CmdAIChatWithCustomAPI\0", StrL("Custom AI chat...")},
     {CmdSaveTrimmedPagesAs, "CmdSaveTrimmedPagesAs\0", StrL("Save Trimmed Pages As...")},
+    {CmdCaretUp, "CmdCaretUp\0", StrL("Move Caret Up")},
+    {CmdCaretDown, "CmdCaretDown\0", StrL("Move Caret Down")},
+    {CmdCaretLeft, "CmdCaretLeft\0", StrL("Move Caret Left")},
+    {CmdCaretRight, "CmdCaretRight\0", StrL("Move Caret Right")},
+    {CmdCaretWordLeft, "CmdCaretWordLeft\0", StrL("Move Caret One Word Left")},
+    {CmdCaretWordRight, "CmdCaretWordRight\0", StrL("Move Caret One Word Right")},
+    {CmdCaretLineStart, "CmdCaretLineStart\0", StrL("Move Caret To Line Start")},
+    {CmdCaretLineEnd, "CmdCaretLineEnd\0", StrL("Move Caret To Line End")},
+    {CmdCaretPageUp, "CmdCaretPageUp\0", StrL("Move Caret Page Up")},
+    {CmdCaretPageDown, "CmdCaretPageDown\0", StrL("Move Caret Page Down")},
+    {CmdCaretDocStart, "CmdCaretDocStart\0", StrL("Move Caret To Document Start")},
+    {CmdCaretDocEnd, "CmdCaretDocEnd\0", StrL("Move Caret To Document End")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

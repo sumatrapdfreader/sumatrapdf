@@ -12139,6 +12139,24 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ExtendTextSelection(win, TextSelectUnit::Word, 1);
             break;
 
+        // no default shortcut: for binding caret keys elsewhere (#6539)
+        case CmdCaretUp:
+        case CmdCaretDown:
+        case CmdCaretLeft:
+        case CmdCaretRight:
+        case CmdCaretWordLeft:
+        case CmdCaretWordRight:
+        case CmdCaretLineStart:
+        case CmdCaretLineEnd:
+        case CmdCaretPageUp:
+        case CmdCaretPageDown:
+        case CmdCaretDocStart:
+        case CmdCaretDocEnd:
+            if (int fallback = RunCaretCmd(win, cmdId, IsShiftPressed())) {
+                HwndSendCommand(win->hwndFrame, fallback);
+            }
+            break;
+
         case CmdDebugToggleRtl:
             gForceRtl = !gForceRtl;
             for (auto* w : gWindows) {

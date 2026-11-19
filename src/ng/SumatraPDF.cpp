@@ -6346,6 +6346,24 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ExtendTextSelection(win, TextSelectUnit::Word, 1);
             break;
 
+        // no default shortcut: for binding caret keys elsewhere (#6539)
+        case CmdCaretUp:
+        case CmdCaretDown:
+        case CmdCaretLeft:
+        case CmdCaretRight:
+        case CmdCaretWordLeft:
+        case CmdCaretWordRight:
+        case CmdCaretLineStart:
+        case CmdCaretLineEnd:
+        case CmdCaretPageUp:
+        case CmdCaretPageDown:
+        case CmdCaretDocStart:
+        case CmdCaretDocEnd:
+            if (int fallback = RunCaretCmd(win, cmdId, CanvasShiftPressed())) {
+                ExecuteCmd(win, fallback);
+            }
+            break;
+
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents:
             ToggleTocBox(win);

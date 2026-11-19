@@ -9,6 +9,21 @@ struct MainWindow;
 struct Gfx;
 enum class TextSelectUnit;
 
+enum class CaretMove {
+    Up,
+    Down,
+    Left,
+    Right,
+    WordLeft,
+    WordRight,
+    LineStart,
+    LineEnd,
+    PageUp,
+    PageDown,
+    DocStart,
+    DocEnd,
+};
+
 extern Kind kNotifTextSelectMode;
 
 bool CanSelectTextWithKeyboard(MainWindow*);
@@ -20,6 +35,7 @@ void SelectTextWithKeyboardOnKeyUp(MainWindow*, int key);
 bool SelectTextWithKeyboardOnKeyDown(MainWindow*, int key);
 bool SelectTextWithKeyboardOnKeyDown(MainWindow*, int key, bool ctrl, bool shift, bool alt);
 bool SelectTextWithKeyboardOnChar(MainWindow*, int key);
+int RunCaretCmd(MainWindow*, int cmdId, bool shift);
 bool CanExtendTextSelection(MainWindow*);
 bool ExtendTextSelection(MainWindow*, TextSelectUnit, int dir);
 void SelectTextWithKeyboardBlinkCaret(MainWindow*);
