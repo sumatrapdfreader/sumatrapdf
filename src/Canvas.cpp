@@ -1652,8 +1652,13 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // the highlighter only selects text: a click never picks an annotation
     Annotation* annot =
         IsPlacingHighlighterAnnotation(win) ? nullptr : dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
-    if (MouseHasCtrl(key) && annot && tab) {
+    if (MouseHasCtrl(key) && annot && tab && !win->pdfAnnotationsToolbarEnabled) {
         EnablePdfAnnotationsToolbar(win);
+        // showing the Edit PDF toolbar re-lays out the page, so pt no longer
+        // points where it did: select only, the next press drags (#6550)
+        OpenOrSelectEditAnnotation(tab, annot, pt);
+        win->textDragPending = false;
+        return;
     }
     bool editPdf = win->pdfAnnotationsToolbarEnabled;
     if (editPdf && annot && !AnnotationCanBeMoved(annot->type)) {

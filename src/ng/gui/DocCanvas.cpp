@@ -2763,8 +2763,13 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     Annotation* annot = IsPlacingHighlighterAnnotation(win)
                             ? nullptr
                             : dm->GetAnnotationAtPos(pt, tab ? tab->selectedAnnotation : nullptr);
-    if (CanvasCtrlPressed() && annot && tab) {
+    if (CanvasCtrlPressed() && annot && tab && !win->pdfAnnotationsToolbarEnabled) {
         EnablePdfAnnotationsToolbar(win);
+        // showing the Edit PDF toolbar re-lays out the page, so pt no longer
+        // points where it did: select only, the next press drags (#6550)
+        OpenOrSelectEditAnnotation(tab, annot, pt);
+        win->textDragPending = false;
+        return;
     }
     bool editPdf = win->pdfAnnotationsToolbarEnabled;
     if (editPdf && annot && !AnnotationCanBeMoved(annot->type)) {

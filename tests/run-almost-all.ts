@@ -272,6 +272,7 @@ import { testit as toggleStateArg } from "./toggle-state-arg.ts";
 import { testit as discussion6543 } from "./discussion-6543.ts";
 import { testit as issue6544 } from "./issue-6544.ts";
 import { testit as issue6549 } from "./issue-6549.ts";
+import { testit as issue6550 } from "./issue-6550.ts";
 import { testit as f7EndsPlacement } from "./f7-ends-placement.ts";
 import { testit as findUiOneAtATime } from "./find-ui-one-at-a-time.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
@@ -1146,6 +1147,7 @@ export const tests: NamedTest[] = [
   ["discussion-6543", discussion6543],
   ["issue-6544", issue6544],
   ["issue-6549", issue6549],
+  ["issue-6550", issue6550],
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
   ["codex-provider", codexProvider],
