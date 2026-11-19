@@ -258,6 +258,10 @@ void HideFwdSearchMarkAfter(MainWindow* win, int delayMs) {
     SetTimer(win->hwndCanvas, kHideFwdSearchMarkTimerID, delayMs, nullptr);
 }
 
+void ArmFindFlashTimer(MainWindow* win, int delayMs) {
+    SetTimer(win->hwndCanvas, kFindFlashTimerID, delayMs, nullptr);
+}
+
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col */, int ret, int page,
                              Vec<Rect>& rects) {
     if (ReportIf(!win->AsFixed())) {

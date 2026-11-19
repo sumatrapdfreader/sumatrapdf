@@ -581,6 +581,16 @@ struct MainWindow {
         Countdown hide;
     } fwdSearchMark;
 
+    // ring blinked around the match Find Next/Prev landed on (FlashFindMatch)
+    struct {
+        bool show = false; // ring visible in the current blink step
+        Vec<Rect> rects;   // match in user coordinates
+        int page = 0;
+        int step = 0;
+        // ng: orig arms kFindFlashTimerID; the tick counts this down
+        Countdown next;
+    } findFlash;
+
     StressTest* stressTest = nullptr;
 
     Size GetViewPortSize() const;

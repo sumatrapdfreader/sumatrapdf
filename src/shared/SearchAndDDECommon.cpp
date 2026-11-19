@@ -1154,6 +1154,40 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
 
 #endif // OS_WIN
 
+// Blink a ring around the match: a highlight on a busy page (a PCB drawing)
+// is easy to miss, a blinking one isn't (#6536)
+static void StartFindFlash(MainWindow* win, Vec<TextSel>* result) {
+    auto& ff = win->findFlash;
+    ff.show = false;
+    VecReset(ff.rects);
+    if (!gSettings->flashFindMatch) {
+        return;
+    }
+    // a match spanning pages rings only its first part
+    ff.page = (*result)[0].pageNo;
+    for (int i = 0; i < len(*result); i++) {
+        TextSel& ts = (*result)[i];
+        if (ts.pageNo == ff.page) {
+            VecAppend(ff.rects, ts.rect);
+        }
+    }
+    ff.step = 0;
+    ff.show = true;
+    ArmFindFlashTimer(win, kFindFlashIntervalMs);
+}
+
+// advance the blink; false when it's over and the timer should stop
+bool FindFlashStep(MainWindow* win) {
+    auto& ff = win->findFlash;
+    ff.step++;
+    if (ff.step >= kFindFlashSteps || len(ff.rects) == 0) {
+        ff.show = false;
+        return false;
+    }
+    ff.show = (ff.step % 2) == 0;
+    return true;
+}
+
 // goToPage: scroll to the match's page even when it's already shown (a new
 // search). Moving between matches never adds a nav point: the search's start
 // view is already in the history (MarkSearchStart), so Back returns there
@@ -1178,6 +1212,7 @@ void ShowSearchResult(MainWindow* win, Vec<TextSel>* result, bool goToPage) {
     // selection highlight is separate and survives searching (issue #5737).
     dm->ShowResultRectToScreen(result);
     InvalidateFindMatchPaintCache();
+    StartFindFlash(win, result);
     ScheduleRepaint(win, 0);
 }
 
@@ -1185,6 +1220,7 @@ void ClearSearchResult(MainWindow* win) {
     // clear only the find-match highlights, never the user's text selection:
     // find and selection highlights are tracked independently (issue #5737)
     ClearFindMatches(win); // also invalidates the find-match paint cache
+    VecReset(win->findFlash.rects); // also stops the blink
     ScheduleRepaint(win, 0);
 }
 
@@ -2893,4 +2929,46 @@ void PaintForwardSearchMark(MainWindow* win, PaintRef ctx) {
         (u8)(0x5f * 1.0f * (float)(kHideFwdSearchMarkSteps - win->fwdSearchMark.hideStep) / kHideFwdSearchMarkSteps);
     ParsedColor* parsedCol = GetPrefsColor(gSettings->forwardSearch.highlightColor);
     PaintTransparentRectangles(ctx, FindPaintClipRc(win, dm), rects, parsedCol->col, alpha);
+}
+
+static void AppendRing(Vec<Rect>& out, Rect r, int thick) {
+    VecAppend(out, Rect(r.x, r.y, r.dx, thick));
+    VecAppend(out, Rect(r.x, r.y + r.dy - thick, r.dx, thick));
+    VecAppend(out, Rect(r.x, r.y + thick, thick, r.dy - 2 * thick));
+    VecAppend(out, Rect(r.x + r.dx - thick, r.y + thick, thick, r.dy - 2 * thick));
+}
+
+// ring around the match, drawn outside the text so it doesn't hide it. The
+// white halo keeps it visible when the page is the ring's color (#6536)
+void PaintFindFlash(MainWindow* win, PaintRef ctx) {
+    auto& ff = win->findFlash;
+    DisplayModel* dm = win->AsFixed();
+    if (!ff.show || !dm || len(ff.rects) == 0) {
+        return;
+    }
+    PageInfo* pageInfo = dm->GetPageInfo(ff.page);
+    if (!pageInfo || 0.0 == pageInfo->visibleRatio) {
+        return;
+    }
+
+    Rect r = dm->CvtToScreen(ff.page, ToRectF(ff.rects[0]));
+    for (int i = 1; i < len(ff.rects); i++) {
+        r = r.Union(dm->CvtToScreen(ff.page, ToRectF(ff.rects[i])));
+    }
+    constexpr int kGap = 5;
+    constexpr int kThick = 3;
+    constexpr int kHalo = 2;
+    r.Inflate(kGap + kThick, kGap + kThick);
+
+    Rect clipRc = FindPaintClipRc(win, dm);
+    Vec<Rect> halo;
+    Rect haloRc = r;
+    haloRc.Inflate(kHalo, kHalo);
+    AppendRing(halo, haloRc, kThick + 2 * kHalo);
+    PaintTransparentRectangles(ctx, clipRc, halo, kColWhite, 0xff, 0);
+
+    Vec<Rect> ring;
+    AppendRing(ring, r, kThick);
+    ParsedColor* parsedCol = GetPrefsColor(gSettings->forwardSearch.highlightColor);
+    PaintTransparentRectangles(ctx, clipRc, ring, parsedCol->col, 0xff, 0);
 }

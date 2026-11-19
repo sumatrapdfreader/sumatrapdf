@@ -139,6 +139,7 @@ void FindResultsInstalled(MainWindow* win, bool gotSnippets);
 void FindCountShown(MainWindow* win);
 void FindStatusChanged(MainWindow* win);
 void HideFwdSearchMarkAfter(MainWindow* win, int delayMs);
+void ArmFindFlashTimer(MainWindow* win, int delayMs);
 MainWindow* WindowFromHwnd(HWND hwnd);
 MainWindow* LastActiveWindow();
 Str HandleAppRequestCmd(Str cmd, bool* ack, str::Builder& res);

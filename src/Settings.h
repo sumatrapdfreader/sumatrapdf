@@ -1420,6 +1420,10 @@ struct Settings {
     // ForwardSearch. Off when the destination is only a page with no
     // position
     bool highlightLinkDestination;
+    // if true, Find Next / Find Previous blinks a ring around the found
+    // text a few times, so it's easy to spot on a busy page. The color
+    // matches ForwardSearch
+    bool flashFindMatch;
     // if true, mouse wheel scrolling is faster when mouse is over a
     // scrollbar
     bool fastScrollOverScrollbar;

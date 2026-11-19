@@ -3282,6 +3282,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     AnnotationResizeRerenderTick(win, ms);
     RefHoverTick(win, ms);
     ForwardSearchMarkTick(win, ms);
+    FindFlashTick(win, ms);
     ExpireNotifications(win, ms);
     // ng: orig's stress test re-arms a WM_TIMER after every step
     OnStressTestTimer(win);

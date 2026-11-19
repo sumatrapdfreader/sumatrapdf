@@ -51,8 +51,14 @@ constexpr int kHideFwdSearchMarkDecayIntervalInMs = 100;
 constexpr int kHideFwdSearchMarkSteps = 5;
 
 void PaintForwardSearchMark(MainWindow* win, gpui::PaintCtx* ctx);
+void PaintFindFlash(MainWindow* win, gpui::PaintCtx* ctx);
+bool FindFlashStep(MainWindow* win);
+// the found-match ring blinks kFindFlashSteps / 2 times
+constexpr int kFindFlashSteps = 6;
+constexpr int kFindFlashIntervalMs = 200;
 // ng: orig arms kHideFwdSearchMarkTimerID; the shell's tick fades the mark
 void ForwardSearchMarkTick(MainWindow* win, int elapsedMs);
+void FindFlashTick(MainWindow* win, int elapsedMs);
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int col, int ret, int page, Vec<Rect>& rects);
 void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest);
 TempStr LinkDestHighlightResultTemp(int* exitCodeOut);

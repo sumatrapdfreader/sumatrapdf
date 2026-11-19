@@ -3226,6 +3226,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     if (win->fwdSearchMark.show) {
         PaintForwardSearchMark(win, &gfx);
     }
+    PaintFindFlash(win, &gfx);
 
     PaintKeyboardLinkTargets(win, &gfx);
     PaintKeyboardTextCaret(win, &gfx);
@@ -5015,6 +5016,13 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             } else {
                 ScheduleRepaint(win, 0);
             }
+            break;
+
+        case kFindFlashTimerID:
+            if (!FindFlashStep(win)) {
+                KillTimer(hwnd, kFindFlashTimerID);
+            }
+            ScheduleRepaint(win, 0);
             break;
 
         case kReadAloudHighlightTimerID:

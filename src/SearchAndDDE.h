@@ -45,6 +45,10 @@ constexpr int kHideFwdSearchMarkDelayInMs = 400;
 constexpr int kHideLinkDestMarkDelayInMs = 2000;
 constexpr int kHideFwdSearchMarkDecayIntervalInMs = 100;
 constexpr int kHideFwdSearchMarkSteps = 5;
+constexpr int kFindFlashTimerID = 19;
+// the found-match ring blinks kFindFlashSteps / 2 times
+constexpr int kFindFlashSteps = 6;
+constexpr int kFindFlashIntervalMs = 200;
 
 // find-as-you-type debounce timer (lives on hwndFrame); see SearchAndDDE.cpp
 constexpr int kFindDebounceTimerId = 0x100;
@@ -55,6 +59,8 @@ bool OnInverseSearch(MainWindow* win, int x, int y);
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int col, int ret, int page, Vec<Rect>& rects);
 void ShowLinkDestHighlight(MainWindow* win, int pageNo, RectF dest);
 void PaintForwardSearchMark(MainWindow* win, Gfx* gfx);
+void PaintFindFlash(MainWindow* win, Gfx* gfx);
+bool FindFlashStep(MainWindow* win);
 TempStr LinkDestHighlightResultTemp(int* exitCodeOut);
 void PaintAllFindMatches(MainWindow* win, Gfx* gfx);
 void InvalidateFindMatchPaintCache();

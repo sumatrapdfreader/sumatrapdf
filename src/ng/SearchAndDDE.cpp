@@ -245,6 +245,21 @@ void ForwardSearchMarkTick(MainWindow* win, int elapsedMs) {
     AppShellInvalidate(win);
 }
 
+// ng: orig's kFindFlashTimerID handler in Canvas.cpp
+void FindFlashTick(MainWindow* win, int elapsedMs) {
+    if (!win || !win->findFlash.next.Tick(elapsedMs)) {
+        return;
+    }
+    if (FindFlashStep(win)) {
+        win->findFlash.next.Arm(kFindFlashIntervalMs);
+    }
+    AppShellInvalidate(win);
+}
+
+void ArmFindFlashTimer(MainWindow* win, int delayMs) {
+    win->findFlash.next.Arm(delayMs);
+}
+
 // starts fading the forward search mark after delayMs
 void HideFwdSearchMarkAfter(MainWindow* win, int delayMs) {
     win->fwdSearchMark.hide.Arm(delayMs);

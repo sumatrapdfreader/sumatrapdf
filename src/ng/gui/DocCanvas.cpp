@@ -3700,6 +3700,7 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     if (win->fwdSearchMark.show) {
         PaintForwardSearchMark(win, ctx);
     }
+    PaintFindFlash(win, ctx);
     PaintKeyboardTextCaret(win, ctx);
     PaintKeyboardLinkTargets(win, ctx);
     PaintLaserPointer(win, ctx);

@@ -4894,6 +4894,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     win->annotationBeingResized = false;
 
     win->fwdSearchMark.show = false;
+    VecReset(win->findFlash.rects);
     // hide the citation-hover popup and cancel a pending hover: it
     // belongs to the document being closed / replaced
     RefHoverHide(win->refHover, win->hwndCanvas);

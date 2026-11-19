@@ -772,6 +772,14 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
         int hideStep = 0; // value used to gradually hide the markers
     } fwdSearchMark;
 
+    // ring blinked around the match Find Next/Prev landed on (FlashFindMatch)
+    struct {
+        bool show = false; // ring visible in the current blink step
+        Vec<Rect> rects;   // match in user coordinates
+        int page = 0;
+        int step = 0;
+    } findFlash;
+
     StressTest* stressTest = nullptr;
 
     TouchState touchState;

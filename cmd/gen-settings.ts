@@ -1999,6 +1999,13 @@ const globalPrefs: Field[] = [
       "destination is only a page with no position",
   ).ver("3.7"),
   field(
+    "FlashFindMatch",
+    Bool,
+    true,
+    "if true, Find Next / Find Previous blinks a ring around the found text a few times, " +
+      "so it's easy to spot on a busy page. The color matches ForwardSearch",
+  ).ver("3.7"),
+  field(
     "CitationHoverDelay",
     Int,
     -1,
@@ -2622,6 +2629,7 @@ const globalPrefsLayout = [
   "ContinuousScrollFollowsRotation",
   "IgnoreDestinationZoom",
   "HighlightLinkDestination",
+  "FlashFindMatch",
   "FastScrollOverScrollbar",
   "PreventSleepInFullscreen",
   "ToolbarShowReadAloud",
