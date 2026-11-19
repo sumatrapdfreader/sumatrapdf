@@ -1435,7 +1435,7 @@ endfunc
 #define SMOOTH  ((1*15<<7)|4*15)
 #define SHARP   ((2*15<<7)|3*15)
 
-.macro filter_fn type, dst, d_strd, src, s_strd, w, h, mx, xmx, my, xmy, ds2, sr2, shift_hv, taps
+.macro filter_fn type, dst, d_strd, src, s_strd, w, h, mx, my, ds2, sr2, shift_hv, taps
 function \type\()_\taps\()_neon
         mov             w10,  #0x4081  // (1 << 14) | (1 << 7) | (1 << 0)
         mul             \mx,  \mx, w10
@@ -1464,7 +1464,7 @@ L(\type\()_\taps\()_h):
         mov             \mx,  w9
 4:
         tst             \my,  #(0x7f << 14)
-        add             \xmx, x10, \mx, uxtw #3
+        add             x(\mx), x10, \mx, uxtw #3
         b.ne            L(\type\()_\taps\()_hv)
 
         movrel          x9,  \type\()_\taps\()_h_tbl
@@ -1475,7 +1475,7 @@ L(\type\()_\taps\()_h):
 20:     // 2xN h
         AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
-        ldur            s0,  [\xmx, #2]
+        ldur            s0,  [x(\mx), #2]
         sub             \src,  \src,  #1
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
@@ -1508,7 +1508,7 @@ L(\type\()_\taps\()_h):
 
 40:     // 4xN h
         AARCH64_VALID_JUMP_TARGET
-        ldur            s0,  [\xmx, #2]
+        ldur            s0,  [x(\mx), #2]
         sub             \src,  \src,  #1
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
@@ -1553,7 +1553,7 @@ L(\type\()_\taps\()_h):
 
 80:     // 8xN h
         AARCH64_VALID_JUMP_TARGET
-        ld1             {v0.8b}, [\xmx]
+        ld1             {v0.8b}, [x(\mx)]
 .ifc \taps, 6tap
         sub             \src,  \src,  #2
 .else
@@ -1610,7 +1610,7 @@ L(\type\()_\taps\()_h):
 640:
 1280:   // 16xN, 32xN, ... h
         AARCH64_VALID_JUMP_TARGET
-        ld1             {v0.8b}, [\xmx]
+        ld1             {v0.8b}, [x(\mx)]
 .ifc \taps, 6tap
         sub             \src,  \src,  #2
 .else
@@ -1726,7 +1726,7 @@ function L(\type\()_\taps\()_v)
         b.le            4f
         mov             \my, w9
 4:
-        add             \xmy, x10, \my, uxtw #3
+        add             x(\my), x10, \my, uxtw #3
 
         movrel          x9,  \type\()_\taps\()_v_tbl
         ldrsw           x8,  [x9, x8, lsl #2]
@@ -1739,7 +1739,7 @@ function L(\type\()_\taps\()_v)
         b.gt            28f
 
         cmp             \h,  #2
-        ldur            s0,  [\xmy, #2]
+        ldur            s0,  [x(\my), #2]
         sub             \src,  \src,  \s_strd
         add             \ds2,  \dst,  \d_strd
         add             \sr2,  \src,  \s_strd
@@ -1768,7 +1768,7 @@ function L(\type\()_\taps\()_v)
         ret
 
 28:     // 2x6, 2x8, 2x12, 2x16 v
-        ld1             {v0.8b}, [\xmy]
+        ld1             {v0.8b}, [x(\my)]
         sub             \sr2,  \src,  \s_strd, lsl #1
         add             \ds2,  \dst,  \d_strd
         sub             \src,  \sr2,  \s_strd
@@ -1818,7 +1818,7 @@ function L(\type\()_\taps\()_v)
 
         // 4x2, 4x4 v
         cmp             \h,  #2
-        ldur            s0,  [\xmy, #2]
+        ldur            s0,  [x(\my), #2]
         sub             \src, \src, \s_strd
         add             \ds2, \dst, \d_strd
         add             \sr2, \src, \s_strd
@@ -1841,7 +1841,7 @@ function L(\type\()_\taps\()_v)
         ret
 
 480:    // 4x6, 4x8, 4x12, 4x16 v
-        ld1             {v0.8b}, [\xmy]
+        ld1             {v0.8b}, [x(\my)]
         sub             \sr2, \src, \s_strd, lsl #1
         add             \ds2, \dst, \d_strd
         sub             \src, \sr2, \s_strd
@@ -1893,7 +1893,7 @@ function L(\type\()_\taps\()_v)
 
         // 8x2, 8x4 v
         cmp             \h,  #2
-        ldur            s0,  [\xmy, #2]
+        ldur            s0,  [x(\my), #2]
         sub             \src, \src, \s_strd
         add             \ds2, \dst, \d_strd
         add             \sr2, \src, \s_strd
@@ -1921,7 +1921,7 @@ function L(\type\()_\taps\()_v)
 640:
 1280:
         AARCH64_VALID_JUMP_TARGET
-        ld1             {v0.8b}, [\xmy]
+        ld1             {v0.8b}, [x(\my)]
         sub             \src, \src, \s_strd
         sub             \src, \src, \s_strd, lsl #1
         sxtl            v0.8h, v0.8b
@@ -1972,8 +1972,8 @@ function L(\type\()_\taps\()_v)
         b.le            0f
         asr             \s_strd, \s_strd, #1
         asr             \d_strd, \d_strd, #1
-        msub            \src, \s_strd, \xmy, \src
-        msub            \dst, \d_strd, \xmy, \dst
+        msub            \src, \s_strd, x(\my), \src
+        msub            \dst, \d_strd, x(\my), \dst
         sub             \src, \src, \s_strd, lsl #3
         mov             \h,  \my
         add             \src, \src, #8
@@ -1991,7 +1991,7 @@ function L(\type\()_\taps\()_v)
         b.gt            1680b
 
         // 16x2, 16x4 v
-        ldur            s0,  [\xmy, #2]
+        ldur            s0,  [x(\my), #2]
         sub             \src, \src, \s_strd
         add             \ds2, \dst, \d_strd
         add             \sr2, \src, \s_strd
@@ -2048,7 +2048,7 @@ function L(\type\()_\taps\()_hv)
         b.le            4f
         mov             \my,  w9
 4:
-        add             \xmy,  x10, \my, uxtw #3
+        add             x(\my),  x10, \my, uxtw #3
 
         movrel          x9,  \type\()_\taps\()_hv_tbl
         ldrsw           x8,  [x9, x8, lsl #2]
@@ -2058,9 +2058,9 @@ function L(\type\()_\taps\()_hv)
 20:
         AARCH64_VALID_JUMP_TARGET
 .ifc \type, put
-        ldur            s0,  [\xmx, #2]
+        ldur            s0,  [x(\mx), #2]
         b.gt            280f
-        ldur            s1,  [\xmy, #2]
+        ldur            s1,  [x(\my), #2]
 
         // 2x2, 2x4 hv
         sub             \sr2, \src, #1
@@ -2105,7 +2105,7 @@ function L(\type\()_\taps\()_hv)
         b               2b
 
 280:    // 2x8, 2x16, 2x32 hv
-        ld1             {v1.8b},  [\xmy]
+        ld1             {v1.8b},  [x(\my)]
         sub             \src, \src, #1
         sub             \sr2, \src, \s_strd, lsl #1
         sub             \src, \sr2, \s_strd
@@ -2194,9 +2194,9 @@ L(\type\()_\taps\()_filter_2):
 
 40:
         AARCH64_VALID_JUMP_TARGET
-        ldur            s0,  [\xmx, #2]
+        ldur            s0,  [x(\mx), #2]
         b.gt            480f
-        ldur            s1,  [\xmy, #2]
+        ldur            s1,  [x(\my), #2]
         sub             \sr2, \src, #1
         sub             \src, \sr2, \s_strd
         add             \ds2, \dst, \d_strd
@@ -2256,7 +2256,7 @@ L(\type\()_\taps\()_filter_2):
         b               4b
 
 480:    // 4x8, 4x16, 4x32 hv
-        ld1             {v1.8b},  [\xmy]
+        ld1             {v1.8b},  [x(\my)]
         sub             \src, \src, #1
 .ifc \taps, 6tap
         sub             \sr2, \src, \s_strd
@@ -2386,8 +2386,8 @@ L(\type\()_\taps\()_filter_4):
 320:
         AARCH64_VALID_JUMP_TARGET
         b.gt            880f
-        ld1             {v0.8b},  [\xmx]
-        ldur            s1,  [\xmy, #2]
+        ld1             {v0.8b},  [x(\mx)]
+        ldur            s1,  [x(\my), #2]
 .ifc \taps, 6tap
         sub             \src,  \src,  #2
 .else
@@ -2452,8 +2452,8 @@ L(\type\()_\taps\()_filter_4):
         b.le            0f
         asr             \s_strd,  \s_strd,  #1
         asr             \d_strd,  \d_strd,  #1
-        msub            \src,  \s_strd,  \xmy,  \src
-        msub            \dst,  \d_strd,  \xmy,  \dst
+        msub            \src,  \s_strd,  x(\my),  \src
+        msub            \dst,  \d_strd,  x(\my),  \dst
         sub             \src,  \src,  \s_strd,  lsl #2
         mov             \h,  \my
         add             \src,  \src,  #8
@@ -2468,8 +2468,8 @@ L(\type\()_\taps\()_filter_4):
 640:
 1280:
         AARCH64_VALID_JUMP_TARGET
-        ld1             {v0.8b},  [\xmx]
-        ld1             {v1.8b},  [\xmy]
+        ld1             {v0.8b},  [x(\mx)]
+        ld1             {v1.8b},  [x(\my)]
 .ifc \taps, 6tap
         sub             \src,  \src,  #2
 .else
@@ -2595,8 +2595,8 @@ L(\type\()_\taps\()_filter_4):
         b.le            0f
         asr             \s_strd,  \s_strd,  #1
         asr             \d_strd,  \d_strd,  #1
-        msub            \src,  \s_strd,  \xmy,  \src
-        msub            \dst,  \d_strd,  \xmy,  \dst
+        msub            \src,  \s_strd,  x(\my),  \src
+        msub            \dst,  \d_strd,  x(\my),  \dst
         sub             \src,  \src,  \s_strd,  lsl #3
         mov             \h,  \my
         add             \src,  \src,  #8
@@ -2691,7 +2691,7 @@ endjumptable
 .endm
 
 
-.macro filter_bilin_fn type, dst, d_strd, src, s_strd, w, h, mx, xmx, my, xmy, ds2, sr2, shift_hv
+.macro filter_bilin_fn type, dst, d_strd, src, s_strd, w, h, mx, my, ds2, sr2, shift_hv
 function \type\()_bilin_8bpc_neon, export=1
         dup             v1.16b, \mx
         dup             v3.16b, \my
@@ -3033,8 +3033,8 @@ function L(\type\()_bilin_v)
         b.le            0f
         asr             \s_strd, \s_strd, #1
         asr             \d_strd, \d_strd, #1
-        msub            \src, \s_strd, \xmy, \src
-        msub            \dst, \d_strd, \xmy, \dst
+        msub            \src, \s_strd, x(\my), \src
+        msub            \dst, \d_strd, x(\my), \dst
         sub             \src, \src, \s_strd, lsl #1
         mov             \h,  \my
         add             \src, \src, #16
@@ -3199,8 +3199,8 @@ function L(\type\()_bilin_hv)
         b.le            0f
         asr             \s_strd,  \s_strd,  #1
         asr             \d_strd,  \d_strd,  #1
-        msub            \src,  \s_strd,  \xmy,  \src
-        msub            \dst,  \d_strd,  \xmy,  \dst
+        msub            \src,  \s_strd,  x(\my),  \src
+        msub            \dst,  \d_strd,  x(\my),  \dst
         sub             \src,  \src,  \s_strd,  lsl #1
         mov             \h,  \my
         add             \src,  \src,  #8
@@ -3230,28 +3230,28 @@ make_8tap_fn    put,  smooth_sharp,   SMOOTH,  SHARP,   8tap
 make_8tap_fn    put,  sharp,          SHARP,   SHARP,   8tap
 make_8tap_fn    put,  sharp_regular,  SHARP,   REGULAR, 8tap
 make_8tap_fn    put,  sharp_smooth,   SHARP,   SMOOTH,  8tap
-filter_fn       put,  x0, x1, x2, x3, w4, w5, w6, x6, w7, x7, x8, x9, 10, 8tap
+filter_fn       put,  x0, x1, x2, x3, w4, w5, w6, w7, x8, x9, 10, 8tap
 
 make_8tap_fn    put,  regular,        REGULAR, REGULAR, 6tap
 make_8tap_fn    put,  regular_smooth, REGULAR, SMOOTH,  6tap
 make_8tap_fn    put,  smooth,         SMOOTH,  SMOOTH,  6tap
 make_8tap_fn    put,  smooth_regular, SMOOTH,  REGULAR, 6tap
-filter_fn       put,  x0, x1, x2, x3, w4, w5, w6, x6, w7, x7, x8, x9, 10, 6tap
-filter_bilin_fn put,  x0, x1, x2, x3, w4, w5, w6, x6, w7, x7, x8, x9, 10
+filter_fn       put,  x0, x1, x2, x3, w4, w5, w6, w7, x8, x9, 10, 6tap
+filter_bilin_fn put,  x0, x1, x2, x3, w4, w5, w6, w7, x8, x9, 10
 
 make_8tap_fn    prep, regular_sharp,  REGULAR, SHARP,   8tap
 make_8tap_fn    prep, smooth_sharp,   SMOOTH,  SHARP,   8tap
 make_8tap_fn    prep, sharp,          SHARP,   SHARP,   8tap
 make_8tap_fn    prep, sharp_regular,  SHARP,   REGULAR, 8tap
 make_8tap_fn    prep, sharp_smooth,   SHARP,   SMOOTH,  8tap
-filter_fn       prep, x0, x7, x1, x2, w3, w4, w5, x5, w6, x6, x8, x9, 6,  8tap
+filter_fn       prep, x0, x7, x1, x2, w3, w4, w5, w6, x8, x9, 6, 8tap
 
 make_8tap_fn    prep, regular,        REGULAR, REGULAR, 6tap
 make_8tap_fn    prep, regular_smooth, REGULAR, SMOOTH,  6tap
 make_8tap_fn    prep, smooth,         SMOOTH,  SMOOTH,  6tap
 make_8tap_fn    prep, smooth_regular, SMOOTH,  REGULAR, 6tap
-filter_fn       prep, x0, x7, x1, x2, w3, w4, w5, x5, w6, x6, x8, x9, 6,  6tap
-filter_bilin_fn prep, x0, x7, x1, x2, w3, w4, w5, x5, w6, x6, x8, x9, 6
+filter_fn       prep, x0, x7, x1, x2, w3, w4, w5, w6, x8, x9, 6, 6tap
+filter_bilin_fn prep, x0, x7, x1, x2, w3, w4, w5, w6, x8, x9, 6
 
 
 .macro load_filter_row dst, src, inc
@@ -3479,31 +3479,31 @@ function emu_edge_8bpc_neon, export=1
 .if \need_left
         ld1r            {v0.16b}, [x8]
         mov             x12, x6                // out = dst
-        mov             x3,  x4
+        add             x3,  x6,  x4
 1:
-        subs            x3,  x3,  #16
-        st1             {v0.16b}, [x12], #16
-        b.gt            1b
+        str             q0,  [x12], #16
+        cmp             x12, x3
+        b.lt            1b
 .endif
         mov             x13, x8
         add             x12, x6,  x4           // out = dst + left_ext
-        mov             x3,  x2
+        add             x3,  x13, x2
 1:
-        ld1             {v0.16b, v1.16b}, [x13], #32
-        subs            x3,  x3,  #32
-        st1             {v0.16b, v1.16b}, [x12], #32
-        b.gt            1b
+        ldp             q0,  q1,  [x13], #32
+        stp             q0,  q1,  [x12], #32
+        cmp             x13, x3
+        b.lt            1b
 .if \need_right
         add             x3,  x8,  x2           // in + center_w
         sub             x3,  x3,  #1           // in + center_w - 1
         add             x12, x6,  x4           // dst + left_ext
         ld1r            {v0.16b}, [x3]
         add             x12, x12, x2           // out = dst + left_ext + center_w
-        mov             x3,  x11
+        add             x3,  x12, x11
 1:
-        subs            x3,  x3,  #16
-        st1             {v0.16b}, [x12], #16
-        b.gt            1b
+        str             q0,  [x12], #16
+        cmp             x12, x3
+        b.lt            1b
 .endif
 
         subs            x1,  x1,  #1           // center_h--
@@ -3542,12 +3542,12 @@ function emu_edge_8bpc_neon, export=1
         sub             x8,  x6,  x7           // ref = dst - stride
         mov             x4,  x0
 1:
-        ld1             {v0.16b, v1.16b}, [x8], #32
-        mov             x3,  x10
+        ldp             q0,  q1,  [x8], #32
+        madd            x3,  x7,  x10, x6
 2:
-        subs            x3,  x3,  #1
         st1             {v0.16b, v1.16b}, [x6], x7
-        b.gt            2b
+        cmp             x6,  x3
+        b.lt            2b
         msub            x6,  x7,  x10,  x6     // dst -= bottom_ext * stride
         subs            x4,  x4,  #32          // bw -= 32
         add             x6,  x6,  #32          // dst += 32
@@ -3559,11 +3559,11 @@ function emu_edge_8bpc_neon, export=1
         msub            x6,  x7,  x5,  x14     // dst = stored_dst - top_ext * stride
 1:
         ld1             {v0.16b, v1.16b}, [x14], #32
-        mov             x3,  x5
+        madd            x3,  x7,  x5,  x6
 2:
-        subs            x3,  x3,  #1
         st1             {v0.16b, v1.16b}, [x6], x7
-        b.gt            2b
+        cmp             x6,  x3
+        b.lt            2b
         msub            x6,  x7,  x5,  x6      // dst -= top_ext * stride
         subs            x0,  x0,  #32          // bw -= 32
         add             x6,  x6,  #32          // dst += 32

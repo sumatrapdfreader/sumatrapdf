@@ -38,7 +38,7 @@
 
 #define decl_loopfilter_sb_fn(name) \
 void (name)(pixel *dst, ptrdiff_t stride, const uint32_t *mask, \
-            const uint8_t (*lvl)[4], ptrdiff_t lvl_stride, \
+            const uint8_t (*lvl)[2], ptrdiff_t lvl_stride, \
             const Av1FilterLUT *lut, int w HIGHBD_DECL_SUFFIX)
 typedef decl_loopfilter_sb_fn(*loopfilter_sb_fn);
 

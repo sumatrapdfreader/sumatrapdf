@@ -342,73 +342,36 @@ static inline int findoddzero(const uint8_t *buf, int len) {
     return 0;
 }
 
-// meant to be SIMD'able, so that theoretical complexity of this function
-// times block size goes from w4*h4 to w4+h4-1
-// a and b are previous two lines containing (a) top/left entries or (b)
-// top/left entries, with a[0] being either the first top or first left entry,
-// depending on top_offset being 1 or 0, and b being the first top/left entry
-// for whichever has one. left_offset indicates whether the (len-1)th entry
-// has a left neighbour.
-// output is order[] and ctx for each member of this diagonal.
-static void order_palette(const uint8_t *pal_idx, const ptrdiff_t stride,
-                          const int i, const int first, const int last,
-                          uint8_t (*const order)[8], uint8_t *const ctx)
+// Resolve a decoded rank (color_idx) to a palette entry, given the ordered
+// priority candidates p[0..prio_count-1] and the bitmask of values already
+// used by those candidates. Ranks below prio_count select a priority
+// candidate directly; higher ranks select the (rank - prio_count)th value
+// (counting from 0) that is not present in mask, in ascending order.
+static inline int resolve_pal_color(const int color_idx, const uint8_t *const p,
+                                    const int prio_count, unsigned mask)
 {
-    int have_top = i > first;
-
-    assert(pal_idx);
-    pal_idx += first + (i - first) * stride;
-    for (int j = first, n = 0; j >= last; have_top = 1, j--, n++, pal_idx += stride - 1) {
-        const int have_left = j > 0;
-
-        assert(have_left || have_top);
-
-#define add(v_in) do { \
-        const int v = v_in; \
-        assert((unsigned)v < 8U); \
-        order[n][o_idx++] = v; \
-        mask |= 1 << v; \
-    } while (0)
-
-        unsigned mask = 0;
-        int o_idx = 0;
-        if (!have_left) {
-            ctx[n] = 0;
-            add(pal_idx[-stride]);
-        } else if (!have_top) {
-            ctx[n] = 0;
-            add(pal_idx[-1]);
-        } else {
-            const int l = pal_idx[-1], t = pal_idx[-stride], tl = pal_idx[-(stride + 1)];
-            const int same_t_l = t == l;
-            const int same_t_tl = t == tl;
-            const int same_l_tl = l == tl;
-            const int same_all = same_t_l & same_t_tl & same_l_tl;
-
-            if (same_all) {
-                ctx[n] = 4;
-                add(t);
-            } else if (same_t_l) {
-                ctx[n] = 3;
-                add(t);
-                add(tl);
-            } else if (same_t_tl | same_l_tl) {
-                ctx[n] = 2;
-                add(tl);
-                add(same_t_tl ? l : t);
-            } else {
-                ctx[n] = 1;
-                add(imin(t, l));
-                add(imax(t, l));
-                add(tl);
-            }
-        }
-        for (unsigned m = 1, bit = 0; m < 0x100; m <<= 1, bit++)
-            if (!(mask & m))
-                order[n][o_idx++] = bit;
-        assert(o_idx == 8);
-#undef add
-    }
+    if (color_idx < prio_count)
+        return p[color_idx];
+    unsigned rank = color_idx - prio_count + (mask & 1);
+    rank += ((mask >> 1) & 1) & (rank > 0);
+    // Unset-bit positions minus their ranks, packed in 2-bit fields.
+    // Mask bits 0 and 1 are cleared and compensated in rank.
+    // At most three priority colors keep each offset within 0..3.
+    static const uint8_t free_offsets2[] = {
+        0x00, 0x00, 0x50, 0x15, 0x40, 0x15, 0xa0, 0x0a, 0x00, 0x15, 0x90, 0x0a,
+        0x80, 0x0a, 0xf0, 0x03, 0x00, 0x14, 0x50, 0x0a, 0x40, 0x0a, 0xe0, 0x03,
+        0x00, 0x0a, 0xd0, 0x03, 0xc0, 0x03, 0x00, 0x00, 0x00, 0x10, 0x50, 0x09,
+        0x40, 0x09, 0xa0, 0x03, 0x00, 0x09, 0x90, 0x03, 0x80, 0x03, 0x00, 0x00,
+        0x00, 0x08, 0x50, 0x03, 0x40, 0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x05, 0x40, 0x05, 0xa0, 0x02,
+        0x00, 0x05, 0x90, 0x02, 0x80, 0x02, 0x00, 0x00, 0x00, 0x04, 0x50, 0x02,
+        0x40, 0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x50, 0x01, 0x40, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    const unsigned byte_idx = 2 * (mask >> 2) + (rank >> 2);
+    assert(byte_idx < sizeof(free_offsets2));
+    return rank + ((free_offsets2[byte_idx] >> (2 * (rank & 3))) & 3);
 }
 
 static void read_pal_indices(Dav1dTaskContext *const t,
@@ -424,17 +387,92 @@ static void read_pal_indices(Dav1dTaskContext *const t,
     pal_tmp[0] = dav1d_msac_decode_uniform(&ts->msac, pal_sz);
     uint16_t (*const color_map_cdf)[8] =
         ts->cdf.m.color_map[pl][pal_sz - 2];
-    uint8_t (*const order)[8] = t->scratch.pal_order;
-    uint8_t *const ctx = t->scratch.pal_ctx;
+
+    if (pal_sz == 2) {
+        // Binary palette: ctx 1 is unreachable (needs 3 distinct neighbours),
+        // and resolve always toggles the single priority value. Use a bool
+        // decode instead of a symbol decode. ctx formula collapses to:
+        // border -> 0, interior -> 2 + same_t_l + (same_t_l & same_t_tl)
+        for (int i = 1; i < 4 * (w4 + h4) - 1; i++) {
+            const int first = imin(i, w4 * 4 - 1);
+            const int last = imax(0, i - h4 * 4 + 1);
+            int have_top = i > first;
+            const uint8_t *pal_row = pal_tmp + first + (i - first) * stride;
+            for (int j = first; j >= last; have_top = 1, j--, pal_row += stride - 1) {
+                const int have_left = j > 0;
+                int ctx, p0;
+                if (!have_left) {
+                    ctx = 0;
+                    p0 = pal_row[-stride];
+                } else if (!have_top) {
+                    ctx = 0;
+                    p0 = pal_row[-1];
+                } else {
+                    const int l = pal_row[-1], tp = pal_row[-stride];
+                    const int tl = pal_row[-(stride + 1)];
+                    const int same_t_l = tp == l;
+                    const int same_t_tl = tp == tl;
+                    ctx = 2 + same_t_l + (same_t_l & same_t_tl);
+                    p0 = same_t_l ? tp : tl;
+                }
+                const int bit = dav1d_msac_decode_bool_adapt(
+                    &ts->msac, color_map_cdf[ctx]);
+                pal_tmp[(i - j) * stride + j] = bit ^ p0;
+            }
+        }
+        t->c->pal_dsp.pal_idx_finish(pal_idx, pal_tmp, bw4 * 4, bh4 * 4,
+                                     w4 * 4, h4 * 4);
+        return;
+    }
+
+    unsigned (*const symbol_adapt)(MsacContext *, uint16_t *, size_t) =
+        pal_sz <= 4 ? dav1d_msac_decode_symbol_adapt4 : dav1d_msac_decode_symbol_adapt8;
+
     for (int i = 1; i < 4 * (w4 + h4) - 1; i++) {
         // top/left-to-bottom/right diagonals ("wave-front")
         const int first = imin(i, w4 * 4 - 1);
         const int last = imax(0, i - h4 * 4 + 1);
-        order_palette(pal_tmp, stride, i, first, last, order, ctx);
-        for (int j = first, m = 0; j >= last; j--, m++) {
-            const int color_idx = dav1d_msac_decode_symbol_adapt8(&ts->msac,
-                                      color_map_cdf[ctx[m]], pal_sz - 1);
-            pal_tmp[(i - j) * stride + j] = order[m][color_idx];
+        int have_top = i > first;
+        const uint8_t *pal_row = pal_tmp + first + (i - first) * stride;
+        for (int j = first; j >= last; have_top = 1, j--, pal_row += stride - 1) {
+            const int have_left = j > 0;
+            uint8_t p[3];
+            unsigned mask;
+            int ctx, prio_count;
+            if (!have_left) {
+                ctx = 0; prio_count = 1;
+                p[0] = pal_row[-stride];
+                mask = 1u << p[0];
+            } else if (!have_top) {
+                ctx = 0; prio_count = 1;
+                p[0] = pal_row[-1];
+                mask = 1u << p[0];
+            } else {
+                const int l = pal_row[-1], tp = pal_row[-stride];
+                const int tl = pal_row[-(stride + 1)];
+                const int same_t_l = tp == l;
+                const int same_t_tl = tp == tl;
+                const int same_l_tl = l == tl;
+                if (same_t_l & same_t_tl) {
+                    ctx = 4; prio_count = 1;
+                    p[0] = tp; mask = 1u << tp;
+                } else if (same_t_l) {
+                    ctx = 3; prio_count = 2;
+                    p[0] = tp; p[1] = tl;
+                    mask = (1u << tp) | (1u << tl);
+                } else if (same_t_tl | same_l_tl) {
+                    ctx = 2; prio_count = 2;
+                    p[0] = tl; p[1] = same_t_tl ? l : tp;
+                    mask = (1u << tl) | (1u << p[1]);
+                } else {
+                    ctx = 1; prio_count = 3;
+                    p[0] = imin(tp, l); p[1] = imax(tp, l); p[2] = tl;
+                    mask = (1u << tp) | (1u << l) | (1u << tl);
+                }
+            }
+            const int color_idx = symbol_adapt(&ts->msac, color_map_cdf[ctx], pal_sz - 1);
+            pal_tmp[(i - j) * stride + j] =
+                resolve_pal_color(color_idx, p, prio_count, mask);
         }
     }
 
@@ -724,9 +762,11 @@ static int decode_b(Dav1dTaskContext *const t,
                     r[x].bs = bs;
                 }
                 refmvs_block *const *rr = &t->rt.r[(t->by & 31) + 5];
+                const int bx = t->bx + bw4 - 1;
                 for (int y = 0; y < bh4 - 1; y++) {
-                    rr[y][t->bx + bw4 - 1].ref.ref[0] = 0;
-                    rr[y][t->bx + bw4 - 1].bs = bs;
+                    refmvs_block *d = &rr[y][bx];
+                    d->ref.ref[0] = 0;
+                    d->bs = bs;
                 }
             }
 
@@ -791,10 +831,12 @@ static int decode_b(Dav1dTaskContext *const t,
                     r[x].bs = bs;
                 }
                 refmvs_block *const *rr = &t->rt.r[(t->by & 31) + 5];
+                const int bx = t->bx + bw4 - 1;
                 for (int y = 0; y < bh4 - 1; y++) {
-                    rr[y][t->bx + bw4 - 1].ref.ref[0] = ref1;
-                    rr[y][t->bx + bw4 - 1].mv.mv[0] = mv1;
-                    rr[y][t->bx + bw4 - 1].bs = bs;
+                    refmvs_block* d = &rr[y][bx];
+                    d->ref.ref[0] = ref1;
+                    d->mv.mv[0] = mv1;
+                    d->bs = bs;
                 }
             }
 
@@ -1217,7 +1259,8 @@ static int decode_b(Dav1dTaskContext *const t,
         if (f->frame_hdr->loopfilter.level_y[0] ||
             f->frame_hdr->loopfilter.level_y[1])
         {
-            dav1d_create_lf_mask_intra(t->lf_mask, f->lf.level, f->b4_stride,
+            dav1d_create_lf_mask_intra(&t->c->lf_mask_dsp, t->lf_mask, f->lf.level,
+                                       f->b4_stride,
                                        (const uint8_t (*)[8][2])
                                        &ts->lflvl[b->seg_id][0][0][0],
                                        t->bx, t->by, f->w4, f->h4, bs,
@@ -1893,10 +1936,11 @@ static int decode_b(Dav1dTaskContext *const t,
                 ytx  = (enum RectTxfmSize) TX_4X4;
                 uvtx = (enum RectTxfmSize) TX_4X4;
             }
-            dav1d_create_lf_mask_inter(t->lf_mask, f->lf.level, f->b4_stride, lf_lvls,
-                                       t->bx, t->by, f->w4, f->h4, b->skip, bs,
-                                       ytx, tx_split, uvtx, f->cur.p.layout,
-                                       &t->a->tx_lpf_y[bx4], &t->l.tx_lpf_y[by4],
+            dav1d_create_lf_mask_inter(&t->c->lf_mask_dsp, t->lf_mask, f->lf.level,
+                                       f->b4_stride, lf_lvls, t->bx, t->by, f->w4,
+                                       f->h4, b->skip, bs, ytx, tx_split, uvtx,
+                                       f->cur.p.layout, &t->a->tx_lpf_y[bx4],
+                                       &t->l.tx_lpf_y[by4],
                                        has_chroma ? &t->a->tx_lpf_uv[cbx4] : NULL,
                                        has_chroma ? &t->l.tx_lpf_uv[cby4] : NULL);
         }
@@ -2783,7 +2827,10 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
         }
         dav1d_free_aligned(f->ts);
         f->ts = dav1d_alloc_aligned(ALLOC_TILE, sizeof(*f->ts) * n_ts, 32);
-        if (!f->ts) goto error;
+        if (!f->ts) {
+            f->n_ts = 0;
+            goto error;
+        }
         f->n_ts = n_ts;
     }
 
@@ -2998,15 +3045,17 @@ int dav1d_decode_frame_init(Dav1dFrameContext *const f) {
     // update allocation for loopfilter masks
     if (num_sb128 != f->lf.mask_sz) {
         dav1d_free(f->lf.mask);
-        dav1d_free(f->lf.level);
+        dav1d_free_aligned(f->lf.level[0]);
         f->lf.mask = dav1d_malloc(ALLOC_LF, sizeof(*f->lf.mask) * num_sb128);
         // over-allocate by 3 bytes since some of the SIMD implementations
-        // index this from the level type and can thus over-read by up to 3
-        f->lf.level = dav1d_malloc(ALLOC_LF, sizeof(*f->lf.level) * num_sb128 * 32 * 32 + 3);
-        if (!f->lf.mask || !f->lf.level) {
+        // index these from the level type and can thus over-read by up to 3
+        size_t level_bytes = sizeof(*f->lf.level[0]) * num_sb128 * 32 * 32;
+        f->lf.level[0] = dav1d_alloc_aligned(ALLOC_LF, 2 * level_bytes + 3, 64);
+        if (!f->lf.mask || !f->lf.level[0]) {
             f->lf.mask_sz = 0;
             goto error;
         }
+        f->lf.level[1] = (void*)((uint8_t*)f->lf.level[0] + level_bytes);
         if (c->n_fc > 1) {
             dav1d_free(f->frame_thread.b);
             f->frame_thread.b = dav1d_malloc(ALLOC_BLOCK, sizeof(*f->frame_thread.b) *
@@ -3306,7 +3355,7 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
                 }
             }
             pthread_mutex_unlock(&f->task_thread.ttd->lock);
-            res = f->task_thread.retval;
+            if (!res) res = f->task_thread.retval;
         } else {
             res = dav1d_decode_frame_main(f);
             if (!res && f->frame_hdr->refresh_context && f->task_thread.update_set) {

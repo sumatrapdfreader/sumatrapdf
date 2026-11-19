@@ -507,6 +507,8 @@ const dav1dAsm = [
   "ipred_avx2",
   "itx16_avx2",
   "itx_avx2",
+  // lf_mask.asm: fill_levelcache_block (sse2 and avx2; only avx2 is wired)
+  "lf_mask",
   "loopfilter16_avx2",
   "loopfilter_avx2",
   "looprestoration16_avx2",

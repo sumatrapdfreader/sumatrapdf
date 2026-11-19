@@ -373,24 +373,24 @@ SECTION .text
 
     ; load L/E/I/H
 %ifidn %2, v
-    pmovzxbw      m1, [lq]
-    pmovzxbw      m0, [lq+l_strideq]
+    pmovzxbd      m1, [lq]
+    pmovzxbd      m0, [lq+l_strideq]
     pxor          m2, m2
-%else
-    vpbroadcastq  m0, [lq]                      ; l0, l1
-    vpbroadcastq  m1, [lq+l_strideq]            ; l2, l3
-    vpbroadcastq  m2, [lq+l_strideq*2]          ; l4, l5
-    vpbroadcastq m10, [lq+l_stride3q]           ; l6, l7
-    punpckldq     m0, m1                        ; l0, l2, l1, l3 [2x]
-    punpckldq     m2, m10                       ; l4, l6, l5, l7 [2x]
-    vpblendd      m0, m0, m2, 11110000b         ; l0, l2, l1, l3, l4, l6, l5, l7
-    pxor          m2, m2
-    punpcklbw     m1, m0, m2                    ; l0, l2, l4, l6
-    punpckhbw     m0, m2                        ; l1, l3, l5, l7
-%endif
     pcmpeqw      m10, m2, m0
     pand          m1, m10
     por           m0, m1                        ; l[x][] ? l[x][] : l[x-stride][]
+%else
+    movd         xm1, [lq]
+    pinsrd       xm1, [lq+l_strideq], 1
+    pinsrd       xm1, [lq+l_strideq*2], 2
+    pinsrd       xm1, [lq+l_stride3q], 3        ; l0, l1, l2, l3, l4, l5, l6, l7
+    psrld        xm0, xm1, 16
+    pxor         xm2, xm2
+    pcmpeqb     xm10, xm2, xm0
+    pand         xm1, xm10
+    por          xm0, xm1                       ; l[x][] ? l[x][] : l[x-stride][]
+    pmovzxbw      m0, xm0
+%endif
     pshufb        m0, [pb_4x1_4x5_4x9_4x13]     ; l[x][1]
     pcmpeqw      m10, m2, m0                    ; !L
     psrlw        m10, 1
@@ -985,7 +985,7 @@ cglobal lpf_v_sb_y_16bpc, 6, 12, 16, 32 * 5, \
     shr          r6d, 11                      ; is_12bpc
     lea          r11, [r11+r6*4]
     mov           wd, wm
-    shl    l_strideq, 2
+    add    l_strideq, l_strideq
     sub           lq, l_strideq
     mov     mstrideq, strideq
     neg     mstrideq
@@ -1015,7 +1015,7 @@ cglobal lpf_v_sb_y_16bpc, 6, 12, 16, 32 * 5, \
 
 .end:
     pslld        m12, 4
-    add           lq, 16
+    add           lq, 8
     add         dstq, 32
     shl   mask_bitsd, 4
     sub           wd, 4
@@ -1035,8 +1035,8 @@ cglobal lpf_h_sb_y_16bpc, 6, 12, 16, 32 * 15, \
     shr          r6d, 11                      ; is_12bpc
     lea          r11, [r11+r6*4]
     mov           hd, hm
-    shl    l_strideq, 2
-    sub           lq, 4
+    add    l_strideq, l_strideq
+    sub           lq, 2
     lea     stride3q, [strideq*3]
     lea   l_stride3q, [l_strideq*3]
     mov   mask_bitsd, 0xf
@@ -1087,7 +1087,7 @@ cglobal lpf_v_sb_uv_16bpc, 6, 12, 16, \
     shr          r6d, 11                      ; is_12bpc
     lea          r11, [r11+r6*4]
     mov           wd, wm
-    shl    l_strideq, 2
+    add    l_strideq, l_strideq
     sub           lq, l_strideq
     mov     mstrideq, strideq
     neg     mstrideq
@@ -1110,7 +1110,7 @@ cglobal lpf_v_sb_uv_16bpc, 6, 12, 16, \
 
 .end:
     pslld        m12, 4
-    add           lq, 16
+    add           lq, 8
     add         dstq, 32
     shl   mask_bitsd, 4
     sub           wd, 4
@@ -1126,8 +1126,8 @@ cglobal lpf_h_sb_uv_16bpc, 6, 12, 16, \
     shr          r6d, 11                      ; is_12bpc
     lea          r11, [r11+r6*4]
     mov           hd, hm
-    shl    l_strideq, 2
-    sub           lq, 4
+    add    l_strideq, l_strideq
+    sub           lq, 2
     lea     stride3q, [strideq*3]
     lea   l_stride3q, [l_strideq*3]
     mov   mask_bitsd, 0xf

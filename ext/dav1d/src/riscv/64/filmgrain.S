@@ -45,6 +45,11 @@ function generate_grain_y_8bpc_rvv, export=1, ext="v,zba,zbb"
     li t3, GRAIN_WIDTH
 1:
     vsetvli t0, t3, e16, m8, ta, ma
+
+    // if t0/vl is odd, set it to the next even value
+    andi  t4, t0, 1
+    add   t0, t0, t4
+
     mv t6, t0
     mv a6, sp
 2:

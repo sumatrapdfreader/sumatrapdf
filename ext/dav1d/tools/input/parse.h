@@ -57,7 +57,7 @@ static int leb(const uint8_t *ptr, int sz, size_t *const len) {
     uint64_t val = 0;
     unsigned i = 0, more;
     do {
-        if (!sz--) return -1;
+        if (sz-- <= 0) return -1;
         const int v = *ptr++;
         more = v & 0x80;
         val |= ((uint64_t) (v & 0x7F)) << (i * 7);
@@ -76,7 +76,7 @@ static inline int parse_obu_header(const uint8_t *buf, int buf_size,
 {
     int ret, extension_flag, has_size_flag;
 
-    if (!buf_size)
+    if (buf_size <= 0)
         return -1;
     if (*buf & 0x80) // obu_forbidden_bit
         return -1;
@@ -89,7 +89,7 @@ static inline int parse_obu_header(const uint8_t *buf, int buf_size,
     buf_size--;
 
     if (extension_flag) {
-        if (!buf_size)
+        if (buf_size <= 0)
             return -1;
         buf++;
         buf_size--;
@@ -98,7 +98,7 @@ static inline int parse_obu_header(const uint8_t *buf, int buf_size,
 
     if (has_size_flag) {
         ret = leb(buf, buf_size, obu_size);
-        if (ret < 0)
+        if (ret < 0 || *obu_size > (size_t) (INT_MAX - ret - 1 - extension_flag))
             return -1;
         return (int) *obu_size + ret + 1 + extension_flag;
     } else if (!allow_implicit_size)

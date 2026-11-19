@@ -181,6 +181,9 @@
     <CustomBuild Include="..\ext\dav1d\src\x86\itx_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\ext\dav1d\src\x86\lf_mask.asm">
+      <Filter>src\x86</Filter>
+    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>

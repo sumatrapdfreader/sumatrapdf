@@ -77,7 +77,7 @@ function \op\()_8tap_\type\()_16bpc_\isa, export=1, align=FUNC_ALIGN
 endfunc
 .endm
 
-.macro filter_8tap_fn type, isa, dst, d_strd, src, s_strd, w, h, mx, my, bdmax, xmx, xmy, ldst, lsrc, wd_strd, ws_strd
+.macro filter_8tap_fn type, isa, dst, d_strd, src, s_strd, w, h, mx, my, bdmax, ldst, lsrc
 make_8tap_fn \type, sharp,          SHARP1,   SHARP1,   \isa
 make_8tap_fn \type, sharp_smooth,   SHARP1,   SMOOTH1,  \isa
 make_8tap_fn \type, sharp_regular,  SHARP1,   REGULAR1, \isa
@@ -118,9 +118,9 @@ L(\type\()_8tap_v_\isa):
         cmp             \h, #4
         csel            \my, \my, w11, le
         sub             \src, \src, \s_strd, lsl #1     // src - 3 * s_strd
-        add             \xmy, x12, \xmy, lsl #3         // subpel V filter address
+        add             x(\my), x12, x(\my), lsl #3     // subpel V filter address
         ldp             q28, q29, [x13, #16]
-        ld1sb           {z7.h}, p0/z, [\xmy]
+        ld1sb           {z7.h}, p0/z, [x(\my)]
 .ifc \type, prep
         clz             \bdmax, \bdmax
         sub             \bdmax, \bdmax, #24
@@ -133,7 +133,7 @@ L(\type\()_8tap_v_\isa):
 80:     // V - 8xN+
         ldp             q30, q31, [x13, #48]
 .ifc \type, prep
-        add             \wd_strd, \w, \w                // d_strd = 2 * w
+        add             w(\d_strd), \w, \w              // d_strd = 2 * w
 .endif
         .align LOOP_ALIGN
 81:
@@ -392,7 +392,7 @@ L(\type\()_8tap_v_\isa):
         ldr             d19, [\src, \s_strd]
         add             \src, \src, \s_strd, lsl #1
 
-        ext             v7.16b, v7.16b, v7.16b, #4      // [\xmy + 2 * 2]
+        ext             v7.16b, v7.16b, v7.16b, #4      // [\my + 2 * 2]
 
         zip1            v0.8h, v16.8h, v17.8h
         zip1            v2.8h, v18.8h, v19.8h
@@ -488,7 +488,7 @@ L(\type\()_8tap_h_hv_\isa):
         cmp             \w, #4
         csel            \mx, \mx, w9, le
         ldp             q30, q31, [x13]
-        add             \xmx, x12, \xmx, lsl #3     // subpel H filter address
+        add             x(\mx), x12, x(\mx), lsl #3 // subpel H filter address
         cbz             \my, L(\type\()_8tap_h_\isa)
 
         // HV cases
@@ -498,15 +498,15 @@ L(\type\()_8tap_h_hv_\isa):
 .endif
         ubfx            w11, w14, #7, #7
         and             w14, w14, #0x7F
-        ld1sb           {z4.h}, p0/z, [\xmx]
+        ld1sb           {z4.h}, p0/z, [x(\mx)]
         cmp             \h, #4
         csel            w14, w14, w11, le
 .ifc \type, put
         dup             v29.8h, \bdmax
 .endif
         clz             \bdmax, \bdmax
-        add             \xmy, x12, x14, lsl #3      // subpel V filter address
-        ld1sb           {z7.h}, p0/z, [\xmy]
+        add             x(\my), x12, x14, lsl #3    // subpel V filter address
+        ld1sb           {z7.h}, p0/z, [x(\my)]
 .ifc \type, put
         mov             w9, #12
         sub             w9, w9, \bdmax
@@ -526,7 +526,7 @@ L(\type\()_8tap_h_hv_\isa):
         // .align JUMP_ALIGN    // fallthrough
 80:     // HV8 - 8xN+
 .ifc \type, prep
-        add             \wd_strd, \w, \w                // d_strd = 2 * w
+        add             w(\d_strd), \w, \w              // d_strd = 2 * w
 .endif
         cmp             \h, #4
         b.le            84f
@@ -640,7 +640,7 @@ L(\type\()_8tap_h_hv_\isa):
         lsr             \d_strd, \d_strd, #1        // hword index for `st1h`
         whilelt         p1.h, wzr, \w               // masking for writes
 .endif
-        ext             v4.16b, v4.16b, v4.16b, #4  // [\xmy + 2 * 2]
+        ext             v4.16b, v4.16b, v4.16b, #4  // [\my + 2 * 2]
         add             \src, \src, #4
 
         cmp             \h, #4
@@ -716,7 +716,7 @@ L(\type\()_6tap_hv_\isa):
         // .align JUMP_ALIGN    // fallthrough
 80:     // HV6 - 8xN+
 .ifc \type, prep
-        add             \wd_strd, \w, \w        // d_strd = 2 * w
+        add             w(\d_strd), \w, \w      // d_strd = 2 * w
 .endif
         cmp             \h, #4
         b.le            84f
@@ -949,7 +949,7 @@ L(\type\()_hv_filter4_\isa):
         lsr             \d_strd, \d_strd, #1        // hword index for `st1h`
         whilelt         p1.h, wzr, \w               // masking for writes
 .endif
-        ext             v4.16b, v4.16b, v4.16b, #4  // [\xmy + 2 * 2]
+        ext             v4.16b, v4.16b, v4.16b, #4  // [\my + 2 * 2]
         add             \src, \src, #4
 
         cmp             \h, #4
@@ -1073,7 +1073,7 @@ L(\type\()_8tap_h_\isa):
         dup             v6.2d, x9
 .endif
         add             x11, x11, x12
-        ld1sb           {z4.h}, p0/z, [\xmx]
+        ld1sb           {z4.h}, p0/z, [x(\mx)]
         br              x11
 
         .align JUMP_ALIGN
@@ -1081,7 +1081,7 @@ L(\type\()_8tap_h_\isa):
 40:
         AARCH64_VALID_JUMP_TARGET
         add             \src, \src, #4              // src - 1 * 2
-        ext             v4.16b, v4.16b, v4.16b, #4  // [\xmy + 2 * 2]
+        ext             v4.16b, v4.16b, v4.16b, #4  // [\my + 2 * 2]
 .ifc \type, put
         lsr             \d_strd, \d_strd, #1        // hword index for `st1h`
         whilelt         p1.h, wzr, \w               // masking for writes
@@ -1636,13 +1636,11 @@ jumptable prep_tbl
 endjumptable
 
 
-// dst(x0), d_strd(x9), src(x1), s_strd(x2), w(w3), h(w4), mx(w5), my(w6), bdmax(w7)
-// xmx(x5), xmy(x6), ldst(x5), lsrc(x6), wd_strd(w9), ws_strd(w2)
-filter_8tap_fn prep, sve2, x0, x9, x1, x2, w3, w4, w5, w6, w7, x5, x6, x5, x6, w9, w2
+// dst(x0), d_strd(x9), src(x1), s_strd(x2), w(w3), h(w4), mx(w5), my(w6), bdmax(w7), ldst(x5), lsrc(x6)
+filter_8tap_fn prep, sve2, x0, x9, x1, x2, w3, w4, w5, w6, w7, x5, x6
 
-// dst(x0) d_strd(x1) src(x2) s_strd(x3) w(w4) h(w5) mx(w6) my(w7), bdmax(w8)
-// xmx(x6), xmy(x7), ldst(x6), lsrc(x7), wd_strd(w1), ws_strd(w3)
-filter_8tap_fn  put, sve2, x0, x1, x2, x3, w4, w5, w6, w7, w8, x6, x7, x6, x7, w1, w3
+// dst(x0) d_strd(x1) src(x2) s_strd(x3) w(w4) h(w5) mx(w6) my(w7), bdmax(w8), ldst(x6), lsrc(x7)
+filter_8tap_fn  put, sve2, x0, x1, x2, x3, w4, w5, w6, w7, w8, x6, x7
 
 DISABLE_SVE2
 DISABLE_SVE

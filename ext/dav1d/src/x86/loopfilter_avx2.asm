@@ -522,23 +522,23 @@ SECTION .text
 
     ; load L/E/I/H
 %ifidn %2, v
-    movu          m1, [lq]
-    movu          m0, [lq+l_strideq]
+    pmovzxwd      m1, [lq]
+    pmovzxwd      m0, [lq+l_strideq]
 %else
-    movq         xm1, [lq]
-    movq         xm2, [lq+l_strideq*2]
-    movhps       xm1, [lq+l_strideq]
-    movhps       xm2, [lq+l_stride3q]
+    movd         xm1, [lq]
+    movd         xm2, [lq+l_strideq*2]
+    pinsrd       xm1, [lq+l_strideq], 1
+    pinsrd       xm2, [lq+l_stride3q], 1
+    punpcklqdq   xm1, xm2
     lea           lq, [lq+l_strideq*4]
-    movq        xm10, [lq]
-    movq         xm0, [lq+l_strideq*2]
-    movhps      xm10, [lq+l_strideq]
-    movhps       xm0, [lq+l_stride3q]
+    movd        xm10, [lq]
+    movd         xm0, [lq+l_strideq*2]
+    pinsrd      xm10, [lq+l_strideq], 1
+    pinsrd       xm0, [lq+l_stride3q], 1
+    punpcklqdq  xm10, xm0
     lea           lq, [lq+l_strideq*4]
     vinserti128   m1, xm10, 1
-    vinserti128   m2, xm0, 1
-    shufps        m0, m1, m2, q3131
-    shufps        m1, m2, q2020
+    psrld         m0, m1, 16
 %endif
     pxor          m2, m2
     pcmpeqb      m10, m2, m0
@@ -796,9 +796,7 @@ SECTION .text
     pmulhrsw      m8, m10, [pw_2048]
     pmulhrsw      m9, m11, [pw_2048]
     packuswb      m8, m9
-    pand          m8, m1
-    pandn         m9, m1, m2
-    por           m8, m9
+    vpblendvb     m8, m2, m8, m1
 %ifidn %2, v
     mova [tmpq+strideq*2], m8                   ; p5
 %else
@@ -1420,7 +1418,7 @@ INIT_YMM avx2
 cglobal lpf_v_sb_y_8bpc, 7, 10, 16, 32 * 11, \
                     dst, stride, mask, l, l_stride, lut, \
                     w, stride3, mstride, tmp
-    shl    l_strideq, 2
+    add    l_strideq, l_strideq
     sub           lq, l_strideq
     mov     mstrideq, strideq
     neg     mstrideq
@@ -1447,7 +1445,7 @@ cglobal lpf_v_sb_y_8bpc, 7, 10, 16, 32 * 11, \
     call .v4
 
 .end:
-    add           lq, 32
+    add           lq, 16
     add         dstq, 32
     add        maskq, 1
     sub           wd, 8
@@ -1462,8 +1460,8 @@ INIT_YMM avx2
 cglobal lpf_h_sb_y_8bpc, 7, 10, 16, 32 * 21, \
                     dst, stride, mask, l, l_stride, lut, \
                     h, stride3, l_stride3, tmp
-    shl    l_strideq, 2
-    sub           lq, 4
+    add    l_strideq, l_strideq
+    sub           lq, 2
     lea     stride3q, [strideq*3]
     lea   l_stride3q, [l_strideq*3]
 
@@ -1506,7 +1504,7 @@ INIT_YMM avx2
 cglobal lpf_v_sb_uv_8bpc, 7, 10, 16, \
                      dst, stride, mask, l, l_stride, lut, \
                      w, stride3, mstride, tmp
-    shl    l_strideq, 2
+    add    l_strideq, l_strideq
     sub           lq, l_strideq
     mov     mstrideq, strideq
     neg     mstrideq
@@ -1526,7 +1524,7 @@ cglobal lpf_v_sb_uv_8bpc, 7, 10, 16, \
     call mangle(private_prefix %+ _lpf_v_sb_y_8bpc_avx2).v4
 
 .end:
-    add           lq, 32
+    add           lq, 16
     add         dstq, 32
     add        maskq, 1
     sub           wd, 8
@@ -1537,8 +1535,8 @@ INIT_YMM avx2
 cglobal lpf_h_sb_uv_8bpc, 7, 10, 16, \
                      dst, stride, mask, l, l_stride, lut, \
                      h, stride3, l_stride3, tmp
-    shl    l_strideq, 2
-    sub           lq, 4
+    add    l_strideq, l_strideq
+    sub           lq, 2
     lea     stride3q, [strideq*3]
     lea   l_stride3q, [l_strideq*3]
 

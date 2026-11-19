@@ -465,13 +465,12 @@ SECTION .text
     ; load L/E/I/H
     vpbroadcastd     m15, [pb_1]
 %ifidn %2, v
-    movu              m1, [lq]
-    movu              m0, [lq+l_strideq]
+    pmovzxwd          m1, [lq]
+    pmovzxwd          m0, [lq+l_strideq]
 %else
     kmovw             k1, k6
-    vpgatherdd    m0{k1}, [lq+m20+4]
-    kmovw             k1, k6
     vpgatherdd    m1{k1}, [lq+m20+0]
+    psrld             m0, m1, 16
 %endif
     pxor              m2, m2
     pcmpeqb           k1, m0, m2
@@ -1339,7 +1338,7 @@ INIT_ZMM avx512icl
 cglobal lpf_v_sb_y_8bpc, 7, 10, 32, dst, stride, mask, l, l_stride, \
                                     lut, w, stride3, mstride
  DECLARE_REG_TMP 9
-    shl        l_strideq, 2
+    add        l_strideq, l_strideq
     sub               lq, l_strideq
     mov         mstrideq, strideq
     neg         mstrideq
@@ -1376,7 +1375,7 @@ cglobal lpf_v_sb_y_8bpc, 7, 10, 32, dst, stride, mask, l, l_stride, \
     call .v4
 
 .end:
-    add               lq, 64
+    add               lq, 32
     add             dstq, 64
     add            maskq, 2
     sub               wd, 16
@@ -1391,8 +1390,8 @@ RESET_MM_PERMUTATION
 cglobal lpf_h_sb_y_8bpc, 7, 13, 32, 5*64, dst, stride, mask, l, l_stride, \
                                           lut, h, stride3, stride8
  DECLARE_REG_TMP 9, 10, 11, 12
-    shl        l_strideq, 2
-    sub               lq, 4
+    add        l_strideq, l_strideq
+    sub               lq, 2
     lea         stride3q, [strideq*3]
     lea         stride8q, [strideq*8]
     kxnorw            k6, k6, k6
@@ -1442,7 +1441,7 @@ RESET_MM_PERMUTATION
 cglobal lpf_v_sb_uv_8bpc, 7, 10, 22, dst, stride, mask, l, l_stride, \
                                      lut, w, stride3, mstride
  DECLARE_REG_TMP 9
-    shl        l_strideq, 2
+    add        l_strideq, l_strideq
     sub               lq, l_strideq
     mov         mstrideq, strideq
     neg         mstrideq
@@ -1471,7 +1470,7 @@ cglobal lpf_v_sb_uv_8bpc, 7, 10, 22, dst, stride, mask, l, l_stride, \
     call mangle(private_prefix %+ _lpf_v_sb_y_8bpc_avx512icl).v4
 
 .end:
-    add               lq, 64
+    add               lq, 32
     add             dstq, 64
     add            maskq, 2
     sub               wd, 16
@@ -1487,8 +1486,8 @@ cglobal lpf_h_sb_uv_8bpc, 7, 12, 22, dst, stride, mask, l, l_stride, \
     cmp               hd, 9
     cmovb            r7d, r8d
     kmovw             k6, r7d   ; h > 8 ? 0xffff : 0x00ff
-    shl        l_strideq, 2
-    sub               lq, 4
+    add        l_strideq, l_strideq
+    sub               lq, 2
     kshiftrw          k7, k6, 4 ; h > 8 ? 0xff   : 0xf0
     lea         stride3q, [strideq*3]
     lea         stride8q, [strideq*8]

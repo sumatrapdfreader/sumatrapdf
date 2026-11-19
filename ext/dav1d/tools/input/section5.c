@@ -36,6 +36,8 @@
 #include <sys/types.h>
 #endif
 
+#include "common/intops.h"
+
 #include "dav1d/headers.h"
 
 #include "input/demuxer.h"
@@ -43,13 +45,15 @@
 
 #define PROBE_SIZE 2048
 
-static int section5_probe(const uint8_t *data) {
+static int section5_probe(const uint8_t *data, int size) {
     int ret, cnt = 0;
+
+    size = imin(size, PROBE_SIZE);
 
     // Check that the first OBU is a Temporal Delimiter.
     size_t obu_size;
     enum Dav1dObuType type;
-    ret = parse_obu_header(data + cnt, PROBE_SIZE - cnt,
+    ret = parse_obu_header(data + cnt, size - cnt,
                            &obu_size, &type, 0);
     if (ret < 0 || type != DAV1D_OBU_TD || obu_size > 0)
         return 0;
@@ -57,12 +61,12 @@ static int section5_probe(const uint8_t *data) {
 
     // look for first frame and accompanying sequence header
     int seq = 0;
-    while (cnt < PROBE_SIZE) {
-        ret = parse_obu_header(data + cnt, PROBE_SIZE - cnt,
+    while (cnt < size) {
+        ret = parse_obu_header(data + cnt, size - cnt,
                                &obu_size, &type, 0);
         if (ret < 0)
             return 0;
-        cnt += ret;
+        cnt += imin(ret, size - cnt);
 
         switch (type) {
         case DAV1D_OBU_SEQ_HDR:
@@ -79,7 +83,7 @@ static int section5_probe(const uint8_t *data) {
         }
     }
 
-    return seq;
+    return seq && size == PROBE_SIZE;
 }
 
 typedef struct DemuxerPriv {
@@ -110,19 +114,23 @@ static int section5_open(Section5InputContext *const c, const char *const file,
             (*num_frames)++;
         const int has_length_field = byte[0] & 0x2;
         if (!has_length_field)
-            return -1;
+            goto error;
         const int has_extension = byte[0] & 0x4;
         if (has_extension && fread(&byte[1], 1, 1, c->f) < 1)
-            return -1;
+            goto error;
         size_t len;
         const int res = leb128(c->f, &len);
         if (res < 0)
-            return -1;
+            goto error;
         fseeko(c->f, len, SEEK_CUR); // skip packet
     }
     fseeko(c->f, 0, SEEK_SET);
 
     return 0;
+
+error:
+    fclose(c->f);
+    return -1;
 }
 
 static int section5_read(Section5InputContext *const c, Dav1dData *const data) {

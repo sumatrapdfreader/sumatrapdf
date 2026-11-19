@@ -45,17 +45,19 @@
 
 #define PROBE_SIZE 2048
 
-static int annexb_probe(const uint8_t *data) {
+static int annexb_probe(const uint8_t *data, int size) {
     int ret, cnt = 0;
 
+    size = imin(size, PROBE_SIZE);
+
     size_t temporal_unit_size;
-    ret = leb(data + cnt, PROBE_SIZE - cnt, &temporal_unit_size);
+    ret = leb(data + cnt, size - cnt, &temporal_unit_size);
     if (ret < 0)
         return 0;
     cnt += ret;
 
     size_t frame_unit_size;
-    ret = leb(data + cnt, PROBE_SIZE - cnt, &frame_unit_size);
+    ret = leb(data + cnt, size - cnt, &frame_unit_size);
     if (ret < 0 || ((uint64_t)frame_unit_size + ret) > temporal_unit_size)
         return 0;
     cnt += ret;
@@ -63,7 +65,7 @@ static int annexb_probe(const uint8_t *data) {
     temporal_unit_size -= ret;
 
     size_t obu_unit_size;
-    ret = leb(data + cnt, PROBE_SIZE - cnt, &obu_unit_size);
+    ret = leb(data + cnt, size - cnt, &obu_unit_size);
     if (ret < 0 || ((uint64_t)obu_unit_size + ret) >= frame_unit_size)
         return 0;
     cnt += ret;
@@ -74,27 +76,29 @@ static int annexb_probe(const uint8_t *data) {
     // Check that the first OBU is a Temporal Delimiter.
     size_t obu_size;
     enum Dav1dObuType type;
-    ret = parse_obu_header(data + cnt, imin(PROBE_SIZE - cnt, (int) obu_unit_size),
+    int obu_unit_probe_size = (int) umin((unsigned) obu_unit_size, size - cnt);
+    ret = parse_obu_header(data + cnt, obu_unit_probe_size,
                            &obu_size, &type, 1);
     if (ret < 0 || type != DAV1D_OBU_TD || obu_size > 0)
         return 0;
-    cnt += (int)obu_unit_size;
+    cnt += obu_unit_probe_size;
 
     // look for first frame and accompanying sequence header
     int seq = 0;
-    while (cnt < PROBE_SIZE) {
-        ret = leb(data + cnt, PROBE_SIZE - cnt, &obu_unit_size);
+    while (cnt < size) {
+        ret = leb(data + cnt, size - cnt, &obu_unit_size);
         if (ret < 0 || ((uint64_t)obu_unit_size + ret) > frame_unit_size)
             return 0;
         cnt += ret;
         temporal_unit_size -= ret;
         frame_unit_size -= ret;
 
-        ret = parse_obu_header(data + cnt, imin(PROBE_SIZE - cnt, (int) obu_unit_size),
+        obu_unit_probe_size = (int) umin((unsigned) obu_unit_size, size - cnt);
+        ret = parse_obu_header(data + cnt, obu_unit_probe_size,
                                &obu_size, &type, 1);
         if (ret < 0)
             return 0;
-        cnt += (int)obu_unit_size;
+        cnt += obu_unit_probe_size;
 
         switch (type) {
         case DAV1D_OBU_SEQ_HDR:
@@ -116,7 +120,7 @@ static int annexb_probe(const uint8_t *data) {
             return 0;
     }
 
-    return seq;
+    return seq && size == PROBE_SIZE;
 }
 
 typedef struct DemuxerPriv {

@@ -1,3 +1,36 @@
+Changes for 1.5.5 'Sonic':
+--------------------------
+
+1.5.5 is a minor release of dav1d, focused on optimizations and maintenance:
+ - x86: optimize cdef (SSSE3), cdef direction search (AVX-512), loopfilter
+   (SSE/AVX2), warp_affine, load_tmvs and high bitdepth idct64 (SSE4),
+   ipred_h and ipred_smooth_v/h (SSSE3), Wiener and SGR loop restoration
+   (SSE/AVX2), and high bitdepth pal_pred (AVX2)
+ - AArch64: optimize CDEF filters and direction search for 8 and 16bpc,
+   emu_edge for 8 and 16bpc, and ipred_filter for 8bpc; always use PIC movrel,
+   and simplify assembly with register type aliases
+ - RISC-V: implement cdef direction search for VLEN 128 and 256+
+ - refmvs: collapse runs of identical temporal MVs, and optimize save_tmvs
+ - Optimize palette decoding, and split the loopfilter level cache into
+   separate luma and chroma planes
+ - Optimize film grain by keeping working pointers to the line buffers and
+   reordering the overlap loops
+ - Move loop-invariant computations out of hot loops (decode_b, lf_apply)
+ - Revert a cdef loop-invariant change from 1.5.4 that regressed performance
+   with GCC 13-16
+ - x86: fix an out-of-bounds read in high bitdepth SGR AVX-512 assembly
+ - Fix an assertion failure or memory leak when ITU-T T.35 metadata
+   allocation fails
+ - Fix error handling of tile state reallocation failures
+ - Fix error reporting when frame task creation fails
+ - refmvs: fix the reference index upper bound in an assertion
+ - RISC-V: fix SIGSEGV in generate_grain_y
+ - Fix building with newer versions of MSVC
+ - CLI: fix memory and file leaks in error paths, fix out-of-bounds reads
+   when probing Annex B and Section 5 streams, and reject --sizelimit
+   dimensions that overflow
+
+
 Changes for 1.5.4 'Sonic':
 --------------------------
 

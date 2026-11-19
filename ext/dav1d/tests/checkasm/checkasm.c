@@ -39,6 +39,7 @@ static const CheckasmTest tests[] = {
     { "msac", checkasm_check_msac },
     { "pal", checkasm_check_pal },
     { "refmvs", checkasm_check_refmvs },
+    { "lfmask", checkasm_check_lf_mask },
 #if CONFIG_8BPC
     { "cdef_8bpc", checkasm_check_cdef_8bpc },
     { "filmgrain_8bpc", checkasm_check_filmgrain_8bpc },

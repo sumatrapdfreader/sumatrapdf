@@ -157,8 +157,8 @@ function cdef_padding\w\()_16bpc_neon, export=1
         b.eq            1f
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
-        ld1             {v0.s}[0], [x3], #4
-        ldr             s2,       [x1, #2*\w]
+        ldr             s0,  [x3], #4
+        ldr             s2,  [x1, #2*\w]
         load_n_incr_16  v1,  x1,  x2,  \w
         subs            w6,  w6,  #1
         str             s0,       [x0]
@@ -169,7 +169,7 @@ function cdef_padding\w\()_16bpc_neon, export=1
         b               3f
 1:
         // CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
-        ld1             {v0.s}[0], [x3], #4
+        ldr             s0,  [x3], #4
         load_n_incr_16  v1,  x1,  x2,  \w
         subs            w6,  w6,  #1
         str             s0,       [x0]

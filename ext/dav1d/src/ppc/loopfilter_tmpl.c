@@ -1362,7 +1362,7 @@ loop_filter_v_16_all(uint8_t *dst, u8x16 E, u8x16 I, u8x16 H,
 
 void LPF(h_sb_y)(pixel *dst, const ptrdiff_t stride,
                  const uint32_t *const vmask,
-                 const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                 const uint8_t (*l)[2], ptrdiff_t b4_stride,
                  const Av1FilterLUT *lut, const int h)
 {
     unsigned vm = vmask[0] | vmask[1] | vmask[2];
@@ -1380,7 +1380,7 @@ void LPF(h_sb_y)(pixel *dst, const ptrdiff_t stride,
     const u8x16 v1u8 = vec_splat_u8(1);
     const u8x16 v2u8 = vec_splat_u8(2);
     const u8x16 v4u8 = vec_splat_u8(4);
-    const uint8_t (*pl)[4] = &l[-1];
+    const uint8_t (*pl)[2] = &l[-1];
 
     const u8x16 spread = (u8x16){
         0x00, 0x00, 0x00, 0x00,
@@ -1397,10 +1397,15 @@ void LPF(h_sb_y)(pixel *dst, const ptrdiff_t stride,
         pl += 4 * b4_stride) {
         if (!(vm & 0x0f))
             continue;
-        u32x4 la = (u32x4)vec_xl(0, (uint8_t *)pl);  // l[-1] l[0] ...
-        u32x4 lb = (u32x4)vec_xl(1 * 4 * b4_stride, (uint8_t *)pl);
-        u32x4 lc = (u32x4)vec_xl(2 * 4 * b4_stride, (uint8_t *)pl);
-        u32x4 ld = (u32x4)vec_xl(3 * 4 * b4_stride, (uint8_t *)pl);
+        u16x8 la_16 = (u16x8)vec_xl(0, (uint8_t *)pl);   // l[-1] l[0] ...
+        u16x8 lb_16 = (u16x8)vec_xl(1 * 2 * b4_stride, (uint8_t *)pl);
+        u16x8 lc_16 = (u16x8)vec_xl(2 * 2 * b4_stride, (uint8_t *)pl);
+        u16x8 ld_16 = (u16x8)vec_xl(3 * 2 * b4_stride, (uint8_t *)pl);
+
+        u32x4 la = (u32x4)vec_mergeh(la_16, la_16);
+        u32x4 lb = (u32x4)vec_mergeh(lb_16, lb_16);
+        u32x4 lc = (u32x4)vec_mergeh(lc_16, lc_16);
+        u32x4 ld = (u32x4)vec_mergeh(ld_16, ld_16);
 
         u32x4 Lac = vec_mergeh(la, lc); // la[-1] lb[-1] la[0] lb[0]
         u32x4 Lbd = vec_mergeh(lb, ld); // lc[-1] ld[-1] lc[0] ld[0]
@@ -1449,7 +1454,7 @@ void LPF(h_sb_y)(pixel *dst, const ptrdiff_t stride,
 
 void LPF(v_sb_y)(pixel *dst, const ptrdiff_t stride,
                  const uint32_t *const vmask,
-                 const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                 const uint8_t (*l)[2], ptrdiff_t b4_stride,
                  const Av1FilterLUT *lut, const int w)
 {
     unsigned vm = vmask[0] | vmask[1] | vmask[2];
@@ -1467,8 +1472,8 @@ void LPF(v_sb_y)(pixel *dst, const ptrdiff_t stride,
     u8x16 v1u8 = vec_splat_u8(1);
     u8x16 v2u8 = vec_splat_u8(2);
     u8x16 v4u8 = vec_splat_u8(4);
-    const uint8_t (*pl)[4] = l;
-    const uint8_t (*plb4)[4] = l - b4_stride;
+    const uint8_t (*pl)[2] = l;
+    const uint8_t (*plb4)[2] = l - b4_stride;
     const u8x16 spread = (u8x16){
         0x00, 0x00, 0x00, 0x00,
         0x04, 0x04, 0x04, 0x04,
@@ -1485,8 +1490,10 @@ void LPF(v_sb_y)(pixel *dst, const ptrdiff_t stride,
         plb4 += 4) {
         if (!(vm & 0x0f))
             continue;
-        u32x4 L_0  = (u32x4)vec_xl(0, (uint8_t *)pl);
-        u32x4 L_b4 = (u32x4)vec_xl(0, (uint8_t *)plb4);
+        u16x8 L_0_u16 = (u16x8)vec_xl(0, (uint8_t *)pl);
+        u16x8 L_b4_u16 = (u16x8)vec_xl(0, (uint8_t *)plb4);
+        u32x4 L_0  = (u32x4)vec_mergeh(L_0_u16, L_0_u16);
+        u32x4 L_b4 = (u32x4)vec_mergeh(L_b4_u16, L_b4_u16);
 
         u32x4 wd16 = vec_and(vm2, mm); // vmask[2] & [1,2,4,8]
         u32x4 wd8 = vec_and(vm1, mm); // vmask[1] & [1,2,4,8]
@@ -1530,7 +1537,7 @@ void LPF(v_sb_y)(pixel *dst, const ptrdiff_t stride,
 
 void LPF(h_sb_uv)(pixel *dst, const ptrdiff_t stride,
                   const uint32_t *const vmask,
-                  const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                  const uint8_t (*l)[2], ptrdiff_t b4_stride,
                   const Av1FilterLUT *lut, const int h)
 {
     unsigned vm = vmask[0] | vmask[1];
@@ -1546,7 +1553,7 @@ void LPF(h_sb_uv)(pixel *dst, const ptrdiff_t stride,
     const u8x16 v1u8 = vec_splat_u8(1);
     const u8x16 v2u8 = vec_splat_u8(2);
     const u8x16 v4u8 = vec_splat_u8(4);
-    const uint8_t (*pl)[4] = &l[-1];
+    const uint8_t (*pl)[2] = &l[-1];
     const u8x16 spread = (u8x16){
         0x00, 0x00, 0x00, 0x00,
         0x04, 0x04, 0x04, 0x04,
@@ -1562,10 +1569,15 @@ void LPF(h_sb_uv)(pixel *dst, const ptrdiff_t stride,
         pl += 4 * b4_stride) {
         if (!(vm & 0x0f))
             continue;
-        u32x4 la = (u32x4)vec_xl(0, (uint8_t *)pl);  // l[-1] l[0] ...
-        u32x4 lb = (u32x4)vec_xl(1 * 4 * b4_stride, (uint8_t *)pl);
-        u32x4 lc = (u32x4)vec_xl(2 * 4 * b4_stride, (uint8_t *)pl);
-        u32x4 ld = (u32x4)vec_xl(3 * 4 * b4_stride, (uint8_t *)pl);
+        u16x8 la_16 = (u16x8)vec_xl(0, (uint8_t *)pl);   // l[-1] l[0] ...
+        u16x8 lb_16 = (u16x8)vec_xl(1 * 2 * b4_stride, (uint8_t *)pl);
+        u16x8 lc_16 = (u16x8)vec_xl(2 * 2 * b4_stride, (uint8_t *)pl);
+        u16x8 ld_16 = (u16x8)vec_xl(3 * 2 * b4_stride, (uint8_t *)pl);
+
+        u32x4 la = (u32x4)vec_mergeh(la_16, la_16);
+        u32x4 lb = (u32x4)vec_mergeh(lb_16, lb_16);
+        u32x4 lc = (u32x4)vec_mergeh(lc_16, lc_16);
+        u32x4 ld = (u32x4)vec_mergeh(ld_16, ld_16);
 
         u32x4 Lac = vec_mergeh(la, lc); // la[-1] lb[-1] la[0] lb[0]
         u32x4 Lbd = vec_mergeh(lb, ld); // lc[-1] ld[-1] lc[0] ld[0]
@@ -1614,7 +1626,7 @@ void LPF(h_sb_uv)(pixel *dst, const ptrdiff_t stride,
 
 void LPF(v_sb_uv)(pixel *dst, const ptrdiff_t stride,
                   const uint32_t *const vmask,
-                  const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                  const uint8_t (*l)[2], ptrdiff_t b4_stride,
                   const Av1FilterLUT *lut, const int w)
 {
     unsigned vm = vmask[0] | vmask[1];
@@ -1631,8 +1643,8 @@ void LPF(v_sb_uv)(pixel *dst, const ptrdiff_t stride,
     u8x16 v1u8 = vec_splat_u8(1);
     u8x16 v2u8 = vec_splat_u8(2);
     u8x16 v4u8 = vec_splat_u8(4);
-    const uint8_t (*pl)[4] = l;
-    const uint8_t (*plb4)[4] = l - b4_stride;
+    const uint8_t (*pl)[2] = l;
+    const uint8_t (*plb4)[2] = l - b4_stride;
     const u8x16 spread = (u8x16){
         0x00, 0x00, 0x00, 0x00,
         0x04, 0x04, 0x04, 0x04,
@@ -1649,8 +1661,10 @@ void LPF(v_sb_uv)(pixel *dst, const ptrdiff_t stride,
         plb4 += 4) {
         if (!(vm & 0x0f))
             continue;
-        u32x4 L_0  = (u32x4)vec_xl(0, (uint8_t *)pl);
-        u32x4 L_b4 = (u32x4)vec_xl(0, (uint8_t *)plb4);
+        u16x8 L_0_u16 = (u16x8)vec_xl(0, (uint8_t *)pl);
+        u16x8 L_b4_u16 = (u16x8)vec_xl(0, (uint8_t *)plb4);
+        u32x4 L_0  = (u32x4)vec_mergeh(L_0_u16, L_0_u16);
+        u32x4 L_b4 = (u32x4)vec_mergeh(L_b4_u16, L_b4_u16);
 
         u32x4 wd6 = vec_and(vm1, mm); // vmask[1] & [1,2,4,8]
         u32x4 wd4 = vec_and(vm0, mm); // vm & [1,2,4,8]

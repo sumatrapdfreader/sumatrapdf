@@ -51,6 +51,7 @@ pw_256:    times 8 dw 256
 pw_2048:   times 8 dw 2048
 pw_0x7FFF: times 8 dw 0x7FFF
 pw_0x8000: times 8 dw 0x8000
+pw_0xC000: times 8 dw 0xC000
 tap_table: ; masks for 8-bit shift emulation
            DUP8 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80
            ; weights
@@ -137,6 +138,13 @@ SECTION .text
     pminuw          m8, m5
     pmaxsw          m7, m6
     pminuw          m8, m6
+  %elif cpuflag(ssse3)
+    pmaxsw          m7, m5
+    pabsw           m3, m5
+    pminsw          m8, m3
+    pmaxsw          m7, m6
+    pabsw           m3, m6
+    pminsw          m8, m3
   %else
     pcmpeqw         m3, m14, m5
     pminsw          m8, m5     ; min after p0
@@ -268,6 +276,8 @@ cglobal cdef_filter_%1x%2_8bpc, 2, 7, 8, - 7 * 16 - (%2+4)*32, \
     mov          edged, r9m
  %if cpuflag(sse4)
    %define OUT_OF_BOUNDS_MEM [base+pw_0x8000]
+ %elif cpuflag(ssse3)
+   %define OUT_OF_BOUNDS_MEM [base+pw_0xC000]
  %else
    %define OUT_OF_BOUNDS_MEM [base+pw_0x7FFF]
  %endif

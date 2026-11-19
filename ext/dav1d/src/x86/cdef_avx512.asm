@@ -46,6 +46,51 @@
 
 SECTION_RODATA 64
 
+dir_idx0a:     db   4,  11,  18,  25,  31,  38,  45,  52,   6,  13,  20,  27,  15,  22,  29,  36
+               db   3,  12,  21,  30,  24,  33,  42,  51,   1,  10,  19,  28,   8,  17,  26,  35
+               db   5,  12,  19,  26,  23,  30,  37,  44,   7,  14,  21,  28,  -1,  -1,  -1,  -1
+               db   2,  11,  20,  29,  16,  25,  34,  43,   0,   9,  18,  27,  -1,  -1,  -1,  -1
+dir_idx1a:     db  38,  39,  44,  45,  -1,  -1,  -1,  -1,   2,   3,  12,  13,  40,  41,  50,  51
+               db   4,  12,  21,  29,  -1,  -1,  -1,  -1,   2,  10,  17,  25,  23,  31,  38,  46
+               db   4,   5,  10,  11,  46,  47,  52,  53,  32,  33,  42,  43,  -1,  -1,  -1,  -1
+               db  16,  24,  33,  41,   5,  13,  22,  30,   7,  15,  22,  30,  -1,  -1,  -1,  -1
+dir_idx2a:     db   0,   1,   2,   3,   8,   9,  10,  11,   6,   7,  12,  13,  14,  15,  20,  21
+               db   0,   8,  16,  24,   1,   9,  17,  25,   0,   8,  17,  25,   1,   9,  18,  26
+               db  32,  33,  34,  35,  40,  41,  42,  43,  22,  23,  28,  29,  30,  31,  36,  37
+               db   4,  12,  20,  28,   5,  13,  21,  29,   2,  10,  19,  27,   3,  11,  20,  28
+dir_idx3a:     db  16,  17,  18,  19,  24,  25,  26,  27,   0,   1,  10,  11,   8,   9,  18,  19
+               db   2,  10,  18,  26,   3,  11,  19,  27,   3,  11,  18,  26,   4,  12,  19,  27
+               db  48,  49,  50,  51,  56,  57,  58,  59,  16,  17,  26,  27,  24,  25,  34,  35
+               db   6,  14,  22,  30,   7,  15,  23,  31,   5,  13,  20,  28,   6,  14,  21,  29
+dir_idx4a:     db   0,  -1,  -1,  -1,  63,  -1,  -1,  -1,   2,   9,  16,  -1,  47,  54,  61,  -1
+               db   7,  -1,  -1,  -1,  56,  -1,  -1,  -1,   5,  14,  23,  -1,  40,  49,  58,  -1
+               db   1,   8,  -1,  -1,  55,  62,  -1,  -1,   3,  10,  17,  24,  39,  46,  53,  60
+               db   6,  15,  -1,  -1,  48,  57,  -1,  -1,   4,  13,  22,  31,  32,  41,  50,  59
+dir_idx5a:     db   2,   3,   8,   9,  54,  55,  60,  61,   6,   7,  -1,  -1,  56,  57,  -1,  -1
+               db  32,  40,  49,  57,   6,  14,  23,  31,   0,   8,  -1,  -1,  55,  63,  -1,  -1
+               db   0,   1,  -1,  -1,  62,  63,  -1,  -1,   4,   5,  14,  15,  48,  49,  58,  59
+               db  48,  56,  -1,  -1,   7,  15,  -1,  -1,   1,   9,  16,  24,  39,  47,  54,  62
+dir_idx0b:     db  32,  -1,  -1,  -1,  59,  -1,  -1,  -1,  34,  41,  48,  -1,  43,  50,  57,  -1
+               db  39,  -1,  -1,  -1,  60,  -1,  -1,  -1,  37,  46,  55,  -1,  44,  53,  62,  -1
+               db  33,  40,  -1,  -1,  51,  58,  -1,  -1,  35,  42,  49,  56,  -1,  -1,  -1,  -1
+               db  38,  47,  -1,  -1,  52,  61,  -1,  -1,  36,  45,  54,  63,  -1,  -1,  -1,  -1
+dir_idx1b:     db  50,  51,  56,  57,  -1,  -1,  -1,  -1,  22,  23,  -1,  -1,  60,  61,  -1,  -1
+               db  38,  46,  55,  63,  -1,  -1,  -1,  -1,  32,  40,  -1,  -1,  53,  61,  -1,  -1
+               db  16,  17,  -1,  -1,  58,  59,  -1,  -1,  52,  53,  62,  63,  -1,  -1,  -1,  -1
+               db  50,  58,  -1,  -1,  39,  47,  -1,  -1,  37,  45,  52,  60,  -1,  -1,  -1,  -1
+dir_idx2b:     db   4,   5,   6,   7,  12,  13,  14,  15,  18,  19,  24,  25,  26,  27,  32,  33
+               db  32,  40,  48,  56,  33,  41,  49,  57,  34,  42,  51,  59,  35,  43,  52,  60
+               db  36,  37,  38,  39,  44,  45,  46,  47,  34,  35,  40,  41,  42,  43,  48,  49
+               db  36,  44,  52,  60,  37,  45,  53,  61,  36,  44,  53,  61,  37,  45,  54,  62
+dir_idx3b:     db  20,  21,  22,  23,  28,  29,  30,  31,  20,  21,  30,  31,  28,  29,  38,  39
+               db  34,  42,  50,  58,  35,  43,  51,  59,  33,  41,  48,  56,  34,  42,  49,  57
+               db  52,  53,  54,  55,  60,  61,  62,  63,  36,  37,  46,  47,  44,  45,  54,  55
+               db  38,  46,  54,  62,  39,  47,  55,  63,  35,  43,  50,  58,  36,  44,  51,  59
+dir_wt2:       dd 840, 280, 210, 420, 840, 280, 210, 420
+               dd 420, 210, 420, 210, 420, 210, 420, 210
+dir_wt0:       dd 168, 120, 105, 140, 168, 120, 105, 140
+               dd 140, 105, 140, 105, 140, 105, 140
+pd_105:        dd 105
 lut_perm_4x4:  db 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79
                db 16, 17,  0,  1,  2,  3,  4,  5, 18, 19,  8,  9, 10, 11, 12, 13
                db 20, 21, 80, 81, 82, 83, 84, 85, 22, 23, 32, 33, 34, 35, 36, 37
@@ -856,5 +901,100 @@ ALIGN function_align
     CDEF_FILTER_8x8_SEC m16, m17, m18, m19, 1
     CDEF_FILTER_8x8_SEC m12, m13, m14, m15
     ret
+
+INIT_ZMM avx512icl
+cglobal cdef_dir_8bpc, 3, 4, 16, src, stride, var, stride3
+    lea        stride3q, [strideq*3]
+    movq            xm0, [srcq+strideq*0]
+    movhps          xm0, [srcq+strideq*1]
+    movq            xm1, [srcq+strideq*2]
+    movhps          xm1, [srcq+stride3q ]
+    lea            srcq, [srcq+strideq*4]
+    movq            xm2, [srcq+strideq*0]
+    movhps          xm2, [srcq+strideq*1]
+    movq            xm3, [srcq+strideq*2]
+    movhps          xm3, [srcq+stride3q ]
+    vinserti32x4    ym0, xm1, 1
+    vinserti32x4    ym2, xm3, 1
+    vinserti32x8     m0, ym2, 1
+
+    ; m0 contains the 8x8 square of samples
+cglobal_label .main
+%define base r3-dir_idx0a ; allows for disp8 encoding
+    lea              r3, [dir_idx0a]
+    pxor            xm7, xm7
+    mov             eax, 0x6666
+    vgf2p8affineqb   m1, m7, m7, 0x80
+    kmovw            k1, eax
+    mova             m5, [base+dir_idx0a]
+    mova             m6, [base+dir_idx1a]
+    mova             m8, [base+dir_idx2a]
+    mova             m9, [base+dir_idx3a]
+    mova            m10, [base+dir_idx4a]
+    mova            m11, [base+dir_idx5a]
+    pxor             m0, m1 ; px - 128
+    psrlw            m1, 7  ; pb_1
+    mova            m12, [base+dir_idx0b]
+    vpermi2b         m5, m0, m7
+    mova            m13, [base+dir_idx1b]
+    vpermi2b         m6, m0, m7
+    mova            m14, [base+dir_idx2b]
+    vpermb           m8, m8, m0
+    mova            m15, [base+dir_idx3b]
+    vpermb           m9, m9, m0
+    mova             m2, m7
+    vpdpbusd         m2, m1, m5
+    mova             m3, m7
+    vpermi2b        m10, m0, m7
+    vpdpbusd         m3, m1, m6
+    mova             m4, m7
+    vpermi2b        m11, m0, m7
+    vpdpbusd         m4, m1, m8
+    mova             m5, m7
+    vpermi2b        m12, m0, m7
+    vpdpbusd         m5, m1, m9
+    mova             m6, m7
+    vpermi2b        m13, m0, m7
+    vpdpbusd         m6, m1, m10
+    vpermb          m14, m14, m0
+    vpdpbusd         m7, m1, m11
+    vpermb          m15, m15, m0
+    vpdpbusd         m2, m1, m12
+    vpdpbusd         m3, m1, m13
+    vpdpbusd         m4, m1, m14
+    vpdpbusd         m5, m1, m15
+
+    packssdw         m6, m7
+    packssdw         m2, m3
+    packssdw         m4, m5
+    pmaddwd          m6, m6
+    pmaddwd          m2, m2
+    pmaddwd          m4, m4
+    pmulld           m6, [base+dir_wt2]
+    pmulld           m2, [base+dir_wt0]
+    pmulld           m4, [base+pd_105] {1to16}
+    paddd            m2, m6
+    shufps           m1, m2, m4, q3021 ; m2[1], m2[2], m4[0], m4[3]
+    vmovdqa32    m2{k1}, m4            ; m2[0], m4[1], m4[2], m2[3]
+    paddd            m1, m2            ; 128-bit chunks  c0-3 a, c4-7 a
+    vextracti32x8   ym0, m1, 1         ;                 c0-3 b, c4-7 b
+    paddd           ym1, ym0           ; cost[i]
+    vshufi32x4      ym3, ym1, ym1, 1   ; cost[i^4]
+
+    ; horizontal maximum splatted across ym2
+    pmaxsd         ym2, ym1, ym3
+    pshufd         ym0, ym2, q1032
+    pmaxsd         ym2, ym0
+    pshufd         ym0, ym2, q2301
+    pmaxsd         ym2, ym0
+
+    vpcmpeqd        k1, ym1, ym2
+    psubd          ym2, ym3
+    kmovb          eax, k1
+    vpcompressd ym2{k1}{z}, ym2
+    tzcnt          eax, eax
+    psrld          xm2, 10
+    movd        [varq], xm2
+    RET
 
 %endif ; ARCH_X86_64

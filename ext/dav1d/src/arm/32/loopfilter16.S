@@ -734,7 +734,7 @@ endfunc
 
 // void dav1d_lpf_v_sb_y_16bpc_neon(pixel *dst, const ptrdiff_t stride,
 //                                  const uint32_t *const vmask,
-//                                  const uint8_t (*l)[4], ptrdiff_t b4_stride,
+//                                  const uint8_t (*l)[2], ptrdiff_t b4_stride,
 //                                  const Av1FilterLUT *lut, const int w,
 //                                  const int bitdepth_max)
 
@@ -756,10 +756,10 @@ function lpf_\dir\()_sb_\type\()_16bpc_neon, export=1
         orr             r7,  r7,  r2   // vmask[1] |= vmask[2]
 .endif
 .ifc \dir, v
-        sub             r4,  r3,  r4, lsl #2
+        sub             r4,  r3,  r4, lsl #1
 .else
-        sub             r3,  r3,  #4
-        lsl             r4,  r4,  #2
+        sub             r3,  r3,  #2
+        lsl             r4,  r4,  #1
 .endif
         orr             r6,  r6,  r7   // vmask[0] |= vmask[1]
 
@@ -767,11 +767,11 @@ function lpf_\dir\()_sb_\type\()_16bpc_neon, export=1
         tst             r6,  #0x01
         strd            r6,  r7,  [sp]
 .ifc \dir, v
-        ldrb            r10, [r4], #4
-        ldrb            r11, [r3], #4
+        ldrb            r10, [r4], #2
+        ldrb            r11, [r3], #2
 .else
         ldrb            r10, [r3]
-        ldrb            r11, [r3, #4]
+        ldrb            r11, [r3, #2]
         add             r3,  r3,  r4
 .endif
         beq             7f             // if (!(vm & bits)) continue;

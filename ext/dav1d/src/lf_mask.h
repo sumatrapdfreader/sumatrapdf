@@ -33,6 +33,15 @@
 
 #include "src/levels.h"
 
+#define decl_fill_levelcache_block_fn(name) \
+void (name)(uint8_t (*level_cache_ptr)[2], ptrdiff_t b_stride, \
+            int bw, int bh, unsigned v0, unsigned v1)
+typedef decl_fill_levelcache_block_fn(*fill_levelcache_block_fn);
+
+typedef struct Dav1dLfMaskDSPContext {
+    fill_levelcache_block_fn fill_levelcache_block;
+} Dav1dLfMaskDSPContext;
+
 typedef struct Av1FilterLUT {
     ALIGN(uint8_t e[64], 16);
     ALIGN(uint8_t i[64], 16);
@@ -61,14 +70,16 @@ typedef struct Av1Restoration {
     Av1RestorationUnit lr[3][4];
 } Av1Restoration;
 
-void dav1d_create_lf_mask_intra(Av1Filter *lflvl, uint8_t (*level_cache)[4],
+void dav1d_create_lf_mask_intra(const Dav1dLfMaskDSPContext* dsp,
+                                Av1Filter *lflvl, uint8_t (*const level_cache[2])[2],
                                 const ptrdiff_t b4_stride,
                                 const uint8_t (*level)[8][2], int bx, int by,
                                 int iw, int ih, enum BlockSize bs,
                                 enum RectTxfmSize ytx, enum RectTxfmSize uvtx,
                                 enum Dav1dPixelLayout layout, uint8_t *ay,
                                 uint8_t *ly, uint8_t *auv, uint8_t *luv);
-void dav1d_create_lf_mask_inter(Av1Filter *lflvl, uint8_t (*level_cache)[4],
+void dav1d_create_lf_mask_inter(const Dav1dLfMaskDSPContext* dsp,
+                                Av1Filter *lflvl, uint8_t (*const level_cache[2])[2],
                                 const ptrdiff_t b4_stride,
                                 const uint8_t (*level)[8][2], int bx, int by,
                                 int iw, int ih, int skip_inter,
@@ -79,5 +90,7 @@ void dav1d_create_lf_mask_inter(Av1Filter *lflvl, uint8_t (*level_cache)[4],
 void dav1d_calc_eih(Av1FilterLUT *lim_lut, int filter_sharpness);
 void dav1d_calc_lf_values(uint8_t (*values)[4][8][2], const Dav1dFrameHeader *hdr,
                           const int8_t lf_delta[4]);
+
+void dav1d_lf_mask_dsp_init(Dav1dLfMaskDSPContext *c);
 
 #endif /* DAV1D_SRC_LF_MASK_H */

@@ -122,6 +122,8 @@ function dav1d_x64_files()
     "ipred_avx2.asm",
     "itx16_avx2.asm",
     "itx_avx2.asm",
+    -- lf_mask.asm: fill_levelcache_block (sse2 and avx2; only avx2 is wired)
+    "lf_mask.asm",
     "loopfilter16_avx2.asm",
     "loopfilter_avx2.asm",
     "looprestoration16_avx2.asm",

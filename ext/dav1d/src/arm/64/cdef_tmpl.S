@@ -57,21 +57,19 @@ const pri_taps
 endconst
 .endm
 
-.macro load_px d1, d2, w
+.macro load_px d1, d2, w, t1, t2
+        add             x6,  x2,  x9, lsl #1        // x + off
+        sub             x9,  x2,  x9, lsl #1        // x - off
 .if \w == 8
-        add             x6,  x2,  w9, sxtb #1       // x + off
-        sub             x9,  x2,  w9, sxtb #1       // x - off
-        ld1             {\d1\().8h}, [x6]           // p0
-        ld1             {\d2\().8h}, [x9]           // p1
+        ldr             q(\d1), [x6]                // p0
+        ldr             q(\d2), [x9]                // p1
 .else
-        add             x6,  x2,  w9, sxtb #1       // x + off
-        sub             x9,  x2,  w9, sxtb #1       // x - off
-        ld1             {\d1\().4h}, [x6]           // p0
-        add             x6,  x6,  #2*8              // += stride
-        ld1             {\d2\().4h}, [x9]           // p1
-        add             x9,  x9,  #2*8              // += stride
-        ld1             {\d1\().d}[1], [x6]         // p0
-        ld1             {\d2\().d}[1], [x9]         // p1
+        ldr             d(\d1), [x6]                // p0
+        ldr             d(\t1), [x6, #16]           // p0
+        ldr             d(\d2), [x9]                // p1
+        ldr             d(\t2), [x9, #16]           // p1
+        uzp1            \d1\().2d,  \d1\().2d,  \t1\().2d
+        uzp1            \d2\().2d,  \d2\().2d,  \t2\().2d
 .endif
 .endm
 .macro handle_pixel s1, s2, thresh_vec, shift, tap, min
@@ -125,7 +123,7 @@ function cdef_filter\w\suffix\()_\bpc\()bpc_neon
 .else
         and             w9,  w3,  #1
 .endif
-        add             x8,  x8,  w9, uxtw #1
+        add             x8,  x8,  x9, lsl #1
 .endif
         movrel          x9,  directions\w
         add             x5,  x9,  w5, uxtw #1
@@ -152,11 +150,11 @@ function cdef_filter\w\suffix\()_\bpc\()bpc_neon
 
 1:
 .if \w == 8
-        ld1             {v0.8h}, [x2]               // px
+        ldr             q0,  [x2]                   // px
 .else
-        add             x12, x2,  #2*8
-        ld1             {v0.4h},   [x2]             // px
-        ld1             {v0.d}[1], [x12]            // px
+        ldr             d0,  [x2]                   // px
+        ldr             d1,  [x2, #16]              // px
+        uzp1            v0.2d,   v0.2d,   v1.2d
 .endif
 
         movi            v1.8h,  #0                  // sum
@@ -172,15 +170,14 @@ function cdef_filter\w\suffix\()_\bpc\()bpc_neon
 
 2:
 .if \pri
-        ldrb            w9,  [x5]                   // off1
+        ldrsb           x9,  [x5]                   // off1
 
-        load_px         v4,  v5, \w
+        load_px         v4,  v5, \w, v16, v17
 .endif
 
 .if \sec
-        add             x5,  x5,  #4                // +2*2
-        ldrb            w9,  [x5]                   // off2
-        load_px         v6,  v7,  \w
+        ldrsb           x9,  [x5, #4]!              // off2
+        load_px         v6,  v7,  \w, v16, v17
 .endif
 
 .if \pri
@@ -190,9 +187,8 @@ function cdef_filter\w\suffix\()_\bpc\()bpc_neon
 .endif
 
 .if \sec
-        add             x5,  x5,  #8                // +2*4
-        ldrb            w9,  [x5]                   // off3
-        load_px         v4,  v5,  \w
+        ldrsb           x9,  [x5, #8]!              // off3
+        load_px         v4,  v5,  \w, v16, v17
 
         handle_pixel    v6,  v7,  v27.8h, v26.8h, w11, \min
 
@@ -229,9 +225,10 @@ function cdef_filter\w\suffix\()_\bpc\()bpc_neon
 .endif
 .else
 .if \bpc == 8
-        st1             {v0.s}[0], [x0], x1
+        str             s0,  [x0]
+        add             x0,  x0,  x1
 .else
-        st1             {v0.d}[0], [x0], x1
+        st1             {v0.8b},  [x0], x1
 .endif
         add             x2,  x2,  #2*16             // tmp += 2*tmp_stride
         subs            w7,  w7,  #2                // h -= 2
@@ -277,7 +274,7 @@ const alt_fact
         .short         420, 210, 140, 105, 105, 105, 105, 105, 140, 210, 420, 0
 endconst
 
-.macro cost_alt d1, d2, s1, s2, s3, s4
+.macro cost_alt s1, s2, s3, s4
         smull           v22.4s,  \s1\().4h, \s1\().4h // sum_alt[n]*sum_alt[n]
         smull2          v23.4s,  \s1\().8h, \s1\().8h
         smull           v24.4s,  \s2\().4h, \s2\().4h
@@ -290,25 +287,6 @@ endconst
         mul             v25.4s,  v25.4s,  v29.4s      // sum_alt[n]^2*fact
         mla             v25.4s,  v26.4s,  v30.4s
         mla             v25.4s,  v27.4s,  v31.4s
-        addv            \d1, v22.4s                   // *cost_ptr
-        addv            \d2, v25.4s                   // *cost_ptr
-.endm
-
-.macro find_best s1, s2, s3
-.ifnb \s2
-        mov             w5,  \s2\().s[0]
-.endif
-        cmp             w4,  w1                       // cost[n] > best_cost
-        csel            w0,  w3,  w0,  gt             // best_dir = n
-        csel            w1,  w4,  w1,  gt             // best_cost = cost[n]
-.ifnb \s2
-        add             w3,  w3,  #1                  // n++
-        cmp             w5,  w1                       // cost[n] > best_cost
-        mov             w4,  \s3\().s[0]
-        csel            w0,  w3,  w0,  gt             // best_dir = n
-        csel            w1,  w5,  w1,  gt             // best_cost = cost[n]
-        add             w3,  w3,  #1                  // n++
-.endif
 .endm
 
 // Steps for loading and preparing each row
@@ -345,7 +323,6 @@ function cdef_find_dir_\bpc\()bpc_neon, export=1
         sub             w3,  w3,  #24                 // -bitdepth_min_8
         dup             v8.8h,   w3
 .endif
-        sub             sp,  sp,  #32 // cost
         mov             w3,  #8
 .if \bpc == 8
         movi            v31.16b, #128
@@ -434,18 +411,12 @@ function cdef_find_dir_\bpc\()bpc_neon, export=1
         smlal2          v26.4s,  v4.8h,   v4.8h
         smull           v27.4s,  v5.4h,   v5.4h       // sum_hv[1]*sum_hv[1]
         smlal2          v27.4s,  v5.8h,   v5.8h
+        rev64           v1.8h,   v1.8h                // partial sum_diag[0][14-n]
+        rev64           v3.8h,   v3.8h                // partial sum_diag[1][14-n]
         mul             v26.4s,  v26.4s,  v31.4s      // cost[2] *= 105
         mul             v27.4s,  v27.4s,  v31.4s      // cost[6] *= 105
-        addv            s4,  v26.4s                   // cost[2]
-        addv            s5,  v27.4s                   // cost[6]
-
-        rev64           v1.8h,   v1.8h
-        rev64           v3.8h,   v3.8h
         ext             v1.16b,  v1.16b,  v1.16b, #10 // sum_diag[0][14-n]
         ext             v3.16b,  v3.16b,  v3.16b, #10 // sum_diag[1][14-n]
-
-        str             s4,  [sp, #2*4]               // cost[2]
-        str             s5,  [sp, #6*4]               // cost[6]
 
         ldrel           q31, x4,  div_table
 
@@ -463,45 +434,82 @@ function cdef_find_dir_\bpc\()bpc_neon, export=1
         mla             v22.4s,  v23.4s,  v31.4s      // cost[0]
         mul             v24.4s,  v24.4s,  v30.4s      // cost[4]
         mla             v24.4s,  v25.4s,  v31.4s      // cost[4]
-        addv            s0,  v22.4s                   // cost[0]
-        addv            s2,  v24.4s                   // cost[4]
 
         movrel          x5,  alt_fact
-        ld1             {v29.4h, v30.4h, v31.4h}, [x5]// div_table[2*m+1] + 105
+        ldr             q30, [x5]                     // div_table[2*m+1] + 105
+        ldr             d31, [x5, #16]
 
-        str             s0,  [sp, #0*4]               // cost[0]
-        str             s2,  [sp, #4*4]               // cost[4]
+        addp            v4.4s,   v26.4s,  v27.4s      // partial cost[2], cost[6]
+        addp            v0.4s,   v22.4s,  v24.4s      // partial cost[0], cost[4]
+        uxtl            v29.4s,  v30.4h               // div_table[2*m+1] + 105
+        uxtl2           v30.4s,  v30.8h               // div_table[2*m+1] + 105
+        uxtl            v31.4s,  v31.4h               // div_table[2*m+1] + 105
+        addp            v4.4s,   v4.4s,   v4.4s       // cost[2], cost[6], cost[2], cost[6]
+        addp            v0.4s,   v0.4s,   v0.4s       // cost[0], cost[4], cost[0], cost[4]
 
-        uxtl            v29.4s,  v29.4h               // div_table[2*m+1] + 105
-        uxtl            v30.4s,  v30.4h
-        uxtl            v31.4s,  v31.4h
+        cost_alt        v6,  v7,  v16, v17            // cost[1], cost[3]
+        addp            v6.4s,   v22.4s,  v25.4s      // partial cost[1], cost[3]
+        cost_alt        v18, v19, v20, v21            // cost[5], cost[7]
+        addp            v18.4s,  v22.4s,  v25.4s      // partial cost[5], cost[7]
+        fmov            x8,  d4                       // cost[2], cost[6]
+        addp            v6.4s,   v6.4s,   v6.4s       // cost[1], cost[3], cost[1], cost[3]
+        fmov            x10, d0                       // cost[0], cost[4]
+        addp            v18.4s,  v18.4s,  v18.4s      // cost[5], cost[7], cost[5], cost[7]
 
-        cost_alt        s6,  s16, v6,  v7,  v16, v17  // cost[1], cost[3]
-        cost_alt        s18, s20, v18, v19, v20, v21  // cost[5], cost[7]
-        str             s6,  [sp, #1*4]               // cost[1]
-        str             s16, [sp, #3*4]               // cost[3]
+        fmov            x12, d6                       // cost[1], cost[3]
+        lsr             x9,  x8,  #32                 // cost[6]
+        fmov            x14, d18                      // cost[5], cost[7]
+        mov             w0,  #0                       // best_dir = 0
+        lsr             x11, x10, #32                 // cost[4]
+        lsr             x13, x12, #32                 // cost[3]
+        lsr             x15, x14, #32                 // cost[7]
+        sub             w4,  w10, w11                 // best_cost - cost[best_dir ^ 4] = cost[0] - cost[4]
 
-        mov             w0,  #0                       // best_dir
-        mov             w1,  v0.s[0]                  // best_cost
-        mov             w3,  #1                       // n
+        cmp             w12, w10                      // cost[1] > best_cost
+        csel            w1,  w12, w10, gt             // best_cost = cost[1]
+        sub             w12, w12, w14                 // cost[1] - cost[5]
+        csinc           w0,  w0,  w0,  le             // best_dir = 0 + 1
+        mov             w3,  #2                       // n = 2
+        csel            w4,  w12, w4,  gt             // *var = cost[1] - cost[5]
 
-        str             s18, [sp, #5*4]               // cost[5]
-        str             s20, [sp, #7*4]               // cost[7]
+        cmp             w8,  w1                       // cost[2] > best_cost
+        csel            w1,  w8,  w1,  gt             // best_cost = cost[2]
+        sub             w8,  w8,  w9                  // cost[2] - cost[6]
+        csel            w0,  w3,  w0,  gt             // best_dir = 2
+        csel            w4,  w8,  w4,  gt             // *var = cost[2] - cost[6]
 
-        mov             w4,  v6.s[0]
+        cmp             w13, w1                       // cost[3] > best_cost
+        csel            w1,  w13, w1,  gt             // best_cost = cost[3]
+        sub             w13, w13, w15                 // cost[3] - cost[7]
+        csinc           w0,  w0,  w3,  le             // best_dir = 2 + 1
+        mov             w3,  #4                       // n = 4
+        csel            w4,  w13, w4,  gt             // *var = cost[3] - cost[7]
 
-        find_best       v6,  v4, v16
-        find_best       v16, v2, v18
-        find_best       v18, v5, v20
-        find_best       v20
+        cmp             w11, w1                       // cost[4] > best_cost
+        csel            w1,  w11, w1,  gt             // best_cost = cost[4]
+        sub             w11, w11, w10                 // cost[4] - cost[0]
+        csel            w0,  w3,  w0,  gt             // best_dir = 4
+        csel            w4,  w11, w4,  gt             // *var = cost[4] - cost[0]
 
-        eor             w3,  w0,  #4                  // best_dir ^4
-        ldr             w4,  [sp, w3, uxtw #2]
-        sub             w1,  w1,  w4                  // best_cost - cost[best_dir ^ 4]
-        lsr             w1,  w1,  #10
+        cmp             w14, w1                       // cost[5] > best_cost
+        csel            w1,  w14, w1,  gt             // best_cost = cost[5]
+        csinc           w0,  w0,  w3,  le             // best_dir = 4 + 1
+        mov             w3,  #6                       // n = 6
+        csneg           w4,  w4,  w12, le             // *var = -(cost[1] - cost[5])
+
+        cmp             w9,  w1                       // cost[6] > best_cost
+        csel            w1,  w9,  w1,  gt             // best_cost = cost[6]
+        csel            w0,  w3,  w0,  gt             // best_dir = 6
+        csneg           w4,  w4,  w8,  le             // *var = -(cost[2] - cost[6])
+
+        cmp             w15, w1                       // cost[7] > best_cost
+        csel            w1,  w15, w1,  gt             // best_cost = cost[7]
+        csinc           w0,  w0,  w3,  le             // best_dir = 6 + 1
+        csneg           w4,  w4,  w13, le             // *var = -(cost[3] - cost[7])
+
+        lsr             w1,  w4,  #10                 // (best_cost - cost[best_dir ^4]) >> 10
         str             w1,  [x2]                     // *var
 
-        add             sp,  sp,  #32
 .if \bpc == 16
         ldr             d8,  [sp], 0x10
 .endif

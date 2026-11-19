@@ -43,14 +43,15 @@ static void pal_idx_finish_c(uint8_t *dst, const uint8_t *src,
     assert(w  >= 4 && w <= bw && !(w & 3));
     assert(h  >= 4 && h <= bh && !(h & 3));
 
-    const int dst_w = w / 2;
-    const int dst_bw = bw / 2;
+    const int dst_w = w >> 1;
+    const int dst_bw = bw >> 1;
+    const int pad_w = dst_bw - dst_w;
 
     for (int y = 0; y < h; y++, src += bw, dst += dst_bw) {
         for (int x = 0; x < dst_w; x++)
             dst[x] = src[x * 2 + 0] | (src[x * 2 + 1] << 4);
-        if (dst_w < dst_bw)
-            memset(dst + dst_w, src[w - 1] * 0x11, dst_bw - dst_w);
+        if (pad_w)
+            memset(dst + dst_w, src[w - 1] * 0x11, pad_w);
     }
 
     if (h < bh) {

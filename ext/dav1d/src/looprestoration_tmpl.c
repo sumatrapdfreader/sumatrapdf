@@ -402,18 +402,12 @@ static NOINLINE void rotate5_x2(int32_t **sumsq_ptrs, coef **sum_ptrs)
 {
     int32_t *tmp32[2];
     coef *tmpc[2];
-    for (int i = 0; i < 2; i++) {
-        tmp32[i] = sumsq_ptrs[i];
-        tmpc[i] = sum_ptrs[i];
-    }
-    for (int i = 0; i < 3; i++) {
-        sumsq_ptrs[i] = sumsq_ptrs[i + 2];
-        sum_ptrs[i] = sum_ptrs[i + 2];
-    }
-    for (int i = 0; i < 2; i++) {
-        sumsq_ptrs[3 + i] = tmp32[i];
-        sum_ptrs[3 + i] = tmpc[i];
-    }
+    memcpy(tmp32, sumsq_ptrs, 2 * sizeof(int32_t*));
+    memcpy(tmpc, sum_ptrs, 2 * sizeof(coef*));
+    memmove(&sumsq_ptrs[0], &sumsq_ptrs[2], 3 * sizeof(int32_t*));
+    memmove(&sum_ptrs[0], &sum_ptrs[2], 3 * sizeof(coef*));
+    memcpy(&sumsq_ptrs[3], tmp32, 2 * sizeof(int32_t*));
+    memcpy(&sum_ptrs[3], tmpc, 2 * sizeof(coef*));
 }
 
 static NOINLINE void sgr_box3_row_h(int32_t *sumsq, coef *sum,

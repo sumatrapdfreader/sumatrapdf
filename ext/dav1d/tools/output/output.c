@@ -66,20 +66,8 @@ static const Muxer *muxers[] = {
 };
 
 static const char *find_extension(const char *const f) {
-    const size_t l = strlen(f);
-
-    if (l == 0) return NULL;
-
-    const char *const end = &f[l - 1], *step = end;
-    while ((*step >= 'a' && *step <= 'z') ||
-           (*step >= 'A' && *step <= 'Z') ||
-           (*step >= '0' && *step <= '9'))
-    {
-        step--;
-    }
-
-    return (step < end && step > f && *step == '.' && step[-1] != '/') ?
-           &step[1] : NULL;
+    const char *const ext = strrchr(f, '.');
+    return (ext && ext > f && ext[1] && !strchr(ext - 1, '/')) ? &ext[1] : NULL;
 }
 
 int output_open(MuxerContext **const c_out,
@@ -236,15 +224,16 @@ int output_write(MuxerContext *const ctx, Dav1dPicture *const p) {
         char filename[1024];
         assemble_filename(ctx, filename, sizeof(filename), &p->p);
         res = ctx->impl->write_header(ctx->data, filename, &p->p, ctx->fps);
-        if (res < 0)
+        if (res < 0) {
+            dav1d_picture_unref(p);
             return res;
+        }
     }
-    if ((res = ctx->impl->write_picture(ctx->data, p)) < 0)
-        return res;
+    res = ctx->impl->write_picture(ctx->data, p);
     if (ctx->one_file_per_frame && ctx->impl->write_trailer)
         ctx->impl->write_trailer(ctx->data);
 
-    return 0;
+    return res;
 }
 
 void output_close(MuxerContext *const ctx) {

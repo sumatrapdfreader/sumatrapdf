@@ -26,6 +26,7 @@
  *****************************************************************************/
 
 #include "src/riscv/asm.S"
+#include "src/riscv/64/cdef_common.S"
 
 .macro constrain_vectors vec1, vec2, vec_sub, strength, shift, vec_tmp1, vec_tmp2
     vmslt.vx v0, \vec_tmp1, zero
@@ -687,3 +688,175 @@ endfunc
 cdef_fn 4, 4
 cdef_fn 4, 8
 cdef_fn 8, 8
+
+
+// These lmul_* names are based on vlen=256
+.macro cdef_find_dir_fn vlen, lmul_mf2, lmul_m1, lmul_m2
+
+function cdef_find_dir_vl\vlen\()_16bpc_rvv, export=1, ext="v,zba,zbb"
+
+    // SEW <= LMUL * ELEN
+    vsetivli zero, 15, e16, \lmul_m1, ta, ma
+    add              t0, a1, a0  # (a0) + stride
+    li               a4, 128
+    // Preparing for vslideup + vadd operations
+    vmv.v.i          v1, 0
+    clz              a3, a3 # clz(bitdepth_max)
+    vmv.v.i          v2, 0
+    vmv.v.i          v3, 0
+    vmv.v.i          v4, 0
+    sh1add           t1, a1,  a0  # (a0) + 2*stride
+    vmv.v.i          v5, 0
+    sh1add           t2, a1,  t0  # (a0) + 3*stride
+    vmv.v.i          v6, 0
+    sh2add           t3, a1,  a0  # (a0) + 4*stride
+    vmv.v.i          v7, 0
+    sh2add           t4, a1,  t0  # (a0) + 5*stride
+
+    // Preparing for vslideup + vadd operations
+    vmv.v.i          v8, 0
+    neg              a3, a3
+    vmv.v.i          v9, 0
+    vmv.v.i         v10, 0
+    vmv.v.i         v11, 0
+    addi             a3, a3, -24 # bitdepth_from_max(bitdepth_max) - 8
+    vmv.v.i         v12, 0
+    sh2add           t5, a1, t1  # (a0) + 6*stride
+    vmv.v.i         v13, 0
+    sh2add           t6, a1, t2  # (a0) + 7*stride
+    vmv.v.i         v14, 0
+    vmv.v.i         v15, 0
+    vmv.v.i         v31, 0
+
+    // Load all pixels of img
+    vsetivli    zero, 8, e16, \lmul_mf2, tu, ma
+
+    vid.v            v0
+    vle16.v          v8,  (a0)
+    vmv.v.i         v24, 0
+    vle16.v          v9,  (t0)
+    vmv.v.i         v25, 0
+    vle16.v         v10,  (t1)
+    vmv.v.i         v26, 0
+    vle16.v         v11,  (t2)
+    vmv.v.i         v27, 0
+    vle16.v         v12,  (t3)
+    vmv.v.i         v28, 0
+    vle16.v         v13,  (t4)
+    vmv.v.i         v29, 0
+    vle16.v         v14,  (t5)
+    vmv.v.i         v30, 0
+    vle16.v         v15,  (t6)
+
+    // vmv.v.i is interleaved with vle8
+    // if there remains a separate execution unit for vmv.v.i
+    // it will do both in parallel
+
+    // Zero v24-v30
+    // Will always have some of its position as zero
+    // for efficient vslideup and vadd operations
+    // The registers will look like the following
+    // after slideup instructions
+    //
+    //   first_reg [xxxxxxx........]
+    //         v24 [.xxxxxxxx......]
+    //         v25 [..xxxxxxxx.....]
+    //         v26 [...xxxxxxxx....]
+    //         v27 [....xxxxxxxx...]
+    //         v28 [.....xxxxxxxx..]
+    //         v29 [.......xxxxxxx.]
+    //         v30 [........xxxxxxx]
+
+    // Only zeroed first 8 elements as
+    // last 8 are already zeroed in the beginning
+
+    vxor.vi          v0,   v0,  7 # [7, 6, 5, 4, 3, 2, 1, 0]
+
+    vsrl.vx          v8,   v8, a3
+    vsrl.vx          v9,   v9, a3
+    vsrl.vx         v10,  v10, a3
+    vsrl.vx         v11,  v11, a3
+    vsrl.vx         v12,  v12, a3
+    vsrl.vx         v13,  v13, a3
+    vsrl.vx         v14,  v14, a3
+    vsrl.vx         v15,  v15, a3
+
+    j cdef_find_dir_vl\vlen\()_8bpc_rvv_epilogue
+
+endfunc
+.endm
+
+cdef_find_dir_fn  256, mf2, m1, m2
+cdef_find_dir_fn  512, mf4, mf2, m1
+cdef_find_dir_fn 1024, mf4, mf4, mf2
+
+function cdef_find_dir_vl128_16bpc_rvv, export=1, ext="v,zba,zbb"
+
+    // SEW <= LMUL * ELEN
+    vsetvli    a7, zero, e16, m1, ta, ma //max amount of elements
+    add              t0, a1, a0  # (a0) +   stride
+    li               a4, 128
+
+    // Preparing for vslideup + vadd operations
+    // Zero v24-v30
+    // Will always have some of its position as zero
+    // for efficient vslideup and vadd operations
+    // The registers will look like the following
+    // after slideup instructions
+
+    // Pattern we want to set:
+    //  [xxxxxxxx........]
+    //  [.xxxxxxxx.......]
+    //  [..xxxxxxxx......]
+    //  [...xxxxxxxx.....]
+    //  [....xxxxxxxx....]
+    //  [.....xxxxxxxx...]
+    //  [.......xxxxxxx..]
+    //  [........xxxxxxx.]
+
+    // Only zeroed first 8 elements as
+    // last 8 are already zeroed in the beginning
+
+    // Load all pixels of img
+    sh1add           t1, a1, a0  # (a0) + 2*stride
+    vmv.v.i         v16, 0
+
+    clz              a3, a3 # clz(bitdepth_max)
+    vl1re16.v        v0, (a0)
+    sh1add           t2, a1, t0  # (a0) + 3*stride
+    vmv.v.i         v17, 0
+    vl1re16.v        v1, (t0)
+    sh2add           t3, a1, a0  # (a0) + 4*stride
+    vmv2r.v         v18, v16
+
+    neg              a3, a3
+    vl1re16.v        v2, (t1)
+    sh2add           t4, a1, t0  # (a0) + 5*stride
+    vmv4r.v         v20, v16
+    vl1re16.v        v3, (t2)
+
+    sh2add           t5, a1, t1  # (a0) + 6*stride
+    vmv8r.v         v24, v16
+    addi             a3, a3, -24 # bitdepth_from_max(bitdepth_max) - 8
+    vid.v            v31
+    vl1re16.v        v4, (t3)
+    sh2add           t6, a1, t2  # (a0) + 7*stride
+
+    vl1re16.v        v5, (t4)
+    vl1re16.v        v6, (t5)
+    vl1re16.v        v7, (t6)
+
+    vxor.vi         v31,  v31, 7 # [7, 6, 5, 4, 3, 2, 1, 0]
+
+    vsrl.vx          v8,  v0, a3
+    vsrl.vx          v9,  v1, a3
+    vsrl.vx         v10,  v2, a3
+    vsrl.vx         v11,  v3, a3
+    vsrl.vx         v12,  v4, a3
+    vsrl.vx         v13,  v5, a3
+    vsrl.vx         v14,  v6, a3
+    vsrl.vx         v15,  v7, a3
+
+    j cdef_find_dir_vl128_8bpc_rvv_epilogue
+
+endfunc

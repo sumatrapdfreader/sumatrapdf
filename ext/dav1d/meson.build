@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '1.5.4',
+    version: '1.5.5',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
@@ -75,6 +75,7 @@ is_asm_enabled = (get_option('enable_asm') == true and
      host_machine.cpu_family() == 'x86' or
      (host_machine.cpu_family() == 'x86_64' and cc.get_define('__ILP32__').strip() == '')))
 cdata.set10('HAVE_ASM', is_asm_enabled)
+cdata.set10('CONFIG_ASM_DEBUG', get_option('asm_debug'))
 
 if is_asm_enabled and get_option('b_sanitize') == 'memory'
     error('asm causes false positive with memory sanitizer. Use \'-Denable_asm=false\'.')

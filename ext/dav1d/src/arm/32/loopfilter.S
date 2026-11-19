@@ -736,7 +736,7 @@ endfunc
 
 // void dav1d_lpf_v_sb_y_8bpc_neon(pixel *dst, const ptrdiff_t stride,
 //                                 const uint32_t *const vmask,
-//                                 const uint8_t (*l)[4], ptrdiff_t b4_stride,
+//                                 const uint8_t (*l)[2], ptrdiff_t b4_stride,
 //                                 const Av1FilterLUT *lut, const int w)
 
 .macro lpf_func dir, type
@@ -753,21 +753,22 @@ function lpf_\dir\()_sb_\type\()_8bpc_neon, export=1
         orr             r7,  r7,  r2   // vmask[1] |= vmask[2]
 .endif
 .ifc \dir, v
-        sub             r4,  r3,  r4, lsl #2
+        sub             r4,  r3,  r4, lsl #1
 .else
-        sub             r3,  r3,  #4
-        lsl             r4,  r4,  #2
+        sub             r3,  r3,  #2
+        lsl             r4,  r4,  #1
 .endif
         orr             r6,  r6,  r7   // vmask[0] |= vmask[1]
 
 1:
         tst             r6,  #0x03
 .ifc \dir, v
-        vld1.8          {d0}, [r4]!
-        vld1.8          {d1}, [r3]!
+        vld1.32         {d0[0]}, [r4]!
+        vld1.32         {d0[1]}, [r3]!
+        vmovl.u16       q0, d0
 .else
-        vld2.32         {d0[0], d1[0]}, [r3], r4
-        vld2.32         {d0[1], d1[1]}, [r3], r4
+        vld2.16         {d0[0], d1[0]}, [r3], r4
+        vld2.16         {d0[2], d1[2]}, [r3], r4
 .endif
         beq             7f             // if (!(vm & bits)) continue;
 

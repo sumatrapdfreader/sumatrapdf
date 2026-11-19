@@ -68,3 +68,8 @@ option('trim_dsp',
     choices: ['true', 'false', 'if-release'],
     value: 'if-release',
     description: 'Eliminate redundant DSP functions where possible')
+
+option('asm_debug',
+    type: 'boolean',
+    value: false,
+    description: 'Include functions for assembly debugging')

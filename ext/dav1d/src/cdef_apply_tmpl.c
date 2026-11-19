@@ -64,14 +64,16 @@ static void backup2lines(pixel *const dst[3], /*const*/ pixel *const src[3],
 
 static void backup2x8(pixel dst[3][8][2],
                       /*const*/ pixel *const src[3],
-                      const ptrdiff_t src_stride[2], int x_off,
+                      const ptrdiff_t src_stride[2], ptrdiff_t x_off,
                       const enum Dav1dPixelLayout layout,
                       const enum Backup2x8Flags flag)
 {
     ptrdiff_t y_off = 0;
     if (flag & BACKUP_2X8_Y) {
-        for (int y = 0; y < 8; y++, y_off += PXSTRIDE(src_stride[0]))
-            pixel_copy(dst[0][y], &src[0][y_off + x_off - 2], 2);
+        const ptrdiff_t y_stride = PXSTRIDE(src_stride[0]);
+        const pixel *src0 = &src[0][x_off - 2];
+        for (int y = 0; y < 8; y++, y_off += y_stride)
+            pixel_copy(dst[0][y], &src0[y_off], 2);
     }
 
     if (layout == DAV1D_PIXEL_LAYOUT_I400 || !(flag & BACKUP_2X8_UV))
@@ -82,9 +84,11 @@ static void backup2x8(pixel dst[3][8][2],
 
     x_off >>= ss_hor;
     y_off = 0;
-    for (int y = 0; y < (8 >> ss_ver); y++, y_off += PXSTRIDE(src_stride[1])) {
-        pixel_copy(dst[1][y], &src[1][y_off + x_off - 2], 2);
-        pixel_copy(dst[2][y], &src[2][y_off + x_off - 2], 2);
+    const ptrdiff_t uv_stride = PXSTRIDE(src_stride[1]);
+    const pixel *src1 = &src[1][x_off - 2], *const src2 = &src[2][x_off - 2];
+    for (int y = 0; y < (8 >> ss_ver); y++, y_off += uv_stride) {
+        pixel_copy(dst[1][y], &src1[y_off], 2);
+        pixel_copy(dst[2][y], &src2[y_off], 2);
     }
 }
 

@@ -795,21 +795,23 @@ function lpf_\dir\()_sb_\type\()_16bpc_neon, export=1
         orr             w7,  w7,  w2             // vmask[1] |= vmask[2]
 .endif
 .ifc \dir, v
-        sub             x4,  x3,  x4, lsl #2
+        sub             x4,  x3,  x4, lsl #1
 .else
-        sub             x3,  x3,  #4
-        lsl             x4,  x4,  #2
+        sub             x3,  x3,  #2
+        lsl             x4,  x4,  #1
 .endif
         orr             w6,  w6,  w7             // vmask[0] |= vmask[1]
 
 1:
         tst             w6,  #0x03
 .ifc \dir, v
-        ld1             {v0.8b}, [x4], #8
-        ld1             {v1.8b}, [x3], #8
+        ldr             s0, [x4], #4
+        ldr             s1, [x3], #4
+        uxtl            v0.4s,  v0.4h
+        uxtl            v1.4s,  v1.4h
 .else
-        ld2             {v0.s,v1.s}[0], [x3], x4
-        ld2             {v0.s,v1.s}[1], [x3], x4
+        ld2             {v0.h,v1.h}[0], [x3], x4
+        ld2             {v0.h,v1.h}[2], [x3], x4
 .endif
         b.eq            7f                        // if (!(vm & bits)) continue;
 

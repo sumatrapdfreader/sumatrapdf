@@ -151,8 +151,7 @@ SECTION .text
 ;                                    const int width, const int height, const int a);
 ;---------------------------------------------------------------------------------------
 %macro IPRED_SET   3                                          ; width, stride, stride size pshuflw_imm8
-    pshuflw                      m1, m0, %3                   ; extend 8 byte for 2 pos
-    punpcklqdq                   m1, m1
+    pshufd                       m1, m0, %3                   ; broadcast dword to all 4 dwords
     mova           [dstq +      %2], m1
 %if %1 > 16
     mova           [dstq + 16 + %2], m1
@@ -186,6 +185,7 @@ SECTION .text
     movq           [dstq+stride3q ], m0
     movhps         [dstq+strideq*2], m0
 %else
+    punpcklwd                    m0, m0                     ; extend 4 byte (each byte in its own dword)
     IPRED_SET                    %1,         0, q3333
     IPRED_SET                    %1,   strideq, q2222
     IPRED_SET                    %1, strideq*2, q1111
@@ -573,10 +573,10 @@ cglobal ipred_dc_top_8bpc, 3, 7, 6, dst, stride, tl, w, h
                 ;            w * a         = (w - 128) * a + 128 * a
                 ;            (256 - w) * b = (127 - w) * b + 129 * b
                 ; => w * a + (256 - w) * b = [(w - 128) * a + (127 - w) * b] + [128 * a + 129 * b]
-    pmaddubsw            m6, m%3, m%1
-    pmaddubsw            m0, m%4, m%2                    ; (w - 128) * a + (127 - w) * b
-    paddw                m6, m%5
-    paddw                m0, m%6                         ; [(w - 128) * a + (127 - w) * b] + [128 * a + 129 * b + 128]
+    pmaddubsw            m6, %3, %1
+    pmaddubsw            m0, %4, %2                    ; (w - 128) * a + (127 - w) * b
+    paddw                m6, %5
+    paddw                m0, %6                         ; [(w - 128) * a + (127 - w) * b] + [128 * a + 129 * b + 128]
     psrlw                m6, 8
     psrlw                m0, 8
     packuswb             m6, m0
@@ -613,7 +613,7 @@ cglobal ipred_smooth_v_8bpc, 3, 7, 7, dst, stride, tl, w, h, weights
     movu                 m1, [weightsq+hq*2]
     pshufb               m0, m1, m4                      ;m2, m3, m4 and m5 should be stable in loop
     pshufb               m1, m5
-    SMOOTH                0, 1, 2, 2, 3, 3
+    SMOOTH               m0, m1, m2, m2, m3, m3
     movd   [dstq+strideq*0], m6
     pshuflw              m1, m6, q1032
     movd   [dstq+strideq*1], m1
@@ -640,7 +640,7 @@ ALIGN function_align
     movq                 m1, [weightsq+hq*2]
     pshufb               m0, m1, m4
     pshufb               m1, m5
-    SMOOTH                0, 1, 2, 2, 3, 3
+    SMOOTH               m0, m1, m2, m2, m3, m3
     movq   [dstq+strideq*0], m6
     movhps [dstq+strideq*1], m6
     lea                dstq, [dstq+strideq*2]
@@ -662,15 +662,72 @@ ALIGN function_align
     movd                 m1, [weightsq+hq*2]
     pshuflw              m1, m1, q0000
     punpcklqdq           m1, m1
-    SMOOTH 1, 1, 2, 3, 4, 5
+    SMOOTH               m1, m1, m2, m3, m4, m5
     mova             [dstq], m6
     add                dstq, strideq
     add                  hq, 1
     jl .w16_loop
     RET
+%if ARCH_X86_64
+%macro PRECOMP_SMOOTH_V 5 ; top_offset, out_1, out_2, out_3, out_4
+    movu                 %3, [tlq+%1]
+    punpcklbw            %2, %3, m5
+    punpckhbw            %3, m5
+    pmaddubsw            %4, %2, m0
+    pmaddubsw            %5, %3, m0
+    paddw                m6, m1, %2
+    paddw                %4, m6
+    paddw                m6, m1, %3
+    paddw                %5, m6
+%endmacro
+
 ALIGN function_align
 .w32:
-    WIN64_PUSH_XMM        8, 7
+    WIN64_SPILL_XMM      11
+    PRECOMP_SMOOTH_V     17,  m7,  m8,  m9, m10
+    PRECOMP_SMOOTH_V      1,  m2,  m3,  m4,  m5
+.w32_loop:
+    movd                 m1, [weightsq+hq*2]
+    pshuflw              m1, m1, q0000
+    punpcklqdq           m1, m1
+    SMOOTH               m1, m1,  m2,  m3,  m4,  m5
+    mova             [dstq], m6
+    SMOOTH               m1, m1,  m7,  m8,  m9, m10
+    mova          [dstq+16], m6
+    add                dstq, strideq
+    add                  hq, 1
+    jl .w32_loop
+    RET
+
+ALIGN function_align
+.w64:
+    ALLOC_STACK          -16*3, 16
+    PRECOMP_SMOOTH_V     49, m15,  m2,  m3,  m4
+    mova         [rsp+16*0], m2
+    mova         [rsp+16*1], m3
+    mova         [rsp+16*2], m4
+    PRECOMP_SMOOTH_V     33, m11, m12, m13, m14
+    PRECOMP_SMOOTH_V     17,  m7,  m8,  m9, m10
+    PRECOMP_SMOOTH_V      1,  m2,  m3,  m4,  m5
+.w64_loop:
+    movd                 m1, [weightsq+hq*2]
+    pshuflw              m1, m1, q0000
+    punpcklqdq           m1, m1
+    SMOOTH               m1, m1,  m2,  m3,  m4,  m5
+    mova        [dstq+16*0], m6
+    SMOOTH               m1, m1,  m7,  m8,  m9, m10
+    mova        [dstq+16*1], m6
+    SMOOTH               m1, m1, m11, m12, m13, m14
+    mova        [dstq+16*2], m6
+    SMOOTH               m1, m1, m15, [rsp+16*0], [rsp+16*1], [rsp+16*2]
+    mova        [dstq+16*3], m6
+    add                dstq, strideq
+    add                  hq, 1
+    jl .w64_loop
+    RET
+%else
+ALIGN function_align
+.w32:
     mova                 m7, m5
 .w32_loop_init:
     mov                 r3d, 2
@@ -689,7 +746,7 @@ ALIGN function_align
     movd                 m1, [weightsq+hq*2]
     pshuflw              m1, m1, q0000
     punpcklqdq           m1, m1
-    SMOOTH                1, 1, 2, 3, 4, 5
+    SMOOTH               m1, m1, m2, m3, m4, m5
     mova             [dstq], m6
     add                 tlq, 16
     add                dstq, 16
@@ -702,7 +759,6 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w64:
-    WIN64_PUSH_XMM        8, 7
     mova                 m7, m5
 .w64_loop_init:
     mov                 r3d, 4
@@ -721,7 +777,7 @@ ALIGN function_align
     movd                 m1, [weightsq+hq*2]
     pshuflw              m1, m1, q0000
     punpcklqdq           m1, m1
-    SMOOTH                1, 1, 2, 3, 4, 5
+    SMOOTH               m1, m1, m2, m3, m4, m5
     mova             [dstq], m6
     add                 tlq, 16
     add                dstq, 16
@@ -732,6 +788,7 @@ ALIGN function_align
     add                  hq, 1
     jl .w64_loop_init
     RET
+%endif
 
 ;---------------------------------------------------------------------------------------
 ;int dav1d_ipred_smooth_h_ssse3(pixel *dst, const ptrdiff_t stride, const pixel *const topleft,
@@ -824,104 +881,60 @@ ALIGN function_align
     sub                 tlq, 1
     sub                 tlq, hq
 .w16_loop:
-    pxor                 m1, m1
-    movd                 m2, [tlq+hq]                    ; left
-    pshufb               m2, m1
-    punpcklbw            m1, m2, m3                      ; left, right
-    punpckhbw            m2, m3
-    pmaddubsw            m0, m1, m4                      ; 127 * left - 127 * right
-    paddw                m0, m1                          ; 128 * left + 129 * right
-    pmaddubsw            m1, m6
-    paddw                m1, m5
-    paddw                m0, m1
-    pmaddubsw            m1, m2, m4
-    paddw                m1, m2
-    pmaddubsw            m2, m7
-    paddw                m2, m5
+    movd                 m1, [tlq+hq]                    ; left
+    pxor                 m0, m0
+    pshufb               m1, m0
+    punpcklbw            m1, m3                          ; left, right
+    pmaddubsw            m2, m1, m4                      ; 127 * left - 127 * right
+    pmaddubsw            m0, m1, m6
+    paddw                m2, m1                          ; 128 * left + 129 * right
+    pmaddubsw            m1, m7
+    paddw                m2, m5                          ; + 128
+    paddw                m0, m2
     paddw                m1, m2
     psrlw                m0, 8
     psrlw                m1, 8
     packuswb             m0, m1
     mova             [dstq], m0
     lea                dstq, [dstq+strideq]
-    sub                  hd, 1
+    dec                  hd
     jg .w16_loop
     RET
 ALIGN function_align
-.w32:
-    sub                 tlq, 1
-    sub                 tlq, hq
-    pxor                 m6, m6
-.w32_loop_init:
-    mov                  r5, 2
-    lea                  r3, [base+smooth_weights+16*4]
-.w32_loop:
-    mova                 m7, [r3]
-    add                  r3, 16
-    movd                 m2, [tlq+hq]                    ; left
-    pshufb               m2, m6
-    punpcklbw            m1, m2, m3                      ; left, right
-    punpckhbw            m2, m3
-    pmaddubsw            m0, m1, m4                      ; 127 * left - 127 * right
-    paddw                m0, m1                          ; 128 * left + 129 * right
-    pmaddubsw            m1, m7
-    paddw                m1, m5
-    paddw                m0, m1
-    pmaddubsw            m1, m2, m4
-    paddw                m1, m2
-    mova                 m7, [r3]
-    add                  r3, 16
-    pmaddubsw            m2, m7
-    paddw                m2, m5
-    paddw                m1, m2
-    psrlw                m0, 8
-    psrlw                m1, 8
-    packuswb             m0, m1
-    mova             [dstq], m0
-    add                dstq, 16
-    dec                  r5
-    jg .w32_loop
-    lea                dstq, [dstq-32+strideq]
-    sub                  hd, 1
-    jg .w32_loop_init
-    RET
-ALIGN function_align
 .w64:
-    sub                 tlq, 1
+    mov                  r5, -64
+    add                  r6, smooth_weights-ipred_smooth_h_ssse3_table+16*8+128
+    jmp .w32_main
+.w32:
+    mov                  r5, -32
+    add                  r6, smooth_weights-ipred_smooth_h_ssse3_table+16*4+64
+.w32_main:
+    dec                 tlq
+    sub                dstq, r5
     sub                 tlq, hq
-    pxor                 m6, m6
-.w64_loop_init:
-    mov                  r5, 4
-    lea                  r3, [base+smooth_weights+16*8]
-.w64_loop:
-    mova                 m7, [r3]
-    add                  r3, 16
-    movd                 m2, [tlq+hq]                    ; left
-    pshufb               m2, m6
-    punpcklbw            m1, m2, m3                      ; left, right
-    punpckhbw            m2, m3
-    pmaddubsw            m0, m1, m4                      ; 127 * left - 127 * right
-    paddw                m0, m1                          ; 128 * left + 129 * right
-    pmaddubsw            m1, m7
-    paddw                m1, m5
-    paddw                m0, m1
-    pmaddubsw            m1, m2, m4
-    paddw                m1, m2
-    mova                 m7, [r3]
-    add                  r3, 16
-    pmaddubsw            m2, m7
+    pxor                 m7, m7
+.w32_loop_init:
+    movd                 m6, [tlq+hq]                    ; left
+    mov                  r3, r5
+    pshufb               m6, m7
+    punpcklbw            m6, m3                          ; left, right
+    pmaddubsw            m2, m6, m4                      ; 127 * left - 127 * right
+    paddw                m2, m6                          ; 128 * left + 129 * right
     paddw                m2, m5
+.w32_loop:
+    pmaddubsw            m0, m6, [r6+r3*2+16*0]
+    pmaddubsw            m1, m6, [r6+r3*2+16*1]
+    paddw                m0, m2
     paddw                m1, m2
     psrlw                m0, 8
     psrlw                m1, 8
     packuswb             m0, m1
-    mova             [dstq], m0
-    add                dstq, 16
-    dec                  r5
-    jg .w64_loop
-    lea                dstq, [dstq-64+strideq]
-    sub                  hd, 1
-    jg .w64_loop_init
+    mova          [dstq+r3], m0
+    add                  r3, 16
+    jl .w32_loop
+    add                dstq, strideq
+    dec                  hd
+    jg .w32_loop_init
     RET
 
 ;---------------------------------------------------------------------------------------

@@ -1096,31 +1096,34 @@ function lpf_\DIR\()_sb_\TYPE\()_8bpc_lsx
 .ifc \TYPE, y
     or               t1,    t1,    t2 // vmask[1] |= vmaks[2]
 .endif
-    slli.d           a4,    a4,    2
+    slli.d           a4,    a4,    1
 .ifc \DIR, v
     sub.d            a4,    a3,    a4
 .else
-    addi.d           a3,    a3,   -4
+    addi.d           a3,    a3,   -2
 .endif
     or               t0,    t0,    t1 // vmaks[0] |= vmask[1]
 1:
     andi             t3,    t0,    0x0f
 .ifc \DIR, v
-    vld              vr0,   a4,    0 // l[-b4_stride][]
-    addi.d           a4,    a4,    16
-    vld              vr1,   a3,    0 // l[0][]
-    addi.d           a3,    a3,    16
+    vldrepl.d        vr0,   a4,    0 // l[-b4_stride][]
+    vilvl.h          vr0,   vr0,   vr0
+    addi.d           a4,    a4,    8
+    vldrepl.d        vr1,   a3,    0 // l[0][]
+    vilvl.h          vr1,   vr1,   vr1
+    addi.d           a3,    a3,    8
 .else
-    fld.d            f0,    a3,    0
-    fldx.d           f1,    a3,    a4
+    fld.s            f0,    a3,    0
+    fldx.s           f1,    a3,    a4
     alsl.d           a3,    a4,    a3,   1
-    fld.d            f2,    a3,    0
-    fldx.d           f3,    a3,    a4
+    fld.s            f2,    a3,    0
+    fldx.s           f3,    a3,    a4
     alsl.d           a3,    a4,    a3,   1
-    vilvl.w          vr1,   vr1,   vr0
+    vilvl.w          vr0,   vr1,   vr0
     vilvl.w          vr2,   vr3,   vr2
-    vilvl.d          vr0,   vr2,   vr1
-    vilvh.d          vr1,   vr2,   vr1
+    vilvl.d          vr0,   vr2,   vr0
+    vshuf4i.h        vr1,   vr0,   0xF5
+    vshuf4i.h        vr0,   vr0,   0xA0
 .endif
     beqz             t3,    7f
     //l[0][] ? l[0][] : l[-b4_stride][]

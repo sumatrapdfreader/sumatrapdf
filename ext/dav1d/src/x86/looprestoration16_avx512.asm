@@ -645,6 +645,7 @@ cglobal sgr_filter_5x5_16bpc, 4, 14, 22, 416*24+8, dst, stride, left, lpf, \
     mov            r10, 0x3333333333333333
     mova           m21, [sgr_x_by_x+64*3]
     kmovq           k2, r10
+    kshiftrd        k4, k1, 19 ; 13 dwords, stay within the padding
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
@@ -742,15 +743,18 @@ cglobal sgr_filter_5x5_16bpc, 4, 14, 22, 416*24+8, dst, stride, left, lpf, \
 .h_loop:
     movu           m16, [lpfq+r10- 2]
 .h_main:
-    movu           m17, [lpfq+r10+14]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .h_have_right
     cmp           r10d, -68
     jl .h_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4 ; c ? a : b
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4 ; c ? a : b
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+14], 0xb8 ; b ? c : a
+    jmp .h_right_done
 .h_have_right:
+    movu           m17, [lpfq+r10+14]
+.h_right_done:
     palignr         m2, m17, m16, 2
     paddw           m0, m16, m2
     palignr         m3, m17, m16, 6
@@ -818,15 +822,18 @@ ALIGN function_align
 .hv_loop:
     movu           m16, [lpfq+r10- 2]
 .hv_main:
-    movu           m17, [lpfq+r10+14]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .hv_have_right
     cmp           r10d, -68
     jl .hv_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+14], 0xb8 ; b ? c : a
+    jmp .hv_right_done
 .hv_have_right:
+    movu           m17, [lpfq+r10+14]
+.hv_right_done:
     palignr         m3, m17, m16, 2
     paddw           m0, m16, m3
     palignr         m1, m17, m16, 6
@@ -1122,6 +1129,7 @@ cglobal sgr_filter_3x3_16bpc, 4, 14, 22, 416*42+8, dst, stride, left, lpf, \
     mov            r10, 0x3333333333333333
     mova           m21, [sgr_x_by_x+64*3]
     kmovq           k2, r10
+    kshiftrd        k4, k1, 19 ; 13 dwords, stay within the padding
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
@@ -1219,15 +1227,18 @@ cglobal sgr_filter_3x3_16bpc, 4, 14, 22, 416*42+8, dst, stride, left, lpf, \
 .h_loop:
     movu           m16, [lpfq+r10+ 0]
 .h_main:
-    movu           m17, [lpfq+r10+16]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .h_have_right
     cmp           r10d, -66
     jl .h_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+16], 0xb8 ; b ? c : a
+    jmp .h_right_done
 .h_have_right:
+    movu           m17, [lpfq+r10+16]
+.h_right_done:
     palignr         m0, m17, m16, 2
     paddw           m1, m16, m0
     punpcklwd       m2, m16, m0
@@ -1266,15 +1277,18 @@ ALIGN function_align
 .hv0_loop:
     movu           m16, [lpfq+r10+ 0]
 .hv0_main:
-    movu           m17, [lpfq+r10+16]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .hv0_have_right
     cmp           r10d, -66
     jl .hv0_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+16], 0xb8 ; b ? c : a
+    jmp .hv0_right_done
 .hv0_have_right:
+    movu           m17, [lpfq+r10+16]
+.hv0_right_done:
     palignr         m0, m17, m16, 2
     paddw           m1, m16, m0
     punpcklwd       m2, m16, m0
@@ -1368,15 +1382,18 @@ ALIGN function_align
 .hv1_loop:
     movu           m16, [lpfq+r10+ 0]
 .hv1_main:
-    movu           m17, [lpfq+r10+16]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .hv1_have_right
     cmp           r10d, -66
     jl .hv1_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+16], 0xb8 ; b ? c : a
+    jmp .hv1_right_done
 .hv1_have_right:
+    movu           m17, [lpfq+r10+16]
+.hv1_right_done:
     palignr         m1, m17, m16, 2
     paddw           m0, m16, m1
     punpcklwd       m2, m16, m1
@@ -1750,6 +1767,7 @@ cglobal sgr_filter_mix_16bpc, 4, 14, 23, 416*66+8, dst, stride, left, lpf, \
     mova           m20, [sgr_x_by_x+64*2]
     kmovq           k2, r10
     mova           m21, [sgr_x_by_x+64*3]
+    kshiftrd        k4, k1, 19 ; 13 dwords, stay within the padding
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
@@ -1857,15 +1875,18 @@ cglobal sgr_filter_mix_16bpc, 4, 14, 23, 416*66+8, dst, stride, left, lpf, \
 .h_loop:
     movu           m16, [lpfq+r10- 2]
 .h_main:
-    movu           m17, [lpfq+r10+14]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .h_have_right
     cmp           r10d, -68
     jl .h_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+14], 0xb8 ; b ? c : a
+    jmp .h_right_done
 .h_have_right:
+    movu           m17, [lpfq+r10+14]
+.h_right_done:
     palignr         m3, m17, m16, 2
     palignr         m0, m17, m16, 4
     paddw           m1, m3, m0
@@ -1915,15 +1936,18 @@ ALIGN function_align
 .hv0_loop:
     movu           m16, [lpfq+r10- 2]
 .hv0_main:
-    movu           m17, [lpfq+r10+14]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .hv0_have_right
     cmp           r10d, -68
     jl .hv0_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+14], 0xb8 ; b ? c : a
+    jmp .hv0_right_done
 .hv0_have_right:
+    movu           m17, [lpfq+r10+14]
+.hv0_right_done:
     palignr         m3, m17, m16, 2
     palignr         m0, m17, m16, 4
     paddw           m1, m3, m0
@@ -2034,15 +2058,18 @@ ALIGN function_align
 .hv1_loop:
     movu           m16, [lpfq+r10- 2]
 .hv1_main:
-    movu           m17, [lpfq+r10+14]
     test         edgeb, 2 ; LR_HAVE_RIGHT
     jnz .hv1_have_right
     cmp           r10d, -68
     jl .hv1_have_right
-    vpbroadcastw    m0, [lpfq-2]
-    vpternlogd     m16, m0, [r13+r10+ 0], 0xe4
-    vpternlogd     m17, m0, [r13+r10+16], 0xe4
+    vpbroadcastw   m17, [lpfq-2]
+    vpternlogd     m16, m17, [r13+r10+ 0], 0xe4
+    movu            m0, [r13+r10+16]
+    vpternlogd m17{k4}, m0, [lpfq+r10+14], 0xb8 ; b ? c : a
+    jmp .hv1_right_done
 .hv1_have_right:
+    movu           m17, [lpfq+r10+14]
+.hv1_right_done:
     palignr         m1, m17, m16, 2
     palignr         m3, m17, m16, 4
     paddw           m2, m1, m3

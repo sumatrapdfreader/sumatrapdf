@@ -29,6 +29,7 @@
 
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "dav1d/common.h"
 
@@ -194,7 +195,7 @@ static void add_temporal_candidate(const refmvs_frame *const rf,
                                    refmvs_candidate *const mvstack, int *const cnt,
                                    const refmvs_temporal_block *const rb,
                                    const union refmvs_refpair ref, int *const globalmv_ctx,
-                                   const union mv gmv[])
+                                   const union mv gmv[], const int weight)
 {
     if (rb->mv.n == INVALID_MV) return;
 
@@ -208,12 +209,12 @@ static void add_temporal_candidate(const refmvs_frame *const rf,
 
         for (int n = 0; n < last; n++)
             if (mvstack[n].mv.mv[0].n == mv.n) {
-                mvstack[n].weight += 2;
+                mvstack[n].weight += weight;
                 return;
             }
         if (last < 8) {
             mvstack[last].mv.mv[0] = mv;
-            mvstack[last].weight = 2;
+            mvstack[last].weight = weight;
             *cnt = last + 1;
         }
     } else {
@@ -225,12 +226,12 @@ static void add_temporal_candidate(const refmvs_frame *const rf,
 
         for (int n = 0; n < last; n++)
             if (mvstack[n].mv.n == mvp.n) {
-                mvstack[n].weight += 2;
+                mvstack[n].weight += weight;
                 return;
             }
         if (last < 8) {
             mvstack[last].mv = mvp;
-            mvstack[last].weight = 2;
+            mvstack[last].weight = weight;
             *cnt = last + 1;
         }
     }
@@ -359,8 +360,8 @@ void dav1d_refmvs_find(const refmvs_tile *const rt,
     mv gmv[2], tgmv[2];
 
     *cnt = 0;
-    assert(ref.ref[0] >=  0 && ref.ref[0] <= 8 &&
-           ref.ref[1] >= -1 && ref.ref[1] <= 8);
+    assert(ref.ref[0] >=  0 && ref.ref[0] <= 7 &&
+           ref.ref[1] >= -1 && ref.ref[1] <= 7);
     if (ref.ref[0] > 0) {
         tgmv[0] = get_gmv_2d(&rf->frm_hdr->gmv[ref.ref[0] - 1],
                              bx4, by4, bw4, bh4, rf->frm_hdr);
@@ -422,13 +423,41 @@ void dav1d_refmvs_find(const refmvs_tile *const rt,
         const refmvs_temporal_block *rb = rbi;
         const int step_h = bw4 >= 16 ? 2 : 1, step_v = bh4 >= 16 ? 2 : 1;
         const int w8 = imin((w4 + 1) >> 1, 8), h8 = imin((h4 + 1) >> 1, 8);
+        // save_tmvs() writes one record per 8x8 cell of a coded block, so the
+        // scan walks runs of bit-identical records. add_temporal_candidate()
+        // is a pure function of (rb->mv, rb->ref) plus loop invariants, and on
+        // a repeat its only effect is `weight += 2` on the same stack entry
+        // the first call of the run inserted or merged into -- the first match
+        // is stable because a repeat never inserts. So a run of `n` identical
+        // records is exactly one call carrying weight 2*n.
+        //
+        // Two records with mv.n == INVALID_MV belong to the same run whatever
+        // their .ref holds: add_temporal_candidate() returns before reading
+        // .ref, so both are no-ops. The check must be written that way round
+        // rather than merely being allowed to be, because load_tmvs() marks a
+        // cell unprojected by writing .mv.n alone and leaves .ref uninitialized.
+        const refmvs_temporal_block *run = &rb[0];
+        int run_len = 1;
+        int *run_gmv_ctx = &globalmv_ctx;
         for (int y = 0; y < h8; y += step_v) {
-            for (int x = 0; x < w8; x+= step_h) {
-                add_temporal_candidate(rf, mvstack, cnt, &rb[x], ref,
-                                       !(x | y) ? &globalmv_ctx : NULL, tgmv);
+            for (int x = y ? 0 : step_h; x < w8; x += step_h) {
+                const unsigned mvn = rb[x].mv.n;
+                if (mvn == run->mv.n &&
+                    (mvn == INVALID_MV || rb[x].ref == run->ref))
+                {
+                    run_len++;
+                    continue;
+                }
+                add_temporal_candidate(rf, mvstack, cnt, run, ref,
+                                       run_gmv_ctx, tgmv, 2 * run_len);
+                run_gmv_ctx = NULL;
+                run = &rb[x];
+                run_len = 1;
             }
             rb += stride * step_v;
         }
+        add_temporal_candidate(rf, mvstack, cnt, run, ref,
+                               run_gmv_ctx, tgmv, 2 * run_len);
         if (imin(bw4, bh4) >= 2 && imax(bw4, bh4) < 16) {
             const int bh8 = bh4 >> 1, bw8 = bw4 >> 1;
             rb = &rbi[bh8 * stride];
@@ -436,16 +465,16 @@ void dav1d_refmvs_find(const refmvs_tile *const rt,
                                                     (by8 & ~7) + 8);
             if (has_bottom && bx8 - 1 >= imax(rt->tile_col.start >> 1, bx8 & ~7)) {
                 add_temporal_candidate(rf, mvstack, cnt, &rb[-1], ref,
-                                       NULL, NULL);
+                                       NULL, NULL, 2);
             }
             if (bx8 + bw8 < imin(rt->tile_col.end >> 1, (bx8 & ~7) + 8)) {
                 if (has_bottom) {
                     add_temporal_candidate(rf, mvstack, cnt, &rb[bw8], ref,
-                                           NULL, NULL);
+                                           NULL, NULL, 2);
                 }
                 if (by8 + bh8 - 1 < imin(rt->tile_row.end >> 1, (by8 & ~7) + 8)) {
                     add_temporal_candidate(rf, mvstack, cnt, &rb[bw8 - stride],
-                                           ref, NULL, NULL);
+                                           ref, NULL, NULL, 2);
                 }
             }
         }
@@ -792,9 +821,8 @@ static void save_tmvs_c(refmvs_temporal_block *rp, const ptrdiff_t stride,
                 for (int n = 0; n < bw8; n++, x++)
                     rp[x] = tmv;
             } else {
-                const refmvs_temporal_block tmv = { .mv = { .n = 0 }, .ref = 0 };
-                for (int n = 0; n < bw8; n++, x++)
-                    rp[x] = tmv;
+                memset(&rp[x], 0, bw8 * sizeof(*rp));
+                x += bw8;
             }
         }
         rp += stride;

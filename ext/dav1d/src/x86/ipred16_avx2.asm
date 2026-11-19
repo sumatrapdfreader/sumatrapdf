@@ -66,6 +66,7 @@ filter_shuf1:  db  8,  9,  0,  1,  2,  3,  4,  5,  6,  7, 14, 15, 12, 13, -1, -1
 filter_shuf2:  db  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,  4,  5,  2,  3, -1, -1
 filter_shuf3:  db 12, 13,  0,  1,  2,  3,  4,  5,  6,  7, 10, 11,  8,  9, -1, -1
 pal_pred_shuf: db  0,  2,  4,  6,  8, 10, 12, 14,  1,  3,  5,  7,  9, 11, 13, 15
+pal_pred_idx_shuf: dd 0, 2, 4, 6, 1, 3, 5, 7
 z_base_inc:    dw   0*64,   1*64,   2*64,   3*64,   4*64,   5*64,   6*64,   7*64
                dw   8*64,   9*64,  10*64,  11*64,  12*64,  13*64,  14*64,  15*64
 z_filter_t0:   db 55,127, 39,127, 39,127,  7, 15, 31,  7, 15, 31,  0,  3, 31,  0
@@ -4867,12 +4868,13 @@ cglobal ipred_cfl_ac_444_16bpc, 4, 7, 6, ac, ypx, stride, wpad, hpad, w, h
     jg .w32_wpad
     jmp .w32_hpad
 
-cglobal pal_pred_16bpc, 4, 6, 6, dst, stride, pal, idx, w, h
+cglobal pal_pred_16bpc, 4, 6, 7, dst, stride, pal, idx, w, h
     vbroadcasti128       m4, [palq]
     lea                  r2, [pal_pred_16bpc_avx2_table]
     tzcnt                wd, wm
     vbroadcasti128       m5, [pal_pred_shuf]
     movifnidn            hd, hm
+    mova                 m6, [pal_pred_idx_shuf]
     movsxd               wq, [r2+wq*4]
     pshufb               m4, m5
     punpckhqdq           m5, m4, m4
@@ -4915,9 +4917,8 @@ DEFINE_ARGS dst, stride, stride3, idx, w, h
     jg .w8
     RET
 .w16:
-    pshufd               m3, [idxq], q3120
+    vpermd               m3, m6, [idxq]
     add                idxq, 32
-    vpermq               m3, m3, q3120
     psrlw                m1, m3, 4
     punpcklbw            m2, m3, m1
     punpckhbw            m3, m1
@@ -4938,9 +4939,8 @@ DEFINE_ARGS dst, stride, stride3, idx, w, h
     jg .w16
     RET
 .w32:
-    pshufd               m3, [idxq], q3120
+    vpermd               m3, m6, [idxq]
     add                idxq, 32
-    vpermq               m3, m3, q3120
     psrlw                m1, m3, 4
     punpcklbw            m2, m3, m1
     punpckhbw            m3, m1
@@ -4961,9 +4961,8 @@ DEFINE_ARGS dst, stride, stride3, idx, w, h
     jg .w32
     RET
 .w64:
-    pshufd               m3, [idxq], q3120
+    vpermd               m3, m6, [idxq]
     add                idxq, 32
-    vpermq               m3, m3, q3120
     psrlw                m1, m3, 4
     punpcklbw            m2, m3, m1
     punpckhbw            m3, m1

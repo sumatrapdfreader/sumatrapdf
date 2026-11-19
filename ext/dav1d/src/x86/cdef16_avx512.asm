@@ -51,8 +51,12 @@ pri_taps8:     dw  4,  4,  2,  2,  3,  3,  3,  3
 sec_taps4:     dw 32, 16
 pw_m16384:     times 2 dw -16384
 pw_2048:       times 2 dw 2048
+dir_shift:     times 2 dw 2
+               times 2 dw 4
 pd_268435568:  dd 268435568                      ; (1 << 28) + (7 << 4)
 edge_mask8:    dw 0x2121, 0x2020, 0x0101
+
+cextern cdef_dir_8bpc_avx512icl.main
 
 SECTION .text
 
@@ -618,5 +622,24 @@ ALIGN function_align
     paddw           m8, m10
     paddw           m9, m11
     ret
+
+cglobal cdef_dir_16bpc, 3, 4, 16, src, stride, var, bdmax
+    lea             r6, [dir_shift]
+    shr         bdmaxd, 11 ; 0 for 10bpc, 1 for 12bpc
+    vpbroadcastd    m4, [r6+bdmaxq*4]
+    lea             r6, [strideq*3]
+    movu           xm0, [srcq+strideq*0]
+    movu           xm1, [srcq+strideq*1]
+    vinserti32x4   ym0, [srcq+strideq*2], 1
+    vinserti32x4   ym1, [srcq+r6       ], 1
+    lea           srcq, [srcq+strideq*4]
+    vinserti32x4    m0, [srcq+strideq*0], 2
+    vinserti32x4    m1, [srcq+strideq*1], 2
+    vinserti32x4    m0, [srcq+strideq*2], 3
+    vinserti32x4    m1, [srcq+r6       ], 3
+    vpsrlvw         m0, m4
+    vpsrlvw         m1, m4
+    packuswb        m0, m1
+    jmp mangle(private_prefix %+ _cdef_dir_8bpc %+ SUFFIX).main
 
 %endif ; ARCH_X86_64

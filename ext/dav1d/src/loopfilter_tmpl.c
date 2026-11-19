@@ -162,7 +162,7 @@ loop_filter(pixel *dst, int E, int I, int H,
 
 static void loop_filter_h_sb128y_c(pixel *dst, const ptrdiff_t stride,
                                    const uint32_t *const vmask,
-                                   const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                                   const uint8_t (*l)[2], ptrdiff_t b4_stride,
                                    const Av1FilterLUT *lut, const int h
                                    HIGHBD_DECL_SUFFIX)
 {
@@ -184,7 +184,7 @@ static void loop_filter_h_sb128y_c(pixel *dst, const ptrdiff_t stride,
 
 static void loop_filter_v_sb128y_c(pixel *dst, const ptrdiff_t stride,
                                    const uint32_t *const vmask,
-                                   const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                                   const uint8_t (*l)[2], ptrdiff_t b4_stride,
                                    const Av1FilterLUT *lut, const int w
                                    HIGHBD_DECL_SUFFIX)
 {
@@ -204,7 +204,7 @@ static void loop_filter_v_sb128y_c(pixel *dst, const ptrdiff_t stride,
 
 static void loop_filter_h_sb128uv_c(pixel *dst, const ptrdiff_t stride,
                                     const uint32_t *const vmask,
-                                    const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                                    const uint8_t (*l)[2], ptrdiff_t b4_stride,
                                     const Av1FilterLUT *lut, const int h
                                     HIGHBD_DECL_SUFFIX)
 {
@@ -226,7 +226,7 @@ static void loop_filter_h_sb128uv_c(pixel *dst, const ptrdiff_t stride,
 
 static void loop_filter_v_sb128uv_c(pixel *dst, const ptrdiff_t stride,
                                     const uint32_t *const vmask,
-                                    const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                                    const uint8_t (*l)[2], ptrdiff_t b4_stride,
                                     const Av1FilterLUT *lut, const int w
                                     HIGHBD_DECL_SUFFIX)
 {

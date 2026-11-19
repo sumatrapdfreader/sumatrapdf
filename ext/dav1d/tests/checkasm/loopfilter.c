@@ -98,7 +98,7 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
     ALIGN_STK_64(pixel, a_dst_mem, 128 * 16,);
 
     declare_func(void, pixel *dst, ptrdiff_t dst_stride, const uint32_t *mask,
-                 const uint8_t (*l)[4], ptrdiff_t b4_stride,
+                 const uint8_t (*l)[2], ptrdiff_t b4_stride,
                  const Av1FilterLUT *lut, int w HIGHBD_DECL_SUFFIX);
 
     pixel *a_dst, *c_dst;
@@ -142,7 +142,7 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
                        is_chroma ? 4 + 2 * i : 4 << i, BITDEPTH))
         {
             uint32_t vmask[4] = { 0 };
-            uint8_t l[32 * 2][4];
+            uint8_t l[32 * 2][2];
 
             for (int j = 0; j < n_blks; j++) {
                 const int idx = rnd() % (i + 2);
@@ -175,16 +175,16 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
             memcpy(a_dst_mem, c_dst_mem, 128 * sizeof(pixel) * 16);
 
             call_ref(c_dst, stride, vmask,
-                     (const uint8_t(*)[4]) &l[dir ? 32 : 1][lf_idx],
+                     (const uint8_t(*)[2]) &l[dir ? 32 : 1][lf_idx],
                      b4_stride, &lut, n_blks HIGHBD_TAIL_SUFFIX);
             call_new(a_dst, stride, vmask,
-                     (const uint8_t(*)[4]) &l[dir ? 32 : 1][lf_idx],
+                     (const uint8_t(*)[2]) &l[dir ? 32 : 1][lf_idx],
                      b4_stride, &lut, n_blks HIGHBD_TAIL_SUFFIX);
 
             checkasm_check_pixel(c_dst_mem, stride, a_dst_mem, stride,
                                  w, h, "dst");
             bench_new(alternate(c_dst, a_dst), stride, vmask,
-                      (const uint8_t(*)[4]) &l[dir ? 32 : 1][lf_idx],
+                      (const uint8_t(*)[2]) &l[dir ? 32 : 1][lf_idx],
                       b4_stride, &lut, n_blks HIGHBD_TAIL_SUFFIX);
         }
     }
@@ -198,6 +198,6 @@ void bitfn(checkasm_check_loopfilter)(void) {
 
     check_lpf_sb(c.loop_filter_sb[0][0], "lpf_h_sb_y", 32, 0, 0, 0);
     check_lpf_sb(c.loop_filter_sb[0][1], "lpf_v_sb_y", 32, 1, 0, 1);
-    check_lpf_sb(c.loop_filter_sb[1][0], "lpf_h_sb_uv", 16, 2, 1, 0);
-    check_lpf_sb(c.loop_filter_sb[1][1], "lpf_v_sb_uv", 16, 2, 1, 1);
+    check_lpf_sb(c.loop_filter_sb[1][0], "lpf_h_sb_uv", 16, 0, 1, 0);
+    check_lpf_sb(c.loop_filter_sb[1][1], "lpf_v_sb_uv", 16, 0, 1, 1);
 }

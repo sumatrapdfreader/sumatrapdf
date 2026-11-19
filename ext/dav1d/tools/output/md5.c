@@ -201,7 +201,10 @@ static int md5_write(MD5Context *const md5, Dav1dPicture *const p) {
         free(md5->bswap);
         md5->bswap_w = 0;
         md5->bswap = malloc(p->p.w << 1);
-        if (!md5->bswap) return -1;
+        if (!md5->bswap) {
+            dav1d_picture_unref(p);
+            return -1;
+        }
         md5->bswap_w = p->p.w;
     }
 #endif

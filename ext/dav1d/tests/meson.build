@@ -44,6 +44,7 @@ if is_asm_enabled and checkasm_dependency.found()
 
     checkasm_sources = files(
         'checkasm/checkasm.c',
+        'checkasm/lf_mask.c',
         'checkasm/msac.c',
         'checkasm/pal.c',
         'checkasm/refmvs.c',

@@ -28,7 +28,7 @@
 
 SECTION_RODATA 16
 
-pb_4x0_4x4_4x8_4x12: db 0, 0, 0, 0, 4, 4, 4, 4, 8, 8, 8, 8, 12, 12, 12, 12
+pb_4x0_4x2_4x4_4x6: db 0, 0, 0, 0, 2, 2, 2, 2, 4, 4, 4, 4, 6, 6, 6, 6
 pb_7_1: times 8 db 7, 1
 pb_3_1: times 8 db 3, 1
 pb_2_1: times 8 db 2, 1
@@ -675,18 +675,20 @@ SECTION .text
     mov    l_strideq, l_stridem
 %endif
 %ifidn %2, v
-    movu          m1, [lq]
-    movu          m0, [lq+l_strideq]
+    movq          m1, [lq]
+    movq          m0, [lq+l_strideq]
 %else
  %if ARCH_X86_32
     lea   l_stride3q, [l_strideq*3]
  %endif
-    movq         xm1, [lq]
-    movq         xm2, [lq+l_strideq*2]
-    movhps       xm1, [lq+l_strideq]
-    movhps       xm2, [lq+l_stride3q]
-    shufps        m0, m1, m2, q3131
-    shufps        m1, m2, q2020
+    movd         xm1, [lq]
+    movd         xm2, [lq+l_strideq*2]
+    movd         xm0, [lq+l_strideq]
+    punpcklwd    xm1, xm0
+    movd         xm0, [lq+l_stride3q]
+    punpcklwd    xm2, xm0
+    punpckldq    xm1, xm2
+    movhlps      xm0, xm1
  %if ARCH_X86_32
     lea     stride3q, [strideq*3]
  %endif
@@ -701,7 +703,7 @@ SECTION .text
     pcmpeqb       m7, m2, m0
     pand          m1, m7
     por           m0, m1                        ; l[x][] ? l[x][] : l[x-stride][]
-    pshufb        m0, [PIC_sym(pb_4x0_4x4_4x8_4x12)] ; l[x][1]
+    pshufb        m0, [PIC_sym(pb_4x0_4x2_4x4_4x6)] ; l[x][1]
     pcmpeqb       m2, m0                        ; !L
     psrlq         m7, m0, [lutq+128]
     pand          m7, [PIC_sym(pb_63)]
@@ -1987,7 +1989,7 @@ cglobal lpf_v_sb_y_8bpc, 6, 7, 8, -16 * (26 + copy_args), \
     SETUP_PIC
  %define m12 m5
 %endif
-    shl    l_strideq, 2
+    shl    l_strideq, 1
     sub           lq, l_strideq
 %if ARCH_X86_64
     mov     mstrideq, strideq
@@ -2062,7 +2064,7 @@ cglobal lpf_v_sb_y_8bpc, 6, 7, 8, -16 * (26 + copy_args), \
 .no_filter:
     pslld        m12, 4
     shl   mask_bitsd, 4
-    add           lq, 16
+    add           lq, 8
     add         dstq, 16
 %if ARCH_X86_64
     sub           wd, 4
@@ -2085,8 +2087,8 @@ cglobal lpf_h_sb_y_8bpc, 6, 7, 8, -16 * (39 + copy_args), \
     SETUP_PIC
  %define m12 m5
 %endif
-    sub           lq, 4
-    shl    l_strideq, 2
+    sub           lq, 2
+    shl    l_strideq, 1
 %if ARCH_X86_64
     lea     stride3q, [strideq*3]
     lea   l_stride3q, [l_strideq*3]
@@ -2189,7 +2191,7 @@ cglobal lpf_v_sb_uv_8bpc, 6, 7, 8, -16 * (12 + copy_args), \
     SETUP_PIC
  %define m12 m4
 %endif
-    shl    l_strideq, 2
+    add    l_strideq, l_strideq
     sub           lq, l_strideq
 %if ARCH_X86_64
     mov     mstrideq, strideq
@@ -2248,7 +2250,7 @@ cglobal lpf_v_sb_uv_8bpc, 6, 7, 8, -16 * (12 + copy_args), \
 .no_filter:
     pslld        m12, 4
     shl   mask_bitsd, 4
-    add           lq, 16
+    add           lq, 8
     add         dstq, 16
 %if ARCH_X86_64
     sub           wd, 4
@@ -2271,8 +2273,8 @@ cglobal lpf_h_sb_uv_8bpc, 6, 7, 8, -16 * (13 + copy_args), \
     SETUP_PIC
  %define m12 m4
 %endif
-    sub           lq, 4
-    shl    l_strideq, 2
+    sub           lq, 2
+    add    l_strideq, l_strideq
 %if ARCH_X86_64
     lea     stride3q, [strideq*3]
     lea   l_stride3q, [l_strideq*3]

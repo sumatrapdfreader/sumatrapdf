@@ -1712,12 +1712,10 @@ ALIGN function_align
     mova [t3+wq*4+400*4+16], m2
     movq            m0, [dstq+wq]
     punpcklbw       m0, m6
-    punpcklwd       m1, m0, m6          ; src
-    punpcklwd       m2, m3, m6          ; a
-    pmaddwd         m2, m1              ; a * src
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
     psubd           m4, m2              ; b - a * src + (1 << 8)
     psubd           m5, m3
     psrad           m4, 9
@@ -1741,12 +1739,10 @@ ALIGN function_align
     mova            m4, [t3+wq*4+400*4+ 0]
     mova            m5, [t3+wq*4+400*4+16]
     punpcklbw       m0, m6
-    punpcklwd       m1, m0, m6          ; src
-    punpcklwd       m2, m3, m6          ; a
-    pmaddwd         m2, m1              ; a * src
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
     psubd           m4, m2              ; b - a * src + (1 << 7)
     psubd           m5, m3
     psrad           m4, 8
@@ -2390,13 +2386,11 @@ ALIGN function_align
     mova [t3+wq*4+400*12+16], m1
     movq            m0, [dstq+wq]
     punpcklbw       m0, m6
-    punpcklwd       m1, m0, m6
-    punpcklwd       m2, m3, m6
-    pmaddwd         m2, m1               ; a * src
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
-    psubd           m4, m2               ; b - a * src + (1 << 8)
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
+    psubd           m4, m2              ; b - a * src + (1 << 8)
     psubd           m5, m3
     psrad           m4, 9
     psrad           m5, 9
@@ -2446,13 +2440,11 @@ ALIGN function_align
     mova [t3+wq*4+400*16+16], m2
     movq            m0, [dstq+wq]
     punpcklbw       m0, m6
-    punpcklwd       m1, m0, m6
-    punpcklwd       m2, m3, m6
-    pmaddwd         m2, m1               ; a * src
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
-    psubd           m4, m2               ; b - a * src + (1 << 8)
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
+    psubd           m4, m2              ; b - a * src + (1 << 8)
     psubd           m5, m3
     psrad           m4, 9
     psrad           m5, 9
@@ -3379,16 +3371,14 @@ ALIGN function_align
     mova [rsp+32+ARCH_X86_32*4], m7
     movq            m4, [dstq+wq]
     punpcklbw       m4, m6
-    punpcklwd       m5, m4, m6
-    punpcklwd       m7, m2, m6
-    pmaddwd         m7, m5               ; a5 * src
-    punpcklwd       m8, m3, m6
-    pmaddwd         m8, m5               ; a3 * src
-    punpckhwd       m5, m4, m6
-    punpckhwd       m2, m6
-    pmaddwd         m2, m5
-    punpckhwd       m3, m6
-    pmaddwd         m3, m5
+    pmulhuw         m5, m2, m4
+    pmullw          m2, m4
+    punpcklwd       m7, m2, m5          ; a5 * src
+    punpckhwd       m2, m5
+    pmulhuw         m5, m3, m4
+    pmullw          m3, m4
+    punpcklwd       m8, m3, m5          ; a3 * src
+    punpckhwd       m3, m5
     psubd           m0, m7               ; b5 - a5 * src + (1 << 8) - (src << 13)
     psubd           m1, m8               ; b3 - a3 * src + (1 << 8) - (src << 13)
     psrld           m0, 9
@@ -3458,16 +3448,14 @@ ALIGN function_align
     movq            m5, [dstq+wq]
     mova            m2, [t4+wq*2+400* 6]
     punpcklbw       m5, m6
-    punpcklwd       m4, m5, m6
-    punpcklwd       m8, m2, m6
-    pmaddwd         m8, m4               ; a5 * src
-    punpcklwd       m0, m3, m6
-    pmaddwd         m0, m4               ; a3 * src
-    punpckhwd       m4, m5, m6
-    punpckhwd       m2, m6
-    pmaddwd         m2, m4
-    punpckhwd       m3, m6
-    pmaddwd         m3, m4
+    pmulhuw         m4, m2, m5
+    pmullw          m2, m5
+    punpcklwd       m8, m2, m4          ; a5 * src
+    punpckhwd       m2, m4
+    pmulhuw         m4, m3, m5
+    pmullw          m3, m5
+    punpcklwd       m0, m3, m4          ; a3 * src
+    punpckhwd       m3, m4
     psubd           m1, m0               ; b3 - a3 * src + (1 << 8) - (src << 13)
     mova            m0, [t3+wq*4+400*12+ 0]
     psubd           m0, m8               ; b5 - a5 * src + (1 << 8) - (src << 13)

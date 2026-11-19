@@ -1100,12 +1100,10 @@ ALIGN function_align
     mova [t3+r10*2+400*4+ 0], m1
     mova [t3+r10*2+400*4+32], m2
     mova            m0, [dstq+r10]
-    punpcklwd       m1, m0, m6          ; src
-    punpcklwd       m2, m3, m6          ; a
-    pmaddwd         m2, m1              ; a * src
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
     vinserti128     m1, m4, xm5, 1
     vperm2i128      m4, m5, 0x31
     psubd           m1, m2              ; b - a * src + (1 << 8)
@@ -1130,12 +1128,10 @@ ALIGN function_align
     mova            m3, [t4+r10*1+400*2+ 0]
     mova            m4, [t3+r10*2+400*4+ 0]
     mova            m5, [t3+r10*2+400*4+32]
-    punpcklwd       m1, m0, m6          ; src
-    punpcklwd       m2, m3, m6          ; a
-    pmaddwd         m2, m1
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
     vinserti128     m1, m4, xm5, 1
     vperm2i128      m4, m5, 0x31
     psubd           m1, m2              ; b - a * src + (1 << 7)
@@ -1742,15 +1738,13 @@ ALIGN function_align
     mova [t3+r10*2+400* 8+32], m2
     mova [t3+r10*2+400*12+32], m1
     mova            m0, [dstq+r10]
-    punpcklwd       m1, m0, m6
-    punpcklwd       m2, m3, m6
-    pmaddwd         m2, m1               ; a * src
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
     vinserti128     m1, m4, xm5, 1
     vperm2i128      m4, m5, 0x31
-    psubd           m1, m2               ; b - a * src + (1 << 8)
+    psubd           m1, m2              ; b - a * src + (1 << 8)
     psubd           m4, m3
     psrad           m1, 9
     psrad           m4, 9
@@ -1796,15 +1790,13 @@ ALIGN function_align
     mova [t3+r10*2+400*12+32], m1
     mova [t3+r10*2+400*16+32], m2
     mova            m0, [dstq+r10]
-    punpcklwd       m1, m0, m6
-    punpcklwd       m2, m3, m6
-    pmaddwd         m2, m1               ; a * src
-    punpckhwd       m1, m0, m6
-    punpckhwd       m3, m6
-    pmaddwd         m3, m1
+    pmulhuw         m1, m3, m0
+    pmullw          m3, m0
+    punpcklwd       m2, m3, m1          ; a * src
+    punpckhwd       m3, m1
     vinserti128     m1, m4, xm5, 1
     vperm2i128      m4, m5, 0x31
-    psubd           m1, m2               ; b - a * src + (1 << 8)
+    psubd           m1, m2              ; b - a * src + (1 << 8)
     psubd           m4, m3
     psrad           m1, 9
     psrad           m4, 9

@@ -225,7 +225,7 @@ static int create_filter_sbrow(Dav1dFrameContext *const f,
     if (num_tasks > f->task_thread.num_tasks) {
         const size_t size = sizeof(Dav1dTask) * num_tasks;
         tasks = dav1d_realloc(ALLOC_COMMON_CTX, f->task_thread.tasks, size);
-        if (!tasks) return -1;
+        if (!tasks) return DAV1D_ERR(ENOMEM);
         memset(tasks, 0, size);
         f->task_thread.tasks = tasks;
         f->task_thread.num_tasks = num_tasks;
@@ -239,7 +239,7 @@ static int create_filter_sbrow(Dav1dFrameContext *const f,
         if (prog_sz > f->frame_thread.prog_sz) {
             atomic_uint *const prog = dav1d_realloc(ALLOC_COMMON_CTX, f->frame_thread.frame_progress,
                                                     2 * prog_sz * sizeof(*prog));
-            if (!prog) return -1;
+            if (!prog) return DAV1D_ERR(ENOMEM);
             f->frame_thread.frame_progress = prog;
             f->frame_thread.copy_lpf_progress = prog + prog_sz;
         }
@@ -276,7 +276,7 @@ int dav1d_task_create_tile_sbrow(Dav1dFrameContext *const f, const int pass,
         if (n_tasks > f->task_thread.num_tile_tasks) {
             const size_t size = sizeof(Dav1dTask) * n_tasks;
             tasks = dav1d_realloc(ALLOC_COMMON_CTX, f->task_thread.tile_tasks[0], size);
-            if (!tasks) return -1;
+            if (!tasks) return DAV1D_ERR(ENOMEM);
             memset(tasks, 0, size);
             f->task_thread.tile_tasks[0] = tasks;
             f->task_thread.num_tile_tasks = n_tasks;
@@ -286,8 +286,8 @@ int dav1d_task_create_tile_sbrow(Dav1dFrameContext *const f, const int pass,
     assert(n_tasks <= f->task_thread.num_tile_tasks);
 
     Dav1dTask *pf_t;
-    if (create_filter_sbrow(f, pass, &pf_t))
-        return -1;
+    const int res = create_filter_sbrow(f, pass, &pf_t);
+    if (res) return res;
 
     Dav1dTask *const p1_tasks = f->task_thread.tile_tasks[1];
     Dav1dTask *prev_t = NULL;
@@ -724,7 +724,7 @@ void *dav1d_worker_task(void *data) {
                 res = dav1d_task_create_tile_sbrow(f, p, 0);
             pthread_mutex_lock(&ttd->lock);
             if (res) {
-                abort_frame(f, DAV1D_ERR(ENOMEM));
+                abort_frame(f, res);
                 reset_task_cur(c, ttd, t->frame_idx);
                 atomic_store(&f->task_thread.init_done, 1);
             }

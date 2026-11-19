@@ -32,23 +32,23 @@ SECTION_RODATA 64
 
 l_shuf_v:      times 2 db  0, 32
 pw_1:          times 2 dw  1
-               times 2 db  4, 36
+               times 2 db  2, 34
 pw_3:          times 2 dw  3
-               times 2 db  8, 40
+               times 2 db  4, 36
 pw_4:          times 2 dw  4
-               times 2 db 12, 44
+               times 2 db  6, 38
 pw_16:         times 2 dw 16
-               times 2 db 16, 48
+               times 2 db  8, 40
 pw_4096:       times 2 dw 4096
-               times 2 db 20, 52
+               times 2 db 10, 42
 pw_16384:      times 2 dw 16384
-               times 2 db 24, 56
+               times 2 db 12, 44
 pw_32767:      times 2 dw 32767
-               times 2 db 28, 60
+               times 2 db 14, 46
                times 2 dw  0
 filter_mask:   dd  1,  2,  4,  8, 16, 32, 64,128
 stride_mul:    dd  0,  1,  8,  9, 16, 17, 24, 25
-l_shuf_h:      db  4, -1,  4, -1,  4, -1,  4, -1, 12, -1, 12, -1, 12, -1, 12, -1
+l_shuf_h:      db  2, -1,  2, -1,  2, -1,  2, -1, 10, -1, 10, -1, 10, -1, 10, -1
 clip_max: dw  511,  511,  2047,  2047
 clip_min: dw -512, -512, -2048, -2048
 
@@ -303,10 +303,10 @@ SECTION .text
 
     ; load L/E/I/H
 %ifidn %2, v
-    movu            ym16, [lq+l_strideq*1]
+    movu            xm16, [lq+l_strideq*1]
     movsldup         m17, [l_shuf_v]
-    vptestnmb         k1, ym16, ym16
-    vmovdqu8    ym16{k1}, [lq+l_strideq*0]  ; l[x][] ? l[x][] : l[x-stride][]
+    vptestnmb         k1, xm16, xm16
+    vmovdqu8    xm16{k1}, [lq+l_strideq*0]  ; l[x][] ? l[x][] : l[x-stride][]
     vpermb           m16, m17, m16          ; l[x][1]
 %else
     movq            xm16, [lq+l_strideq*0]
@@ -321,7 +321,7 @@ SECTION .text
     punpcklqdq       m16, m17
     vbroadcasti32x4  m17, [l_shuf_h]
     vptestnmb         k1, m16, m16
-    vpalignr     m16{k1}, m16, 12
+    vpalignr     m16{k1}, m16, 14
     pshufb           m16, m17               ; l[x][1]
 %endif
     vpbroadcastd     m20, [pw_32767]
@@ -750,7 +750,7 @@ cglobal lpf_v_sb_y_16bpc, 6, 12, 26, dst, stride, mask, l, l_stride, \
     lea             tmpq, [filter_mask]
     mov              r6d, r7m               ; bitdepth_max
     lea         stride3q, [strideq*3]
-    shl        l_strideq, 2
+    add        l_strideq, l_strideq
     lea         stride5q, [strideq*5]
     shr              r6d, 11                ; is_12bpc
     mova            ym21, [base+filter_mask]
@@ -780,7 +780,7 @@ cglobal lpf_v_sb_y_16bpc, 6, 12, 26, dst, stride, mask, l, l_stride, \
     shl       mask_bitsd, 8
     add             dstq, 64
     pslld           ym21, 8
-    add               lq, 32
+    add               lq, 16
     sub               wd, 8
     jg .loop
     RET
@@ -796,7 +796,7 @@ cglobal lpf_h_sb_y_16bpc, 6, 13, 29, dst, stride, mask, l, l_stride, \
     mov              r6d, r7m               ; bitdepth_max
     lea         stride3q, [strideq*3]
     vpbroadcastd    ym12, strided
-    shl        l_strideq, 2
+    add        l_strideq, l_strideq
     lea         stride5q, [strideq*5]
     shr              r6d, 11                ; is_12bpc
     pmulld          ym12, [base+stride_mul]
@@ -804,7 +804,7 @@ cglobal lpf_h_sb_y_16bpc, 6, 13, 29, dst, stride, mask, l, l_stride, \
     mova            ym21, [base+filter_mask]
     mov       mask_bitsd, 0xff
     vpbroadcastd     m13, [base+pw_4+r6*8]
-    sub               lq, 4
+    sub               lq, 2
     vpbroadcastd     m14, [base+clip_max+r6*4]
     lea       l_stride3q, [l_strideq*3]
     vpbroadcastd     m15, [base+clip_min+r6*4]
@@ -843,7 +843,7 @@ cglobal lpf_v_sb_uv_16bpc, 6, 11, 22, dst, stride, mask, l, l_stride, lut, \
                                       w, stride3, mstride, tmp, mask_bits
     lea             tmpq, [filter_mask]
     mov              r6d, r7m               ; bitdepth_max
-    shl        l_strideq, 2
+    add        l_strideq, l_strideq
     lea         stride3q, [strideq*3]
     shr              r6d, 11                ; is_12bpc
     mova            ym21, [base+filter_mask]
@@ -868,7 +868,7 @@ cglobal lpf_v_sb_uv_16bpc, 6, 11, 22, dst, stride, mask, l, l_stride, lut, \
     shl       mask_bitsd, 8
     add             dstq, 64
     pslld           ym21, 8
-    add               lq, 32
+    add               lq, 16
     sub               wd, 8
     jg .loop
     RET
@@ -878,14 +878,14 @@ cglobal lpf_h_sb_uv_16bpc, 6, 11, 22, dst, stride, mask, l, l_stride, lut, \
     lea             tmpq, [filter_mask]
     mov              r6d, r7m               ; bitdepth_max
     vpbroadcastd    ym12, strided
-    shl        l_strideq, 2
+    add        l_strideq, l_strideq
     shr              r6d, 11                ; is_12bpc
     pmulld          ym12, [base+stride_mul]
     lea         stride3q, [strideq*3]
     mova            ym21, [base+filter_mask]
     mov       mask_bitsd, 0xff
     vpbroadcastd     m13, [base+pw_4+r6*8]
-    sub               lq, 4
+    sub               lq, 2
     vpbroadcastd     m14, [base+clip_max+r6*4]
     lea       l_stride3q, [l_strideq*3]
     vpbroadcastd     m15, [base+clip_min+r6*4]

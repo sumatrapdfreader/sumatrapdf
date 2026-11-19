@@ -94,6 +94,7 @@ if is_asm_enabled
             libdav1d_sources_asm = files(
                 # itx.S is used for both 8 and 16 bpc.
                 'arm/64/itx.S',
+                'arm/64/lf_mask.S',
                 'arm/64/looprestoration_common.S',
                 'arm/64/msac.S',
                 'arm/64/refmvs.S',
@@ -121,6 +122,12 @@ if is_asm_enabled
                     'arm/64/looprestoration16.S',
                     'arm/64/mc16.S',
                     'arm/64/mc16_sve.S',
+                )
+            endif
+
+            if get_option('asm_debug')
+                libdav1d_sources += files(
+                    'arm/64/asm_debug.c',
                 )
             endif
         elif host_machine.cpu_family().startswith('arm')
@@ -154,6 +161,12 @@ if is_asm_enabled
                     'arm/32/mc16.S',
                 )
             endif
+
+            if get_option('asm_debug')
+                libdav1d_sources += files(
+                    'arm/32/asm_debug.c',
+                )
+            endif
         endif
 
         if use_gaspp
@@ -170,11 +183,13 @@ if is_asm_enabled
         # NASM source files
         libdav1d_sources_asm = files(
             'x86/cpuid.asm',
+            'x86/lf_mask.asm',
             'x86/msac.asm',
             'x86/pal.asm',
             'x86/refmvs.asm',
             'x86/itx_avx512.asm',
             'x86/cdef_avx2.asm',
+            'x86/cdef_avx512.asm',
             'x86/itx_avx2.asm',
             'x86/cdef_sse.asm',
             'x86/itx_sse.asm',
@@ -182,7 +197,6 @@ if is_asm_enabled
 
         if dav1d_bitdepths.contains('8')
             libdav1d_sources_asm += files(
-                'x86/cdef_avx512.asm',
                 'x86/filmgrain_avx512.asm',
                 'x86/ipred_avx512.asm',
                 'x86/loopfilter_avx512.asm',
@@ -272,6 +286,7 @@ if is_asm_enabled
             libdav1d_sources += files(
                 'riscv/64/cpu.S',
                 'riscv/64/pal.S',
+                'riscv/64/cdef.S',
             )
 
             if dav1d_bitdepths.contains('8')

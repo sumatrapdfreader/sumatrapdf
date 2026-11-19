@@ -42,6 +42,7 @@ decl_cdef_fns(sse4);
 decl_cdef_fns(ssse3);
 decl_cdef_fns(sse2);
 
+decl_cdef_dir_fn(BF(dav1d_cdef_dir, avx512icl));
 decl_cdef_dir_fn(BF(dav1d_cdef_dir, avx2));
 decl_cdef_dir_fn(BF(dav1d_cdef_dir, sse4));
 decl_cdef_dir_fn(BF(dav1d_cdef_dir, ssse3));
@@ -83,6 +84,7 @@ static ALWAYS_INLINE void cdef_dsp_init_x86(Dav1dCdefDSPContext *const c) {
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
 
+    c->dir = BF(dav1d_cdef_dir, avx512icl);
     c->fb[0] = BF(dav1d_cdef_filter_8x8, avx512icl);
     c->fb[1] = BF(dav1d_cdef_filter_4x8, avx512icl);
     c->fb[2] = BF(dav1d_cdef_filter_4x4, avx512icl);

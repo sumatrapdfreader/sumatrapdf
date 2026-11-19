@@ -51,8 +51,9 @@ static const uint8_t probe_data[] = {
     'A', 'V', '0', '1',
 };
 
-static int ivf_probe(const uint8_t *const data) {
-    return !memcmp(data, probe_data, sizeof(probe_data));
+static int ivf_probe(const uint8_t *const data, const int size) {
+    return size >= (int) sizeof(probe_data) &&
+           !memcmp(data, probe_data, sizeof(probe_data));
 }
 
 static unsigned rl32(const uint8_t *const p) {

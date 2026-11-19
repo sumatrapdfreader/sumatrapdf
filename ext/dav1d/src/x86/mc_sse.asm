@@ -8357,9 +8357,11 @@ ALIGN function_align
  %define blendmask [esp+gprsize+0x120]
  %define m10 m7
 %endif
+%if notcpuflag(sse4)
     pcmpeqd             m10, m10
     pslld               m10, 16
     mova          blendmask, m10
+%endif
     BLENDHWDW            m2, m0 ; 0
     BLENDHWDW            m3, m1 ; 2
     mova [rsp+gprsize+0x00], m2
@@ -8369,7 +8371,9 @@ ALIGN function_align
     mova                 m4, [esp+gprsize+0x20]
     mova                 m5, [esp+gprsize+0x30]
 %endif
+%if notcpuflag(sse4)
     mova                m10, blendmask
+%endif
     BLENDHWDW            m4, m0 ; 1
     BLENDHWDW            m5, m1 ; 3
     mova [rsp+gprsize+0x20], m4
@@ -8381,7 +8385,9 @@ ALIGN function_align
 %endif
     psrld                m6, m2, 16
     psrld                m7, m3, 16
+%if notcpuflag(sse4)
     mova                m10, blendmask
+%endif
     BLENDHWDW            m6, m0 ; 2
     BLENDHWDW            m7, m1 ; 4
     mova [rsp+gprsize+0x40], m6
@@ -8393,7 +8399,9 @@ ALIGN function_align
 %endif
     psrld               m2, m4, 16
     psrld               m3, m5, 16
+%if notcpuflag(sse4)
     mova                m10, blendmask
+%endif
     BLENDHWDW           m2, m0 ; 3
     BLENDHWDW           m3, m1 ; 5
     mova [rsp+gprsize+0x60], m2
@@ -8406,7 +8414,9 @@ ALIGN function_align
 %endif
     psrld                m4, m6, 16
     psrld                m5, m7, 16
+%if notcpuflag(sse4)
     mova                m10, blendmask
+%endif
     BLENDHWDW            m4, m0 ; 4
     BLENDHWDW            m5, m1 ; 6
 %if ARCH_X86_64
@@ -8429,7 +8439,9 @@ ALIGN function_align
 %endif
     psrld                m6, 16
     psrld                m7, 16
+%if notcpuflag(sse4)
     mova                m10, blendmask
+%endif
     BLENDHWDW            m6, m0 ; 5
     BLENDHWDW            m7, m1 ; 7
 %if ARCH_X86_64
@@ -8462,7 +8474,9 @@ ALIGN function_align
     mova [rsp+gprsize+0x50], m5
     psrld                m4, 16
     psrld                m5, 16
+%if notcpuflag(sse4)
     mova                m10, blendmask
+%endif
     BLENDHWDW            m4, m0 ; 6
     BLENDHWDW            m5, m1 ; 8
 %if ARCH_X86_64
@@ -8726,23 +8740,21 @@ cglobal w_avg_8bpc, 4, 7, 6, dst, stride, tmp1, tmp2, w, h, stride3
     mova                 m3,     [maskq+(%1+0)*(mmsize/2)]
     mova                 m0,     [tmp2q+(%1+0)*mmsize] ; b
     psubw                m1, m0, [tmp1q+(%1+0)*mmsize] ; b - a
-    mova                 m6, m3      ; m
-    psubb                m3, m4, m6  ; -m
+    psubb                m6, m4, m3 ; -m
     paddw                m1, m1     ; (b - a) << 1
-    paddb                m3, m3     ; -m << 1
-    punpcklbw            m2, m4, m3 ; -m << 9 (<< 8 when ext as uint16)
+    paddb                m6, m6     ; -m << 1
+    punpcklbw            m2, m4, m6 ; -m << 9 (<< 8 when ext as uint16)
     pmulhw               m1, m2     ; (-m * (b - a)) << 10
     paddw                m0, m1     ; + b
     mova                 m1,     [tmp2q+(%1+1)*mmsize] ; b
     psubw                m2, m1, [tmp1q+(%1+1)*mmsize] ; b - a
-    paddw                m2, m2  ; (b - a) << 1
-    mova                 m6, m3  ; (-m << 1)
+    paddw                m2, m2     ; (b - a) << 1
     punpckhbw            m3, m4, m6 ; (-m << 9)
-    pmulhw               m2, m3 ; (-m << 9)
-    paddw                m1, m2 ; (-m * (b - a)) << 10
-    pmulhrsw             m0, m5 ; round
-    pmulhrsw             m1, m5 ; round
-    packuswb             m0, m1 ; interleave 16 -> 8
+    pmulhw               m2, m3     ; (-m << 9)
+    paddw                m1, m2     ; (-m * (b - a)) << 10
+    pmulhrsw             m0, m5     ; round
+    pmulhrsw             m1, m5     ; round
+    packuswb             m0, m1     ; interleave 16 -> 8
 %endmacro
 
 %macro MASK_INC_PTR 1

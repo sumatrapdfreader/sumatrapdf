@@ -151,7 +151,7 @@ function save_tmvs_neon, export=1
         add             r9,  r9,  lr,  lsl #1     // cand_b += bw8*2
         cmp             r9,  r10
         vmov            d4,  d0
-        bge             3f
+        bhs             3f
 
         ldrb            r2,  [r9, #10]            // cand_b->bs
         add             lr,  r9,  #8
@@ -195,13 +195,13 @@ function save_tmvs_neon, export=1
         vext.8          q11, q9,  q10, #4
 
         blx             r11
-        bge             4f  // if (cand_b >= end)
+        bhs             4f  // if (cand_b >= end)
         vmov            q0,  q9
         vmov            q1,  q10
         vmov            q2,  q11
         cmp             r9,  r10
         blx             r2
-        blt             2b  // if (cand_b < end)
+        blo             2b  // if (cand_b < end)
 
 4:
         pop             {r2,r4,r6}

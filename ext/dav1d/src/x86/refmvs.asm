@@ -360,9 +360,24 @@ cglobal splat_mv, 4, 5, 3, rr, a, bx4, bw4, bh4
 
 %if ARCH_X86_64
 INIT_XMM sse4
+%macro PRECOMP_FRAC 1
+    pmovsxwd        m1, [mv_proj + %1*16 + 0]
+    pmovsxwd        m2, [mv_proj + %1*16 + 8]
+    pmulld          m1, m4
+    pmulld          m2, m4
+    punpckldq       m0, m1, m1
+    mova    [rsp+0x50 + %1*64 +  0], m0
+    punpckhdq       m0, m1, m1
+    mova    [rsp+0x50 + %1*64 + 16], m0
+    punpckldq       m0, m2, m2
+    mova    [rsp+0x50 + %1*64 + 32], m0
+    punpckhdq       m0, m2, m2
+    mova    [rsp+0x50 + %1*64 + 48], m0
+%endmacro
+
 ; refmvs_frame *rf, int tile_row_idx,
 ; int col_start8, int col_end8, int row_start8, int row_end8
-cglobal load_tmvs, 6, 15, 4, -0x50, rf, tridx, xstart, xend, ystart, yend, \
+cglobal load_tmvs, 6, 15, 5, -0x150, rf, tridx, xstart, xend, ystart, yend, \
                                     stride, rp_proj, roff, troff, \
                                     xendi, xstarti, iw8, ih8, dst
     xor           r14d, r14d
@@ -447,6 +462,12 @@ cglobal load_tmvs, 6, 15, 4, -0x50, rf, tridx, xstart, xend, ystart, yend, \
     cmp           refd, -32                 ; INVALID_REF2CUR
     je .next_n
     mov     [rsp+0x40], refd
+    movd            m4, refd
+    pshufd          m4, m4, 0
+    PRECOMP_FRAC 0
+    PRECOMP_FRAC 1
+    PRECOMP_FRAC 2
+    PRECOMP_FRAC 3
     mov           offq, [rsp+0x00]          ; ystart * stride * 5
     movzx         refd, byte [rfq+rf.mfmv_ref+nq]
     lea       refsignq, [refq-4]
@@ -467,25 +488,21 @@ cglobal load_tmvs, 6, 15, 4, -0x50, rf, tridx, xstart, xend, ystart, yend, \
     cmp           r12d, r14d
     cmovs         r14d, r12d                ; imin(y_sb_align + 8, yend)
     mov     [rsp+0x3c], r14d                ; y_proj_end
- DEFINE_ARGS y, src, xstart, xend, frac, rf, n7, mv, \
+ DEFINE_ARGS y, src, xstart, xend, _, _, n7, mv, \
              ref, x, xendi, mvx, mvy, rb, ref2ref
     mov             xd, [rsp+0x20] ; xstarti
-.xloop:
     lea            rbd, [xq*5]
     add            rbq, srcq
+.xloop:
     movzx         refd, byte [rbq+4]
     test          refd, refd
     jz .next_x_bad_ref
     movzx     ref2refd, byte [n7q+refq]     ; rf->mfmv_ref2ref[n][b_ref-1]
     test      ref2refd, ref2refd
     jz .next_x_bad_ref
-    lea          fracq, [mv_proj]
-    movzx        fracd, word [fracq+ref2refq*2]
     mov            mvd, [rbq]
-    imul         fracd, [rsp+0x40] ; ref2cur
     pmovsxwq        m0, [rbq]
-    movd            m1, fracd
-    punpcklqdq      m1, m1
+    movddup         m1, [rsp+0x50+ref2refq*8]
     pmuldq          m0, m1          ; mv * frac
     pshufd          m1, m0, q3311
     paddd           m0, m3
@@ -571,6 +588,7 @@ cglobal load_tmvs, 6, 15, 4, -0x50, rf, tridx, xstart, xend, ystart, yend, \
     jl .next_x
     jmp .next_y
 .next_x_bad_ref:
+    add            rbq, 5
     inc             xd
     cmp             xd, xendid
     jl .xloop

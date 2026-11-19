@@ -90,7 +90,7 @@ function \op\()_8tap_\type\()_8bpc_\isa, export=1, align=FUNC_ALIGN
 endfunc
 .endm
 
-.macro filter_8tap_fn type, dot, isa, dst, d_strd, src, s_strd, w, h, mx, my, xmx, xmy, ldst, lsrc, wd_strd
+.macro filter_8tap_fn type, dot, isa, dst, d_strd, src, s_strd, w, h, mx, my, ldst, lsrc
 make_8tap_fn \type, sharp,          SHARP1,   SHARP1,   \isa
 make_8tap_fn \type, sharp_smooth,   SHARP1,   SMOOTH1,  \isa
 make_8tap_fn \type, sharp_regular,  SHARP1,   REGULAR1, \isa
@@ -109,7 +109,7 @@ function \type\()_8tap_\isa, align=FUNC_ALIGN
         cbnz            \mx, L(\type\()_8tap_h_hv_\isa)
         cbnz            \my, L(\type\()_8tap_v_\isa)
 .ifc \type, prep
-        add             \wd_strd, \w, \w    // prep_neon needs w * 2 as stride
+        add             w(\d_strd), \w, \w  // prep_neon needs w * 2 as stride
 .endif
         b               X(\type\()_neon)
 
@@ -132,12 +132,12 @@ L(\type\()_8tap_v_\isa):
         cmp             \h, #4
         csel            \my, \my, w11, le
         sub             \src, \src, \s_strd, lsl #1     // src - s_strd * 3
-        add             \xmy, x12, \xmy, lsl #3         // subpel V filter address
+        add             x(\my), x12, x(\my), lsl #3     // subpel V filter address
         ldr             q29, [x13, #32]
 .ifc \isa, neon_dotprod
         movi            v5.16b, #128
 .endif
-        ldr             d7, [\xmy]
+        ldr             d7, [x(\my)]
         cmp             \w, #8
         b.eq            80f
         b.lt            40f
@@ -146,7 +146,7 @@ L(\type\()_8tap_v_\isa):
 160:    // V - 16xN+
         ldp             q30, q31, [x13, #48]
 .ifc \type, prep
-        add             \wd_strd, \w, \w
+        add             w(\d_strd), \w, \w
 .endif
         .align LOOP_ALIGN
 161:
@@ -695,7 +695,7 @@ L(\type\()_8tap_h_hv_\isa):
         and             w14, w14, #0x7F         // for HV
         cmp             \w, #4
         csel            \mx, \mx, w15, le
-        add             \xmx, x12, \xmx, lsl #3 // subpel H filter address
+        add             x(\mx), x12, x(\mx), lsl #3 // subpel H filter address
 .ifc \isa, neon_dotprod
         movi            v24.16b, #128
 .endif
@@ -705,9 +705,9 @@ L(\type\()_8tap_h_hv_\isa):
         cmp             \h, #4
         csel            w14, w14, w11, le
         sub             \src, \src, \s_strd, lsl #1 // src - s_strd * 2 - 3
-        add             \xmy, x12, x14, lsl #3      // subpel V filter address
+        add             x(\my), x12, x14, lsl #3    // subpel V filter address
         mov             x15, x30
-        ldr             d7, [\xmy]
+        ldr             d7, [x(\my)]
 .ifc \type, put
         ldr             q25, [x13, #(OFFSET_CVT_32_8)] // LUT to help conversion
 .endif                                                 // of 32b values to 8b
@@ -726,9 +726,9 @@ L(\type\()_8tap_h_hv_\isa):
         // .align JUMP_ALIGN    // fallthrough
 80:     // HV8 - 8xN+
         ldp             q29, q30, [x13, #16]
-        ldr             d26, [\xmx]
+        ldr             d26, [x(\mx)]
 .ifc \type, prep
-        add             \wd_strd, \w, \w
+        add             w(\d_strd), \w, \w
 .endif
         .align LOOP_ALIGN
 81:
@@ -866,7 +866,7 @@ L(\type\()_8tap_h_hv_\isa):
 
         .align JUMP_ALIGN
 40:     // HV8 - 4xN
-        ldur            s26, [\xmx, #2]
+        ldur            s26, [x(\mx), #2]
         add             \src, \src, #2
 
         bl              L(\type\()_hv_filter4_\isa)
@@ -936,7 +936,7 @@ L(\type\()_8tap_h_hv_\isa):
 .ifc \type, put
         .align JUMP_ALIGN
 20:     // HV8 - 2xN
-        ldur            s26, [\xmx, #2]
+        ldur            s26, [x(\mx), #2]
         add             \src, \src, #2
 
         bl              L(\type\()_hv_filter4_\isa)
@@ -1011,9 +1011,9 @@ L(\type\()_6tap_hv_\isa):
 
         // .align JUMP_ALIGN    // fallthrough
 80:     // HV6 - 8xN+
-        ldr             d26, [\xmx]
+        ldr             d26, [x(\mx)]
 .ifc \type, prep
-        add             \wd_strd, \w, \w
+        add             w(\d_strd), \w, \w
 .endif
 .ifc \isa, neon_i8mm
         cmp             w9, #SHARP1
@@ -1244,7 +1244,7 @@ L(\type\()_hv_filter4_\isa):
 
         .align JUMP_ALIGN
 40:     // HV6 - 4xN
-        ldur            s26, [\xmx, #2]
+        ldur            s26, [x(\mx), #2]
         add             \src, \src, #2
 
         bl              L(\type\()_hv_filter4_\isa)
@@ -1305,7 +1305,7 @@ L(\type\()_hv_filter4_\isa):
 .ifc \type, put
         .align JUMP_ALIGN
 20:     // HV6 - 2xN
-        ldur            s26, [\xmx, #2]
+        ldur            s26, [x(\mx), #2]
         add             \src, \src, #2
 
         bl              L(\type\()_hv_filter4_\isa)
@@ -1383,7 +1383,7 @@ L(\type\()_8tap_h_\isa):
 20:     // H - 2xN
         AARCH64_VALID_JUMP_TARGET
         add             \src, \src, #2
-        ldur            s26, [\xmx, #2]
+        ldur            s26, [x(\mx), #2]
 
         .align LOOP_ALIGN
 2:
@@ -1420,7 +1420,7 @@ L(\type\()_8tap_h_\isa):
 40:     // H - 4xN
         AARCH64_VALID_JUMP_TARGET
         add             \src, \src, #2
-        ldur            s26, [\xmx, #2]
+        ldur            s26, [x(\mx), #2]
 
         .align LOOP_ALIGN
 4:
@@ -1469,7 +1469,7 @@ L(\type\()_8tap_h_\isa):
         .align JUMP_ALIGN
 80:     // H - 8xN
         AARCH64_VALID_JUMP_TARGET
-        ldr             d26, [\xmx]
+        ldr             d26, [x(\mx)]
 .ifc \isa, neon_i8mm
         cmp             w9, #SHARP1
         b.eq            88f             // horizontal == SHARP1
@@ -1589,7 +1589,7 @@ L(\type\()_8tap_h_\isa):
         .align JUMP_ALIGN
 160:    // H - 16xN
         AARCH64_VALID_JUMP_TARGET
-        ldr             d26, [\xmx]
+        ldr             d26, [x(\mx)]
 .ifc \isa, neon_i8mm
         cmp             w9, #SHARP1
         b.eq            168f            // horizontal == SHARP1
@@ -1706,7 +1706,7 @@ L(\type\()_8tap_h_\isa):
 640:
 1280:
         AARCH64_VALID_JUMP_TARGET
-        ldr             d26, [\xmx]
+        ldr             d26, [x(\mx)]
 .ifc \type, put
         sub             \d_strd, \d_strd, \w, uxtw
 .endif
@@ -1854,24 +1854,20 @@ jumptable \type\()_8tap_h_\isa\()_tbl
 endjumptable
 .endm
 
-// dst(x0), d_strd(x7), src(x1), s_strd(x2), w(w3), h(w4), mx(w5), my(w6)
-// xmx(x5), xmy(x6), ldst(x5), lsrc(x6), wd_strd(w7)
-filter_8tap_fn prep, sdot, neon_dotprod, x0, x7, x1, x2, w3, w4, w5, w6, x5, x6, x5, x6, w7
+// dst(x0), d_strd(x7), src(x1), s_strd(x2), w(w3), h(w4), mx(w5), my(w6), ldst(x5), lsrc(x6)
+filter_8tap_fn prep, sdot, neon_dotprod, x0, x7, x1, x2, w3, w4, w5, w6, x5, x6
 
-// dst(x0) d_strd(x1) src(x2) s_strd(x3) w(w4) h(w5) mx(w6) my(w7)
-// xmx(x6), xmy(x7), ldst(x6), lsrc(x7), wd_strd(w1)
-filter_8tap_fn  put, sdot, neon_dotprod, x0, x1, x2, x3, w4, w5, w6, w7, x6, x7, x6, x7, w1
+// dst(x0) d_strd(x1) src(x2) s_strd(x3) w(w4) h(w5) mx(w6) my(w7), ldst(x6), lsrc(x7)
+filter_8tap_fn  put, sdot, neon_dotprod, x0, x1, x2, x3, w4, w5, w6, w7, x6, x7
 
 #if HAVE_I8MM
 ENABLE_I8MM
 
-// dst(x0), d_strd(x7), src(x1), s_strd(x2), w(w3), h(w4), mx(w5), my(w6)
-// xmx(x5), xmy(x6), ldst(x5), lsrc(x6), wd_strd(w7)
-filter_8tap_fn prep, usdot, neon_i8mm, x0, x7, x1, x2, w3, w4, w5, w6, x5, x6, x5, x6, w7
+// dst(x0), d_strd(x7), src(x1), s_strd(x2), w(w3), h(w4), mx(w5), my(w6), ldst(x5), lsrc(x6)
+filter_8tap_fn prep, usdot, neon_i8mm, x0, x7, x1, x2, w3, w4, w5, w6, x5, x6
 
-// dst(x0) d_strd(x1) src(x2) s_strd(x3) w(w4) h(w5) mx(w6) my(w7)
-// xmx(x6), xmy(x7), ldst(x6), lsrc(x7), wd_strd(w1)
-filter_8tap_fn  put, usdot, neon_i8mm, x0, x1, x2, x3, w4, w5, w6, w7, x6, x7, x6, x7, w1
+// dst(x0) d_strd(x1) src(x2) s_strd(x3) w(w4) h(w5) mx(w6) my(w7), ldst(x6), lsrc(x7)
+filter_8tap_fn  put, usdot, neon_i8mm, x0, x1, x2, x3, w4, w5, w6, w7, x6, x7
 
 DISABLE_I8MM
 #endif  // HAVE_I8MM

@@ -122,10 +122,9 @@ zlib-ng         2.0.6      2021-12-24
 extract         trunk
   https://github.com/ArtifexSoftware/extract
 
-dav1d           1.5.4      2026-07-14
+dav1d           1.5.5      2026-11-17
   https://code.videolan.org/videolan/dav1d
-  https://code.videolan.org/videolan/dav1d/-/tags/1.5.4
-  backported a34e0685 (include/compat/msvc/stdatomic.h: MSVC 19.52 build fix)
+  https://code.videolan.org/videolan/dav1d/-/tags/1.5.5
 
 heicdec         dist       2026-10-27
   https://github.com/kjk/heicdec

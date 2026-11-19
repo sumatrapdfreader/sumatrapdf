@@ -60,7 +60,7 @@ int input_open(DemuxerContext **const c_out,
 {
     const Demuxer *impl;
     DemuxerContext *c;
-    int res, i;
+    int i;
 
     if (name) {
         for (i = 0; demuxers[i]; i++) {
@@ -88,16 +88,16 @@ int input_open(DemuxerContext **const c_out,
             fprintf(stderr, "Failed to open input file %s: %s\n", filename, strerror(errno));
             return errno ? DAV1D_ERR(errno) : DAV1D_ERR(EIO);
         }
-        res = !!fread(probe_data, 1, probe_sz, f);
+        probe_sz = (int) fread(probe_data, 1, probe_sz, f);
         fclose(f);
-        if (!res) {
+        if (!probe_sz) {
             free(probe_data);
             fprintf(stderr, "Failed to read probe data\n");
             return errno ? DAV1D_ERR(errno) : DAV1D_ERR(EIO);
         }
 
         for (i = 0; demuxers[i]; i++) {
-            if (demuxers[i]->probe(probe_data)) {
+            if (demuxers[i]->probe(probe_data, probe_sz)) {
                 impl = demuxers[i];
                 break;
             }
@@ -117,7 +117,8 @@ int input_open(DemuxerContext **const c_out,
     }
     c->impl = impl;
     c->data = (DemuxerPriv *) c->priv_data;
-    if ((res = impl->open(c->data, filename, fps, num_frames, timebase)) < 0) {
+    const int res = impl->open(c->data, filename, fps, num_frames, timebase);
+    if (res < 0) {
         free(c);
         return res;
     }

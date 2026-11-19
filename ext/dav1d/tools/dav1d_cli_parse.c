@@ -398,8 +398,10 @@ void parse(const int argc, char *const *const argv,
         case ARG_SIZE_LIMIT: {
             char *arg = optarg, *end;
             uint64_t res = strtoul(arg, &end, 0);
-            if (*end == 'x') // NxM
-                res *= strtoul((arg = end + 1), &end, 0);
+            if (*end == 'x' && res < UINT_MAX) { // NxM
+                const uint64_t h = strtoul((arg = end + 1), &end, 0);
+                res = h < UINT_MAX ? res * h : UINT_MAX;
+            }
             if (*end || end == arg || res >= UINT_MAX)
                 error(argv[0], optarg, ARG_SIZE_LIMIT, "an integer or dimension");
             lib_settings->frame_size_limit = (unsigned) res;

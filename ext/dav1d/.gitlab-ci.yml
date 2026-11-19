@@ -759,10 +759,10 @@ test-debian-riscv64:
         - cd build && time meson test -v --timeout-multiplier 10
     parallel:
       matrix:
-        - QEMU_CPU: [ "rv64,v=true,vext_spec=v1.0,vlen=128,elen=64",
-                      "rv64,v=true,vext_spec=v1.0,vlen=256,elen=64",
-                      "rv64,v=true,vext_spec=v1.0,vlen=512,elen=64",
-                      "rv64,v=true,vext_spec=v1.0,vlen=1024,elen=64" ]
+        - QEMU_CPU: [ "rv64,v=true,vext_spec=v1.0,vlen=128,elen=64,rvv_ta_all_1s=on,rvv_ma_all_1s=on,rvv_vl_half_avl=on",
+                      "rv64,v=true,vext_spec=v1.0,vlen=256,elen=64,rvv_ta_all_1s=on,rvv_ma_all_1s=on,rvv_vl_half_avl=on",
+                      "rv64,v=true,vext_spec=v1.0,vlen=512,elen=64,rvv_ta_all_1s=on,rvv_ma_all_1s=on,rvv_vl_half_avl=on",
+                      "rv64,v=true,vext_spec=v1.0,vlen=1024,elen=64,rvv_ta_all_1s=on,rvv_ma_all_1s=on,rvv_vl_half_avl=on" ]
 
 test-debian-aarch64-qemu:
     extends:
