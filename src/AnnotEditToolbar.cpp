@@ -1753,13 +1753,9 @@ static bool SetInPlaceEditScale(Annotation* annot, RectF pageRect, Rect rc) {
     return true;
 }
 
-// The box follows what has been typed. It never shrinks below the annotation's
-// own box, so committing can only ever grow the annotation.
-static void SizeInPlaceEditToText() {
-    if (!gInPlace.hwnd || !gInPlace.win) {
-        return;
-    }
-    TempStr text = HwndGetTextTemp(gInPlace.hwnd);
+// The size `text` needs: room for the edit control to show it, and for MuPDF
+// to lay it out the same way once the box is gone. Lines don't wrap.
+static Size InPlaceTextFit(Str text) {
     Size ts = MeasureInPlaceText(text);
     int pad = gInPlace.padding;
     // room for the caret past the last glyph
@@ -1776,12 +1772,24 @@ static void SizeInPlaceEditToText() {
     // annotation wrap a line the box had shown whole.
     float emDx = gInPlace.fontPx > 0 ? ((float)ts.dx / (float)gInPlace.fontPx) : 0.f;
     float padPts = 4.f * (float)gInPlace.borderWidth;
-    int nLines = std::max((int)SendMessageW(gInPlace.hwnd, EM_GETLINECOUNT, 0, 0), 1);
+    int nLines = 1;
+    for (int i = 0; i < len(text); i++) {
+        nLines += text.s[i] == '\n' ? 1 : 0;
+    }
     float dxPts = (emDx * (float)gInPlace.textSize * kInPlaceWidthSlack) + padPts;
     float dyPts = ((float)nLines * kFreeTextLineHeight * (float)gInPlace.textSize) + padPts;
     want.dx = std::max(want.dx, (int)(dxPts * gInPlace.scale) + caret);
     want.dy = std::max(want.dy, (int)(dyPts * gInPlace.scale));
+    return want;
+}
 
+// The box follows what has been typed. It never shrinks below the annotation's
+// own box.
+static void SizeInPlaceEditToText() {
+    if (!gInPlace.hwnd || !gInPlace.win) {
+        return;
+    }
+    Size want = InPlaceTextFit(HwndGetTextTemp(gInPlace.hwnd));
     want.dx = std::max(want.dx, gInPlace.minSize.dx);
     want.dy = std::max(want.dy, gInPlace.minSize.dy);
     Rect canvas = HwndClientRect(gInPlace.win->hwndCanvas);
@@ -1832,11 +1840,16 @@ void EndFreeTextInPlaceEdit(bool accept) {
     MainWindow* win = gInPlace.win;
     WindowTab* tab = gInPlace.tab;
     Annotation* annot = gInPlace.annot;
-    Rect editRect = ChildPosWithinParent(hwnd);
+    float scale = gInPlace.scale;
     TempStr text{};
+    Size grow{};
     if (accept) {
         text = str::DupTemp(HwndGetTextTemp(hwnd));
         str::NormalizeNewlinesToLFInPlace(text);
+        if (AnnotationIsLive(annot)) {
+            // the annotation still has the old text
+            grow = FreeTextGrowth(gInPlace.minSize, InPlaceTextFit(Contents(annot)), InPlaceTextFit(text));
+        }
     }
     // clear the state and unsubclass before destroying, so the destroy-time
     // WM_KILLFOCUS doesn't come back through the commit path
@@ -1853,20 +1866,13 @@ void EndFreeTextInPlaceEdit(bool accept) {
     if (accept && AnnotationIsLive(annot)) {
         // the box may be enlarged and the text set: one undo step
         ScopedEngineOperation op(annot->engine, "Edit text");
-        DisplayModel* dm = winOk ? win->AsFixed() : nullptr;
-        int pageNo = PageNo(annot);
-        if (dm && dm->ValidPageNo(pageNo)) {
-            // the box was sized to the text while typing; keep that room so
-            // MuPDF doesn't clip what was just written. Compare in screen
-            // pixels: converting the box back to page coordinates biases it
-            // half a pixel up and to the left, so a page-space union always
-            // looks bigger and would grow the annotation on every edit.
-            RectF cur = GetRect(annot);
-            Rect curScreen = dm->CvtToScreen(pageNo, cur);
-            Rect wanted = curScreen.Union(editRect);
-            if (wanted != curScreen) {
-                SetRect(annot, cur.Union(dm->CvtFromScreen(wanted, pageNo)));
-            }
+        // make room so MuPDF doesn't clip what was just written: to the right
+        // and down, in page units, so the top-left corner stays put
+        if ((grow.dx > 0 || grow.dy > 0) && scale > 0) {
+            RectF r = GetRect(annot);
+            r.dx += (float)grow.dx / scale;
+            r.dy += (float)grow.dy / scale;
+            SetRect(annot, r);
         }
         SetContents(annot, text);
         AnnotChanged(tab);

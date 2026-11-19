@@ -128,3 +128,4 @@ constexpr int kOpacityPercentMin = 10;
 constexpr float kInPlaceWidthSlack = 1.03f;
 
 void PostedStartContentsEdit(MainWindow* win);
+Size FreeTextGrowth(Size box, Size fitOld, Size fitNew);

@@ -583,7 +583,6 @@ void EndFreeTextInPlaceEdit(bool accept) {
     MainWindow* win = gInPlace.win;
     WindowTab* tab = gInPlace.tab;
     Annotation* annot = gInPlace.annot;
-    gp::Bounds box = gInPlace.box;
     TempStr text = str::DupTemp(FromGpui(gp::InputValue(gInPlace.edit)));
     gInPlace.win = nullptr;
     gInPlace.tab = nullptr;
@@ -602,28 +601,19 @@ void EndFreeTextInPlaceEdit(bool accept) {
         DisplayModel* dm = winOk ? win->AsFixed() : nullptr;
         int pageNo = PageNo(annot);
         if (dm && dm->ValidPageNo(pageNo)) {
-            // the box grew with the text while typing; keep that room so
-            // MuPDF doesn't clip or wrap what was just written. Compare in
-            // screen pixels: converting the box back to page coordinates
-            // biases it half a pixel up and to the left, so a page-space
-            // union always looks bigger and would grow the annotation on
-            // every edit.
+            // make room so MuPDF doesn't clip or wrap what was just written:
+            // to the right and down, in page units, so the top-left corner
+            // stays put. The annotation still has the old text.
             RectF cur = GetRect(annot);
             Rect curScreen = dm->CvtToScreen(pageNo, cur);
             float scale = cur.dy > 0 ? ((float)curScreen.dy / cur.dy) : 1.f;
-            Size fit = MeasureInPlaceText(annot, text, scale);
-            Rect editRect{curScreen.x, curScreen.y, std::max(curScreen.dx, fit.dx), std::max(curScreen.dy, fit.dy)};
-            if (box.h > 0) {
-                float k = CanvasScale(win);
-                if (k <= 0.f) {
-                    k = 1.f;
-                }
-                Rect painted{curScreen.x, curScreen.y, (int)lroundf(box.w / k), (int)lroundf(box.h / k)};
-                editRect = editRect.Union(painted);
-            }
-            Rect wanted = curScreen.Union(editRect);
-            if (wanted != curScreen) {
-                SetRect(annot, cur.Union(dm->CvtFromScreen(wanted, pageNo)));
+            Size fitOld = MeasureInPlaceText(annot, Contents(annot), scale);
+            Size fitNew = MeasureInPlaceText(annot, text, scale);
+            Size grow = FreeTextGrowth(curScreen.Size(), fitOld, fitNew);
+            if ((grow.dx > 0 || grow.dy > 0) && scale > 0) {
+                cur.dx += (float)grow.dx / scale;
+                cur.dy += (float)grow.dy / scale;
+                SetRect(annot, cur);
             }
         }
         SetContents(annot, text);

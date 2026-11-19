@@ -1096,3 +1096,12 @@ void PostedStartContentsEdit(MainWindow* win) {
     }
     StartSelectedAnnotContentsEdit(win);
 }
+
+// How much committing a free text edit grows its box: only by what the new
+// text needs beyond both the box and what the old text needed. A box that fit
+// its text snugly, smaller than our padded estimate, keeps its size (#6551).
+Size FreeTextGrowth(Size box, Size fitOld, Size fitNew) {
+    int dx = fitNew.dx - std::max(box.dx, fitOld.dx);
+    int dy = fitNew.dy - std::max(box.dy, fitOld.dy);
+    return {std::max(dx, 0), std::max(dy, 0)};
+}
