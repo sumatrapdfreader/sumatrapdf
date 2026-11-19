@@ -909,6 +909,8 @@ static void PositionFindWindow(FindWindowWnd* w) {
 }
 
 void ShowFindWindow(MainWindow* win) {
+    // hiding the bar aborts a running search (e.g. -search); restart it below
+    bool wasFinding = win->findThread != nullptr;
     // one find UI at a time: SearchUIFloating can change while the bar is up
     if (IsFindBarVisible(win)) {
         HideFindBar(win);
@@ -946,6 +948,9 @@ void ShowFindWindow(MainWindow* win) {
     // populate the results list: show what's cached, and (re)run the search for
     // the current term so snippets get built now that the window is visible
     w->RefreshResults();
+    if (wasFinding && !win->findThread && len(term) > 0) {
+        FindTextOnThread(win, TextSearch::Direction::Forward, term, true, true);
+    }
     // a CLI/DDE search still running fills the list itself: FindEndTask ->
     // UpdateMatchCount requests snippets now that the window is visible
     if (CbGetTextLen(win->findEdit) == 0 || win->findThread) {

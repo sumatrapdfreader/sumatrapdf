@@ -604,6 +604,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["session-restore-search", sessionRestoreSearch],
   ["issue-6419", issue6419],
   ["issue-6412", issue6412],
   ["sidebar-thumbnails", sidebarThumbnails],
@@ -840,7 +841,6 @@ export const tests: NamedTest[] = [
   ["goto-page-word-after-find", gotoPageWordAfterFind],
   ["issue-5874", issue5874],
   ["issue-6055", issue6055],
-  ["session-restore-search", sessionRestoreSearch],
   ["issue-5869", issue5869],
   ["issue-5881", issue5881],
   ["rect-selection-drag", rectSelectionDrag],

@@ -32,7 +32,9 @@ async function findWindowContents(client: ControlClient): Promise<string> {
     if (Date.now() > deadline) {
       throw new Error(`session-restore-search: deferred search never finished: ${text}`);
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // poll fast: each poll shows the Find window, which used to abort a
+    // -search still running and never restart it
+    await new Promise((resolve) => setTimeout(resolve, 5));
   }
 }
 
