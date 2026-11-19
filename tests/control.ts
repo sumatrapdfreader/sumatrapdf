@@ -179,6 +179,8 @@ export enum ControlCommand {
   TestCloneRender = 166,
   // does the document have load errors, does the Errors notification show
   TestDocErrors = 167,
+  // [pageNo, idx, value]: pick value in the idx-th combo / list box
+  TestSetFormChoice = 168,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

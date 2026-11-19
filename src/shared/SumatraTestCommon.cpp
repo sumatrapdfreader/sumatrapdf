@@ -1438,6 +1438,49 @@ TempStr ToggleFormButtonResultTemp(int pageNo, int idx, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Set the idx-th combo box / list box on a page to `value` as picking it does:
+// "OK before='a' after='b'"
+TempStr SetFormChoiceResultTemp(int pageNo, int idx, Str value, int* exitCodeOut) {
+    if (exitCodeOut) {
+        *exitCodeOut = 1;
+    }
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-doc\n"));
+    }
+    if (!dm->ValidPageNo(pageNo)) {
+        return fmt("ERROR invalid-page pageNo=%d\n", pageNo);
+    }
+    Vec<Annotation*> widgets;
+    EngineMupdfGetPageWidgets(dm->GetEngine(), pageNo, widgets);
+    Annotation* choice = nullptr;
+    int n = 0;
+    for (Annotation* w : widgets) {
+        int wt = GetWidgetType(w);
+        if (wt != PDF_WIDGET_TYPE_COMBOBOX && wt != PDF_WIDGET_TYPE_LISTBOX) {
+            continue;
+        }
+        if (n == idx) {
+            choice = w;
+        }
+        n++;
+    }
+    if (!choice) {
+        return fmt("ERROR no-choice idx=%d choices=%d\n", idx, n);
+    }
+    TempStr before = str::DupTemp(GetWidgetValue(choice));
+    bool ok = SetWidgetChoiceValue(choice, value);
+    TempStr after = str::DupTemp(GetWidgetValue(choice));
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return fmt("OK before='%s' after='%s'\n", before, after);
+}
+
 // Render one page and count red / non-white pixels (issue #3415: WebP in EPUB paints).
 TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo, int zoomPercent) {
     str::Builder out;

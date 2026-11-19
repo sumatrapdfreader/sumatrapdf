@@ -715,6 +715,8 @@ enum class ControlCmd : u16 {
     TestCloneRender = 166,
     // does the document have load errors, does the Errors notification show
     TestDocErrors = 167,
+    // [pageNo, idx, value]: pick value in the idx-th combo / list box
+    TestSetFormChoice = 168,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1416,6 +1418,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSelectedText: {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSetFormChoice: {
+            i32 pageNo = 1;
+            i32 idx = 0;
+            if (!IntArg(req, 0, pageNo) || !IntArg(req, 1, idx)) {
+                AppendError(req, StrL("TestSetFormChoice expects int pageNo, int idx, string value"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = SetFormChoiceResultTemp(pageNo, idx, StringArg(req, 2), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

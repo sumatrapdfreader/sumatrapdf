@@ -683,10 +683,47 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
     }
 }
 
+// A choice field's /I lists the indices of its selected options, and viewers
+// like Firefox show those rather than /V. pdf_set_choice_field_value only sets
+// /V, so point /I at the option that is now the value, or drop it (#6563).
+static void SyncChoiceSelectedIndex(fz_context* ctx, pdf_annot* a, const char* value) {
+    // /V is on the field, which is the widget itself or one of its parents
+    pdf_obj* field = pdf_annot_obj(ctx, a);
+    while (field && !pdf_dict_get(ctx, field, PDF_NAME(V)) && pdf_dict_get(ctx, field, PDF_NAME(Parent))) {
+        field = pdf_dict_get(ctx, field, PDF_NAME(Parent));
+    }
+    pdf_obj* opts = pdf_dict_get_inheritable(ctx, pdf_annot_obj(ctx, a), PDF_NAME(Opt));
+    int n = pdf_array_len(ctx, opts);
+    for (int i = 0; i < n; i++) {
+        // an option is its text, or an [export value, display text] pair
+        pdf_obj* opt = pdf_array_get(ctx, opts, i);
+        bool isPair = pdf_is_array(ctx, opt);
+        const char* exportVal = pdf_to_text_string(ctx, isPair ? pdf_array_get(ctx, opt, 0) : opt);
+        const char* display = isPair ? pdf_to_text_string(ctx, pdf_array_get(ctx, opt, 1)) : exportVal;
+        if (str::Eq(Str(exportVal), Str(value)) || str::Eq(Str(display), Str(value))) {
+            pdf_obj* sel = pdf_dict_put_array(ctx, field, PDF_NAME(I), 1);
+            pdf_array_push_drop(ctx, sel, pdf_new_int(ctx, i));
+            return;
+        }
+    }
+    pdf_dict_del(ctx, field, PDF_NAME(I));
+}
+
 // set a choice field's value to one of its options; returns true if applied.
 bool SetWidgetChoiceValue(Annotation* annot, Str value) {
     auto setValue = [](fz_context* ctx, pdf_annot* a, const char* s) {
-        pdf_set_choice_field_value(ctx, a, s);
+        // the value and its index: one undo step
+        pdf_document* doc = pdf_annot_page(ctx, a)->doc;
+        pdf_begin_operation(ctx, doc, "Set choice");
+        fz_try(ctx) {
+            pdf_set_choice_field_value(ctx, a, s);
+            SyncChoiceSelectedIndex(ctx, a, s);
+            pdf_end_operation(ctx, doc);
+        }
+        fz_catch(ctx) {
+            pdf_abandon_operation(ctx, doc);
+            fz_rethrow(ctx);
+        }
         return true;
     };
     return SetWidgetValue(annot, value, StrL("SetWidgetChoiceValue"), setValue);
