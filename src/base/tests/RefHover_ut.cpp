@@ -548,6 +548,33 @@ static void NumericCitationSrcRectDistinctOnLine() {
     utassert(first.x != second.x);
 }
 
+// (13x) A diagonal watermark letter crossing a citation list must not break
+// bracket detection or balloon the citation's anchor rect: its tall rotated
+// bbox puts its baseline within the line's baseline tolerance. Hover strips
+// it first (RefHoverTryPlainText), as this does.
+static void NumericCitationWatermarkIgnored() {
+    WCHAR text[256];
+    Rect coords[256];
+    int n = 0;
+    AddText(text, coords, n, 256, L"tion [10, 12, 13, 63] more", 72, 200);
+    text[n] = L'w';
+    coords[n] = Rect{157, 145, 40, 60};
+    n++;
+    int num = 0;
+    Rect src{};
+    // cursor on the '1' of "13" (glyph 14 → x = 72 + 14*6 = 156)
+    WCHAR cleanText[256];
+    Rect cleanCoords[256];
+    int cleanN = StripWatermarkGlyphs(WStr(text, n), coords, cleanText, cleanCoords);
+    utassert(cleanN == n - 1);
+    bool ok =
+        DetectNumericCitationInPageText(WStr(cleanText, cleanN), cleanCoords, cleanN, Point{158, 206}, &num, &src);
+    utassert(ok);
+    utassert(num == 13);
+    utassert(src.y >= 195);
+    utassert(src.dy <= 20);
+}
+
 // (13c) Numeric citation page range written with an en-dash ("[2, 9–14]"):
 // the en-dash must not break bracket detection, and hovering an endpoint
 // resolves to that endpoint's number.
@@ -1100,6 +1127,7 @@ void RefHoverTest() {
     SurnameFoundOnBibPage();
     NumericCitationDetected();
     NumericCitationSrcRectDistinctOnLine();
+    NumericCitationWatermarkIgnored();
     NumericCitationRangeEnDash();
     NumericCitationLineBreakList();
     NumericCitationWrapEndOfLine();
