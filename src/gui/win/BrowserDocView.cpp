@@ -176,6 +176,11 @@ void BrowserDocView::NavigationCompleted(void* ctx, Str url, bool success) {
     if (view->wv) {
         view->wv->Eval(Str(kReportScrollJs));
     }
+    view->docLoaded = true;
+    if (view->printPending) {
+        view->printPending = false;
+        view->PrintCurrentPage(true);
+    }
 }
 
 void BrowserDocView::HistoryChanged(void* ctx, bool canGoBack, bool canGoForward) {
@@ -512,6 +517,12 @@ void BrowserDocView::SetScrollPos(Point pos) {
 
 void BrowserDocView::PrintCurrentPage(bool showUI) {
     if (backend == Backend::WebView2 && wv) {
+        // WebView2 starts asynchronously; before the page is there, ShowPrintUI()
+        // fails and window.print() shows the browser preview (#6323)
+        if (!docLoaded) {
+            printPending = true;
+            return;
+        }
         if (!wv->ShowPrintUI()) {
             wv->Eval(StrL("window.print()"));
         }
