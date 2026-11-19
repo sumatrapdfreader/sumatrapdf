@@ -65,10 +65,12 @@ bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine) {
     if (!engine || engine->isImageCollection) {
         return false;
     }
-    // Native HTML engines need the same bitmap recoloring as PDF and DjVu.
+    // Native HTML engines need the same bitmap recoloring as PDF and DjVu, and
+    // so do the documents shown through a converted PDF (#6561).
     return engine->kind == kindEngineMupdf || engine->kind == kindEngineDjVu || engine->kind == kindEngineChm ||
            engine->kind == kindEngineEpub || engine->kind == kindEngineFb2 || engine->kind == kindEngineMobi ||
-           engine->kind == kindEnginePdb || engine->kind == kindEngineHtml;
+           engine->kind == kindEnginePdb || engine->kind == kindEngineHtml || engine->kind == kindEngineCaj ||
+           engine->kind == kindEngineDvi || engine->kind == kindEnginePostScript;
 }
 
 bool EngineUsesReflowThemeCss(EngineBase* engine) {

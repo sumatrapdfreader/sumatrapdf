@@ -40,7 +40,7 @@ function exeBeside(bin: string, name: string): string {
 
 // Same tools EngineDvi looks for: dvipdfmx / xdvipdfmx on PATH or beside a
 // TeX engine, otherwise dvips plus Ghostscript.
-function dviConverterAvailable(): boolean {
+export function dviConverterAvailable(): boolean {
   if (whereExe(`dvipdfmx${kExe}`) || whereExe(`xdvipdfmx${kExe}`)) {
     return true;
   }
@@ -80,7 +80,7 @@ function u16be(n: number): Buffer {
 }
 
 // One empty page. No font is used, so dvipdfmx / dvips do not need a TFM.
-function makeBlankDvi(): Buffer {
+export function makeBlankDvi(): Buffer {
   const num = 25400000;
   const den = 473628672;
   const mag = 1000;
