@@ -679,6 +679,8 @@ enum class ControlCmd : u16 {
     TestToggleCmd = 165,
     // page 1 pixels a Clone() of the current document renders differently
     TestCloneRender = 166,
+    // does the document have load errors, does the Errors notification show
+    TestDocErrors = 167,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1954,6 +1956,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSelectedText: {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDocErrors: {
+            int exitCode = 0;
+            Str res = DocErrorsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

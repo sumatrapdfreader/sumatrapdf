@@ -1927,6 +1927,11 @@ static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab);
 // ShowThumbnailsIfNoToc: a document without bookmarks opens with page
 // thumbnails in the sidebar's top panel instead of no sidebar (#6407).
 // Bookmarks still being generated from headings count as bookmarks
+// the "Errors in document" notification is up (kNotifDocErrors is per file)
+bool IsDocErrorsNotifShown(MainWindow* win) {
+    return GetNotificationForGroup(win, kNotifDocErrors) != nullptr;
+}
+
 static bool OpensWithThumbnails(MainWindow* win, WindowTab* tab) {
     if (!gSettings->showThumbnailsIfNoToc || !tab || win->InPresentation()) {
         return false;
@@ -2375,9 +2380,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // Errors" to the context menu), surface it with a notification whose
     // "Errors" link opens the Show Errors dialog (matching the unsupported-
     // features notification: bottom-right, small margins, 16s timeout)
+    // ShowDocumentErrors = false keeps quiet; Show Errors is still in the menu (#6558)
     DisplayModel* dmErr = win->AsFixed();
     EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
-    if (engineErr && engineErr->HasErrors()) {
+    if (engineErr && engineErr->HasErrors() && gSettings->showDocumentErrors) {
         TempStr msg = fmt("[%s](CmdShowErrors) %s", Tr("Errors"), Tr("in document"));
         NotificationCreateArgs nargs;
         nargs.win = win;

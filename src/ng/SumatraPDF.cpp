@@ -1442,6 +1442,11 @@ static void ShowLoadWarning(MainWindow* win, WindowTab* tab, Kind groupId, Str m
 }
 
 // orig's LoadDocumentFinish: what the user should know about the document
+// the "Errors in document" notification is up (kNotifDocErrors is per file)
+bool IsDocErrorsNotifShown(MainWindow* win) {
+    return GetNotificationForGroup(win, kNotifDocErrors) != nullptr;
+}
+
 static void ShowLoadWarnings(MainWindow* win, WindowTab* tab) {
     if (!win->IsDocLoaded()) {
         return;
@@ -1458,7 +1463,8 @@ static void ShowLoadWarnings(MainWindow* win, WindowTab* tab) {
     // "Errors" link opens the Show Errors dialog
     DisplayModel* dmErr = win->AsFixed();
     EngineBase* engineErr = dmErr ? dmErr->GetEngine() : nullptr;
-    if (engineErr && engineErr->HasErrors()) {
+    // ShowDocumentErrors = false keeps quiet; Show Errors is still in the menu (#6558)
+    if (engineErr && engineErr->HasErrors() && gSettings->showDocumentErrors) {
         TempStr msg = fmt("[%s](CmdShowErrors) %s", Tr("Errors"), Tr("in document"));
         ShowLoadWarning(win, tab, kNotifDocErrors, msg, false);
     }

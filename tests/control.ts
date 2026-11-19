@@ -177,6 +177,8 @@ export enum ControlCommand {
   TestToggleCmd = 165,
   // page 1 pixels a Clone() of the current document renders differently
   TestCloneRender = 166,
+  // does the document have load errors, does the Errors notification show
+  TestDocErrors = 167,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -133,6 +133,7 @@ bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo);
 // implemented by each app
 void ShowPageInfoIfWanted(MainWindow* win);
 bool AppToggleCmdState(MainWindow* win, int cmdId, bool& on);
+bool IsDocErrorsNotifShown(MainWindow* win);
 void ToggleCursorPositionInDoc(MainWindow* win);
 
 extern Str gNextPrevDir;

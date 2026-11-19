@@ -45,6 +45,7 @@ ShowThumbnailsIfNoToc = false
 SidebarOnRight = false
 SidebarAutoHide = false
 ShowLinks = false
+ShowDocumentErrors = true
 HighlightFormFields = true
 ClickEdgeToTurnPage = false
 DisableLinks = false

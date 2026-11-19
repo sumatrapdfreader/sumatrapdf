@@ -1824,6 +1824,13 @@ const globalPrefs: Field[] = [
     .ver("3.7"),
   field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
+    "ShowDocumentErrors",
+    Bool,
+    true,
+    "if false, opening a document with errors doesn't show the Errors in document notification. " +
+      "Show Errors stays in the context menu",
+  ).ver("3.7"),
+  field(
     "HighlightFormFields",
     Bool,
     true,

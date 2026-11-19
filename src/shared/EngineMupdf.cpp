@@ -3702,8 +3702,10 @@ static void fz_print_cb(void* user, const char* msg) {
     // logged above, not shown as "Errors in document": epub 3.0 is rendered
     // fine, a missing system font falls back to a default (issue #6027),
     // Movie (etc.) appearance streams are a MuPDF limitation, not a PDF defect,
-    // and hyphen tables are compiled out (issue #6109)
+    // hyphen tables are compiled out (issue #6109), and iText's closepath
+    // with nothing to close draws nothing in any viewer (issue #6558)
     if (str::Contains(msgStr, StrL("unknown epub version")) ||
+        str::Contains(msgStr, StrL("closepath with no current point")) ||
         str::Contains(msgStr, StrL("couldn't find system font")) ||
         str::Contains(msgStr, StrL("cannot create appearance stream")) ||
         str::Contains(msgStr, StrL("no hyphenation table"))) {

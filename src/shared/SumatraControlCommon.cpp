@@ -681,6 +681,21 @@ TempStr CloneRenderDiffTemp(int* exitCodeOut) {
     return res;
 }
 
+// "OK errors=1 shown=0": whether the current document has load errors and
+// whether the "Errors in document" notification shows them
+TempStr DocErrorsResultTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    DisplayModel* dm = win && win->IsDocLoaded() ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return str::DupTemp(StrL("NOTREADY no-doc\n"));
+    }
+    *exitCodeOut = 0;
+    int errors = dm->GetEngine()->HasErrors() ? 1 : 0;
+    int shown = IsDocErrorsNotifShown(win) ? 1 : 0;
+    return fmt("OK errors=%d shown=%d\n", errors, shown);
+}
+
 TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](Str msg, int code) -> TempStr {

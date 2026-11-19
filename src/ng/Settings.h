@@ -914,6 +914,9 @@ struct Settings {
     // what the sidebar's bottom panel shows: favorites (the default),
     // bookmarks or thumbnails
     Str sidebarBottomView;
+    // if false, opening a document with errors doesn't show the Errors in
+    // document notification. Show Errors stays in the context menu
+    bool showDocumentErrors;
     // if true, a PDF without an outline gets a table of contents built
     // from numbered headings in its text (Generate Table Of Contents
     // command does it on demand)
