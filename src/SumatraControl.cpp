@@ -306,6 +306,16 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
         AppendHwndLayoutRect(out, win, panelNames[i], panels[i] ? panels[i]->hwnd : nullptr);
     }
     AppendHwndLayoutRect(out, win, StrL("aiChat"), win->hwndAiChatBox);
+    AppendHwndLayoutRect(out, win, StrL("captionOverlay"), win->hwndCaptionOverlay);
+    // an owned popup, not a child: report it in frame client coordinates
+    HWND sbV = win->overlayScrollV ? win->overlayScrollV->hwnd : nullptr;
+    Rect sbRc;
+    if (sbV) {
+        Rect wr = HwndWindowRect(sbV);
+        Point tl = HwndScreenToClient(win->hwndFrame, wr.TL());
+        sbRc = {tl.x, tl.y, wr.dx, wr.dy};
+    }
+    AppendLayoutRect(out, StrL("overlayScrollV"), sbV && HwndIsVisible(sbV), sbRc);
 
     AppendLayoutTree(out, StrL("chrome"), win->chromeLayout);
     AppendLayoutTree(out, StrL("frameLayout"), win->frameLayout);

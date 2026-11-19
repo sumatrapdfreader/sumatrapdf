@@ -533,7 +533,8 @@ static int OverlayToolbarBottomScrollbarOffset() {
 static int OverlayToolbarY(MainWindow* win) {
     Rect canvas = win->canvasRc;
     if (!ToolbarAtBottom()) {
-        return canvas.y;
+        // below a revealed hidden caption (#6537)
+        return std::max(canvas.y, AppShellRevealedCaptionDy(win));
     }
     return canvas.y + canvas.dy - Tb(win)->rowDy - OverlayToolbarBottomScrollbarOffset();
 }

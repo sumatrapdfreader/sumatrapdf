@@ -40,6 +40,8 @@ struct OverlayScrollbar {
     int nTrackPos = 0;
 
     int thinWidth = 0;
+    // owner pixels at the top covered by something else (a revealed caption)
+    int topInset = 0;
     int thickWidth = 0;
 
     // auto-hide timing (milliseconds)
@@ -70,6 +72,7 @@ void OverlayScrollbarSetInfo(OverlayScrollbar* sb, const SCROLLINFO* si, bool re
 void OverlayScrollbarGetInfo(OverlayScrollbar* sb, SCROLLINFO* si);
 
 void OverlayScrollbarUpdatePos(OverlayScrollbar* sb);
+void OverlayScrollbarSetTopInset(OverlayScrollbar* sb, int inset);
 
 void OverlayScrollbarShow(OverlayScrollbar* sb, bool show);
 void OverlayScrollbarHide(OverlayScrollbar* sb);

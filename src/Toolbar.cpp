@@ -525,6 +525,10 @@ static Rect OverlayToolbarRect(MainWindow* win) {
     int h = ToolbarHost(win)->ScreenRect().dy;
     int x = canvas.x + ((canvas.dx - natW) / 2);
     int y = canvas.y;
+    // below a revealed hidden caption (#6537)
+    if (win->captionOverlayShown) {
+        y = std::max(y, win->captionRect.y + win->captionRect.dy);
+    }
     if (ToolbarAtBottom()) {
         y = canvas.y + canvas.dy - h - OverlayToolbarBottomScrollbarOffset();
     }

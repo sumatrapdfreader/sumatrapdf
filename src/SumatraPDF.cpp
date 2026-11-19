@@ -13799,6 +13799,38 @@ static LRESULT CALLBACK CaptionOverlayProc(HWND hwnd, UINT msg, WPARAM wp, LPARA
     return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
+// Keep the revealed caption clear of what sits at the top of the frame: the
+// docked toolbar floats below it over the document (no resize), the overlay
+// toolbar is re-placed and the overlay scrollbar starts below it (#6537)
+static void PlaceChromeForCaption(MainWindow* win, bool shown) {
+    int capBottom = shown ? win->captionRect.y + win->captionRect.dy : 0;
+
+    HWND tb = win->hwndToolbar;
+    if (tb && !win->isToolbarOverlay) {
+        Rect r = ChildPosWithinParent(tb);
+        if (shown && HwndIsVisible(tb) && r.y < capBottom) {
+            if (win->toolbarYBeforeCaption < 0) {
+                win->toolbarYBeforeCaption = r.y;
+            }
+            SetWindowPos(tb, HWND_TOP, r.x, capBottom, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+        } else if (!shown && win->toolbarYBeforeCaption >= 0) {
+            SetWindowPos(tb, nullptr, r.x, win->toolbarYBeforeCaption, 0, 0,
+                         SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+    }
+    if (!shown) {
+        win->toolbarYBeforeCaption = -1;
+    }
+    PositionOverlayToolbar(win);
+
+    int inset = 0;
+    if (shown && win->hwndCanvas) {
+        int canvasY = HwndScreenToClient(win->hwndFrame, HwndWindowRect(win->hwndCanvas).TL()).y;
+        inset = std::max(0, capBottom - canvasY);
+    }
+    OverlayScrollbarSetTopInset(win->overlayScrollV, inset);
+}
+
 static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update) {
     constexpr int kCaptionRevealDy = 8;
     constexpr int kCaptionPollMs = 50;
@@ -13833,7 +13865,8 @@ static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update) {
     GUITHREADINFO gui{sizeof(gui)};
     GetGUIThreadInfo(GetCurrentThreadId(), &gui);
     bool menuUp = gui.hwndActive == win->hwndFrame && (gui.flags & GUI_INMENUMODE) != 0;
-    bool overFrame = GetAncestor(WindowFromPoint(cursor), GA_ROOT) == win->hwndFrame;
+    // GA_ROOTOWNER: owned popups over the frame (the overlay scrollbar) count
+    bool overFrame = GetAncestor(WindowFromPoint(cursor), GA_ROOTOWNER) == win->hwndFrame;
     bool shown = overlay && ((overFrame && pt.x >= 0 && pt.x < rc.dx && pt.y >= 0 && pt.y < hoverDy) || menuUp ||
                              GetCapture() == win->hwndFrame);
     if (update == CaptionUpdate::Mouse && shown == win->captionOverlayShown) {
@@ -13857,9 +13890,11 @@ static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update) {
                          SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
         HwndInvalidate(win->hwndCaptionOverlay);
+        PlaceChromeForCaption(win, true);
         return;
     }
     ShowWindow(win->hwndCaptionOverlay, SW_HIDE);
+    PlaceChromeForCaption(win, false);
     if (!gSettings->showCaption) {
         win->captionRect = {};
         if (win->tabsCtrl) {

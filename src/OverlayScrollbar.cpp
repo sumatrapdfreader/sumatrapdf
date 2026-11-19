@@ -814,10 +814,11 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
     }
 
     if (IsVert(sb)) {
+        int inset = std::clamp(sb->topInset, 0, ownerRc.dy / 2);
         x = ownerRc.x + ownerRc.dx - scrollW;
-        y = ownerRc.y;
+        y = ownerRc.y + inset;
         w = scrollW;
-        h = ownerRc.dy - siblingInset;
+        h = ownerRc.dy - siblingInset - inset;
     } else {
         x = ownerRc.x;
         y = ownerRc.y + ownerRc.dy - scrollW;
@@ -847,6 +848,15 @@ void OverlayScrollbarUpdatePos(OverlayScrollbar* sb) {
         swpFlags |= SWP_NOZORDER;
     }
     SetWindowPos(sb->hwnd, insertAfter, x, y, w, h, swpFlags);
+}
+
+// start a vertical bar below what covers the top of its owner
+void OverlayScrollbarSetTopInset(OverlayScrollbar* sb, int inset) {
+    if (!sb || sb->topInset == inset) {
+        return;
+    }
+    sb->topInset = inset;
+    OverlayScrollbarUpdatePos(sb);
 }
 
 // Hide the scrollbar window without stealing activation from other windows.

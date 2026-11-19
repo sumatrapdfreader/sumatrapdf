@@ -394,6 +394,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     Rect captionRect;
     HWND hwndCaptionOverlay = nullptr;
     bool captionOverlayShown = false;
+    // docked toolbar's y before the revealed caption pushed it down; -1 if not
+    int toolbarYBeforeCaption = -1;
     // SidebarAutoHide: the sidebar floats over the canvas in sidebarOverlayRc
     // (frame client coords), shown while the mouse or the focus is in it
     bool sidebarOverlayShown = false;

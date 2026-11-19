@@ -294,6 +294,15 @@ static int CaptionDy(MainWindow* win, bool twoRow, bool tabsVisible) {
     return dy;
 }
 
+// bottom of a revealed hidden caption in frame coordinates; 0 when there is none
+int AppShellRevealedCaptionDy(MainWindow* win) {
+    if (!ShowCaption(win) || gSettings->showCaption || !win->captionOverlayShown) {
+        return 0;
+    }
+    bool twoRow = win->isMenuBarVisible && !gp::AppHasMenuBar();
+    return AppShellFrameBorder(win) + CaptionDy(win, twoRow, TabsAreVisible(win));
+}
+
 bool AppShellCaptionRects(MainWindow* win, Rect* menuOut, Rect* tabsOut, int* dyOut) {
     if (!ShowCaption(win) || (!gSettings->showCaption && !win->captionOverlayShown)) {
         return false;
@@ -3558,8 +3567,22 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
         }
     }
     gp::El* toolbar = ToolbarBuild(win, cx);
+    gp::El* toolbarBelowCaption = nullptr;
     if (toolbar && !win->isToolbarOverlay && !tbAtBottom) {
-        root->Child(toolbar);
+        int captionDy = AppShellRevealedCaptionDy(win);
+        if (captionDy > 0) {
+            // the revealed caption covers the top: float the toolbar below it,
+            // over the document, and keep its row so the document stays (#6537)
+            root->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)ToolbarDy(win))->Shrink0());
+            toolbarBelowCaption = gp::Div(cx->a)
+                                      ->Absolute()
+                                      ->Top((float)captionDy)
+                                      ->Left((float)border)
+                                      ->W((float)(win->frameRc.dx - 2 * border))
+                                      ->Child(toolbar);
+        } else {
+            root->Child(toolbar);
+        }
     }
     // what sits over the canvas is built first: a browser-hosted document is a
     // native child window, so the canvas has to know it must step aside
@@ -3595,6 +3618,9 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     // floats over both
     if (toolbar && win->isToolbarOverlay) {
         root->Child(toolbar);
+    }
+    if (toolbarBelowCaption) {
+        root->Child(toolbarBelowCaption);
     }
     if (gp::El* strip = ToolbarOverlayBuild(win, cx)) {
         root->Child(strip);
