@@ -60,6 +60,15 @@ static int CalcDlgWidth(PlatformFont* font, Str path, int minW, int padding) {
 // process runs so the next one opens that wide, as Advanced Settings does
 static int gToolDlgLastClientDx = 0;
 
+// shows a tool's output in the file manager; a -for-testing run must not leave
+// file manager windows behind
+static void ShowToolOutput(Str path) {
+    if (gForTesting) {
+        return;
+    }
+    OpenPathInDefaultFileManager(path);
+}
+
 // the Sumatra app icon, shown in each tool dialog's title bar / taskbar
 static HICON GetAppIcon() {
     return LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
@@ -638,7 +647,7 @@ void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
         logf("PdfExtractTextDoIt: extracted successfully\n");
         TempStr path = str::DupTemp(destPath);
         Close();
-        OpenPathInDefaultFileManager(path);
+        ShowToolOutput(path);
     } else {
         logf("PdfExtractTextDoIt: failed to extract text, isPdf: %d\n", (int)isPdf);
         MessageBoxWarning(hwnd, StrL("Failed to extract text."), Tr("Extract Text"));
@@ -1687,7 +1696,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
     TempStr openPath = str::DupTemp(firstPath);
     str::Free(firstPath);
     Close();
-    OpenPathInDefaultFileManager(openPath);
+    ShowToolOutput(openPath);
 }
 
 bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
