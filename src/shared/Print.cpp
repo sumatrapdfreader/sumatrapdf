@@ -302,7 +302,6 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     // paper bins
     DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
     DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
-    ReportIf(bins != binNames);
     if (0 == bins) {
         out.Append(StrL("  no paper bins available\n"));
     } else if (bins == (DWORD)-1) {
@@ -310,8 +309,12 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     } else {
         WORD* binValues = AllocArrayTemp<WORD>((int)bins);
         DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues, nullptr);
-        WCHAR* binNameValues = AllocArrayTemp<WCHAR>(24 * (int)binNames);
-        DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues, nullptr);
+        // drivers can report a different number of names: missing ones stay empty
+        int nBinNames = (binNames == (DWORD)-1) ? 0 : (int)binNames;
+        WCHAR* binNameValues = AllocArrayTemp<WCHAR>(24 * std::max((int)bins, nBinNames));
+        if (nBinNames > 0) {
+            DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues, nullptr);
+        }
         for (DWORD j = 0; j < bins; j++) {
             TempStr s = ToUtf8Temp(WStr(binNameValues + (24 * (size_t)j)));
             out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues[j]));
@@ -325,8 +328,11 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         WORD* paperValues = AllocArrayTemp<WORD>((int)papers);
         DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues, nullptr);
         // paper names are 64 WCHARs each
-        WCHAR* paperNameValues = AllocArrayTemp<WCHAR>(64 * (int)paperNames);
-        DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues, nullptr);
+        int nPaperNames = (paperNames == (DWORD)-1) ? 0 : (int)paperNames;
+        WCHAR* paperNameValues = AllocArrayTemp<WCHAR>(64 * std::max((int)papers, nPaperNames));
+        if (nPaperNames > 0) {
+            DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues, nullptr);
+        }
         // paper sizes in tenths of a millimeter
         POINT* paperSizes = AllocArrayTemp<POINT>((int)papers);
         DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes, nullptr);
