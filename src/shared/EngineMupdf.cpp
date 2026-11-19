@@ -4047,6 +4047,47 @@ class PasswordCloner : public PasswordUI {
     }
 };
 
+// A copy of a PDF with unsaved changes (filled in form fields, annotations),
+// loaded from the document as it is in memory: the file doesn't have them
+// (#6556). Unencrypted, since the copy never leaves this process. nullptr if
+// nothing is unsaved.
+static EngineMupdf* CloneUnsavedPdf(EngineMupdf* e) {
+    fz_context* ctx = e->Ctx();
+    fz_buffer* buf = nullptr;
+    fz_output* out = nullptr;
+    fz_var(buf);
+    fz_var(out);
+    {
+        ScopedRecursiveMutex scope(&e->docLock);
+        if (!e->pdfdoc || !pdf_has_unsaved_changes(ctx, e->pdfdoc)) {
+            return nullptr;
+        }
+        fz_try(ctx) {
+            pdf_write_options opts{};
+            opts.permissions = ~0;
+            opts.do_encrypt = PDF_ENCRYPT_NONE;
+            buf = fz_new_buffer(ctx, 1024 * 1024);
+            out = fz_new_output_with_buffer(ctx, buf);
+            pdf_write_document(ctx, e->pdfdoc, out, &opts);
+            fz_close_output(ctx, out);
+        }
+        fz_always(ctx) {
+            fz_drop_output(ctx, out);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("CloneUnsavedPdf: writing '%s' to memory failed\n", e->FilePath());
+            fz_drop_buffer(ctx, buf);
+            return nullptr;
+        }
+    }
+    u8* data = nullptr;
+    size_t n = fz_buffer_storage(ctx, buf, &data);
+    auto* clone = (EngineMupdf*)CreateEngineMupdfFromData(Str((char*)data, (int)n), e->FilePath(), nullptr);
+    fz_drop_buffer(ctx, buf);
+    return clone;
+}
+
 EngineBase* EngineMupdf::Clone() {
     // use this document's encryption key (if any) to load the clone
     u8 cryptKey[32]{};
@@ -4069,8 +4110,8 @@ EngineBase* EngineMupdf::Clone() {
 
     // prefer re-loading from the file: it streams large documents on demand
     // rather than copying them, and is the cheapest path when the file is present.
-    EngineMupdf* clone = nullptr;
-    if (FilePath()) {
+    EngineMupdf* clone = CloneUnsavedPdf(this);
+    if (!clone && FilePath()) {
         clone = new EngineMupdf();
         if (!clone->Load(FilePath(), pwdUI, GuessFileTypeFromName(defaultExt, true))) {
             delete clone;

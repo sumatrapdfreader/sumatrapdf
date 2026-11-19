@@ -175,6 +175,8 @@ export enum ControlCommand {
   TestSelectTab = 164,
   // [definition]: does "CmdToggleX on" parse, and the command's on/off state
   TestToggleCmd = 165,
+  // page 1 pixels a Clone() of the current document renders differently
+  TestCloneRender = 166,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

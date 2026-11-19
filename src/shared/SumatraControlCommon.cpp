@@ -635,6 +635,52 @@ TempStr ToggleCmdResultTemp(Str definition, int* exitCodeOut) {
     return fmt("OK hasState=%d known=%d on=%d\n", (int)hasState, (int)known, (int)on);
 }
 
+// "OK differ=N": pixels of page 1 that a Clone() of the current document
+// renders differently from the document itself. Printing renders from a clone.
+TempStr CloneRenderDiffTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    if (!engine) {
+        return fmt("NOTREADY no-doc\n");
+    }
+    EngineBase* clone = engine->Clone();
+    if (!clone) {
+        return fmt("ERROR clone failed\n");
+    }
+    RenderPageArgs args(1, 1.f, 0, nullptr, RenderTarget::Export);
+    Pixmap* a = engine->RenderPage(args);
+    Pixmap* b = clone->RenderPage(args);
+    Pixmap* ra = EnsureReadablePixmap(a);
+    Pixmap* rb = EnsureReadablePixmap(b);
+    TempStr res;
+    if (!ra || !rb || ra->width != rb->width || ra->height != rb->height) {
+        res = fmt("ERROR render failed\n");
+    } else {
+        int differ = 0;
+        for (int y = 0; y < ra->height; y++) {
+            const u8* pa = ra->data + ((size_t)y * (size_t)ra->stride);
+            const u8* pb = rb->data + ((size_t)y * (size_t)rb->stride);
+            for (int x = 0; x < ra->width * 4; x += 4) {
+                differ += (pa[x] != pb[x] || pa[x + 1] != pb[x + 1] || pa[x + 2] != pb[x + 2]) ? 1 : 0;
+            }
+        }
+        *exitCodeOut = 0;
+        res = fmt("OK differ=%d\n", differ);
+    }
+    if (ra != a) {
+        FreePixmap(ra);
+    }
+    if (rb != b) {
+        FreePixmap(rb);
+    }
+    FreePixmap(a);
+    FreePixmap(b);
+    SafeEngineRelease(&clone);
+    return res;
+}
+
 TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](Str msg, int code) -> TempStr {

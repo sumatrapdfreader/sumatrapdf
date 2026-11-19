@@ -711,6 +711,8 @@ enum class ControlCmd : u16 {
     TestSelectTab = 164,
     // [definition]: does "CmdToggleX on" parse, and the command's on/off state
     TestToggleCmd = 165,
+    // page 1 pixels a Clone() of the current document renders differently
+    TestCloneRender = 166,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1412,6 +1414,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSelectedText: {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestCloneRender: {
+            int exitCode = 0;
+            Str res = CloneRenderDiffTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
