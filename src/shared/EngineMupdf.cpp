@@ -8921,6 +8921,18 @@ static void AppendSigValidation(str::Builder& out, pdf_signature_error certErr, 
 }
 #endif
 
+static const char* SigSubFilter(fz_context* ctx, pdf_obj* vDict) {
+    pdf_obj* sf = pdf_dict_get(ctx, vDict, PDF_NAME(SubFilter));
+    if (!sf) {
+        return nullptr;
+    }
+    return pdf_to_name(ctx, sf);
+}
+
+static bool SubFilterIsDocTimeStamp(const char* sf) {
+    return sf && str::Eq(Str(sf), StrL("ETSI.RFC3161"));
+}
+
 #if OS_WIN
 static const EutlLookup* gEutlLookup = nullptr;
 
@@ -8997,18 +9009,6 @@ static bool PdfHasDssRevocation(fz_context* ctx, pdf_document* pdfdoc) {
     int nCrl = crls ? pdf_array_len(ctx, crls) : 0;
     int nOcsp = ocsps ? pdf_array_len(ctx, ocsps) : 0;
     return nCrl > 0 || nOcsp > 0;
-}
-
-static const char* SigSubFilter(fz_context* ctx, pdf_obj* vDict) {
-    pdf_obj* sf = pdf_dict_get(ctx, vDict, PDF_NAME(SubFilter));
-    if (!sf) {
-        return nullptr;
-    }
-    return pdf_to_name(ctx, sf);
-}
-
-static bool SubFilterIsDocTimeStamp(const char* sf) {
-    return sf && str::Eq(Str(sf), StrL("ETSI.RFC3161"));
 }
 
 static bool SubFilterIsCades(const char* sf) {
@@ -9441,8 +9441,14 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         s.Append(StrL("  Signed by: (unknown)\n"));
     }
 
-    pdf_obj* mObj = pdf_dict_get(ctx, vDict, PDF_NAME(M));
-    TempStr signedAt = FormatPdfDateRawTemp(ctx, mObj);
+    // a document timestamp's /M isn't proof of anything: ETSI EN 319 142-1 5.4.3
+    // says to ignore it and use the token's time
+    TempStr signedAt;
+    if (isDocTs && provenTime > 0) {
+        signedAt = FormatUnixTimeTemp(provenTime);
+    } else if (!isDocTs) {
+        signedAt = FormatPdfDateRawTemp(ctx, pdf_dict_get(ctx, vDict, PDF_NAME(M)));
+    }
     if (len(signedAt) == 0 && info.gen_time_unix > 0) {
         signedAt = FormatUnixTimeTemp(info.gen_time_unix);
     }
@@ -9506,9 +9512,12 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     bool isCades = SubFilterIsCades(subFilter) || info.has_cades_attr;
     AppendPadesLevel(s, isCades, info.has_timestamp, ltv, docHasDocTs, isDocTs, info.has_sig_policy_attr);
 
-    AppendSigDictText(ctx, s, vDict, StrL("reason"), PDF_NAME(Reason));
-    AppendSigDictText(ctx, s, vDict, StrL("location"), PDF_NAME(Location));
-    AppendSigDictText(ctx, s, vDict, StrL("contact"), PDF_NAME(ContactInfo));
+    // ignored for document timestamps (ETSI EN 319 142-1 5.4.3)
+    if (!isDocTs) {
+        AppendSigDictText(ctx, s, vDict, StrL("reason"), PDF_NAME(Reason));
+        AppendSigDictText(ctx, s, vDict, StrL("location"), PDF_NAME(Location));
+        AppendSigDictText(ctx, s, vDict, StrL("contact"), PDF_NAME(ContactInfo));
+    }
     AppendSigCertification(ctx, s, vDict);
 
     for (int ti = 0; ti < info.n_ts; ti++) {
@@ -9952,9 +9961,12 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
     if (!value) {
         value = field;
     }
-    AppendSigDictText(ctx, out, value, StrL("reason"), PDF_NAME(Reason));
-    AppendSigDictText(ctx, out, value, StrL("location"), PDF_NAME(Location));
-    AppendSigDictText(ctx, out, value, StrL("contact"), PDF_NAME(ContactInfo));
+    // ignored for document timestamps (ETSI EN 319 142-1 5.4.3)
+    if (!SubFilterIsDocTimeStamp(SigSubFilter(ctx, value))) {
+        AppendSigDictText(ctx, out, value, StrL("reason"), PDF_NAME(Reason));
+        AppendSigDictText(ctx, out, value, StrL("location"), PDF_NAME(Location));
+        AppendSigDictText(ctx, out, value, StrL("contact"), PDF_NAME(ContactInfo));
+    }
     AppendSigCertification(ctx, out, value);
 }
 #endif
