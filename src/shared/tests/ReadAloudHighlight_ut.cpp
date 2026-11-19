@@ -9,6 +9,45 @@
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
 
+// glyphs n, each dx by dy, stepping by (stepX, stepY) from (x, y)
+static void AddGlyphs(ReadAloudByteLoc* locs, int& n, int count, int x, int y, int stepX, int stepY) {
+    constexpr int kGlyphDx = 10;
+    constexpr int kGlyphDy = 10;
+    for (int i = 0; i < count; i++) {
+        locs[n++] = ReadAloudByteLoc{LocFromPageNo(1), x + (i * stepX), y + (i * stepY), kGlyphDx, kGlyphDy};
+    }
+}
+
+// A line of horizontal text is one run; a column of vertical text (issue #6530)
+// is one vertical run, and the next column starts another.
+static void ReadAloudRunsTests() {
+    ReadAloudByteLoc locs[32];
+    ReadAloudHighlightMap map;
+    map.locs = locs;
+
+    int n = 0;
+    AddGlyphs(locs, n, 6, 100, 100, 11, 0);
+    map.len = n;
+    Vec<ReadAloudRun> runs;
+    ReadAloudCollectRuns(&map, 0, n, runs);
+    utassert(len(runs) == 1);
+    utassert(!runs[0].vertical);
+
+    // two columns, read top to bottom, right column first
+    n = 0;
+    AddGlyphs(locs, n, 5, 200, 100, 0, 12);
+    AddGlyphs(locs, n, 4, 180, 100, 0, 12);
+    map.len = n;
+    VecReset(runs);
+    ReadAloudCollectRuns(&map, 0, n, runs);
+    utassert(len(runs) == 2);
+    utassert(runs[0].vertical && runs[1].vertical);
+    utassert(runs[0].bbox.x == 200.f && runs[0].bbox.dy == 58.f);
+    utassert(runs[1].bbox.x == 180.f && runs[1].bbox.dy == 46.f);
+
+    map.locs = nullptr;
+}
+
 void ReadAloudHighlight_UnitTests() {
     int s = 0;
     int e = 0;
@@ -75,4 +114,6 @@ void ReadAloudHighlight_UnitTests() {
     utassert(e < cjk.len);
     utassert(ReadAloudSentenceRange(cjk, e, &s, &e));
     utassert(e == cjk.len);
+
+    ReadAloudRunsTests();
 }

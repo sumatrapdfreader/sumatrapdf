@@ -574,12 +574,7 @@ bool ReadAloudSentenceRange(Str text, int pos, int* startOut, int* endOut) {
     return true;
 }
 
-struct ReadAloudLineRun {
-    Location pageLoc;
-    RectF bbox;
-};
-
-static bool ReadAloudLineContinues(const ReadAloudLineRun& run, Location pageLoc, const RectF& g) {
+static bool ReadAloudLineContinues(const ReadAloudRun& run, Location pageLoc, const RectF& g) {
     if (run.pageLoc != pageLoc) {
         return false;
     }
@@ -598,9 +593,45 @@ static bool ReadAloudLineContinues(const ReadAloudLineRun& run, Location pageLoc
     return gap <= maxGap;
 }
 
-static void ReadAloudFlushLine(DisplayModel* dm, Rect canvasRc, const ReadAloudLineRun& run, int minThick, int thickDiv,
+// g is the next glyph down the same column of vertical text (e.g. Japanese)
+static bool ReadAloudColumnContinues(const ReadAloudRun& run, Location pageLoc, const RectF& g) {
+    if (run.pageLoc != pageLoc) {
+        return false;
+    }
+    bool overlapsX = g.x < run.bbox.x + run.bbox.dx && g.x + g.dx > run.bbox.x;
+    if (!overlapsX) {
+        return false;
+    }
+    float w = std::max(run.bbox.dx, g.dx);
+    float gap = g.y - (run.bbox.y + run.bbox.dy);
+    return gap >= -w * 0.5f && gap <= std::max(w * 2.5f, 8.0f);
+}
+
+static void ReadAloudFlushColumn(DisplayModel* dm, Rect canvasRc, const ReadAloudRun& run, int minThick, int thickDiv,
+                                 Vec<Rect>& out) {
+    int pageNo = dm->FindPageNoByLoc(run.pageLoc);
+    PageInfo* pi = dm->GetPageInfo(pageNo);
+    if (!pi || pi->visibleRatio <= 0.0) {
+        return;
+    }
+    Rect sr = dm->CvtToScreen(pageNo, run.bbox);
+    int thick = thickDiv > 0 ? sr.dx / thickDiv : minThick;
+    thick = std::max(ClampI(thick, minThick, std::max(sr.dx, minThick)), 1);
+    // a bar just left of the column: furigana sits on its right, and the bar
+    // must not cover the characters
+    Rect u = Rect{sr.x - thick, sr.y, thick, sr.dy}.Intersect(canvasRc);
+    if (!u.IsEmpty()) {
+        VecAppend(out, u);
+    }
+}
+
+static void ReadAloudFlushLine(DisplayModel* dm, Rect canvasRc, const ReadAloudRun& run, int minThick, int thickDiv,
                                Vec<Rect>& out) {
     if (!run.pageLoc.IsValid() || run.bbox.IsEmpty()) {
+        return;
+    }
+    if (run.vertical) {
+        ReadAloudFlushColumn(dm, canvasRc, run, minThick, thickDiv, out);
         return;
     }
     int pageNo = dm->FindPageNoByLoc(run.pageLoc);
@@ -622,12 +653,14 @@ static void ReadAloudFlushLine(DisplayModel* dm, Rect canvasRc, const ReadAloudL
     }
 }
 
-void ReadAloudAppendUnderlines(DisplayModel* dm, Rect canvasRc, ReadAloudHighlightMap* map, int startAbs, int endAbs,
-                               int minThick, int thickDiv, Vec<Rect>& out) {
-    if (!dm || !map || !map->locs || startAbs < 0 || endAbs > map->len || endAbs <= startAbs) {
+// Group the glyphs of [startAbs, endAbs) into runs to underline with one stroke each.
+void ReadAloudCollectRuns(ReadAloudHighlightMap* map, int startAbs, int endAbs, Vec<ReadAloudRun>& out) {
+    if (!map || !map->locs || startAbs < 0 || endAbs > map->len || endAbs <= startAbs) {
         return;
     }
-    ReadAloudLineRun run;
+    ReadAloudRun run;
+    // the second glyph of a run decides whether it's a line or a column
+    int nInRun = 0;
     for (int i = startAbs; i < endAbs; i++) {
         ReadAloudByteLoc& loc = map->locs[i];
         if (!ReadAloudByteLocHasRect(loc)) {
@@ -638,19 +671,42 @@ void ReadAloudAppendUnderlines(DisplayModel* dm, Rect canvasRc, ReadAloudHighlig
             continue;
         }
         if (!run.pageLoc.IsValid()) {
-            run.pageLoc = loc.pageLoc;
-            run.bbox = g;
+            run = ReadAloudRun{loc.pageLoc, g};
+            nInRun = 1;
             continue;
         }
-        if (ReadAloudLineContinues(run, loc.pageLoc, g)) {
+        bool canBeLine = nInRun == 1 || !run.vertical;
+        bool canBeColumn = nInRun == 1 || run.vertical;
+        if (canBeLine && ReadAloudLineContinues(run, loc.pageLoc, g)) {
             run.bbox = run.bbox.Union(g);
+            nInRun++;
             continue;
         }
-        ReadAloudFlushLine(dm, canvasRc, run, minThick, thickDiv, out);
-        run.pageLoc = loc.pageLoc;
-        run.bbox = g;
+        if (canBeColumn && ReadAloudColumnContinues(run, loc.pageLoc, g)) {
+            run.bbox = run.bbox.Union(g);
+            run.vertical = true;
+            nInRun++;
+            continue;
+        }
+        VecAppend(out, run);
+        run = ReadAloudRun{loc.pageLoc, g};
+        nInRun = 1;
     }
-    ReadAloudFlushLine(dm, canvasRc, run, minThick, thickDiv, out);
+    if (run.pageLoc.IsValid()) {
+        VecAppend(out, run);
+    }
+}
+
+void ReadAloudAppendUnderlines(DisplayModel* dm, Rect canvasRc, ReadAloudHighlightMap* map, int startAbs, int endAbs,
+                               int minThick, int thickDiv, Vec<Rect>& out) {
+    if (!dm) {
+        return;
+    }
+    Vec<ReadAloudRun> runs;
+    ReadAloudCollectRuns(map, startAbs, endAbs, runs);
+    for (const ReadAloudRun& run : runs) {
+        ReadAloudFlushLine(dm, canvasRc, run, minThick, thickDiv, out);
+    }
 }
 
 static int ReadAloudGlyphDy(ReadAloudHighlightMap* map, int startAbs, int endAbs) {

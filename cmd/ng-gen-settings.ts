@@ -1982,6 +1982,18 @@ const globalPrefs: Field[] = [
     "playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed from the Read Aloud playback bar",
   ).ver("3.7"),
   field(
+    "ReadAloudSentenceColor",
+    Color,
+    "#3b82f6",
+    "color of the line Read Aloud draws under the sentence being read (beside it in vertical text)",
+  ).ver("3.7"),
+  field(
+    "ReadAloudWordColor",
+    Color,
+    "#f59e0b",
+    "color of the line Read Aloud draws under the word being read (beside it in vertical text)",
+  ).ver("3.7"),
+  field(
     "ReadingAutoScrollSpeed",
     Float,
     40,
@@ -2476,6 +2488,8 @@ const globalPrefsLayout = [
   "SaveMemory",
   "CitationHoverDelay",
   "ReadAloudSpeed",
+  "ReadAloudSentenceColor",
+  "ReadAloudWordColor",
   "ReadingAutoScrollSpeed",
   "ReadingAutoScrollMinutes",
   "ReadingBar",

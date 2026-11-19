@@ -105,8 +105,8 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
         return;
     }
 
-    constexpr Color kSentenceCol = MkRgb(0x3b, 0x82, 0xf6);
-    constexpr Color kWordCol = MkRgb(0xf5, 0x9e, 0x0b);
+    Color sentenceCol = GetPrefsColor(gSettings->readAloudSentenceColor)->col;
+    Color wordCol = GetPrefsColor(gSettings->readAloudWordColor)->col;
     int minThick = DpiScale(2);
 
     Vec<Rect> sentenceRects;
@@ -116,7 +116,7 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
         ReadAloudAppendUnderlines(dm, win->canvasRc, map, sentStartAbs, sentEndAbs, minThick, 10, sentenceRects);
     }
     if (len(sentenceRects) > 0) {
-        gfx->FillRects(sentenceRects.els, len(sentenceRects), kSentenceCol);
+        gfx->FillRects(sentenceRects.els, len(sentenceRects), sentenceCol);
     }
 
     Vec<Rect> wordRects;
@@ -125,7 +125,7 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx) {
         ReadAloudPaintLogOnce(7, StrL("PaintHighlight: no screen rects for current word"));
         return;
     }
-    gfx->FillRects(wordRects.els, len(wordRects), kWordCol);
+    gfx->FillRects(wordRects.els, len(wordRects), wordCol);
 }
 
 // ---------------- 3. playback bar ----------------

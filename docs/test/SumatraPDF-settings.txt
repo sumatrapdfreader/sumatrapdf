@@ -74,6 +74,8 @@ IgnoreDestinationZoom = false
 HighlightLinkDestination = false
 CitationHoverDelay = -1
 ReadAloudSpeed = 1
+ReadAloudSentenceColor = #3b82f6
+ReadAloudWordColor = #f59e0b
 ReadingAutoScrollSpeed = 40
 ReadingAutoScrollMinutes = 0
 ReadingBar [

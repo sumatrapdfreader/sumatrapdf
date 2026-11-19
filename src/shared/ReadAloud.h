@@ -133,6 +133,16 @@ int ReadAloudWordEndUtf8(Str text, int pos);
 bool ReadAloudByteLocHasRect(const ReadAloudByteLoc& loc);
 Rect ReadAloudByteLocToRect(const ReadAloudByteLoc& loc);
 void ReadAloudClampVisual(ReadAloudHighlightMap* map, int wordStartAbs, int wordEndAbs, int* startAbs, int* endAbs);
+
+// glyphs underlined as one stroke: a line of horizontal text or a column of
+// vertical text, in page coordinates
+struct ReadAloudRun {
+    Location pageLoc;
+    RectF bbox;
+    bool vertical = false;
+};
+
+void ReadAloudCollectRuns(ReadAloudHighlightMap* map, int startAbs, int endAbs, Vec<ReadAloudRun>& out);
 void ReadAloudAppendUnderlines(DisplayModel* dm, Rect canvasRc, ReadAloudHighlightMap* map, int startAbs, int endAbs,
                                int minThick, int thickDiv, Vec<Rect>& out);
 

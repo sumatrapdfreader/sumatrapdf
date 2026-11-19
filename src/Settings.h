@@ -1123,6 +1123,12 @@ struct Settings {
     // 3.0), 1 is normal speed; can also be changed from the Read Aloud
     // playback bar
     float readAloudSpeed;
+    // color of the line Read Aloud draws under the sentence being read
+    // (beside it in vertical text)
+    ParsedColor readAloudSentenceColor;
+    // color of the line Read Aloud draws under the word being read (beside
+    // it in vertical text)
+    ParsedColor readAloudWordColor;
     // pixels per second for Automatically Scroll (View menu /
     // Ctrl+Shift+H). 1 to 320; also changed from the auto-scroll bar and
     // the arrow keys while scrolling
