@@ -346,16 +346,16 @@ Go to a page and select the search term, but only if it's found on that page
 [GotoPageWord("<pdffile>",<page>,"<search-term>")]
 */
 
-// An empty window is only a good reuse target when focusing it won't switch
-// virtual desktops, the very thing #5630 avoids for the main window. Under
-// OpenOnOtherDesktop = move, an empty window elsewhere is pulled here instead.
+// An empty window is only a good reuse target when it is on the current virtual
+// desktop: a new-window request exists to avoid a desktop switch (#5630), in every
+// OpenOnOtherDesktop mode. Under move, an empty window elsewhere is pulled here.
 static MainWindow* FindEmptyWinToReuse() {
     MainWindow* elsewhere = nullptr;
     for (auto& w : gWindows) {
         if (w->HasDocsLoaded()) {
             continue;
         }
-        if (CanFocusWithoutDesktopSwitch(w->hwndFrame)) {
+        if (IsOnCurrentDesktop(w->hwndFrame)) {
             return w;
         }
         elsewhere = w;
@@ -364,6 +364,28 @@ static MainWindow* FindEmptyWinToReuse() {
         return elsewhere;
     }
     return nullptr;
+}
+
+// Window to load a new document into: the last active one, unless focusing it
+// would switch desktops; then another window here, the last active one pulled
+// here (move), or a new window (copy).
+static MainWindow* FindWinToLoadInto() {
+    MainWindow* last = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+    if (!last && len(gWindows) > 0) {
+        last = gWindows[0];
+    }
+    if (!last || CanFocusWithoutDesktopSwitch(last->hwndFrame)) {
+        return last;
+    }
+    for (auto& w : gWindows) {
+        if (CanFocusWithoutDesktopSwitch(w->hwndFrame)) {
+            return w;
+        }
+    }
+    if (BringToCurrentDesktop(last->hwndFrame)) {
+        return last;
+    }
+    return CreateAndShowMainWindow(nullptr);
 }
 
 /*
@@ -693,19 +715,14 @@ static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
             delete d;
             return;
         }
-        win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
-        if (!win && len(gWindows) > 0) {
-            win = gWindows[0];
-        }
+        win = FindWinToLoadInto();
     }
     LoadArgs args(d->path, win);
     args.activateExisting = d->newWindow == 0;
     // Match the legacy DDE Open(..., setFocus=1) behavior used by
     // shell/reuseInstance launches: opening into an existing instance should
-    // bring that window to the foreground. Not across virtual desktops: that
-    // would switch the user away from the desktop they opened the file on;
-    // under OpenOnOtherDesktop = move the host window is pulled here first.
-    if (win && (CanFocusWithoutDesktopSwitch(win->hwndFrame) || BringToCurrentDesktop(win->hwndFrame))) {
+    // bring that window to the foreground.
+    if (win) {
         win->Focus();
     }
     StartLoadDocument(&args);

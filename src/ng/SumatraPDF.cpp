@@ -860,6 +860,63 @@ MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) 
     return tab->win;
 }
 
+// ng: MainWindow wrappers of the OpenOnOtherDesktop helpers; virtual desktops
+// are Windows-only, elsewhere every window counts as on the current desktop
+bool IsWinOnCurrentDesktop(MainWindow* win) {
+#if OS_WIN
+    return IsOnCurrentDesktop(MainWindowHwnd(win));
+#else
+    (void)win;
+    return true;
+#endif
+}
+
+bool CanFocusWinHere(MainWindow* win) {
+#if OS_WIN
+    return CanFocusWithoutDesktopSwitch(MainWindowHwnd(win));
+#else
+    (void)win;
+    return true;
+#endif
+}
+
+bool BringWinHere(MainWindow* win) {
+#if OS_WIN
+    return BringToCurrentDesktop(MainWindowHwnd(win));
+#else
+    (void)win;
+    return false;
+#endif
+}
+
+// The window showing file that we can bring to the front without switching the
+// user's virtual desktop, selecting its tab. Picks the same window as
+// FindMainWindowByFile() whenever that one is on the current desktop; only when
+// it isn't do we look for another window here that also shows the file, and
+// under OpenOnOtherDesktop = move we pull the found window onto this desktop.
+MainWindow* FindMainWindowToActivate(Str file, MainWindow* limitWin) {
+    MainWindow* win = FindMainWindowByFile(file, false, limitWin);
+    if (win && !CanFocusWinHere(win)) {
+        MainWindow* here = nullptr;
+        for (int i = 0; !limitWin && i < len(gWindows); i++) {
+            MainWindow* w = gWindows[i];
+            if (FindTabByFilePath(file, w) && CanFocusWinHere(w)) {
+                here = w;
+                break;
+            }
+        }
+        if (here) {
+            win = here;
+        } else if (!BringWinHere(win)) {
+            win = nullptr;
+        }
+    }
+    if (win) {
+        SelectTabInWindow(FindTabByFilePath(file, win));
+    }
+    return win;
+}
+
 // --- thumbnails (orig's, from SumatraPDF.cpp) --------------------------------
 
 // ng: a thumbnail never asks for a password

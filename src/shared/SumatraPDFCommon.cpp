@@ -2295,13 +2295,8 @@ OtherDesktopOpen GetOtherDesktopOpen() {
     return OtherDesktopOpen::Switch;
 }
 
-// Focusing a window on another virtual desktop makes Windows switch the user
-// to that desktop, so a window there is not a usable activation target (#5630).
-// OpenOnOtherDesktop = switch opts back in to switching.
-bool CanFocusWithoutDesktopSwitch(HWND hwnd) {
-    if (GetOtherDesktopOpen() == OtherDesktopOpen::Switch) {
-        return true;
-    }
+// True if hwnd is on the current virtual desktop, regardless of OpenOnOtherDesktop.
+bool IsOnCurrentDesktop(HWND hwnd) {
     ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
     bool res = IsWindowOnCurrentDesktop(vdm, hwnd);
     if (vdm) {
@@ -2310,16 +2305,38 @@ bool CanFocusWithoutDesktopSwitch(HWND hwnd) {
     return res;
 }
 
-// The desktop the user is looking at. The shell's registry value is primary;
-// the foreground window's desktop is the fallback (the value can be missing
-// until the user first switches desktops).
-static bool GetCurrentDesktopId(ISumatraVirtualDesktopManager* vdm, GUID* out) {
-    DWORD cb = sizeof(GUID);
-    LSTATUS res =
-        RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VirtualDesktops",
-                     L"CurrentVirtualDesktop", RRF_RT_REG_BINARY, nullptr, out, &cb);
-    if (res == ERROR_SUCCESS && cb == sizeof(GUID) && !IsEqualGUID(*out, GUID{})) {
+// Focusing a window on another virtual desktop makes Windows switch the user
+// to that desktop, so a window there is not a usable activation target (#5630).
+// OpenOnOtherDesktop = switch opts back in to switching.
+bool CanFocusWithoutDesktopSwitch(HWND hwnd) {
+    if (GetOtherDesktopOpen() == OtherDesktopOpen::Switch) {
         return true;
+    }
+    return IsOnCurrentDesktop(hwnd);
+}
+
+static bool ReadDesktopIdFromReg(const WCHAR* key, GUID* out) {
+    DWORD cb = sizeof(GUID);
+    LSTATUS res = RegGetValueW(HKEY_CURRENT_USER, key, L"CurrentVirtualDesktop", RRF_RT_REG_BINARY, nullptr, out, &cb);
+    return res == ERROR_SUCCESS && cb == sizeof(GUID) && !IsEqualGUID(*out, GUID{});
+}
+
+// The desktop the user is looking at, from the shell's registry value: Windows 11
+// keeps it under VirtualDesktops, Windows 10 under SessionInfo\<session>. The
+// foreground window's desktop is the fallback (the value can be missing until
+// the user first switches desktops).
+static bool GetCurrentDesktopId(ISumatraVirtualDesktopManager* vdm, GUID* out) {
+    if (ReadDesktopIdFromReg(L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VirtualDesktops", out)) {
+        return true;
+    }
+    DWORD sessionId = 0;
+    if (ProcessIdToSessionId(GetCurrentProcessId(), &sessionId)) {
+        TempWStr key =
+            ToWStrTemp(fmt("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\SessionInfo\\%d\\VirtualDesktops",
+                           (int)sessionId));
+        if (ReadDesktopIdFromReg(key.s, out)) {
+            return true;
+        }
     }
     HWND fg = GetForegroundWindow();
     if (fg && SUCCEEDED(vdm->GetWindowDesktopId(fg, out)) && !IsEqualGUID(*out, GUID{})) {

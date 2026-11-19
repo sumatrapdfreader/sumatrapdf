@@ -1663,9 +1663,10 @@ const globalPrefs: Field[] = [
     "OpenOnOtherDesktop",
     Str,
     "switch",
-    "what happens when a document is opened whose window is on another virtual desktop: " +
-      "switch makes Windows switch to that desktop, move pulls the window onto the current " +
-      "desktop, copy opens the document again on the current desktop (Windows 10+)",
+    "what happens when opening a document already open, or reusing a window, on another virtual " +
+      "desktop: switch switches to that desktop, move pulls the window onto the current desktop, " +
+      "copy opens the document again on the current desktop. a new window always opens on the " +
+      "current desktop (Windows 10+)",
   )
     .enum(["switch", "move", "copy"])
     .ver("3.7"),
