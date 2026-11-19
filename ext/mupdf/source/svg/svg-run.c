@@ -246,8 +246,51 @@ static void svg_stroke(fz_context *ctx, fz_device *dev, svg_document *doc, fz_pa
 		fz_stroke_path(ctx, dev, path, state->stroke, state->transform, fz_device_rgb(ctx), state->stroke_color, opacity, fz_default_color_params);
 }
 
+/* SumatraPDF: append a shape's path, in device space, to the clip-path being collected */
+static void svg_clip_moveto(fz_context *ctx, void *arg, float x, float y)
+{
+	fz_path *dst = ((svg_document *)arg)->clip_collect;
+	fz_moveto(ctx, dst, x, y);
+}
+
+static void svg_clip_lineto(fz_context *ctx, void *arg, float x, float y)
+{
+	fz_path *dst = ((svg_document *)arg)->clip_collect;
+	fz_lineto(ctx, dst, x, y);
+}
+
+static void svg_clip_curveto(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	fz_path *dst = ((svg_document *)arg)->clip_collect;
+	fz_curveto(ctx, dst, x1, y1, x2, y2, x3, y3);
+}
+
+static void svg_clip_closepath(fz_context *ctx, void *arg)
+{
+	fz_closepath(ctx, ((svg_document *)arg)->clip_collect);
+}
+
+static const fz_path_walker svg_clip_walker = { svg_clip_moveto, svg_clip_lineto, svg_clip_curveto, svg_clip_closepath };
+
 static void svg_draw_path(fz_context *ctx, fz_device *dev, svg_document *doc, fz_path *path, svg_state *state)
 {
+	if (doc->clip_collect)
+	{
+		if (path)
+		{
+			fz_path *t = fz_clone_path(ctx, path);
+			fz_try(ctx)
+			{
+				fz_transform_path(ctx, t, state->transform);
+				fz_walk_path(ctx, t, &svg_clip_walker, doc);
+			}
+			fz_always(ctx)
+				fz_drop_path(ctx, t);
+			fz_catch(ctx)
+				fz_rethrow(ctx);
+		}
+		return;
+	}
 	if (state->fill_is_set)
 		svg_fill(ctx, dev, doc, path, state);
 	if (state->stroke_is_set)
@@ -2069,7 +2112,7 @@ svg_run_text(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, c
 }
 
 static void
-svg_run_element(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *state)
+svg_run_element_imp(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *state)
 {
 	if (fz_xml_is_tag(root, "svg"))
 		svg_run_svg(ctx, dev, doc, root, state);
@@ -2115,6 +2158,100 @@ svg_run_element(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root
 	{
 		/* ignore unrecognized tags */
 	}
+}
+
+/* SumatraPDF: the <clipPath> a clip-path="url(#id)" attribute or style refers to */
+static fz_xml *
+svg_find_clip_path(fz_context *ctx, svg_document *doc, fz_xml *node)
+{
+	char buf[256];
+	char id[256];
+	const char *att = fz_xml_att(node, "clip-path");
+	const char *style = fz_xml_att(node, "style");
+	const char *units;
+	fz_xml *clip;
+	size_t n = 0;
+
+	if (!att && style && strstr(style, "clip-path"))
+		att = svg_parse_string_from_style(ctx, doc, style, "clip-path", buf, sizeof buf, "");
+	if (!att)
+		return NULL;
+	while (svg_is_whitespace(*att))
+		att++;
+	if (strncmp(att, "url(", 4))
+		return NULL;
+	att += 4;
+	while (svg_is_whitespace(*att) || *att == '\'' || *att == '"')
+		att++;
+	if (*att++ != '#')
+		return NULL;
+	while (att[n] && att[n] != ')' && att[n] != '\'' && att[n] != '"' && !svg_is_whitespace(att[n]) && n + 1 < sizeof id)
+	{
+		id[n] = att[n];
+		n++;
+	}
+	id[n] = 0;
+
+	clip = fz_tree_lookup(ctx, doc->idmap, id);
+	if (!clip || !fz_xml_is_tag(clip, "clipPath"))
+		return NULL;
+	/* TODO: objectBoundingBox needs the element's bounds; draw it unclipped as before */
+	units = fz_xml_att(clip, "clipPathUnits");
+	if (units && !strcmp(units, "objectBoundingBox"))
+		return NULL;
+	return clip;
+}
+
+/* SumatraPDF: run an element clipped to its clip-path (#6544). The clip's shapes
+ * are in the element's user space, which includes its own transform. */
+static void
+svg_run_element(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *state)
+{
+	fz_xml *clip = doc->clip_collect ? NULL : svg_find_clip_path(ctx, doc, root);
+	const char *transform_att;
+	svg_state clip_state;
+	fz_path *path = NULL;
+	fz_xml *node;
+	int clipped = 0;
+
+	if (!clip)
+	{
+		svg_run_element_imp(ctx, dev, doc, root, state);
+		return;
+	}
+
+	fz_var(path);
+	fz_var(clipped);
+
+	svg_begin_state(ctx, &clip_state, state);
+	fz_try(ctx)
+	{
+		transform_att = fz_xml_att(root, "transform");
+		if (transform_att)
+			clip_state.transform = svg_parse_transform(ctx, doc, transform_att, clip_state.transform);
+		transform_att = fz_xml_att(clip, "transform");
+		if (transform_att)
+			clip_state.transform = svg_parse_transform(ctx, doc, transform_att, clip_state.transform);
+
+		path = doc->clip_collect = fz_new_path(ctx);
+		for (node = fz_xml_down(clip); node; node = fz_xml_next(node))
+			svg_run_element_imp(ctx, dev, doc, node, &clip_state);
+		doc->clip_collect = NULL;
+
+		fz_clip_path(ctx, dev, path, 0, fz_identity, fz_infinite_rect);
+		clipped = 1;
+		svg_run_element_imp(ctx, dev, doc, root, state);
+	}
+	fz_always(ctx)
+	{
+		doc->clip_collect = NULL;
+		if (clipped)
+			fz_pop_clip(ctx, dev);
+		fz_drop_path(ctx, path);
+		svg_end_state(ctx, &clip_state);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 void

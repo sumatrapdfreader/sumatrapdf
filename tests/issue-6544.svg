@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- #6544: clip-path. The magenta rect is clipped to the left half: the clip is in
+     the group's (scaled) user space, set through style. The green rect is not
+     clipped. Clipped right: magenta has 2x green's area; unclipped: 3x. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 200 100">
+<defs>
+  <clipPath id="c">
+    <rect x="0" y="0" width="50" height="100"/>
+  </clipPath>
+</defs>
+<rect x="0" y="0" width="200" height="100" fill="#ffffff"/>
+<g transform="scale(2,1)" style="clip-path:url(#c)">
+  <rect x="0" y="0" width="100" height="100" fill="#ff00ff"/>
+</g>
+<rect x="100" y="0" width="100" height="50" fill="#00ff00"/>
+</svg>

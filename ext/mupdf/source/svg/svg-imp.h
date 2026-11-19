@@ -63,6 +63,7 @@ struct svg_document_s
 	float width;
 	float height;
 	svg_cycle_list *cycle; /* for detecting mutual recursive <use> invocations */
+	fz_path *clip_collect; /* SumatraPDF: while set, shapes add to this clip-path instead of painting */
 	fz_archive *zip; /* for locating external resources */
 	char base_uri[2048];
 };
