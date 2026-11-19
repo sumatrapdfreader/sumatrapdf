@@ -23,6 +23,7 @@ RememberStatePerDocument = true
 RestoreSession = true
 KeepMissingSessionTabs = true
 ReuseInstance = true
+OpenOnOtherDesktop = switch
 ShowMenubar = true
 ShowMenubarWithTabs = false
 ShowPageNumberInTabs = false

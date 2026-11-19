@@ -2284,6 +2284,67 @@ bool IsWindowOnCurrentDesktop(ISumatraVirtualDesktopManager* vdm, HWND hwnd) {
     return onCurrent != FALSE;
 }
 
+OtherDesktopOpen GetOtherDesktopOpen() {
+    Str v = gSettings->openOnOtherDesktop;
+    if (str::Eq(v, StrL("move"))) {
+        return OtherDesktopOpen::Move;
+    }
+    if (str::Eq(v, StrL("copy"))) {
+        return OtherDesktopOpen::Copy;
+    }
+    return OtherDesktopOpen::Switch;
+}
+
+// Focusing a window on another virtual desktop makes Windows switch the user
+// to that desktop, so a window there is not a usable activation target (#5630).
+// OpenOnOtherDesktop = switch opts back in to switching.
+bool CanFocusWithoutDesktopSwitch(HWND hwnd) {
+    if (GetOtherDesktopOpen() == OtherDesktopOpen::Switch) {
+        return true;
+    }
+    ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+    bool res = IsWindowOnCurrentDesktop(vdm, hwnd);
+    if (vdm) {
+        vdm->Release();
+    }
+    return res;
+}
+
+// The desktop the user is looking at. The shell's registry value is primary;
+// the foreground window's desktop is the fallback (the value can be missing
+// until the user first switches desktops).
+static bool GetCurrentDesktopId(ISumatraVirtualDesktopManager* vdm, GUID* out) {
+    DWORD cb = sizeof(GUID);
+    LSTATUS res =
+        RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VirtualDesktops",
+                     L"CurrentVirtualDesktop", RRF_RT_REG_BINARY, nullptr, out, &cb);
+    if (res == ERROR_SUCCESS && cb == sizeof(GUID) && !IsEqualGUID(*out, GUID{})) {
+        return true;
+    }
+    HWND fg = GetForegroundWindow();
+    if (fg && SUCCEEDED(vdm->GetWindowDesktopId(fg, out)) && !IsEqualGUID(*out, GUID{})) {
+        return true;
+    }
+    return false;
+}
+
+// Under OpenOnOtherDesktop = move, pull hwnd onto the user's current virtual
+// desktop so focusing it won't switch desktops. False in the other modes.
+bool BringToCurrentDesktop(HWND hwnd) {
+    if (GetOtherDesktopOpen() != OtherDesktopOpen::Move) {
+        return false;
+    }
+    ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+    if (!vdm) {
+        return false;
+    }
+    GUID id{};
+    bool ok = GetCurrentDesktopId(vdm, &id) && SUCCEEDED(vdm->MoveWindowToDesktop(hwnd, id));
+    vdm->Release();
+    logf("BringToCurrentDesktop: %s, hwnd: 0x%p\n", ok ? StrL("ok") : StrL("failed"), hwnd);
+    return ok;
+}
+
 // the virtual desktop hwnd is on, as "{GUID}". Empty when the shell can't
 // tell (no manager, hidden window).
 TempStr GetWindowDesktopIdTemp(ISumatraVirtualDesktopManager* vdm, HWND hwnd) {

@@ -1623,6 +1623,16 @@ const globalPrefs: Field[] = [
     "if true, open documents in the already running SumatraPDF instead of starting a new one",
   ),
   field(
+    "OpenOnOtherDesktop",
+    Str,
+    "switch",
+    "what happens when a document is opened whose window is on another virtual desktop: " +
+      "switch makes Windows switch to that desktop, move pulls the window onto the current " +
+      "desktop, copy opens the document again on the current desktop (Windows 10+)",
+  )
+    .enum(["switch", "move", "copy"])
+    .ver("3.7"),
+  field(
     "ShowMenubar",
     Bool,
     true,
@@ -2510,6 +2520,7 @@ const globalPrefsLayout = [
   "RestoreSession",
   "KeepMissingSessionTabs",
   "ReuseInstance",
+  "OpenOnOtherDesktop",
   "ShowMenubar",
   "ShowMenubarWithTabs",
   "ShowChaptersInEbooks",
@@ -2819,6 +2830,7 @@ const desktopOnlySettings = new Set([
   "DownloadDirectory",
   "TemporaryFileAutoMove",
   "ReuseInstance",
+  "OpenOnOtherDesktop",
   "ExplorerQuickLook",
   "ClaudeCode",
   "GrokBuild",

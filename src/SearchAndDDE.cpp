@@ -38,6 +38,7 @@
 #include "Favorites.h"
 #include "Translations.h"
 #include "Version.h"
+#include "VirtualDesktop.h"
 #include "SearchAndDDE.h"
 #include "SearchAndDDECommon.h"
 
@@ -345,6 +346,26 @@ Go to a page and select the search term, but only if it's found on that page
 [GotoPageWord("<pdffile>",<page>,"<search-term>")]
 */
 
+// An empty window is only a good reuse target when focusing it won't switch
+// virtual desktops, the very thing #5630 avoids for the main window. Under
+// OpenOnOtherDesktop = move, an empty window elsewhere is pulled here instead.
+static MainWindow* FindEmptyWinToReuse() {
+    MainWindow* elsewhere = nullptr;
+    for (auto& w : gWindows) {
+        if (w->HasDocsLoaded()) {
+            continue;
+        }
+        if (CanFocusWithoutDesktopSwitch(w->hwndFrame)) {
+            return w;
+        }
+        elsewhere = w;
+    }
+    if (elsewhere && BringToCurrentDesktop(elsewhere->hwndFrame)) {
+        return elsewhere;
+    }
+    return nullptr;
+}
+
 /*
 Open file DDE Command
 
@@ -401,14 +422,10 @@ Str HandleOpenCmd(Str cmd, bool* ack) {
 
     // intelligently pick a window or create one
     MainWindow* win = nullptr;
-    MainWindow* emptyExistingWin = nullptr;
     auto nWindows = len(gWindows);
-    for (auto& w : gWindows) {
-        if (!w->HasDocsLoaded()) {
-            emptyExistingWin = w;
-            logf("HandleOpenCmd: found empty existing window\n");
-            break;
-        }
+    MainWindow* emptyExistingWin = FindEmptyWinToReuse();
+    if (emptyExistingWin) {
+        logf("HandleOpenCmd: found empty existing window\n");
     }
     if (newWindow > 0) {
         if (emptyExistingWin) {
@@ -620,13 +637,7 @@ Str HandleAppRequestCmd(Str cmd, bool* ack, str::Builder& res) {
 static void OpenManyCopyDataAsyncRun(OpenManyCopyDataAsync* d) {
     MainWindow* win = nullptr;
     if (d->newWindow) {
-        MainWindow* emptyExistingWin = nullptr;
-        for (auto& w : gWindows) {
-            if (!w->HasDocsLoaded()) {
-                emptyExistingWin = w;
-                break;
-            }
-        }
+        MainWindow* emptyExistingWin = FindEmptyWinToReuse();
         win = emptyExistingWin ? emptyExistingWin : CreateAndShowMainWindow(nullptr);
     } else {
         win = FindMainWindowByHwnd(d->hwnd);
@@ -651,16 +662,22 @@ static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
     // had to wait on us in the first place.
     MainWindow* win = nullptr;
     if (d->newWindow) {
-        MainWindow* emptyExistingWin = nullptr;
-        for (auto& w : gWindows) {
-            if (!w->HasDocsLoaded()) {
-                emptyExistingWin = w;
-                break;
+        // Under OpenOnOtherDesktop = move, pull the window already showing the
+        // document here instead of opening it twice (#5630 forces newWindow
+        // when every window is on another desktop).
+        if (GetOtherDesktopOpen() == OtherDesktopOpen::Move) {
+            win = FindMainWindowToActivate(d->path);
+            if (win) {
+                win->Focus();
+                str::Free(d->path);
+                delete d;
+                return;
             }
         }
+        MainWindow* emptyExistingWin = FindEmptyWinToReuse();
         win = emptyExistingWin ? emptyExistingWin : CreateAndShowMainWindow(nullptr);
     } else {
-        win = FindMainWindowByFile(d->path, true);
+        win = FindMainWindowToActivate(d->path);
         if (win) {
             // Already open: just focus (matches activateExisting).
             win->Focus();
@@ -685,8 +702,10 @@ static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
     args.activateExisting = d->newWindow == 0;
     // Match the legacy DDE Open(..., setFocus=1) behavior used by
     // shell/reuseInstance launches: opening into an existing instance should
-    // bring that window to the foreground.
-    if (win) {
+    // bring that window to the foreground. Not across virtual desktops: that
+    // would switch the user away from the desktop they opened the file on;
+    // under OpenOnOtherDesktop = move the host window is pulled here first.
+    if (win && (CanFocusWithoutDesktopSwitch(win->hwndFrame) || BringToCurrentDesktop(win->hwndFrame))) {
         win->Focus();
     }
     StartLoadDocument(&args);
