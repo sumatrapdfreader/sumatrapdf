@@ -26,7 +26,10 @@ import { spawn, spawnSync } from "node:child_process";
 import { inflateRawSync } from "node:zlib";
 
 const ROOT = resolve(join(import.meta.dir, ".."));
-const CACHE_DIR = join(ROOT, ".work", "crashes");
+// CRASHES_DIR moves the dumps + symbols cache, CRASHES_NOTES_DIR the /fix-crashes
+// notes (fixed.md, analyzed-*.md) that --since-last reads; both default to .work/crashes
+const CACHE_DIR = process.env.CRASHES_DIR ? resolve(process.env.CRASHES_DIR) : join(ROOT, ".work", "crashes");
+const NOTES_DIR = process.env.CRASHES_NOTES_DIR ? resolve(process.env.CRASHES_NOTES_DIR) : CACHE_DIR;
 const WIN_SYM_CACHE = join(homedir(), ".symbols");
 const MS_SYMBOL_SERVER = "https://msdl.microsoft.com/download/symbols";
 const PROD_SERVER = "https://www.sumatrapdfreader.org";
@@ -52,7 +55,8 @@ function usage(): void {
                                                print the list as CSV and exit (no download, no server)
   bun cmd/crashes.ts --server <url> ...        override server base URL
   --today                                      only crashes from today
-  --since-last                                 crashes after the newest id in .work/crashes/analyzed-*.md and fixed.md
+  --since-last                                 crashes after the newest id in analyzed-*.md and fixed.md
+                                               in $CRASHES_NOTES_DIR (default .work/crashes)
                                                (no such id yet: today)
   --since <id or yyyy-mm-dd>                   crashes whose id is greater than that value
 After listing, serves a local page (like sumatrapdfreader.org/crashes/) and opens the browser.`);
@@ -148,7 +152,7 @@ function newestCrashIdIn(text: string): string {
 
 // Newest id already recorded by /fix-crashes. Empty when this tree has no check yet.
 function lastAnalyzedCrashId(): string {
-  if (!existsSync(CACHE_DIR)) {
+  if (!existsSync(NOTES_DIR)) {
     return "";
   }
   let max = "";
@@ -161,10 +165,10 @@ function lastAnalyzedCrashId(): string {
       max = id;
     }
   };
-  consider(join(CACHE_DIR, "fixed.md"));
-  for (const name of readdirSync(CACHE_DIR)) {
+  consider(join(NOTES_DIR, "fixed.md"));
+  for (const name of readdirSync(NOTES_DIR)) {
     if (/^analyzed-\d{4}-\d{2}-\d{2}\.md$/.test(name)) {
-      consider(join(CACHE_DIR, name));
+      consider(join(NOTES_DIR, name));
     }
   }
   return max;
@@ -236,15 +240,15 @@ function settingsPath(id: string): string {
 }
 
 function relAnalyze(id: string): string {
-  return relative(ROOT, analyzePath(id)).replaceAll("\\", "/");
+  return relative(process.cwd(), analyzePath(id)).replaceAll("\\", "/");
 }
 
 function relLog(id: string): string {
-  return relative(ROOT, logPath(id)).replaceAll("\\", "/");
+  return relative(process.cwd(), logPath(id)).replaceAll("\\", "/");
 }
 
 function relSettings(id: string): string {
-  return relative(ROOT, settingsPath(id)).replaceAll("\\", "/");
+  return relative(process.cwd(), settingsPath(id)).replaceAll("\\", "/");
 }
 
 function summaryPath(id: string): string {
@@ -252,7 +256,7 @@ function summaryPath(id: string): string {
 }
 
 function relSummary(id: string): string {
-  return relative(ROOT, summaryPath(id)).replaceAll("\\", "/");
+  return relative(process.cwd(), summaryPath(id)).replaceAll("\\", "/");
 }
 
 function toLF(s: string): string {
@@ -939,7 +943,7 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   }
   const symPath = symParts.join(";");
   console.log(`cdb: ${cdb} (${row.id})`);
-  const pdbNote = symDir ? relative(ROOT, symDir).replaceAll("\\", "/") : `missing (${pdbMissingReason(row.version)})`;
+  const pdbNote = symDir ? relative(process.cwd(), symDir).replaceAll("\\", "/") : `missing (${pdbMissingReason(row.version)})`;
   console.log(`pdb: ${pdbNote}`);
   const args = ["-z", dmpPath, "-y", symPath, "-lines"];
   const imgDirs = [exeDir, renamedExeDir(row.id, exeDir)].filter((d) => d !== "");
@@ -1074,7 +1078,7 @@ function logTail(log: string, n: number): string {
 }
 
 function relCrashFile(id: string, name: string): string {
-  return join(".work", "crashes", id, name).replaceAll("\\", "/");
+  return relative(process.cwd(), join(dumpDir(id), name)).replaceAll("\\", "/");
 }
 
 // summary.txt: what the skill and the web index read. Built from the log
