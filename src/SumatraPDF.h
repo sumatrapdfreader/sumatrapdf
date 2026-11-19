@@ -206,6 +206,7 @@ void CopyFilePath(WindowTab*);
 void CopyLocationToClipboard(WindowTab*);
 
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin = nullptr);
+MainWindow* FindMainWindowToActivate(Str file, MainWindow* limitWin = nullptr);
 MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab);
 void ExecuteCmd(MainWindow* win, int cmdId);
 void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete = {});

@@ -1260,6 +1260,11 @@ struct Settings {
     // if true, open documents in the already running SumatraPDF instead of
     // starting a new one
     bool reuseInstance;
+    // what happens when a document is opened whose window is on another
+    // virtual desktop: switch makes Windows switch to that desktop, move
+    // pulls the window onto the current desktop, copy opens the document
+    // again on the current desktop (Windows 10+)
+    Str openOnOtherDesktop;
     // if true, show the menu bar (F9 toggles it; the choice is remembered
     // across sessions)
     bool showMenubar;
