@@ -78,6 +78,7 @@ class BrowserDocView {
     WStr virtualHostW;
 
     bool CreateWebView2();
+    void EvalScroll(Str js);
     void SubclassParent();
     void UnsubclassParent();
     bool visible = false;

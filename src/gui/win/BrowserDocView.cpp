@@ -662,6 +662,12 @@ static Str ScrollJsForKey(WPARAM key) {
     return {};
 }
 
+// Scrolls and reports the new position at once: the 'scroll' event waits for a
+// rendering frame, which Chromium skips when the view is occluded or busy.
+void BrowserDocView::EvalScroll(Str js) {
+    wv->Eval(fmt("%s;%s", js, Str(kReportScrollJs)));
+}
+
 LRESULT BrowserDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
     if (backend == Backend::WebView2 && wv && wv->hwnd) {
         if (msg == WM_KEYDOWN) {
@@ -669,7 +675,7 @@ LRESULT BrowserDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
             // the focused frame, e.g. after a tab switch (#6419)
             Str js = ScrollJsForKey(wp);
             if (len(js) > 0) {
-                wv->Eval(js);
+                EvalScroll(js);
                 return 0;
             }
         }
@@ -682,7 +688,7 @@ LRESULT BrowserDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
             short delta = GET_WHEEL_DELTA_WPARAM(wp);
             bool horiz = (msg == WM_MOUSEHWHEEL) || (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
             int d = -(int)delta;
-            wv->Eval(horiz ? fmt("window.scrollBy(%d, 0)", d) : fmt("window.scrollBy(0, %d)", d));
+            EvalScroll(horiz ? fmt("window.scrollBy(%d, 0)", d) : fmt("window.scrollBy(0, %d)", d));
             return 0;
         }
         return SendMessageW(wv->hwnd, msg, wp, lp);
