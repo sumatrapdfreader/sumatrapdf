@@ -72,6 +72,7 @@ PaddingAfterLastPage = false
 ContinuousScrollFollowsRotation = false
 IgnoreDestinationZoom = false
 HighlightLinkDestination = false
+FlashFindMatch = true
 CitationHoverDelay = -1
 ReadAloudSpeed = 1
 ReadAloudSentenceColor = #3b82f6
