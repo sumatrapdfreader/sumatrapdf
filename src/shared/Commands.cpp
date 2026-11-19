@@ -394,6 +394,7 @@ const CommandInfo gCommands[] = {
     {CmdCaretPageDown, "CmdCaretPageDown\0", StrL("Move Caret Page Down")},
     {CmdCaretDocStart, "CmdCaretDocStart\0", StrL("Move Caret To Document Start")},
     {CmdCaretDocEnd, "CmdCaretDocEnd\0", StrL("Move Caret To Document End")},
+    {CmdEditAnnotationText, "CmdEditAnnotationText\0", StrL("Edit Annotation Text")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

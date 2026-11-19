@@ -5623,6 +5623,26 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ApplyRedactionsInTab(tab);
             break;
 
+        case CmdEditAnnotationText: {
+            // the annotation under the cursor (context menu), else the selected one
+            Annotation* annot = tab ? win->annotationUnderCursor : nullptr;
+            if (!annot && tab) {
+                annot = tab->selectedAnnotation;
+            }
+            if (!annot || annot->type == AnnotationType::Widget) {
+                break;
+            }
+            // text is edited in Edit PDF, on the selected annotation: free
+            // text in place, other annotations in the contents editor
+            EnablePdfAnnotationsToolbar(win);
+            SetSelectedAnnotation(tab, annot);
+            if (annot->type == AnnotationType::FreeText && StartFreeTextInPlaceEdit(win, annot)) {
+                break;
+            }
+            PostForWindow(win, StartSelectedAnnotContentsEdit, "StartAnnotContentsEdit");
+            break;
+        }
+
         case CmdDeleteAnnotation:
             // A dialog owns the keyboard. Delete removes the selection, or
             // the annotation under the cursor when nothing is selected.

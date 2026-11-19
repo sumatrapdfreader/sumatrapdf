@@ -139,6 +139,7 @@ enum class EngineWait {
 bool EngineCanUndoRedo(EngineBase*, UndoDir, EngineWait);
 bool EngineUndoRedo(EngineBase*, UndoDir, Vec<Annotation*>& removedOut);
 void EngineMupdfRefreshModifiedState(EngineBase*);
+void EngineMupdfSetEditedAnnot(EngineBase*, Annotation*);
 // a PDF EngineMupdfMergePdfs() reads pages from
 struct PdfMergeSource {
     Str path;

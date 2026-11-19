@@ -388,8 +388,9 @@ enum {
     CmdCaretPageDown = 582,
     CmdCaretDocStart = 583,
     CmdCaretDocEnd = 584,
+    CmdEditAnnotationText = 585,
 
-    CmdLast = 584,
+    CmdLast = 585,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

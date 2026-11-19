@@ -3292,6 +3292,8 @@ static void OnPaintDocument(MainWindow* win) {
         HdcFillRect(hdc, ToRect(ps.rcPaint), GetStockBrush(WHITE_BRUSH));
     } else {
         bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), ToRect(ps.rcPaint));
+        // the in-place free text box shows the page under it
+        FreeTextInPlaceEditCanvasPainted(win);
         // Flush when the focus ring is needed so DrawFocusRect is not XOR'd
         // on top of a stale frame that already had a ring.
         bool showFocus = CanvasShouldShowKeyboardFocus(win);

@@ -64,6 +64,7 @@ TempStr AnnotationListRowTextTemp(Annotation*);
 void RepositionAnnotEditToolbar(MainWindow*);
 void RepositionFreeTextInPlaceEdit(MainWindow*);
 HBRUSH FreeTextInPlaceEditCtlColor(HWND edit, HDC hdc);
+void FreeTextInPlaceEditCanvasPainted(MainWindow* win);
 TempStr FreeTextInPlaceEditStateTemp(MainWindow*);
 void DrawAnnotationListRow(Gfx*, PlatformFont*, Rect, Annotation*, const StrVec& filterWords, Vec<u8>& hlScratch,
                            Color colBg, Color colText, bool selected);

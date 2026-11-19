@@ -981,6 +981,10 @@ MenuDef menuDefContextAnnotations[] = {
         kMenuSeparatorID,
     },
     {
+        TrN("Edit Annotation Text"),
+        CmdEditAnnotationText,
+    },
+    {
         TrN("Cut Annotation"),
         CmdCutAnnotation,
     },

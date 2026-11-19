@@ -320,6 +320,7 @@ static const i32 removeIfAnnotsNotSupported[] = {
     // "this engine can be edited and re-saved" support annotations do
     CmdSignDocument,
     CmdDeleteAnnotation,
+    CmdEditAnnotationText,
     CmdShowAnnotations,
     CmdHideAnnotations,
     CmdToggleShowAnnotations,
@@ -865,6 +866,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (cmdId == CmdDeleteAnnotation && !ctx.annotationUnderCursor && !ctx.selectedAnnotation) {
         return MapForSurface(CommandVisibility::Disable, surface);
+    }
+    if (cmdId == CmdEditAnnotationText) {
+        // a form field's value is typed into the field itself
+        Annotation* annot = ctx.annotationUnderCursor ? ctx.annotationUnderCursor : ctx.selectedAnnotation;
+        bool can = AnnotationIsLive(annot) && annot->type != AnnotationType::Widget;
+        return can ? CommandVisibility::Show : MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if (cmdId == CmdUndo || cmdId == CmdRedo) {

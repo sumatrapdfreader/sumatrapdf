@@ -12521,6 +12521,26 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdEditAnnotationText: {
+            // the annotation under the cursor (context menu), else the selected one
+            Annotation* annot = tab ? GetAnnotionUnderCursor(tab, nullptr, lp) : nullptr;
+            if (!annot && tab) {
+                annot = tab->selectedAnnotation;
+            }
+            if (!annot || annot->type == AnnotationType::Widget) {
+                return 0;
+            }
+            // text is edited in Edit PDF, on the selected annotation: free
+            // text in place, other annotations in the contents editor
+            EnablePdfAnnotationsToolbar(win);
+            SetSelectedAnnotation(tab, annot);
+            if (annot->type == AnnotationType::FreeText && StartFreeTextInPlaceEdit(win, annot)) {
+                return 0;
+            }
+            PostForWindow(win, StartSelectedAnnotContentsEdit, "StartAnnotContentsEdit");
+            return 0;
+        }
+
         case CmdDeleteAnnotation: {
             if (!tab) {
                 return 0;

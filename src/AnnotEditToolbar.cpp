@@ -1658,9 +1658,10 @@ static AnnotEditToolbar* GetOrCreateToolbar(MainWindow* win) {
 //--- in-place free text editing
 
 // A plain edit control sits exactly over the free text annotation while you
-// type: same font and size, on a white background so the text stays readable
-// whatever is underneath. Enter makes a new line; Ctrl+Enter, Esc or clicking
-// away ends it and the rendered annotation comes back.
+// type, in the same font and size. Its background is the annotation's; without
+// one the page shows through, with the annotation itself left out of rendering
+// so its text isn't doubled (#6534). Enter makes a new line; Ctrl+Enter, Esc or
+// clicking away ends it and the rendered annotation comes back.
 struct FreeTextInPlaceEdit {
     HWND hwnd = nullptr;
     HFONT font = nullptr;
@@ -1677,6 +1678,11 @@ struct FreeTextInPlaceEdit {
     float scale = 1.f;
     // the annotation's text color, for the typed text and the box's border
     Color textCol = kColBlack;
+    // the annotation's background; without one, the page under the box
+    bool seeThrough = false;
+    Color bgCol = kColWhite;
+    HBRUSH bgBrush = nullptr;
+    HBITMAP bgBmp = nullptr;
 };
 
 // MuPDF stacks free text lines 1.2 * the font size apart and wraps at the
@@ -1753,6 +1759,42 @@ static bool SetInPlaceEditScale(Annotation* annot, RectF pageRect, Rect rc) {
     return true;
 }
 
+// Copy what the canvas last painted under the box (its back buffer) into the
+// brush the box paints its background with, so the page shows through.
+static void CaptureInPlaceBackground() {
+    MainWindow* win = gInPlace.win;
+    if (!gInPlace.hwnd || !gInPlace.seeThrough || !win || !win->buffer) {
+        return;
+    }
+    RECT rc;
+    GetClientRect(gInPlace.hwnd, &rc);
+    if (rc.right <= 0 || rc.bottom <= 0) {
+        return;
+    }
+    POINT org{0, 0};
+    MapWindowPoints(gInPlace.hwnd, win->hwndCanvas, &org, 1);
+    HDC src = win->buffer->GetDC();
+    HBITMAP bmp = CreateCompatibleBitmap(src, rc.right, rc.bottom);
+    HDC mem = CreateCompatibleDC(src);
+    HGDIOBJ prev = SelectObject(mem, bmp);
+    BitBlt(mem, 0, 0, rc.right, rc.bottom, src, org.x, org.y, SRCCOPY);
+    SelectObject(mem, prev);
+    DeleteDC(mem);
+    HBRUSH brush = CreatePatternBrush(bmp);
+    DeleteObject(gInPlace.bgBrush);
+    DeleteObject(gInPlace.bgBmp);
+    gInPlace.bgBmp = bmp;
+    gInPlace.bgBrush = brush;
+    InvalidateRect(gInPlace.hwnd, nullptr, TRUE);
+}
+
+// the canvas painted a frame: the page under the box may have changed
+void FreeTextInPlaceEditCanvasPainted(MainWindow* win) {
+    if (IsEditingFreeTextInPlace(win)) {
+        CaptureInPlaceBackground();
+    }
+}
+
 // The size `text` needs: room for the edit control to show it, and for MuPDF
 // to lay it out the same way once the box is gone. Lines don't wrap.
 static Size InPlaceTextFit(Str text) {
@@ -1801,6 +1843,7 @@ static void SizeInPlaceEditToText() {
     }
     gInPlace.size = want;
     SetWindowPos(gInPlace.hwnd, nullptr, 0, 0, want.dx, want.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    CaptureInPlaceBackground();
 }
 
 // Scrolling and zooming move the annotation out from under the box.
@@ -1828,6 +1871,7 @@ void RepositionFreeTextInPlaceEdit(MainWindow* win) {
         return;
     }
     SetWindowPos(gInPlace.hwnd, nullptr, r.x, r.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+    CaptureInPlaceBackground();
 }
 
 void EndFreeTextInPlaceEdit(bool accept) {
@@ -1851,6 +1895,9 @@ void EndFreeTextInPlaceEdit(bool accept) {
             grow = FreeTextGrowth(gInPlace.minSize, InPlaceTextFit(Contents(annot)), InPlaceTextFit(text));
         }
     }
+    bool seeThrough = gInPlace.seeThrough;
+    HBRUSH bgBrush = gInPlace.bgBrush;
+    HBITMAP bgBmp = gInPlace.bgBmp;
     // clear the state and unsubclass before destroying, so the destroy-time
     // WM_KILLFOCUS doesn't come back through the commit path
     gInPlace = {};
@@ -1859,7 +1906,16 @@ void EndFreeTextInPlaceEdit(bool accept) {
     if (font) {
         DeleteObject(font);
     }
+    DeleteObject(bgBrush);
+    DeleteObject(bgBmp);
     bool winOk = win && IsMainWindowValidAndNotClosing(win);
+    if (seeThrough) {
+        // the annotation is drawn again
+        EngineMupdfSetEditedAnnot(tab ? tab->GetEngine() : nullptr, nullptr);
+        if (winOk) {
+            MainWindowRerender(win);
+        }
+    }
     if (winOk) {
         HwndSetFocus(win->hwndCanvas);
     }
@@ -1964,6 +2020,34 @@ static LRESULT CALLBACK WndProcFreeTextInPlaceEdit(HWND hwnd, UINT msg, WPARAM w
             SizeInPlaceEditToText();
             break;
     }
+    // text drawn on a see-through background doesn't erase what was there:
+    // repaint the whole box when the text, selection or scroll changes
+    if (gInPlace.seeThrough && gInPlace.hwnd == hwnd) {
+        switch (msg) {
+            case WM_CHAR:
+            case WM_KEYDOWN:
+            case WM_PASTE:
+            case WM_CUT:
+            case WM_CLEAR:
+            case WM_UNDO:
+            case WM_SETTEXT:
+            case EM_REPLACESEL:
+            case EM_SETSEL:
+            case WM_LBUTTONDOWN:
+            case WM_LBUTTONUP:
+            case WM_LBUTTONDBLCLK:
+            case WM_HSCROLL:
+            case WM_VSCROLL:
+            case WM_MOUSEWHEEL:
+                InvalidateRect(hwnd, nullptr, TRUE);
+                break;
+            case WM_MOUSEMOVE:
+                if (wp & MK_LBUTTON) {
+                    InvalidateRect(hwnd, nullptr, TRUE);
+                }
+                break;
+        }
+    }
     return res;
 }
 
@@ -2027,8 +2111,23 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
         UnpackPdfColor(pdfTextCol, r, g, b, a);
         gInPlace.textCol = MkRgb(r, g, b);
     }
+    PdfColor pdfBgCol = GetColor(annot);
+    u8 br = 0, bg = 0, bb = 0, ba = 0;
+    if (pdfBgCol != kColorUnset) {
+        UnpackPdfColor(pdfBgCol, br, bg, bb, ba);
+    }
+    gInPlace.seeThrough = pdfBgCol == kColorUnset || ba == 0;
+    if (!gInPlace.seeThrough) {
+        gInPlace.bgCol = MkRgb(br, bg, bb);
+    }
     // the border was painted before we knew the color
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    if (gInPlace.seeThrough) {
+        // the page shows through the box: render it without the annotation
+        EngineMupdfSetEditedAnnot(gInPlace.tab ? gInPlace.tab->GetEngine() : nullptr, annot);
+        MainWindowRerender(win);
+        CaptureInPlaceBackground();
+    }
 
     HwndSetFocus(hwnd);
     // caret at the end, nothing selected: this is editing what is there, not
@@ -2040,14 +2139,20 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
 }
 
 // WM_CTLCOLOREDIT the canvas gets for the in-place box: the annotation's text
-// color on white. nullptr if `edit` isn't the box.
+// color on its background, or on the page under the box. nullptr if `edit`
+// isn't the box.
 HBRUSH FreeTextInPlaceEditCtlColor(HWND edit, HDC hdc) {
     if (!gInPlace.hwnd || edit != gInPlace.hwnd) {
         return nullptr;
     }
     SetTextColor(hdc, gInPlace.textCol);
-    SetBkColor(hdc, kColWhite);
-    return (HBRUSH)GetStockObject(WHITE_BRUSH);
+    if (gInPlace.seeThrough && gInPlace.bgBrush) {
+        SetBkMode(hdc, TRANSPARENT);
+        return gInPlace.bgBrush;
+    }
+    SetBkColor(hdc, gInPlace.bgCol);
+    SetDCBrushColor(hdc, gInPlace.bgCol);
+    return (HBRUSH)GetStockObject(DC_BRUSH);
 }
 
 TempStr FreeTextInPlaceEditStateTemp(MainWindow* win) {

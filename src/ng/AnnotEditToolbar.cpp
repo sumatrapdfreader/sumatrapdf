@@ -589,6 +589,8 @@ void EndFreeTextInPlaceEdit(bool accept) {
     gInPlace.annot = nullptr;
     gInPlace.box = {};
     gContentsEditJustEnded = true;
+    // the annotation is drawn again
+    EngineMupdfSetEditedAnnot(tab ? tab->GetEngine() : nullptr, nullptr);
 
     bool winOk = win && IsMainWindowValidAndNotClosing(win);
     if (accept && AnnotationIsLive(annot)) {
@@ -666,6 +668,9 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     gInPlace.annot = annot;
     gInPlace.box = {};
     gInPlace.wantFocus = true;
+    // the page shows through the box: render it without the annotation
+    EngineMupdfSetEditedAnnot(tab->GetEngine(), annot);
+    MainWindowRerender(win);
     AppShellInvalidate(win);
     return true;
 }
@@ -1879,7 +1884,18 @@ gp::El* FreeTextInPlaceEditBuild(MainWindow* win, gp::Ctx* cx) {
     }
     float fontPx = std::max(6.f, roundf((float)textSize * scale)) * k;
     float pad = kFreeTextPadPerBorder * (float)std::max(BorderWidth(annot), 0) * scale * k;
-    // the annotation's text color on white, as orig's FreeTextInPlaceEditCtlColor
+    // the annotation's text color on its background, or on the page under the
+    // box (the annotation is left out of rendering while edited), as orig's
+    // FreeTextInPlaceEditCtlColor (#6534)
+    gp::Rgba bg = gp::RgbaTransparent();
+    PdfColor pdfBgCol = GetColor(annot);
+    if (pdfBgCol != kColorUnset) {
+        u8 r, g, b, a;
+        UnpackPdfColor(pdfBgCol, r, g, b, a);
+        if (a != 0) {
+            bg = ToGpui(MkRgb(r, g, b));
+        }
+    }
     Color textCol = kColBlack;
     PdfColor pdfTextCol = DefaultAppearanceTextColor(annot);
     if (pdfTextCol != kColorUnset) {
@@ -1891,7 +1907,7 @@ gp::El* FreeTextInPlaceEditBuild(MainWindow* win, gp::Ctx* cx) {
     style.fontSize = fontPx;
     style.foreground = ToGpui(textCol);
     style.caret = ToGpui(textCol);
-    style.background = ToGpui(kColWhite);
+    style.background = bg;
 
     gp::El* box = gp::Div(cx->a)
                       ->Absolute()
@@ -1902,7 +1918,7 @@ gp::El* FreeTextInPlaceEditBuild(MainWindow* win, gp::Ctx* cx) {
                       ->MaxH((float)rc.dy * k)
                       ->ClipY()
                       ->Pad(pad)
-                      ->Bg(ToGpui(kColWhite))
+                      ->Bg(bg)
                       // a frame in the annotation's text color
                       ->Border(1, ToGpui(textCol))
                       ->BoundsOut(&gInPlace.box)

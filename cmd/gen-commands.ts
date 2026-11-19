@@ -395,6 +395,7 @@ const commandsRaw = [
     "CmdCaretPageDown", "Move Caret Page Down",
     "CmdCaretDocStart", "Move Caret To Document Start",
     "CmdCaretDocEnd", "Move Caret To Document End",
+    "CmdEditAnnotationText", "Edit Annotation Text",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

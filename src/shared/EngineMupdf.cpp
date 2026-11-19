@@ -7769,6 +7769,8 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     // The "View" rendering (no Print, no hideAnnotations) is what
     // fz_new_display_list_from_page produces; safe to cache and re-run lock-free.
     bool useCache = (args.target == RenderTarget::View) && !hideAnnotations;
+    // the annotation being edited in place is left out; the cached list has it
+    pdf_annot* skipAnnot = nullptr;
 
     fz_rect pRect;
     fz_matrix ctm;
@@ -7793,6 +7795,10 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         ctm = viewctm(page, zoom, rotation);
         ibounds = fz_round_rect(fz_transform_rect(pRect, ctm));
 
+        if (editedAnnot && args.target == RenderTarget::View && pdf_annot_page(ctx, editedAnnot) == (pdf_page*)page) {
+            skipAnnot = editedAnnot;
+            useCache = false;
+        }
         if (useCache) {
             keptList = GetOrBuildPageDisplayList(pageInfo, ctx);
         }
@@ -7892,6 +7898,15 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             }
             if (hideAnnotations) {
                 pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+                pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+            } else if (skipAnnot) {
+                ScopedRecursiveMutex docScope(&docLock);
+                pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
+                for (pdf_annot* a = pdf_first_annot(ctx, pdfpage); a; a = pdf_next_annot(ctx, a)) {
+                    if (a != skipAnnot) {
+                        pdf_run_annot(ctx, a, dev, fz_identity, fzcookie);
+                    }
+                }
                 pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             } else {
                 pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
@@ -13045,4 +13060,17 @@ TempStr EngineMupdfGetPdfInfo(Str path, Str password) {
     fz_drop_buffer(ctx, buf);
     fz_drop_context(ctx);
     return res;
+}
+
+// The free text being edited in place is left out of rendering, so the page
+// shows through the edit box without the annotation's text doubled (#6534).
+// nullptr ends that. The caller re-renders the page.
+void EngineMupdfSetEditedAnnot(EngineBase* engine, Annotation* annot) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e) {
+        return;
+    }
+    ScopedMutex render(&e->renderLock);
+    ScopedRecursiveMutex doc(&e->docLock);
+    e->editedAnnot = annot ? annot->pdfannot : nullptr;
 }
