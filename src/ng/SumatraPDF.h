@@ -114,6 +114,10 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs = LoadPrefs:
 void OpenDroppedFiles(MainWindow* win, const Str* paths, int n);
 void SelectTabInWindow(WindowTab* tab);
 MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin = nullptr);
+MainWindow* FindMainWindowToActivate(Str file, MainWindow* limitWin = nullptr);
+bool IsWinOnCurrentDesktop(MainWindow* win);
+bool CanFocusWinHere(MainWindow* win);
+bool BringWinHere(MainWindow* win);
 MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab);
 struct SessionData;
 MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr);

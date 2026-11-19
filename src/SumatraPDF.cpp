@@ -482,11 +482,9 @@ MainWindow* FindMainWindowToActivate(Str file, MainWindow* limitWin) {
     MainWindow* win = FindMainWindowByFile(file, false, limitWin);
     if (win && !CanFocusWithoutDesktopSwitch(win->hwndFrame)) {
         MainWindow* here = nullptr;
-        for (auto& w : gWindows) {
-            if (limitWin) {
-                break;
-            }
-            if (CanFocusWithoutDesktopSwitch(w->hwndFrame) && FindTabByFilePath(file, w)) {
+        for (int i = 0; !limitWin && i < len(gWindows); i++) {
+            MainWindow* w = gWindows[i];
+            if (FindTabByFilePath(file, w) && CanFocusWithoutDesktopSwitch(w->hwndFrame)) {
                 here = w;
                 break;
             }
@@ -546,10 +544,7 @@ bool IsDocumentOpenOrLoading(Str file) {
         return false;
     }
     for (auto& w : gWindows) {
-        if (!CanFocusWithoutDesktopSwitch(w->hwndFrame)) {
-            continue;
-        }
-        if (FindTabByFilePath(file, w)) {
+        if (FindTabByFilePath(file, w) && CanFocusWithoutDesktopSwitch(w->hwndFrame)) {
             return true;
         }
     }

@@ -23,6 +23,7 @@ enum class OtherDesktopOpen {
     Copy
 };
 OtherDesktopOpen GetOtherDesktopOpen();
+bool IsOnCurrentDesktop(HWND hwnd);
 bool CanFocusWithoutDesktopSwitch(HWND hwnd);
 bool BringToCurrentDesktop(HWND hwnd);
 #endif
