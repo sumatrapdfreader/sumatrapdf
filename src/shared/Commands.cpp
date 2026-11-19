@@ -462,6 +462,8 @@ static const ArgSpec argSpecs[] = {
     {CmdTogglePresentationMode, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleBookmarks, kCmdArgState, CommandArg::Type::Bool},        // default
     {CmdToggleTableOfContents, kCmdArgState, CommandArg::Type::Bool},  // default
+    {CmdToggleDisableLinks, kCmdArgState, CommandArg::Type::Bool},     // default
+    {CmdSelectTextViaKeyboard, kCmdArgState, CommandArg::Type::Bool},  // default
 #ifndef NO_THUMBNAIL_STATE_ARG
     {CmdToggleThumbnails, kCmdArgState, CommandArg::Type::Bool}, // default
 #endif

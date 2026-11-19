@@ -12454,7 +12454,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSelectTextViaKeyboard:
-            ToggleSelectTextWithKeyboard(win);
+            if (ShouldToggle(cmd, SelectTextWithKeyboardActive(win))) {
+                ToggleSelectTextWithKeyboard(win);
+            }
             break;
 
         case CmdPresentationBlackBackground:

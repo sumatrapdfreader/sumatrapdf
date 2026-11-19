@@ -6224,6 +6224,9 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdToggleDisableLinks:
+            if (!ShouldToggle(cmd, gSettings->disableLinks)) {
+                break;
+            }
             gSettings->disableLinks = !gSettings->disableLinks;
             ScheduleSaveSettings();
             if (gSettings->disableLinks) {
@@ -6325,7 +6328,9 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdSelectTextViaKeyboard:
-            ToggleSelectTextWithKeyboard(win);
+            if (ShouldToggle(cmd, SelectTextWithKeyboardActive(win))) {
+                ToggleSelectTextWithKeyboard(win);
+            }
             break;
 
         // no default shortcut: Ctrl+Shift+Left / Right and friends are taken, so
