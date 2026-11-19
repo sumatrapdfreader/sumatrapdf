@@ -8521,10 +8521,11 @@ static _synctex_nd_s _synctex_point_v_ordered_distance_v2
  *  So there is a real risk of overflow if we stick with ints.
  */
 SYNCTEX_INLINE static synctex_node_p _synctex_smallest_container_v2(synctex_node_p node, synctex_node_p other_node) {
-    long total_height, other_total_height;
-    unsigned long area, other_area;
-    long width = synctex_node_hbox_width(node);
-    long other_width = synctex_node_hbox_width(other_node);
+    /* long long: long is 32-bit on Windows and area overflows */
+    long long total_height, other_total_height;
+    unsigned long long area, other_area;
+    long long width = synctex_node_hbox_width(node);
+    long long other_width = synctex_node_hbox_width(other_node);
     if (width<0) {
         width = -width;
     }
