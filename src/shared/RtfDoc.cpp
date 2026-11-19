@@ -493,7 +493,12 @@ static u32 DibBitsOffset(Str dib) {
         nColors = 1u << bitCount;
     }
     u32 masks = (hdrSize == kBitmapInfoHeaderSize && compression == kBiBitfields) ? 12 : 0;
-    return hdrSize + masks + nColors * 4;
+    // the palette size comes from the file: its end must be inside the DIB (#6566)
+    u64 bitsOffset = (u64)hdrSize + masks + (u64)nColors * 4;
+    if (bitsOffset > (u64)len(dib)) {
+        return 0;
+    }
+    return (u32)bitsOffset;
 }
 
 // a \dibitmap is a BMP file without its 14-byte file header
