@@ -228,6 +228,7 @@ import { testit as autoScrollExtras } from "./auto-scroll-extras.ts";
 import { testit as toolbarWrap } from "./toolbar-wrap.ts";
 import { testit as reopenClosedWindow } from "./reopen-closed-window.ts";
 import { testit as tabGroupAutoSync } from "./tab-group-autosync.ts";
+import { testit as tabGroupEmptyPath } from "./tab-group-empty-path.ts";
 import { testit as replaceImage } from "./replace-image.ts";
 import { testit as readColumns } from "./read-columns.ts";
 import { testit as issue6486 } from "./issue-6486.ts";
@@ -1091,6 +1092,7 @@ export const tests: NamedTest[] = [
   ["toolbar-wrap", toolbarWrap],
   ["reopen-closed-window", reopenClosedWindow],
   ["tab-group-autosync", tabGroupAutoSync],
+  ["tab-group-empty-path", tabGroupEmptyPath],
   ["replace-image", replaceImage],
   ["read-columns", readColumns],
   ["issue-6486", issue6486],

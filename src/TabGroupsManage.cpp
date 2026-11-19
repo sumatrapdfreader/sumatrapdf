@@ -135,7 +135,7 @@ void TabGroupsWnd::OpenTabGroup() {
     }
     bool first = true;
     for (TabFile* tf : *group->tabFiles) {
-        if (!tf->path.s) {
+        if (len(tf->path) == 0) {
             continue;
         }
         LoadArgs args(tf->path, targetWin);
