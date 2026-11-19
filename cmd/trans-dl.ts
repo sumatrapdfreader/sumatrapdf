@@ -1165,7 +1165,7 @@ async function translateWithClaude(apiKey: string, strings: string[], langCode: 
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-5-5",
       max_tokens: 16384,
       messages: [{ role: "user", content: prompt }],
     }),
