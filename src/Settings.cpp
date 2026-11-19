@@ -973,20 +973,23 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, showToc), SettingType::Bool, true},
     {offsetof(TabState, sidebarView), SettingType::String, 0, false, false, gEnumTabStateSidebarView, "bookmarks"},
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
+    {offsetof(TabState, groupName), SettingType::String, 0},
+    {offsetof(TabState, groupColor), SettingType::String, 0},
+    {offsetof(TabState, groupCollapsed), SettingType::Bool, false},
 };
 const StructInfo gTabStateInfo = {
     sizeof(TabState),
     (u16)dimof(gTabStateFields),
     gTabStateFields,
-    "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0SidebarView\0TocState",
+    "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0SidebarView\0TocState\0GroupName\0GroupColor\0GroupCollapsed",
     "path of the document\0layout of pages in this tab\0number of the last read page, or `bm:<bookmark>` for documents "
     "with chapters (see PagePosition.cpp)\0zoom (in %) or one of those values: fit page, fit width, fit height, fit "
     "content, fit visible\0how far pages have been rotated as a multiple of 90 degrees\0how far this document has been "
     "scrolled (in x and y direction)\0if true, the table of contents was shown when the document was closed\0what the "
     "sidebar's top panel showed: bookmarks, thumbnails, favorites, signatures or layers\0which table of contents items "
-    "were expanded (see FileStates -> TocState)",
+    "were expanded (see FileStates -> TocState)\0name of the tab group this tab belongs to (empty if none)\0color of that group, e.g. #1a73e8\0if true, the group was collapsed",
     false};
-static_assert(dimof(gTabStateFields) == 9);
+static_assert(dimof(gTabStateFields) == 12);
 
 static const FieldInfo gRect_4_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -1169,6 +1172,8 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, preventSleepInFullscreen), SettingType::Bool, true},
     {offsetof(Settings, tabWidth), SettingType::Int, 300},
     {offsetof(Settings, tabsEqualWidth), SettingType::Bool, true},
+    {offsetof(Settings, verticalTabs), SettingType::Bool, false},
+    {offsetof(Settings, verticalTabsWidth), SettingType::Int, 220},
     {offsetof(Settings, theme), SettingType::String, (intptr_t)"Light"},
     {offsetof(Settings, helpTheme), SettingType::String, (intptr_t)"app", false, false, gEnumSettingsHelpTheme,
      nullptr},
@@ -1294,7 +1299,7 @@ const StructInfo gSettingsInfo = {
     "rollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0PaddingAfterLastPage\0ContinuousScrol"
     "lFollowsRotation\0IgnoreDestinationZoom\0HighlightLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloud"
     "Speed\0ReadingAutoScrollSpeed\0ReadingAutoScrollMinutes\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepInFullsc"
-    "reen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy"
+    "reen\0TabWidth\0TabsEqualWidth\0VerticalTabs\0VerticalTabsWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy"
     "\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize"
     "\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption\0SelectionTool"
     "bar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0FitWidthPercent\0\0FixedPageUI\0\0"
@@ -1420,7 +1425,7 @@ const StructInfo gSettingsInfo = {
     "on the page to keep your place. Highlight fills the band; Invert dims everything else\0if true, mouse wheel "
     "scrolling is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off when in "
     "fullscreen or presentation mode\0maximum width of a single tab, in pixels at 100% display scaling (at least "
-    "60)\0if true, all tabs are equally wide. If false, a tab is as wide as its file name needs, up to TabWidth\0valid "
+    "60)\0if true, all tabs are equally wide. If false, a tab is as wide as its file name needs, up to TabWidth\0if true, tabs are shown as a column next to the document instead of a bar above it\0width of the vertical tabs column, in pixels at 100% display scaling\0valid "
     "themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, Solarized Dark, Dracula, Nebula, "
     "Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, "
     "Ayu, Palenight, System\0color theme of the in-app manual (F1): app (follow the app's theme), light or dark. The "
@@ -1493,7 +1498,7 @@ const StructInfo gSettingsInfo = {
     "Set from File / Link SumatraPDF Web. Do not share the settings file.\0an empty value means the public SumatraPDF "
     "Web site. The dialog does not edit it.\0\0Settings below are not recognized by the current version",
     false};
-static_assert(dimof(gSettingsFields) == 193);
+static_assert(dimof(gSettingsFields) == 195);
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

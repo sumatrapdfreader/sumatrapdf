@@ -383,6 +383,11 @@ const commandsRaw = [
     "CmdViewAsHex", "View As Hex",
     "CmdAIChatWithCustomAPI", "Custom AI chat...",
     "CmdSaveTrimmedPagesAs", "Save Trimmed Pages As...",
+    "CmdToggleVerticalTabs", "Toggle Vertical Tabs",
+    "CmdTabGroupNew", "Add Tab To New Group",
+    "CmdTabGroupRemove", "Remove Tab From Group",
+    "CmdTabGroupToggle", "Toggle Tab Group Collapsed",
+    "CmdTabGroupRename", "Rename Tab Group...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

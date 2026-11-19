@@ -382,6 +382,11 @@ const CommandInfo gCommands[] = {
     {CmdViewAsHex, "CmdViewAsHex\0", StrL("View As Hex")},
     {CmdAIChatWithCustomAPI, "CmdAIChatWithCustomAPI\0", StrL("Custom AI chat...")},
     {CmdSaveTrimmedPagesAs, "CmdSaveTrimmedPagesAs\0", StrL("Save Trimmed Pages As...")},
+    {CmdToggleVerticalTabs, "CmdToggleVerticalTabs\0", StrL("Toggle Vertical Tabs")},
+    {CmdTabGroupNew, "CmdTabGroupNew\0", StrL("Add Tab To New Group")},
+    {CmdTabGroupRemove, "CmdTabGroupRemove\0", StrL("Remove Tab From Group")},
+    {CmdTabGroupToggle, "CmdTabGroupToggle\0", StrL("Toggle Tab Group Collapsed")},
+    {CmdTabGroupRename, "CmdTabGroupRename\0", StrL("Rename Tab Group...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

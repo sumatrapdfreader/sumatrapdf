@@ -406,6 +406,12 @@ struct TabState {
     // which table of contents items were expanded (see FileStates ->
     // TocState)
     Vec<int>* tocState;
+    // name of the tab group this tab belongs to (empty if none)
+    Str groupName;
+    // color of that group, e.g. #1a73e8
+    Str groupColor;
+    // if true, the group was collapsed
+    bool groupCollapsed;
 };
 
 // windows and tabs still open when SumatraPDF was last closed; reopened
@@ -1139,6 +1145,11 @@ struct Settings {
     // if true, all tabs are equally wide. If false, a tab is as wide as
     // its file name needs, up to TabWidth
     bool tabsEqualWidth;
+    // if true, tabs are shown as a column next to the document instead of
+    // a bar above it
+    bool verticalTabs;
+    // width of the vertical tabs column, in pixels at 100% display scaling
+    int verticalTabsWidth;
     // if both the favorites and the bookmarks part of the sidebar are
     // visible, this is the height of the bookmarks (table of contents)
     // part, in screen pixels
