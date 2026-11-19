@@ -1942,6 +1942,22 @@ static bool OpensWithThumbnails(MainWindow* win, WindowTab* tab) {
     return !win->ctrl->HasToc();
 }
 
+// Color the tab as remembered for its document (FileState::tabCol).
+static void ApplySavedTabColor(WindowTab* tab, FileState* fs) {
+    if (!fs) {
+        return;
+    }
+    ParsedColor* tabColParsed = GetPrefsColor(fs->tabCol);
+    if (!tabColParsed->parsedOk) {
+        return;
+    }
+    tab->tabColor = tabColParsed->col;
+    // AddTabToWindow() copied tab->tabColor into the TabInfo before the
+    // document loaded, when it was still unset, so push it again now -
+    // the tab control paints from the TabInfo (issue #5884)
+    SetTabInfoColor(tab);
+}
+
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
@@ -2022,14 +2038,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             tab->bgColor = bgParsed->col;
             tab->bgColorCheckered = (bgParsed->col == kColorUnset);
         }
-        ParsedColor* tabColParsed = GetPrefsColor(fs->tabCol);
-        if (tabColParsed->parsedOk) {
-            tab->tabColor = tabColParsed->col;
-            // AddTabToWindow() copied tab->tabColor into the TabInfo before the
-            // document loaded, when it was still unset, so push it again now -
-            // the tab control paints from the TabInfo (issue #5884)
-            SetTabInfoColor(tab);
-        }
+        ApplySavedTabColor(tab, fs);
     }
     if (gCli && !gCli->windowPos.IsEmpty()) {
         // -window-pos asked for a rectangle, which a maximized, minimized or
@@ -3501,6 +3510,9 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
             return nullptr;
         }
         ReplaceDocumentInCurrentTab(args, args->ctrl, nullptr);
+    } else {
+        // the document loads when the tab is selected, but its color shows now
+        ApplySavedTabColor(win->CurrentTab(), FileHistoryFindByPath(fullPath));
     }
 
     if (!IsMainWindowValidAndNotClosing(win)) {

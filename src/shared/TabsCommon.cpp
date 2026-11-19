@@ -74,11 +74,17 @@ TempStr TabPageSuffixTemp(WindowTab* tab) {
     return fmt(" %d/%d", curr, count);
 }
 
-// a tab for a document of the restored session, its file not loaded yet
+// a tab for a document of the restored session, its file not loaded yet; it
+// shows the document's remembered tab color already
 WindowTab* NewSessionTab(MainWindow* win, TabState* state) {
     WindowTab* tab = new WindowTab(win);
     tab->SetFilePath(state->filePath);
     tab->tabState = state;
+    FileState* fs = FileHistoryFindByPath(state->filePath);
+    ParsedColor* tabCol = fs ? GetPrefsColor(fs->tabCol) : nullptr;
+    if (tabCol && tabCol->parsedOk) {
+        tab->tabColor = tabCol->col;
+    }
     return tab;
 }
 
