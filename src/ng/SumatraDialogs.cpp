@@ -40,7 +40,6 @@
 #include "SelectionTranslate.h"
 #include "SimpleBrowserWindow.h"
 #include "gui/DialogWidgets.h"
-#include "gui/NativeMsgBox.h"
 #include "resource.h"
 #include "SumatraDialogs.h"
 #include "shared/PdfToolsCommon.h"
@@ -127,6 +126,137 @@ void MsgBoxView::OnCancel(MsgBoxView*, gp::Ctx* cx, const gp::ClickEvent*) {
     gp::Notify(cx);
 }
 
+// --- orig's system dialogs as gpui prompts ----------------------------------
+
+// ng: orig asks with MessageBoxW and, for "Unsaved changes", a task dialog.
+// On Windows gpui's prompt is that task dialog. Under the automation channel
+// it is off, so a script gets the port's own dialogs, which it can answer.
+// Elsewhere the port's dialogs are closer to orig's than an NSAlert.
+static bool gNativeMsgBoxOff = false;
+
+static bool NativeMsgBoxEnabled() {
+    return OS_WIN && !gNativeMsgBoxOff && ToolWindowsAvailable();
+}
+
+void NativeMsgBoxSetEnabled(bool enabled) {
+    gNativeMsgBoxOff = !enabled;
+}
+
+// orig's box is owned by the window that asks: the main window, or its tool
+// window that was the active one
+static gp::Window* NativePromptOwner(MainWindow* win) {
+    if (ToolWindow* tw = ToolWindowActiveOf(win)) {
+        if (gp::Window* gw = ToolWindowGpui(tw)) {
+            return gw;
+        }
+    }
+    return win->gpuiWin;
+}
+
+// what each prompt button stands for in orig's return value
+constexpr int kNativePromptMaxButtons = 4;
+
+struct NativePrompt {
+    MainWindow* win = nullptr;
+    Func1<int> onResult;
+    gp::PromptButton buttons[kNativePromptMaxButtons];
+    int results[kNativePromptMaxButtons]{};
+    int n = 0;
+    // the result when the prompt goes away unanswered
+    int unanswered = 0;
+};
+
+struct NativePromptView {
+    static void OnAnswer(NativePromptView*, gp::Ctx*, const gp::PromptResponse* r, int64_t arg);
+};
+
+static gp::Entity<NativePromptView> gNativePromptView;
+
+static void NativePromptAdd(NativePrompt* p, gp::PromptButton b, int result) {
+    p->buttons[p->n] = b;
+    p->results[p->n] = result;
+    p->n++;
+}
+
+void NativePromptView::OnAnswer(NativePromptView*, gp::Ctx*, const gp::PromptResponse* r, int64_t arg) {
+    auto* p = (NativePrompt*)(intptr_t)arg;
+    int res = r->ix >= 0 && r->ix < p->n ? p->results[r->ix] : p->unanswered;
+    logf("NativePrompt: answer %d result %d\n", r->ix, res);
+    MainWindow* win = p->win;
+    Func1<int> onResult = p->onResult;
+    delete p;
+    onResult.Call(res);
+    if (IsMainWindowValid(win)) {
+        AppShellInvalidate(win);
+    }
+}
+
+static void NativePromptShow(NativePrompt* p, gp::PromptLevel level, Str message, Str detail, Str title,
+                             int defaultIx) {
+    gp::Window* owner = NativePromptOwner(p->win);
+    if (!gNativePromptView.IsValid()) {
+        gNativePromptView = gp::EntityNewState<NativePromptView>(owner->app);
+    }
+    gp::PromptOptions opts;
+    opts.title = ToGpui(title);
+    opts.defaultIx = defaultIx;
+    opts.rtl = trans::IsCurrLangRtl();
+    gp::Listener onAnswer = gp::ListenTo(gNativePromptView, &NativePromptView::OnAnswer, (int64_t)(intptr_t)p);
+    gp::WindowPrompt(owner, level, ToGpui(message), ToGpui(detail), p->buttons, p->n, onAnswer, &opts);
+}
+
+// a task dialog button's mnemonic, as MessageBoxW's &Yes / &No
+static Str PromptMnemonic(Str label) {
+    return fmt("&%s", label);
+}
+
+// MessageBoxW(owner, text, caption, flags); onResult gets its return value.
+// The text is the content, not the bigger main instruction, as in a message box.
+static void NativeMsgBox(MainWindow* win, Str text, Str caption, uint flags, Func1<int> onResult) {
+    auto* p = new NativePrompt();
+    p->win = win;
+    p->onResult = onResult;
+    p->unanswered = MbRetCancel;
+    uint kind = flags & 0xf;
+    if (kind == MbYesNo || kind == MbYesNoCancel) {
+        NativePromptAdd(p, gp::PromptButton::New(ToGpui(PromptMnemonic(Tr("Yes")))), MbRetYes);
+        NativePromptAdd(p, gp::PromptButton::New(ToGpui(PromptMnemonic(Tr("No")))), MbRetNo);
+        if (kind == MbYesNoCancel) {
+            NativePromptAdd(p, gp::PromptButton::Cancel(ToGpui(Tr("Cancel"))), MbRetCancel);
+        }
+    } else if (kind == MbOkCancel) {
+        NativePromptAdd(p, gp::PromptButton::Ok(ToGpui(Tr("OK"))), MbRetOk);
+        NativePromptAdd(p, gp::PromptButton::Cancel(ToGpui(Tr("Cancel"))), MbRetCancel);
+    } else {
+        // MB_OK: Esc closes the box, which a prompt allows for Cancel only
+        NativePromptAdd(p, gp::PromptButton::Cancel(ToGpui(Tr("OK"))), MbRetOk);
+        p->unanswered = MbRetOk;
+    }
+    gp::PromptLevel level = gp::PromptLevel::Info;
+    uint icon = flags & 0xf0;
+    if (icon == MbIconError) {
+        level = gp::PromptLevel::Critical;
+    } else if (icon == MbIconWarning) {
+        level = gp::PromptLevel::Warning;
+    }
+    NativePromptShow(p, level, {}, text, caption, 0);
+}
+
+// orig's ShouldSaveAnnotationsDialog; onChoice gets a SaveChoice
+static void NativeUnsavedDialog(MainWindow* win, Str fileName, Func1<int> onChoice) {
+    auto* p = new NativePrompt();
+    p->win = win;
+    p->onResult = onChoice;
+    // as orig: a dialog that could not be shown discards
+    p->unanswered = (int)SaveChoice::Discard;
+    NativePromptAdd(p, gp::PromptButton::New(ToGpui(Tr("&Save to existing PDF"))), (int)SaveChoice::SaveExisting);
+    NativePromptAdd(p, gp::PromptButton::New(ToGpui(Tr("Save to &new PDF"))), (int)SaveChoice::SaveNew);
+    NativePromptAdd(p, gp::PromptButton::New(ToGpui(Tr("&Discard changes"))), (int)SaveChoice::Discard);
+    NativePromptAdd(p, gp::PromptButton::Cancel(ToGpui(Tr("&Cancel"))), (int)SaveChoice::Cancel);
+    Str instr = fmt(Tr("Unsaved changes in '%s'").s, fileName);
+    NativePromptShow(p, gp::PromptLevel::Info, instr, Tr("Save changes?"), Tr("Unsaved changes"), p->n - 1);
+}
+
 void MsgBox(MainWindow* win, Str text, Str caption, uint flags, Func1<int> onResult) {
     // a second message box would drop the first one's answer on the floor
     if (gMsgBox.visible) {
@@ -140,14 +270,12 @@ void MsgBox(MainWindow* win, Str text, Str caption, uint flags, Func1<int> onRes
         onResult.Call(MbRetCancel);
         return;
     }
-#if OS_WIN
     // orig's MessageBoxW, where the system's box can be shown
     if (NativeMsgBoxEnabled()) {
         logf("MsgBox (system): '%s' / '%s' flags 0x%x\n", caption, text, flags);
         NativeMsgBox(win, text, len(caption) > 0 ? caption : Str(kAppName), flags, onResult);
         return;
     }
-#endif
     gMsgBox.win = win;
     gMsgBox.host = ToolWindowActiveOf(win);
     gMsgBox.text = str::Dup(text);
@@ -1010,14 +1138,12 @@ void ShowUnsavedAnnotationsDialog(MainWindow* win, Str fileName, Func1<int> onCh
     if (gUnsaved.visible) {
         FinishUnsaved(SaveChoice::Cancel);
     }
-#if OS_WIN
     // orig's task dialog, where the system's can be shown
     if (NativeMsgBoxEnabled()) {
         logf("ShowUnsavedAnnotationsDialog (system): '%s'\n", fileName);
         NativeUnsavedDialog(win, fileName, onChoice);
         return;
     }
-#endif
     gUnsaved.win = win;
     gUnsaved.fileName = str::Dup(fileName);
     gUnsaved.onChoice = onChoice;

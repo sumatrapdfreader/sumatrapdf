@@ -22951,6 +22951,63 @@ double TestClockNow() {
     return gTestPlatform.now;
 }
 
+static Vec<PromptRequest*> gTestPrompts;
+
+static void TestPromptsDrop() {
+    for (int i = 0; i < len(gTestPrompts); i++) {
+        PromptRequest* req = gTestPrompts[i];
+        req->app = nullptr;
+        PromptFinish(req, -1);
+    }
+    VecReset(gTestPrompts);
+}
+
+bool TestPlatformPrompt(PromptRequest* req) {
+    if (!gTestPlatform.on || !req) {
+        return false;
+    }
+    VecAppend(gTestPrompts, req);
+    return true;
+}
+
+bool TestHasPendingPrompt() {
+    return len(gTestPrompts) > 0;
+}
+
+bool TestPendingPrompt(Str* message, Str* detail) {
+    if (len(gTestPrompts) == 0) {
+        return false;
+    }
+    if (message) {
+        *message = gTestPrompts[0]->message;
+    }
+    if (detail) {
+        *detail = gTestPrompts[0]->detail;
+    }
+    return true;
+}
+
+bool TestSimulatePromptAnswer(Str response) {
+    if (len(gTestPrompts) == 0) {
+        return false;
+    }
+    PromptRequest* req = gTestPrompts[0];
+    int ix = -1;
+    for (int i = 0; i < req->n && ix < 0; i++) {
+        if (StrEq(req->answers[i].label, response)) {
+            ix = i;
+        }
+    }
+    if (ix < 0) {
+        return false;
+    }
+    VecRemoveAt(gTestPrompts, 0);
+    App* app = req->app;
+    PromptFinish(req, ix);
+    TestRunUntilParked(app);
+    return true;
+}
+
 RenderImage* TestMakeSizedImage(PaintApp* paint, int width, int height) {
     if (width <= 0 || height <= 0 || height > INT32_MAX / 4 / width) {
         return nullptr;
@@ -22979,6 +23036,7 @@ App* TestAppNew() {
         return nullptr;
     }
     StrFree(gTestPlatform.clipboard);
+    TestPromptsDrop();
     gTestPlatform = TestPlatform{};
     gTestPlatform.on = true;
     gTestPlatform.now = kTestClockStart;
@@ -22986,6 +23044,7 @@ App* TestAppNew() {
 }
 
 void TestAppFree(App* app) {
+    TestPromptsDrop();
     AppFreeHeadless(app);
     StrFree(gTestPlatform.clipboard);
     gTestPlatform = TestPlatform{};
@@ -23878,7 +23937,17 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
     VecClear(win->debugViewRoots);
     win->hasRovingTabs = false;
     El* root = EntityRender(win->app, win, win->frameArena, win->root);
-    if (win->tooltip.IsValid()) {
+
+    El* prompt = win->prompt.IsValid()
+                     ? EntityRender(win->app, win, win->frameArena, win->prompt)
+                     : nullptr;
+    if (prompt) {
+        if (root) {
+            root->Child(prompt);
+        } else {
+            root = prompt;
+        }
+    } else if (win->tooltip.IsValid()) {
         El* tooltip =
             EntityRender(win->app, win, win->frameArena, win->tooltip);
         if (tooltip) {
@@ -27486,6 +27555,8 @@ void WindowClosed(Window* win) {
         return;
     }
 
+    PromptsWindowClosed(win);
+
     if (win->input) {
         InputBlur(win->input, win->app, win);
     }
@@ -28119,6 +28190,245 @@ TempStr WindowCaptureOkTemp(int pxW, int pxH, float scale, int windows,
                             int webviews) {
     return fmt("OK w=%d h=%d scale=%g windows=%d webviews=%d pending=%d", pxW,
                pxH, (double)scale, windows, webviews, webviews > 0 ? 1 : 0);
+}
+
+PromptButton PromptButton::From(Str value) {
+    if (StrEqI(value, StrL("ok"))) {
+        return Ok(StrL("OK"));
+    }
+    if (StrEqI(value, StrL("cancel"))) {
+        return Cancel(StrL("Cancel"));
+    }
+    return New(value);
+}
+
+static void PromptRequestFree(PromptRequest* req) {
+    if (!req) {
+        return;
+    }
+    StrFree(req->message);
+    StrFree(req->detail);
+    StrFree(req->opts.title);
+    for (int i = 0; i < req->n; i++) {
+        StrFree(req->answers[i].label);
+    }
+    delete[] req->answers;
+    delete req;
+}
+
+static void PromptAnswer(PromptRequest* req, int ix) {
+    if (req->answered) {
+        return;
+    }
+    req->answered = true;
+    bool live = false;
+    for (int i = 0; req->app && i < len(req->app->windows); i++) {
+        live = live || req->app->windows[i] == req->win;
+    }
+    if (!live) {
+        return;
+    }
+    PromptResponse resp;
+    resp.ix = ix >= 0 && ix < req->n ? ix : -1;
+    ListenerCall(req->app, req->win, req->onAnswer, &resp);
+    if (req->win->running) {
+        AppInvalidate(req->win);
+    }
+}
+
+static void PromptForget(PromptRequest* req) {
+    Window* win = req->win;
+    for (int i = 0; win && i < len(win->nativePrompts); i++) {
+        if (win->nativePrompts[i] == req) {
+            VecRemoveAt(win->nativePrompts, i);
+            break;
+        }
+    }
+}
+
+void PromptFinish(PromptRequest* req, int ix) {
+    if (!req) {
+        return;
+    }
+    PromptForget(req);
+    PromptAnswer(req, ix);
+    PromptRequestFree(req);
+}
+
+struct FallbackPrompt {
+    PromptRequest* req = nullptr;
+    FocusHandle focus = {};
+    FocusHandle previousFocus = {};
+
+    ~FallbackPrompt() { PromptRequestFree(req); }
+
+    static El* Render(FallbackPrompt* self, Ctx* cx);
+    static void OnPick(FallbackPrompt* self, Ctx* cx, const ClickEvent*,
+                       int64_t ix);
+};
+
+static const Rgba kPromptBackdrop = {128, 128, 128, 153};
+static const Rgba kPromptButtonBorder = {51, 51, 51, 128};
+static const Rgba kPromptSurface = {255, 255, 255, 255};
+static const Rgba kPromptText = {0, 0, 0, 255};
+
+El* FallbackPrompt::Render(FallbackPrompt* self, Ctx* cx) {
+    PromptRequest* req = self->req;
+    if (!req) {
+        return nullptr;
+    }
+    Arena* a = cx->a;
+
+    float rem = WindowRemSize(cx->win);
+    float textSm = rem * 0.875f;
+
+    El* prompt = Div(a)
+                     ->TrackFocus(self->focus)
+                     ->W(rem * 18)
+                     ->Bg(kPromptSurface)
+                     ->Radius(rem * 0.5f)
+                     ->Pad(rem * 0.75f)
+                     ->Fg(kPromptText)
+                     ->FlexCol();
+    prompt->Child(Div(a)->FlexRow()->JustifyAround()->Child(
+        TextEl(a, req->message)->Wrap()));
+    if (len(req->detail) > 0) {
+        prompt
+            ->Child(Div(a)
+                        ->FlexRow()
+                        ->JustifyAround()
+                        ->MarginB(rem * 0.5f)
+                        ->Child(TextEl(a, req->detail)->Font(textSm)->Wrap()));
+    }
+    for (int i = 0; i < req->n; i++) {
+        prompt->Child(
+            Div(a)
+                ->FlexRow()
+                ->JustifyAround()
+                ->Border(1, kPromptButtonBorder)
+                ->MarginT(rem * 0.25f)
+                ->Radius(rem * 0.125f)
+                ->Cursor(CursorKind::Pointer)
+                ->Click(i + 1)
+                ->OnClick(Listen(cx, &FallbackPrompt::OnPick, i))
+                ->Child(TextEl(a, req->answers[i].label)->Font(textSm)));
+    }
+
+    WinSize sz = WindowSize(cx->win);
+    El* centered =
+        Div(a)->Absolute()->Inset0()->FlexCol()->JustifyAround()->Child(
+            Div(a)->FlexRow()->JustifyAround()->Child(prompt));
+    return Div(a)
+        ->Fixed()
+        ->Top(0)
+        ->Left(0)
+        ->W(sz.dipW)
+        ->H(sz.dipH)
+        ->DeferredLayer(kPaintLayerTooltip)
+        ->Child(Div(a)->Absolute()->Inset0()->Bg(kPromptBackdrop))
+        ->Child(centered);
+}
+
+void FallbackPrompt::OnPick(FallbackPrompt* self, Ctx* cx, const ClickEvent*,
+                            int64_t ix) {
+    Window* win = cx->win;
+    PromptRequest* req = self->req;
+    FocusHandle previous = self->previousFocus;
+    self->req = nullptr;
+
+    if (win && win->prompt == cx->self) {
+        win->prompt = {};
+    }
+    EntityDrop(cx->app, cx->self);
+    if (win) {
+        FocusHandleRestore(win, previous);
+        AppInvalidate(win);
+    }
+    PromptFinish(req, (int)ix);
+}
+
+static void PromptShowFallback(Window* win, PromptRequest* req) {
+
+    if (FallbackPrompt* old =
+            (FallbackPrompt*)EntityGet(win->app, win->prompt)) {
+        PromptRequest* oldReq = old->req;
+        old->req = nullptr;
+        EntityDrop(win->app, win->prompt);
+        win->prompt = {};
+        PromptFinish(oldReq, -1);
+    }
+    Entity<FallbackPrompt> view = EntityNew<FallbackPrompt>(win->app);
+    FallbackPrompt* p = view.Get(win->app);
+    p->req = req;
+    p->focus = FocusHandleNew(win->app);
+    p->previousFocus = WindowFocused(win);
+    win->prompt = view.id;
+    FocusHandleFocus(win, p->focus);
+    AppInvalidate(win);
+}
+
+void WindowPrompt(Window* win, PromptLevel level, Str message, Str detail,
+                  const PromptButton* answers, int n, Listener onAnswer,
+                  const PromptOptions* opts) {
+    if (!win || !win->app) {
+        return;
+    }
+    auto* req = new PromptRequest();
+    req->app = win->app;
+    req->win = win;
+    req->onAnswer = onAnswer;
+    req->level = level;
+    req->message = StrDup(message);
+    req->detail = len(detail) > 0 ? StrDup(detail) : Str{};
+    req->n = n > 0 ? n : 0;
+    req->answers = new PromptButton[req->n > 0 ? req->n : 1];
+    for (int i = 0; i < req->n; i++) {
+        req->answers[i].kind = answers[i].kind;
+        req->answers[i].label = StrDup(answers[i].label);
+    }
+    if (opts) {
+        req->opts = *opts;
+        req->opts.title = len(opts->title) > 0 ? StrDup(opts->title) : Str{};
+    }
+
+    if (!win->app->fallbackPrompts) {
+        if (TestPlatformPrompt(req) || PlatWindowPrompt(win, req)) {
+            VecAppend(win->nativePrompts, req);
+            return;
+        }
+    }
+    PromptShowFallback(win, req);
+}
+
+void PromptsWindowClosed(Window* win) {
+    if (!win || !win->app) {
+        return;
+    }
+    if (FallbackPrompt* p = (FallbackPrompt*)EntityGet(win->app, win->prompt)) {
+        PromptRequest* req = p->req;
+        p->req = nullptr;
+        EntityDrop(win->app, win->prompt);
+        win->prompt = {};
+        PromptFinish(req, -1);
+    }
+
+    while (len(win->nativePrompts) > 0) {
+        PromptRequest* req = win->nativePrompts[len(win->nativePrompts) - 1];
+        VecRemoveAt(win->nativePrompts, len(win->nativePrompts) - 1);
+        PromptAnswer(req, -1);
+        req->win = nullptr;
+        PlatPromptAbort(win, req);
+    }
+}
+
+bool WindowHasActivePrompt(const Window* win) {
+    return win && win->prompt.IsValid();
+}
+
+void AppSetFallbackPrompts(App* app, bool always) {
+    if (app) {
+        app->fallbackPrompts = always;
+    }
 }
 
 }
@@ -249456,6 +249766,101 @@ void OpenPath(Str path) {
     }
 }
 
+static NSString* PromptNSString(Str s) {
+    NSString* res = [[NSString alloc] initWithBytes:s.s ? s.s : ""
+                                             length:(NSUInteger)len(s)
+                                           encoding:NSUTF8StringEncoding];
+    return res ? res : @"";
+}
+
+static NSWindow* PromptSheetParent(PromptRequest* req) {
+    for (int i = 0; req->app && i < len(req->app->windows); i++) {
+        Window* w = req->app->windows[i];
+        if (w == req->win && w->plat) {
+            return w->plat->window;
+        }
+    }
+    return nil;
+}
+
+static void PromptRun(PromptRequest* req) {
+    NSWindow* parent = PromptSheetParent(req);
+    if (!parent) {
+        PromptFinish(req, -1);
+        return;
+    }
+    int focusIx = -1;
+    for (int i = req->n - 1; i > 0 && focusIx < 0; i--) {
+        if (!req->answers[i].IsCancel()) {
+            focusIx = i;
+        }
+    }
+    NSAlert* alert = [[NSAlert alloc] init];
+    NSAlertStyle style = NSAlertStyleInformational;
+    if (req->level == PromptLevel::Warning) {
+        style = NSAlertStyleWarning;
+    } else if (req->level == PromptLevel::Critical) {
+        style = NSAlertStyleCritical;
+    }
+    [alert setAlertStyle:style];
+    [alert setMessageText:PromptNSString(req->message)];
+    if (len(req->detail) > 0) {
+        [alert setInformativeText:PromptNSString(req->detail)];
+    }
+
+    int defaultIx = req->opts.defaultIx;
+    NSButton* focusButton = nil;
+    NSButton* first = nil;
+    for (int i = 0; i < req->n; i++) {
+        NSButton* button =
+            [alert addButtonWithTitle:PromptNSString(req->answers[i].label)];
+        [button setTag:i];
+        if (i == 0) {
+            first = button;
+        }
+        if (req->answers[i].IsCancel()) {
+            [button setKeyEquivalent:@"\x1b"];
+        } else if (i == focusIx) {
+            focusButton = button;
+        }
+        if (defaultIx > 0 && i == defaultIx) {
+            [button setKeyEquivalent:@"\r"];
+        }
+    }
+    if (defaultIx > 0 && defaultIx < req->n && first &&
+        [[first keyEquivalent] isEqualToString:@"\r"]) {
+        [first setKeyEquivalent:@""];
+    }
+    if (focusButton) {
+        [[alert window] setInitialFirstResponder:focusButton];
+    }
+
+    req->plat = (__bridge_retained void*)alert;
+    [alert beginSheetModalForWindow:parent
+                  completionHandler:^(NSModalResponse answer) {
+                    NSAlert* done = (__bridge_transfer NSAlert*)req->plat;
+                    req->plat = nullptr;
+                    (void)done;
+                    PromptFinish(req, (int)answer);
+                  }];
+}
+
+void PlatPromptAbort(Window* win, PromptRequest* req) {
+    if (!req || !req->plat || !win || !win->plat || !win->plat->window) {
+        return;
+    }
+    NSAlert* alert = (__bridge NSAlert*)req->plat;
+    [win->plat->window endSheet:[alert window] returnCode:NSModalResponseAbort];
+}
+
+bool PlatWindowPrompt(Window* win, PromptRequest* req) {
+    if (!win || !win->plat || !win->plat->window) {
+        return false;
+    }
+    ExecPost(MkFunc0(PromptRun, req));
+    return true;
+}
+
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     (void)win;
     NSOpenPanel* panel = [NSOpenPanel openPanel];
@@ -252565,6 +252970,137 @@ void OpenPath(Str path) {
     }
     ShellExecuteW(nullptr, L"open", ToCWstrTemp(path), nullptr, nullptr,
                   SW_SHOWNORMAL);
+}
+
+using TaskDialogIndirectFn = HRESULT(WINAPI*)(const TASKDIALOGCONFIG*, int*,
+                                              int*, BOOL*);
+
+static TaskDialogIndirectFn TaskDialogIndirectProc() {
+    static bool looked = false;
+    static TaskDialogIndirectFn fn = nullptr;
+    if (!looked) {
+        looked = true;
+        if (HMODULE m = LoadLibraryW(L"comctl32.dll")) {
+            fn = (TaskDialogIndirectFn)(void*)GetProcAddress(
+                m, "TaskDialogIndirect");
+        }
+    }
+    return fn;
+}
+
+static HRESULT CALLBACK PromptDialogCallback(HWND, UINT msg, WPARAM wp, LPARAM,
+                                             LONG_PTR hasCancel) {
+    if (msg == TDN_BUTTON_CLICKED && wp == IDCANCEL && !hasCancel) {
+        return S_FALSE;
+    }
+    return S_OK;
+}
+
+static WCHAR* PromptWideDup(Str s) {
+    int n = len(s) > 0
+                ? MultiByteToWideChar(CP_UTF8, 0, s.s, len(s), nullptr, 0)
+                : 0;
+    n = n > 0 ? n : 0;
+    WCHAR* res = new WCHAR[n + 1];
+    if (n > 0) {
+        MultiByteToWideChar(CP_UTF8, 0, s.s, len(s), res, n);
+    }
+    res[n] = 0;
+    return res;
+}
+
+static HWND PromptOwner(PromptRequest* req) {
+    for (int i = 0; req->app && i < len(req->app->windows); i++) {
+        Window* w = req->app->windows[i];
+        if (w == req->win && w->plat) {
+            return w->plat->hwnd;
+        }
+    }
+    return nullptr;
+}
+
+static void PromptRun(PromptRequest* req) {
+    HWND owner = PromptOwner(req);
+    TaskDialogIndirectFn taskDialog = TaskDialogIndirectProc();
+    if (!owner || !taskDialog) {
+        PromptFinish(req, -1);
+        return;
+    }
+    TASKDIALOGCONFIG config = {};
+    config.cbSize = sizeof(config);
+    config.hwndParent = owner;
+
+    DWORD flags =
+        TDF_ALLOW_DIALOG_CANCELLATION | TDF_POSITION_RELATIVE_TO_WINDOW;
+    if (req->opts.rtl) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    config.dwFlags = (TASKDIALOG_FLAGS)flags;
+    const WCHAR* levelTitle = L"Info";
+    config.pszMainIcon = TD_INFORMATION_ICON;
+    if (req->level == PromptLevel::Warning) {
+        levelTitle = L"Warning";
+        config.pszMainIcon = TD_WARNING_ICON;
+    } else if (req->level == PromptLevel::Critical) {
+        levelTitle = L"Critical";
+        config.pszMainIcon = TD_ERROR_ICON;
+    }
+    WCHAR* title =
+        len(req->opts.title) > 0 ? PromptWideDup(req->opts.title) : nullptr;
+    config.pszWindowTitle = title ? title : levelTitle;
+    WCHAR* instruction = PromptWideDup(req->message);
+    config.pszMainInstruction = instruction;
+    WCHAR* content =
+        len(req->detail) > 0 ? PromptWideDup(req->detail) : nullptr;
+    config.pszContent = content;
+
+    int n = req->n;
+    TASKDIALOG_BUTTON* buttons = new TASKDIALOG_BUTTON[n > 0 ? n : 1];
+    bool hasCancel = false;
+    for (int i = 0; i < n; i++) {
+        const PromptButton& b = req->answers[i];
+        int id = -i - 1;
+        if (b.kind == PromptButton::Kind::Ok) {
+            id = IDOK;
+        } else if (b.kind == PromptButton::Kind::Cancel) {
+            id = IDCANCEL;
+            hasCancel = true;
+        }
+        buttons[i].nButtonID = id;
+        buttons[i].pszButtonText = PromptWideDup(b.label);
+    }
+    config.cButtons = (UINT)n;
+    config.pButtons = buttons;
+    if (req->opts.defaultIx > 0 && req->opts.defaultIx < n) {
+        config.nDefaultButton = buttons[req->opts.defaultIx].nButtonID;
+    }
+    config.pfCallback = PromptDialogCallback;
+    config.lpCallbackData = hasCancel ? 1 : 0;
+
+    int pressed = 0;
+    HRESULT hr = taskDialog(&config, &pressed, nullptr, nullptr);
+    int ix = -1;
+    for (int i = 0; SUCCEEDED(hr) && i < n && ix < 0; i++) {
+        if (buttons[i].nButtonID == pressed) {
+            ix = i;
+        }
+    }
+    for (int i = 0; i < n; i++) {
+        delete[] buttons[i].pszButtonText;
+    }
+    delete[] buttons;
+    delete[] title;
+    delete[] instruction;
+    delete[] content;
+    PromptFinish(req, ix);
+}
+
+bool PlatWindowPrompt(Window* win, PromptRequest* req) {
+    if (!win || !win->plat || !win->plat->hwnd || !TaskDialogIndirectProc()) {
+        return false;
+    }
+    ExecPost(MkFunc0(PromptRun, req));
+    return true;
 }
 
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {

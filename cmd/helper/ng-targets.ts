@@ -1647,7 +1647,6 @@ export const targets: Target[] = [
       "src/ng/WebViewCapture_win.cpp",
       "src/ng/gui/NativeFileDlg_win.cpp",
       "src/ng/OpenFileFilters_win.cpp",
-      "src/ng/gui/NativeMsgBox_win.cpp",
       "src/ng/gui/NativeCursors.cpp",
       "src/ng/LaserPointerCursorCommon.cpp",
       "src/ng/gui/TouchGestures_win.cpp",

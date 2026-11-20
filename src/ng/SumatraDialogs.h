@@ -57,6 +57,7 @@ constexpr int MbRetYes = 6;
 constexpr int MbRetNo = 7;
 
 void MsgBox(MainWindow* win, Str text, Str caption, uint flags, Func1<int> onResult = {});
+void NativeMsgBoxSetEnabled(bool enabled);
 // ng: a message box raised while a tool window of `win` is the active window
 // is drawn in that window (gui/ToolWindow.cpp asks for it and gives it keys)
 struct ToolWindow;

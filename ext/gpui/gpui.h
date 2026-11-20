@@ -9047,10 +9047,14 @@ struct App {
 
     ImageStore* images = nullptr;
 
+    bool fallbackPrompts = false;
+
     App() = default;
 };
 
 struct PlatWindow;
+
+struct PromptRequest;
 
 struct WindowSelection;
 
@@ -9268,6 +9272,10 @@ struct Window {
     EntityId tooltip = {};
 
     EntityId rootTooltip = {};
+
+    EntityId prompt = {};
+
+    Vec<PromptRequest*> nativePrompts;
     Overlay overlay = {};
     InspectorState inspector = {};
     MenuState menu = {};
@@ -9840,6 +9848,50 @@ struct PathPrompt {
 };
 
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts);
+
+enum class PromptLevel : uint8_t {
+    Info,
+    Warning,
+    Critical
+};
+
+struct PromptButton {
+    enum class Kind : uint8_t {
+        Ok,
+        Cancel,
+        Other
+    };
+    Kind kind = Kind::Other;
+    Str label = {};
+
+    static PromptButton New(Str label) { return {Kind::Other, label}; }
+    static PromptButton Ok(Str label) { return {Kind::Ok, label}; }
+    static PromptButton Cancel(Str label) { return {Kind::Cancel, label}; }
+
+    static PromptButton From(Str value);
+    bool IsCancel() const { return kind == Kind::Cancel; }
+};
+
+struct PromptResponse {
+    int ix = -1;
+};
+
+struct PromptOptions {
+
+    Str title = {};
+
+    int defaultIx = 0;
+
+    bool rtl = false;
+};
+
+void WindowPrompt(Window* win, PromptLevel level, Str message, Str detail,
+                  const PromptButton* answers, int n, Listener onAnswer,
+                  const PromptOptions* opts = nullptr);
+
+bool WindowHasActivePrompt(const Window* win);
+
+void AppSetFallbackPrompts(App* app, bool always);
 
 int AppRun(App* app);
 Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts);
@@ -38966,6 +39018,44 @@ void WindowDrawFrameHeadless(Window* win, float dipW, float dipH);
 TempStr WindowCaptureOkTemp(int pxW, int pxH, float scale, int windows,
                             int webviews);
 
+struct PromptRequest {
+    App* app = nullptr;
+
+    Window* win = nullptr;
+    Listener onAnswer = {};
+    PromptLevel level = PromptLevel::Info;
+    Str message = {};
+    Str detail = {};
+    PromptButton* answers = nullptr;
+    int n = 0;
+    PromptOptions opts = {};
+    bool answered = false;
+
+    void* plat = nullptr;
+};
+void PromptFinish(PromptRequest* req, int ix);
+
+void PromptsWindowClosed(Window* win);
+
+#if GPUI_OS_WINDOWS || GPUI_OS_MAC
+bool PlatWindowPrompt(Window* win, PromptRequest* req);
+#else
+inline bool PlatWindowPrompt(Window* win, PromptRequest* req) {
+    (void)win, (void)req;
+    return false;
+}
+#endif
+#if GPUI_OS_MAC
+void PlatPromptAbort(Window* win, PromptRequest* req);
+#else
+
+inline void PlatPromptAbort(Window* win, PromptRequest* req) {
+    (void)win, (void)req;
+}
+#endif
+
+bool TestPlatformPrompt(PromptRequest* req);
+
 TempStr PlatPreferredLocaleTemp();
 
 TempStr PlatPreferredLocalesTemp();
@@ -39395,6 +39485,12 @@ void TestWriteToClipboard(Str text);
 Str TestReadFromClipboard(Arena* a);
 
 void TestFocus(Window* win, FocusHandle handle);
+
+bool TestHasPendingPrompt();
+
+bool TestPendingPrompt(Str* message, Str* detail);
+
+bool TestSimulatePromptAnswer(Str response);
 
 }
 

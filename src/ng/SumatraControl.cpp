@@ -83,7 +83,6 @@
 #include "gui/ToolWindowPlat.h"
 #include "gui/ToolWindow.h"
 #include "gui/NativeFileDlg.h"
-#include "gui/NativeMsgBox.h"
 #include "gui/DocCanvas.h"
 #include "gui/TabsUI.h"
 #include "gui/Sidebar.h"
@@ -3750,10 +3749,8 @@ void StartSumatraControl(Str pipeName) {
         return;
     }
     logf("StartSumatraControl: pipe '%s'\n", pipeName);
-#if OS_WIN
     // a script cannot answer a system message box: it gets the port's own
     NativeMsgBoxSetEnabled(false);
-#endif
     auto* arg = new ControlThreadArg{str::Dup(pipeName)};
     RunAsync(MkFunc0(SumatraControlThread, arg), StrL("SumatraControl"));
 }
