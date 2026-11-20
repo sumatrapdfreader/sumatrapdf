@@ -3493,6 +3493,9 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         tab->SetFilePath(fullPath);
         tab->SetDisplayName(args->DisplayName());
         tab->skipHistory = args->skipHistory;
+        if (args->lazyLoad) {
+            tab->tabState = args->tabState;
+        }
         win->currentTabTemp = AddTabToWindow(win, tab, args->deferTabUpdate);
 
         if (!IsMainWindowValidAndNotClosing(win)) {
@@ -3565,7 +3568,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     }
     bool skipHistory = transient || args->skipHistory || (win->CurrentTab() && win->CurrentTab()->skipHistory);
 
-    if (gSettings->reloadModifiedDocuments && !transient) {
+    // a lazy tab gets these when it's selected and loads
+    if (gSettings->reloadModifiedDocuments && !transient && !lazyLoad) {
         auto fn = MkFunc0(ScheduleReloadTab, currTab);
         // was gSettings->enableTeXEnhancements because people complained
         // about network traffic. but then people complained it stopped working
@@ -3578,7 +3582,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     if (SettingsRememberOpenedFiles() && !skipHistory) {
         ReportIf(!str::Eq(fullPath, path));
         FileState* ds = FileHistoryMarkFileLoaded(fullPath);
-        if (gSettings->showStartPage) {
+        if (gSettings->showStartPage && !lazyLoad) {
             CreateThumbnailForFile(win, ds);
         }
         // TODO: this seems to save the state of file that we just opened
@@ -3590,7 +3594,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    if (CanAccessDisk() && !gPluginMode && !IsStressTesting() && !skipHistory) {
+    if (CanAccessDisk() && !gPluginMode && !IsStressTesting() && !skipHistory && !lazyLoad) {
         AddPathToRecentDocs(fullPath);
 
         // Remove Zone.Identifier (Mark of the Web) so that Windows Explorer
@@ -4334,7 +4338,8 @@ MainWindow* LoadDocument(LoadArgs* args) {
     }
 
     MainWindow* win = args->win;
-    bool failEarly = AdjustPathForMaybeMovedFile(args);
+    // a lazy tab's file is checked when the tab is selected and loads
+    bool failEarly = !args->lazyLoad && AdjustPathForMaybeMovedFile(args);
 
     // fail fast if the file doesn't exist and there is a window the user
     // has just been interacting with
@@ -4348,7 +4353,9 @@ MainWindow* LoadDocument(LoadArgs* args) {
         return nullptr;
     }
 
-    MaybeDetachEphemeralHostFile(args);
+    if (!args->lazyLoad) {
+        MaybeDetachEphemeralHostFile(args);
+    }
     path = args->FilePath();
 
     args->ebookLayoutAspect = EbookLayoutAspectForLoad(args, win);
@@ -15045,7 +15052,10 @@ static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state, bool de
 
 static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad, bool deferTabUpdate) {
     logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
-    if (!DocumentPathExists(state->filePath)) {
+    // a lazy tab touches its file only when selected: checking every file here
+    // woke each sleeping drive of the session
+    bool lazyTab = lazyLoad && SettingsUseTabs();
+    if (!lazyTab && !DocumentPathExists(state->filePath)) {
         RestoreMissingTabOnStartup(win, state, deferTabUpdate);
         return;
     }

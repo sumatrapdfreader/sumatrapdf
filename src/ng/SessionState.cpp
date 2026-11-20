@@ -30,6 +30,7 @@
 #include "Tabs.h"
 #include "TableOfContents.h"
 #include "gui/Sidebar.h"
+#include "gui/TabsUI.h"
 #include "VirtualDesktop.h"
 #include "AppHelpersCommon.h"
 #include "SessionState.h"
@@ -300,8 +301,12 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
     if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab)) {
         return;
     }
-    // a file that has gone away keeps its placeholder tab
+    // a file that has gone away keeps its tab, marked as failed, as orig's
     if (!DocumentPathExists(tab->filePath)) {
+        logf("LoadLazyTabIfNeeded: file not found '%s'\n", tab->filePath);
+        FileHistoryDemote(tab->filePath, true);
+        tab->loadState = WindowTab::LoadState::Error;
+        TabsUIOnTabsChanged(win);
         return;
     }
     // RememberOpenedFiles = false frees the borrowed TabState on save.
@@ -327,12 +332,14 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
 // The placeholder path below is orig's, for a file that has gone away.
 static void RestoreTabOnStartup(MainWindow* win, TabState* state) {
     logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
-    if (!DocumentPathExists(state->filePath)) {
-        RestoreMissingTabOnStartup(win, state);
-        return;
-    }
+    // a lazy tab touches its file only when selected: checking every file here
+    // woke each sleeping drive of the session
     if (gSettings->lazyLoading && SettingsUseTabs()) {
         RestoreLazyTabOnStartup(win, state);
+        return;
+    }
+    if (!DocumentPathExists(state->filePath)) {
+        RestoreMissingTabOnStartup(win, state);
         return;
     }
     // a failed load already shows its error tab (or asks for a password)

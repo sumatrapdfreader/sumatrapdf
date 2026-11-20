@@ -40,6 +40,7 @@
 #include "Theme.h"
 #include "Translations.h"
 #include "HomePage.h"
+#include "AppTools.h"
 #include "Tabs.h"
 #include "MenuDefs.h"
 #include "TabsCommon.h"
@@ -755,7 +756,9 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     newTab->pageText = str::Dup(TabPageSuffixTemp(tab));
     // same full path + size as UpdateTabTitle (was path-only, so size missing until
     // TabsOnChangedDoc for the active tab)
-    newTab->tooltip = str::Dup(MakeTabTooltipTemp(tab->filePath, false));
+    // a lazy tab (a session's, not loaded yet) leaves its file alone: no size
+    bool lazy = !tab->ctrl && tab->tabState;
+    newTab->tooltip = str::Dup(lazy ? PathForDisplayTemp(tab->filePath) : MakeTabTooltipTemp(tab->filePath, false));
     newTab->userData = (UINT_PTR)tab;
     newTab->tabColor = tab->tabColor;
     newTab->groupId = tab->stripGroupId;

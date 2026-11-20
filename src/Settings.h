@@ -1231,8 +1231,8 @@ struct Settings {
     bool escToExit;
     // if true, show the full path to the document in the title bar
     bool fullPathInTitle;
-    // if true, restoring a session delays loading each document until its
-    // tab is selected
+    // if true, restoring a session delays loading each document, and any
+    // access to its file, until its tab is selected
     bool lazyLoading;
     // if true, doesn't open Home tab
     bool noHomeTab;

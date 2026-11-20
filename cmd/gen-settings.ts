@@ -1511,7 +1511,7 @@ const globalPrefs: Field[] = [
     "LazyLoading",
     Bool,
     false,
-    "if true, restoring a session delays loading each document until its tab is selected",
+    "if true, restoring a session delays loading each document, and any access to its file, until its tab is selected",
   ).ver("3.6"),
   field(
     "MainWindowBackground",
