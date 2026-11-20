@@ -605,6 +605,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6169", issue6169],
   ["issue-5736", issue5736],
   ["issue-6055", issue6055],
   ["issue-6323", issue6323],
@@ -805,7 +806,6 @@ export const tests: NamedTest[] = [
   ["issue-6198", issue6198],
   ["create-annot-enters-edit-mode", createAnnotEntersEditMode],
   ["issue-6166", issue6166],
-  ["issue-6169", issue6169],
   ["issue-5771", issue5771],
   ["issue-6111", issue6111],
   ["annot-list-placement", annotListPlacement],

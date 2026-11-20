@@ -5,7 +5,7 @@
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { ROOT, cmdId, runStandalone } from "./util.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { ensureModifierKeysUp, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 import { postMessage, sleep, VK_DOWN, VK_ESCAPE, VK_SPACE, WM_KEYDOWN, WM_KEYUP } from "./winapi.ts";
 
 type BarState = {
@@ -64,7 +64,10 @@ async function waitBar(
   throw new Error(`issue-6169: ${msg}: ${JSON.stringify(last)}`);
 }
 
-function postKey(hwnd: number, vk: number): void {
+// auto-scroll ignores keys with a modifier down; a Ctrl stuck mid-run (RDP)
+// would send them to the accelerators instead
+async function postKey(hwnd: number, vk: number): Promise<void> {
+  await ensureModifierKeysUp();
   postMessage(hwnd, WM_KEYDOWN, vk, 1);
   postMessage(hwnd, WM_KEYUP, vk, 1);
 }
@@ -84,7 +87,7 @@ export async function testit(): Promise<void> {
     st = await waitBar(client, (s) => s.visible && s.scrollY > startY, "document did not auto-scroll", 2500);
     console.log(`  scrolled to ${st.scrollY} ✓`);
 
-    postKey(frame, VK_SPACE);
+    await postKey(frame, VK_SPACE);
     st = await waitBar(client, (s) => s.visible && s.paused === 1, "Space did not pause");
     const pausedY = st.scrollY;
     await sleep(300);
@@ -95,7 +98,7 @@ export async function testit(): Promise<void> {
     console.log(`  Space paused at ${pausedY} ✓`);
 
     const speedBefore = st.speed;
-    postKey(frame, VK_DOWN);
+    await postKey(frame, VK_DOWN);
     st = await waitBar(client, (s) => s.visible && s.speed > speedBefore, "Down did not increase speed");
     console.log(`  Down: ${speedBefore} -> ${st.speed} px/s ✓`);
 
@@ -112,7 +115,7 @@ export async function testit(): Promise<void> {
     st = await waitBar(client, (s) => s.visible && s.paused === 1, "bar did not return with the document tab");
     console.log(`  document tab restored the paused bar ✓`);
 
-    postKey(frame, VK_ESCAPE);
+    await postKey(frame, VK_ESCAPE);
     st = await waitBar(client, (s) => !s.visible, "Esc did not hide the bar");
     console.log(`  Esc stopped auto-scroll ✓`);
   } finally {
