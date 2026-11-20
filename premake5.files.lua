@@ -314,6 +314,7 @@ function sumatrapdf_files()
     "LaserPointerCursorCommon.cpp",
     "OleDragDropCommon.h",
     "OleDragDropCommon_win.cpp",
+    "DropUrlCommon.*",
     "WebViewCapture.h",
     "WebViewCapture_win.cpp",
     "PageThumbnails.*",

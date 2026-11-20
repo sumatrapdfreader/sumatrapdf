@@ -4320,6 +4320,9 @@ struct DropEvent {
     Bounds el = {};
 
     Str externalPaths = {};
+
+    Str externalText = {};
+    Str externalUrl = {};
 };
 
 struct PinchEvent {
@@ -4368,6 +4371,9 @@ struct FileDropEvent {
     float y = 0;
 
     Str paths = {};
+
+    Str text = {};
+    Str url = {};
 };
 
 struct MouseExitEvent {
@@ -9087,6 +9093,8 @@ struct PlatWindow;
 
 struct PromptRequest;
 
+struct DragOutRequest;
+
 struct WindowSelection;
 
 struct WindowBlurSub {
@@ -9249,6 +9257,9 @@ struct Window {
     bool fileDrop = false;
     Str fileDropPaths = {};
 
+    Str fileDropText = {};
+    Str fileDropUrl = {};
+
     float dragOffX = 0;
     float dragOffY = 0;
     bool eatReturn = false;
@@ -9310,6 +9321,8 @@ struct Window {
     EntityId prompt = {};
 
     Vec<PromptRequest*> nativePrompts;
+
+    DragOutRequest* dragOut = nullptr;
     Overlay overlay = {};
     InspectorState inspector = {};
     MenuState menu = {};
@@ -9952,6 +9965,40 @@ void WindowPrompt(Window* win, PromptLevel level, Str message, Str detail,
 bool WindowHasActivePrompt(const Window* win);
 
 void AppSetFallbackPrompts(App* app, bool always);
+
+struct DragOutData {
+
+    Str text = {};
+
+    const uint8_t* imageBytes = nullptr;
+    int imageBytesLen = 0;
+    Str imageName = {};
+
+    Str paths = {};
+
+    float previewMaxEdge = 0;
+
+    float previewHotX = 0.5f;
+    float previewHotY = 0.5f;
+};
+
+enum class DragOutResult : uint8_t {
+    Copied,
+    Moved,
+    Linked,
+    Canceled,
+
+    Unsupported
+};
+
+struct DragOutEndEvent {
+    DragOutResult result = DragOutResult::Canceled;
+};
+
+bool WindowStartDragOut(Window* win, const DragOutData& data,
+                        Listener onEnd = {});
+
+bool AppCanDragOut(App* app);
 
 int AppRun(App* app);
 Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts);
@@ -39068,6 +39115,10 @@ bool PaintBackendTextLayoutSpans(PaintCtx* ctx, TextLayout* tl, Str text,
 
 #line 1 "src/gpui/platform.h"
 
+#if GPUI_OS_WINDOWS
+struct IDataObject;
+#endif
+
 namespace gpui {
 
 void WindowDrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
@@ -39115,6 +39166,66 @@ inline void PlatPromptAbort(Window* win, PromptRequest* req) {
 #endif
 
 bool TestPlatformPrompt(PromptRequest* req);
+
+struct DragOutRequest {
+    App* app = nullptr;
+
+    Window* win = nullptr;
+    Listener onEnd = {};
+    DragOutData data = {};
+
+    void* plat = nullptr;
+};
+
+void DragOutFinish(DragOutRequest* req, DragOutResult result);
+
+enum class DragOutFormat : uint8_t {
+    Text,
+    Paths,
+    ImageFile
+};
+
+int DragOutFormats(const DragOutData& data, DragOutFormat* out);
+
+Str DragOutImageName(const DragOutData& data);
+
+struct DragOutPreview {
+    int w = 0;
+    int h = 0;
+    int hotX = 0;
+    int hotY = 0;
+};
+DragOutPreview DragOutPreviewSize(const DragOutData& data, int imgW, int imgH,
+                                  float scale);
+
+void DragOutPreviewFrame(uint8_t* px, int w, int h, int stride);
+
+#if GPUI_OS_WINDOWS || GPUI_OS_MAC
+
+bool PlatStartDragOut(Window* win, DragOutRequest* req);
+inline bool PlatCanDragOut() {
+    return true;
+}
+#else
+inline bool PlatStartDragOut(Window* win, DragOutRequest* req) {
+    (void)win, (void)req;
+    return false;
+}
+inline bool PlatCanDragOut() {
+    return false;
+}
+#endif
+
+bool TestPlatformOn();
+
+bool TestPlatformDragOut(DragOutRequest* req);
+
+#if GPUI_OS_WINDOWS
+
+::IDataObject* DragOutDataObjectNew(const DragOutData& data);
+
+void DragOutDisconnectLast();
+#endif
 
 TempStr PlatPreferredLocaleTemp();
 
@@ -39179,6 +39290,9 @@ PlatformInput InputTouchDrag(TouchPhase phase, Point start, Point position);
 PlatformInput InputLongPress(TouchPhase phase, Point start, Point position);
 
 PlatformInput InputFileDrop(FileDropPhase phase, float x, float y, Str paths);
+
+PlatformInput InputTextDrop(FileDropPhase phase, float x, float y, Str text,
+                            Str url);
 PlatformInput InputPinch(float x, float y, float delta, Modifiers modifiers,
                          TouchPhase phase);
 PlatformInput InputGesture(const GestureEvent& ev);
@@ -39572,6 +39686,10 @@ bool TestHasPendingPrompt();
 bool TestPendingPrompt(Str* message, Str* detail);
 
 bool TestSimulatePromptAnswer(Str response);
+
+bool TestPendingDragOut(DragOutData* out);
+
+bool TestFinishDragOut(DragOutResult result);
 
 }
 

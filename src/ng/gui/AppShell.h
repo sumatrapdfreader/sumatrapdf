@@ -110,9 +110,6 @@ void AppShellOpenSystemMenu(MainWindow* win, Rect below);
 // the app's small icon; null where there is none to ask for (off Windows)
 struct Pixmap;
 Pixmap* AppShellAppIconPixmap(MainWindow* win);
-// DoDragDrop (gui/OleDragDrop_win.cpp) ate the button-up that ends the press
-// gpui saw begin: tell gpui the button is up
-void AppShellAfterNativeDrag(MainWindow* win);
 void AppShellForgetNativeHwnd(MainWindow* win);
 // ng: gpui has no fullscreen window state (see "gpui gaps"). On Windows this
 // is orig's EnterFullScreen / ExitFullScreen on the native frame

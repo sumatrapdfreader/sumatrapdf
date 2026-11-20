@@ -56,7 +56,7 @@
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
 #include "AnnotPlacement.h"
-#include "gui/OleDragDrop.h"
+#include "gui/DragDrop.h"
 #include "AnnotTextPopup.h"
 #include "RefHover.h"
 #include "FormFields.h"
@@ -2893,9 +2893,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     }
 
     // if clicking on already selected text, prepare for drag-out instead of new selection
-    // ng: the drag-out is OLE's, so Windows only (gpui has no drag out of a
-    // window); elsewhere the press is only remembered and the release clears
-    // the selection, which is what orig does for a click without a drag
+    // ng: where gpui has no drag out of a window (Linux, wasm) the press is
+    // only remembered and the release clears the selection, which is what
+    // orig does for a click without a drag
     if (canCopy && !isShift && !isCtrl && isOverText && win->showSelection && IsPointInSelection(win, pt)) {
         win->textDragPending = true;
         win->linkOnLastButtonDown = nullptr;
@@ -3478,17 +3478,16 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
     }
 
     if (win->textDragPending) {
-#if OS_WIN
-        if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
+        // ng: no drag out of the window where gpui has none (Linux, wasm); the
+        // release clears the selection
+        if (!CanDragOut(win) || !IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
             return;
         }
-        // threshold met: initiate OLE drag-drop of selected text
+        // threshold met: initiate drag-drop of selected text
         win->textDragPending = false;
         win->dragStartPending = false;
         CanvasSetCapture(win, false);
         StartTextDragDrop(win);
-#endif
-        // ng: no drag out of the window off Windows; the release clears the selection
         return;
     }
 
@@ -3500,7 +3499,7 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
         win->imageDragPending = false;
         win->dragStartPending = false;
         CanvasSetCapture(win, false);
-        // ng: the drag is posted; it clears imageDragElement when it is over
+        // ng: gpui copies the image, and this clears imageDragElement
         StartImageDragDrop(win);
         return;
     }
@@ -3658,7 +3657,13 @@ struct DocCanvasView {
     static void OnHover(DocCanvasView* self, gp::Ctx* cx, const gp::HoverEvent* ev);
     static void OnMove(DocCanvasView* self, gp::Ctx* cx, const gp::MouseMoveEvent* ev);
     static void OnMenuAction(DocCanvasView* self, gp::Ctx* cx, const gp::ActionEvent* ev);
+    static void OnTextDrop(DocCanvasView* self, gp::Ctx* cx, const gp::DropEvent* ev);
 };
+
+// text or a link dragged onto the canvas from another application
+void DocCanvasView::OnTextDrop(DocCanvasView* self, gp::Ctx*, const gp::DropEvent* ev) {
+    CanvasOnTextDrop(self->win, FromGpui(ev->externalText), FromGpui(ev->externalUrl));
+}
 
 // window coordinates (dips) -> document coordinates (pixels), or false when
 // the point isn't on the canvas
@@ -4441,7 +4446,8 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
                          ->OnHover(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnHover))
                          ->OnScrollWheel(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnWheel))
                          ->OnPinch(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnPinch))
-                         ->OnGesture(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnGesture));
+                         ->OnGesture(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnGesture))
+                         ->OnDrop(GStrL("ExternalText"), gp::ListenTo(Ui(win)->view, &DocCanvasView::OnTextDrop));
     canvas->customPaint = &DocCanvasView::OnPaint;
     canvas->customUser = win;
     // ng: ContextMenu::IntoEl() returns the child it was given with its own

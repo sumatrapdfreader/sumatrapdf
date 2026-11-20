@@ -33,7 +33,6 @@
 #include "PdfTools.h"
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
-#include "gui/OleDragDrop.h"
 #include "HomePage.h"
 #include "SumatraConfig.h"
 #include "RefHover.h"
@@ -371,11 +370,8 @@ static void OpenDroppedFilesNow(DroppedFiles* d) {
     delete d;
 }
 
-// orig's OnDropFiles. `ptDrop` is in client pixels. Returns false when the
-// drop is refused. `dragFinish` is false for an HDROP that an IDataObject
-// owns (OLE drop), and then the files are opened once Drop() returned, so
-// the drag source isn't kept waiting.
-bool AppShellOnDropFiles(HWND hwnd, HDROP hdrop, POINT ptDrop, bool inClient, bool dragFinish) {
+// orig's OnDropFiles, for WM_DROPFILES. `ptDrop` is in client pixels.
+static void AppShellOnDropFiles(HWND hwnd, HDROP hdrop, POINT ptDrop, bool inClient) {
     int n = (int)DragQueryFileW(hdrop, (UINT)-1, nullptr, 0);
     // client pixels; the Merge PDF grid wants window dips
     float scale = (float)DpiGetForHwnd(hwnd) / 96.f;
@@ -395,9 +391,7 @@ bool AppShellOnDropFiles(HWND hwnd, HDROP hdrop, POINT ptDrop, bool inClient, bo
             VecAppend(paths, str::Dup(path));
         }
     }
-    if (dragFinish) {
-        DragFinish(hdrop);
-    }
+    DragFinish(hdrop);
     logf("AppShellOnDropFiles: %d file(s)\n", paths.len);
     // a tool window's drop (the Merge PDF window) is its main window's
     DropHost host = ToolWindowOwnsHwnd(hwnd) ? DropHost::ToolWindow : DropHost::Frame;
@@ -421,7 +415,7 @@ bool AppShellOnDropFiles(HWND hwnd, HDROP hdrop, POINT ptDrop, bool inClient, bo
         for (Str s : paths) {
             str::Free(s);
         }
-        return false;
+        return;
     }
     auto* d = new DroppedFiles();
     d->win = win;
@@ -431,18 +425,13 @@ bool AppShellOnDropFiles(HWND hwnd, HDROP hdrop, POINT ptDrop, bool inClient, bo
     d->pt = ptDips;
     d->inClient = inClient;
     d->host = host;
-    if (dragFinish) {
-        OpenDroppedFilesNow(d);
-    } else {
-        uitask::Post(MkFunc0<DroppedFiles>(OpenDroppedFilesNow, d), "OpenDroppedFiles");
-    }
-    return true;
+    OpenDroppedFilesNow(d);
 }
 
 static void OnDropFiles(HWND hwnd, HDROP hdrop) {
     POINT ptDrop{};
     bool inClient = DragQueryPoint(hdrop, &ptDrop);
-    AppShellOnDropFiles(hwnd, hdrop, ptDrop, inClient, true);
+    AppShellOnDropFiles(hwnd, hdrop, ptDrop, inClient);
 }
 
 float CanvasScale(MainWindow* win);
@@ -733,7 +722,6 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             break;
         case WM_DESTROY:
             GlobalHotkeysOnDestroy(hwnd);
-            RevokeCanvasDropTarget(hwnd);
             break;
         case WM_CONTEXTMENU:
             if (AppShellOnWmContextMenu(WinOf(hwnd), GET_X_LPARAM(lp), GET_Y_LPARAM(lp))) {
@@ -828,10 +816,8 @@ void AppShellEnableFileDrop(MainWindow* win) {
     }
     NativeWin nw{hwnd, win};
     VecAppend(gNativeWins, nw);
-    // WM_DROPFILES, for when the OLE registration below fails
+    // WM_DROPFILES, for when gpui's OLE drop target could not be registered
     DragAcceptFiles(hwnd, TRUE);
-    // orig's CanvasDropTarget: files, image URLs, and where a dragged file is
-    RegisterCanvasDropTarget(hwnd);
     SetWindowSubclass(hwnd, ShellSubclass, 1, 0);
     RegisterGlobalHotkeys(hwnd);
     // SAPI posts its word-boundary / end-of-stream events to a window
@@ -896,7 +882,6 @@ void AppShellForgetNativeHwnd(MainWindow* win) {
         HWND hwnd = gNativeWins[i].hwnd;
         VecRemoveAt(gNativeWins, i);
         GlobalHotkeysOnDestroy(hwnd);
-        RevokeCanvasDropTarget(hwnd);
     }
 }
 

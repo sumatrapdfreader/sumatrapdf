@@ -23015,6 +23015,54 @@ bool TestSimulatePromptAnswer(Str response) {
     return true;
 }
 
+static DragOutRequest* gTestDragOut = nullptr;
+
+static void TestDragOutDrop() {
+    DragOutRequest* req = gTestDragOut;
+    gTestDragOut = nullptr;
+    if (req) {
+        if (req->win && req->win->dragOut == req) {
+            req->win->dragOut = nullptr;
+        }
+        req->win = nullptr;
+        DragOutFinish(req, DragOutResult::Canceled);
+    }
+}
+
+bool TestPlatformOn() {
+    return gTestPlatform.on;
+}
+
+bool TestPlatformDragOut(DragOutRequest* req) {
+    if (!gTestPlatform.on || !req || gTestDragOut) {
+        return false;
+    }
+    gTestDragOut = req;
+    return true;
+}
+
+bool TestPendingDragOut(DragOutData* out) {
+    if (!gTestDragOut) {
+        return false;
+    }
+    if (out) {
+        *out = gTestDragOut->data;
+    }
+    return true;
+}
+
+bool TestFinishDragOut(DragOutResult result) {
+    DragOutRequest* req = gTestDragOut;
+    if (!req) {
+        return false;
+    }
+    gTestDragOut = nullptr;
+    App* app = req->app;
+    DragOutFinish(req, result);
+    TestRunUntilParked(app);
+    return true;
+}
+
 RenderImage* TestMakeSizedImage(PaintApp* paint, int width, int height) {
     if (width <= 0 || height <= 0 || height > INT32_MAX / 4 / width) {
         return nullptr;
@@ -23044,6 +23092,7 @@ App* TestAppNew() {
     }
     StrFree(gTestPlatform.clipboard);
     TestPromptsDrop();
+    TestDragOutDrop();
     gTestPlatform = TestPlatform{};
     gTestPlatform.on = true;
     gTestPlatform.now = kTestClockStart;
@@ -23052,6 +23101,7 @@ App* TestAppNew() {
 
 void TestAppFree(App* app) {
     TestPromptsDrop();
+    TestDragOutDrop();
     AppFreeHeadless(app);
     StrFree(gTestPlatform.clipboard);
     gTestPlatform = TestPlatform{};
@@ -26072,6 +26122,8 @@ static void DispatchMouseUp(Window* win, const MouseUpEvent& in,
             DropEvent ev = {win->activeDrag, in.x, in.y, target->bounds};
             if (win->fileDrop) {
                 ev.externalPaths = win->fileDropPaths;
+                ev.externalText = win->fileDropText;
+                ev.externalUrl = win->fileDropUrl;
             }
             ListenerCall(win->app, win, target->onDrop, &ev);
         }
@@ -26858,6 +26910,8 @@ PlatformInput InputLongPress(TouchPhase phase, Point start, Point position) {
 PlatformInput InputFileDrop(FileDropPhase phase, float x, float y, Str paths) {
     PlatformInput in = {};
     in.kind = PlatformInputKind::FileDrop;
+
+    in.fileDrop = FileDropEvent{};
     in.fileDrop.phase = phase;
     in.fileDrop.x = x;
     in.fileDrop.y = y;
@@ -26865,14 +26919,29 @@ PlatformInput InputFileDrop(FileDropPhase phase, float x, float y, Str paths) {
     return in;
 }
 
-static void FileDropStore(Window* win, Str paths) {
-    StrFree(win->fileDropPaths);
-    win->fileDropPaths = paths.s && len(paths) > 0 ? StrDup(paths) : Str{};
+PlatformInput InputTextDrop(FileDropPhase phase, float x, float y, Str text,
+                            Str url) {
+    PlatformInput in = InputFileDrop(phase, x, y, {});
+    in.fileDrop.text = text;
+    in.fileDrop.url = url;
+    return in;
+}
+
+static void FileDropSet(Str* dst, Str src) {
+    StrFree(*dst);
+    *dst = src.s && len(src) > 0 ? StrDup(src) : Str{};
+}
+
+static void FileDropStore(Window* win, const FileDropEvent& in) {
+    FileDropSet(&win->fileDropPaths, in.paths);
+    FileDropSet(&win->fileDropText, in.text);
+    FileDropSet(&win->fileDropUrl, in.url);
 }
 
 static void FileDropClear(Window* win) {
-    StrFree(win->fileDropPaths);
-    win->fileDropPaths = {};
+    FileDropSet(&win->fileDropPaths, {});
+    FileDropSet(&win->fileDropText, {});
+    FileDropSet(&win->fileDropUrl, {});
 
     if (win->fileDrop) {
         win->activeDrag = {};
@@ -26893,8 +26962,11 @@ static void DispatchFileDrop(Window* win, const FileDropEvent& in) {
         if (win->activeDrag.IsValid() && !win->fileDrop) {
             return;
         }
-        FileDropStore(win, in.paths);
-        win->activeDrag.kind = StrL("ExternalPaths");
+        FileDropStore(win, in);
+
+        bool text = len(in.paths) <= 0 && (len(in.text) > 0 || len(in.url) > 0);
+        win->activeDrag
+            .kind = text ? StrL("ExternalText") : StrL("ExternalPaths");
         win->activeDrag.ix = 0;
         win->activeDrag.data = nullptr;
         win->fileDrop = true;
@@ -27651,9 +27723,15 @@ Window::~Window() {
     scene::Free(&paint);
     StrFree(fileDropPaths);
     fileDropPaths = {};
+    StrFree(fileDropText);
+    fileDropText = {};
+    StrFree(fileDropUrl);
+    fileDropUrl = {};
 
     LayoutRowCachesFree(this);
 }
+
+static void DragOutWindowClosed(Window* win);
 
 void WindowClosed(Window* win) {
     if (!win) {
@@ -27661,6 +27739,7 @@ void WindowClosed(Window* win) {
     }
 
     PromptsWindowClosed(win);
+    DragOutWindowClosed(win);
 
     if (win->input) {
         InputBlur(win->input, win->app, win);
@@ -28601,6 +28680,165 @@ TempStr PathDropRepeatedExtTemp(Str path) {
         return StrDupTemp(path);
     }
     return StrDupTemp(Str(path.s, len(path) - len(third) - 1));
+}
+
+}
+
+namespace gpui {
+
+int DragOutFormats(const DragOutData& data, DragOutFormat* out) {
+    int n = 0;
+    if (len(data.text) > 0) {
+        out[n++] = DragOutFormat::Text;
+    }
+    if (len(data.paths) > 0) {
+        out[n++] = DragOutFormat::Paths;
+    }
+    if (data.imageBytes && data.imageBytesLen > 0) {
+        out[n++] = DragOutFormat::ImageFile;
+    }
+    return n;
+}
+
+Str DragOutImageName(const DragOutData& data) {
+    return len(data.imageName) > 0 ? data.imageName : StrL("image.png");
+}
+
+DragOutPreview DragOutPreviewSize(const DragOutData& data, int imgW, int imgH,
+                                  float scale) {
+    DragOutPreview p;
+    int maxEdge = (int)lroundf(data.previewMaxEdge * (scale > 0 ? scale : 1));
+
+    const int kMinPreviewEdge = 16;
+    if (maxEdge < kMinPreviewEdge || imgW <= 0 || imgH <= 0) {
+        return p;
+    }
+    p.w = imgW;
+    p.h = imgH;
+    int longest = std::max(imgW, imgH);
+    if (longest > maxEdge) {
+        p.w = std::max(1, (int)((int64_t)imgW * maxEdge / longest));
+        p.h = std::max(1, (int)((int64_t)imgH * maxEdge / longest));
+    }
+    float hx = ClampF(data.previewHotX, 0, 1);
+    float hy = ClampF(data.previewHotY, 0, 1);
+    p.hotX = std::min(p.w - 1, (int)((float)p.w * hx));
+    p.hotY = std::min(p.h - 1, (int)((float)p.h * hy));
+    return p;
+}
+
+void DragOutPreviewFrame(uint8_t* px, int w, int h, int stride) {
+
+    const uint8_t kBorder = 60;
+    for (int y = 0; y < h; y++) {
+        uint8_t* row = px + (size_t)y * (size_t)stride;
+        for (int x = 0; x < w; x++) {
+            uint8_t* c = row + (size_t)x * 4;
+            bool edge = x == 0 || y == 0 || x == w - 1 || y == h - 1;
+            if (edge) {
+                c[0] = c[1] = c[2] = kBorder;
+                c[3] = 255;
+                continue;
+            }
+
+            int under = 255 - c[3];
+            c[0] = (uint8_t)std::min(255, c[0] + under);
+            c[1] = (uint8_t)std::min(255, c[1] + under);
+            c[2] = (uint8_t)std::min(255, c[2] + under);
+            c[3] = 255;
+        }
+    }
+}
+
+static void DragOutRequestFree(DragOutRequest* req) {
+    StrFree(req->data.text);
+    StrFree(req->data.paths);
+    StrFree(req->data.imageName);
+    delete[] req->data.imageBytes;
+    delete req;
+}
+
+static void DragOutEnd(App* app, Window* win, Listener onEnd,
+                       DragOutResult result) {
+    DragOutEndEvent ev;
+    ev.result = result;
+    if (onEnd.IsValid()) {
+        ListenerCall(app, win, onEnd, &ev);
+    }
+}
+
+void DragOutFinish(DragOutRequest* req, DragOutResult result) {
+    if (!req) {
+        return;
+    }
+    Window* win = req->win;
+    if (win && win->dragOut == req) {
+        win->dragOut = nullptr;
+    }
+
+    if (win && win->mouseDown) {
+        PlatformInput up =
+            InputMouseUp(MouseButton::Left, win->mouseX, win->mouseY, {},
+                         WindowCurrentClickCount(win));
+        WindowDispatchInput(win, &up);
+    }
+    if (win) {
+        DragOutEnd(req->app, win, req->onEnd, result);
+        AppInvalidate(win);
+    }
+    DragOutRequestFree(req);
+}
+
+static void DragOutWindowClosed(Window* win) {
+    DragOutRequest* req = win ? win->dragOut : nullptr;
+    if (!req) {
+        return;
+    }
+    win->dragOut = nullptr;
+    req->win = nullptr;
+}
+
+static Str DragOutDup(Str s) {
+    return len(s) > 0 ? StrDup(s) : Str{};
+}
+
+bool AppCanDragOut(App* app) {
+    return app && (TestPlatformOn() || PlatCanDragOut());
+}
+
+bool WindowStartDragOut(Window* win, const DragOutData& data, Listener onEnd) {
+    if (!win || !win->app) {
+        return false;
+    }
+    DragOutFormat formats[3];
+    if (DragOutFormats(data, formats) == 0 || win->dragOut) {
+        DragOutEnd(win->app, win, onEnd, DragOutResult::Unsupported);
+        return false;
+    }
+    auto* req = new DragOutRequest();
+    req->app = win->app;
+    req->win = win;
+    req->onEnd = onEnd;
+    req->data = data;
+    req->data.text = DragOutDup(data.text);
+    req->data.paths = DragOutDup(data.paths);
+    req->data.imageName = DragOutDup(data.imageName);
+    req->data.imageBytes = nullptr;
+    req->data.imageBytesLen = 0;
+    if (data.imageBytes && data.imageBytesLen > 0) {
+        auto* bytes = new uint8_t[data.imageBytesLen];
+        memcpy(bytes, data.imageBytes, (size_t)data.imageBytesLen);
+        req->data.imageBytes = bytes;
+        req->data.imageBytesLen = data.imageBytesLen;
+    }
+    win->dragOut = req;
+    if (TestPlatformDragOut(req) || PlatStartDragOut(win, req)) {
+        return true;
+    }
+    win->dragOut = nullptr;
+    DragOutRequestFree(req);
+    DragOutEnd(win->app, win, onEnd, DragOutResult::Unsupported);
+    return false;
 }
 
 }
@@ -234909,6 +235147,7 @@ void CustomProtocolDispatch(const CustomProtocol& protocol, Str id,
 #include <psapi.h>
 #include <roapi.h>
 #include <shellapi.h>
+#include <shlobj.h>
 #include <shobjidl.h>
 #include <tlhelp32.h>
 #include <uiautomation.h>
@@ -248352,6 +248591,8 @@ static bool PressedButton(MouseButton* out) {
   @public
     gpui::Window* win;
     __strong NSString* textContentType;
+
+    BOOL textDrag;
 }
 @end
 
@@ -248456,6 +248697,30 @@ static gpui::Str TextInputString(id string) {
     return out;
 }
 
+- (bool)textDrop:(id<NSDraggingInfo>)sender at:(NSPoint)p {
+    NSPasteboard* pb = [sender draggingPasteboard];
+    NSString* text = [pb stringForType:NSPasteboardTypeString];
+    NSString* url = nil;
+    NSArray<NSURL*>* urls =
+        [pb readObjectsForClasses:@[ [NSURL class] ] options:nil];
+    for (NSURL* u in urls) {
+        if (![u isFileURL]) {
+            url = [u absoluteString];
+            break;
+        }
+    }
+    const char* t = text.UTF8String;
+    const char* u = url.UTF8String;
+    if ((!t || !t[0]) && (!u || !u[0])) {
+        return false;
+    }
+    gpui::PlatformInput in = gpui::InputTextDrop(
+        gpui::FileDropPhase::Entered, (float)p.x, (float)p.y,
+        t ? gpui::Str(t) : gpui::Str{}, u ? gpui::Str(u) : gpui::Str{});
+    gpui::WindowDispatchInput(win, &in);
+    return true;
+}
+
 - (void)fileDrop:(id<NSDraggingInfo>)sender phase:(gpui::FileDropPhase)phase {
     if (!win) {
         return;
@@ -248464,6 +248729,10 @@ static gpui::Str TextInputString(id string) {
     gpui::Str paths = {};
     if (phase == gpui::FileDropPhase::Entered) {
         paths = [self fileDropPaths:sender];
+        textDrag = gpui::len(paths) == 0 && [self textDrop:sender at:p];
+        if (textDrag) {
+            return;
+        }
     }
     gpui::PlatformInput in =
         gpui::InputFileDrop(phase, (float)p.x, (float)p.y, paths);
@@ -248471,13 +248740,21 @@ static gpui::Str TextInputString(id string) {
     gpui::StrFree(paths);
 }
 
+- (NSDragOperation)dropOperation {
+    if (!textDrag) {
+        return NSDragOperationCopy;
+    }
+    bool taken = win && win->fileDrop && win->dragOverId != 0;
+    return taken ? NSDragOperationCopy : NSDragOperationNone;
+}
+
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender {
     [self fileDrop:sender phase:gpui::FileDropPhase::Entered];
-    return NSDragOperationCopy;
+    return [self dropOperation];
 }
 - (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender {
     [self fileDrop:sender phase:gpui::FileDropPhase::Pending];
-    return NSDragOperationCopy;
+    return [self dropOperation];
 }
 - (void)draggingExited:(id<NSDraggingInfo>)sender {
     [self fileDrop:sender phase:gpui::FileDropPhase::Exited];
@@ -250134,6 +250411,179 @@ bool PlatWindowPrompt(Window* win, PromptRequest* req) {
     return true;
 }
 
+}
+
+@interface GpuiDragSource
+    : NSObject <NSDraggingSource, NSFilePromiseProviderDelegate> {
+  @public
+    gpui::DragOutRequest* req;
+    __strong NSData* png;
+    __strong NSString* pngName;
+}
+@end
+
+@implementation GpuiDragSource
+- (NSDragOperation)draggingSession:(NSDraggingSession*)session
+    sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
+    (void)session, (void)context;
+    return NSDragOperationCopy;
+}
+- (void)draggingSession:(NSDraggingSession*)session
+           endedAtPoint:(NSPoint)point
+              operation:(NSDragOperation)op {
+    (void)session, (void)point;
+    gpui::DragOutResult result = gpui::DragOutResult::Canceled;
+    if (op & NSDragOperationMove) {
+        result = gpui::DragOutResult::Moved;
+    } else if (op & NSDragOperationCopy) {
+        result = gpui::DragOutResult::Copied;
+    } else if (op & NSDragOperationLink) {
+        result = gpui::DragOutResult::Linked;
+    }
+    gpui::DragOutRequest* r = req;
+    req = nullptr;
+    if (!r) {
+        return;
+    }
+    void* plat = r->plat;
+    r->plat = nullptr;
+    gpui::DragOutFinish(r, result);
+    if (plat) {
+        CFBridgingRelease(plat);
+    }
+}
+- (NSString*)filePromiseProvider:(NSFilePromiseProvider*)provider
+                 fileNameForType:(NSString*)fileType {
+    (void)provider, (void)fileType;
+    return pngName;
+}
+- (void)filePromiseProvider:(NSFilePromiseProvider*)provider
+          writePromiseToURL:(NSURL*)url
+          completionHandler:(void (^)(NSError* error))done {
+    (void)provider;
+    NSError* err = nil;
+    [png writeToURL:url options:NSDataWritingAtomic error:&err];
+    done(err);
+}
+@end
+
+namespace gpui {
+
+static NSImage* DragOutPreviewImage(NSImage* img, const DragOutPreview& p) {
+    NSSize size = NSMakeSize(p.w, p.h);
+    return [NSImage
+         imageWithSize:size
+               flipped:NO
+        drawingHandler:^BOOL(NSRect r) {
+          [[NSColor whiteColor] setFill];
+          NSRectFill(r);
+          [img drawInRect:r
+                 fromRect:NSZeroRect
+                operation:NSCompositingOperationSourceOver
+                 fraction:1];
+          [[NSColor colorWithCalibratedWhite:60.0 / 255.0 alpha:1] setFill];
+          NSFrameRect(r);
+          return YES;
+        }];
+}
+
+static NSArray<NSDraggingItem*>* DragOutItems(const DragOutData& d,
+                                              GpuiDragSource* src, NSPoint at) {
+    NSMutableArray<NSDraggingItem*>* items = [NSMutableArray array];
+    DragOutFormat formats[3];
+    int n = DragOutFormats(d, formats);
+    for (int i = 0; i < n; i++) {
+        if (formats[i] == DragOutFormat::Text) {
+            NSPasteboardItem* pi = [[NSPasteboardItem alloc] init];
+            [pi setString:PromptNSString(d.text)
+                  forType:NSPasteboardTypeString];
+            NSDraggingItem* item =
+                [[NSDraggingItem alloc] initWithPasteboardWriter:pi];
+            [item setDraggingFrame:NSMakeRect(at.x, at.y, 1, 1) contents:nil];
+            [items addObject:item];
+        } else if (formats[i] == DragOutFormat::Paths) {
+            const float kIconSize = 32;
+            Str rest = d.paths;
+            while (len(rest) > 0) {
+                int k = 0;
+                while (k < len(rest) && rest.s[k] != '\n') {
+                    k++;
+                }
+                Str line(rest.s, k);
+                int skip = k < len(rest) ? k + 1 : k;
+                rest = Str(rest.s + skip, len(rest) - skip);
+                if (len(line) == 0) {
+                    continue;
+                }
+                NSString* path = PromptNSString(line);
+                NSURL* url = [NSURL fileURLWithPath:path];
+                NSDraggingItem* item =
+                    [[NSDraggingItem alloc] initWithPasteboardWriter:url];
+                NSRect frame =
+                    NSMakeRect(at.x - kIconSize / 2, at.y - kIconSize / 2,
+                               kIconSize, kIconSize);
+                [item setDraggingFrame:frame
+                              contents:[[NSWorkspace sharedWorkspace]
+                                           iconForFile:path]];
+                [items addObject:item];
+            }
+        } else {
+            NSFilePromiseProvider* prov =
+                [[NSFilePromiseProvider alloc] initWithFileType:@"public.png"
+                                                       delegate:src];
+            prov.userInfo = src;
+            NSDraggingItem* item =
+                [[NSDraggingItem alloc] initWithPasteboardWriter:prov];
+            NSImage* img = [[NSImage alloc] initWithData:src->png];
+            DragOutPreview p = img ? DragOutPreviewSize(d, (int)img.size.width,
+                                                        (int)img.size.height, 1)
+                                   : DragOutPreview{};
+            if (p.w > 0) {
+
+                NSRect frame =
+                    NSMakeRect(at.x - p.hotX, at.y - p.hotY, p.w, p.h);
+                [item setDraggingFrame:frame
+                              contents:DragOutPreviewImage(img, p)];
+            } else {
+                [item setDraggingFrame:NSMakeRect(at.x, at.y, 1, 1)
+                              contents:nil];
+            }
+
+            [items insertObject:item atIndex:0];
+        }
+    }
+    return items;
+}
+
+bool PlatStartDragOut(Window* win, DragOutRequest* req) {
+    GpuiView* view = win && win->plat ? win->plat->view : nil;
+    NSEvent* ev = [NSApp currentEvent];
+    if (!view || !ev) {
+        return false;
+    }
+    NSEventType t = [ev type];
+    if (t != NSEventTypeLeftMouseDown && t != NSEventTypeLeftMouseDragged) {
+        return false;
+    }
+    GpuiDragSource* src = [[GpuiDragSource alloc] init];
+    src->req = req;
+    if (req->data.imageBytes && req->data.imageBytesLen > 0) {
+        src->png = [NSData dataWithBytes:req->data.imageBytes
+                                  length:(NSUInteger)req->data.imageBytesLen];
+        src->pngName = PromptNSString(DragOutImageName(req->data));
+    }
+    NSPoint at = [view convertPoint:[ev locationInWindow] fromView:nil];
+    NSArray<NSDraggingItem*>* items = DragOutItems(req->data, src, at);
+    if ([items count] == 0) {
+        return false;
+    }
+    req->plat = (void*)CFBridgingRetain(src);
+    NSDraggingSession* session =
+        [view beginDraggingSessionWithItems:items event:ev source:src];
+    session.animatesToStartingPositionsOnCancelOrFail = YES;
+    return true;
+}
+
 static NSArray* PanelContentTypes(const Vec<Str>& exts) {
     Class cls = NSClassFromString(@"UTType");
     if (!cls || len(exts) == 0) {
@@ -250412,7 +250862,9 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
         }
         GpuiView* view = [[GpuiView alloc] initWithFrame:frame];
         view->win = win;
-        [view registerForDraggedTypes:@[ NSPasteboardTypeFileURL ]];
+        [view registerForDraggedTypes:@[
+            NSPasteboardTypeFileURL, NSPasteboardTypeURL, NSPasteboardTypeString
+        ]];
         GpuiWindowDelegate* del = [[GpuiWindowDelegate alloc] init];
         del->win = win;
 
@@ -252277,8 +252729,93 @@ static void ConfigureDwmDarkMode(HWND hwnd) {
 
 static Str ClipboardReadPaths(Arena* a, HANDLE handle);
 
+static Str NextLine(Str* rest) {
+    int i = 0;
+    while (i < len(*rest) && rest->s[i] != '\n') {
+        i++;
+    }
+    Str line(rest->s, i);
+    if (i > 0 && line.s[i - 1] == '\r') {
+        line.len--;
+    }
+    int skip = i < len(*rest) ? i + 1 : i;
+    *rest = Str(rest->s + skip, len(*rest) - skip);
+    return line;
+}
+
+static CLIPFORMAT ClipFormat(const WCHAR* name) {
+    return (CLIPFORMAT)RegisterClipboardFormatW(name);
+}
+
+static Str DataObjectReadText(Arena* a, IDataObject* data, CLIPFORMAT cf,
+                              bool wide) {
+    FORMATETC fmt = {cf, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    STGMEDIUM medium = {};
+    if (!cf || FAILED(data->GetData(&fmt, &medium))) {
+        return {};
+    }
+    Str out = {};
+    const void* p = medium.hGlobal ? GlobalLock(medium.hGlobal) : nullptr;
+    SIZE_T size = p ? GlobalSize(medium.hGlobal) : 0;
+    if (p && wide) {
+
+        const auto* w = (const WCHAR*)p;
+        int n = 0;
+        int maxChars = (int)(size / sizeof(WCHAR));
+        while (n < maxChars && w[n]) {
+            n++;
+        }
+        int bytes =
+            WideCharToMultiByte(CP_UTF8, 0, w, n, nullptr, 0, nullptr, nullptr);
+        char* buf = bytes > 0 ? (char*)Alloc(a, bytes + 1) : nullptr;
+        if (buf) {
+            WideCharToMultiByte(CP_UTF8, 0, w, n, buf, bytes, nullptr, nullptr);
+            buf[bytes] = 0;
+            out = Str(buf, bytes);
+        }
+    } else if (p) {
+        const auto* s = (const char*)p;
+        int n = 0;
+        while (n < (int)size && s[n]) {
+            n++;
+        }
+        char* buf = n > 0 ? (char*)Alloc(a, n + 1) : nullptr;
+        if (buf) {
+            memcpy(buf, s, (size_t)n);
+            buf[n] = 0;
+            out = Str(buf, n);
+        }
+    }
+    if (p) {
+        GlobalUnlock(medium.hGlobal);
+    }
+    ReleaseStgMedium(&medium);
+    return out;
+}
+
+static void DataObjectReadTextDrag(Arena* a, IDataObject* data, Str* text,
+                                   Str* url) {
+    *text = DataObjectReadText(a, data, CF_UNICODETEXT, true);
+    if (len(*text) == 0) {
+        *text = DataObjectReadText(a, data, CF_TEXT, false);
+    }
+    *url = DataObjectReadText(a, data, ClipFormat(L"UniformResourceLocatorW"),
+                              true);
+    if (len(*url) == 0) {
+        *url = DataObjectReadText(a, data,
+                                  ClipFormat(L"UniformResourceLocator"), false);
+    }
+}
+
 struct FileDropTarget : ComObject<IDropTarget> {
+    enum class Kind : uint8_t {
+        None,
+        Paths,
+        Text
+    };
     Window* win = nullptr;
+    Kind kind = Kind::None;
+    DWORD lastEffect = DROPEFFECT_NONE;
 
     explicit FileDropTarget(Window* w) : win(w) {}
 
@@ -252291,48 +252828,79 @@ struct FileDropTarget : ComObject<IDropTarget> {
         *y = PxToDip(&win->paint, (int)pt.y);
     }
 
+    DWORD Effect() {
+        if (kind == Kind::Paths) {
+            return DROPEFFECT_COPY;
+        }
+        bool taken =
+            kind == Kind::Text && win && win->fileDrop && win->dragOverId != 0;
+        return taken ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+    }
+
     HRESULT STDMETHODCALLTYPE DragEnter(IDataObject* data, DWORD, POINTL pt,
                                         DWORD* effect) override {
+        kind = Kind::None;
+        lastEffect = DROPEFFECT_NONE;
         if (effect) {
             *effect = DROPEFFECT_NONE;
         }
         if (!win || !data) {
             return S_OK;
         }
-        FORMATETC fmt = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1,
-                         TYMED_HGLOBAL};
-        if (data->QueryGetData(&fmt) != S_OK) {
-            return S_OK;
-        }
-        STGMEDIUM medium = {};
-        if (FAILED(data->GetData(&fmt, &medium))) {
-            return S_OK;
-        }
         Arena* a = ArenaNew();
-        Str paths = ClipboardReadPaths(a, medium.hGlobal);
-        ReleaseStgMedium(&medium);
         float x = 0, y = 0;
         At(pt, &x, &y);
-        PlatformInput in = InputFileDrop(FileDropPhase::Entered, x, y, paths);
-        WindowDispatchInput(win, &in);
+        FORMATETC fmt = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1,
+                         TYMED_HGLOBAL};
+        STGMEDIUM medium = {};
+        if (data->QueryGetData(&fmt) == S_OK &&
+            SUCCEEDED(data->GetData(&fmt, &medium))) {
+            Str paths = ClipboardReadPaths(a, medium.hGlobal);
+            ReleaseStgMedium(&medium);
+            PlatformInput in =
+                InputFileDrop(FileDropPhase::Entered, x, y, paths);
+            kind = Kind::Paths;
+            WindowDispatchInput(win, &in);
+        } else {
+            Str text = {}, url = {};
+            DataObjectReadTextDrag(a, data, &text, &url);
+            if (len(text) > 0 || len(url) > 0) {
+                PlatformInput in =
+                    InputTextDrop(FileDropPhase::Entered, x, y, text, url);
+                kind = Kind::Text;
+                WindowDispatchInput(win, &in);
+            }
+        }
         ArenaDelete(a);
+        lastEffect = Effect();
         if (effect) {
-            *effect = DROPEFFECT_COPY;
+            *effect = lastEffect;
         }
         return S_OK;
     }
 
     HRESULT DispatchAt(FileDropPhase phase, POINTL pt, DWORD* effect) {
         if (effect) {
-            *effect = DROPEFFECT_COPY;
+            *effect = DROPEFFECT_NONE;
         }
-        if (!win) {
+        if (!win || kind == Kind::None) {
             return S_OK;
         }
+
+        DWORD dropEffect = lastEffect;
         float x = 0, y = 0;
         At(pt, &x, &y);
         PlatformInput in = InputFileDrop(phase, x, y, {});
         WindowDispatchInput(win, &in);
+        if (phase == FileDropPhase::Submit) {
+            kind = Kind::None;
+        } else {
+            lastEffect = Effect();
+            dropEffect = lastEffect;
+        }
+        if (effect) {
+            *effect = dropEffect;
+        }
         return S_OK;
     }
     HRESULT STDMETHODCALLTYPE DragOver(DWORD, POINTL pt,
@@ -252340,11 +252908,12 @@ struct FileDropTarget : ComObject<IDropTarget> {
         return DispatchAt(FileDropPhase::Pending, pt, effect);
     }
     HRESULT STDMETHODCALLTYPE DragLeave() override {
-        if (win) {
+        if (win && kind != Kind::None) {
             PlatformInput in = InputFileDrop(FileDropPhase::Exited, win->mouseX,
                                              win->mouseY, {});
             WindowDispatchInput(win, &in);
         }
+        kind = Kind::None;
         return S_OK;
     }
     HRESULT STDMETHODCALLTYPE Drop(IDataObject*, DWORD, POINTL pt,
@@ -252352,6 +252921,495 @@ struct FileDropTarget : ComObject<IDropTarget> {
         return DispatchAt(FileDropPhase::Submit, pt, effect);
     }
 };
+
+static HGLOBAL GlobalFromBytes(const void* p, size_t n) {
+    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE, n > 0 ? n : 1);
+    void* dst = h ? GlobalLock(h) : nullptr;
+    if (!dst) {
+        if (h) {
+            GlobalFree(h);
+        }
+        return nullptr;
+    }
+    if (n > 0) {
+        memcpy(dst, p, n);
+    }
+    GlobalUnlock(h);
+    return h;
+}
+
+static int WideInto(Str s, WCHAR* dst, int room) {
+    int n = len(s) > 0 ? MultiByteToWideChar(CP_UTF8, 0, s.s, len(s), dst,
+                                             dst ? room - 1 : 0)
+                       : 0;
+    if (dst) {
+        dst[n] = 0;
+    }
+    return n + 1;
+}
+
+static HGLOBAL GlobalFromText(Str text) {
+    int n = WideInto(text, nullptr, 0);
+    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE, (size_t)n * sizeof(WCHAR));
+    auto* w = h ? (WCHAR*)GlobalLock(h) : nullptr;
+    if (!w) {
+        if (h) {
+            GlobalFree(h);
+        }
+        return nullptr;
+    }
+    WideInto(text, w, n);
+    GlobalUnlock(h);
+    return h;
+}
+
+static HGLOBAL GlobalFromPaths(Str paths) {
+    int chars = 1;
+    for (Str rest = paths; len(rest) > 0;) {
+        Str line = NextLine(&rest);
+        if (len(line) > 0) {
+            chars += WideInto(line, nullptr, 0);
+        }
+    }
+    size_t size = sizeof(DROPFILES) + (size_t)chars * sizeof(WCHAR);
+    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, size);
+    auto* df = h ? (DROPFILES*)GlobalLock(h) : nullptr;
+    if (!df) {
+        if (h) {
+            GlobalFree(h);
+        }
+        return nullptr;
+    }
+    df->pFiles = sizeof(DROPFILES);
+    df->fWide = TRUE;
+    auto* w = (WCHAR*)(df + 1);
+    int at = 0;
+    for (Str rest = paths; len(rest) > 0;) {
+        Str line = NextLine(&rest);
+        if (len(line) > 0) {
+            at += WideInto(line, w + at, chars - at);
+        }
+    }
+    w[at] = 0;
+    GlobalUnlock(h);
+    return h;
+}
+
+static HGLOBAL GlobalFromFileDescriptor(Str name, int size) {
+    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT,
+                            sizeof(FILEGROUPDESCRIPTORW));
+    auto* fgd = h ? (FILEGROUPDESCRIPTORW*)GlobalLock(h) : nullptr;
+    if (!fgd) {
+        if (h) {
+            GlobalFree(h);
+        }
+        return nullptr;
+    }
+    fgd->cItems = 1;
+    fgd->fgd[0].dwFlags = FD_FILESIZE | FD_ATTRIBUTES;
+    fgd->fgd[0].dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+    fgd->fgd[0].nFileSizeLow = (DWORD)size;
+    WideInto(name, fgd->fgd[0].cFileName, MAX_PATH);
+    GlobalUnlock(h);
+    return h;
+}
+
+struct DragOutFormatEnum : ComObject<IEnumFORMATETC> {
+    static const int kMax = 6;
+    FORMATETC fmts[kMax] = {};
+    ULONG n = 0;
+    ULONG at = 0;
+
+    HRESULT STDMETHODCALLTYPE Next(ULONG want, FORMATETC* out,
+                                   ULONG* got) override {
+        if (!out) {
+            return E_POINTER;
+        }
+        ULONG k = 0;
+        while (k < want && at < n) {
+            out[k++] = fmts[at++];
+        }
+        if (got) {
+            *got = k;
+        }
+        return k == want ? S_OK : S_FALSE;
+    }
+    HRESULT STDMETHODCALLTYPE Skip(ULONG k) override {
+        at = std::min(n, at + k);
+        return at < n ? S_OK : S_FALSE;
+    }
+    HRESULT STDMETHODCALLTYPE Reset() override {
+        at = 0;
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE Clone(IEnumFORMATETC** out) override {
+        if (!out) {
+            return E_POINTER;
+        }
+        auto* e = new DragOutFormatEnum();
+        memcpy(e->fmts, fmts, sizeof(fmts));
+        e->n = n;
+        e->at = at;
+        *out = e;
+        return S_OK;
+    }
+};
+
+struct DragOutDataObject : ComObject<IDataObject> {
+    Str text = {};
+    Str paths = {};
+    Str imageName = {};
+    uint8_t* image = nullptr;
+    int imageLen = 0;
+    CLIPFORMAT cfDescriptor = 0;
+    CLIPFORMAT cfContents = 0;
+    CLIPFORMAT cfDropEffect = 0;
+    FORMATETC fmts[DragOutFormatEnum::kMax] = {};
+    ULONG n = 0;
+
+    ~DragOutDataObject() override {
+        StrFree(text);
+        StrFree(paths);
+        StrFree(imageName);
+        delete[] image;
+    }
+
+    void Add(CLIPFORMAT cf, LONG lindex, DWORD tymed) {
+        fmts[n++] = {cf, nullptr, DVASPECT_CONTENT, lindex, tymed};
+    }
+
+    const FORMATETC* Find(const FORMATETC* want) const {
+        for (ULONG i = 0; want && i < n; i++) {
+            const FORMATETC& f = fmts[i];
+            if (want->cfFormat != f.cfFormat || !(want->tymed & f.tymed)) {
+                continue;
+            }
+            if (f.lindex >= 0 && want->lindex != f.lindex) {
+                continue;
+            }
+            return &f;
+        }
+        return nullptr;
+    }
+
+    HRESULT STDMETHODCALLTYPE GetData(FORMATETC* want,
+                                      STGMEDIUM* out) override {
+        if (!want || !out) {
+            return E_POINTER;
+        }
+        const FORMATETC* f = Find(want);
+        if (!f) {
+            return DV_E_FORMATETC;
+        }
+        *out = {};
+        CLIPFORMAT cf = f->cfFormat;
+        if (cf == cfContents && (want->tymed & TYMED_ISTREAM)) {
+            IStream* stream = nullptr;
+            if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
+                return E_OUTOFMEMORY;
+            }
+            stream->Write(image, (ULONG)imageLen, nullptr);
+            LARGE_INTEGER zero = {};
+            stream->Seek(zero, STREAM_SEEK_SET, nullptr);
+            out->tymed = TYMED_ISTREAM;
+            out->pstm = stream;
+            return S_OK;
+        }
+        HGLOBAL h = nullptr;
+        DWORD copyEffect = DROPEFFECT_COPY;
+        if (cf == CF_UNICODETEXT) {
+            h = GlobalFromText(text);
+        } else if (cf == CF_HDROP) {
+            h = GlobalFromPaths(paths);
+        } else if (cf == cfDescriptor) {
+            h = GlobalFromFileDescriptor(imageName, imageLen);
+        } else if (cf == cfContents) {
+            h = GlobalFromBytes(image, (size_t)imageLen);
+        } else if (cf == cfDropEffect) {
+            h = GlobalFromBytes(&copyEffect, sizeof(copyEffect));
+        }
+        if (!h) {
+            return E_OUTOFMEMORY;
+        }
+        out->tymed = TYMED_HGLOBAL;
+        out->hGlobal = h;
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE GetDataHere(FORMATETC*, STGMEDIUM*) override {
+        return E_NOTIMPL;
+    }
+    HRESULT STDMETHODCALLTYPE QueryGetData(FORMATETC* want) override {
+        return Find(want) ? S_OK : DV_E_FORMATETC;
+    }
+    HRESULT STDMETHODCALLTYPE GetCanonicalFormatEtc(FORMATETC*,
+                                                    FORMATETC* out) override {
+        if (out) {
+            out->ptd = nullptr;
+        }
+        return E_NOTIMPL;
+    }
+    HRESULT STDMETHODCALLTYPE SetData(FORMATETC*, STGMEDIUM*, BOOL) override {
+        return E_NOTIMPL;
+    }
+    HRESULT STDMETHODCALLTYPE EnumFormatEtc(DWORD dir,
+                                            IEnumFORMATETC** out) override {
+        if (!out) {
+            return E_POINTER;
+        }
+        *out = nullptr;
+        if (dir != DATADIR_GET) {
+            return E_NOTIMPL;
+        }
+        auto* e = new DragOutFormatEnum();
+        memcpy(e->fmts, fmts, sizeof(fmts));
+        e->n = n;
+        *out = e;
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE DAdvise(FORMATETC*, DWORD, IAdviseSink*,
+                                      DWORD*) override {
+        return OLE_E_ADVISENOTSUPPORTED;
+    }
+    HRESULT STDMETHODCALLTYPE DUnadvise(DWORD) override {
+        return OLE_E_ADVISENOTSUPPORTED;
+    }
+    HRESULT STDMETHODCALLTYPE EnumDAdvise(IEnumSTATDATA**) override {
+        return OLE_E_ADVISENOTSUPPORTED;
+    }
+};
+
+IDataObject* DragOutDataObjectNew(const DragOutData& data) {
+    DragOutFormat formats[3];
+    int nf = DragOutFormats(data, formats);
+    if (nf == 0) {
+        return nullptr;
+    }
+    auto* obj = new DragOutDataObject();
+    for (int i = 0; i < nf; i++) {
+        switch (formats[i]) {
+            case DragOutFormat::Text:
+                obj->text = StrDup(data.text);
+                obj->Add(CF_UNICODETEXT, -1, TYMED_HGLOBAL);
+                break;
+            case DragOutFormat::Paths:
+                obj->paths = StrDup(data.paths);
+                obj->Add(CF_HDROP, -1, TYMED_HGLOBAL);
+                break;
+            case DragOutFormat::ImageFile:
+                obj->imageName = StrDup(DragOutImageName(data));
+                obj->imageLen = data.imageBytesLen;
+                obj->image = new uint8_t[data.imageBytesLen];
+                memcpy(obj->image, data.imageBytes, (size_t)data.imageBytesLen);
+                obj->cfDescriptor = ClipFormat(CFSTR_FILEDESCRIPTORW);
+                obj->cfContents = ClipFormat(CFSTR_FILECONTENTS);
+                obj->Add(obj->cfDescriptor, -1, TYMED_HGLOBAL);
+                obj->Add(obj->cfContents, 0, TYMED_ISTREAM | TYMED_HGLOBAL);
+                break;
+        }
+    }
+
+    if (len(obj->paths) > 0 || obj->image) {
+        obj->cfDropEffect = ClipFormat(CFSTR_PREFERREDDROPEFFECT);
+        obj->Add(obj->cfDropEffect, -1, TYMED_HGLOBAL);
+    }
+    return obj;
+}
+
+struct DragOutSource : ComObject<IDropSource> {
+    bool imageDrag = false;
+
+    HRESULT STDMETHODCALLTYPE QueryContinueDrag(BOOL escape,
+                                                DWORD keys) override {
+        if (escape) {
+            return DRAGDROP_S_CANCEL;
+        }
+        if (!(keys & MK_LBUTTON)) {
+            return DRAGDROP_S_DROP;
+        }
+        return S_OK;
+    }
+    HRESULT STDMETHODCALLTYPE GiveFeedback(DWORD) override {
+        if (!imageDrag) {
+            return DRAGDROP_S_USEDEFAULTCURSORS;
+        }
+        POINT pt = {};
+        GetCursorPos(&pt);
+        ImageList_DragMove(pt.x, pt.y);
+        return S_OK;
+    }
+};
+
+static HIMAGELIST DragOutPreviewList(const DragOutData& data, float scale,
+                                     POINT* hot) {
+    if (!data.imageBytes || data.imageBytesLen <= 0 ||
+        data.previewMaxEdge <= 0) {
+        return nullptr;
+    }
+    IWICImagingFactory* wic = nullptr;
+    IWICStream* stream = nullptr;
+    IWICBitmapDecoder* dec = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* conv = nullptr;
+    IWICBitmapScaler* scaler = nullptr;
+    HIMAGELIST list = nullptr;
+    UINT w = 0, h = 0;
+    DragOutPreview p;
+    HRESULT hr =
+        CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                         __uuidof(IWICImagingFactory), (void**)&wic);
+    if (SUCCEEDED(hr)) {
+        hr = wic->CreateStream(&stream);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = stream->InitializeFromMemory((BYTE*)data.imageBytes,
+                                          (DWORD)data.imageBytesLen);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = wic->CreateDecoderFromStream(stream, nullptr,
+                                          WICDecodeMetadataCacheOnDemand, &dec);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = dec->GetFrame(0, &frame);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = frame->GetSize(&w, &h);
+    }
+    if (SUCCEEDED(hr)) {
+        p = DragOutPreviewSize(data, (int)w, (int)h, scale);
+        hr = p.w > 0 ? wic->CreateFormatConverter(&conv) : E_FAIL;
+    }
+    if (SUCCEEDED(hr)) {
+        hr = conv->Initialize(frame, GUID_WICPixelFormat32bppPBGRA,
+                              WICBitmapDitherTypeNone, nullptr, 0,
+                              WICBitmapPaletteTypeCustom);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = wic->CreateBitmapScaler(&scaler);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = scaler->Initialize(conv, (UINT)p.w, (UINT)p.h,
+                                WICBitmapInterpolationModeHighQualityCubic);
+    }
+    void* bits = nullptr;
+    HBITMAP bmp = nullptr;
+    if (SUCCEEDED(hr)) {
+        BITMAPINFO bmi = {};
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = p.w;
+        bmi.bmiHeader.biHeight = -p.h;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+        bmp =
+            CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+        hr = bmp && bits ? S_OK : E_OUTOFMEMORY;
+    }
+    UINT stride = (UINT)p.w * 4;
+    if (SUCCEEDED(hr)) {
+        hr = scaler
+                 ->CopyPixels(nullptr, stride, stride * (UINT)p.h, (BYTE*)bits);
+    }
+    if (SUCCEEDED(hr)) {
+        DragOutPreviewFrame((uint8_t*)bits, p.w, p.h, (int)stride);
+        list = ImageList_Create(p.w, p.h, ILC_COLOR32, 1, 1);
+        if (list && ImageList_Add(list, bmp, nullptr) < 0) {
+            ImageList_Destroy(list);
+            list = nullptr;
+        }
+        hot->x = p.hotX;
+        hot->y = p.hotY;
+    }
+    if (bmp) {
+        DeleteObject(bmp);
+    }
+    IUnknown* objs[] = {scaler, conv, frame, dec, stream, wic};
+    for (IUnknown* o : objs) {
+        if (o) {
+            o->Release();
+        }
+    }
+    return list;
+}
+
+static IDataObject* gLastDragOut = nullptr;
+
+void DragOutDisconnectLast() {
+    if (!gLastDragOut) {
+        return;
+    }
+    CoDisconnectObject(gLastDragOut, 0);
+    gLastDragOut->Release();
+    gLastDragOut = nullptr;
+}
+
+static bool PrimaryButtonDown() {
+    int vk = GetSystemMetrics(SM_SWAPBUTTON) ? VK_RBUTTON : VK_LBUTTON;
+    return (GetAsyncKeyState(vk) & 0x8000) != 0;
+}
+
+static DragOutResult DragOutResultOf(HRESULT hr, DWORD effect) {
+    if (hr != DRAGDROP_S_DROP) {
+        return DragOutResult::Canceled;
+    }
+    if (effect & DROPEFFECT_MOVE) {
+        return DragOutResult::Moved;
+    }
+    if (effect & DROPEFFECT_COPY) {
+        return DragOutResult::Copied;
+    }
+    if (effect & DROPEFFECT_LINK) {
+        return DragOutResult::Linked;
+    }
+    return DragOutResult::Canceled;
+}
+
+static void DragOutRun(DragOutRequest* req) {
+    Window* win = req->win;
+    HWND hwnd = win && win->plat ? win->plat->hwnd : nullptr;
+
+    if (!hwnd || !PrimaryButtonDown()) {
+        DragOutFinish(req, DragOutResult::Canceled);
+        return;
+    }
+    IDataObject* data = DragOutDataObjectNew(req->data);
+    if (!data) {
+        DragOutFinish(req, DragOutResult::Canceled);
+        return;
+    }
+    POINT hot = {};
+    HIMAGELIST list = DragOutPreviewList(req->data, HostDpi(hwnd) / 96.f, &hot);
+    auto* src = new DragOutSource();
+    if (list && ImageList_BeginDrag(list, 0, hot.x, hot.y)) {
+        POINT pt = {};
+        GetCursorPos(&pt);
+
+        src->imageDrag = ImageList_DragEnter(GetDesktopWindow(), pt.x, pt.y);
+        if (!src->imageDrag) {
+            ImageList_EndDrag();
+        }
+    }
+    DWORD effect = DROPEFFECT_NONE;
+    HRESULT hr = DoDragDrop(data, src, DROPEFFECT_COPY, &effect);
+    if (src->imageDrag) {
+        ImageList_DragLeave(GetDesktopWindow());
+        ImageList_EndDrag();
+    }
+    if (list) {
+        ImageList_Destroy(list);
+    }
+    src->Release();
+    DragOutDisconnectLast();
+    gLastDragOut = data;
+    DragOutFinish(req, DragOutResultOf(hr, effect));
+}
+
+bool PlatStartDragOut(Window* win, DragOutRequest* req) {
+    if (!win || !win->plat || !win->plat->hwnd) {
+        return false;
+    }
+    ExecPost(MkFunc0(DragOutRun, req));
+    return true;
+}
 
 static void RegisterFileDrop(Window* win, HWND hwnd) {
     if (!win || !win->plat || win->plat->fileDrop) {
@@ -254043,6 +255101,7 @@ bool PlatInit(App* app) {
 void PlatShutdown(App* app) {
     (void)app;
     WakeShutdown();
+    DragOutDisconnectLast();
     OleUninitialize();
     CoUninitialize();
 }

@@ -24,9 +24,7 @@
 #include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
-#if OS_WIN
-#include "gui/OleDragDrop.h"
-#endif
+#include "gui/DragDrop.h"
 #include "SumatraDialogs.h"
 #include "gui/ToolWindow.h"
 #if !OS_WIN && !OS_WASM
@@ -44,6 +42,7 @@ struct ToolRootView {
     static void OnCaptureKey(ToolRootView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnTick(ToolRootView* self, gp::Ctx* cx, const gp::TickEvent* ev);
     static void OnNoKey(ToolRootView*, gp::Ctx*, const gp::KeyEvent*) {}
+    static void OnDropFiles(ToolRootView* self, gp::Ctx* cx, const gp::DropEvent* ev);
 };
 
 struct ToolWindow {
@@ -459,9 +458,6 @@ static void ApplyHwndStyle(ToolWindow* tw) {
     }
     Rect r = tw->outer;
     SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE);
-    if (desc.dropFiles) {
-        RegisterCanvasDropTarget(hwnd);
-    }
 }
 
 // what a win32 dialog does before it is destroyed: the owner takes input
@@ -589,10 +585,6 @@ static LRESULT CALLBACK ToolSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, 
             break;
         case WM_DESTROY:
             EndModal(tw);
-            // a registered target keeps the window alive in OLE's eyes
-            if (tw->desc.dropFiles) {
-                RevokeCanvasDropTarget(hwnd);
-            }
             break;
         case WM_EXITSIZEMOVE:
             if (tw->desc.onExitSizeMove && IsMainWindowValid(tw->owner)) {
@@ -1191,6 +1183,9 @@ gp::El* ToolRootView::Render(ToolRootView* self, gp::Ctx* cx) {
     if (tw->desc.onKeyUp) {
         root->OnKeyUp(gp::Listen(cx, &ToolRootView::OnKeyUp));
     }
+    if (tw->desc.onDropFiles) {
+        root->OnDrop(GStrL("ExternalPaths"), gp::Listen(cx, &ToolRootView::OnDropFiles));
+    }
     if (gp::El* el = tw->desc.build(tw->owner, cx)) {
         root->Child(el);
     }
@@ -1208,6 +1203,20 @@ gp::El* ToolRootView::Render(ToolRootView* self, gp::Ctx* cx) {
         root->Child(msgBox);
     }
     return root;
+}
+
+// orig: the window is an OLE drop target of its own (MergeDropTarget)
+void ToolRootView::OnDropFiles(ToolRootView* self, gp::Ctx*, const gp::DropEvent* ev) {
+    ToolWindow* tw = self->tw;
+    if (!IsLive(tw) || tw->closing || !tw->desc.onDropFiles || !IsMainWindowValidAndNotClosing(tw->owner)) {
+        return;
+    }
+    constexpr int kMaxDropped = 64;
+    Str paths[kMaxDropped];
+    int n = SplitDroppedPaths(FromGpui(ev->externalPaths), paths, kMaxDropped);
+    if (n > 0) {
+        tw->desc.onDropFiles(tw->owner, paths, n, PointF{ev->x, ev->y});
+    }
 }
 
 void ToolRootView::OnKeyDown(ToolRootView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {

@@ -81,7 +81,6 @@
 #include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/NativeFileDlg.h"
-#include "gui/OleDragDrop.h"
 #include "gui/NativeCursors.h"
 #include "gui/Sidebar.h"
 #include "gui/WasmBridge.h"
@@ -7923,9 +7922,6 @@ int GpuiMain(int argc, char** argv) {
     ShutdownWin11Printing();
     TtsRelease();
     ClearPendingNextPrevNav();
-#if OS_WIN
-    DisconnectLastDragDataObject();
-#endif
     NativeCursorsDelete();
 
     // the window is off the screen but its model is still here, and the shell

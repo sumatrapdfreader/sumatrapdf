@@ -46,6 +46,7 @@
 #include "HexView.h"
 #include "gui/NativeFileDlg.h"
 #include "gui/AppShell.h"
+#include "gui/DragDrop.h"
 #include "gui/WasmBridge.h"
 #include "gui/GpuiTheme.h"
 #include "gui/DocCanvas.h"
@@ -793,17 +794,6 @@ bool AppShellOnWmContextMenu(MainWindow* win, int screenX, int screenY) {
     return true;
 }
 #endif
-
-void AppShellAfterNativeDrag(MainWindow* win) {
-    gp::Window* gw = IsMainWindowValid(win) ? win->gpuiWin : nullptr;
-    if (!gw || !gw->mouseDown) {
-        return;
-    }
-    gp::PlatformInput in =
-        gp::InputMouseUp(gp::MouseButton::Left, gw->mouseX, gw->mouseY, {}, gp::WindowCurrentClickCount(gw));
-    gp::WindowDispatchInput(gw, &in);
-    AppShellInvalidate(win);
-}
 
 static bool NotifShownNow(MainWindow* win, NotificationWnd* n);
 
@@ -2446,34 +2436,11 @@ void ShellView::OnExternalDrop(ShellView* self, gp::Ctx*, const gp::DropEvent* e
     if (!self || !self->win || !ev) {
         return;
     }
-    Str all = FromGpui(ev->externalPaths);
-    if (len(all) <= 0) {
-        return;
-    }
-
     constexpr int kMaxDropped = 64;
     Str paths[kMaxDropped];
-    int n = 0;
-    int i = 0;
-    while (i < len(all) && n < kMaxDropped) {
-        int start = i;
-        while (i < len(all) && all.s[i] != '\n' && all.s[i] != '\r') {
-            i++;
-        }
-        int lineLen = i - start;
-        while (lineLen > 0 && (all.s[start] == ' ' || all.s[start] == '\t')) {
-            start++;
-            lineLen--;
-        }
-        if (lineLen > 0) {
-            paths[n++] = Str(all.s + start, lineLen);
-        }
-        if (i < len(all) && all.s[i] == '\r') {
-            i++;
-        }
-        if (i < len(all) && all.s[i] == '\n') {
-            i++;
-        }
+    int n = SplitDroppedPaths(FromGpui(ev->externalPaths), paths, kMaxDropped);
+    if (n <= 0) {
+        return;
     }
     AppShellAcceptDrop(self->win, ev->x, ev->y, paths, n, FileDropPhase::Drop);
 }

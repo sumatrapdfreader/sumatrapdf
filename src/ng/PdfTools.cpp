@@ -3844,6 +3844,11 @@ static bool MergeToolOnKey(MainWindow* win, gp::Ctx* cx, const gp::KeyEvent* ev)
     return MergeOnKeyDown(win, ev->vk, ev->ctrl || ev->platform, ev->shift);
 }
 
+// PDFs dropped on the Merge PDF window
+static void MergeToolOnDropFiles(MainWindow* win, const Str* paths, int n, PointF pt) {
+    PdfToolDialogOnDropFiles(win, paths, n, &pt, DropHost::ToolWindow);
+}
+
 // the caption's close box, or the frame went away
 static void MergeToolOnClosed(MainWindow*) {
     gTool.tw = nullptr;
@@ -3859,7 +3864,7 @@ static ToolWindowDesc MergeToolDesc() {
     desc.resize = ToolWinResize::Resizable;
     desc.owner = ToolWinOwner::Owned;
     desc.minClient = Size(kMergeWinMinDx, kMergeWinMinDy);
-    desc.dropFiles = true;
+    desc.onDropFiles = MergeToolOnDropFiles;
     desc.build = MergeToolBuild;
     desc.onKey = MergeToolOnKey;
     desc.onClosed = MergeToolOnClosed;

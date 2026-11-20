@@ -1,26 +1,16 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// --- shared by OleDragDropCommon_win.cpp, orig's Canvas.cpp and ng's gui/OleDragDrop_win.cpp ---
+// --- shared by OleDragDropCommon_win.cpp and orig's Canvas.cpp ---
 
 void FinishDragDrop(IDataObject* dataObj);
 HGLOBAL EncodeBitmapToPngGlobal(HBITMAP hbmp);
 HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge);
 HIMAGELIST CreateDragImageList(HBITMAP hbmp);
-TempStr FileNameFromUrlTemp(Str url);
 TempStr GetTextFromDataObject(IDataObject* dataObj);
 TempStr GetUrlFromDataObject(IDataObject* dataObj);
 bool DataObjectHasFiles(IDataObject* dataObj);
 bool DataObjectHasUrl(IDataObject* dataObj);
-
-struct DownloadAndOpenUrlData {
-    Str url;
-    HWND hwndCanvas;
-};
-void DownloadAndOpenUrl(DownloadAndOpenUrlData* data);
-
-// implemented by each app
-void OpenDownloadedPath(Str* path);
 
 // OLE drag-drop support for dragging selected text out of the window
 class TextDropSource : public IDropSource {

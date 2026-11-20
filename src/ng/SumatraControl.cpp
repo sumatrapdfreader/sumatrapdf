@@ -113,7 +113,6 @@
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
-#include "gui/OleDragDrop.h"
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 #include "StripGroups.h"

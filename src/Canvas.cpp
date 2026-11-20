@@ -61,6 +61,7 @@
 #include "AnnotEditToolbar.h"
 #include "AnnotTextPopup.h"
 #include "OleDragDropCommon.h"
+#include "DropUrlCommon.h"
 #include "CanvasCommon.h"
 #include "LaserPointerCursor.h"
 #include "ReadAloud.h"
@@ -5238,7 +5239,6 @@ class CanvasDropTarget : public IDropTarget {
         if (url) {
             auto* data = new DownloadAndOpenUrlData();
             data->url = str::Dup(url);
-            data->hwndCanvas = hwnd;
             auto fn = MkFunc0<DownloadAndOpenUrlData>(DownloadAndOpenUrl, data);
             RunAsync(fn, StrL("DownloadAndOpenUrl"));
         }

@@ -67,8 +67,8 @@ struct ToolWindowDesc {
     Size minClient;
     // largest; a 0 side is unbounded
     Size maxClient;
-    // files can be dropped on it: an OLE drop target on its HWND (Windows)
-    bool dropFiles = false;
+    // files dropped on it (gpui's ExternalPaths drop); `pt` is window dips
+    void (*onDropFiles)(MainWindow* owner, const Str* paths, int n, PointF pt) = nullptr;
     // the content; fills the window
     gpui::El* (*build)(MainWindow* owner, gpui::Ctx* cx) = nullptr;
     // a key the content's own listeners did not take; true when handled
