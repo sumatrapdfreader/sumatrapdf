@@ -15,17 +15,11 @@
 
 // The laser pointer: a cursor drawn at run time, the same in orig and ng.
 
-// logical size of the cursor bitmap. The dot itself is a small part of it,
-// the rest is the glow fading out to fully transparent
-constexpr int kLaserPointerCursorSize = 32;
-
 static HCURSOR gCursorLaserPointer = nullptr;
 
 static int gCursorLaserPointerSize = 0;
 
-// A laser dot: a white-hot center inside a saturated red core, surrounded by a
-// glow that fades to transparent so the dot is visible on light and dark pages
-// alike. The hotspot is the center of the dot, unlike an arrow's tip.
+// The hotspot is the center of the dot, unlike an arrow's tip.
 static HCURSOR CreateLaserPointerCursor(int size) {
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -42,41 +36,7 @@ static HCURSOR CreateLaserPointerCursor(int size) {
         return nullptr;
     }
 
-    float center = (float)size / 2.f;
-    float glowR = center;
-    float coreR = (float)size * 0.16f;
-    float hotR = (float)size * 0.07f;
-    DWORD* pixels = (DWORD*)bits;
-    for (int y = 0; y < size; y++) {
-        for (int x = 0; x < size; x++) {
-            float dx = ((float)x + 0.5f) - center;
-            float dy = ((float)y + 0.5f) - center;
-            float d = sqrtf((dx * dx) + (dy * dy));
-
-            // the glow, densest where it meets the core and quadratically
-            // fading out; it also fills the core, so that anti-aliasing the
-            // core's edge blends it into the glow rather than into a gap
-            float t = limitValue((d - coreR) / (glowR - coreR), 0.f, 1.f);
-            float glowA = (d < glowR) ? 0.45f * (1.f - t) * (1.f - t) : 0.f;
-            // the dot itself, white-hot in the middle, saturated red at the edge
-            float coreA = limitValue(coreR + 0.5f - d, 0.f, 1.f);
-            float hot = limitValue(d / hotR, 0.f, 1.f);
-            float coreG = 255.f - (200.f * hot);
-
-            // core over glow, written out premultiplied (as 32bpp cursors want)
-            float glowW = glowA * (1.f - coreA);
-            float alpha = coreA + glowW;
-            if (alpha <= 0.f) {
-                pixels[(y * size) + x] = 0;
-                continue;
-            }
-            u8 a = (u8)(alpha * 255.f);
-            u8 r = (u8)((255.f * coreA) + (255.f * glowW));
-            u8 g = (u8)((coreG * coreA) + (16.f * glowW));
-            u8 b = g;
-            pixels[(y * size) + x] = ((DWORD)a << 24) | ((DWORD)r << 16) | ((DWORD)g << 8) | b;
-        }
-    }
+    LaserPointerDotPixels((u32*)bits, size);
 
     // 32bpp cursors carry their own alpha, but CreateIconIndirect still wants a
     // mask bitmap; an all-zero AND mask leaves the color bitmap in charge

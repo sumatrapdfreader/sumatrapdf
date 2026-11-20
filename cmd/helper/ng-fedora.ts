@@ -31,6 +31,7 @@ const packages = [
   "unzip",
   // GPUI and the app link these
   "libX11-devel",
+  "libXcursor-devel",
   "cairo-devel",
   "pango-devel",
   "gdk-pixbuf2-devel",

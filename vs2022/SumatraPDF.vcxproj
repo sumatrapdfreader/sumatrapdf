@@ -2185,6 +2185,7 @@
     <ClCompile Include="..\src\shared\InstallerUtil_win.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
     <ClCompile Include="..\src\shared\KeyboardHelpCommon.cpp" />
+    <ClCompile Include="..\src\shared\LaserPointerCursorCommon.cpp" />
     <ClCompile Include="..\src\shared\LaserPointerCursor_win.cpp" />
     <ClCompile Include="..\src\shared\LinkFollow.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

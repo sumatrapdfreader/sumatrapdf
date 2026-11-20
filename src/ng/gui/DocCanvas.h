@@ -124,9 +124,8 @@ void CanvasSetKeyModifiers(bool shift, bool ctrl, bool platform);
 bool IsDragDistance(int x1, int x2, int y1, int y2);
 // the cursor the canvas shows, as a gpui CursorKind cast to int
 void CanvasSetCursor(MainWindow* win, int cursorKind);
-// one of orig's cursors that are bitmaps; false where there is none (off
-// Windows), and the caller sets a gpui cursor instead
-bool CanvasSetNativeCursor(MainWindow* win, NativeCursor cursor);
+// one of orig's cursors that are bitmaps
+void CanvasSetNativeCursor(MainWindow* win, NativeCursor cursor);
 // orig's CancelDrag: Escape abandons whatever the mouse was doing
 void CanvasCancelDrag(MainWindow* win);
 bool NudgeSelectedAnnotation(MainWindow*, int vkey, bool shift);

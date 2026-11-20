@@ -7837,8 +7837,8 @@ int GpuiMain(int argc, char** argv) {
     ClearPendingNextPrevNav();
 #if OS_WIN
     DisconnectLastDragDataObject();
-    NativeCursorsDelete();
 #endif
+    NativeCursorsDelete();
 
     // the window is off the screen but its model is still here, and the shell
     // cached its geometry on every frame, so the session snapshot SaveSettings

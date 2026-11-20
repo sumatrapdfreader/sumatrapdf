@@ -54,7 +54,6 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SUMATRAPDF          ICON "gfx\\SumatraPDF-smaller.ico"
-IDC_CURSORDRAG          CURSOR "dragcursor.cur"
 // for compat with pre 3.4 registry association for pre-win10
 // have icon as ,1, which is index of this icon. unless we delete
 // those old registry on install, the icon would change

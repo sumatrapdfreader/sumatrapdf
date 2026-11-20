@@ -8490,6 +8490,12 @@ El* El::Cursor(CursorKind c) {
     cursor = c;
     return this;
 }
+El* El::CustomCursor(CursorImage* img) {
+    if (!img && !lifecycle) return this;
+    if (!lifecycle) lifecycle = ArenaNew<ElLifecycle>(arena);
+    lifecycle->cursorImage = img;
+    return this;
+}
 El* El::BindSlider(SliderState* s, Axis axis) {
     slider = s;
     sliderAxis = axis;
@@ -14225,7 +14231,8 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         e->onLongPress.IsValid() || e->onDragMove.IsValid() ||
         e->onMouseDownOut.IsValid() || e->onMouseUpOut.IsValid() ||
         e->onScrollWheel.IsValid() ||
-        (e->lifecycle && e->lifecycle->onPinch.IsValid()) ||
+        (e->lifecycle &&
+         (e->lifecycle->onPinch.IsValid() || e->lifecycle->cursorImage)) ||
         e->drag.IsValid() || e->onDrop.IsValid() ||
         e->cursor != CursorKind::Arrow || e->slider || e->stopMouseDown ||
         e->suppressTextSelection || e->keepTextSelection ||
@@ -14266,6 +14273,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         hr.dropKind = e->dropKind;
         hr.onDrop = e->onDrop;
         hr.cursor = e->cursor;
+        hr.cursorImage = e->lifecycle ? e->lifecycle->cursorImage : nullptr;
         hr.slider = e->slider;
         hr.sliderAxis = e->sliderAxis;
         hr.input = e->input;
@@ -23701,6 +23709,8 @@ int WindowFlushImeCoordinates(Window* win) {
     return n;
 }
 
+static void UpdateCursor(Window* win, float x, float y);
+
 static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
                       float dipH, bool headless) {
     if (!win) {
@@ -23973,6 +23983,10 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
 
     TooltipDismissRemoved(win);
     TooltipUpdateLinkAtPointer(win);
+
+    if (win->pointerInWindow) {
+        UpdateCursor(win, win->mouseX, win->mouseY);
+    }
 
     if (HttpFetchPending() > 0) {
         PlatSetTimer(win, WindowTimerMs(win));
@@ -25352,6 +25366,68 @@ static bool SemanticKeyStep(Window* win, int key, bool ctrl, bool alt) {
 
 static const float kDragThreshold = 4.f;
 
+static void WindowApplyCursor(Window* win, CursorKind kind, CursorImage* img) {
+    if (kind == win->cursor && img == win->cursorImage) {
+        return;
+    }
+    win->cursor = kind;
+    win->cursorImage = img;
+    PlatSetCursor(win, kind);
+}
+
+static bool HoverDefAt(Window* win, float x, float y) {
+    for (int i = 0; i < win->paint.inputs.len; i++) {
+        InputState* f = win->paint.inputs[i];
+        if (f->hoverDef.locations.len > 0 && f->hoverDef.bounds
+                                                 .Contains({x, y})) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void UpdateCursor(Window* win, float x, float y) {
+    if (HoverDefAt(win, x, y)) {
+        WindowApplyCursor(win, CursorKind::Pointer, nullptr);
+        return;
+    }
+
+    CursorKind want = CursorKind::Arrow;
+    CursorImage* wantImage = nullptr;
+    const HitRect* under = HitRectById(win, win->pressedId);
+    if (!under || !win->mouseDown) {
+        under = HitTestRect(&win->paint, x, y);
+    }
+
+    const HitRect* cursorHit = under;
+    if (under && under->cursor == CursorKind::Arrow && !under->cursorImage &&
+        !under->textHoverCursor && !under->suppressTextSelection) {
+        for (int i = under->parent; i >= 0; i = win->paint.hits[i].parent) {
+            const HitRect& parent = win->paint.hits[i];
+            if (parent.textHoverCursor) {
+                cursorHit = &parent;
+                break;
+            }
+        }
+    }
+    bool selecting = win->mouseDown && win->sel &&
+                     win->sel->gesture.selecting &&
+                     win->sel->gesture.didHitText;
+    if (selecting) {
+        want = CursorKind::IBeam;
+    } else if (cursorHit &&
+               (cursorHit->cursor != CursorKind::Arrow ||
+                cursorHit->cursorImage || cursorHit->textHoverCursor ||
+                cursorHit->suppressTextSelection)) {
+        want = cursorHit->cursor;
+        wantImage = cursorHit->cursorImage;
+    } else if (TextHitOffsetIn(&win->paint, x, y, false, -1, nullptr,
+                               under ? under->paintLayer : 0) >= 0) {
+        want = CursorKind::IBeam;
+    }
+    WindowApplyCursor(win, want, wantImage);
+}
+
 static void DispatchMouseMove(Window* win, const MouseMoveEvent& in) {
     float x = in.x;
     float y = in.y;
@@ -25374,54 +25450,12 @@ static void DispatchMouseMove(Window* win, const MouseMoveEvent& in) {
     }
     win->mouseModifiers = in.modifiers;
     win->modifiers = in.modifiers;
-
-    for (int i = 0; i < win->paint.inputs.len; i++) {
-        InputState* f = win->paint.inputs[i];
-        if (f->hoverDef.locations.len > 0 && f->hoverDef.bounds
-                                                 .Contains({x, y})) {
-            if (win->cursor != CursorKind::Pointer) {
-                win->cursor = CursorKind::Pointer;
-                PlatSetCursor(win, CursorKind::Pointer);
-            }
-            AppInvalidate(win);
-            return;
-        }
+    if (HoverDefAt(win, x, y)) {
+        WindowApplyCursor(win, CursorKind::Pointer, nullptr);
+        AppInvalidate(win);
+        return;
     }
-
-    CursorKind want = CursorKind::Arrow;
-    const HitRect* under = HitRectById(win, win->pressedId);
-    if (!under || !win->mouseDown) {
-        under = HitTestRect(&win->paint, x, y);
-    }
-
-    const HitRect* cursorHit = under;
-    if (under && under->cursor == CursorKind::Arrow &&
-        !under->textHoverCursor && !under->suppressTextSelection) {
-        for (int i = under->parent; i >= 0; i = win->paint.hits[i].parent) {
-            const HitRect& parent = win->paint.hits[i];
-            if (parent.textHoverCursor) {
-                cursorHit = &parent;
-                break;
-            }
-        }
-    }
-    bool selecting = win->mouseDown && win->sel &&
-                     win->sel->gesture.selecting &&
-                     win->sel->gesture.didHitText;
-    if (selecting) {
-        want = CursorKind::IBeam;
-    } else if (cursorHit && (cursorHit->cursor != CursorKind::Arrow ||
-                             cursorHit->textHoverCursor ||
-                             cursorHit->suppressTextSelection)) {
-        want = cursorHit->cursor;
-    } else if (TextHitOffsetIn(&win->paint, x, y, false, -1, nullptr,
-                               under ? under->paintLayer : 0) >= 0) {
-        want = CursorKind::IBeam;
-    }
-    if (want != win->cursor) {
-        win->cursor = want;
-        PlatSetCursor(win, want);
-    }
+    UpdateCursor(win, x, y);
     int id = HitTest(&win->paint, x, y);
     if (id != win->hoverId) {
 
@@ -27859,6 +27893,51 @@ void WindowSetCursorVisible(Window* win, bool visible) {
     }
     win->cursorHidden = !visible;
     PlatSetCursor(win, win->cursor);
+}
+
+CursorImage* CursorImageNew(App* app, const uint8_t* rgba, int w, int h,
+                            int hotX, int hotY) {
+    if (!app || !rgba || w <= 0 || h <= 0) {
+        return nullptr;
+    }
+    size_t size = (size_t)w * (size_t)h * 4;
+    CursorImage* img = new CursorImage();
+    img->app = app;
+    img->rgba = (uint8_t*)malloc(size);
+    if (!img->rgba) {
+        delete img;
+        return nullptr;
+    }
+    memcpy(img->rgba, rgba, size);
+    img->w = w;
+    img->h = h;
+    img->hotX = std::max(0, std::min(hotX, w - 1));
+    img->hotY = std::max(0, std::min(hotY, h - 1));
+    return img;
+}
+
+void CursorImageFree(CursorImage* img) {
+    if (!img) {
+        return;
+    }
+    App* app = img->app;
+    for (int i = 0; i < len(app->windows); i++) {
+        Window* win = app->windows[i];
+        for (int j = 0; j < len(win->paint.hits); j++) {
+            if (win->paint.hits[j].cursorImage == img) {
+                win->paint.hits[j].cursorImage = nullptr;
+            }
+        }
+        if (win->cursorImage == img) {
+            win->cursorImage = nullptr;
+            PlatSetCursor(win, win->cursor);
+        }
+    }
+    if (img->plat && img->platFree) {
+        img->platFree(img->plat);
+    }
+    free(img->rgba);
+    delete img;
 }
 
 struct AppMenuBinding {
@@ -244672,6 +244751,10 @@ bool PlatAutoHideScrollbars() {
 #if GPUI_OS_LINUX
 #line 1 "src/gpui/window_linux.cpp"
 
+#if defined(GPUI_HAVE_XCURSOR) && GPUI_HAVE_XCURSOR
+#include <X11/Xcursor/Xcursor.h>
+#endif
+
 namespace gpui {
 
 using XWindow = ::Window;
@@ -245429,9 +245512,55 @@ void PlatSetMouseCapture(Window* win, bool capture) {
     XFlush(gDpy);
 }
 
+#if defined(GPUI_HAVE_XCURSOR) && GPUI_HAVE_XCURSOR
+static void CursorImageFreeX(void* plat) {
+    if (gDpy) {
+        XFreeCursor(gDpy, (::Cursor)(uintptr_t)plat);
+    }
+}
+
+static ::Cursor CursorImageX(CursorImage* img) {
+    if (!img || img->plat) {
+        return img ? (::Cursor)(uintptr_t)img->plat : 0;
+    }
+    XcursorImage* xi = XcursorImageCreate(img->w, img->h);
+    if (!xi) {
+        return 0;
+    }
+    xi->xhot = (XcursorDim)img->hotX;
+    xi->yhot = (XcursorDim)img->hotY;
+    int n = img->w * img->h;
+    for (int i = 0; i < n; i++) {
+        const uint8_t* p = img->rgba + i * 4;
+        xi->pixels[i] = ((XcursorPixel)p[3] << 24) |
+                        ((XcursorPixel)p[0] << 16) | ((XcursorPixel)p[1] << 8) |
+                        p[2];
+    }
+    ::Cursor cursor = XcursorImageLoadCursor(gDpy, xi);
+    XcursorImageDestroy(xi);
+    if (cursor) {
+        img->plat = (void*)(uintptr_t)cursor;
+        img->platFree = CursorImageFreeX;
+    }
+    return cursor;
+}
+#else
+
+static ::Cursor CursorImageX(CursorImage*) {
+    return 0;
+}
+#endif
+
 void PlatSetCursor(Window* win, CursorKind kind) {
     if (!win || !win->plat || !gDpy) {
         return;
+    }
+    if (!win->cursorHidden) {
+        if (::Cursor image = CursorImageX(win->cursorImage)) {
+            XDefineCursor(gDpy, win->plat->xwin, image);
+            XFlush(gDpy);
+            return;
+        }
     }
     if (win->cursorHidden) {
         static ::Cursor hidden = 0;
@@ -248755,6 +248884,52 @@ void PlatSetMouseCapture(Window* win, bool capture) {
     (void)capture;
 }
 
+static void CursorImageRelease(void* plat) {
+    CFBridgingRelease(plat);
+}
+
+static NSCursor* CursorImageCursor(CursorImage* img, float scale) {
+    if (!img) {
+        return nil;
+    }
+    if (img->plat && img->platScale == scale) {
+        return (__bridge NSCursor*)img->plat;
+    }
+    if (img->plat) {
+        img->platFree(img->plat);
+        img->plat = nullptr;
+    }
+    NSBitmapImageRep* rep =
+        [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nullptr
+                                                pixelsWide:img->w
+                                                pixelsHigh:img->h
+                                             bitsPerSample:8
+                                           samplesPerPixel:4
+                                                  hasAlpha:YES
+                                                  isPlanar:NO
+                                            colorSpaceName:NSDeviceRGBColorSpace
+                                              bitmapFormat:(NSBitmapFormat)0
+                                               bytesPerRow:img->w * 4
+                                              bitsPerPixel:32];
+    if (!rep || ![rep bitmapData]) {
+        return nil;
+    }
+    memcpy([rep bitmapData], img->rgba, (size_t)img->w * (size_t)img->h * 4);
+    NSImage* image = [[NSImage alloc]
+        initWithSize:NSMakeSize(img->w / scale, img->h / scale)];
+    [image addRepresentation:rep];
+    NSCursor* cursor = [[NSCursor alloc]
+        initWithImage:image
+              hotSpot:NSMakePoint(img->hotX / scale, img->hotY / scale)];
+    if (!cursor) {
+        return nil;
+    }
+    img->plat = (void*)CFBridgingRetain(cursor);
+    img->platScale = scale;
+    img->platFree = CursorImageRelease;
+    return cursor;
+}
+
 void PlatSetCursor(Window* win, CursorKind kind) {
     static bool hidden = false;
     bool wantHidden = win && win->cursorHidden;
@@ -248767,6 +248942,11 @@ void PlatSetCursor(Window* win, CursorKind kind) {
         }
     }
     if (wantHidden) {
+        return;
+    }
+    if (NSCursor* image = CursorImageCursor(win ? win->cursorImage : nullptr,
+                                            WindowScaleFactor(win))) {
+        [image set];
         return;
     }
     if (kind == CursorKind::IBeam) {
@@ -249735,6 +249915,58 @@ EM_JS(void, GpJsSetCursor, (int kind), {
     }
 });
 
+EM_JS(void, GpJsSetCursorImage,
+      (int id, const uint8_t* rgba, int w, int h, int hotX, int hotY,
+       int kind), {
+    const g = globalThis.__gpui;
+    const c = g.canvas;
+    if (!c) {
+        return;
+    }
+    g.cursorImages = g.cursorImages || {};
+    let css = g.cursorImages[id];
+    if (!css) {
+        const src = document.createElement("canvas");
+        src.width = w;
+        src.height = h;
+        const data = new ImageData(w, h);
+        for (let i = 0; i < w * h * 4; i += 4) {
+            const a = HEAPU8[rgba + i + 3];
+            const k = a ? 255 / a : 0;
+            data.data[i] = Math.min(255, Math.round(HEAPU8[rgba + i] * k));
+            data.data[i + 1] = Math.min(255, Math.round(HEAPU8[rgba + i + 1] * k));
+            data.data[i + 2] = Math.min(255, Math.round(HEAPU8[rgba + i + 2] * k));
+            data.data[i + 3] = a;
+        }
+        src.getContext("2d").putImageData(data, 0, 0);
+        const dpr = globalThis.devicePixelRatio || 1;
+        let out = src;
+        if (dpr !== 1) {
+            out = document.createElement("canvas");
+            out.width = Math.max(1, Math.round(w / dpr));
+            out.height = Math.max(1, Math.round(h / dpr));
+            out.getContext("2d").drawImage(src, 0, 0, out.width, out.height);
+        }
+        css = "url(" + out.toDataURL("image/png") + ") " +
+              Math.round(hotX / dpr) + " " + Math.round(hotY / dpr);
+        g.cursorImages[id] = css;
+    }
+    const names = [
+        "default", "text", "pointer", "col-resize", "row-resize", "crosshair",
+        "grabbing", "grab", "w-resize", "e-resize", "ew-resize", "n-resize",
+        "s-resize", "ns-resize", "nwse-resize", "nesw-resize", "vertical-text",
+        "not-allowed", "alias", "copy", "context-menu"
+    ];
+    c.style.cursor = css + ", " + (names[kind] || "default");
+});
+
+EM_JS(void, GpJsCursorImageFree, (int id), {
+    const g = globalThis.__gpui;
+    if (g && g.cursorImages) {
+        delete g.cursorImages[id];
+    }
+});
+
 EM_JS(void, GpJsOpenUrl, (const char* s, int len), {
     globalThis.open(globalThis.__gpui.str(s, len), "_blank", "noopener");
 });
@@ -250447,7 +250679,22 @@ void PlatSetTimer(Window* win, int ms) {
     win->plat->nextTick = ms > 0 ? TimeNow() + ms / 1000.0 : 0;
 }
 
+static void CursorImageFreeJs(void* plat) {
+    GpJsCursorImageFree((int)(intptr_t)plat);
+}
+
 void PlatSetCursor(Window* win, CursorKind kind) {
+    CursorImage* img = win && !win->cursorHidden ? win->cursorImage : nullptr;
+    if (img) {
+        static int nextId = 1;
+        if (!img->plat) {
+            img->plat = (void*)(intptr_t)nextId++;
+            img->platFree = CursorImageFreeJs;
+        }
+        GpJsSetCursorImage((int)(intptr_t)img->plat, img->rgba, img->w, img->h,
+                           img->hotX, img->hotY, (int)kind);
+        return;
+    }
     GpJsSetCursor(win && win->cursorHidden ? (int)CursorKind::Count
                                            : (int)kind);
 }
@@ -251946,12 +252193,72 @@ void PlatSetMouseCapture(Window* win, bool capture) {
     }
 }
 
+static void CursorImageDestroy(void* plat) {
+    DestroyCursor((HCURSOR)plat);
+}
+
+static HCURSOR CursorImageHandle(CursorImage* img) {
+    if (!img || img->plat) {
+        return img ? (HCURSOR)img->plat : nullptr;
+    }
+    BITMAPINFO bmi = {};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = img->w;
+    bmi.bmiHeader.biHeight = -img->h;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    void* bits = nullptr;
+    HBITMAP color =
+        CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!color || !bits) {
+        if (color) DeleteObject(color);
+        return nullptr;
+    }
+    int n = img->w * img->h;
+    uint8_t* d = (uint8_t*)bits;
+    for (int i = 0; i < n; i++) {
+        const uint8_t* s = img->rgba + i * 4;
+        d[i * 4 + 0] = s[2];
+        d[i * 4 + 1] = s[1];
+        d[i * 4 + 2] = s[0];
+        d[i * 4 + 3] = s[3];
+    }
+    int maskStride = ((img->w + 15) / 16) * 2;
+    uint8_t* maskBits = (uint8_t*)calloc((size_t)maskStride * img->h, 1);
+    HBITMAP mask =
+        maskBits ? CreateBitmap(img->w, img->h, 1, 1, maskBits) : nullptr;
+    free(maskBits);
+    HCURSOR cursor = nullptr;
+    if (mask) {
+        ICONINFO ii = {};
+        ii.fIcon = FALSE;
+        ii.xHotspot = (DWORD)img->hotX;
+        ii.yHotspot = (DWORD)img->hotY;
+        ii.hbmMask = mask;
+        ii.hbmColor = color;
+        cursor = (HCURSOR)CreateIconIndirect(&ii);
+        DeleteObject(mask);
+    }
+    DeleteObject(color);
+    if (cursor) {
+        img->plat = cursor;
+        img->platFree = CursorImageDestroy;
+    }
+    return cursor;
+}
+
 void PlatSetCursor(Window* win, CursorKind kind) {
     if (!win || !win->plat) {
         return;
     }
     if (win->cursorHidden) {
         SetCursor(nullptr);
+        return;
+    }
+    if (HCURSOR image = CursorImageHandle(win->cursorImage)) {
+        win->plat->cursor = image;
+        SetCursor(image);
         return;
     }
 

@@ -794,14 +794,6 @@ bool AppShellOnWmContextMenu(MainWindow* win, int screenX, int screenY) {
 }
 #endif
 
-bool AppShellNativeCursorActive(MainWindow* win) {
-    gp::Window* gw = IsMainWindowValid(win) ? win->gpuiWin : nullptr;
-    if (!gw || win->nativeCursor == NativeCursor::None) {
-        return false;
-    }
-    return (int)gw->cursor == win->canvasCursor && gw->cursor == gp::CursorKind::OpenHand;
-}
-
 void AppShellAfterNativeDrag(MainWindow* win) {
     gp::Window* gw = IsMainWindowValid(win) ? win->gpuiWin : nullptr;
     if (!gw || !gw->mouseDown) {

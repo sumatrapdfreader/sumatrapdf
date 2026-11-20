@@ -34,7 +34,6 @@
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
 #include "gui/OleDragDrop.h"
-#include "gui/NativeCursors.h"
 #include "gui/TouchGestures.h"
 #include "HomePage.h"
 #include "SumatraConfig.h"
@@ -447,32 +446,6 @@ static void OnDropFiles(HWND hwnd, HDROP hdrop) {
     AppShellOnDropFiles(hwnd, hdrop, ptDrop, inClient, true);
 }
 
-// ng: gpui has no cursor from an image. When the canvas wants one of orig's
-// bitmap cursors (the drag hand, the laser dot, a placement cursor) it asks
-// gpui for a stand-in kind and this puts the real cursor in its place.
-static HCURSOR NativeCursorWanted(HWND hwnd) {
-    MainWindow* win = WinOf(hwnd);
-    if (!win || !AppShellNativeCursorActive(win)) {
-        return nullptr;
-    }
-    return NativeCursorGet(win->nativeCursor);
-}
-
-void AppShellApplyNativeCursor(MainWindow* win) {
-    HWND hwnd = AppShellNativeHwnd(win);
-    if (!hwnd || !AppShellNativeCursorActive(win)) {
-        return;
-    }
-    POINT pt{};
-    GetCursorPos(&pt);
-    if (WindowFromPoint(pt) != hwnd) {
-        return;
-    }
-    if (HCURSOR cur = NativeCursorGet(win->nativeCursor)) {
-        SetCursor(cur);
-    }
-}
-
 float CanvasScale(MainWindow* win);
 
 // orig's SumatraPDF.h. Posted to the canvas; ng has no canvas child.
@@ -583,23 +556,6 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 return 0;
             }
             break;
-        case WM_SETCURSOR:
-            if (LOWORD(lp) == HTCLIENT) {
-                if (HCURSOR cur = NativeCursorWanted(hwnd)) {
-                    SetCursor(cur);
-                    return TRUE;
-                }
-            }
-            break;
-        case WM_MOUSEMOVE: {
-            // gpui sets the cursor itself from inside the mouse move when the
-            // kind under the pointer changed
-            LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
-            if (HCURSOR cur = NativeCursorWanted(hwnd)) {
-                SetCursor(cur);
-            }
-            return res;
-        }
         case WM_GESTURENOTIFY:
         case WM_GESTURE:
             // orig's OnGesture: pinch zoom, pan, flick, rotate, taps on a document
@@ -958,8 +914,6 @@ void AppShellForgetNativeHwnd(MainWindow* win) {
 #else
 
 void AppShellEnableFileDrop(MainWindow*) {}
-
-void AppShellApplyNativeCursor(MainWindow*) {}
 
 void AppShellFrameChanged(MainWindow*) {}
 

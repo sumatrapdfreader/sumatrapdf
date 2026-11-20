@@ -63,6 +63,7 @@
 #include "Menu.h"
 #include "gui/DialogWidgets.h"
 #include "MeasurementToolbar.h"
+#include "gui/NativeCursors.h"
 #include "gui/DocCanvas.h"
 #include "CanvasCommon.h"
 #include "MainWindowCommon.h"
@@ -494,43 +495,35 @@ void CanvasSetClipboardText(MainWindow* win, Str s) {
     }
 }
 
-// orig's SetCursorCached: gpui resolves the cursor on every mouse move from the
-// element under the pointer, so tell it what we picked and keep its cache in
-// sync or it will not set it again
+// orig's SetCursorCached: the canvas element names the cursor and gpui shows
+// it after the next frame, which this asks for when the choice changed
 void CanvasSetCursor(MainWindow* win, int cursorKind) {
+    bool changed = win->canvasCursor != cursorKind || win->nativeCursor != NativeCursor::None;
     win->nativeCursor = NativeCursor::None;
-    gp::Window* gw = win ? win->gpuiWin : nullptr;
-    auto kind = (gp::CursorKind)cursorKind;
-    bool changed = win->canvasCursor != cursorKind;
     win->canvasCursor = cursorKind;
-    if (changed) {
-        AppShellInvalidate(win);
-    }
-    if (!gw || gw->cursor == kind) {
-        return;
-    }
-    gw->cursor = kind;
-    gp::PlatSetCursor(gw, kind);
     if (!changed) {
         return;
     }
+    AppShellInvalidate(win);
     static SeqStrings kCursorNames = "arrow\0ibeam\0hand\0col-resize\0row-resize\0cross\0";
-    logf("CanvasSetCursor: %s\n", SeqStrByIndex(kCursorNames, cursorKind));
+    if (cursorKind <= (int)gp::CursorKind::Crosshair) {
+        logf("CanvasSetCursor: %s\n", SeqStrByIndex(kCursorNames, cursorKind));
+    }
 }
 
-bool CanvasSetNativeCursor(MainWindow* win, NativeCursor cursor) {
-#if OS_WIN
-    // ng: the stand-in kind; gpui's Windows backend draws OpenHand as the
-    // arrow, and the frame's subclass replaces it (gui/NativeWindow.cpp)
-    CanvasSetCursor(win, (int)gp::CursorKind::OpenHand);
+// orig's bitmap cursors (gui/NativeCursors.cpp) as the canvas' cursor image.
+// The kind is what shows where gpui cannot draw an image (X11 without
+// libXcursor).
+void CanvasSetNativeCursor(MainWindow* win, NativeCursor cursor) {
+    auto kind = cursor == NativeCursor::Drag ? gp::CursorKind::OpenHand : gp::CursorKind::Crosshair;
+    bool changed = win->nativeCursor != cursor || win->canvasCursor != (int)kind;
+    win->canvasCursor = (int)kind;
     win->nativeCursor = cursor;
-    AppShellApplyNativeCursor(win);
-    return true;
-#else
-    (void)win;
-    (void)cursor;
-    return false;
-#endif
+    if (!changed) {
+        return;
+    }
+    AppShellInvalidate(win);
+    logf("CanvasSetNativeCursor: %d\n", (int)cursor);
 }
 
 // the thread that paints; nothing else may touch a RenderImage
@@ -1976,20 +1969,11 @@ void StartAutoScrollAtCursor(MainWindow* win) {
 
 // --- laser pointer (CmdToggleLaserPointer) ----------------------------------
 
-constexpr int kLaserPointerSize = 32;
-
-// ng: where the system cursor can be a bitmap (Windows) the dot is orig's
-// cursor; elsewhere it is painted on the canvas under a hidden cursor
-constexpr bool kLaserPointerIsCursor = OS_WIN;
-
 static void OnSetCursor(MainWindow* win, Point pt);
 
 void ToggleLaserPointer(MainWindow* win) {
     gLaserPointer = !gLaserPointer;
     logf("ToggleLaserPointer: %d\n", (int)gLaserPointer);
-    if (!gLaserPointer) {
-        AppShellShowCursor(win, true);
-    }
     // change the cursor now rather than on the next mouse move
     if (win->AsFixed()) {
         OnSetCursor(win, win->dragPrevPos);
@@ -2007,22 +1991,8 @@ static bool SetLaserPointerCursor(MainWindow* win) {
         // the presenter blanked the screen on purpose, don't put a dot on it
         return false;
     }
-    return CanvasSetNativeCursor(win, NativeCursor::LaserPointer);
-}
-
-// a white-hot center inside a saturated red core, surrounded by a soft halo
-static void PaintLaserPointer(MainWindow* win, gp::PaintCtx* ctx) {
-    if (!gLaserPointer || kLaserPointerIsCursor) {
-        return;
-    }
-    Point pt = win->dragPrevPos;
-    int r = kLaserPointerSize / 2;
-    auto dot = [&](int radius, Color col) {
-        CanvasDrawEllipse(ctx, Rect(pt.x - radius, pt.y - radius, radius * 2, radius * 2), col, 0);
-    };
-    dot(r, MkRgba(0xff, 0x20, 0x20, 0x40));
-    dot(r / 2, MkRgba(0xff, 0x10, 0x10, 0xd0));
-    dot(r / 5, MkRgba(0xff, 0xe0, 0xe0, 0xff));
+    CanvasSetNativeCursor(win, NativeCursor::LaserPointer);
+    return true;
 }
 
 // orig's IsDragDistance, with the system drag thresholds
@@ -2216,9 +2186,7 @@ static void OnSetCursor(MainWindow* win, Point pt) {
     switch (win->mouseAction) {
         case MouseAction::Dragging:
             // orig's gCursorDrag, the hand of dragcursor.cur
-            if (!CanvasSetNativeCursor(win, NativeCursor::Drag)) {
-                CanvasSetCursor(win, kCurCross);
-            }
+            CanvasSetNativeCursor(win, NativeCursor::Drag);
             return;
         case MouseAction::Scrolling:
             CanvasSetCursor(win, kCurSizeAll);
@@ -3499,10 +3467,6 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
             win->hideCursorOnNextMove = false;
         }
     }
-    if (gLaserPointer && !kLaserPointerIsCursor) {
-        AppShellShowCursor(win, false);
-        AppShellInvalidate(win);
-    }
     if (AnnotationPlacementOnMouseMove(win, Point{x, y}, CanvasShiftPressed(), win->annotPlacement.mouseDown)) {
         win->dragPrevPos = Point{x, y};
         return;
@@ -3761,7 +3725,6 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     PaintFindFlash(win, ctx);
     PaintKeyboardTextCaret(win, ctx);
     PaintKeyboardLinkTargets(win, ctx);
-    PaintLaserPointer(win, ctx);
     UpdateSelectionToolbarPosition(win);
     // The flip swapchain keeps three buffers, and an identical scene does not
     // present. A fresh prim each paint fills every buffer with this frame.
@@ -4345,6 +4308,7 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
                          ->Id(GStrL("doc-canvas"))
                          ->Click(gp::HashClickId(GStrL("doc-canvas")))
                          ->Cursor((gp::CursorKind)win->canvasCursor)
+                         ->CustomCursor(NativeCursorGet(win, win->nativeCursor))
                          ->OnMouseDown(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnDown))
                          ->OnMouseUp(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnUp))
                          ->OnMouseMove(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnMove))

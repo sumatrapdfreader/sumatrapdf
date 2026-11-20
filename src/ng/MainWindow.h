@@ -112,9 +112,8 @@ struct AnnotFilterToolbar;
 struct AnnotTextPopup;
 struct MeasurementToolbar;
 
-// ng: orig's cursors that are bitmaps, which gpui's CursorKind cannot name.
-// Windows only: the canvas asks gpui for a stand-in kind and the frame's
-// subclass sets the real cursor (gui/NativeCursors_win.cpp).
+// ng: orig's cursors that are bitmaps, which gpui's CursorKind cannot name;
+// the canvas shows them as gpui cursor images (gui/NativeCursors.cpp).
 enum class NativeCursor {
     None,
     // the hand of a drag-pan (orig's gCursorDrag)
@@ -512,7 +511,7 @@ struct MainWindow {
     bool annotListFloatPosUserSet = false;
     // read-only card with a clicked annotation's whole text
     AnnotTextPopup* annotTextPopup = nullptr;
-    // what the canvas' cursor is when canvasCursor is the stand-in kind
+    // the canvas' cursor image; canvasCursor is the kind shown without one
     NativeCursor nativeCursor = NativeCursor::None;
     // Edit PDF: the card with the properties of the annotation under the cursor
     AnnotationHoverOverlay* annotationHoverOverlay = nullptr;

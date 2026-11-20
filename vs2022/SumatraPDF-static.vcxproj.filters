@@ -1382,6 +1382,9 @@
     <ClCompile Include="..\src\shared\KeyboardHelpCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\LaserPointerCursorCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\LaserPointerCursor_win.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>

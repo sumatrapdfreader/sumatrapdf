@@ -4552,6 +4552,11 @@ enum class CursorKind : uint8_t {
     Count
 };
 
+struct CursorImage;
+CursorImage* CursorImageNew(App* app, const uint8_t* rgba, int w, int h,
+                            int hotX, int hotY);
+void CursorImageFree(CursorImage* img);
+
 struct TickEvent {
     int ms = 0;
 };
@@ -5896,6 +5901,8 @@ struct ElLifecycle {
     const LinkTooltipTarget* linkTooltip = nullptr;
 
     Listener onPinch;
+
+    CursorImage* cursorImage = nullptr;
     const TextHighlight* highlights = nullptr;
     int highlightCount = 0;
     TextFontRanges fontRanges;
@@ -6374,6 +6381,8 @@ struct El {
     El* ReportLineSpan(float lineHeight);
     El* LineClamp(float cap, Listener onChange = {});
     El* Cursor(CursorKind c);
+
+    El* CustomCursor(CursorImage* img);
     El* BindSlider(SliderState* s, Axis axis = Axis::Horizontal);
     El* BindSliderBounds(SliderState* s);
     El* BindInput(InputState* s);
@@ -6611,6 +6620,8 @@ struct HitRect {
     Str dropKind = {};
     Listener onDrop;
     CursorKind cursor = CursorKind::Arrow;
+
+    CursorImage* cursorImage = nullptr;
 
     Str tooltip = {};
     int8_t tooltipPlacement = -1;
@@ -9136,6 +9147,8 @@ struct Window {
     Modifiers mouseModifiers = {};
 
     CursorKind cursor = CursorKind::Arrow;
+
+    CursorImage* cursorImage = nullptr;
     bool cursorHidden = false;
     bool maximized = false;
 
@@ -39101,6 +39114,18 @@ inline void PlatAddLoopSource(PlatLoopPrepare prepare,
     (void)prepare, (void)dispatch;
 }
 #endif
+
+struct CursorImage {
+    App* app = nullptr;
+    uint8_t* rgba = nullptr;
+    int w = 0;
+    int h = 0;
+    int hotX = 0;
+    int hotY = 0;
+    void* plat = nullptr;
+    float platScale = 0;
+    void (*platFree)(void* plat) = nullptr;
+};
 
 void PlatSetCursor(Window* win, CursorKind kind);
 

@@ -126,7 +126,7 @@ bun, g++/clang++, pkg-config and development packages for X11, Cairo, Pango,
 GDK Pixbuf, GLib and OpenSSL. WSL Ubuntu needs bun in `~/.bun/bin` and:
 
 ```sh
-sudo apt install build-essential pkg-config libx11-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev
+sudo apt install build-essential pkg-config libx11-dev libxcursor-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev
 ```
 
 WSLg needs a working `DISPLAY` to run the GUI. macOS needs bun and Xcode

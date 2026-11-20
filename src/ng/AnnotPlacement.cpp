@@ -5,9 +5,7 @@
 // when it has no point to place the annotation at: the cursor becomes a cross,
 // a hint notification says what to do, and the next click (or drag, or set of
 // strokes) says where. Same kinds, same keys, same previews. What differs is
-// the cursor off Windows (gpui has no cursor from an image, so every mode uses
-// Crosshair where orig draws the annotation's SVG icon into one) and that the
-// preview is painted by the gpui canvas instead of into the canvas HDC.
+// that the preview is painted by the gpui canvas instead of into the canvas HDC.
 
 #include "gui/GpuiBridge.h"
 #include "VirtKeys.h"
@@ -70,20 +68,14 @@ SizeF FreeTextPlacementPageSize(const AnnotCreateArgs& args) {
 
 // orig's SetPlacementCursor: the note and the ink tool have a cursor made from
 // their SVG icon, every other mode a cross
-// ng: the icon cursors exist on Windows only (see "gpui gaps": no cursor from
-// an image); elsewhere all modes use the cross
 void SetPlacementCursor(MainWindow* win) {
     switch (KindOf(win)) {
         case AnnotPlacementKind::Text:
-            if (CanvasSetNativeCursor(win, NativeCursor::TextAnnotationPlacement)) {
-                return;
-            }
-            break;
+            CanvasSetNativeCursor(win, NativeCursor::TextAnnotationPlacement);
+            return;
         case AnnotPlacementKind::Ink:
-            if (CanvasSetNativeCursor(win, NativeCursor::InkAnnotationPlacement)) {
-                return;
-            }
-            break;
+            CanvasSetNativeCursor(win, NativeCursor::InkAnnotationPlacement);
+            return;
         default:
             break;
     }
@@ -392,8 +384,8 @@ void PaintAnnotationPlacement(MainWindow* win, gp::PaintCtx* ctx, DisplayModel* 
 }
 
 // orig compares GetCursor() to IDC_CROSS or the SVG cursor. ng records the
-// cursor it asked for: the note and the ink tool are native cursors on
-// Windows, everything else is the cross.
+// cursor it asked for: the note and the ink tool are cursor images, everything
+// else is the cross.
 bool PlacementDumpCursor(MainWindow* win, AnnotPlacementKind kind, bool active) {
     if (!win || !active) {
         return false;
