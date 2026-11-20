@@ -502,8 +502,18 @@ function cleanEnv(env: Record<string, string | undefined> | undefined): Record<s
   if (!env) {
     return undefined;
   }
+  // Windows env names are case-insensitive: { ...process.env, PATH } keeps the
+  // original "Path" too, and the child may read the stale one. Last key wins.
+  const isWin = process.platform === "win32";
   const res: Record<string, string> = {};
   for (const [key, value] of Object.entries(env)) {
+    if (isWin) {
+      for (const k of Object.keys(res)) {
+        if (k.toLowerCase() === key.toLowerCase()) {
+          delete res[k];
+        }
+      }
+    }
     if (value !== undefined) {
       res[key] = value;
     }

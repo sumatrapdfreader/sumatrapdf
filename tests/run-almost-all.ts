@@ -608,6 +608,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["codex-provider", codexProvider],
   ["issue-6405", issue6405],
   ["issue-6236", issue6236],
   ["issue-6169", issue6169],
@@ -1174,7 +1175,6 @@ export const tests: NamedTest[] = [
   ["issue-6568", issue6568],
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
-  ["codex-provider", codexProvider],
   ["custom-ai", customAI],
   ["custom-ai-ui", customAIUI],
   ["page-links-fresh-engine", pageLinksFreshEngine],
