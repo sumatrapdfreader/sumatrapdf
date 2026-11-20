@@ -34,7 +34,6 @@
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
 #include "gui/OleDragDrop.h"
-#include "gui/TouchGestures.h"
 #include "HomePage.h"
 #include "SumatraConfig.h"
 #include "RefHover.h"
@@ -556,15 +555,6 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 return 0;
             }
             break;
-        case WM_GESTURENOTIFY:
-        case WM_GESTURE:
-            // orig's OnGesture: pinch zoom, pan, flick, rotate, taps on a document
-            if (MainWindow* win = WinOf(hwnd)) {
-                if (TouchGesturesOnMessage(win, hwnd, msg, lp)) {
-                    return 0;
-                }
-            }
-            break;
         case WM_DROPFILES:
             OnDropFiles(hwnd, (HDROP)wp);
             return 0;
@@ -907,7 +897,6 @@ void AppShellForgetNativeHwnd(MainWindow* win) {
         VecRemoveAt(gNativeWins, i);
         GlobalHotkeysOnDestroy(hwnd);
         RevokeCanvasDropTarget(hwnd);
-        TouchGesturesForget(win);
     }
 }
 

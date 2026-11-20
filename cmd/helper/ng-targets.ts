@@ -1649,7 +1649,6 @@ export const targets: Target[] = [
       "src/ng/OpenFileFilters_win.cpp",
       "src/ng/gui/NativeCursors.cpp",
       "src/ng/LaserPointerCursorCommon.cpp",
-      "src/ng/gui/TouchGestures_win.cpp",
       "src/ng/GlobalHotkeys.cpp",
       "src/ng/GlobalHotkeysCommon_win.cpp",
       "src/ng/Print.cpp",

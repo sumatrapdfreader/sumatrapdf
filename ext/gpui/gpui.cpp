@@ -9030,6 +9030,11 @@ El* El::OnPinch(Listener fn) {
     lifecycle->onPinch = fn;
     return this;
 }
+El* El::OnGesture(Listener fn) {
+    if (!lifecycle) lifecycle = ArenaNew<ElLifecycle>(arena);
+    lifecycle->onGesture = fn;
+    return this;
+}
 
 El* El::OnClickAction(uint32_t action, int64_t arg) {
     clickAction = action;
@@ -14232,7 +14237,8 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         e->onMouseDownOut.IsValid() || e->onMouseUpOut.IsValid() ||
         e->onScrollWheel.IsValid() ||
         (e->lifecycle &&
-         (e->lifecycle->onPinch.IsValid() || e->lifecycle->cursorImage)) ||
+         (e->lifecycle->onPinch.IsValid() ||
+          e->lifecycle->onGesture.IsValid() || e->lifecycle->cursorImage)) ||
         e->drag.IsValid() || e->onDrop.IsValid() ||
         e->cursor != CursorKind::Arrow || e->slider || e->stopMouseDown ||
         e->suppressTextSelection || e->keepTextSelection ||
@@ -14270,6 +14276,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         hr.onMouseUpOut = e->onMouseUpOut;
         hr.onScrollWheel = e->onScrollWheel;
         hr.onPinch = e->lifecycle ? e->lifecycle->onPinch : Listener{};
+        hr.onGesture = e->lifecycle ? e->lifecycle->onGesture : Listener{};
         hr.dropKind = e->dropKind;
         hr.onDrop = e->onDrop;
         hr.cursor = e->cursor;
@@ -23361,6 +23368,10 @@ void TestSimulatePinch(Window* win, Point position, float delta,
     Simulate(win, InputPinch(position.x, position.y, delta, modifiers, phase));
 }
 
+void TestSimulateGesture(Window* win, const GestureEvent& ev) {
+    Simulate(win, InputGesture(ev));
+}
+
 void TestSimulateClick(Window* win, Point position, Modifiers modifiers) {
     TestSimulateMouseDown(win, position, MouseButton::Left, modifiers);
     TestSimulateMouseUp(win, position, MouseButton::Left, modifiers);
@@ -26418,9 +26429,14 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
 
 static void DispatchFileDrop(Window* win, const FileDropEvent& in);
 
+static Point GestureHitPoint(Window* win, float x, float y) {
+    return win->gestureAnchored ? win->gestureAnchor : Point{x, y};
+}
+
 static void DispatchPinch(Window* win, const PinchEvent& in) {
     Vec<int> chain;
-    HitChain(win, in.x, in.y, &chain);
+    Point at = GestureHitPoint(win, in.x, in.y);
+    HitChain(win, at.x, at.y, &chain);
     for (int k = 0; k < len(chain); k++) {
         const HitRect& hr = win->paint.hits[chain[k]];
         if (!hr.onPinch.IsValid()) {
@@ -26435,6 +26451,85 @@ static void DispatchPinch(Window* win, const PinchEvent& in) {
     }
     VecReset(chain);
     AppInvalidate(win);
+}
+
+static void DispatchGesture(Window* win, const GestureEvent& in) {
+    Vec<int> chain;
+    Point at = GestureHitPoint(win, in.x, in.y);
+    HitChain(win, at.x, at.y, &chain);
+    bool taken = false;
+    for (int k = 0; k < len(chain); k++) {
+        const HitRect& hr = win->paint.hits[chain[k]];
+        if (!hr.onGesture.IsValid()) {
+            continue;
+        }
+        GestureEvent ev = in;
+        ev.propagate = true;
+        ListenerCall(win->app, win, hr.onGesture, &ev);
+        if (!ev.propagate) {
+            taken = true;
+            break;
+        }
+    }
+    VecReset(chain);
+    if (!taken && in.kind == GestureKind::Pan) {
+        ScrollWheelEvent wheel = {};
+        wheel.x = at.x;
+        wheel.y = at.y;
+        wheel.deltaX = in.dx;
+        wheel.deltaY = in.dy;
+        wheel.precise = true;
+        wheel.modifiers = in.modifiers;
+        wheel.phase = in.phase;
+        DispatchScrollWheel(win, wheel);
+        return;
+    }
+    AppInvalidate(win);
+}
+
+void WindowGestureBegin(Window* win, float x, float y) {
+    if (!win) {
+        return;
+    }
+    win->gestureAnchored = true;
+    win->gestureAnchor = {x, y};
+}
+
+void WindowGestureEnd(Window* win) {
+    if (win) {
+        win->gestureAnchored = false;
+    }
+}
+
+bool WindowWantsGestures(Window* win, float x, float y) {
+    if (!win) {
+        return false;
+    }
+    Vec<int> chain;
+    HitChain(win, x, y, &chain);
+    bool wants = false;
+    for (int k = 0; k < len(chain); k++) {
+        if (win->paint.hits[chain[k]].onGesture.IsValid()) {
+            wants = true;
+            break;
+        }
+    }
+    VecReset(chain);
+    return wants;
+}
+
+float TouchZoomDelta(TouchZoom* z, float distance, TouchPhase phase) {
+    if (phase == TouchPhase::Started || z->first <= 0) {
+        z->first = distance;
+        z->last = distance;
+        return 0;
+    }
+    float delta = (distance - z->last) / z->first;
+    z->last = distance;
+    if (phase == TouchPhase::Ended || phase == TouchPhase::Cancelled) {
+        *z = {};
+    }
+    return delta;
 }
 
 void WindowDispatchInput(Window* win, const PlatformInput* input) {
@@ -26652,6 +26747,9 @@ void WindowDispatchInput(Window* win, const PlatformInput* input) {
         case PlatformInputKind::Pinch:
             DispatchPinch(win, input->pinch);
             break;
+        case PlatformInputKind::Gesture:
+            DispatchGesture(win, input->gesture);
+            break;
     }
 }
 
@@ -26714,6 +26812,13 @@ PlatformInput InputPinch(float x, float y, float delta, Modifiers modifiers,
     in.pinch.delta = delta;
     in.pinch.modifiers = modifiers;
     in.pinch.phase = phase;
+    return in;
+}
+
+PlatformInput InputGesture(const GestureEvent& ev) {
+    PlatformInput in = {};
+    in.kind = PlatformInputKind::Gesture;
+    in.gesture = ev;
     return in;
 }
 
@@ -251620,6 +251725,10 @@ struct PlatWindow {
     float touchStartX = 0;
     float touchStartY = 0;
     float touchLastY = 0;
+
+    TouchZoom zoom = {};
+    float panX = 0;
+    float panY = 0;
     LONG_PTR windowedStyle = 0;
     WINDOWPLACEMENT windowedPlacement = {sizeof(WINDOWPLACEMENT)};
     bool fullScreen = false;
@@ -251948,15 +252057,33 @@ static void TouchEmitScroll(Window* win, TouchPhase phase, float dy) {
     WindowDispatchInput(win, &in);
 }
 
-static void TouchPointer(Window* win, UINT msg, LPARAM lParam) {
+static Point ScreenToDips(Window* win, int sx, int sy) {
     PlatWindow* p = win->plat;
-    POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+    POINT pt = {sx, sy};
     ScreenToClient(p->hwnd, &pt);
     win->paint.dpi = HostDpi(p->hwnd);
-    float x = PxToDip(&win->paint, pt.x);
-    float y = PxToDip(&win->paint, pt.y);
+    return {PxToDip(&win->paint, pt.x), PxToDip(&win->paint, pt.y)};
+}
+
+static void TouchPointer(Window* win, UINT msg, WPARAM wParam, LPARAM lParam) {
+    PlatWindow* p = win->plat;
+    Point at = ScreenToDips(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    float x = at.x;
+    float y = at.y;
+    if (!IS_POINTER_PRIMARY_WPARAM(wParam)) {
+
+        if (msg == WM_POINTERDOWN && p->touchDown) {
+            if (p->touchScroll) {
+                TouchEmitScroll(win, TouchPhase::Ended, 0.f);
+            }
+            p->touchDown = false;
+            p->touchScroll = false;
+        }
+        return;
+    }
     if (msg == WM_POINTERDOWN) {
-        p->touchDown = true;
+
+        p->touchDown = !WindowWantsGestures(win, x, y);
         p->touchScroll = false;
         p->touchStartX = x;
         p->touchStartY = y;
@@ -252001,6 +252128,127 @@ static void TouchPointer(Window* win, UINT msg, LPARAM lParam) {
 
 static bool IsTouchScrollMouse(Window* win) {
     return win->plat->touchScroll && IsMouseFromTouch();
+}
+
+static void GestureNotify(Window* win, LPARAM lParam) {
+    auto* gn = (GESTURENOTIFYSTRUCT*)lParam;
+    HWND hwnd = win->plat->hwnd;
+    Point at = ScreenToDips(win, gn->ptsLocation.x, gn->ptsLocation.y);
+    if (WindowWantsGestures(win, at.x, at.y)) {
+        GESTURECONFIG all = {0, GC_ALLGESTURES, 0};
+        SetGestureConfig(hwnd, 0, 1, &all, sizeof(GESTURECONFIG));
+        return;
+    }
+    DWORD panWant = GC_PAN | GC_PAN_WITH_GUTTER | GC_PAN_WITH_INERTIA;
+    DWORD panBlock = GC_PAN_WITH_SINGLE_FINGER_VERTICALLY |
+                     GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
+    GESTURECONFIG gcs[] = {
+        {GID_ZOOM, GC_ZOOM, 0},
+        {GID_PAN, panWant, panBlock},
+        {GID_ROTATE, 0, GC_ROTATE},
+        {GID_TWOFINGERTAP, GC_TWOFINGERTAP, 0},
+        {GID_PRESSANDTAP, GC_PRESSANDTAP, 0},
+    };
+    SetGestureConfig(hwnd, 0, sizeof(gcs) / sizeof(gcs[0]), gcs,
+                     sizeof(GESTURECONFIG));
+}
+
+static TouchPhase GesturePhase(DWORD flags) {
+    if (flags & GF_END) {
+        return TouchPhase::Ended;
+    }
+    return (flags & GF_BEGIN) ? TouchPhase::Started : TouchPhase::Moved;
+}
+
+static void DispatchTouchPinch(Window* win, Point at, float delta,
+                               TouchPhase phase) {
+    PlatformInput in = InputPinch(at.x, at.y, delta, ModsNow(), phase);
+    WindowDispatchInput(win, &in);
+}
+
+static void TouchZoomPinch(Window* win, float distance, TouchPhase phase,
+                           Point at) {
+    TouchZoom* z = &win->plat->zoom;
+    bool ending = phase == TouchPhase::Ended || phase == TouchPhase::Cancelled;
+    if (phase == TouchPhase::Started || z->first <= 0) {
+        TouchZoomDelta(z, distance, TouchPhase::Started);
+        DispatchTouchPinch(win, at, 0, TouchPhase::Started);
+        if (ending) {
+            *z = {};
+            DispatchTouchPinch(win, at, 0, phase);
+        }
+        return;
+    }
+    float delta = TouchZoomDelta(z, distance, phase);
+    if (!ending) {
+        DispatchTouchPinch(win, at, delta, TouchPhase::Moved);
+        return;
+    }
+    if (delta != 0) {
+        DispatchTouchPinch(win, at, delta, TouchPhase::Moved);
+    }
+    DispatchTouchPinch(win, at, 0, phase);
+}
+
+static bool TouchGesture(Window* win, LPARAM lParam) {
+    HGESTUREINFO hgi = (HGESTUREINFO)lParam;
+    GESTUREINFO gi = {};
+    gi.cbSize = sizeof(GESTUREINFO);
+    if (!GetGestureInfo(hgi, &gi)) {
+        return false;
+    }
+    PlatWindow* p = win->plat;
+    Point at = ScreenToDips(win, gi.ptsLocation.x, gi.ptsLocation.y);
+    if (gi.dwID == GID_BEGIN) {
+        WindowGestureBegin(win, at.x, at.y);
+        return false;
+    }
+    if (gi.dwID == GID_END) {
+        WindowGestureEnd(win);
+        return false;
+    }
+    uint32_t arg = (uint32_t)gi.ullArguments;
+    GestureEvent ev = {};
+    ev.phase = GesturePhase(gi.dwFlags);
+    ev.x = at.x;
+    ev.y = at.y;
+    ev.modifiers = ModsNow();
+    switch (gi.dwID) {
+        case GID_ZOOM:
+            TouchZoomPinch(win, (float)arg, ev.phase, at);
+            CloseGestureInfoHandle(hgi);
+            return true;
+        case GID_PAN:
+            ev.kind = GestureKind::Pan;
+            if (ev.phase != TouchPhase::Started) {
+                ev.dx = at.x - p->panX;
+                ev.dy = at.y - p->panY;
+            }
+            p->panX = at.x;
+            p->panY = at.y;
+            ev.inertia = (gi.dwFlags & GF_INERTIA) != 0;
+            break;
+        case GID_ROTATE:
+
+            ev.kind = GestureKind::Rotate;
+            if (ev.phase != TouchPhase::Started) {
+                ev.angle = (float)GID_ROTATE_ANGLE_FROM_ARGUMENT(arg);
+            }
+            break;
+        case GID_TWOFINGERTAP:
+            ev.kind = GestureKind::TwoFingerTap;
+            ev.phase = TouchPhase::Ended;
+            break;
+        case GID_PRESSANDTAP:
+            ev.kind = GestureKind::PressAndTap;
+            break;
+        default:
+            return false;
+    }
+    PlatformInput in = InputGesture(ev);
+    WindowDispatchInput(win, &in);
+    CloseGestureInfoHandle(hgi);
+    return true;
 }
 
 static void MouseExited(Window* win) {
@@ -252352,7 +252600,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
         case WM_POINTERUPDATE:
         case WM_POINTERUP:
             if (IsTouchPointer(wParam)) {
-                TouchPointer(win, msg, lParam);
+                TouchPointer(win, msg, wParam, lParam);
+            }
+            break;
+        case WM_GESTURENOTIFY:
+            GestureNotify(win, lParam);
+            break;
+        case WM_GESTURE:
+            if (TouchGesture(win, lParam)) {
+                return 0;
             }
             break;
         case WM_MOUSEMOVE: {

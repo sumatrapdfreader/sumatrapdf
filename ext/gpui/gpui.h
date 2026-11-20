@@ -4331,6 +4331,30 @@ struct PinchEvent {
     bool propagate = true;
 };
 
+enum class GestureKind : uint8_t {
+    Pan,
+    Rotate,
+    TwoFingerTap,
+    PressAndTap
+};
+
+struct GestureEvent {
+    GestureKind kind = GestureKind::Pan;
+    TouchPhase phase = TouchPhase::Moved;
+
+    float x = 0;
+    float y = 0;
+
+    float dx = 0;
+    float dy = 0;
+
+    float angle = 0;
+
+    bool inertia = false;
+    Modifiers modifiers = {};
+    bool propagate = true;
+};
+
 enum class FileDropPhase : uint8_t {
     Entered,
     Pending,
@@ -4391,7 +4415,8 @@ enum class PlatformInputKind : uint8_t {
     TouchDrag,
     LongPress,
     FileDrop,
-    Pinch
+    Pinch,
+    Gesture
 };
 
 struct PlatformInput {
@@ -4406,6 +4431,7 @@ struct PlatformInput {
         LongPressEvent longPress;
         FileDropEvent fileDrop;
         PinchEvent pinch;
+        GestureEvent gesture;
     };
 };
 
@@ -5902,6 +5928,8 @@ struct ElLifecycle {
 
     Listener onPinch;
 
+    Listener onGesture;
+
     CursorImage* cursorImage = nullptr;
     const TextHighlight* highlights = nullptr;
     int highlightCount = 0;
@@ -6501,6 +6529,8 @@ struct El {
     El* OnScrollWheel(Listener fn);
 
     El* OnPinch(Listener fn);
+
+    El* OnGesture(Listener fn);
     El* TabIndex(int v);
     El* TabStop(bool v);
 
@@ -6617,6 +6647,7 @@ struct HitRect {
     Listener onScrollWheel;
 
     Listener onPinch;
+    Listener onGesture;
     Str dropKind = {};
     Listener onDrop;
     CursorKind cursor = CursorKind::Arrow;
@@ -9258,6 +9289,9 @@ struct Window {
     bool longPressSelection = false;
 
     InputState* longPressInput = nullptr;
+
+    bool gestureAnchored = false;
+    Point gestureAnchor = {};
 
     TouchHostKind touchHost = TouchHostKind::None;
 
@@ -39147,6 +39181,19 @@ PlatformInput InputLongPress(TouchPhase phase, Point start, Point position);
 PlatformInput InputFileDrop(FileDropPhase phase, float x, float y, Str paths);
 PlatformInput InputPinch(float x, float y, float delta, Modifiers modifiers,
                          TouchPhase phase);
+PlatformInput InputGesture(const GestureEvent& ev);
+
+void WindowGestureBegin(Window* win, float x, float y);
+void WindowGestureEnd(Window* win);
+
+bool WindowWantsGestures(Window* win, float x, float y);
+
+struct TouchZoom {
+    float first = 0;
+    float last = 0;
+};
+
+float TouchZoomDelta(TouchZoom* z, float distance, TouchPhase phase);
 
 Str FileUriListToPaths(Arena* a, Str list);
 
@@ -39507,6 +39554,8 @@ void TestSimulateScrollWheel(Window* win, Point position, Point delta,
 void TestSimulatePinch(Window* win, Point position, float delta,
                        TouchPhase phase = TouchPhase::Moved,
                        Modifiers modifiers = {});
+
+void TestSimulateGesture(Window* win, const GestureEvent& ev);
 
 bool TestDispatchAction(Window* win, uint32_t action, int64_t arg = 0);
 

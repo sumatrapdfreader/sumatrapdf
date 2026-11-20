@@ -3652,6 +3652,7 @@ struct DocCanvasView {
     static void OnWheelOverScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev);
     static void OnWheelOverHScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev);
     static void OnPinch(DocCanvasView* self, gp::Ctx* cx, const gp::PinchEvent* ev);
+    static void OnGesture(DocCanvasView* self, gp::Ctx* cx, const gp::GestureEvent* ev);
     static void OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
     static void OnUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev);
     static void OnHover(DocCanvasView* self, gp::Ctx* cx, const gp::HoverEvent* ev);
@@ -3862,7 +3863,8 @@ void DocCanvasView::OnWheelOverScrollbar(DocCanvasView* self, gp::Ctx* cx, const
     const_cast<gp::ScrollWheelEvent*>(ev)->propagate = false;
 }
 
-// gpui's PinchEvent (a macOS trackpad pinch) zooms the document
+// gpui's PinchEvent (a macOS trackpad or Windows touch-screen pinch) zooms the
+// document
 void DocCanvasView::OnPinch(DocCanvasView* self, gp::Ctx* cx, const gp::PinchEvent* ev) {
     PinchPhase phase = PinchPhase::Change;
     if (ev->phase == gp::TouchPhase::Started) {
@@ -3874,6 +3876,130 @@ void DocCanvasView::OnPinch(DocCanvasView* self, gp::Ctx* cx, const gp::PinchEve
         const_cast<gp::PinchEvent*>(ev)->propagate = false;
         gp::Notify(cx);
     }
+}
+
+// the touch pan in progress, in window pixels
+struct TouchPan {
+    MainWindow* win = nullptr;
+    bool started = false;
+    Point pos;
+};
+static TouchPan gTouchPan;
+
+// orig's flick: a sideways move this fast (pixels per gesture message) with
+// the finger already lifted turns the page
+constexpr int kFlickMinDx = 26;
+
+static Point TouchPanPos(MainWindow* win, const gp::GestureEvent* ev) {
+    float k = CanvasScale(win);
+    return Point((int)floorf(ev->x / k), (int)floorf(ev->y / k));
+}
+
+// orig's OnGesture GID_PAN: flicking left or right changes the page, panning
+// moves the document
+static void CanvasTouchPan(MainWindow* win, DisplayModel* dm, const gp::GestureEvent* ev) {
+    Point pos = TouchPanPos(win, ev);
+    if (ev->phase == gp::TouchPhase::Started) {
+        gTouchPan = TouchPan{win, true, pos};
+        return;
+    }
+    if (!gTouchPan.started || gTouchPan.win != win) {
+        return;
+    }
+    int deltaX = gTouchPan.pos.x - pos.x;
+    int deltaY = gTouchPan.pos.y - pos.y;
+    gTouchPan.pos = pos;
+
+    // on left / right flick, go to next / prev page unless we can pan/scroll
+    // the document
+    bool isFlickX = ev->inertia && abs(deltaX) > abs(deltaY) && abs(deltaX) > kFlickMinDx;
+    bool flipPage = !dm->NeedHScroll();
+    if (deltaX > 0 && !dm->CanScrollRight()) {
+        flipPage = true;
+    }
+    if (deltaX < 0 && !dm->CanScrollLeft()) {
+        flipPage = true;
+    }
+
+    if (isFlickX && flipPage) {
+        // deltaX < 0: finger moved left (content follows) -> leftward spatial nav
+        // In manga (R2L) mode, left advances (issue #3964)
+        if (deltaX < 0) {
+            bool goNext = dm->GetDisplayR2L();
+            dm->GoToPageHorizontal(false);
+            // show the right-hand part of the page we land on
+            int x = dm->canvasSize.dx - dm->viewPort.dx;
+            dm->ScrollXTo(x);
+            OnDocumentVerticalScrollIntent(win, goNext);
+        } else {
+            bool goNext = !dm->GetDisplayR2L();
+            dm->GoToPageHorizontal(true);
+            dm->ScrollXTo(0);
+            OnDocumentVerticalScrollIntent(win, goNext);
+        }
+        ReadAloudOnUserViewChanged(win);
+        // the inertia must not move the page we switched to
+        gTouchPan.started = false;
+        return;
+    }
+
+    bool canScrollRightBefore = dm->CanScrollRight();
+    bool canScrollLeftBefore = dm->CanScrollLeft();
+    win->MoveDocBy(deltaX, deltaY);
+    // a pan to the right edge "sticks" to it; only the next flick turns the page
+    if (canScrollRightBefore != dm->CanScrollRight() || canScrollLeftBefore != dm->CanScrollLeft()) {
+        gTouchPan.started = false;
+    }
+}
+
+// orig's OnGesture GID_ROTATE: rotate 90 degrees in the direction turned. The
+// gesture's angle is the opposite of Sumatra's rotation. A turn well short of a
+// full 90 or 180 counts: fingers seldom go all the way.
+static void CanvasTouchRotate(DisplayModel* dm, const gp::GestureEvent* ev) {
+    if (ev->phase != gp::TouchPhase::Ended) {
+        return;
+    }
+    constexpr double kPi = 3.14159265358979323846;
+    double degrees = -(double)ev->angle * 180 / kPi;
+    if (degrees < -120 || degrees > 120) {
+        dm->RotateBy(180);
+    } else if (degrees < -45) {
+        dm->RotateBy(-90);
+    } else if (degrees > 45) {
+        dm->RotateBy(90);
+    }
+}
+
+// orig's OnGesture: gpui's touch gestures (Windows touch screens) other than
+// the pinch, which is OnPinch's
+void DocCanvasView::OnGesture(DocCanvasView* self, gp::Ctx* cx, const gp::GestureEvent* ev) {
+    MainWindow* win = self->win;
+    DisplayModel* dm = IsMainWindowValid(win) ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return;
+    }
+    switch (ev->kind) {
+        case gp::GestureKind::Pan:
+            CanvasTouchPan(win, dm, ev);
+            break;
+        case gp::GestureKind::Rotate:
+            CanvasTouchRotate(dm, ev);
+            break;
+        case gp::GestureKind::TwoFingerTap:
+            ToggleFullScreen(win);
+            break;
+        case gp::GestureKind::PressAndTap:
+            // cycle Fit Page, Fit Width and Fit Content (same as 'z')
+            if (ev->phase == gp::TouchPhase::Started) {
+                win->ToggleZoom();
+            }
+            break;
+    }
+    const_cast<gp::GestureEvent*>(ev)->propagate = false;
+    if (IsMainWindowValid(win)) {
+        AppShellInvalidate(win);
+    }
+    gp::Notify(cx);
 }
 
 void DocCanvasView::OnWheelOverHScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev) {
@@ -4314,7 +4440,8 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
                          ->OnMouseMove(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnMove))
                          ->OnHover(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnHover))
                          ->OnScrollWheel(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnWheel))
-                         ->OnPinch(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnPinch));
+                         ->OnPinch(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnPinch))
+                         ->OnGesture(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnGesture));
     canvas->customPaint = &DocCanvasView::OnPaint;
     canvas->customUser = win;
     // ng: ContextMenu::IntoEl() returns the child it was given with its own
