@@ -110,6 +110,7 @@ struct Annotation;
 struct AnnotEditToolbar;
 struct AnnotFilterToolbar;
 struct AnnotTextPopup;
+struct MeasurementToolbar;
 
 // ng: orig's cursors that are bitmaps, which gpui's CursorKind cannot name.
 // Windows only: the canvas asks gpui for a stand-in kind and the frame's
@@ -503,6 +504,8 @@ struct MainWindow {
     // the property row under the selected annotation, and the annotation list
     AnnotEditToolbar* annotEditToolbar = nullptr;
     AnnotFilterToolbar* annotFilterToolbar = nullptr;
+    // the Measure window (CmdMeasure); null while it is closed
+    MeasurementToolbar* measurementToolbar = nullptr;
     // where the annotation list window was last (screen pixels), and whether
     // the user put it there; not saved to the settings file, as in orig
     Rect annotListFloatPos;

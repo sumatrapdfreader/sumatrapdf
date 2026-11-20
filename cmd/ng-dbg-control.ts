@@ -56,6 +56,7 @@ export const controlCommands: Record<string, number> = {
   TestMainMenu: 117,
   TestPerfStats: 161,
   TestOverlayState: 162,
+  TestMeasurement: 159,
   TestInput: 121,
   TestUiState: 122,
   TestToolWindow: 125,

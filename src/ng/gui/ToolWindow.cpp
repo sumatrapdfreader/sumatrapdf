@@ -1369,6 +1369,12 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
     if (!tw->gw) {
         return StrL("NOTREADY");
     }
+    // a, b: the new top left corner in screen pixels
+    if (str::Eq(action, StrL("move"))) {
+        Rect r = ToolWindowRect(tw);
+        ToolWindowMove(tw, Rect(a, b, r.dx, r.dy));
+        return StrL("OK");
+    }
     if (str::Eq(action, StrL("input"))) {
 #if !OS_WIN && !OS_WASM
         if (str::Eq(kind, StrL("mackey"))) {

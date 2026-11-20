@@ -1058,7 +1058,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdMeasure) {
-#if defined(SUMATRA_NG)
+#if defined(SUMATRA_NG) && OS_WASM
+        // ng: the Measure window needs a window of its own, which wasm has not
         return CommandVisibility::Hide;
 #else
         if (!ctx.isFixedPage) {

@@ -167,6 +167,9 @@ void AppShellOpenDocsReady();
 void AppShellHandleMagnify();
 TempStr AppShellCaptureWindowTemp(MainWindow* win, Str path, Str mode);
 #endif
+#if OS_DARWIN || OS_WIN
+void AppShellMakeKeyWindow(MainWindow* win);
+#endif
 // presentation mode's auto-hidden cursor (orig hides it with SetCursor(null))
 void AppShellShowCursor(MainWindow* win, bool show);
 // The shell tick drops to a slow cadence while the window is idle. Call this

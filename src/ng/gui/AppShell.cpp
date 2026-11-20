@@ -83,6 +83,7 @@
 #include "AnnotFilterToolbar.h"
 #include "AnnotPlacement.h"
 #include "AnnotTextPopup.h"
+#include "MeasurementToolbar.h"
 #include "RefHover.h"
 #include "FormFields.h"
 #include "ImageSaveCropResize.h"
@@ -733,6 +734,17 @@ TempStr AppShellTestInputHwnd(HWND hwnd, Str kind, int a, int b, int c, int d) {
     TempStr res = AppShellTestInputGpui(gw, kind, a, b, c, d, k);
     ToolWindowInvalidate(tw);
     return res;
+}
+
+// orig's HwndSetFocus(hwndFrame) from one of its tool windows: the frame gets
+// the keys again. Only when one of our windows is active: it doesn't take the
+// focus from another app
+void AppShellMakeKeyWindow(MainWindow* win) {
+    HWND hwnd = AppShellNativeHwnd(win);
+    HWND active = GetActiveWindow();
+    if (hwnd && active && active != hwnd) {
+        SetActiveWindow(hwnd);
+    }
 }
 
 // orig's WM_CONTEXTMENU: from the keyboard (-1, -1) the Apps key's menu, from a
@@ -2940,6 +2952,11 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
             ReadingAutoScrollStop(win);
         } else if (ReadingBarIsOn(win)) {
             ReadingBarHide(win);
+        } else if (win->measurementToolbar) {
+            // the first Esc drops the measurement being clicked, the next closes the tool
+            if (!MeasurementCancel(win)) {
+                CloseMeasurement(win);
+            }
         } else if (IsFindEditFocused(win)) {
             // orig's FindBarWnd::OnKeyDown: Esc goes to the focused window
             HideFindBar(win);

@@ -734,6 +734,10 @@ static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
             it.checked = ShowTransparencyGrid();
             continue;
         }
+        if (it.cmdId == CmdMeasure) {
+            it.checked = win->measurementToolbar != nullptr;
+            continue;
+        }
         if (it.cmdId == CmdToggleImages) {
             it.checked = ShowImageOutlines();
             continue;

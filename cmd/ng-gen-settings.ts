@@ -1321,7 +1321,6 @@ const fileState: Field[] = [
     null,
     "visibility of the PDF's layers (optional content groups), if changed: 1 (shown) or 0 (hidden) for each layer, in document order",
   ).ver("3.7"),
-  // ng doesn't calibrate measurements, but keeps what orig saved in the shared settings file
   field("MeasurementScale", Float, 0, "calibrated measurement units per document coordinate; 0 uses points"),
   field("MeasurementUnit", Str, null, "unit name for calibrated measurements"),
   compactArray(

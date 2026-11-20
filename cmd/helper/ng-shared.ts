@@ -164,6 +164,8 @@ export const sharedFiles = [
   "src/shared/LaserPointerCursor_win.cpp",
   "src/shared/MainWindowCommon.cpp",
   "src/shared/MainWindowCommon.h",
+  "src/shared/MeasurementToolbarCommon.cpp",
+  "src/shared/MeasurementToolbarCommon.h",
   "src/shared/MenuCommon.cpp",
   "src/shared/MenuCommon.h",
   "src/shared/MenuDefs.cpp",

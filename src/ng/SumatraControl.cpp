@@ -110,6 +110,7 @@
 #include "RefHover.h"
 #include "PerfLog.h"
 #include "AnnotTextPopup.h"
+#include "MeasurementToolbar.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
@@ -689,6 +690,8 @@ enum class ControlCmd : u16 {
     TestStripGroups = 169,
     // ng only (macOS): [path, mode]: a PNG of the first window as drawn ("all": with its other windows)
     TestCaptureWindow = 170,
+    // [action, pageNo, x, y, length, unit]: drives the Measure tool
+    TestMeasurement = 159,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -3402,6 +3405,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = PageRenderViewPrintResultTemp(path, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMeasurement: {
+            i32 pageNo = 0, x = 0, y = 0;
+            IntArg(req, 1, pageNo);
+            IntArg(req, 2, x);
+            IntArg(req, 3, y);
+            MainWindow* win = FirstWindow();
+            Str res = TestMeasurement(win, StringArg(req, 0), pageNo, PointF((float)x, (float)y), StringArg(req, 1),
+                                      StringArg(req, 2));
+            AppendTestResult(req, 0, res);
             break;
         }
 

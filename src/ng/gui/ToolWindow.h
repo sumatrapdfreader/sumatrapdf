@@ -195,7 +195,7 @@ ToolWindow* ToolWindowFromHwnd(HWND hwnd);
 MainWindow* ToolWindowOwnerFromHwnd(HWND hwnd);
 #endif
 
-// -dbg-control's TestToolWindow: list | on | off | close <name> |
+// -dbg-control's TestToolWindow: list | on | off | close <name> | move <name> x y |
 // input <name> <kind> a b c d (see AppShellTestInput) | state <name> |
 // layout <name> (also TestLayout <name>): the texts, click targets and
 // scrolled boxes of the window's last frame; `layout frame`: the same of the

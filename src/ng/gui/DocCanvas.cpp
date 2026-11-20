@@ -62,6 +62,7 @@
 #include "FormFields.h"
 #include "Menu.h"
 #include "gui/DialogWidgets.h"
+#include "MeasurementToolbar.h"
 #include "gui/DocCanvas.h"
 #include "CanvasCommon.h"
 #include "MainWindowCommon.h"
@@ -391,6 +392,27 @@ void CanvasDrawEllipse(gp::PaintCtx* ctx, Rect r, Color col, float width) {
         return;
     }
     gp::CanvasEllipse(ctx, b.x + b.w / 2, b.y + b.h / 2, b.w / 2, b.h / 2, width * k, ToGpui(col));
+}
+
+// orig's Gfx::FillRoundedRect: `fill` with a 1px `border`
+void CanvasFillRoundRect(gp::PaintCtx* ctx, Rect r, int radius, Color fill, Color border) {
+    if (!ctx) {
+        return;
+    }
+    gp::Bounds b = ToCanvas(r);
+    float k = gFrame.k > 0 ? gFrame.k : 1;
+    gp::CanvasFillRound(ctx, b.x, b.y, b.w, b.h, (float)radius * k, ToGpui(fill));
+    gp::CanvasStrokeRound(ctx, b.x, b.y, b.w, b.h, (float)radius * k, k, ToGpui(border));
+}
+
+// orig's Gfx::PushClip / PopClip, in document coordinates
+void CanvasClipPush(gp::PaintCtx* ctx, Rect r) {
+    gp::Bounds b = ToCanvas(r);
+    gp::CanvasPushClip(ctx, b.x, b.y, b.w, b.h);
+}
+
+void CanvasClipPop(gp::PaintCtx* ctx) {
+    gp::CanvasPopClip(ctx);
 }
 
 Size CanvasMeasureText(gp::PaintCtx* ctx, Str s, float fontSize) {
@@ -2130,6 +2152,10 @@ static void OnSetCursorMouseNone(MainWindow* win, Point pt) {
 
 // orig's OnSetCursor: the cursor that belongs to the action in progress
 static void OnSetCursor(MainWindow* win, Point pt) {
+    if (win->measurementToolbar && MeasurementOnSetCursor(win)) {
+        DeleteLinkTooltip(win);
+        return;
+    }
     if (win->mouseAction != MouseAction::None) {
         DeleteLinkTooltip(win);
     }
@@ -2673,6 +2699,9 @@ static bool IsTripleClick() {
 }
 
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
+    if (win->measurementToolbar && MeasurementOnClick(win, Point{x, y}, CanvasCtrlPressed())) {
+        return;
+    }
     // orig closes a pinned hover menu when the page is pressed
     HideToolbarHoverDropdown(win);
     win->pressOnlyDeselected = false;
@@ -2943,6 +2972,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
 // orig's OnMouseLeftButtonDblClk. False when the press was not a double-click
 // action, so the caller can still treat it as an ordinary click.
 static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
+    if (win->measurementToolbar && MeasurementOnClick(win, Point{x, y}, CanvasCtrlPressed())) {
+        return true;
+    }
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return false;
@@ -3116,6 +3148,9 @@ static bool RunJsMenuItem(MainWindow* win, int cmdId) {
 // forward-search branches. cx is null for a click from -dbg-control, which then
 // can't show a JavaScript menu
 static void OnMouseLeftButtonUp(MainWindow* win, gp::Ctx* cx, int x, int y) {
+    if (win->measurementToolbar) {
+        return;
+    }
     if (ReadingBarOnLeftUp(win)) {
         return;
     }
@@ -3433,6 +3468,9 @@ void CanvasCancelDrag(MainWindow* win) {
 constexpr int kHideCursorDelayInMs = 3000;
 
 static void OnMouseMove(MainWindow* win, int x, int y) {
+    if (win->measurementToolbar && MeasurementOnMove(win, Point{x, y})) {
+        return;
+    }
     if (ReadingBarOnMouseMove(win, x, y)) {
         return;
     }
@@ -3712,6 +3750,9 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     PaintAnnotationMove(win, ctx);
     ReadingBarPaint(win, ctx);
     PaintReadAloudHighlight(win, ctx);
+    if (win->measurementToolbar) {
+        PaintMeasurement(win, ctx);
+    }
     PaintAllFindMatches(win, ctx);
     if (win->fwdSearchMark.show) {
         PaintForwardSearchMark(win, ctx);

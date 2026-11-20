@@ -1534,6 +1534,7 @@
     <ClInclude Include="..\src\shared\MainWindowCommon.h" />
     <ClInclude Include="..\src\shared\MarkdownModel.h" />
     <ClInclude Include="..\src\shared\MarkdownToc.h" />
+    <ClInclude Include="..\src\shared\MeasurementToolbarCommon.h" />
     <ClInclude Include="..\src\shared\MenuCommon.h" />
     <ClInclude Include="..\src\shared\MenuDefs.h" />
     <ClInclude Include="..\src\shared\MobiDoc.h" />
@@ -2192,6 +2193,7 @@
     <ClCompile Include="..\src\shared\MainWindowCommon.cpp" />
     <ClCompile Include="..\src\shared\MarkdownModel.cpp" />
     <ClCompile Include="..\src\shared\MarkdownToc.cpp" />
+    <ClCompile Include="..\src\shared\MeasurementToolbarCommon.cpp" />
     <ClCompile Include="..\src\shared\MenuCommon.cpp" />
     <ClCompile Include="..\src\shared\MenuDefs.cpp" />
     <ClCompile Include="..\src\shared\MobiDoc.cpp" />

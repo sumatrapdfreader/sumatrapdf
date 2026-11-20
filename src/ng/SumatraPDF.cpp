@@ -124,6 +124,7 @@
 #include "AnnotFilterToolbar.h"
 #include "AnnotPlacement.h"
 #include "AnnotTextPopup.h"
+#include "MeasurementToolbar.h"
 #include "RefHover.h"
 #include "FormFields.h"
 #include "ImageReader.h"
@@ -3202,6 +3203,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win) {
     HideFindBar(win);
     HideSelectionToolbar(win);
     CloseAnnotationUiForTab(tab);
+    CloseMeasurement(win);
     ResetReadAloudStateForTab(tab);
     ReadingAutoScrollHideBar(win);
     ReadingBarCancelDrag(win);
@@ -5815,6 +5817,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleReadingBar:
             ReadingBarToggle(win);
+            break;
+
+        case CmdMeasure:
+            ToggleMeasurement(win);
             break;
 
         case CmdToggleReadingBarInvert:

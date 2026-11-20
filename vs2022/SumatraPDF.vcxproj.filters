@@ -483,6 +483,9 @@
     <ClInclude Include="..\src\shared\MarkdownToc.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\MeasurementToolbarCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\MenuCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1398,6 +1401,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\MarkdownToc.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\MeasurementToolbarCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\MenuCommon.cpp">

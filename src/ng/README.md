@@ -28,8 +28,16 @@ saves and restores settings. Pass `-- -for-testing` for a throwaway run.
 
 ## Measuring
 
-`CmdMeasure` (calibrated length and rectangular area measurements) is currently
-available only in the original Windows app; ng hides it until a GPUI port exists.
+`CmdMeasure` (View menu) opens the Measure window with orig's tools, rows and
+strings: Length, Rectangular area, Radius, Guide line and Calibrate, snapping to
+the page's vector lines, Clear, Reset scale and a calibration saved per file.
+The model, label text and expression evaluator are shared with orig
+(`src/shared/MeasurementToolbarCommon.cpp`); `src/ng/MeasurementToolbar.cpp`
+is the GPUI window and the canvas drawing. `TestMeasurement` drives it as in
+orig. Differences: on macOS `Cmd + click` deletes a measurement (Command
+stands in for Ctrl on the canvas); the window can be dragged wider; a length's
+label sits just above its line, since GPUI's line box is taller than orig's.
+Wasm has no tool windows, so the command is hidden there.
 
 ## PDF scripts
 

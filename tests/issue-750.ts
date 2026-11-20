@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { IS_WIN } from "./host.ts";
 import { assemblePdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
-import { launchControlled, killAndWait, waitForExit, findCanvas } from "./win-automation.ts";
+import { launchControlled, killAndWait, waitForExit, findCanvas, ngKey } from "./win-automation.ts";
 import { captureWindowPixels, postMessage, sleep, VK_ESCAPE, WM_KEYDOWN } from "./winapi.ts";
 
 async function measure(client: ControlClient, action = "state", ...args: (number | string)[]): Promise<string> {
@@ -84,8 +84,12 @@ async function testTools(): Promise<void> {
 
     // Esc drops the measurement being clicked, then closes the tool
     const esc = async () => {
-      // keydown only: a posted keyup without its transition bit translates to another Esc
-      postMessage(frame, WM_KEYDOWN, VK_ESCAPE, 1);
+      if (USE_NG) {
+        await ngKey(client, VK_ESCAPE);
+      } else {
+        // keydown only: a posted keyup without its transition bit translates to another Esc
+        postMessage(frame, WM_KEYDOWN, VK_ESCAPE, 1);
+      }
       await sleep(300);
     };
     await measure(client, "length");
@@ -105,8 +109,8 @@ async function testTools(): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
-  if (!IS_WIN || USE_NG) {
-    console.log("issue-750: measurement toolbar is Windows-only");
+  if (!IS_WIN) {
+    console.log("issue-750: Windows only");
     return;
   }
   await testTools();

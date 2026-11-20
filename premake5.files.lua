@@ -307,6 +307,7 @@ function sumatrapdf_files()
     "AppTools.*",
     "Canvas.*",
     "MeasurementToolbar.*",
+    "MeasurementToolbarCommon.*",
     "CanvasCommon.*",
     "LaserPointerCursor.h",
     "LaserPointerCursor_win.cpp",
