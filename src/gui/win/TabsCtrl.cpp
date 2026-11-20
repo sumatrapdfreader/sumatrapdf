@@ -29,6 +29,7 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 static Kind kindTabs = "tabs";
 static Kind kindTabCtrl = "tabCtrl";
 static Kind kindTabsPlus = "tabsPlus";
+static Kind kindTabGroupHeader = "tabGroupHeader";
 
 using Gdiplus::Bitmap;
 using Gdiplus::CompositingQualityHighQuality;
@@ -52,6 +53,24 @@ TabInfo::~TabInfo() {
     str::Free(text);
     str::Free(tooltip);
     str::Free(pageText);
+}
+
+TabGroupInfo::~TabGroupInfo() {
+    str::Free(label);
+}
+
+constexpr int kGroupStripeDy = 3;
+
+// the chip is as wide as its label, within limits; without one it's a dot
+static int GroupHeaderDx(TabsCtrl* tabs, TabGroupInfo* g) {
+    int minDx = DpiScale(20);
+    PlatformFont* font = tabs->GetFont();
+    if (!font) {
+        return minDx;
+    }
+    Str txt = g->label;
+    int dx = len(txt) > 0 ? PlatformFontMeasureText(font, txt).dx + DpiScale(18) : minDx;
+    return limitValue(dx, minDx, DpiScale(160));
 }
 
 //--- TabCtrl: one tab
@@ -227,6 +246,13 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     bool isRtl = IsTabsRtl(hwnd);
     PlatformFont* font = tabsCtrl->GetFont();
 
+    // a tab in a group wears the group's color as a stripe along its bottom
+    TabGroupInfo* group = tabsCtrl->FindGroup(ti->groupId);
+    if (group) {
+        int stripe = DpiScale(kGroupStripeDy);
+        gfx->FillRect({r.x, r.Bottom() - stripe, r.dx, stripe}, group->color);
+    }
+
     // draw text — inset from the close glyph (size varies with tab height),
     // or using the full tab width when the ✕ is hidden
     Rect rTxt = r;
@@ -386,6 +412,85 @@ void TabsPlusBtn::OnClick(VirtMouseEvent*) {
     }
 }
 
+//--- TabGroupHeader: the colored chip in front of a group's tabs. Clicking it
+// collapses / expands the group
+
+struct TabGroupHeader : VirtCtrl {
+    TabsCtrl* tabsCtrl = nullptr;
+    int groupId = 0;
+
+    TabGroupHeader();
+    ~TabGroupHeader() override = default;
+
+    Size GetIdealSize() override;
+    void Paint(VirtPaintCtx&) override;
+    void OnInvalidate();
+    void OnClick(VirtMouseEvent*);
+    void OnGetTooltip(VirtTooltipEvent*);
+};
+
+TabGroupHeader::TabGroupHeader() {
+    kind = kindTabGroupHeader;
+    colorDefaults = gColsTab;
+    nColors = kColTabCount;
+    cursor = CursorId::Hand;
+    onMouseEnter = MkMethod0<TabGroupHeader, &TabGroupHeader::OnInvalidate>(this);
+    onMouseLeave = MkMethod0<TabGroupHeader, &TabGroupHeader::OnInvalidate>(this);
+    onClick = MkMethod1<TabGroupHeader, VirtMouseEvent*, &TabGroupHeader::OnClick>(this);
+    onGetTooltip = MkMethod1<TabGroupHeader, VirtTooltipEvent*, &TabGroupHeader::OnGetTooltip>(this);
+}
+
+Size TabGroupHeader::GetIdealSize() {
+    return bounds.Size();
+}
+
+void TabGroupHeader::OnInvalidate() {
+    Invalidate();
+}
+
+void TabGroupHeader::OnClick(VirtMouseEvent* ev) {
+    ev->didHandle = true;
+    TabsCtrl::GroupClickEvent gev;
+    gev.tabs = tabsCtrl;
+    gev.groupId = groupId;
+    // may rebuild the strip, deleting this chip: nothing after the call
+    tabsCtrl->onGroupClick.Call(&gev);
+}
+
+void TabGroupHeader::OnGetTooltip(VirtTooltipEvent* ev) {
+    TabGroupInfo* g = tabsCtrl ? tabsCtrl->FindGroup(groupId) : nullptr;
+    if (!g || !tabsCtrl->withToolTips || len(g->label) == 0) {
+        return;
+    }
+    ev->tip = str::DupTemp(g->label);
+}
+
+void TabGroupHeader::Paint(VirtPaintCtx& ctx) {
+    TabGroupInfo* g = tabsCtrl->FindGroup(groupId);
+    if (!g) {
+        return;
+    }
+    Gfx* gfx = ctx.gfx;
+    Rect r = ctx.bounds;
+
+    int padX = DpiScale(2);
+    int padY = DpiScale(4);
+    Rect chip = {r.x + padX, r.y + padY, std::max(0, r.dx - (2 * padX)), std::max(0, r.dy - (2 * padY))};
+    Color col = g->color;
+    if (HasFlag(vwfHovered)) {
+        col = AccentColor(col, 12);
+    }
+    gfx->FillRect(chip, col);
+
+    Str txt = g->label;
+    if (len(txt) == 0) {
+        return;
+    }
+    Color txtCol = IsLightColor(col) ? MkRgb(0x20, 0x20, 0x20) : MkRgb(0xff, 0xff, 0xff);
+    Rect rTxt = {chip.x + DpiScale(6), chip.y, std::max(0, chip.dx - DpiScale(12)), chip.dy};
+    gfx->DrawText(txt, rTxt, gfxTextEllipsis | gfxTextVCenter | gfxTextCenter, tabsCtrl->GetFont(), txtCol);
+}
+
 //--- TabsCtrl host window
 
 static LRESULT CALLBACK TabsCtrlWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -429,6 +534,7 @@ TabsCtrl::TabsCtrl() {
 TabsCtrl::~TabsCtrl() {
     Destroy();
     DeleteVecMembers(tabs);
+    DeleteVecMembers(groups);
     // TabCtrl children are owned via VirtCtrl::children
 }
 
@@ -496,6 +602,7 @@ bool TabsCtrl::IsVisible() const {
 void TabsCtrl::RebuildTabCtrls() {
     RemoveAllChildren(true);
     VecReset(tabCtrls);
+    VecReset(headerCtrls);
     int n = TabCount();
     for (int i = 0; i < n; i++) {
         auto* w = new TabCtrl();
@@ -503,6 +610,13 @@ void TabsCtrl::RebuildTabCtrls() {
         w->ti = tabs[i];
         VecAppend(tabCtrls, w);
         AddChild(w);
+    }
+    for (TabGroupInfo* g : groups) {
+        auto* h = new TabGroupHeader();
+        h->tabsCtrl = this;
+        h->groupId = g->id;
+        VecAppend(headerCtrls, h);
+        AddChild(h);
     }
     plusBtn = new TabsPlusBtn();
     plusBtn->tabsCtrl = this;
@@ -553,6 +667,12 @@ int TabsCtrl::TabDx(int idx) {
 }
 
 // Calculates the size of a tab and lays the children out.
+//
+// The strip is a row of cells: a group's chip comes before its first tab, the
+// tabs of a collapsed group take no room.
+//
+//   [Home] [a.pdf] [ Work ][b.pdf][c.pdf] [ Misc (2) ] [d.pdf] [+]
+//                    chip   members        collapsed
 void TabsCtrl::LayoutTabs() {
     if (!hwnd || !vroot) {
         return;
@@ -566,18 +686,40 @@ void TabsCtrl::LayoutTabs() {
         // (issue #5861). The parent hides the control when there are no tabs.
         return;
     }
+
+    // a chip shows when its group has a tab in the strip
+    int headersDx = 0;
+    for (TabGroupHeader* h : headerCtrls) {
+        h->visibility = Visibility::Collapse;
+        h->SetBounds({0, 0, 0, 0});
+        TabGroupInfo* g = FindGroup(h->groupId);
+        if (g && GroupFirstIdx(g->id) >= 0) {
+            headersDx += GroupHeaderDx(this, g);
+        }
+    }
+    int nShown = 0;
+    for (int i = 0; i < nTabs; i++) {
+        if (!IsTabHidden(i)) {
+            nShown++;
+        }
+    }
+
     // the "+" is square and always there. Fit-to-label tabs take what their label
     // needs, the others share the rest
     int plusDx = dy;
-    int availDx = rect.dx - 5 - plusDx;
+    int availDx = rect.dx - 5 - plusDx - headersDx;
     int restDx = availDx;
     int nRest = 0;
     for (int i = 0; i < nTabs; i++) {
+        if (IsTabHidden(i)) {
+            tabCtrls[i]->idealSize = {0, dy};
+            continue;
+        }
         if (!tabs[i]->fitToLabel) {
             nRest++;
             continue;
         }
-        int fitDx = std::min(FitToLabelDx(this, tabs[i], dy), availDx / nTabs);
+        int fitDx = std::min(FitToLabelDx(this, tabs[i], dy), availDx / std::max(1, nShown));
         tabCtrls[i]->idealSize = {fitDx, dy};
         restDx -= fitDx;
     }
@@ -586,7 +728,7 @@ void TabsCtrl::LayoutTabs() {
     Vec<int> nameDx;
     if (!equalWidth) {
         for (int i = 0; i < nTabs; i++) {
-            if (!tabs[i]->fitToLabel) {
+            if (!tabs[i]->fitToLabel && !IsTabHidden(i)) {
                 VecAppend(nameDx, FitToNameDx(this, tabs[i], dy));
             }
         }
@@ -601,14 +743,38 @@ void TabsCtrl::LayoutTabs() {
     }
     tabSize = {dx, dy};
 
-    int totalW = 0;
     int nameIdx = 0;
     for (int i = 0; i < nTabs; i++) {
-        if (!tabs[i]->fitToLabel) {
-            int tabDx = equalWidth ? dx : std::min(dx, nameDx[nameIdx++]);
-            tabCtrls[i]->idealSize = {tabDx, dy};
+        if (IsTabHidden(i) || tabs[i]->fitToLabel) {
+            continue;
         }
-        totalW += tabCtrls[i]->idealSize.dx;
+        int tabDx = equalWidth ? dx : std::min(dx, nameDx[nameIdx++]);
+        tabCtrls[i]->idealSize = {tabDx, dy};
+    }
+
+    // the cells in strip order, with their widths
+    Vec<VirtCtrl*> cells;
+    Vec<int> cellDx;
+    int totalW = 0;
+    for (int i = 0; i < nTabs; i++) {
+        int groupId = tabs[i]->groupId;
+        bool startsGroup = groupId != 0 && (i == 0 || tabs[i - 1]->groupId != groupId);
+        TabGroupInfo* g = startsGroup ? FindGroup(groupId) : nullptr;
+        for (TabGroupHeader* h : headerCtrls) {
+            if (g && h->groupId == groupId) {
+                h->visibility = Visibility::Visible;
+                int hdx = GroupHeaderDx(this, g);
+                VecAppend(cells, (VirtCtrl*)h);
+                VecAppend(cellDx, hdx);
+                totalW += hdx;
+            }
+        }
+        bool hidden = IsTabHidden(i);
+        tabCtrls[i]->visibility = hidden ? Visibility::Collapse : Visibility::Visible;
+        int tdx = hidden ? 0 : tabCtrls[i]->idealSize.dx;
+        VecAppend(cells, (VirtCtrl*)tabCtrls[i]);
+        VecAppend(cellDx, tdx);
+        totalW += tdx;
     }
 
     // pack tabs left-to-right (LTR) or right-aligned with reversed order (RTL)
@@ -625,13 +791,12 @@ void TabsCtrl::LayoutTabs() {
         plusBtn->SetBounds({rect.x + x, rect.y, plusDx, dy});
         x += plusDx;
     }
-    for (int i = 0; i < nTabs; i++) {
-        int idx = isRtl ? (nTabs - 1 - i) : i;
-        TabCtrl* t = tabCtrls[idx];
-        Rect r = {x, 0, t->idealSize.dx, t->idealSize.dy};
+    int nCells = len(cells);
+    for (int i = 0; i < nCells; i++) {
+        int idx = isRtl ? (nCells - 1 - i) : i;
         // absolute client coords; TabCtrl::SetBounds rebases via parent origin
-        t->SetBounds({rect.x + r.x, rect.y + r.y, r.dx, r.dy});
-        x += r.dx;
+        cells[idx]->SetBounds({rect.x + x, rect.y, cellDx[idx], dy});
+        x += cellDx[idx];
     }
     if (!isRtl) {
         plusBtn->SetBounds({rect.x + x, rect.y, plusDx, dy});
@@ -654,6 +819,10 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
         if (IsVirtCtrlOfKind(w, kindTabCtrl)) {
             tab = (TabCtrl*)w;
             break;
+        }
+        if (IsVirtCtrlOfKind(w, kindTabGroupHeader)) {
+            res.headerGroupId = ((TabGroupHeader*)w)->groupId;
+            return res;
         }
     }
     if (!tab) {
@@ -830,15 +999,18 @@ static void TriggerTabClosed(TabsCtrl* tabs, int tabIdx) {
     tabs->onTabClosed.Call(&ev);
 }
 
-static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
+// the app moves the tab if it asked to; returns false if it didn't
+static bool TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2, int groupId) {
     if (!tabs->onTabDragged.IsValid()) {
-        return;
+        return false;
     }
     TabsCtrl::DraggedEvent ev;
     ev.tabs = tabs;
     ev.tab1 = tab1;
     ev.tab2 = tab2;
+    ev.groupId = groupId;
     tabs->onTabDragged.Call(&ev);
+    return true;
 }
 
 static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
@@ -965,7 +1137,8 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             mousePos = HwndScreenToClient(hwnd, mousePos);
             tabState = TabStateFromMousePosition(mousePos);
-            if (tabState.tabIdx >= 0 || (plusBtn && plusBtn->BoundsInWindow().Contains(mousePos))) {
+            if (tabState.tabIdx >= 0 || tabState.headerGroupId != 0 ||
+                (plusBtn && plusBtn->BoundsInWindow().Contains(mousePos))) {
                 return HTCLIENT;
             }
             return HTTRANSPARENT;
@@ -1077,24 +1250,38 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return 0;
             }
             int selectedTab = selectedIdx;
-            if (tabUnderMouse < 0) {
+            int dstIdx = -1;
+            int dstGroupId = 0;
+            TabGroupInfo* dropOnGroup = FindGroup(tabState.headerGroupId);
+            if (dropOnGroup) {
+                // dropped on a group's chip: it joins the group, at the front
+                // (at the end of a collapsed one)
+                dstGroupId = dropOnGroup->id;
+                dstIdx = dropOnGroup->collapsed ? GroupLastIdx(dstGroupId) + 1 : GroupFirstIdx(dstGroupId);
+            } else if (tabUnderMouse >= 0) {
+                dstIdx = tabUnderMouse;
+                if (tabState.inRightHalf) {
+                    dstIdx++;
+                }
+                dstGroupId = tabState.tabInfo ? tabState.tabInfo->groupId : 0;
+            } else {
                 // migrate to new/different window
                 Point scPoint = HwndClientToScreen(hwnd, mousePos);
                 TriggerTabMigration(this, selectedTab, scPoint);
                 return 0;
             }
-            int dstIdx = tabUnderMouse;
-            if (tabState.inRightHalf) {
-                dstIdx++;
-            }
-            if (dstIdx == selectedTab) {
+            if (dstIdx < 0) {
                 return 0;
             }
             if ((dstIdx < TabCount()) && GetTab(dstIdx)->isPinned) {
                 return 0;
             }
-            TriggerTabDragged(this, selectedTab, dstIdx);
-            UpdateAfterDrag(this, selectedTab, dstIdx);
+            if (TriggerTabDragged(this, selectedTab, dstIdx, dstGroupId)) {
+                return 0;
+            }
+            if (dstIdx != selectedTab) {
+                UpdateAfterDrag(this, selectedTab, dstIdx);
+            }
             ScheduleRepaint();
             return 0;
         }
@@ -1321,6 +1508,8 @@ void TabsCtrl::SwapTabs(int idx1, int idx2) {
 void TabsCtrl::RemoveAllTabs() {
     DeleteVecMembers(tabs);
     VecReset(tabs);
+    DeleteVecMembers(groups);
+    VecReset(groups);
     selectedIdx = -1;
     RebuildTabCtrls();
     LayoutTabs();
@@ -1383,4 +1572,55 @@ void TabsCtrl::SetHighlighted(int idx) {
     }
     UpdateHover(tabHighlighted);
     HwndRepaintNow(hwnd);
+}
+
+//--- tab groups
+
+TabGroupInfo* TabsCtrl::FindGroup(int groupId) {
+    if (groupId == 0) {
+        return nullptr;
+    }
+    for (TabGroupInfo* g : groups) {
+        if (g->id == groupId) {
+            return g;
+        }
+    }
+    return nullptr;
+}
+
+TabGroupInfo* TabsCtrl::GroupOfTab(int idx) {
+    if (!IsValidIdx(idx)) {
+        return nullptr;
+    }
+    return FindGroup(tabs[idx]->groupId);
+}
+
+int TabsCtrl::GroupFirstIdx(int groupId) {
+    int n = TabCount();
+    for (int i = 0; i < n; i++) {
+        if (tabs[i]->groupId == groupId) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int TabsCtrl::GroupLastIdx(int groupId) {
+    for (int i = TabCount() - 1; i >= 0; i--) {
+        if (tabs[i]->groupId == groupId) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool TabsCtrl::IsTabHidden(int idx) {
+    TabGroupInfo* g = GroupOfTab(idx);
+    return g && g->collapsed;
+}
+
+// the app sets new groups after this
+void TabsCtrl::ClearGroups() {
+    DeleteVecMembers(groups);
+    VecReset(groups);
 }

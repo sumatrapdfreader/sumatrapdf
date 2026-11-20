@@ -32,6 +32,7 @@
 #include "AppTools.h"
 #include "Tabs.h"
 #include "TabsCommon.h"
+#include "StripGroups.h"
 
 // always full path (FullPathInTitle only affects tab/window title text).
 // Append size when GetSize succeeds (may fail for offline network paths).
@@ -186,6 +187,7 @@ void SetTabCloseFlags(AppCommandCtx& ctx) {
     ctx.canCloseTabsToRight = len(right) > 0;
     ctx.canCloseTabsToLeft = ctx.tab && len(left) > 0;
     ctx.hasDocTabs = HasOpenedDocuments(ctx.win);
+    StripGroupSetFlags(ctx);
 }
 
 // create a new window if win==nullptr
@@ -220,11 +222,15 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     if (count < 2) {
         return;
     }
-    int idx = win->GetTabIdx(win->CurrentTab()) + 1;
-    if (reverse) {
-        idx -= 2;
+    // the next tab not hidden in a collapsed strip group
+    int cur = win->GetTabIdx(win->CurrentTab());
+    int step = reverse ? -1 : 1;
+    int idx = cur;
+    for (int i = 0; i < count; i++) {
+        idx = (idx + step + count) % count;
+        if (!StripGroupIsHidden(win, win->GetTab(idx))) {
+            break;
+        }
     }
-    idx += count; // ensure > 0
-    idx = idx % count;
     TabsSelect(win, idx);
 }

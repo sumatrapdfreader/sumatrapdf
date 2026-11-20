@@ -8,6 +8,7 @@ struct InputState;
 
 struct WindowTab;
 struct TabGroup;
+struct StripGroup;
 struct DocController;
 struct DocControllerCallback;
 struct ChmModel;
@@ -230,6 +231,8 @@ struct MainWindow {
     // keeps the sequence of tab selection, for restoring the previous tab
     // when the current one is closed (points into tabs)
     Vec<WindowTab*>* tabSelectionHistory = nullptr;
+    // groups of tabs in the tab strip (owned), in strip order
+    Vec<StripGroup*> stripGroups;
     // ng: the gpui side of the tab strip (hover, drag, context menu); orig
     // keeps the same state in its TabsCtrl
     TabsUI* tabsUI = nullptr;

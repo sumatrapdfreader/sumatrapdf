@@ -12,6 +12,7 @@ struct TabsCtrl;
 struct TabInfo;
 struct TabCtrl;
 struct TabsPlusBtn;
+struct TabGroupHeader;
 struct VirtRoot;
 struct VirtCloseButton;
 struct VirtMouseEvent;
@@ -31,9 +32,23 @@ struct TabInfo {
     bool fitToLabel = false;
     UINT_PTR userData = 0;
     Color tabColor = (Color)0xfeffffff; // kColorUnset; use default tab color
+    // id of its TabGroupInfo in TabsCtrl::groups; 0: none
+    int groupId = 0;
 
     TabInfo() = default;
     ~TabInfo();
+};
+
+// how a group of neighbouring tabs looks: a colored chip with `label` before
+// its tabs, and only the chip when collapsed. The app owns the groups' logic
+struct TabGroupInfo {
+    int id = 0;
+    Str label;
+    Color color = (Color)0;
+    bool collapsed = false;
+
+    TabGroupInfo() = default;
+    ~TabGroupInfo();
 };
 
 // Tab bar as a virtual control: owns TabCtrl children, paints and hit-tests
@@ -56,6 +71,8 @@ struct TabsCtrl : VirtCtrl {
         // used to make drag&drop determine a better position for drop
         bool inRightHalf = false;
         TabInfo* tabInfo = nullptr;
+        // != 0 when the mouse is over the header chip of that group
+        int headerGroupId = 0;
     };
 
     struct SelectionChangingEvent {
@@ -85,6 +102,13 @@ struct TabsCtrl : VirtCtrl {
         TabsCtrl* tabs = nullptr;
         int tab1 = -1;
         int tab2 = -1;
+        // the group of the tab or chip it was dropped on; 0: none
+        int groupId = 0;
+    };
+
+    struct GroupClickEvent {
+        TabsCtrl* tabs = nullptr;
+        int groupId = 0;
     };
 
     using SelectionChangingHandler = Func1<SelectionChangingEvent*>;
@@ -92,6 +116,7 @@ struct TabsCtrl : VirtCtrl {
     using ClosedHandler = Func1<ClosedEvent*>;
     using MigrationHandler = Func1<MigrationEvent*>;
     using DraggedHandler = Func1<DraggedEvent*>;
+    using GroupClickHandler = Func1<GroupClickEvent*>;
 
     // host HWND (child of the frame); GetHwnd() also returns this once attached
     HWND hwnd = nullptr;
@@ -115,6 +140,10 @@ struct TabsCtrl : VirtCtrl {
     TabsPlusBtn* plusBtn = nullptr;
     int selectedIdx = -1;
 
+    // groups' chips are laid out before the first tab of the group
+    Vec<TabGroupInfo*> groups;
+    Vec<TabGroupHeader*> headerCtrls;
+
     // tracking state of which tab is highlighted etc.
     int tabHighlighted = -1;
     int tabHighlightedClose = -1;
@@ -134,7 +163,10 @@ struct TabsCtrl : VirtCtrl {
     SelectionChangingHandler onSelectionChanging;
     SelectionChangedHandler onSelectionChanged;
     MigrationHandler onTabMigration;
+    // set: the app moves the dropped tab; unset: the tab strip does
     DraggedHandler onTabDragged;
+    // a group's chip was clicked
+    GroupClickHandler onGroupClick;
     // must not change the tabs directly: that deletes the button being clicked
     Func0 onPlusClick;
 
@@ -184,6 +216,13 @@ struct TabsCtrl : VirtCtrl {
     bool IsValidIdx(int idx);
 
     void SetHighlighted(int idx);
+
+    TabGroupInfo* FindGroup(int groupId);
+    TabGroupInfo* GroupOfTab(int idx);
+    bool IsTabHidden(int idx);
+    int GroupFirstIdx(int groupId);
+    int GroupLastIdx(int groupId);
+    void ClearGroups();
 
     void LayoutTabs();
     void ScheduleRepaint();

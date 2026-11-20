@@ -32,6 +32,7 @@ extern MenuDef menuDefDocumentAIChat[];
 extern MenuDef menuDefDocumentOperations[];
 extern MenuDef menuDefContextStart[];
 extern MenuDef menuDefContextTab[];
+extern MenuDef menuDefStripGroup[];
 extern MenuDef menuDefContextToc[];
 extern MenuDef menuDefContextFav[];
 extern MenuDef menuDefCreateAnnotUnderCursor[];

@@ -67,6 +67,7 @@
 #include "Notifications.h"
 #include "ExplorerQuickLook.h"
 #include "Tabs.h"
+#include "StripGroups.h"
 #include "GlobalHotkeys.h"
 #include "PagePosition.h"
 #include "CachedObjects.h"
@@ -491,6 +492,10 @@ TabState* CloneTabState(const TabState* src) {
     dst->showToc = src->showToc;
     str::ReplaceWithCopy(&dst->sidebarView, src->sidebarView);
     dst->tocState = new Vec<int>(*src->tocState);
+    dst->group = src->group;
+    str::ReplaceWithCopy(&dst->groupName, src->groupName);
+    str::ReplaceWithCopy(&dst->groupColor.s, src->groupColor.s);
+    dst->groupCollapsed = src->groupCollapsed;
     return dst;
 }
 
@@ -569,7 +574,9 @@ static void RememberSessionState() {
                     src = FindSessionTabState(fp);
                 }
                 if (src) {
-                    VecAppend(*windowState->tabStates, CloneTabState(src));
+                    TabState* ts = CloneTabState(src);
+                    StripGroupSaveTab(win, tab, ts);
+                    VecAppend(*windowState->tabStates, ts);
                 }
                 continue;
             }
@@ -579,6 +586,7 @@ static void RememberSessionState() {
             str::ReplaceWithCopy(&fs->sidebarView, SidebarViewToStr(tab->sidebarView));
             *fs->tocState = tab->tocState;
             TabState* ts = NewTabState(fs);
+            StripGroupSaveTab(win, tab, ts);
             VecAppend(*windowState->tabStates, ts);
             DeleteFileState(fs);
         }

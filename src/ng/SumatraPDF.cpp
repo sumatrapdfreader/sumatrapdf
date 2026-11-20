@@ -76,6 +76,7 @@
 #include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Tabs.h"
+#include "StripGroups.h"
 #include "HexView.h"
 #include "gui/Dpi.h"
 #include "gui/AppShell.h"
@@ -5272,6 +5273,9 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         if (len(filePath) > 0) {
             LoadDocument(win, filePath);
         }
+        return;
+    }
+    if (StripGroupCmd(win, tab, invokedCmdId)) {
         return;
     }
     // one of the viewers we detect ourselves (Explorer, Acrobat, ...)

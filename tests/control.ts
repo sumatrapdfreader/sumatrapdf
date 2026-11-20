@@ -181,6 +181,9 @@ export enum ControlCommand {
   TestDocErrors = 167,
   // [pageNo, idx, value]: pick value in the idx-th combo / list box
   TestSetFormChoice = 168,
+  // [action, a, b, c]: "drop" from to groupPos, "move" dir, "select" idx, or
+  // "" for the state; answers with the strip groups and tabs
+  TestStripGroups = 169,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -1411,6 +1411,10 @@ const tabState: Field[] = [
     .emptyMeans("bookmarks")
     .ver("3.7"),
   compactArray("TocState", Int, null, "which table of contents items were expanded (see FileStates -> TocState)"),
+  field("Group", Int, 0, "tabs with the same number form a group in the tab strip; 0 if the tab is in none").ver("3.7"),
+  field("GroupName", Str, null, "name of the tab's group").ver("3.7"),
+  field("GroupColor", Color, "", "color of the tab's group").ver("3.7"),
+  field("GroupCollapsed", Bool, false, "if true, the tab's group was collapsed").ver("3.7"),
 ];
 
 const sessionData: Field[] = [

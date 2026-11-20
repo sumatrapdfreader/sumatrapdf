@@ -61,4 +61,5 @@ WindowTab* NewMissingSessionTab(MainWindow* win, TabState* state);
 void CloseMissingFileTabs(MainWindow* win);
 // the tab's right-click menu; the caller owns the model
 MenuModel* BuildTabContextMenu(MainWindow* win, WindowTab* tabUnderMouse);
+MenuModel* BuildStripGroupMenu(MainWindow* win, int groupId);
 void TabContextMenuCommand(MainWindow* win, WindowTab* tabUnderMouse, int cmdId);

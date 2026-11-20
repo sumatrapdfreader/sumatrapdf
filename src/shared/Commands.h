@@ -389,8 +389,16 @@ enum {
     CmdCaretDocStart = 583,
     CmdCaretDocEnd = 584,
     CmdEditAnnotationText = 585,
+    CmdStripGroupNew = 586,
+    CmdStripGroupAddTab = 587,
+    CmdStripGroupRemoveTab = 588,
+    CmdStripGroupToggle = 589,
+    CmdStripGroupRename = 590,
+    CmdStripGroupColor = 591,
+    CmdStripGroupUngroup = 592,
+    CmdStripGroupClose = 593,
 
-    CmdLast = 585,
+    CmdLast = 593,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

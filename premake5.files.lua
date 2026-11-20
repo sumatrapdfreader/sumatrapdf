@@ -474,6 +474,8 @@ function sumatrapdf_files()
     "TableOfContentsCommon.*",
     "Tabs.*",
     "TabsCommon.*",
+    "StripGroups.*",
+    "StripGroupDialog.*",
     "TabGroupsManage.*",
     "Tests.cpp",
     "TextSearch.*",

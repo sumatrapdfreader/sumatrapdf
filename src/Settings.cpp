@@ -973,20 +973,26 @@ static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, showToc), SettingType::Bool, true},
     {offsetof(TabState, sidebarView), SettingType::String, 0, false, false, gEnumTabStateSidebarView, "bookmarks"},
     {offsetof(TabState, tocState), SettingType::IntArray, 0},
+    {offsetof(TabState, group), SettingType::Int, 0},
+    {offsetof(TabState, groupName), SettingType::String, 0},
+    {offsetof(TabState, groupColor), SettingType::Color, (intptr_t)""},
+    {offsetof(TabState, groupCollapsed), SettingType::Bool, false},
 };
 const StructInfo gTabStateInfo = {
     sizeof(TabState),
     (u16)dimof(gTabStateFields),
     gTabStateFields,
-    "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0SidebarView\0TocState",
+    "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0SidebarView\0TocState\0Group\0GroupName\0GroupC"
+    "olor\0GroupCollapsed",
     "path of the document\0layout of pages in this tab\0number of the last read page, or `bm:<bookmark>` for documents "
     "with chapters (see PagePosition.cpp)\0zoom (in %) or one of those values: fit page, fit width, fit height, fit "
     "content, fit visible\0how far pages have been rotated as a multiple of 90 degrees\0how far this document has been "
     "scrolled (in x and y direction)\0if true, the table of contents was shown when the document was closed\0what the "
     "sidebar's top panel showed: bookmarks, thumbnails, favorites, signatures or layers\0which table of contents items "
-    "were expanded (see FileStates -> TocState)",
+    "were expanded (see FileStates -> TocState)\0tabs with the same number form a group in the tab strip; 0 if the tab "
+    "is in none\0name of the tab's group\0color of the tab's group\0if true, the tab's group was collapsed",
     false};
-static_assert(dimof(gTabStateFields) == 9);
+static_assert(dimof(gTabStateFields) == 13);
 
 static const FieldInfo gRect_4_Fields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},

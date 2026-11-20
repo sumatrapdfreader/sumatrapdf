@@ -3,6 +3,7 @@
 
 struct DoubleBuffer;
 struct TabGroup;
+struct StripGroup;
 struct Edit;
 struct WebviewWnd;
 struct LinkHandler;
@@ -385,6 +386,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
     Vec<WindowTab*>* tabSelectionHistory = nullptr;
+    // groups of tabs in the tab strip (owned), in strip order
+    Vec<StripGroup*> stripGroups;
 
     ButtonInfo captionBtn[CB_BTN_COUNT];
     // where a caption button was pressed (client coords): dragging the app icon

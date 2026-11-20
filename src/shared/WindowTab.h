@@ -158,6 +158,8 @@ struct WindowTab {
     Color bgColor = kColorUnset;
     // per-document tab color from FileState; kColorUnset = use default
     Color tabColor = kColorUnset;
+    // id of the window's StripGroup the tab is in; 0: none
+    int stripGroupId = 0;
 
     // which AI chat sidebar is open for this tab
     // (-1 = none; 0 = Claude, 1 = Grok, 2 = Codex, 3 = AntiGravity)

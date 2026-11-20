@@ -601,6 +601,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     if (gp::El* e = GoToPageDialogBuild(win, cx)) {
         return e;
     }
+    if (gp::El* e = RenameStripGroupDialogBuild(win, cx)) {
+        return e;
+    }
     if (gp::El* e = AddFavoriteDialogBuild(win, cx)) {
         return e;
     }
@@ -729,7 +732,7 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
                IsSetScreenshotHotkeyDialogVisible() || IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() ||
                IsAdvancedSettingsDialogVisible() || IsConfigureRestrictedUseDialogVisible() ||
                IsPageGridDialogVisible() || IsKeyboardHelpVisible() || IsUnsavedAnnotationsDialogVisible() ||
-               IsSavePathDialogVisible();
+               IsSavePathDialogVisible() || IsRenameStripGroupDialogVisible();
     (void)win;
     return any ? DialogAccels::None : DialogAccels::All;
 }
@@ -1105,6 +1108,10 @@ bool DialogsOnEscape(MainWindow* win) {
     }
     if (IsGoToPageDialogVisible()) {
         CloseGoToPageDialog();
+        return true;
+    }
+    if (IsRenameStripGroupDialogVisible()) {
+        CloseRenameStripGroupDialog();
         return true;
     }
     if (IsTabGroupsDialogVisible()) {

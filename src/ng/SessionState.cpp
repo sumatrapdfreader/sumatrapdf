@@ -33,6 +33,7 @@
 #include "VirtualDesktop.h"
 #include "AppHelpersCommon.h"
 #include "SessionState.h"
+#include "StripGroups.h"
 #include "SumatraLog.h"
 
 static TabState* CloneSessionTabState(const TabState* src) {
@@ -45,6 +46,10 @@ static TabState* CloneSessionTabState(const TabState* src) {
     dst->scrollPos = src->scrollPos;
     dst->showToc = src->showToc;
     dst->tocState = new Vec<int>(*src->tocState);
+    dst->group = src->group;
+    str::ReplaceWithCopy(&dst->groupName, src->groupName);
+    str::ReplaceWithCopy(&dst->groupColor.s, src->groupColor.s);
+    dst->groupCollapsed = src->groupCollapsed;
     return dst;
 }
 
@@ -112,7 +117,9 @@ static void RememberSessionState() {
                     src = FindSessionTabState(fp);
                 }
                 if (src) {
-                    VecAppend(*windowState->tabStates, CloneSessionTabState(src));
+                    TabState* ts = CloneSessionTabState(src);
+                    StripGroupSaveTab(win, tab, ts);
+                    VecAppend(*windowState->tabStates, ts);
                 }
                 continue;
             }
@@ -121,6 +128,7 @@ static void RememberSessionState() {
             fs->showToc = tab->showToc;
             *fs->tocState = tab->tocState;
             TabState* ts = NewTabState(fs);
+            StripGroupSaveTab(win, tab, ts);
             VecAppend(*windowState->tabStates, ts);
             DeleteFileState(fs);
         }
@@ -404,12 +412,17 @@ bool RestoreSession(MainWindow* firstWin) {
         }
         int nInWindow = 0;
         gRestoringSession = true;
+        StripGroupRestore groupsRestore;
         for (TabState* state : *data->tabStates) {
             if (len(state->filePath) == 0) {
                 logf("RestoreSession: skipping a TabState with an empty filePath\n");
                 continue;
             }
+            int nTabsBefore = win->TabCount();
             RestoreTabOnStartup(win, state);
+            if (win->TabCount() > nTabsBefore) {
+                StripGroupRestoreTab(win, win->GetTab(win->TabCount() - 1), state, groupsRestore);
+            }
             nInWindow++;
         }
         gRestoringSession = false;
@@ -422,6 +435,7 @@ bool RestoreSession(MainWindow* firstWin) {
             continue;
         }
         SelectRestoredTab(win, data->tabIndex);
+        StripGroupRestoreDone(win, groupsRestore);
         if (gSettings->lazyLoading) {
             // trigger loading of the document
             LoadLazyTabIfNeeded(win->CurrentTab());

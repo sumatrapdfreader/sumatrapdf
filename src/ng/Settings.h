@@ -404,6 +404,15 @@ struct TabState {
     // which table of contents items were expanded (see FileStates ->
     // TocState)
     Vec<int>* tocState;
+    // tabs with the same number form a group in the tab strip; 0 if the
+    // tab is in none
+    int group;
+    // name of the tab's group
+    Str groupName;
+    // color of the tab's group
+    ParsedColor groupColor;
+    // if true, the tab's group was collapsed
+    bool groupCollapsed;
 };
 
 // state of the last session, usage depends on RestoreSession

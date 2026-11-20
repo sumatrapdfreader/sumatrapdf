@@ -109,6 +109,7 @@
 #include "SidebarPanel.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
+#include "StripGroups.h"
 #include "HexView.h"
 #include "Toolbar.h"
 #include "SvgIcons.h"
@@ -4415,6 +4416,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
 
     MainWindow* win = tab->win;
+    StripGroupOnSelected(win, tab);
     ReadingAutoScrollHideBar(win);
     CloseMeasurement(win);
     ReadingBarCancelDrag(win);
@@ -10741,6 +10743,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         if (len(filePath) > 0) {
             LoadDocument(win, filePath);
         }
+        return 0;
+    }
+
+    if (StripGroupCmd(win, tab, invokedCmdId)) {
         return 0;
     }
 
@@ -17490,13 +17496,18 @@ ContinueOpenWindow:
                 }
             }
             int restored = 0;
+            StripGroupRestore groupsRestore;
             for (TabState* state : *data->tabStates) {
                 if (len(state->filePath) == 0) {
                     logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
                     continue;
                 }
                 restored++;
+                int nTabsBefore = win->TabCount();
                 RestoreTabOnStartup(win, state, gSettings->lazyLoading, restored != nRestore);
+                if (win->TabCount() > nTabsBefore) {
+                    StripGroupRestoreTab(win, win->GetTab(win->TabCount() - 1), state, groupsRestore);
+                }
             }
             win->currentTabTemp = nullptr;
             // a browser-view (CHM / markdown) tab loads synchronously and is
@@ -17543,6 +17554,7 @@ ContinueOpenWindow:
                 }
                 TabsSelect(win, selectIdx);
             }
+            StripGroupRestoreDone(win, groupsRestore);
             if (gSettings->lazyLoading) {
                 // trigger loading of the document
                 ReloadDocument(win, false);

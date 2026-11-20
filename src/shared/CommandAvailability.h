@@ -78,6 +78,10 @@ struct AppCommandCtx {
     bool canCloseOtherTabs = false;
     bool canCloseTabsToRight = false;
     bool canCloseTabsToLeft = false;
+    // ctx.tab can be in a strip group / is in one / groups it could join
+    bool tabCanGroup = false;
+    bool tabInGroup = false;
+    int nOtherStripGroups = 0;
 
     // the document's own permission (orig's MenuUpdatePrintItem)
     bool allowsPrinting = true;

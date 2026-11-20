@@ -1510,6 +1510,8 @@ export const targets: Target[] = [
       "src/ng/WindowTab.cpp",
       "src/ng/Tabs.cpp",
       "src/ng/TabsCommon.cpp",
+      "src/ng/StripGroups.cpp",
+      "src/ng/StripGroupDialog.cpp",
       "src/ng/TabGroupsManage.cpp",
       "src/ng/SessionState.cpp",
       "src/ng/Menu.cpp",

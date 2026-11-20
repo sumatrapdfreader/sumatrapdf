@@ -396,6 +396,14 @@ const commandsRaw = [
     "CmdCaretDocStart", "Move Caret To Document Start",
     "CmdCaretDocEnd", "Move Caret To Document End",
     "CmdEditAnnotationText", "Edit Annotation Text",
+    "CmdStripGroupNew", "Add Tab to New Group",
+    "CmdStripGroupAddTab", "Add Tab to Group",
+    "CmdStripGroupRemoveTab", "Remove Tab from Group",
+    "CmdStripGroupToggle", "Collapse / Expand Group",
+    "CmdStripGroupRename", "Rename Group...",
+    "CmdStripGroupColor", "Change Group Color",
+    "CmdStripGroupUngroup", "Ungroup Tabs",
+    "CmdStripGroupClose", "Close Group",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

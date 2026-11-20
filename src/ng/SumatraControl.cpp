@@ -117,6 +117,7 @@
 #include "gui/NativeCursors.h"
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
+#include "StripGroups.h"
 #include "BrightnessContrastDialogCommon.h"
 #include "OpenFromUrlCommon.h"
 
@@ -683,6 +684,9 @@ enum class ControlCmd : u16 {
     TestDocErrors = 167,
     // [pageNo, idx, value]: pick value in the idx-th combo / list box
     TestSetFormChoice = 168,
+    // [action, a, b, c]: "drop" from to groupPos, "move" dir, "select" idx, or
+    // "" for the state; answers with the strip groups and tabs (StripGroupsStateTemp)
+    TestStripGroups = 169,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1959,6 +1963,31 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestStripGroups: {
+            if (len(gWindows) == 0 || !gWindows[0]) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            MainWindow* win = gWindows[0];
+            Str action = StringArg(req, 0);
+            i32 a = 0;
+            i32 b = 0;
+            i32 c = 0;
+            IntArg(req, 1, a);
+            IntArg(req, 2, b);
+            IntArg(req, 3, c);
+            if (str::Eq(action, StrL("drop"))) {
+                int groupId = (c >= 1 && c <= len(win->stripGroups)) ? win->stripGroups[c - 1]->id : 0;
+                StripGroupDropTab(win, a, b, groupId);
+            } else if (str::Eq(action, StrL("move"))) {
+                StripGroupMoveTab(win, a);
+            } else if (str::Eq(action, StrL("select")) && a >= 0 && a < win->TabCount()) {
+                TabsSelect(win, a);
+            }
+            AppendTestResult(req, 0, StripGroupsStateTemp(win));
             break;
         }
 

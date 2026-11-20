@@ -563,6 +563,20 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (CmdCloseTabsToTheLeft == cmdId) {
         return ctx.canCloseTabsToLeft ? CommandVisibility::Show : CommandVisibility::Hide;
     }
+    int groupCmdId = origCmdId ? origCmdId : cmdId;
+    if (groupCmdId == CmdStripGroupNew) {
+        return ctx.tabCanGroup ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
+    if (groupCmdId == CmdStripGroupAddTab) {
+        // the bare command has no group to add to: menus make one per group
+        bool ok = origCmdId && ctx.tabCanGroup && ctx.nOtherStripGroups > 0;
+        return ok ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
+    if (groupCmdId == CmdStripGroupRemoveTab || groupCmdId == CmdStripGroupToggle ||
+        groupCmdId == CmdStripGroupRename || groupCmdId == CmdStripGroupColor || groupCmdId == CmdStripGroupUngroup ||
+        groupCmdId == CmdStripGroupClose) {
+        return ctx.tabInGroup ? CommandVisibility::Show : CommandVisibility::Hide;
+    }
     if (CmdReopenLastClosedFile == cmdId) {
         return RecentlyCloseDocumentsCount() > 0 ? CommandVisibility::Show : CommandVisibility::Hide;
     }

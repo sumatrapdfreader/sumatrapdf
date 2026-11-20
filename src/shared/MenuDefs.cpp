@@ -1314,6 +1314,19 @@ MenuDef menuDefContextTab[] = {
         StrL(kMenuSeparator),
         0,
     },
+    // each app puts an "Add Tab to Group" submenu after this one
+    {
+        TrN("Add Tab to New Group"),
+        CmdStripGroupNew,
+    },
+    {
+        TrN("Remove Tab from Group"),
+        CmdStripGroupRemoveTab,
+    },
+    {
+        StrL(kMenuSeparator),
+        0,
+    },
     {
         TrN("Save Tab Group"),
         CmdTabGroupSave,
@@ -1321,6 +1334,35 @@ MenuDef menuDefContextTab[] = {
     {
         TrN("Restore Tab Group"),
         CmdTabGroupRestore,
+    },
+    {
+        {},
+        0,
+    },
+};
+
+// right-click on a strip group's chip
+MenuDef menuDefStripGroup[] = {
+    {
+        TrN("Rename Group..."),
+        CmdStripGroupRename,
+    },
+    // each app puts a "Group Color" submenu after this one
+    {
+        TrN("Collapse Group"),
+        CmdStripGroupToggle,
+    },
+    {
+        StrL(kMenuSeparator),
+        0,
+    },
+    {
+        TrN("Ungroup"),
+        CmdStripGroupUngroup,
+    },
+    {
+        TrN("Close Group"),
+        CmdStripGroupClose,
     },
     {
         {},

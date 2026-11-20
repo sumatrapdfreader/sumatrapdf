@@ -41,6 +41,7 @@
 #include "AIChatPanel.h"
 #include "OverlayScrollbar.h"
 #include "MainWindow.h"
+#include "StripGroups.h"
 #include "Selection.h"
 #include "SearchAndDDECommon.h"
 #include "WindowTab.h"
@@ -326,6 +327,7 @@ MainWindow::MainWindow(gpui::Window* w) {
 
 MainWindow::~MainWindow() {
     isBeingClosed = true;
+    StripGroupsDelete(this);
     FinishStressTest(this);
     // the find / count workers hold this window; join them before it goes away
     AbortFinding(this, true);

@@ -216,6 +216,8 @@ export const sharedFiles = [
   "src/shared/TableOfContentsCommon.h",
   "src/shared/TabsCommon.cpp",
   "src/shared/TabsCommon.h",
+  "src/shared/StripGroups.cpp",
+  "src/shared/StripGroups.h",
   "src/shared/TipLink.h",
   "src/shared/ToolbarCommon.cpp",
   "src/shared/ToolbarCommon.h",

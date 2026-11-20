@@ -395,6 +395,14 @@ const CommandInfo gCommands[] = {
     {CmdCaretDocStart, "CmdCaretDocStart\0", StrL("Move Caret To Document Start")},
     {CmdCaretDocEnd, "CmdCaretDocEnd\0", StrL("Move Caret To Document End")},
     {CmdEditAnnotationText, "CmdEditAnnotationText\0", StrL("Edit Annotation Text")},
+    {CmdStripGroupNew, "CmdStripGroupNew\0", StrL("Add Tab to New Group")},
+    {CmdStripGroupAddTab, "CmdStripGroupAddTab\0", StrL("Add Tab to Group")},
+    {CmdStripGroupRemoveTab, "CmdStripGroupRemoveTab\0", StrL("Remove Tab from Group")},
+    {CmdStripGroupToggle, "CmdStripGroupToggle\0", StrL("Collapse / Expand Group")},
+    {CmdStripGroupRename, "CmdStripGroupRename\0", StrL("Rename Group...")},
+    {CmdStripGroupColor, "CmdStripGroupColor\0", StrL("Change Group Color")},
+    {CmdStripGroupUngroup, "CmdStripGroupUngroup\0", StrL("Ungroup Tabs")},
+    {CmdStripGroupClose, "CmdStripGroupClose\0", StrL("Close Group")},
 };
 const int gCommandsCount = dimofi(gCommands);
 
@@ -527,6 +535,11 @@ static const ArgSpec argSpecs[] = {
     // a favorite in the Favorites menu, e.g. [CmdFavorite C:\dir\file.pdf page=3]
     {CmdFavorite, kCmdArgFilePath, CommandArg::Type::String}, // default
     {CmdFavorite, kCmdArgPage, CommandArg::Type::String},
+
+    // 1-based position of the group in the tab strip, e.g. [CmdStripGroupAddTab 2]
+    {CmdStripGroupAddTab, kCmdArgN, CommandArg::Type::Int}, // default
+    // without a color it moves to the next one, e.g. [CmdStripGroupColor #1a73e8]
+    {CmdStripGroupColor, kCmdArgColor, CommandArg::Type::Color}, // default
 
     {CmdNone, StrL(""), CommandArg::Type::None}, // sentinel
 };
