@@ -28036,6 +28036,12 @@ float WheelNotchPixels(const App* app) {
     return kWheelScrollLines * RuntimeStyleNow(app).fontSize * kLineHeight;
 }
 
+TempStr WindowCaptureOkTemp(int pxW, int pxH, float scale, int windows,
+                            int webviews) {
+    return fmt("OK w=%d h=%d scale=%g windows=%d webviews=%d pending=%d", pxW,
+               pxH, (double)scale, windows, webviews, webviews > 0 ? 1 : 0);
+}
+
 }
 
 #line 1 "src/base/accordion.cpp"
@@ -246539,6 +246545,80 @@ float WindowScaleFactor(Window*) {
     return 1;
 }
 
+static bool CaptureFrameRect(Window* w, int* x, int* y) {
+    PlatWindow* pw = w ? w->plat : nullptr;
+    if (!gDpy || !pw || !pw->back) {
+        return false;
+    }
+    XWindowAttributes attrs = {};
+    if (!XGetWindowAttributes(gDpy, pw->xwin, &attrs) ||
+        attrs.map_state != IsViewable) {
+        return false;
+    }
+    XWindow child = 0;
+    return XTranslateCoordinates(gDpy, pw->xwin, gRoot, 0, 0, x, y, &child);
+}
+
+TempStr WindowCapturePngTemp(Window* win, Str path, bool allWindows) {
+    int mainX = 0;
+    int mainY = 0;
+    if (!CaptureFrameRect(win, &mainX, &mainY)) {
+        return StrL("ERR no-window");
+    }
+    if (len(path) == 0) {
+        return StrL("ERR no-path");
+    }
+    Vec<Window*> wins;
+    VecAppend(wins, win);
+    if (allWindows) {
+        for (int i = 0; i < len(win->app->windows); i++) {
+            Window* w = win->app->windows[i];
+            if (w != win) {
+                VecAppend(wins, w);
+            }
+        }
+    }
+
+    Vec<Point> origins;
+    int x0 = mainX;
+    int y0 = mainY;
+    int x1 = mainX + win->plat->pxW;
+    int y1 = mainY + win->plat->pxH;
+    Vec<Window*> shots;
+    for (int i = 0; i < len(wins); i++) {
+        int x = 0;
+        int y = 0;
+        if (!CaptureFrameRect(wins[i], &x, &y)) {
+            continue;
+        }
+        PlatWindow* pw = wins[i]->plat;
+        x0 = std::min(x0, x);
+        y0 = std::min(y0, y);
+        x1 = std::max(x1, x + pw->pxW);
+        y1 = std::max(y1, y + pw->pxH);
+        VecAppend(shots, wins[i]);
+        VecAppend(origins, Point{(float)x, (float)y});
+    }
+
+    int w = x1 - x0;
+    int h = y1 - y0;
+    cairo_surface_t* out = cairo_image_surface_create(CAIRO_FORMAT_RGB24, w, h);
+    cairo_t* cr = cairo_create(out);
+    for (int i = 0; i < len(shots); i++) {
+        cairo_set_source_surface(cr, shots[i]->plat->back, origins[i].x - x0,
+                                 origins[i].y - y0);
+        cairo_paint(cr);
+    }
+    cairo_destroy(cr);
+    cairo_surface_flush(out);
+    cairo_status_t st = cairo_surface_write_to_png(out, StrDupTemp(path).s);
+    cairo_surface_destroy(out);
+    if (st != CAIRO_STATUS_SUCCESS) {
+        return StrL("ERR write");
+    }
+    return WindowCaptureOkTemp(w, h, 1, len(shots), 0);
+}
+
 void AppActivate(Window* win) {
     if (!win || !win->plat) {
         return;
@@ -248385,6 +248465,201 @@ float WindowScaleFactor(Window* win) {
     }
     float scale = (float)[win->plat->window backingScaleFactor];
     return scale > 0 ? scale : 1;
+}
+
+constexpr double kCaptureWebSnapshotTimeoutSec = 5;
+
+static void CaptureCollectWebViews(NSView* view,
+                                   NSMutableArray<WKWebView*>* out) {
+    for (NSView* sub in view.subviews) {
+        if ([sub isKindOfClass:[WKWebView class]]) {
+            [out addObject:(WKWebView*)sub];
+            continue;
+        }
+        CaptureCollectWebViews(sub, out);
+    }
+}
+
+static NSBitmapImageRep* CaptureView(NSView* view,
+                                     NSMutableArray<WKWebView*>* webs,
+                                     NSMutableArray<NSValue*>* webRects) {
+    NSRect b = view.bounds;
+    if (b.size.width <= 0 || b.size.height <= 0) {
+        return nil;
+    }
+    NSBitmapImageRep* rep = [view bitmapImageRepForCachingDisplayInRect:b];
+    if (!rep) {
+        return nil;
+    }
+    [view cacheDisplayInRect:b toBitmapImageRep:rep];
+    NSMutableArray<WKWebView*>* found = [NSMutableArray array];
+    CaptureCollectWebViews(view, found);
+    for (WKWebView* web in found) {
+        if (web.hiddenOrHasHiddenAncestor || web.bounds.size.width <= 0 ||
+            web.bounds.size.height <= 0) {
+            continue;
+        }
+        NSRect r = [web convertRect:web.bounds toView:nil];
+        [webs addObject:web];
+        [webRects addObject:[NSValue valueWithRect:[web.window
+                                                       convertRectToScreen:r]]];
+    }
+    return rep;
+}
+
+static bool CaptureWritePng(NSBitmapImageRep* rep, NSString* dst) {
+    NSData* png =
+        [rep representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
+    return png && [png writeToFile:dst atomically:YES];
+}
+
+static void CaptureDrawWebViewsThenWrite(NSBitmapImageRep* out,
+                                         NSPoint outOrigin,
+                                         NSArray<WKWebView*>* webs,
+                                         NSArray<NSValue*>* webRects,
+                                         NSString* dst) {
+    __block NSUInteger left = webs.count;
+    __block bool written = false;
+    void (^finish)(void) = ^{
+      if (!written) {
+          written = true;
+          CaptureWritePng(out, dst);
+      }
+    };
+    for (NSUInteger i = 0; i < webs.count; i++) {
+        NSRect r = webRects[i].rectValue;
+        r.origin.x -= outOrigin.x;
+        r.origin.y -= outOrigin.y;
+        [webs[i]
+            takeSnapshotWithConfiguration:nil
+                        completionHandler:^(NSImage* img, NSError*) {
+                          if (img && !written) {
+                              NSGraphicsContext* gc = [NSGraphicsContext
+                                  graphicsContextWithBitmapImageRep:out];
+                              [NSGraphicsContext saveGraphicsState];
+                              [NSGraphicsContext setCurrentContext:gc];
+                              [img drawInRect:r
+                                     fromRect:NSZeroRect
+                                    operation:NSCompositingOperationSourceOver
+                                     fraction:1];
+                              [NSGraphicsContext restoreGraphicsState];
+                          }
+                          if (--left == 0) {
+                              finish();
+                          }
+                        }];
+    }
+
+    dispatch_after(
+        dispatch_time(DISPATCH_TIME_NOW,
+                      (int64_t)(kCaptureWebSnapshotTimeoutSec * NSEC_PER_SEC)),
+        dispatch_get_main_queue(), finish);
+}
+
+static NSArray<NSWindow*>* CaptureWindowList(NSWindow* main, bool all) {
+    if (!all) {
+        return @[ main ];
+    }
+    NSMutableArray<NSWindow*>* out = [NSMutableArray array];
+    for (NSWindow* w in [[NSApp orderedWindows] reverseObjectEnumerator]) {
+        if (!w.isVisible || !w.contentView || w.isMiniaturized) {
+            continue;
+        }
+        if (w != main && w.parentWindow != main &&
+            w.level < NSNormalWindowLevel) {
+            continue;
+        }
+        [out addObject:w];
+    }
+    if (![out containsObject:main]) {
+        [out insertObject:main atIndex:0];
+    }
+    return out;
+}
+
+TempStr WindowCapturePngTemp(Window* win, Str path, bool allWindows) {
+    NSView* mainView = (win && win->plat) ? win->plat->view : nil;
+    if (!mainView || !mainView.window) {
+        return StrL("ERR no-window");
+    }
+    if (len(path) == 0) {
+        return StrL("ERR no-path");
+    }
+    @autoreleasepool {
+        NSArray<NSWindow*>* wins =
+            CaptureWindowList(mainView.window, allWindows);
+        float scale = WindowScaleFactor(win);
+
+        NSMutableArray<NSBitmapImageRep*>* reps = [NSMutableArray array];
+        NSMutableArray<NSValue*>* rects = [NSMutableArray array];
+        NSRect total = NSZeroRect;
+        NSMutableArray<WKWebView*>* webs = [NSMutableArray array];
+        NSMutableArray<NSValue*>* webRects = [NSMutableArray array];
+        for (NSWindow* w in wins) {
+            NSView* v = w == mainView.window
+                            ? mainView
+                            : (w.contentView.superview ?: w.contentView);
+            NSBitmapImageRep* rep = CaptureView(v, webs, webRects);
+            if (!rep) {
+                continue;
+            }
+            NSRect r =
+                [w convertRectToScreen:[v convertRect:v.bounds toView:nil]];
+            [reps addObject:rep];
+            [rects addObject:[NSValue valueWithRect:r]];
+            total = reps.count == 1 ? r : NSUnionRect(total, r);
+        }
+        if (reps.count == 0) {
+            return StrL("ERR empty");
+        }
+
+        NSBitmapImageRep* out = reps[0];
+        if (reps.count > 1) {
+            NSInteger pxW = (NSInteger)ceil(total.size.width * scale);
+            NSInteger pxH = (NSInteger)ceil(total.size.height * scale);
+            out = [[NSBitmapImageRep alloc]
+                initWithBitmapDataPlanes:nullptr
+                              pixelsWide:pxW
+                              pixelsHigh:pxH
+                           bitsPerSample:8
+                         samplesPerPixel:4
+                                hasAlpha:YES
+                                isPlanar:NO
+                          colorSpaceName:NSCalibratedRGBColorSpace
+                             bytesPerRow:0
+                            bitsPerPixel:0];
+            out.size = total.size;
+            NSGraphicsContext* gc =
+                [NSGraphicsContext graphicsContextWithBitmapImageRep:out];
+            [NSGraphicsContext saveGraphicsState];
+            [NSGraphicsContext setCurrentContext:gc];
+            for (NSUInteger i = 0; i < reps.count; i++) {
+                NSRect r = rects[i].rectValue;
+                r.origin.x -= total.origin.x;
+                r.origin.y -= total.origin.y;
+                [reps[i] drawInRect:r];
+            }
+            [NSGraphicsContext restoreGraphicsState];
+        }
+
+        NSString* dst = [[NSString alloc] initWithBytes:path.s
+                                                 length:(NSUInteger)len(path)
+                                               encoding:NSUTF8StringEncoding];
+        if (!dst) {
+            return StrL("ERR path");
+        }
+        [[NSFileManager defaultManager] removeItemAtPath:dst error:nil];
+        int nWeb = (int)webs.count;
+        if (nWeb > 0) {
+            NSPoint origin =
+                reps.count > 1 ? total.origin : rects[0].rectValue.origin;
+            CaptureDrawWebViewsThenWrite(out, origin, webs, webRects, dst);
+        } else if (!CaptureWritePng(out, dst)) {
+            return StrL("ERR write");
+        }
+        return WindowCaptureOkTemp((int)out.pixelsWide, (int)out.pixelsHigh,
+                                   scale, (int)reps.count, nWeb);
+    }
 }
 
 void AppActivate(Window* win) {
@@ -251315,6 +251590,190 @@ bool WindowClientDecorated(Window* win) {
 
 float WindowScaleFactor(Window* win) {
     return win && win->paint.dpi > 0 ? win->paint.dpi / 96.f : 1.f;
+}
+
+constexpr UINT kPwClientOnly = 0x1;
+constexpr UINT kPwRenderFullContent = 0x2;
+
+struct CaptureShot {
+    HWND hwnd;
+    RECT r;
+    bool clientOnly;
+};
+
+struct CaptureEnum {
+    HWND main;
+    DWORD pid;
+    Vec<CaptureShot>* shots;
+};
+
+static bool CaptureShotFor(HWND hwnd, bool clientOnly, CaptureShot* out) {
+    RECT r = {};
+    if (clientOnly) {
+        GetClientRect(hwnd, &r);
+        MapWindowPoints(hwnd, nullptr, (POINT*)&r, 2);
+    } else {
+        GetWindowRect(hwnd, &r);
+    }
+    if (r.right <= r.left || r.bottom <= r.top) {
+        return false;
+    }
+    *out = {hwnd, r, clientOnly};
+    return true;
+}
+
+static BOOL CALLBACK CaptureEnumProc(HWND hwnd, LPARAM lp) {
+    auto* e = (CaptureEnum*)lp;
+    DWORD pid = 0;
+    GetWindowThreadProcessId(hwnd, &pid);
+    if (hwnd == e->main || pid != e->pid || !IsWindowVisible(hwnd) ||
+        IsIconic(hwnd)) {
+        return TRUE;
+    }
+    CaptureShot shot = {};
+    if (CaptureShotFor(hwnd, false, &shot)) {
+        VecAppend(*e->shots, shot);
+    }
+    return TRUE;
+}
+
+static bool CaptureWritePng(Str path, const void* bits, int w, int h) {
+    IWICImagingFactory* wic = nullptr;
+    IWICStream* stream = nullptr;
+    IWICBitmapEncoder* enc = nullptr;
+    IWICBitmapFrameEncode* frame = nullptr;
+    HRESULT hr =
+        CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                         __uuidof(IWICImagingFactory), (void**)&wic);
+    if (SUCCEEDED(hr)) {
+        hr = wic->CreateStream(&stream);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = stream->InitializeFromFilename(ToCWstrTemp(path), GENERIC_WRITE);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = wic->CreateEncoder(GUID_ContainerFormatPng, nullptr, &enc);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = enc->Initialize(stream, WICBitmapEncoderNoCache);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = enc->CreateNewFrame(&frame, nullptr);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = frame->Initialize(nullptr);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = frame->SetSize((UINT)w, (UINT)h);
+    }
+    WICPixelFormatGUID pixFmt = GUID_WICPixelFormat32bppBGRA;
+    if (SUCCEEDED(hr)) {
+        hr = frame->SetPixelFormat(&pixFmt);
+    }
+    if (SUCCEEDED(hr) && !IsEqualGUID(pixFmt, GUID_WICPixelFormat32bppBGRA)) {
+        hr = E_FAIL;
+    }
+    UINT stride = (UINT)w * 4;
+    if (SUCCEEDED(hr)) {
+        hr = frame->WritePixels((UINT)h, stride, stride * (UINT)h, (BYTE*)bits);
+    }
+    if (SUCCEEDED(hr)) {
+        hr = frame->Commit();
+    }
+    if (SUCCEEDED(hr)) {
+        hr = enc->Commit();
+    }
+    if (frame) {
+        frame->Release();
+    }
+    if (enc) {
+        enc->Release();
+    }
+    if (stream) {
+        stream->Release();
+    }
+    if (wic) {
+        wic->Release();
+    }
+    return SUCCEEDED(hr);
+}
+
+TempStr WindowCapturePngTemp(Window* win, Str path, bool allWindows) {
+    HWND main = Hwnd(win);
+    if (!main || IsIconic(main)) {
+        return StrL("ERR no-window");
+    }
+    if (len(path) == 0) {
+        return StrL("ERR no-path");
+    }
+
+    Vec<CaptureShot> shots;
+    CaptureShot mainShot = {};
+    if (!CaptureShotFor(main, true, &mainShot)) {
+        return StrL("ERR empty");
+    }
+    VecAppend(shots, mainShot);
+    if (allWindows) {
+        Vec<CaptureShot> others;
+        CaptureEnum e = {main, GetCurrentProcessId(), &others};
+        EnumWindows(CaptureEnumProc, (LPARAM)&e);
+        for (int i = len(others) - 1; i >= 0; i--) {
+            VecAppend(shots, others[i]);
+        }
+    }
+    RECT total = shots[0].r;
+    for (int i = 1; i < len(shots); i++) {
+        UnionRect(&total, &total, &shots[i].r);
+    }
+    int w = total.right - total.left;
+    int h = total.bottom - total.top;
+
+    void* bits = nullptr;
+    HBITMAP canvas = WinDib32New(w, h, &bits);
+    if (!canvas) {
+        return StrL("ERR alloc");
+    }
+    HDC canvasDc = CreateCompatibleDC(nullptr);
+    HGDIOBJ canvasOld = SelectObject(canvasDc, canvas);
+    int captured = 0;
+    for (int i = 0; i < len(shots); i++) {
+        const CaptureShot& s = shots[i];
+        int sw = s.r.right - s.r.left;
+        int sh = s.r.bottom - s.r.top;
+        void* shotBits = nullptr;
+        HBITMAP bmp = WinDib32New(sw, sh, &shotBits);
+        if (!bmp) {
+            continue;
+        }
+        HDC dc = CreateCompatibleDC(nullptr);
+        HGDIOBJ old = SelectObject(dc, bmp);
+        UINT flags = kPwRenderFullContent | (s.clientOnly ? kPwClientOnly : 0);
+        if (PrintWindow(s.hwnd, dc, flags)) {
+            BitBlt(canvasDc, s.r.left - total.left, s.r.top - total.top, sw, sh,
+                   dc, 0, 0, SRCCOPY);
+            captured++;
+        }
+        SelectObject(dc, old);
+        DeleteDC(dc);
+        DeleteObject(bmp);
+    }
+    GdiFlush();
+    SelectObject(canvasDc, canvasOld);
+    DeleteDC(canvasDc);
+
+    auto* px = (uint8_t*)bits;
+    for (int i = 0; i < w * h; i++) {
+        px[i * 4 + 3] = 0xff;
+    }
+    bool ok = captured > 0 && CaptureWritePng(path, bits, w, h);
+    DeleteObject(canvas);
+    if (captured == 0) {
+        return StrL("ERR empty");
+    }
+    if (!ok) {
+        return StrL("ERR write");
+    }
+    return WindowCaptureOkTemp(w, h, WindowScaleFactor(win), captured, 0);
 }
 
 void AppActivate(Window* win) {

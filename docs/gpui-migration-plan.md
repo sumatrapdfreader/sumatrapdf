@@ -18,6 +18,31 @@ ng keeps OS code that a UI framework should own. Each item moves it into
 4. Commit + push gpui-kit-cpp, `bun cmd/update-dist.ts`,
    `bun cmd/ng-update-gpui.ts`, rebuild, retest, commit ng.
 
+## Working notes
+
+- Bash heredocs drop backslashes: write edit scripts or C++ with the Write
+  tool. Python on Windows: `open(p, newline='', encoding='utf-8')`.
+- `El` has a size budget (`static_assert` after `struct El`); put rarely set
+  fields in `ElLifecycle`. Listener handlers take `const E*`; `const_cast` to
+  clear `propagate`.
+- gpui builds: Windows `bun cmd/test.ts -dbg`; Mac `bun cmd/mac-build.ts -dbg
+  tests` (force-pushes scratch branch `mac-build-tmp`; allowed), then
+  `ssh kjk@macbook-pro-14 'cd ~/src/gpui-cpp && ./out/mac/dbg/tests'`; Linux
+  `wsl -e bash -lc 'cd /mnt/c/Users/kjk/src/gpui-kit-cpp && ~/.bun/bin/bun
+  cmd/build.ts -dbg tests && ./out/linux/dbg/tests'`; wasm
+  `EMSDK=C:/Users/kjk/src/sumatrapdf/.work/emsdk bun cmd/build.ts -rel -wasm
+  hello_world`; Android `bun cmd/mobile-build.ts -android -rel`; iOS
+  `bun cmd/mac-build.ts -ios -rel`.
+- ng builds: `bun cmd/ng-build.ts -dbg` (Windows), `-wasm -dbg`, `-linux -dbg`
+  (WSL). Mac: `git bundle create b <mac HEAD>..HEAD`, `git diff HEAD
+  --binary`, scp both, `git clone --shared ~/src/sumatrapdf /tmp/x`, fetch
+  bundle, apply diff, `~/.bun/bin/bun cmd/ng-build.ts -dbg`; delete /tmp/x
+  after. Tests: `bun tests/<name>.ts -ng --no-build`; on the Mac
+  `-exe out/mac/dbg/SumatraPDF`.
+- A locked session makes window captures blank: pixel tests fail with
+  nothing on screen. Not a regression.
+- Agents never commit, push or run `update-dist.ts` without `-no-publish`.
+
 ## Items
 
 | # | ng code | gpui API (Rust name) | Notes |

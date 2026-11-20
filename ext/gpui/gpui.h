@@ -10033,6 +10033,15 @@ void AppMenuClear(App* app);
 void AppActivate(Window* win);
 
 float WindowScaleFactor(Window* win);
+
+#if GPUI_OS_WASM
+inline TempStr WindowCapturePngTemp(Window* win, Str path, bool allWindows) {
+    (void)win, (void)path, (void)allWindows;
+    return StrL("ERR unsupported");
+}
+#else
+TempStr WindowCapturePngTemp(Window* win, Str path, bool allWindows);
+#endif
 void AppMinimize(Window* win);
 void AppToggleMaximize(Window* win);
 
@@ -38940,6 +38949,9 @@ void WindowDrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
                      float dipH);
 
 void WindowDrawFrameHeadless(Window* win, float dipW, float dipH);
+
+TempStr WindowCaptureOkTemp(int pxW, int pxH, float scale, int windows,
+                            int webviews);
 
 TempStr PlatPreferredLocaleTemp();
 

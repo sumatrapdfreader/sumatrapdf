@@ -160,7 +160,6 @@ void AppShellToggleDpiOverride();
 #if OS_DARWIN
 void AppShellHandleOpenDocs(gpui::App* app);
 void AppShellOpenDocsReady();
-TempStr AppShellCaptureWindowTemp(MainWindow* win, Str path, Str mode);
 #endif
 #if OS_DARWIN || OS_WIN
 void AppShellMakeKeyWindow(MainWindow* win);

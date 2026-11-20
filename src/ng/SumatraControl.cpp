@@ -14,7 +14,7 @@
 // so the rest can be filled in later; an unimplemented one answers
 // "NOTPORTED <n>" instead of silently doing nothing.
 
-#include "base/Base.h"
+#include "gui/GpuiBridge.h"
 #include "base/Pixmap.h"
 #include "base/UITask.h"
 #include "base/File.h"
@@ -2001,17 +2001,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestCaptureWindow: {
-#if OS_DARWIN
             Str path = StringArg(req, 0);
             if (len(path) == 0) {
                 AppendError(req, StrL("TestCaptureWindow expects string path [, string mode]"));
                 break;
             }
-            Str res = AppShellCaptureWindowTemp(FirstWindow(), path, StringArg(req, 1));
+            MainWindow* win = FirstWindow();
+            bool all = str::Eq(StringArg(req, 1), StrL("all"));
+            Str res = FromGpui(gp::WindowCapturePngTemp(win ? win->gpuiWin : nullptr, ToGpui(path), all));
             AppendTestResult(req, str::StartsWith(res, StrL("OK")) ? 0 : 1, res);
-#else
-            AppendTestResult(req, 1, StrL("NOTPORTED 170"));
-#endif
             break;
         }
 
