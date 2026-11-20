@@ -9837,6 +9837,18 @@ void OpenUrl(Str url);
 
 void OpenPath(Str path);
 
+struct PathFilter {
+    Str name = {};
+    Str patterns = {};
+};
+
+struct PathFilters {
+    const PathFilter* items = nullptr;
+    int32_t count = 0;
+    int32_t index = 0;
+    int32_t* chosen = nullptr;
+};
+
 struct PathPrompt {
 
     bool files = true;
@@ -9845,9 +9857,23 @@ struct PathPrompt {
     bool multiple = false;
 
     Str title = {};
+
+    PathFilters filters = {};
+    Str directory = {};
+    Str fileName = {};
+};
+
+struct NewPathPrompt {
+    Str directory = {};
+    Str suggestedName = {};
+    Str title = {};
+    PathFilters filters = {};
+    Str defaultExt = {};
 };
 
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts);
+
+TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts);
 
 enum class PromptLevel : uint8_t {
     Info,
@@ -39289,6 +39315,12 @@ inline void PlatSetMenuBarVisible(bool visible) {
 #endif
 
 void AppMenuChosen(int id);
+
+bool PathPatternExts(Str patterns, Vec<Str>* exts);
+
+TempStr PathWithDefaultExtTemp(Str path, Str ext);
+
+TempStr PathDropRepeatedExtTemp(Str path);
 
 }
 

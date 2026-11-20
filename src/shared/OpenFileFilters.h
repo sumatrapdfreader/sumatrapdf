@@ -1,7 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// --- shared by OpenFileFilters_win.cpp and orig's SumatraPDF.cpp and ng's gui/NativeFileDlg_win.cpp ---
+// --- shared by OpenFileFilters_win.cpp and orig's SumatraPDF.cpp and ng's gui/NativeFileDlg.cpp ---
 
 // File-type filters for IFileOpenDialog. Heap-owned wide strings stay alive
 // for the whole Show() call (modal dialog pumps messages / temp arena).

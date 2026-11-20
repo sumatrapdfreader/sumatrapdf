@@ -1,11 +1,11 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: gpui has no save-file prompt (PathPrompt opens only), so this is the
-// port's stand-in for win32's GetSaveFileNameW: a dialog with the directory it
-// is in, the sub-directories and matching files in it, and a file-name field.
-// Every save-as in the port goes through ShowSavePathDialog(), which on
-// Windows shows orig's dialog instead (gui/NativeFileDlg_win.cpp).
+// ng: the port's stand-in for win32's GetSaveFileNameW: a dialog with the
+// directory it is in, the sub-directories and matching files in it, and a
+// file-name field. Every save-as in the port goes through ShowSavePathDialog(),
+// which on Windows shows gpui's native save prompt instead
+// (gui/NativeFileDlg.cpp).
 
 #include "gui/GpuiBridge.h"
 

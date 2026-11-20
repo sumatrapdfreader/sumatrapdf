@@ -1252,28 +1252,15 @@ bool AppShellPickFileAsync(MainWindow* win, Str title, Str filter, const Func1<S
 }
 
 // ng: the same open prompt with a caller-chosen title (a certificate, an
-// image); gpui's PathPrompt has no file-type filter
+// image)
 TempStr AppShellPromptForPathTemp(MainWindow* win, Str title, Str filter, Str initialPath) {
-    if (!win || !win->gpuiWin) {
+    // orig's GetOpenFileNameW on Windows has no title of its own
+    Str shown = NativeFileDlgEnabled() ? Str{} : (len(title) > 0 ? title : Tr("Open"));
+    StrVec paths;
+    if (!NativeOpenFileDlg(win, shown, filter, initialPath, false, &paths)) {
         return {};
     }
-#if OS_WIN
-    if (NativeFileDlgEnabled()) {
-        // orig's GetOpenFileNameW, which has no title of its own
-        StrVec paths;
-        if (!NativeOpenFileDlg(win, filter, initialPath, false, &paths)) {
-            return {};
-        }
-        return str::DupTemp(paths[0]);
-    }
-#endif
-    (void)filter;
-    (void)initialPath;
-    gp::PathPrompt prompt;
-    prompt.files = true;
-    prompt.title = ToGpui(len(title) > 0 ? title : Tr("Open"));
-    gp::TempStr path = gp::PromptForPathTemp(win->gpuiWin, prompt);
-    return str::DupTemp(FromGpui(path));
+    return str::DupTemp(paths[0]);
 }
 
 // a folder, with gpui's prompt (it has no initial folder)
@@ -1443,16 +1430,14 @@ TempStr AppShellPromptForFileTemp(MainWindow* win) {
 #endif
 }
 
-// ng: gpui's prompt answers one path (see "gpui gaps"); Windows' own dialog
-// has orig's OFN_ALLOWMULTISELECT
+// orig's OFN_ALLOWMULTISELECT. ng: the browser's picker answers one path
 bool AppShellPromptForFiles(MainWindow* win, Str filter, StrVec* pathsOut) {
     if (!win || !win->gpuiWin) {
         return false;
     }
-#if OS_WIN
-    if (NativeFileDlgEnabled()) {
-        return NativeOpenFileDlg(win, filter, {}, true, pathsOut);
-    }
+#if !OS_WASM
+    Str title = NativeFileDlgEnabled() ? Str{} : Tr("Open");
+    return NativeOpenFileDlg(win, title, filter, {}, true, pathsOut);
 #endif
     (void)filter;
     TempStr path = AppShellPromptForFileTemp(win);

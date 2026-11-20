@@ -28431,6 +28431,73 @@ void AppSetFallbackPrompts(App* app, bool always) {
     }
 }
 
+bool PathPatternExts(Str patterns, Vec<Str>* exts) {
+    int start = len(*exts);
+    int n = len(patterns);
+    for (int i = 0; i <= n;) {
+        int end = i;
+        while (end < n && patterns.s[end] != ';') {
+            end++;
+        }
+        Str pat = StrTrimAscii(Str(patterns.s + i, end - i));
+        i = end + 1;
+        if (StrEq(pat, "*") || StrEq(pat, "*.*")) {
+            VecResize(*exts, start);
+            return false;
+        }
+        if (len(pat) > 2 && StrStartsWith(pat, "*.")) {
+            VecAppend(*exts, Str(pat.s + 2, len(pat) - 2));
+        }
+    }
+    return true;
+}
+
+static Str PathFileName(Str path) {
+    int i = len(path);
+    while (i > 0 && path.s[i - 1] != '/' && path.s[i - 1] != '\\') {
+        i--;
+    }
+    return Str(path.s + i, len(path) - i);
+}
+
+TempStr PathWithDefaultExtTemp(Str path, Str ext) {
+    if (len(ext) > 0 && ext.s[0] == '.') {
+        ext = Str(ext.s + 1, len(ext) - 1);
+    }
+    Str name = PathFileName(path);
+
+    bool hasExt =
+        len(name) > 1 && StrFind(Str(name.s + 1, len(name) - 1), ".") >= 0;
+    if (len(ext) == 0 || len(name) == 0 || hasExt) {
+        return StrDupTemp(path);
+    }
+    return fmt("%s.%s", path, ext);
+}
+
+TempStr PathDropRepeatedExtTemp(Str path) {
+    Str name = PathFileName(path);
+    int dots[2] = {};
+    int n = 0;
+    for (int i = 0; i < len(name); i++) {
+        if (name.s[i] != '.') {
+            continue;
+        }
+        if (n == 2) {
+            return StrDupTemp(path);
+        }
+        dots[n++] = i;
+    }
+    if (n != 2) {
+        return StrDupTemp(path);
+    }
+    Str second(name.s + dots[0] + 1, dots[1] - dots[0] - 1);
+    Str third(name.s + dots[1] + 1, len(name) - dots[1] - 1);
+    if (!StrStartsWith(second, third)) {
+        return StrDupTemp(path);
+    }
+    return StrDupTemp(Str(path.s, len(path) - len(third) - 1));
+}
+
 }
 
 #line 1 "src/base/accordion.cpp"
@@ -234793,6 +234860,7 @@ void CustomProtocolDispatch(const CustomProtocol& protocol, Str id,
 #include <sys/stat.h>
 #include <sys/sysctl.h>
 #include <sys/wait.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #include <unistd.h>
 #import <WebKit/WKDownload.h>
 #import <WebKit/WKDownloadDelegate.h>
@@ -246170,11 +246238,52 @@ void OpenPath(Str path) {
     StrFree(value);
 }
 
-TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
-    (void)win;
-    TempStr title =
-        StrDupTemp(len(opts.title) < 255 ? opts.title : Str(opts.title.s, 255));
-    bool dirs = opts.directories && !opts.files;
+struct DialogArgv {
+    static constexpr int kMax = 64;
+    const char* argv[kMax + 1] = {};
+    int n = 0;
+
+    void Add(const char* arg) {
+        if (n < kMax) {
+            argv[n++] = arg;
+        }
+    }
+    void Add(Str arg) { Add(StrDupTemp(arg).s); }
+};
+
+static int32_t DialogFilterAt(const PathFilters& filters, int32_t i) {
+    int32_t first =
+        filters.index >= 0 && filters.index < filters.count ? filters.index : 0;
+    if (i == 0) {
+        return first;
+    }
+    return i <= first ? i - 1 : i;
+}
+
+static void DialogAddFilters(DialogArgv* zenity, StrBuilder* kdialog,
+                             const PathFilters& filters) {
+    for (int32_t i = 0; i < filters.count; i++) {
+        const PathFilter& f = filters.items[DialogFilterAt(filters, i)];
+        TempStr pats =
+            StrDupTemp(StrReplaceAll(f.patterns, StrL(";"), StrL(" ")));
+        zenity->Add(fmt("--file-filter=%s | %s", f.name, pats));
+        if (len(*kdialog) > 0) {
+            kdialog->AppendChar('\n');
+        }
+        kdialog->Append(fmt("%s|%s", pats, f.name));
+    }
+}
+
+static TempStr DialogStartTemp(Str dir, Str name) {
+    if (len(dir) == 0) {
+        return len(name) > 0 ? StrDupTemp(name) : TempStr{};
+    }
+    bool slash = dir.s[len(dir) - 1] == '/';
+    return fmt("%s%s%s", dir, slash ? StrL("") : StrL("/"), name);
+}
+
+static TempStr RunPathDialogTemp(DialogArgv* zenity, DialogArgv* kdialog,
+                                 int cap) {
     int fds[2] = {-1, -1};
     if (pipe(fds) != 0) {
         return {};
@@ -246184,27 +246293,8 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
         dup2(fds[1], STDOUT_FILENO);
         close(fds[0]);
         close(fds[1]);
-
-        if (dirs) {
-            execlp("zenity", "zenity", "--file-selection", "--directory",
-                   title ? "--title" : (char*)nullptr,
-                   title ? title.s : (char*)nullptr, (char*)nullptr);
-            execlp("kdialog", "kdialog", "--getexistingdirectory", ".",
-                   (char*)nullptr);
-        } else if (opts.multiple) {
-
-            execlp("zenity", "zenity", "--file-selection", "--multiple",
-                   "--separator=\n", title ? "--title" : (char*)nullptr,
-                   title ? title.s : (char*)nullptr, (char*)nullptr);
-            execlp("kdialog", "kdialog", "--getopenfilename", ".", "--multiple",
-                   "--separate-output", (char*)nullptr);
-        } else {
-            execlp("zenity", "zenity", "--file-selection",
-                   title ? "--title" : (char*)nullptr,
-                   title ? title.s : (char*)nullptr, (char*)nullptr);
-            execlp("kdialog", "kdialog", "--getopenfilename", ".",
-                   (char*)nullptr);
-        }
+        execvp("zenity", (char* const*)zenity->argv);
+        execvp("kdialog", (char* const*)kdialog->argv);
         _exit(127);
     }
     close(fds[1]);
@@ -246212,8 +246302,7 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
         close(fds[0]);
         return {};
     }
-    TempStr result =
-        AllocStrTemp(opts.multiple ? kMaxPath * 64 - 1 : kMaxPath - 1);
+    TempStr result = AllocStrTemp(cap);
     if (!result.s) {
         close(fds[0]);
         int st = 0;
@@ -246234,13 +246323,92 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     close(fds[0]);
     int st = 0;
     waitpid(pid, &st, 0);
-
     while (n > 0 && (result.s[n - 1] == '\n' || result.s[n - 1] == '\r')) {
         n--;
     }
     result.s[n] = 0;
     result.len = n;
     return result;
+}
+
+TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
+    (void)win;
+    if (opts.filters.chosen) {
+        *opts.filters.chosen = -1;
+    }
+    bool dirs = opts.directories && !opts.files;
+    TempStr start =
+        DialogStartTemp(opts.directory, dirs ? Str{} : opts.fileName);
+    DialogArgv zenity;
+    DialogArgv kdialog;
+    zenity.Add("zenity");
+    zenity.Add("--file-selection");
+    kdialog.Add("kdialog");
+    if (len(opts.title) > 0) {
+        zenity.Add(fmt("--title=%s", opts.title));
+        kdialog.Add("--title");
+        kdialog.Add(opts.title);
+    }
+    if (len(start) > 0) {
+        zenity.Add(fmt("--filename=%s", start));
+    }
+    if (dirs) {
+        zenity.Add("--directory");
+        kdialog.Add("--getexistingdirectory");
+        kdialog.Add(len(start) > 0 ? Str(start) : StrL("."));
+        return RunPathDialogTemp(&zenity, &kdialog, kMaxPath - 1);
+    }
+    if (opts.multiple) {
+
+        zenity.Add("--multiple");
+        zenity.Add("--separator=\n");
+        kdialog.Add("--multiple");
+        kdialog.Add("--separate-output");
+    }
+    kdialog.Add("--getopenfilename");
+    kdialog.Add(len(start) > 0 ? Str(start) : StrL("."));
+    StrBuilder kfilter;
+    DialogAddFilters(&zenity, &kfilter, opts.filters);
+    if (len(kfilter) > 0) {
+        kdialog.Add(Str(kfilter.els, len(kfilter)));
+    }
+    int cap = opts.multiple ? kMaxPath * 64 - 1 : kMaxPath - 1;
+    return RunPathDialogTemp(&zenity, &kdialog, cap);
+}
+
+TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts) {
+    (void)win;
+    if (opts.filters.chosen) {
+        *opts.filters.chosen = -1;
+    }
+    TempStr start = DialogStartTemp(opts.directory, opts.suggestedName);
+    DialogArgv zenity;
+    DialogArgv kdialog;
+    zenity.Add("zenity");
+    zenity.Add("--file-selection");
+    zenity.Add("--save");
+    zenity.Add("--confirm-overwrite");
+    kdialog.Add("kdialog");
+
+    Str title = len(opts.title) > 0 ? opts.title : StrL("Save File");
+    zenity.Add(fmt("--title=%s", title));
+    kdialog.Add("--title");
+    kdialog.Add(title);
+    if (len(start) > 0) {
+        zenity.Add(fmt("--filename=%s", start));
+    }
+    kdialog.Add("--getsavefilename");
+    kdialog.Add(len(start) > 0 ? Str(start) : StrL("."));
+    StrBuilder kfilter;
+    DialogAddFilters(&zenity, &kfilter, opts.filters);
+    if (len(kfilter) > 0) {
+        kdialog.Add(Str(kfilter.els, len(kfilter)));
+    }
+    TempStr path = RunPathDialogTemp(&zenity, &kdialog, kMaxPath - 1);
+    if (len(path) == 0) {
+        return {};
+    }
+    return PathWithDefaultExtTemp(path, opts.defaultExt);
 }
 
 void PlatClipboardSetText(Window* win, Str text) {
@@ -249861,6 +250029,28 @@ bool PlatWindowPrompt(Window* win, PromptRequest* req) {
     return true;
 }
 
+static NSArray* PanelContentTypes(const Vec<Str>& exts) {
+    Class cls = NSClassFromString(@"UTType");
+    if (!cls || len(exts) == 0) {
+        return nil;
+    }
+    NSMutableArray* types = [NSMutableArray array];
+    for (int i = 0; i < len(exts); i++) {
+        UTType* t = [cls typeWithFilenameExtension:PromptNSString(exts[i])];
+        if (t) {
+            [types addObject:t];
+        }
+    }
+    return [types count] > 0 ? types : nil;
+}
+
+static void PanelSetDirectory(NSSavePanel* panel, Str dir) {
+    if (len(dir) > 0) {
+        [panel setDirectoryURL:[NSURL fileURLWithPath:PromptNSString(dir)
+                                          isDirectory:YES]];
+    }
+}
+
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     (void)win;
     NSOpenPanel* panel = [NSOpenPanel openPanel];
@@ -249868,13 +250058,20 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     [panel setCanChooseDirectories:opts.directories ? YES : NO];
     [panel setAllowsMultipleSelection:opts.multiple ? YES : NO];
     if (len(opts.title) > 0) {
-        NSString* t =
-            [[NSString alloc] initWithBytes:opts.title.s
-                                     length:(NSUInteger)len(opts.title)
-                                   encoding:NSUTF8StringEncoding];
-        if (t) {
-            [panel setMessage:t];
-        }
+        [panel setMessage:PromptNSString(opts.title)];
+    }
+    PanelSetDirectory(panel, opts.directory);
+    Vec<Str> exts;
+    bool any = opts.filters.count == 0;
+    for (int32_t i = 0; i < opts.filters.count && !any; i++) {
+        any = !PathPatternExts(opts.filters.items[i].patterns, &exts);
+    }
+    NSArray* types = any ? nil : PanelContentTypes(exts);
+    if (types) {
+        [panel setAllowedContentTypes:types];
+    }
+    if (opts.filters.chosen) {
+        *opts.filters.chosen = -1;
     }
     if ([panel runModal] != NSModalResponseOK) {
         return {};
@@ -249898,6 +250095,56 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
         return {};
     }
     return StrDupTemp(Str(paths.els, len(paths)));
+}
+
+TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts) {
+    (void)win;
+    NSSavePanel* panel = [NSSavePanel savePanel];
+    if (!panel) {
+        return {};
+    }
+    PanelSetDirectory(panel, opts.directory);
+    if (len(opts.suggestedName) > 0) {
+        [panel setNameFieldStringValue:PromptNSString(opts.suggestedName)];
+    }
+    if (len(opts.title) > 0) {
+        [panel setMessage:PromptNSString(opts.title)];
+    }
+    Vec<Str> exts;
+    const PathFilters& filters = opts.filters;
+    if (filters.index >= 0 && filters.index < filters.count) {
+        PathPatternExts(filters.items[filters.index].patterns, &exts);
+    }
+    Str ext = opts.defaultExt;
+    if (len(ext) > 0 && ext.s[0] == '.') {
+        ext = Str(ext.s + 1, len(ext) - 1);
+    }
+    if (len(exts) == 0 && len(ext) > 0) {
+        VecAppend(exts, ext);
+    }
+    NSArray* types = PanelContentTypes(exts);
+    if (types) {
+        [panel setAllowedContentTypes:types];
+        [panel setAllowsOtherFileTypes:YES];
+    }
+    if (filters.chosen) {
+        *filters.chosen = -1;
+    }
+    if ([panel runModal] != NSModalResponseOK) {
+        return {};
+    }
+    NSURL* url = [panel URL];
+    const char* chosen =
+        url && [url isFileURL] ? [[url path] UTF8String] : nullptr;
+    if (!chosen || !*chosen) {
+        return {};
+    }
+    TempStr path = StrDupTemp(Str(chosen));
+    NSOperatingSystemVersion sequoia = {15, 0, 0};
+    if ([[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:sequoia]) {
+        path = PathDropRepeatedExtTemp(path);
+    }
+    return PathWithDefaultExtTemp(path, ext);
 }
 
 void PlatClipboardSetText(Window* win, Str text) {
@@ -251158,7 +251405,17 @@ void OpenPath(Str) {}
 
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     (void)win;
-    (void)opts;
+    if (opts.filters.chosen) {
+        *opts.filters.chosen = -1;
+    }
+    return {};
+}
+
+TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts) {
+    (void)win;
+    if (opts.filters.chosen) {
+        *opts.filters.chosen = -1;
+    }
     return {};
 }
 
@@ -253103,6 +253360,86 @@ bool PlatWindowPrompt(Window* win, PromptRequest* req) {
     return true;
 }
 
+struct FileDialogStrs {
+    Vec<WCHAR*> strs;
+    Vec<COMDLG_FILTERSPEC> specs;
+
+    WCHAR* Dup(Str s) {
+        WCHAR* w = PromptWideDup(s);
+        VecAppend(strs, w);
+        return w;
+    }
+    ~FileDialogStrs() {
+        for (int i = 0; i < len(strs); i++) {
+            delete[] strs[i];
+        }
+    }
+};
+
+static void FileDialogSetup(IFileDialog* dlg, FileDialogStrs* strs, Str title,
+                            Str dir, Str name, const PathFilters& filters) {
+    if (len(title) > 0) {
+        dlg->SetTitle(strs->Dup(title));
+    }
+    if (len(dir) > 0) {
+
+        IShellItem* folder = nullptr;
+        if (SUCCEEDED(SHCreateItemFromParsingName(strs->Dup(dir), nullptr,
+                                                  IID_PPV_ARGS(&folder))) &&
+            folder) {
+            dlg->SetFolder(folder);
+            folder->Release();
+        }
+    }
+    if (len(name) > 0) {
+        dlg->SetFileName(strs->Dup(name));
+    }
+    for (int32_t i = 0; i < filters.count; i++) {
+        COMDLG_FILTERSPEC spec{};
+        spec.pszName = strs->Dup(filters.items[i].name);
+        spec.pszSpec = strs->Dup(filters.items[i].patterns);
+        VecAppend(strs->specs, spec);
+    }
+    if (len(strs->specs) > 0) {
+        dlg->SetFileTypes((UINT)len(strs->specs), strs->specs.els);
+        int32_t ix = filters.index;
+        ix = ix >= 0 && ix < filters.count ? ix : 0;
+        dlg->SetFileTypeIndex((UINT)ix + 1);
+    }
+}
+
+static void FileDialogChosen(IFileDialog* dlg, const PathFilters& filters,
+                             bool ok) {
+    if (!filters.chosen) {
+        return;
+    }
+    UINT ix = 0;
+    bool known = ok && filters.count > 0 &&
+                 SUCCEEDED(dlg->GetFileTypeIndex(&ix)) && ix > 0;
+    *filters.chosen = known ? (int32_t)ix - 1 : -1;
+}
+
+static void AppendShellItemPath(IShellItem* item, StrBuilder* paths) {
+    PWSTR wide = nullptr;
+    if (!item || FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, &wide)) ||
+        !wide) {
+        return;
+    }
+    int n =
+        WideCharToMultiByte(CP_UTF8, 0, wide, -1, nullptr, 0, nullptr, nullptr);
+    if (n > 1) {
+        TempStr path = AllocStrTemp(n - 1);
+        if (path.s && WideCharToMultiByte(CP_UTF8, 0, wide, -1, path.s, n,
+                                          nullptr, nullptr) == n) {
+            if (len(*paths) > 0) {
+                paths->AppendChar('\n');
+            }
+            paths->Append(path);
+        }
+    }
+    CoTaskMemFree(wide);
+}
+
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     IFileOpenDialog* dlg = nullptr;
     HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr,
@@ -253122,11 +253459,12 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
         flags |= FOS_ALLOWMULTISELECT;
     }
     dlg->SetOptions(flags | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
-    if (len(opts.title) > 0) {
-        dlg->SetTitle(ToCWstrTemp(opts.title));
-    }
+    FileDialogStrs strs;
+    FileDialogSetup(dlg, &strs, opts.title, opts.directory, opts.fileName,
+                    opts.filters);
     HWND owner = win && win->plat ? win->plat->hwnd : nullptr;
     hr = dlg->Show(owner);
+    FileDialogChosen(dlg, opts.filters, SUCCEEDED(hr));
     TempStr result;
     if (SUCCEEDED(hr)) {
         IShellItemArray* items = nullptr;
@@ -253143,25 +253481,7 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
             if (items && FAILED(items->GetItemAt(i, &one))) {
                 continue;
             }
-            PWSTR wide = nullptr;
-            if (one &&
-                SUCCEEDED(one->GetDisplayName(SIGDN_FILESYSPATH, &wide)) &&
-                wide) {
-                int n = WideCharToMultiByte(CP_UTF8, 0, wide, -1, nullptr, 0,
-                                            nullptr, nullptr);
-                if (n > 1) {
-                    TempStr path = AllocStrTemp(n - 1);
-                    if (path.s &&
-                        WideCharToMultiByte(CP_UTF8, 0, wide, -1, path.s, n,
-                                            nullptr, nullptr) == n) {
-                        if (len(paths) > 0) {
-                            paths.AppendChar('\n');
-                        }
-                        paths.Append(path);
-                    }
-                }
-                CoTaskMemFree(wide);
-            }
+            AppendShellItemPath(one, &paths);
             if (items && one) {
                 one->Release();
             }
@@ -253174,6 +253494,51 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
         }
         if (len(paths) > 0) {
             result = StrDupTemp(Str(paths.els, len(paths)));
+        }
+    }
+    dlg->Release();
+    return result;
+}
+
+TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts) {
+    IFileSaveDialog* dlg = nullptr;
+    HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, nullptr,
+                                  CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg));
+    if (FAILED(hr) || !dlg) {
+        return {};
+    }
+    DWORD flags = 0;
+    dlg->GetOptions(&flags);
+    dlg->SetOptions(flags | FOS_OVERWRITEPROMPT | FOS_FORCEFILESYSTEM |
+                    FOS_PATHMUSTEXIST);
+    FileDialogStrs strs;
+    PathFilters filters = opts.filters;
+    PathFilter all{StrL("All files"), StrL("*.*")};
+    if (filters.count == 0) {
+        filters.items = &all;
+        filters.count = 1;
+        filters.index = 0;
+    }
+    FileDialogSetup(dlg, &strs, opts.title, opts.directory, opts.suggestedName,
+                    filters);
+    Str ext = opts.defaultExt;
+    if (len(ext) > 0 && ext.s[0] == '.') {
+        ext = Str(ext.s + 1, len(ext) - 1);
+    }
+    if (len(ext) > 0) {
+        dlg->SetDefaultExtension(strs.Dup(ext));
+    }
+    HWND owner = win && win->plat ? win->plat->hwnd : nullptr;
+    hr = dlg->Show(owner);
+    FileDialogChosen(dlg, opts.filters, SUCCEEDED(hr));
+    TempStr result;
+    IShellItem* item = nullptr;
+    if (SUCCEEDED(hr) && SUCCEEDED(dlg->GetResult(&item)) && item) {
+        StrBuilder path;
+        AppendShellItemPath(item, &path);
+        item->Release();
+        if (len(path) > 0) {
+            result = StrDupTemp(Str(path.els, len(path)));
         }
     }
     dlg->Release();

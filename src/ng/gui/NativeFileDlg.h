@@ -3,13 +3,9 @@
 
 struct SavePathArgs;
 
-#if OS_WIN
 bool NativeFileDlgEnabled();
 void NativeSaveFileDlg(SavePathArgs* args);
-bool NativeOpenFileDlg(MainWindow* win, Str filter, Str initialPath, bool multiSelect, StrVec* pathsOut);
+bool NativeOpenFileDlg(MainWindow* win, Str title, Str filter, Str initialPath, bool multiSelect, StrVec* pathsOut);
+#if OS_WIN
 bool NativeOpenDocsDlg(MainWindow* win, StrVec* pathsOut);
-#else
-inline bool NativeFileDlgEnabled() {
-    return false;
-}
 #endif

@@ -1645,7 +1645,7 @@ export const targets: Target[] = [
       "src/ng/gui/OleDragDrop_win.cpp",
       "src/ng/OleDragDropCommon_win.cpp",
       "src/ng/WebViewCapture_win.cpp",
-      "src/ng/gui/NativeFileDlg_win.cpp",
+      "src/ng/gui/NativeFileDlg.cpp",
       "src/ng/OpenFileFilters_win.cpp",
       "src/ng/gui/NativeCursors.cpp",
       "src/ng/LaserPointerCursorCommon.cpp",
