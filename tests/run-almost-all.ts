@@ -547,6 +547,7 @@ import { testit as issue6080 } from "./issue-6080.ts";
 import { testit as issue6203 } from "./issue-6203.ts";
 import { testit as issue6205 } from "./issue-6205.ts";
 import { testit as advSettingsEnter } from "./adv-settings-enter.ts";
+import { testit as aichatCloseHidesWebview } from "./aichat-close-hides-webview.ts";
 import { testit as hexView } from "./hex-view.ts";
 import { testit as codexProvider } from "./codex-provider.ts";
 import { testit as advSettingsFreshDefaults } from "./adv-settings-fresh-defaults.ts";
@@ -1179,6 +1180,7 @@ export const tests: NamedTest[] = [
   ["find-ui-one-at-a-time", findUiOneAtATime],
   ["custom-ai", customAI],
   ["custom-ai-ui", customAIUI],
+  ["aichat-close-hides-webview", aichatCloseHidesWebview],
   ["page-links-fresh-engine", pageLinksFreshEngine],
 ];
 

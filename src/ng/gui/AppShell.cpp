@@ -2116,6 +2116,10 @@ static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
         win->sidebarOverlayShown = false;
     }
     gp::El* aiChat = overlayUp ? nullptr : AIChatPanelBuild(win, cx);
+    // its web view would cover the dialog / palette, as UpdateBrowserViews() says
+    if (overlayUp) {
+        AIChatPanelHideView(win);
+    }
     // orig docks the folder picker's window beside the frame; here it is the
     // frame's last column
     gp::El* navFiles = NavFilesUIBuild(win, cx);

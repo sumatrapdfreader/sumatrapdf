@@ -792,6 +792,16 @@ void OnAIChatToggle(MainWindow* win, int providerId) {
     AppShellInvalidate(win);
 }
 
+// the chat page is a native view over the frame: a frame that does not build
+// the panel does not paint it, so it has to be hidden explicitly. The session
+// and the page stay, so showing the panel again is instant.
+void AIChatPanelHideView(MainWindow* win) {
+    AIChatPanel* p = PanelOf(win);
+    if (p && p->view) {
+        BrowserViewSetVisible(p->view, false);
+    }
+}
+
 // call when switching tabs to update session context
 void OnAIChatTabChanged(MainWindow* win) {
     AIChatPanel* p = PanelOf(win);
@@ -961,11 +971,9 @@ void AIChatTick(MainWindow* win, int elapsedMs) {
 
 gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
     AIChatPanel* p = PanelOf(win);
-    if (!p || !win->uiState.aiChatVisible) {
-        return nullptr;
-    }
-    AIChatProvider* provider = CurrentProvider(win);
-    if (!provider) {
+    AIChatProvider* provider = p ? CurrentProvider(win) : nullptr;
+    if (!p || !win->uiState.aiChatVisible || !provider) {
+        AIChatPanelHideView(win);
         return nullptr;
     }
     if (!gAIChatView.IsValid()) {
@@ -1025,15 +1033,17 @@ gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
     // the chat page
     gp::El* chat = gp::Div(cx->a)->Flex1()->W(gp::kFill)->MinH(0);
     if (p->view) {
+        // shown again after AIChatPanelHideView()
+        bool listOpen = false;
 #if OS_DARWIN
         // the native WebView covers gpui popups: hide it while a list is open
         auto isOpen = [cx](DialogSelect& sel) {
             gpc::SelectState* st = sel.state.Get(cx);
             return st && st->state.open;
         };
-        bool listOpen = isOpen(p->sessionSel) || isOpen(p->modelSel) || isOpen(p->optionSel);
-        BrowserViewSetVisible(p->view, !listOpen);
+        listOpen = isOpen(p->sessionSel) || isOpen(p->modelSel) || isOpen(p->optionSel);
 #endif
+        BrowserViewSetVisible(p->view, !listOpen);
         chat->Child(BrowserViewBuild(p->view, cx));
     }
     col->Child(chat);
