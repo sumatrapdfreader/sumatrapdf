@@ -1735,6 +1735,9 @@ bool ToggleCmdState(MainWindow* win, CustomCommand* cmd, int cmdId, bool& on) {
         case CmdSelectTextViaKeyboard:
             on = SelectTextWithKeyboardActive(win);
             return true;
+        case CmdToggleTextSelecting:
+            on = TextSelectingActive(win);
+            return true;
         case CmdToggleBoolSetting: {
             bool* p = FindSettingsBoolSetting(GetCommandStringArg(cmd, kCmdArgName, {}));
             on = p && *p;

@@ -29,6 +29,8 @@ extern Kind kNotifTextSelectMode;
 
 bool CanSelectTextWithKeyboard(MainWindow*);
 void ToggleSelectTextWithKeyboard(MainWindow*);
+void ToggleTextSelecting(MainWindow*);
+bool TextSelectingActive(MainWindow*);
 bool SelectTextWithKeyboardActive(MainWindow*);
 bool StopSelectTextWithKeyboard(MainWindow*);
 bool KeepCaretAfterMarkup(MainWindow*);

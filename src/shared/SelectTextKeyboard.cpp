@@ -705,23 +705,36 @@ void SelectTextWithKeyboardOnFindResult(MainWindow* win, TextSearch* ts) {
     RepaintTextSelect(win);
 }
 
-// 'v' toggles visual mode, 'y' / Ctrl+C copy. Returns true if consumed.
+bool TextSelectingActive(MainWindow* win) {
+    return SelectTextWithKeyboardActive(win) && win->textSelectModeVisual;
+}
+
+// Start / stop selecting at the caret ('v', CmdToggleTextSelecting). Does
+// nothing outside keyboard selection.
+void ToggleTextSelecting(MainWindow* win) {
+    if (!SelectTextWithKeyboardActive(win)) {
+        return;
+    }
+    if (win->textSelectModeVisual) {
+        CommitHighlighterSelection(win);
+        win->textSelectModeVisual = false;
+    } else {
+        win->textSelectModeVisual = true;
+        // start selecting from where the caret is now
+        win->textSelectAnchorPage = win->textSelectPage;
+        win->textSelectAnchorGlyph = win->textSelectGlyph;
+    }
+    ShowModeNotification(win);
+    RepaintTextSelect(win);
+}
+
+// 'v' toggles visual mode, 'y' copies and exits. Returns true if consumed.
 bool SelectTextWithKeyboardOnChar(MainWindow* win, int key) {
     if (!SelectTextWithKeyboardActive(win)) {
         return false;
     }
     if (key == 'v' || key == 'V') {
-        if (win->textSelectModeVisual) {
-            CommitHighlighterSelection(win);
-            win->textSelectModeVisual = false;
-        } else {
-            win->textSelectModeVisual = true;
-            // start selecting from where the caret is now
-            win->textSelectAnchorPage = win->textSelectPage;
-            win->textSelectAnchorGlyph = win->textSelectGlyph;
-        }
-        ShowModeNotification(win);
-        RepaintTextSelect(win);
+        ToggleTextSelecting(win);
         return true;
     }
     if (key == 'y' || key == 'Y') {

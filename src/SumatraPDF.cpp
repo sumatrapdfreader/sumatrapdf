@@ -12545,6 +12545,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleSelectTextWithKeyboard(win);
             break;
 
+        case CmdToggleTextSelecting:
+            ToggleTextSelecting(win);
+            break;
+
         case CmdPresentationBlackBackground:
             if (win->InPresentation()) {
                 // toggle: pressing the key again restores the slide (so a

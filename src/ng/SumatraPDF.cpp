@@ -6489,6 +6489,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ToggleSelectTextWithKeyboard(win);
             break;
 
+        case CmdToggleTextSelecting:
+            ToggleTextSelecting(win);
+            break;
+
         // no default shortcut: Ctrl+Shift+Left / Right and friends are taken, so
         // these exist for the user to bind in the Shortcuts settings (#5922)
         case CmdExtendSelectionCharLeft:

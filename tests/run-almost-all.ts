@@ -267,6 +267,7 @@ import { testit as issue6537 } from "./issue-6537.ts";
 import { testit as issue6539 } from "./issue-6539.ts";
 import { testit as issue6541 } from "./issue-6541.ts";
 import { testit as issue6540 } from "./issue-6540.ts";
+import { testit as issue6570 } from "./issue-6570.ts";
 import { testit as issue6542 } from "./issue-6542.ts";
 import { testit as toggleStateArg } from "./toggle-state-arg.ts";
 import { testit as discussion6543 } from "./discussion-6543.ts";
@@ -1159,6 +1160,7 @@ export const tests: NamedTest[] = [
   ["issue-6539", issue6539],
   ["issue-6541", issue6541],
   ["issue-6540", issue6540],
+  ["issue-6570", issue6570],
   ["issue-6542", issue6542],
   ["toggle-state-arg", toggleStateArg],
   ["discussion-6543", discussion6543],

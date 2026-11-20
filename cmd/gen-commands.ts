@@ -405,6 +405,7 @@ const commandsRaw = [
     "CmdStripGroupUngroup", "Ungroup Tabs",
     "CmdStripGroupClose", "Close Group",
     "CmdToggleLineWeights", "Show Line Weights",
+    "CmdToggleTextSelecting", "Start / Stop Selecting Text",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

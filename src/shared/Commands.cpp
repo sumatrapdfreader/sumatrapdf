@@ -404,6 +404,7 @@ const CommandInfo gCommands[] = {
     {CmdStripGroupUngroup, "CmdStripGroupUngroup\0", StrL("Ungroup Tabs")},
     {CmdStripGroupClose, "CmdStripGroupClose\0", StrL("Close Group")},
     {CmdToggleLineWeights, "CmdToggleLineWeights\0", StrL("Show Line Weights")},
+    {CmdToggleTextSelecting, "CmdToggleTextSelecting\0", StrL("Start / Stop Selecting Text")},
 };
 const int gCommandsCount = dimofi(gCommands);
 
@@ -516,6 +517,7 @@ static const ArgSpec argSpecs[] = {
     {CmdToggleReadColumns, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleColumnsWholePage, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleLineWeights, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleTextSelecting, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdFavoriteToggle, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdFindToggleMatchCase, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdFindToggleMatchWholeWord, kCmdArgState, CommandArg::Type::Bool}, // default

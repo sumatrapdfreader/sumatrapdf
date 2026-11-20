@@ -790,9 +790,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
-    bool isTextSelectCmd = cmdId == CmdSelectTextViaKeyboard || cmdId == CmdExtendSelectionCharLeft ||
-                           cmdId == CmdExtendSelectionCharRight || cmdId == CmdExtendSelectionWordLeft ||
-                           cmdId == CmdExtendSelectionWordRight;
+    bool isTextSelectCmd = cmdId == CmdSelectTextViaKeyboard || cmdId == CmdToggleTextSelecting ||
+                           cmdId == CmdExtendSelectionCharLeft || cmdId == CmdExtendSelectionCharRight ||
+                           cmdId == CmdExtendSelectionWordLeft || cmdId == CmdExtendSelectionWordRight;
     if (isTextSelectCmd) {
         // needs a fixed-page engine with extractable text: image collections
         // have none and CHM / markdown do their own selection (#4684, #4116)

@@ -398,8 +398,9 @@ enum {
     CmdStripGroupUngroup = 592,
     CmdStripGroupClose = 593,
     CmdToggleLineWeights = 594,
+    CmdToggleTextSelecting = 595,
 
-    CmdLast = 594,
+    CmdLast = 595,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering
