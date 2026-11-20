@@ -3443,13 +3443,17 @@ static Pixmap* RenderFileThumbnail(CreateThumbnailFromFileData* d) {
         SafeEngineRelease(&d->engine);
         engine = CreateEngineForThumbnail(cover);
     }
-    // the cover the book itself declares, which isn't always page 1
-    if (!engine && GuessFileTypeFromName(d->filePath, true) == FileType::Epub) {
+    // the cover the book itself declares, which isn't always page 1 of the
+    // loaded engine (d->engine)
+    bool noSiblingCover = len(cover) == 0;
+    if (noSiblingCover && GuessFileTypeFromName(d->filePath, true) == FileType::Epub) {
         Str coverData = EpubCoverImageData(d->filePath);
-        if (len(coverData) > 0) {
-            engine = CreateEngineImageFromData(coverData);
-        }
+        EngineBase* coverEngine = len(coverData) > 0 ? CreateEngineImageFromData(coverData) : nullptr;
         str::Free(coverData);
+        if (coverEngine) {
+            SafeEngineRelease(&d->engine);
+            engine = coverEngine;
+        }
     }
     if (!engine) {
         SetLoadThreadFileEBookUI(d->fileEBookUI);

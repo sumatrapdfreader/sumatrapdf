@@ -160,8 +160,23 @@ export async function testit(): Promise<void> {
   if (r2 < 200 || g2 < 200 || b2 < 200) {
     throw new Error(`issue-6236: thumbnail without a cover should be page 1, center pixel is rgb(${r2},${g2},${b2})`);
   }
-  for (const epub of [epub2, epub3]) {
-    const [r3, g3, b3] = centerPixel(thumbnailPath(appData, epub));
+  // the only open document: its thumbnail is made from the loaded engine
+  const solo = join(root, "solo.epub");
+  writeEpubWithCover(solo, 2);
+  const soloAppData = join(root, "appdata-solo");
+  mkdirSync(soloAppData, { recursive: true });
+  copyFileSync(join(appData, "SumatraPDF-settings.txt"), join(soloAppData, "SumatraPDF-settings.txt"));
+  const soloRun = await launchControlled(["-appdata", soloAppData, solo]);
+  try {
+    await soloRun.client.waitForRenderIdle();
+    await waitForFile(thumbnailPath(soloAppData, solo), "solo.epub");
+  } finally {
+    soloRun.client.close();
+    await killAndWait(soloRun.proc);
+  }
+
+  for (const epub of [epub2, epub3, solo]) {
+    const [r3, g3, b3] = centerPixel(thumbnailPath(epub === solo ? soloAppData : appData, epub));
     if (r3 < 180 || g3 > 80 || b3 > 80) {
       throw new Error(
         `issue-6236: ${epub} thumbnail should be its declared cover, center pixel is rgb(${r3},${g3},${b3})`,
