@@ -17889,5 +17889,11 @@ Exit:
     DestroyPermArena();
     FreeLibsumatrapdfDll();
 
+#if IS_ASAN
+    // ExitProcess kills other threads first; one killed inside ASan's free hook
+    // leaves its lock held and a DLL detach that frees memory then hangs forever
+    fflush(nullptr);
+    ::TerminateProcess(GetCurrentProcess(), (UINT)exitCode);
+#endif
     return exitCode;
 }
