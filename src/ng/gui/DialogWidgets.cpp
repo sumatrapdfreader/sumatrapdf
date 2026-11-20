@@ -832,6 +832,24 @@ gp::El* DlgAccelText(gp::Ctx* cx, gp::Str text) {
     return DlgAccelUnderline(cx, gp::TextEl(cx->a, text), text);
 }
 
+// focuses the element with click id `clickId` or its nearest focusable ancestor:
+// a gpui slider takes the focus on its root, not on the element with its id
+static void FocusClickTarget(gp::Window* win, int clickId) {
+    const auto& hits = win->paint.hits;
+    for (int i = 0; i < len(hits); i++) {
+        if (hits[i].id != clickId) {
+            continue;
+        }
+        for (int j = i; j >= 0; j = hits[j].parent) {
+            if (hits[j].focusId) {
+                gp::WindowSetFocusId(win, hits[j].focusId);
+                return;
+            }
+        }
+    }
+    gp::WindowSetFocusId(win, clickId);
+}
+
 // Alt + letter, or the letter alone while no text field has the focus
 bool DlgAccelOnKey(gp::Ctx* cx, int vk, bool alt, bool ctrl, bool editFocused) {
     if (ctrl || vk < 'A' || vk > 'Z' || len(gDlgAccels) == 0) {
@@ -868,7 +886,7 @@ bool DlgAccelOnKey(gp::Ctx* cx, int vk, bool alt, bool ctrl, bool editFocused) {
                 }
                 break;
             case DlgAccelKind::Focus:
-                gp::WindowSetFocusId(cx->win, acc.focusId);
+                FocusClickTarget(cx->win, acc.focusId);
                 break;
             case DlgAccelKind::None:
                 break;
