@@ -284,6 +284,7 @@ import { testit as issue6566 } from "./issue-6566.ts";
 import { testit as issue6521 } from "./issue-6521.ts";
 import { testit as issue6560 } from "./issue-6560.ts";
 import { testit as issue6567 } from "./issue-6567.ts";
+import { testit as issue6568 } from "./issue-6568.ts";
 import { testit as f7EndsPlacement } from "./f7-ends-placement.ts";
 import { testit as findUiOneAtATime } from "./find-ui-one-at-a-time.ts";
 import { testit as issue6477 } from "./issue-6477.ts";
@@ -1170,6 +1171,7 @@ export const tests: NamedTest[] = [
   ["issue-6521", issue6521],
   ["issue-6560", issue6560],
   ["issue-6567", issue6567],
+  ["issue-6568", issue6568],
   ["f7-ends-placement", f7EndsPlacement],
   ["find-ui-one-at-a-time", findUiOneAtATime],
   ["codex-provider", codexProvider],

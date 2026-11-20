@@ -4150,8 +4150,10 @@ bool DisplayModel::AtExactScroll() const {
     if (!hasExactScroll) {
         return false;
     }
+    // a page single page mode doesn't show keeps a stale position that can
+    // match the shown page's (#6568)
     PageInfo* pi = GetPageInfo(exactScrollPageNo);
-    if (!pi) {
+    if (!pi || !pi->isShown) {
         return false;
     }
     Point off(viewPort.x - pi->pos.x, viewPort.y - pi->pos.y);
