@@ -446,6 +446,10 @@ static void NotifyUpdateCheckFailed(MainWindow* win, DWORD err) {
     MsgBox(win, content, Tr("SumatraPDF Update"), MbYesNo | MbIconWarning, MkFunc1Void(OnVisitWebsiteAnswer));
 }
 
+#if OS_LINUX
+static void PickLinuxPackage(UpdateInfo* updateInfo, Str data);
+#endif
+
 static DWORD MaybeStartUpdateDownload(MainWindow* win, HttpRsp* rsp, UpdateCheck updateCheckType) {
     Str url = rsp->url;
     str::Builder* data = &rsp->data;
@@ -474,6 +478,9 @@ static DWORD MaybeStartUpdateDownload(MainWindow* win, HttpRsp* rsp, UpdateCheck
         return 3;
     }
     updateInfo->win = win;
+#if OS_LINUX
+    PickLinuxPackage(updateInfo, ToStr(*data));
+#endif
 
     if (!ShouldDownloadUpdate(updateInfo)) {
         Str myVer = currentVersion;
@@ -543,38 +550,72 @@ static TempStr OsNameTemp() {
     return fmt("mac-%s", Str(ver));
 }
 #elif OS_LINUX
-// The distribution's ID from os-release, e.g. "ubuntu" for ID=ubuntu or ID="ubuntu".
-static TempStr OsNameTemp() {
+// A value from os-release, e.g. "ubuntu" for ID=ubuntu or ID="ubuntu", "" if missing.
+static TempStr OsReleaseValueTemp(Str key) {
     FILE* f = fopen("/etc/os-release", "r");
     if (!f) {
         f = fopen("/usr/lib/os-release", "r");
     }
     if (!f) {
-        return StrL("linux");
+        return {};
     }
-    constexpr Str kKey = StrL("ID=");
-    TempStr res = StrL("linux");
+    TempStr prefix = str::JoinTemp(key, StrL("="));
+    TempStr res{};
     char line[256];
     while (fgets(line, sizeof(line), f)) {
         Str s(line);
-        if (!str::StartsWith(s, kKey)) {
+        if (!str::StartsWith(s, prefix)) {
             continue;
         }
         // keep what is safe in a url; that drops the quotes and the newline
-        str::Builder id;
-        for (int i = len(kKey); i < len(s); i++) {
+        str::Builder v;
+        for (int i = len(prefix); i < len(s); i++) {
             char c = s.s[i];
             if (isalnum((unsigned char)c) || c == '.' || c == '_' || c == '-') {
-                id.AppendChar(c);
+                v.AppendChar(c);
             }
         }
-        if (len(id) > 0) {
-            res = str::DupTemp(ToStr(id));
+        if (len(v) > 0) {
+            res = str::DupTemp(ToStr(v));
         }
         break;
     }
     fclose(f);
     return res;
+}
+
+// The distribution's ID from os-release, e.g. "ubuntu".
+static TempStr OsNameTemp() {
+    TempStr id = OsReleaseValueTemp(StrL("ID"));
+    return len(id) > 0 ? id : StrL("linux");
+}
+
+// Opens this distro's package instead of DownloadPage (the list of all) when
+// the update info has one, e.g. "Package-ubuntu24.04-x86_64: <.deb url>".
+static void PickLinuxPackage(UpdateInfo* updateInfo, Str data) {
+    TempStr id = OsReleaseValueTemp(StrL("ID"));
+    TempStr ver = OsReleaseValueTemp(StrL("VERSION_ID"));
+    if (len(id) == 0 || len(ver) == 0) {
+        return;
+    }
+#if defined(__aarch64__)
+    Str arch = StrL("aarch64");
+#else
+    Str arch = StrL("x86_64");
+#endif
+    SquareTreeNode* root = ParseSquareTree(data);
+    if (!root) {
+        return;
+    }
+    AutoDelete delRoot(root);
+    SquareTreeNode* node = root->GetChild(StrL("SumatraPDF"));
+    TempStr key = fmt("Package-%s%s-%s", id, ver, arch);
+    Str url = node ? node->GetValue(key) : Str{};
+    logf("PickLinuxPackage: %s: '%s'\n", key, url);
+    if (len(url) == 0 || !IsTrustedUpdateDlUrl(url)) {
+        return;
+    }
+    str::ReplaceWithCopy(&updateInfo->downloadPage, url);
 }
 #elif !OS_WIN
 static TempStr OsNameTemp() {

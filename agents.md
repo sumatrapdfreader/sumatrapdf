@@ -162,11 +162,13 @@ and the build passes it as defines (`SUMATRA_VER`, `GIT_COMMIT_ID`) to
 `currentVersion`, `BuiltOnDate()` (from `__DATE__`) and `gitCommidId`. `src/ng/Version.h` is ng's own. The macOS release script is
 `build-ng-mac.ts` in `../hack/sumatrapdf/build`: it uploads the app and its
 `.dSYM` to R2 `software/sumatrapdfng/mac/<ver>/`. The Linux release script
-is `build-ng-linux.ts` there: it builds a `.deb` per Ubuntu release (22.04,
-24.04, 26.04) in containers (`wslc` on Windows, Apple `container` on macOS,
-docker on Linux; images cached in `~/data/sumatra-build`) by running
-`cmd/ng-deb.ts` in each, and uploads them with their `.debug` symbols to
-`software/sumatrapdfng/linux/<ver>/`. The package's desktop entry, MIME
+is `build-ng-linux.ts` there: it starts the manual
+`.github/workflows/ng-linux-release.yml` workflow for the pushed master
+commit, waits for it, downloads its artifacts and uploads them with their
+`.debug` symbols, an `index.html` and the update-check file to
+`software/sumatrapdfng/linux/<ver>/`. The workflow runs `cmd/ng-linux-ci.sh`
+in a distro container per package: `cmd/ng-deb.ts` (Ubuntu, Debian),
+`cmd/ng-rpm.ts` (Fedora), `cmd/ng-tar.ts` (portable), for x86_64 and arm64. The package's desktop entry, MIME
 types and icons live in `src/ng/linux/`; `cmd/update-linux-icons.ts`
 regenerates the icons from the Windows artwork.
 

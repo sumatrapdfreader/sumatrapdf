@@ -5,6 +5,11 @@ import { join } from "node:path";
 
 export const maxRev = 9;
 
+// set by the Linux release workflow: the version build-ng-linux.ts picked,
+// so a runner in another time zone doesn't build a different day
+export const ngVerEnv = "SUMATRA_NG_VER";
+const verRx = /^(\d\d)\.(\d\d)\.(\d\d)(?:\.(\d))?$/;
+
 export type NgVersion = {
   /** 26.10.03.1 */
   ver: string;
@@ -29,6 +34,15 @@ const memo = new Map<number, NgVersion>();
 export function ngVersion(rev = 0): NgVersion {
   let res = memo.get(rev);
   if (res) return res;
+  const fixed = process.env[ngVerEnv];
+  if (fixed) {
+    const m = verRx.exec(fixed);
+    if (!m) throw new Error(`${ngVerEnv}=${fixed}: not yy.mm.dd[.n]`);
+    const [yy, mm, dd, r] = m.slice(1).map((s) => Number(s ?? 0)) as [number, number, number, number];
+    res = { ver: fixed, rc: `${yy},${mm},${dd},${r}`, gitSha1: gitSha1() };
+    memo.set(rev, res);
+    return res;
+  }
   const now = new Date();
   const [yyyy, mm, dd] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const yy = yyyy % 100;

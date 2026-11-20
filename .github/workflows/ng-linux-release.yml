@@ -1,0 +1,73 @@
+name: ng-linux-release
+# build-ng-linux.ts finds its run by this name
+run-name: ng-linux-release ${{ inputs.ver }}
+
+# Builds the ng Linux packages: a .deb per Ubuntu / Debian release, an .rpm
+# per Fedora release and a portable .tar.xz, each for x86_64 and arm64.
+# build-ng-linux.ts (in ../hack) starts it, downloads the artifacts and
+# uploads them to R2 with the update-check file.
+on:
+  workflow_dispatch:
+    inputs:
+      ver:
+        description: "version, yy.mm.dd[.n]"
+        required: true
+      sha:
+        description: "commit to build"
+        required: true
+      tests:
+        description: "run the unit tests (once, on Ubuntu 24.04 x86_64)"
+        type: boolean
+        default: true
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.target.image }} ${{ matrix.target.fmt }} ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        target:
+          - { image: "ubuntu:22.04", fmt: deb }
+          - { image: "ubuntu:24.04", fmt: deb }
+          - { image: "ubuntu:26.04", fmt: deb }
+          - { image: "debian:12", fmt: deb }
+          - { image: "debian:13", fmt: deb }
+          - { image: "fedora:44", fmt: rpm }
+          - { image: "fedora:45", fmt: rpm }
+          # oldest glibc, so it runs on newer distros
+          - { image: "ubuntu:22.04", fmt: tar }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+      - name: Build in ${{ matrix.target.image }}
+        env:
+          IMAGE: ${{ matrix.target.image }}
+          FMT: ${{ matrix.target.fmt }}
+          SUMATRA_NG_VER: ${{ inputs.ver }}
+          RUN_TESTS: ${{ inputs.tests && matrix.target.image == 'ubuntu:24.04' && matrix.runner == 'ubuntu-24.04' && '1' || '' }}
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src \
+            -e SUMATRA_NG_VER -e RUN_TESTS -e NG_LINUX_OUT=pkg \
+            "$IMAGE" bash cmd/ng-linux-ci.sh "$FMT"
+      - name: Artifact name
+        id: name
+        env:
+          IMAGE: ${{ matrix.target.image }}
+          FMT: ${{ matrix.target.fmt }}
+        run: echo "name=ng-linux-${IMAGE/:/}-$FMT-$(uname -m)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: ${{ steps.name.outputs.name }}
+          path: |
+            out/pkg/rel/*.deb
+            out/pkg/rel/*.rpm
+            out/pkg/rel/*.tar.xz
+            out/pkg/rel/*.debug
+          if-no-files-found: error
+          retention-days: 7

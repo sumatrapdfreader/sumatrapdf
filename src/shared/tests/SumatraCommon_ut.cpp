@@ -183,6 +183,11 @@ void UpdateCheckDecisionTest() {
     utassert(ShouldOfferProgramUpdate(StrL("3.8"), StrL("3.7"), false));
     utassert(!ShouldOfferProgramUpdate(StrL("3.7"), StrL("3.7"), false));
     utassert(!ShouldOfferProgramUpdate(StrL("3.6"), StrL("3.7"), false));
+    // ng: yy.mm.dd[.n]
+    utassert(ShouldOfferProgramUpdate(StrL("26.11.20.1"), StrL("26.11.20"), false));
+    utassert(ShouldOfferProgramUpdate(StrL("26.12.01"), StrL("26.11.20.3"), false));
+    utassert(!ShouldOfferProgramUpdate(StrL("26.11.20"), StrL("26.11.20.1"), false));
+    utassert(IsValidProgramVersion(StrL("26.11.20.1")));
 
     Str allowed[] = {StrL("https://www.sumatrapdfreader.org/")};
     Str url = StrL("https://www.sumatrapdfreader.org/update-check-rel.txt");
