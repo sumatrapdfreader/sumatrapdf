@@ -2,12 +2,13 @@
    License: GPLv3 */
 
 // ng: orig shows a number of things in top-level windows of their own (Browse
-// Files In Folder, the find window, Document Properties, ...). gpui opens a
-// window at a size and nothing else (see "gpui gaps": no owner, no style, no
-// position). On Windows, macOS and Linux the native frame is configured, and
-// such a window is a second gpui window described by a ToolWindowDesc. On
-// wasm, and in plugin mode, ToolWindowsAvailable() is false and the caller
-// draws the same content inside the frame.
+// Files In Folder, the find window, Document Properties, ...). On Windows,
+// macOS and Linux such a window is a second gpui window described by a
+// ToolWindowDesc, with its frame, owner and place from gpui's window options.
+// A window without a caption is moved by its body: the content marks that
+// area with gpui's ClickWinCaption. On wasm, and in plugin mode,
+// ToolWindowsAvailable() is false and the caller draws the same content
+// inside the frame.
 
 namespace gpui {
 struct Ctx;
@@ -94,10 +95,6 @@ struct ToolWindowDesc {
     void (*onExitSizeMove)(MainWindow* owner, Rect outer) = nullptr;
     // orig's WM_ACTIVATE
     void (*onActivate)(MainWindow* owner, bool active) = nullptr;
-    // a window without a caption is moved by its body (orig's WM_NCHITTEST ->
-    // HTCAPTION): true for the points that are the content's (a button). The
-    // point is in the window's client area, in dips
-    bool (*isClientPoint)(MainWindow* owner, Point pt) = nullptr;
     // for a window docked to the frame, as orig's popups that are put back in
     // place on the frame's WM_MOVE / WM_SIZE (RegisterOnWindowMoved): where it
     // belongs now, in screen pixels; empty: nowhere, it is hidden. Asked when

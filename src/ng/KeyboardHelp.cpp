@@ -50,10 +50,6 @@ struct KeyboardHelpDlg {
     // null: a dialog in the frame
     ToolWindow* tw = nullptr;
     bool parentFullscreen = false;
-    // the close button as laid out last frame
-    gpui::Bounds closeBounds{};
-    // the two columns at their natural height (dips), as orig's fonts measure
-    float columnsDy = 0;
 };
 
 static KeyboardHelpDlg gKbHelp;
@@ -301,19 +297,6 @@ static void KbHelpToolOnClosed(MainWindow*) {
     CloseKeyboardHelp();
 }
 
-// orig's OnNcHitTest: everything but the close button moves the window. ng:
-// and but the scrollbar of the columns
-static bool KbHelpIsClientPoint(MainWindow*, Point pt) {
-    gp::Point p{(float)pt.x, (float)pt.y};
-    if (gKbHelp.closeBounds.Contains(p)) {
-        return true;
-    }
-    const gp::Bounds& v = gKbHelp.viewBounds;
-    bool scrolls = gKbHelp.columnsDy > v.h + 1;
-    constexpr float kScrollbarDx = 16;
-    return scrolls && v.Contains(p) && p.x >= v.x + v.w - kScrollbarDx;
-}
-
 // ng: gpui has no table whose columns take the width of their widest cell,
 // and the window has to have its size before it is made, so the texts are
 // measured here the way orig measures them (DirectWrite, rounded up) in
@@ -401,7 +384,6 @@ static ToolWindowDesc KbHelpToolDesc() {
     desc.build = KbHelpToolBuild;
     desc.onKey = KbHelpToolOnKey;
     desc.onClosed = KbHelpToolOnClosed;
-    desc.isClientPoint = KbHelpIsClientPoint;
     return desc;
 }
 
@@ -445,8 +427,6 @@ static void KbHelpOpenToolWindow(MainWindow* win) {
     int nSections = CollectKbSections(gKbHelp.dataSource, sections);
     KbHelpDims dims;
     MeasureKbHelp(win, sections, nSections, dims);
-    gKbHelp.closeBounds = {};
-    gKbHelp.columnsDy = dims.columnsDy;
     gKbHelp.tw = ToolWindowOpen(KbHelpToolDesc(), win, KbHelpToolRect(win, dims));
 }
 
@@ -463,7 +443,6 @@ static gp::El* KbHelpToolBuild(MainWindow* win, gp::Ctx* cx) {
     int nSections = CollectKbSections(ds, sections);
     KbHelpDims dims;
     MeasureKbHelp(win, sections, nSections, dims);
-    gKbHelp.columnsDy = dims.columnsDy;
     float rowDy = std::max(dims.capDy, dims.textDy);
 
     gp::El* columns[2];
@@ -527,7 +506,6 @@ static gp::El* KbHelpToolBuild(MainWindow* win, gp::Ctx* cx) {
                       ->W(kKbHelpCloseDx)
                       ->H(kKbHelpCloseDx)
                       ->Shrink0()
-                      ->BoundsOut(&gKbHelp.closeBounds)
                       ->Child(gpc::Button::New(cx, GStrL("kbhelp-close"))
                                   ->Icon(gp::IconName::Close)
                                   ->WithSize(gp::UiSize::XSmall)
@@ -535,12 +513,15 @@ static gp::El* KbHelpToolBuild(MainWindow* win, gp::Ctx* cx) {
                                   ->Ghost()
                                   ->OnClick(gp::ListenTo(gKbHelpView, &KeyboardHelpView::OnClose))
                                   ->IntoEl()));
+    // orig's OnNcHitTest: everything but the close button (and, in ng, the
+    // scrollbar) moves the window
     return gp::Div(cx->a)
         ->FlexCol()
         ->W(gp::kFill)
         ->Flex1()
         ->MinH(0)
         ->Pad(kKbHelpPad)
+        ->Click(gp::ClickWinCaption)
         ->Child(header)
         ->Child(gp::Div(cx->a)->W(gp::kFill)->H(kKbHelpSepGapTop)->Shrink0())
         ->Child(gp::Div(cx->a)->W(gp::kFill)->H(1)->Shrink0()->Bg(th.border))

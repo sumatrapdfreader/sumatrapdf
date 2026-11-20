@@ -73,9 +73,6 @@
 #include "gui/Sidebar.h"
 #include "gui/NavFilesUI.h"
 #include "gui/ToolWindow.h"
-#if !OS_WIN && !OS_WASM
-#include "gui/ToolWindowPlat.h"
-#endif
 #include "HomePage.h"
 #include "DocumentProperties.h"
 #include "TabGroupsManage.h"
@@ -737,17 +734,6 @@ TempStr AppShellTestInputHwnd(HWND hwnd, Str kind, int a, int b, int c, int d) {
     return res;
 }
 
-// orig's HwndSetFocus(hwndFrame) from one of its tool windows: the frame gets
-// the keys again. Only when one of our windows is active: it doesn't take the
-// focus from another app
-void AppShellMakeKeyWindow(MainWindow* win) {
-    HWND hwnd = AppShellNativeHwnd(win);
-    HWND active = GetActiveWindow();
-    if (hwnd && active && active != hwnd) {
-        SetActiveWindow(hwnd);
-    }
-}
-
 // orig's WM_CONTEXTMENU: from the keyboard (-1, -1) the Apps key's menu, from a
 // screen point the menu a right click there opens. Both are gpui's menus.
 // False for a point outside the client area (a border): DefWindowProc's.
@@ -977,18 +963,18 @@ void AppShellSetFullScreen(MainWindow* win, bool fullScreen, bool) {
     // toggleFullScreen refuses a client-titlebar window and can close it.
     // Cover the monitor, and put the old frame back on the way out.
     if (fullScreen) {
-        Rect cur = ToolWinNativeFrame(gw);
+        Rect cur = FromGpui(gp::WindowFrameBounds(gw));
         if (!cur.IsEmpty()) {
             win->normalWindowRc = cur;
         }
-        Rect mon = ToolWinNativeMonitor(gw);
+        gp::ScreenBounds mon = gp::WindowDisplayBounds(gw);
         if (!mon.IsEmpty()) {
-            ToolWinNativeSetFrame(gw, mon, false);
+            gp::WindowSetFrameBounds(gw, mon);
         }
         return;
     }
     if (!win->normalWindowRc.IsEmpty()) {
-        ToolWinNativeSetFrame(gw, win->normalWindowRc, false);
+        gp::WindowSetFrameBounds(gw, ToGpuiScreen(win->normalWindowRc));
     }
 #else
     gp::WindowSetFullScreen(gw, fullScreen);
@@ -1031,33 +1017,11 @@ Rect AppShellShiftToWorkArea(Rect rect, MainWindow*, bool) {
 
 #else // macOS, Linux
 
-// same rules as ShiftRectToWorkArea
-static Rect ShiftIntoWorkArea(Rect rect, Rect monitor, bool fully) {
-    if (monitor.IsEmpty()) {
-        return rect;
-    }
-    if (rect.y + rect.dy <= monitor.y || (fully && rect.y < monitor.y)) {
-        rect.Offset(0, monitor.y - rect.y);
-    } else if (rect.y >= monitor.y + monitor.dy || (fully && rect.y + rect.dy > monitor.y + monitor.dy)) {
-        rect.Offset(0, monitor.y - rect.y + monitor.dy - rect.dy);
-    }
-    if (rect.x + rect.dx <= monitor.x || (fully && rect.x < monitor.x)) {
-        rect.Offset(monitor.x - rect.x, 0);
-    } else if (rect.x >= monitor.x + monitor.dx || (fully && rect.x + rect.dx > monitor.x + monitor.dx)) {
-        rect.Offset(monitor.x - rect.x + monitor.dx - rect.dx, 0);
-    }
-    return rect;
-}
-
-static bool MainWindowTitled(gp::Window* gw) {
-    return gw && !gw->opts.borderless && !gw->opts.clientTitleBar;
-}
-
 Rect AppShellWindowScreenRect(MainWindow* win) {
     if (!win || !win->gpuiWin) {
         return {};
     }
-    Rect r = ToolWinNativeFrame(win->gpuiWin);
+    Rect r = FromGpui(gp::WindowFrameBounds(win->gpuiWin));
     return r.IsEmpty() ? win->frameRc : r;
 }
 
@@ -1065,7 +1029,7 @@ Rect AppShellCanvasScreenRect(MainWindow* win) {
     if (!win || !win->gpuiWin || win->canvasRc.IsEmpty()) {
         return {};
     }
-    Rect content = ToolWinNativeContentRect(win->gpuiWin);
+    Rect content = FromGpui(gp::WindowContentBounds(win->gpuiWin));
     if (content.IsEmpty()) {
         return {};
     }
@@ -1078,14 +1042,13 @@ bool AppShellPlaceWindow(MainWindow* win, Rect r, bool maximize) {
     if (!gw) {
         return false;
     }
-    bool titled = MainWindowTitled(gw);
     if (!r.IsEmpty()) {
-        ToolWinNativeSetFrame(gw, r, titled);
+        gp::WindowSetFrameBounds(gw, ToGpuiScreen(r));
     }
     if (maximize) {
-        Rect work = ToolWinNativeWorkArea(gw);
+        gp::ScreenBounds work = gp::WindowDisplayVisibleBounds(gw);
         if (!work.IsEmpty()) {
-            ToolWinNativeSetFrame(gw, work, titled);
+            gp::WindowSetFrameBounds(gw, work);
         }
         win->isMaximized = true;
         gw->maximized = true;
@@ -1094,15 +1057,17 @@ bool AppShellPlaceWindow(MainWindow* win, Rect r, bool maximize) {
 }
 
 Rect AppShellWorkArea(MainWindow* win) {
-    return ToolWinNativeWorkArea(win ? win->gpuiWin : nullptr);
+    return FromGpui(gp::WindowDisplayVisibleBounds(win ? win->gpuiWin : nullptr));
 }
 
 Rect AppShellMonitorRect(MainWindow* win) {
-    return ToolWinNativeMonitor(win ? win->gpuiWin : nullptr);
+    return FromGpui(gp::WindowDisplayBounds(win ? win->gpuiWin : nullptr));
 }
 
+// same rules as ShiftRectToWorkArea
 Rect AppShellShiftToWorkArea(Rect rect, MainWindow* win, bool fully) {
-    return ShiftIntoWorkArea(rect, AppShellWorkArea(win), fully);
+    gp::ScreenBounds area = gp::WindowDisplayVisibleBounds(win ? win->gpuiWin : nullptr);
+    return FromGpui(gp::ScreenBoundsShiftInto(ToGpuiScreen(rect), area, fully));
 }
 
 #endif // macOS, Linux

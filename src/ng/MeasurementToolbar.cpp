@@ -93,9 +93,7 @@ static MeasurementToolbar* gMeasure = nullptr;
 // orig's HwndSetFocus(win->hwndFrame)
 static void FocusFrame(MainWindow* win) {
     AppShellFocusFrame(win);
-#if OS_DARWIN || OS_WIN
-    AppShellMakeKeyWindow(win);
-#endif
+    gp::WindowActivateInApp(win->gpuiWin);
 }
 
 //--- the window

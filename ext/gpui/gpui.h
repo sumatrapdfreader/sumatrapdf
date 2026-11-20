@@ -8981,6 +8981,49 @@ struct Tiling {
     bool AllTiled() const { return top && bottom && left && right; }
 };
 
+enum class WindowKind : uint8_t {
+    Normal,
+
+    PopUp,
+
+    Floating,
+
+    Dialog,
+};
+
+struct ScreenBounds {
+    int x = 0;
+    int y = 0;
+    int w = 0;
+    int h = 0;
+
+    bool IsEmpty() const { return w <= 0 || h <= 0; }
+    bool operator==(const ScreenBounds& o) const {
+        return x == o.x && y == o.y && w == o.w && h == o.h;
+    }
+    bool operator!=(const ScreenBounds& o) const { return !(*this == o); }
+};
+
+ScreenBounds ScreenBoundsShiftInto(ScreenBounds r, ScreenBounds area,
+                                   bool fully);
+
+ScreenBounds ScreenBoundsCentered(ScreenBounds size, ScreenBounds over);
+
+enum class WindowBoundsEvent : uint8_t {
+
+    Changed,
+
+    MoveResizeEnded,
+};
+using WindowBoundsFn = void (*)(void* data, Window* win, WindowBoundsEvent ev);
+using WindowActivationFn = void (*)(void* data, Window* win, bool active);
+
+enum class FrameAppearance : uint8_t {
+    System,
+    Light,
+    Dark,
+};
+
 struct WinOpts {
     bool borderless = false;
 
@@ -8991,6 +9034,27 @@ struct WinOpts {
     bool transparent = false;
     bool anim = false;
     int timerMs = 500;
+
+    WindowKind kind = WindowKind::Normal;
+
+    Window* parent = nullptr;
+
+    bool frameless = false;
+
+    bool utility = false;
+
+    bool minimizable = true;
+    bool maximizable = true;
+
+    bool focus = true;
+    bool show = true;
+
+    bool activatable = true;
+
+    ScreenBounds bounds = {};
+
+    Size minSize = {};
+    Size maxSize = {};
 };
 
 struct FrameTiming {
@@ -9070,6 +9134,9 @@ struct App {
 
     void (*hostThemeHandler)(App*, bool dark) = nullptr;
     void (*onOpenUrls)(App*, const Str* urls, int n) = nullptr;
+
+    void (*onWindowClosed)(void* data, Window* win) = nullptr;
+    void* onWindowClosedData = nullptr;
 
     Vec<EntitySlot> entities;
     Vec<int32_t> freeSlots;
@@ -9206,6 +9273,13 @@ struct Window {
     bool running = true;
     WindowShouldCloseFn shouldClose = nullptr;
     void* shouldCloseData = nullptr;
+
+    WindowBoundsFn onBounds = nullptr;
+    void* onBoundsData = nullptr;
+    WindowActivationFn onActivation = nullptr;
+    void* onActivationData = nullptr;
+
+    Window* modalParent = nullptr;
     bool anim = false;
 
     bool animFrame = false;
@@ -10203,6 +10277,45 @@ bool AppMenuRowForId(const App* app, int id, uint32_t* action, int64_t* arg);
 void AppMenuClear(App* app);
 
 void AppActivate(Window* win);
+
+ScreenBounds WindowFrameBounds(Window* win);
+
+ScreenBounds WindowContentBounds(Window* win);
+
+void WindowSetFrameBounds(Window* win, ScreenBounds outer);
+
+ScreenBounds WindowFrameForContent(Window* nearby, const WinOpts& opts,
+                                   ScreenBounds content);
+
+ScreenBounds WindowDisplayBounds(Window* win);
+ScreenBounds WindowDisplayVisibleBounds(Window* win);
+
+void WindowSetVisible(Window* win, bool visible, bool activate);
+bool WindowIsVisible(Window* win);
+
+void WindowActivateInApp(Window* win);
+
+bool WindowIsActive(Window* win);
+
+void WindowSetParent(Window* win, Window* parent);
+
+void WindowSetMinSize(Window* win, Size content);
+void WindowSetMaxSize(Window* win, Size content);
+
+bool WindowIsEnabled(Window* win);
+
+void WindowSetFrameAppearance(Window* win, FrameAppearance appearance);
+
+void WindowOnBoundsChanged(Window* win, WindowBoundsFn fn, void* data);
+
+void WindowOnActivationChanged(Window* win, WindowActivationFn fn, void* data);
+
+void AppOnWindowClosed(App* app, void (*fn)(void* data, Window* win),
+                       void* data);
+#if GPUI_OS_MAC
+
+void WindowSendNativeKey(Window* win, int macKeyCode);
+#endif
 
 float WindowScaleFactor(Window* win);
 
@@ -39347,6 +39460,36 @@ void WindowClampToDisplay(int* dipW, int* dipH, int screenW, int screenH);
 bool WindowGeomRequested(int* x, int* y, int* w, int* h);
 
 int GpuiTakeRuntimeArgs(int argc, char** argv);
+
+#if GPUI_OS_WINDOWS || GPUI_OS_MAC || GPUI_OS_LINUX
+#define GPUI_WINDOW_FRAME_UNSUPPORTED 0
+
+void PlatWindowShow(Window* win, bool visible, bool activate);
+
+void PlatWindowSetParent(Window* win, Window* parent);
+
+void PlatWindowSetModal(Window* dlg, Window* parent, bool on);
+#else
+#define GPUI_WINDOW_FRAME_UNSUPPORTED 1
+inline void PlatWindowShow(Window* win, bool visible, bool activate) {
+    (void)win, (void)visible, (void)activate;
+}
+inline void PlatWindowSetParent(Window* win, Window* parent) {
+    (void)win, (void)parent;
+}
+inline void PlatWindowSetModal(Window* dlg, Window* parent, bool on) {
+    (void)dlg, (void)parent, (void)on;
+}
+#endif
+
+void WindowModalTake(Window* dlg);
+void WindowModalRelease(Window* dlg);
+
+void WindowBoundsNotify(Window* win, WindowBoundsEvent ev);
+
+inline bool WindowOptsTitled(const WinOpts& opts) {
+    return !opts.frameless && !opts.borderless && !opts.clientTitleBar;
+}
 
 bool PlatInit(App* app);
 void PlatShutdown(App* app);

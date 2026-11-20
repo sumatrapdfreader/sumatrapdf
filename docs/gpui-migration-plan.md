@@ -45,6 +45,8 @@ ng keeps OS code that a UI framework should own. Each item moves it into
 
 ## Items
 
+All nine are done (2026-11-20); gpui-kit-cpp commits d4afa4d3 to 97465f44.
+
 | # | ng code | gpui API (Rust name) | Notes |
 |---|---|---|---|
 | 1 | `AppShellRenderScale` (`NativeWindow_mac.mm`, `NativeWindow_wasm.cpp`) | `WindowScaleFactor` (`window.scale_factor()`) | per `window_*.cpp` |

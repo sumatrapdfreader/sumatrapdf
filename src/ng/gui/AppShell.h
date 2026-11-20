@@ -154,9 +154,6 @@ void AppShellToggleDpiOverride();
 void AppShellHandleOpenDocs(gpui::App* app);
 void AppShellOpenDocsReady();
 #endif
-#if OS_DARWIN || OS_WIN
-void AppShellMakeKeyWindow(MainWindow* win);
-#endif
 // presentation mode's auto-hidden cursor (orig hides it with SetCursor(null))
 void AppShellShowCursor(MainWindow* win, bool show);
 // The shell tick drops to a slow cadence while the window is idle. Call this
@@ -170,6 +167,8 @@ void AppShellPreventSleep(bool on);
 HWND AppShellNativeHwnd(MainWindow* win);
 MainWindow* AppShellWindowFromHwnd(HWND hwnd);
 bool AppShellOnWmContextMenu(MainWindow* win, int screenX, int screenY);
+// a tool window's handle: command ids sent at it run on its owner
+void AppShellClaimToolHwnd(HWND hwnd);
 // the top-level windows of another SumatraPDF process: `procId`, or with 0 any
 // process running this exe (orig: FindWindowW(kFrameClassName))
 void AppShellFindOtherInstanceWindows(DWORD procId, Vec<HWND>& out);

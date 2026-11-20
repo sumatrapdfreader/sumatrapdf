@@ -93,6 +93,15 @@ inline Rect FromGpui(gp::Bounds b) {
     return Rect{(int)b.x, (int)b.y, (int)b.w, (int)b.h};
 }
 
+// screen rectangles: device pixels on Windows and X11, points on macOS
+inline gp::ScreenBounds ToGpuiScreen(Rect r) {
+    return gp::ScreenBounds{r.x, r.y, r.dx, r.dy};
+}
+
+inline Rect FromGpui(gp::ScreenBounds b) {
+    return Rect{b.x, b.y, b.w, b.h};
+}
+
 // ng: gpui's Listen() needs the listener's owner entity type, so it can't be
 // wrapped generically. This is the one shape the shell repeats: a handler on
 // the root view entity.

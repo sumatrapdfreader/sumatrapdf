@@ -5974,7 +5974,14 @@ bool WindowIsTouchPress(Ctx* cx) {
 }
 
 void WindowSetActive(Window* win, bool active) {
-    if (!win || win->active == active) {
+    if (!win) {
+        return;
+    }
+
+    if (win->onActivation) {
+        win->onActivation(win->onActivationData, win, active);
+    }
+    if (win->active == active) {
         return;
     }
     win->active = active;
@@ -26067,7 +26074,7 @@ static void DispatchMouseDown(Window* win, const MouseDownEvent& in) {
 
     bool caption = id == ClickWinCaption ||
                    (id == 0 && win->opts.clientTitleBar && y < kCaptionH);
-    if (in.clickCount == 2 && caption) {
+    if (in.clickCount == 2 && caption && win->opts.maximizable) {
         AppToggleMaximize(win);
     }
     AppInvalidate(win);
@@ -27622,6 +27629,11 @@ int WindowChromeHit(Window* win, float x, float y) {
         return 0;
     }
     int id = HitTest(&win->paint, x, y);
+
+    bool horizontal = false;
+    if (id == ClickWinCaption && ScrollbarAt(&win->paint, x, y, &horizontal)) {
+        return 0;
+    }
     if (id == ClickWinMin || id == ClickWinMax || id == ClickWinClose ||
         id == ClickWinCaption) {
         return id;
@@ -27740,6 +27752,20 @@ void WindowClosed(Window* win) {
 
     PromptsWindowClosed(win);
     DragOutWindowClosed(win);
+    if (win->app->onWindowClosed) {
+        win->app->onWindowClosed(win->app->onWindowClosedData, win);
+    }
+
+    WindowModalRelease(win);
+    for (int i = 0; i < win->app->windows.len; i++) {
+        Window* other = win->app->windows[i];
+        if (other->opts.parent == win) {
+            other->opts.parent = nullptr;
+        }
+        if (other->modalParent == win) {
+            other->modalParent = nullptr;
+        }
+    }
 
     if (win->input) {
         InputBlur(win->input, win->app, win);
@@ -27773,6 +27799,137 @@ void WindowOnShouldClose(Window* win, WindowShouldCloseFn fn, void* data) {
     }
     win->shouldClose = fn;
     win->shouldCloseData = data;
+}
+
+ScreenBounds ScreenBoundsShiftInto(ScreenBounds r, ScreenBounds area,
+                                   bool fully) {
+    if (area.IsEmpty()) {
+        return r;
+    }
+    int areaRight = area.x + area.w;
+    int areaBottom = area.y + area.h;
+    if (r.y + r.h <= area.y || (fully && r.y < area.y)) {
+        r.y = area.y;
+    } else if (r.y >= areaBottom || (fully && r.y + r.h > areaBottom)) {
+        r.y = areaBottom - r.h;
+    }
+    if (r.x + r.w <= area.x || (fully && r.x < area.x)) {
+        r.x = area.x;
+    } else if (r.x >= areaRight || (fully && r.x + r.w > areaRight)) {
+        r.x = areaRight - r.w;
+    }
+    return r;
+}
+
+ScreenBounds ScreenBoundsCentered(ScreenBounds size, ScreenBounds over) {
+    return {over.x + (over.w - size.w) / 2, over.y + (over.h - size.h) / 2,
+            size.w, size.h};
+}
+
+void WindowSetVisible(Window* win, bool visible, bool activate) {
+    if (!win || !win->plat) {
+        return;
+    }
+    if (visible) {
+        WindowModalTake(win);
+    } else {
+        WindowModalRelease(win);
+    }
+    PlatWindowShow(win, visible, activate);
+}
+
+static bool WindowKeepsParent(const Window* win) {
+    return win->opts.kind == WindowKind::Floating ||
+           win->opts.kind == WindowKind::Dialog;
+}
+
+void WindowSetParent(Window* win, Window* parent) {
+    if (!win || win->opts.parent == parent) {
+        return;
+    }
+
+    bool held = win->modalParent != nullptr;
+    WindowModalRelease(win);
+    win->opts.parent = parent;
+    if (win->plat && WindowKeepsParent(win)) {
+        PlatWindowSetParent(win, parent);
+    }
+    if (held) {
+        WindowModalTake(win);
+    }
+}
+
+bool WindowIsEnabled(Window* win) {
+    if (!win) {
+        return false;
+    }
+    for (int i = 0; i < win->app->windows.len; i++) {
+        if (win->app->windows[i]->modalParent == win) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void WindowModalTake(Window* dlg) {
+    if (!dlg || dlg->opts.kind != WindowKind::Dialog || dlg->modalParent) {
+        return;
+    }
+    Window* parent = dlg->opts.parent;
+    if (!parent || !parent->plat) {
+        return;
+    }
+    dlg->modalParent = parent;
+    PlatWindowSetModal(dlg, parent, true);
+}
+
+void WindowModalRelease(Window* dlg) {
+    Window* parent = dlg ? dlg->modalParent : nullptr;
+    if (!parent) {
+        return;
+    }
+    dlg->modalParent = nullptr;
+
+    if (!WindowIsEnabled(parent) || !parent->plat) {
+        return;
+    }
+
+    bool wasActive = dlg->plat && WindowIsActive(dlg);
+    PlatWindowSetModal(dlg, parent, false);
+    if (wasActive) {
+        WindowActivateInApp(parent);
+    }
+}
+
+void WindowOnBoundsChanged(Window* win, WindowBoundsFn fn, void* data) {
+    if (!win) {
+        return;
+    }
+    win->onBounds = fn;
+    win->onBoundsData = data;
+}
+
+void WindowOnActivationChanged(Window* win, WindowActivationFn fn, void* data) {
+    if (!win) {
+        return;
+    }
+    win->onActivation = fn;
+    win->onActivationData = data;
+}
+
+void AppOnWindowClosed(App* app, void (*fn)(void* data, Window* win),
+                       void* data) {
+    if (!app) {
+        return;
+    }
+    app->onWindowClosed = fn;
+    app->onWindowClosedData = data;
+}
+
+void WindowBoundsNotify(Window* win, WindowBoundsEvent ev) {
+    if (win && win->onBounds) {
+        win->onBounds(win->onBoundsData, win, ev);
+    }
 }
 
 static void AppFetchLanded(App* app) {
@@ -28842,6 +28999,55 @@ bool WindowStartDragOut(Window* win, const DragOutData& data, Listener onEnd) {
 }
 
 }
+
+#line 1 "src/gpui/window_frame_unsupported.cpp"
+
+#if GPUI_WINDOW_FRAME_UNSUPPORTED
+
+namespace gpui {
+
+ScreenBounds WindowFrameBounds(Window*) {
+    return {};
+}
+
+ScreenBounds WindowContentBounds(Window*) {
+    return {};
+}
+
+void WindowSetFrameBounds(Window*, ScreenBounds) {}
+
+ScreenBounds WindowFrameForContent(Window*, const WinOpts&,
+                                   ScreenBounds content) {
+    return content;
+}
+
+ScreenBounds WindowDisplayBounds(Window*) {
+    return {};
+}
+
+ScreenBounds WindowDisplayVisibleBounds(Window*) {
+    return {};
+}
+
+bool WindowIsVisible(Window* win) {
+    return win && win->plat;
+}
+
+void WindowActivateInApp(Window*) {}
+
+bool WindowIsActive(Window*) {
+    return false;
+}
+
+void WindowSetMinSize(Window*, Size) {}
+
+void WindowSetMaxSize(Window*, Size) {}
+
+void WindowSetFrameAppearance(Window*, FrameAppearance) {}
+
+}
+
+#endif
 
 #line 1 "src/base/accordion.cpp"
 
@@ -245509,6 +245715,14 @@ struct PlatWindow {
     bool xdndDrop = false;
     int xdndX = 0;
     int xdndY = 0;
+
+    ScreenBounds lastFrame = {};
+
+    ScreenBounds requested = {};
+    bool settling = false;
+    int settleCount = 0;
+
+    bool moveEndPending = false;
 };
 
 static XDisplay* gDpy = nullptr;
@@ -245753,6 +245967,28 @@ static void SetUndecorated(XWindow xwin) {
     hints.decorations = 0;
     XChangeProperty(gDpy, xwin, aMotifWmHints, aMotifWmHints, 32,
                     PropModeReplace, (unsigned char*)&hints, 5);
+}
+
+static void SetWindowType(XWindow xwin, const WinOpts& opts) {
+    const char* type = nullptr;
+    if (opts.kind == WindowKind::Dialog) {
+        type = "_NET_WM_WINDOW_TYPE_DIALOG";
+    } else if (opts.utility) {
+        type = "_NET_WM_WINDOW_TYPE_UTILITY";
+    }
+    if (type) {
+        Atom typeProp = XInternAtom(gDpy, "_NET_WM_WINDOW_TYPE", False);
+        Atom value = XInternAtom(gDpy, type, False);
+        XChangeProperty(gDpy, xwin, typeProp, XA_ATOM, 32, PropModeReplace,
+                        (unsigned char*)&value, 1);
+    }
+    if (opts.kind == WindowKind::PopUp) {
+        Atom states[2] = {
+            XInternAtom(gDpy, "_NET_WM_STATE_ABOVE", False),
+            XInternAtom(gDpy, "_NET_WM_STATE_SKIP_TASKBAR", False)};
+        XChangeProperty(gDpy, xwin, aNetWmState, XA_ATOM, 32, PropModeReplace,
+                        (unsigned char*)states, 2);
+    }
 }
 
 static int KeyFor(KeySym ks) {
@@ -246987,6 +247223,8 @@ static void DestroyPlatWindow(Window* win) {
     if (!pw) {
         return;
     }
+
+    WindowModalRelease(win);
     if (pw->back) {
         cairo_surface_destroy(pw->back);
     }
@@ -247266,6 +247504,116 @@ static void OnXdndClient(Window* win, const XClientMessageEvent* ev) {
     }
 }
 
+constexpr int kTitleGuess = 28;
+constexpr int kBorderGuess = 1;
+struct FrameExtentsPx {
+    int left = 0;
+    int right = 0;
+    int top = 0;
+    int bottom = 0;
+};
+static FrameExtentsPx gSeenExtents = {};
+
+static FrameExtentsPx ReadFrameExtents(XWindow xwin) {
+    FrameExtentsPx e;
+    Atom type = 0;
+    int format = 0;
+    unsigned long n = 0, after = 0;
+    unsigned char* data = nullptr;
+    if (!xwin || XGetWindowProperty(gDpy, xwin, aNetFrameExtents, 0, 4, False,
+                                    XA_CARDINAL, &type, &format, &n, &after,
+                                    &data) != Success) {
+        return e;
+    }
+    if (data && format == 32 && n >= 4) {
+        auto* v = (long*)data;
+        e = {(int)v[0], (int)v[1], (int)v[2], (int)v[3]};
+        if (e.top > 0 || e.left > 0) {
+            gSeenExtents = e;
+        }
+    }
+    if (data) {
+        XFree(data);
+    }
+    return e;
+}
+
+static FrameExtentsPx PlacementExtents(const WinOpts& opts, XWindow xwin) {
+    if (!WindowOptsTitled(opts)) {
+        return {};
+    }
+    FrameExtentsPx e = ReadFrameExtents(xwin);
+    if (e.top > 0 || e.left > 0) {
+        return e;
+    }
+    if (gSeenExtents.top > 0 || gSeenExtents.left > 0) {
+        return gSeenExtents;
+    }
+    return {kBorderGuess, kBorderGuess, kTitleGuess, kBorderGuess};
+}
+
+static bool PointerButtonsDown() {
+    XWindow root = 0, child = 0;
+    int rx = 0, ry = 0, wx = 0, wy = 0;
+    unsigned mask = 0;
+    if (!XQueryPointer(gDpy, gRoot, &root, &child, &rx, &ry, &wx, &wy, &mask)) {
+        return false;
+    }
+    return (mask & (Button1Mask | Button2Mask | Button3Mask)) != 0;
+}
+
+static bool FrameNear(ScreenBounds a, ScreenBounds b) {
+    auto near4 = [](int x, int y) { return x - y < 4 && y - x < 4; };
+    return near4(a.x, b.x) && near4(a.y, b.y) && near4(a.w, b.w) &&
+           near4(a.h, b.h);
+}
+
+static void FrameConfigured(Window* win) {
+    PlatWindow* pw = win->plat;
+    ScreenBounds now = WindowFrameBounds(win);
+    if (now.IsEmpty() || now == pw->lastFrame) {
+        return;
+    }
+    pw->lastFrame = now;
+    bool down = PointerButtonsDown();
+    if (pw->settling) {
+        if (FrameNear(now, pw->requested)) {
+            pw->settling = false;
+            return;
+        }
+        if (!down && ++pw->settleCount <= 8) {
+            return;
+        }
+        pw->settling = false;
+        if (!down) {
+            return;
+        }
+    }
+    WindowBoundsNotify(win, WindowBoundsEvent::Changed);
+    if (down) {
+        pw->moveEndPending = true;
+    }
+}
+
+static bool PollMoveEnds(App* app) {
+    bool waiting = false;
+    for (int i = 0; i < app->windows.len; i++) {
+        Window* w = app->windows[i];
+        if (!w->plat || !w->plat->moveEndPending) {
+            continue;
+        }
+        if (PointerButtonsDown()) {
+            waiting = true;
+            continue;
+        }
+        w->plat->moveEndPending = false;
+        WindowBoundsNotify(w, WindowBoundsEvent::MoveResizeEnded);
+    }
+    return waiting;
+}
+
+constexpr int kMoveEndPollMs = 50;
+
 static void HandleEvent(App* app, XEvent* ev) {
     if (ev->type == SelectionRequest) {
         OnSelectionRequest(&ev->xselectionrequest);
@@ -247297,6 +247645,7 @@ static void HandleEvent(App* app, XEvent* ev) {
                 pw->pxH = ev->xconfigure.height;
                 win->dirty = true;
             }
+            FrameConfigured(win);
             break;
         case PropertyNotify:
             if (ev->xproperty.atom == aNetAllowedActions) {
@@ -247585,6 +247934,231 @@ void AppMinimize(Window* win) {
         XIconifyWindow(gDpy, win->plat->xwin, gScreen);
         XFlush(gDpy);
     }
+}
+
+static XWindow XwinOf(Window* win) {
+    return win && win->plat ? win->plat->xwin : 0;
+}
+
+ScreenBounds WindowContentBounds(Window* win) {
+    XWindow xwin = XwinOf(win);
+    XWindowAttributes attr = {};
+    if (!xwin || !XGetWindowAttributes(gDpy, xwin, &attr)) {
+        return {};
+    }
+    int x = 0, y = 0;
+    XWindow child = 0;
+    if (!XTranslateCoordinates(gDpy, xwin, gRoot, 0, 0, &x, &y, &child)) {
+        return {};
+    }
+    return {x, y, attr.width, attr.height};
+}
+
+ScreenBounds WindowFrameBounds(Window* win) {
+    ScreenBounds c = WindowContentBounds(win);
+    if (c.IsEmpty()) {
+        return {};
+    }
+    FrameExtentsPx e = ReadFrameExtents(XwinOf(win));
+    return {c.x - e.left, c.y - e.top, c.w + e.left + e.right,
+            c.h + e.top + e.bottom};
+}
+
+void WindowSetFrameBounds(Window* win, ScreenBounds outer) {
+    XWindow xwin = XwinOf(win);
+    if (!xwin || outer.IsEmpty()) {
+        return;
+    }
+    FrameExtentsPx e = PlacementExtents(win->opts, xwin);
+    int w = std::max(outer.w - e.left - e.right, 1);
+    int h = std::max(outer.h - e.top - e.bottom, 1);
+    win->plat->requested = outer;
+    win->plat->settling = true;
+    win->plat->settleCount = 0;
+    XMoveResizeWindow(gDpy, xwin, outer.x + e.left, outer.y + e.top,
+                      (unsigned)w, (unsigned)h);
+    XFlush(gDpy);
+}
+
+ScreenBounds WindowFrameForContent(Window* nearby, const WinOpts& opts,
+                                   ScreenBounds content) {
+    (void)nearby;
+    FrameExtentsPx e = PlacementExtents(opts, 0);
+    return {content.x - e.left, content.y - e.top, content.w + e.left + e.right,
+            content.h + e.top + e.bottom};
+}
+
+static void X11WorkArea(int* x, int* y, int* w, int* h);
+
+ScreenBounds WindowDisplayBounds(Window* win) {
+    (void)win;
+    if (!gDpy) {
+        return {};
+    }
+    return {0, 0, DisplayWidth(gDpy, gScreen), DisplayHeight(gDpy, gScreen)};
+}
+
+ScreenBounds WindowDisplayVisibleBounds(Window* win) {
+    (void)win;
+    if (!gDpy) {
+        return {};
+    }
+    ScreenBounds r;
+    X11WorkArea(&r.x, &r.y, &r.w, &r.h);
+    return r;
+}
+
+static bool XwinViewable(XWindow xwin);
+
+void PlatWindowShow(Window* win, bool visible, bool activate) {
+    XWindow xwin = XwinOf(win);
+    if (!xwin) {
+        return;
+    }
+    if (!visible) {
+        XUnmapWindow(gDpy, xwin);
+        XFlush(gDpy);
+        return;
+    }
+
+    bool viewable = XwinViewable(xwin);
+    XMapRaised(gDpy, xwin);
+    if (viewable && activate && win->opts.activatable) {
+        XSetInputFocus(gDpy, xwin, RevertToParent, CurrentTime);
+    }
+    XFlush(gDpy);
+}
+
+bool WindowIsVisible(Window* win) {
+    XWindow xwin = XwinOf(win);
+    XWindowAttributes attr = {};
+    if (!xwin || !XGetWindowAttributes(gDpy, xwin, &attr)) {
+        return false;
+    }
+    return attr.map_state != IsUnmapped;
+}
+
+static bool XwinViewable(XWindow xwin) {
+    XWindowAttributes attr = {};
+    return xwin && XGetWindowAttributes(gDpy, xwin, &attr) &&
+           attr.map_state == IsViewable;
+}
+
+static XWindow FocusedXwin() {
+    XWindow focus = 0;
+    int revert = 0;
+    XGetInputFocus(gDpy, &focus, &revert);
+    return focus;
+}
+
+void WindowActivateInApp(Window* win) {
+    XWindow xwin = XwinOf(win);
+    XWindow focus = xwin ? FocusedXwin() : 0;
+    if (!focus || focus == xwin || !FindWindow(win->app, focus) ||
+        !XwinViewable(xwin)) {
+        return;
+    }
+    XRaiseWindow(gDpy, xwin);
+    XSetInputFocus(gDpy, xwin, RevertToParent, CurrentTime);
+    XFlush(gDpy);
+}
+
+bool WindowIsActive(Window* win) {
+    XWindow xwin = XwinOf(win);
+    return xwin && FocusedXwin() == xwin;
+}
+
+void PlatWindowSetParent(Window* win, Window* parent) {
+    XWindow xwin = XwinOf(win);
+    XWindow p = XwinOf(parent);
+    if (!xwin) {
+        return;
+    }
+    if (p) {
+        XSetTransientForHint(gDpy, xwin, p);
+    } else {
+        XDeleteProperty(gDpy, xwin, XA_WM_TRANSIENT_FOR);
+    }
+    XFlush(gDpy);
+}
+
+static XWindow gModalGrab = 0;
+
+void PlatWindowSetModal(Window* dlg, Window* parent, bool on) {
+    (void)parent;
+    if (gModalGrab) {
+        XUngrabPointer(gDpy, CurrentTime);
+        XUngrabKeyboard(gDpy, CurrentTime);
+        gModalGrab = 0;
+    }
+    XWindow xwin = XwinOf(dlg);
+    if (on && xwin) {
+        unsigned mask = ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+        if (XGrabPointer(gDpy, xwin, True, mask, GrabModeAsync, GrabModeAsync,
+                         0, 0, CurrentTime) == GrabSuccess) {
+            XGrabKeyboard(gDpy, xwin, True, GrabModeAsync, GrabModeAsync,
+                          CurrentTime);
+            gModalGrab = xwin;
+        }
+    }
+    XFlush(gDpy);
+}
+
+static void UpdateSizeHints(Window* win) {
+    XWindow xwin = XwinOf(win);
+    if (!xwin || !win->opts.resizable) {
+        return;
+    }
+    XSizeHints hints = {};
+    long supplied = 0;
+    XGetWMNormalHints(gDpy, xwin, &hints, &supplied);
+    const Size& mn = win->opts.minSize;
+    const Size& mx = win->opts.maxSize;
+    hints.flags &= ~(PMinSize | PMaxSize);
+    if (mn.w > 0 && mn.h > 0) {
+        hints.flags |= PMinSize;
+        hints.min_width = (int)mn.w;
+        hints.min_height = (int)mn.h;
+    }
+    if (mx.w > 0 || mx.h > 0) {
+        constexpr int kUnbounded = 1 << 20;
+        hints.flags |= PMaxSize;
+        hints.max_width = mx.w > 0 ? (int)mx.w : kUnbounded;
+        hints.max_height = mx.h > 0 ? (int)mx.h : kUnbounded;
+    }
+    XSetWMNormalHints(gDpy, xwin, &hints);
+    XFlush(gDpy);
+}
+
+void WindowSetMinSize(Window* win, Size content) {
+    if (win) {
+        win->opts.minSize = content;
+        UpdateSizeHints(win);
+    }
+}
+
+void WindowSetMaxSize(Window* win, Size content) {
+    if (win) {
+        win->opts.maxSize = content;
+        UpdateSizeHints(win);
+    }
+}
+
+void WindowSetFrameAppearance(Window* win, FrameAppearance appearance) {
+    XWindow xwin = XwinOf(win);
+    if (!xwin) {
+        return;
+    }
+    Atom prop = XInternAtom(gDpy, "_GTK_THEME_VARIANT", False);
+    if (appearance == FrameAppearance::System) {
+        XDeleteProperty(gDpy, xwin, prop);
+    } else {
+        Str v =
+            appearance == FrameAppearance::Dark ? StrL("dark") : StrL("light");
+        XChangeProperty(gDpy, xwin, prop, aUtf8String, 8, PropModeReplace,
+                        (unsigned char*)v.s, len(v));
+    }
+    XFlush(gDpy);
 }
 
 void AppToggleMaximize(Window* win) {
@@ -247932,12 +248506,21 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
     X11WorkArea(&wx, &wy, &sw, &sh);
     WindowClampToDisplay(&dipW, &dipH, sw, sh);
 
+    int x = wx + (sw - dipW) / 2;
+    int y = wy + (sh - dipH) / 2;
+
+    bool placed = !opts.bounds.IsEmpty();
+    if (placed) {
+        FrameExtentsPx e = PlacementExtents(opts, 0);
+        x = opts.bounds.x + e.left;
+        y = opts.bounds.y + e.top;
+        dipW = std::max(opts.bounds.w - e.left - e.right, 1);
+        dipH = std::max(opts.bounds.h - e.top - e.bottom, 1);
+    }
+
     auto* pw = new PlatWindow();
     pw->pxW = dipW;
     pw->pxH = dipH;
-
-    int x = wx + (sw - dipW) / 2;
-    int y = wy + (sh - dipH) / 2;
 
     XSetWindowAttributes attrs = {};
     attrs.background_pixel = BlackPixel(gDpy, gScreen);
@@ -247959,16 +248542,42 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
     Atom xdndVersion = 5;
     XChangeProperty(gDpy, pw->xwin, aXdndAware, XA_ATOM, 32, PropModeReplace,
                     (unsigned char*)&xdndVersion, 1);
-    if (opts.borderless || opts.clientTitleBar) {
+    if (opts.borderless || opts.clientTitleBar || opts.frameless ||
+        opts.kind == WindowKind::PopUp) {
         SetUndecorated(pw->xwin);
     }
 
-    if (!opts.resizable) {
+    if (!opts.resizable || placed) {
         XSizeHints hints = {};
-        hints.flags = PMinSize | PMaxSize;
-        hints.min_width = hints.max_width = dipW;
-        hints.min_height = hints.max_height = dipH;
+        if (!opts.resizable) {
+            hints.flags = PMinSize | PMaxSize;
+            hints.min_width = hints.max_width = dipW;
+            hints.min_height = hints.max_height = dipH;
+        }
+        if (placed) {
+            hints.flags |= USPosition | USSize;
+            hints.x = x;
+            hints.y = y;
+            hints.width = dipW;
+            hints.height = dipH;
+        }
         XSetWMNormalHints(gDpy, pw->xwin, &hints);
+    }
+    SetWindowType(pw->xwin, opts);
+    bool keepsParent =
+        opts.kind == WindowKind::Floating || opts.kind == WindowKind::Dialog;
+    if (keepsParent && opts.parent && opts.parent->plat) {
+        XSetTransientForHint(gDpy, pw->xwin, opts.parent->plat->xwin);
+    }
+    if (!opts.activatable) {
+
+        XWMHints* wm = XAllocWMHints();
+        if (wm) {
+            wm->flags = InputHint;
+            wm->input = False;
+            XSetWMHints(gDpy, pw->xwin, wm);
+            XFree(wm);
+        }
     }
     AppSetTitle(win, title);
 
@@ -247996,7 +248605,16 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
         }
     }
 
-    XMapWindow(gDpy, pw->xwin);
+    WindowSetMinSize(win, opts.minSize);
+    WindowSetMaxSize(win, opts.maxSize);
+    if (opts.show) {
+        WindowModalTake(win);
+        XMapWindow(gDpy, pw->xwin);
+    }
+    if (placed) {
+
+        WindowSetFrameBounds(win, opts.bounds);
+    }
     ReadWindowButtonSupport(pw);
     XFlush(gDpy);
     PlatSetTimer(win, WindowTimerMs(win));
@@ -248022,9 +248640,13 @@ int AppRun(App* app) {
         }
 
         RunLoopRedrawDirty<PlatWindow>(app, Redraw);
+        bool moveEndWaiting = PollMoveEnds(app);
 
         bool anyDirty = false;
         double waitS = RunLoopWaitFor<PlatWindow>(app, &anyDirty);
+        if (moveEndWaiting && waitS > kMoveEndPollMs / 1000.0) {
+            waitS = kMoveEndPollMs / 1000.0;
+        }
         bool idle = !anyDirty && XPending(gDpy) == 0 && ExecQueued() == 0;
         PlatPollFd* extra = nullptr;
         int extraTimeoutMs = -1;
@@ -248076,6 +248698,18 @@ int main(int argc, char** argv) {
 @class GpuiWindowDelegate;
 @class GpuiAccessibilityElement;
 
+@interface GpuiKeyableWindow : NSWindow
+@end
+
+@implementation GpuiKeyableWindow
+- (BOOL)canBecomeKeyWindow {
+    return YES;
+}
+- (BOOL)canBecomeMainWindow {
+    return NO;
+}
+@end
+
 namespace gpui {
 
 struct PlatWindow {
@@ -248090,6 +248724,11 @@ struct PlatWindow {
     double nextTick = 0;
 
     bool ordered = false;
+
+    bool hidden = false;
+    bool activateOnShow = true;
+
+    NSTimer* moveEndPoll = nil;
 
     bool a11yInstalled = false;
 };
@@ -249154,6 +249793,8 @@ static gpui::Str TextInputString(id string) {
     __attribute__((objc_precise_lifetime)) GpuiWindowDelegate* keepAlive = self;
     gpui::PlatWindow* plat = win ? win->plat : nullptr;
     if (plat) {
+        [plat->moveEndPoll invalidate];
+        plat->moveEndPoll = nil;
         for (GpuiAccessibilityElement* element in
              [plat->accessibilityElements allValues]) {
             element->gpuiWindow = nullptr;
@@ -249181,6 +249822,38 @@ static gpui::Str TextInputString(id string) {
 - (void)windowDidResize:(NSNotification*)note {
     (void)note;
     gpui::AppInvalidate(win);
+    gpui::WindowBoundsNotify(win, gpui::WindowBoundsEvent::Changed);
+}
+
+- (void)windowDidEndLiveResize:(NSNotification*)note {
+    (void)note;
+    gpui::WindowBoundsNotify(win, gpui::WindowBoundsEvent::MoveResizeEnded);
+}
+
+- (void)windowDidMove:(NSNotification*)note {
+    (void)note;
+    gpui::WindowBoundsNotify(win, gpui::WindowBoundsEvent::Changed);
+    gpui::PlatWindow* pw = win ? win->plat : nullptr;
+    if (!pw || pw->moveEndPoll || [NSEvent pressedMouseButtons] == 0) {
+        return;
+    }
+    gpui::Window* w = win;
+    pw->moveEndPoll = [NSTimer
+        scheduledTimerWithTimeInterval:0.05
+                               repeats:YES
+                                 block:^(NSTimer* timer) {
+                                   if ([NSEvent pressedMouseButtons] != 0) {
+                                       return;
+                                   }
+                                   [timer invalidate];
+                                   if (!w->plat) {
+                                       return;
+                                   }
+                                   w->plat->moveEndPoll = nil;
+                                   gpui::WindowBoundsNotify(
+                                       w, gpui::WindowBoundsEvent::
+                                              MoveResizeEnded);
+                                 }];
 }
 
 - (void)windowDidMiniaturize:(NSNotification*)note {
@@ -249416,13 +250089,42 @@ bool WindowMacKeyDown(Window* win, NSEvent* event) {
     return false;
 }
 
-static void OrderFrontOnce(PlatWindow* pw) {
-    if (!pw || pw->ordered) {
+static void AttachToParent(Window* win) {
+    bool keeps = win->opts.kind == WindowKind::Floating ||
+                 win->opts.kind == WindowKind::Dialog;
+    Window* parent = win->opts.parent;
+    if (!keeps || !parent || !parent->plat) {
+        return;
+    }
+    NSWindow* w = win->plat->window;
+    NSWindow* p = parent->plat->window;
+    if (w.parentWindow != p) {
+        [w.parentWindow removeChildWindow:w];
+        [p addChildWindow:w ordered:NSWindowAbove];
+    }
+}
+
+static void OrderFront(Window* win, bool activate) {
+    PlatWindow* pw = win->plat;
+    AttachToParent(win);
+    if (!activate || !win->opts.activatable) {
+        [pw->window orderFront:nil];
+        return;
+    }
+    [pw->window makeFirstResponder:pw->view];
+    [pw->window makeKeyAndOrderFront:nil];
+}
+
+static void OrderFrontOnce(Window* win) {
+    PlatWindow* pw = win->plat;
+    if (!pw || pw->ordered || pw->hidden) {
         return;
     }
     pw->ordered = true;
-    [pw->window makeKeyAndOrderFront:nil];
-    [NSApp activateIgnoringOtherApps:YES];
+    OrderFront(win, pw->activateOnShow);
+    if (pw->activateOnShow && win->opts.activatable) {
+        [NSApp activateIgnoringOtherApps:YES];
+    }
 }
 
 static void Redraw(Window* win) {
@@ -249433,11 +250135,12 @@ static void Redraw(Window* win) {
     win->dirty = false;
     win->maximized = [pw->window isZoomed] ? true : false;
     [pw->view display];
-    OrderFrontOnce(pw);
+    OrderFrontOnce(win);
 }
 
 void AppQuit(Window* win) {
     if (win && win->plat && win->plat->window) {
+        WindowModalRelease(win);
 
         [win->plat->window close];
     }
@@ -249658,7 +250361,9 @@ void AppActivate(Window* win) {
     if ([win->plat->window isMiniaturized]) {
         [win->plat->window deminiaturize:nil];
     }
+    win->plat->hidden = false;
     if (!win->plat->ordered) {
+        win->plat->activateOnShow = true;
         Redraw(win);
         return;
     }
@@ -249670,6 +250375,243 @@ void AppMinimize(Window* win) {
     if (win && win->plat) {
         [win->plat->window miniaturize:nil];
     }
+}
+
+static NSWindow* NsWindowOf(Window* win) {
+    return win && win->plat ? win->plat->window : nil;
+}
+
+static CGFloat FlipHeight() {
+    for (NSScreen* screen in [NSScreen screens]) {
+        if (screen.frame.origin.x == 0 && screen.frame.origin.y == 0) {
+            return screen.frame.size.height;
+        }
+    }
+    NSScreen* screen = [NSScreen mainScreen];
+    return screen ? screen.frame.size.height : 0;
+}
+
+static ScreenBounds FromMac(NSRect r) {
+    CGFloat h = FlipHeight();
+    return {(int)r.origin.x, (int)(h - (r.origin.y + r.size.height)),
+            (int)r.size.width, (int)r.size.height};
+}
+
+static NSRect ToMac(ScreenBounds r) {
+    CGFloat h = FlipHeight();
+    return NSMakeRect(r.x, h - (r.y + r.h), r.w, r.h);
+}
+
+static NSScreen* ScreenOf(Window* win) {
+    NSWindow* w = NsWindowOf(win);
+    if (w && w.screen) {
+        return w.screen;
+    }
+    NSArray<NSScreen*>* screens = [NSScreen screens];
+    return screens.count > 0 ? screens[0] : [NSScreen mainScreen];
+}
+
+ScreenBounds WindowFrameBounds(Window* win) {
+    NSWindow* w = NsWindowOf(win);
+    return w ? FromMac(w.frame) : ScreenBounds{};
+}
+
+ScreenBounds WindowContentBounds(Window* win) {
+    NSWindow* w = NsWindowOf(win);
+    return w ? FromMac([w contentRectForFrameRect:w.frame]) : ScreenBounds{};
+}
+
+void WindowSetFrameBounds(Window* win, ScreenBounds outer) {
+    NSWindow* w = NsWindowOf(win);
+    if (!w || outer.IsEmpty()) {
+        return;
+    }
+    [w setFrame:ToMac(outer) display:YES];
+}
+
+static NSWindowStyleMask FrameStyleMask(const WinOpts& opts) {
+    if (opts.frameless || opts.kind == WindowKind::PopUp || opts.borderless) {
+        return NSWindowStyleMaskBorderless;
+    }
+    NSWindowStyleMask mask =
+        NSWindowStyleMaskTitled | NSWindowStyleMaskClosable;
+    if (opts.resizable) {
+        mask |= NSWindowStyleMaskResizable;
+    }
+    if (opts.utility) {
+        mask |= NSWindowStyleMaskUtilityWindow;
+    } else if (opts.minimizable) {
+        mask |= NSWindowStyleMaskMiniaturizable;
+    }
+    if (opts.clientTitleBar) {
+        mask |= NSWindowStyleMaskFullSizeContentView;
+    }
+    return mask;
+}
+
+ScreenBounds WindowFrameForContent(Window* nearby, const WinOpts& opts,
+                                   ScreenBounds content) {
+    (void)nearby;
+    NSRect c = NSMakeRect(0, 0, content.w, content.h);
+    NSRect f =
+        [NSWindow frameRectForContentRect:c styleMask:FrameStyleMask(opts)];
+    int dw = (int)(f.size.width - c.size.width);
+    int dh = (int)(f.size.height - c.size.height);
+    return {content.x - dw / 2, content.y - dh, content.w + dw, content.h + dh};
+}
+
+ScreenBounds WindowDisplayBounds(Window* win) {
+    NSScreen* screen = ScreenOf(win);
+    return screen ? FromMac(screen.frame) : ScreenBounds{};
+}
+
+ScreenBounds WindowDisplayVisibleBounds(Window* win) {
+    NSScreen* screen = ScreenOf(win);
+    return screen ? FromMac(screen.visibleFrame) : ScreenBounds{};
+}
+
+void PlatWindowShow(Window* win, bool visible, bool activate) {
+    PlatWindow* pw = win ? win->plat : nullptr;
+    if (!pw) {
+        return;
+    }
+    pw->hidden = !visible;
+    if (!visible) {
+        [pw->window orderOut:nil];
+        return;
+    }
+    if (!pw->ordered) {
+
+        pw->activateOnShow = activate;
+        AppInvalidate(win);
+        return;
+    }
+    OrderFront(win, activate);
+    AppInvalidate(win);
+}
+
+bool WindowIsVisible(Window* win) {
+    NSWindow* w = NsWindowOf(win);
+    if (!w) {
+        return false;
+    }
+
+    return w.isVisible || (!win->plat->ordered && !win->plat->hidden);
+}
+
+void WindowActivateInApp(Window* win) {
+    NSWindow* w = NsWindowOf(win);
+    if (w && NSApp.isActive && !w.isKeyWindow) {
+        [w makeKeyWindow];
+    }
+}
+
+bool WindowIsActive(Window* win) {
+    NSWindow* w = NsWindowOf(win);
+    return w && w.isKeyWindow;
+}
+
+void PlatWindowSetParent(Window* win, Window* parent) {
+    NSWindow* w = NsWindowOf(win);
+    if (!w) {
+        return;
+    }
+    NSWindow* p = NsWindowOf(parent);
+    if (w.parentWindow && w.parentWindow != p) {
+        [w.parentWindow removeChildWindow:w];
+    }
+
+    if (p && w.isVisible) {
+        AttachToParent(win);
+    }
+}
+
+static id gModalMonitor = nil;
+
+void PlatWindowSetModal(Window* dlg, Window* parent, bool on) {
+    if (gModalMonitor) {
+        [NSEvent removeMonitor:gModalMonitor];
+        gModalMonitor = nil;
+    }
+    NSWindow* tool = NsWindowOf(dlg);
+    NSWindow* p = NsWindowOf(parent);
+    if (!on || !tool || !p) {
+        return;
+    }
+    NSEventMask mask = NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown |
+                       NSEventMaskOtherMouseDown | NSEventMaskKeyDown;
+    gModalMonitor = [NSEvent
+        addLocalMonitorForEventsMatchingMask:mask
+                                     handler:^NSEvent*(NSEvent* event) {
+                                       if (event.window == p) {
+                                           [tool makeKeyAndOrderFront:nil];
+                                           return nil;
+                                       }
+                                       return event;
+                                     }];
+}
+
+void WindowSetMinSize(Window* win, Size content) {
+    if (!win) {
+        return;
+    }
+    win->opts.minSize = content;
+    NSWindow* w = NsWindowOf(win);
+    if (w && content.w > 0 && content.h > 0) {
+        [w setContentMinSize:NSMakeSize(content.w, content.h)];
+    }
+}
+
+void WindowSetMaxSize(Window* win, Size content) {
+    if (!win) {
+        return;
+    }
+    win->opts.maxSize = content;
+    NSWindow* w = NsWindowOf(win);
+    if (w) {
+
+        CGFloat dx = content.w > 0 ? content.w : FLT_MAX;
+        CGFloat dy = content.h > 0 ? content.h : FLT_MAX;
+        [w setContentMaxSize:NSMakeSize(dx, dy)];
+    }
+}
+
+void WindowSetFrameAppearance(Window* win, FrameAppearance appearance) {
+    NSWindow* w = NsWindowOf(win);
+    if (!w) {
+        return;
+    }
+    NSAppearance* a = nil;
+    if (appearance == FrameAppearance::Dark) {
+        a = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    } else if (appearance == FrameAppearance::Light) {
+        a = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    }
+    [w setAppearance:a];
+}
+
+void WindowSendNativeKey(Window* win, int macKeyCode) {
+    PlatWindow* pw = win ? win->plat : nullptr;
+    if (!pw) {
+        return;
+    }
+    NSWindow* w = pw->window;
+    [w makeFirstResponder:pw->view];
+    NSString* chars = macKeyCode == 0 ? @"a" : @"";
+    auto event = ^(NSEventType type, NSString* text) {
+      return [NSEvent keyEventWithType:type
+                              location:NSZeroPoint
+                         modifierFlags:0
+                             timestamp:[NSProcessInfo processInfo].systemUptime
+                          windowNumber:w.windowNumber
+                               context:nil
+                            characters:text
+           charactersIgnoringModifiers:chars
+                             isARepeat:NO
+                               keyCode:(unsigned short)macKeyCode];
+    };
+    [NSApp sendEvent:event(NSEventTypeKeyDown, chars)];
+    [NSApp sendEvent:event(NSEventTypeKeyUp, @"")];
 }
 
 void AppToggleMaximize(Window* win) {
@@ -250823,9 +251765,11 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
         return nullptr;
     }
     @autoreleasepool {
-        NSWindowStyleMask style = NSWindowStyleMaskTitled |
-                                  NSWindowStyleMaskClosable |
-                                  NSWindowStyleMaskMiniaturizable;
+        NSWindowStyleMask style =
+            NSWindowStyleMaskTitled | NSWindowStyleMaskClosable;
+        if (opts.minimizable) {
+            style |= NSWindowStyleMaskMiniaturizable;
+        }
         if (opts.resizable) {
             style |= NSWindowStyleMaskResizable;
         }
@@ -250843,14 +251787,37 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
         NSRect screen = [[NSScreen mainScreen] visibleFrame];
         WindowClampToDisplay(&dipW, &dipH, (int)screen.size.width,
                              (int)screen.size.height);
+        bool frameless = opts.frameless || opts.kind == WindowKind::PopUp;
+        if (frameless) {
+            style = NSWindowStyleMaskBorderless;
+            if (opts.resizable) {
+                style |= NSWindowStyleMaskResizable;
+            }
+        }
         NSRect frame = NSMakeRect(0, 0, dipW, dipH);
+        Class cls = frameless && opts.activatable ? [GpuiKeyableWindow class]
+                                                  : [NSWindow class];
         NSWindow* window =
-            [[NSWindow alloc] initWithContentRect:frame
-                                        styleMask:style
-                                          backing:NSBackingStoreBuffered
-                                            defer:NO];
+            [[cls alloc] initWithContentRect:frame
+                                   styleMask:style
+                                     backing:NSBackingStoreBuffered
+                                       defer:NO];
         if (!window) {
             return nullptr;
+        }
+        if (opts.utility && !frameless) {
+
+            [window setStyleMask:(style & ~NSWindowStyleMaskMiniaturizable) |
+                                 NSWindowStyleMaskUtilityWindow];
+        }
+        if (frameless) {
+            [window setHasShadow:YES];
+            [window setMovableByWindowBackground:NO];
+        }
+        if (opts.kind == WindowKind::PopUp) {
+            [window setLevel:NSPopUpMenuWindowLevel];
+        } else if (opts.kind == WindowKind::Floating && !opts.parent) {
+            [window setLevel:NSFloatingWindowLevel];
         }
 
         [window setColorSpace:[NSColorSpace sRGBColorSpace]];
@@ -250879,7 +251846,22 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
         [window setAcceptsMouseMovedEvents:YES];
         [window setReleasedWhenClosed:NO];
         [window setDelegate:del];
-        [window center];
+        if (opts.bounds.IsEmpty()) {
+            [window center];
+        } else {
+            WindowSetFrameBounds(win, opts.bounds);
+        }
+        if (opts.minSize.w > 0 || opts.minSize.h > 0) {
+            WindowSetMinSize(win, opts.minSize);
+        }
+        if (opts.maxSize.w > 0 || opts.maxSize.h > 0) {
+            WindowSetMaxSize(win, opts.maxSize);
+        }
+        pw->hidden = !opts.show;
+        pw->activateOnShow = opts.focus;
+        if (opts.show) {
+            WindowModalTake(win);
+        }
 
         AppSetTitle(win, title);
 
@@ -252187,6 +253169,8 @@ struct PlatWindow {
 
     int opacity = 100;
     bool clickThrough = false;
+
+    FrameAppearance frameAppearance = FrameAppearance::System;
 };
 
 static HWND Hwnd(Window* win) {
@@ -252361,6 +253345,116 @@ static int BorderYPx() {
 
 static bool ClientDecorated(Window* win) {
     return win->opts.clientTitleBar || win->opts.borderless;
+}
+
+static DWORD WinStyle(const WinOpts& opts) {
+    DWORD style = 0;
+    if (opts.clientTitleBar || opts.borderless) {
+
+        style = WS_OVERLAPPEDWINDOW & ~WS_CAPTION;
+        style |= WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        return style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    } else if (opts.frameless || opts.kind == WindowKind::PopUp) {
+        style = WS_POPUP;
+    } else {
+
+        style = WS_CAPTION | WS_SYSMENU | (opts.utility ? WS_POPUP : 0);
+        if (opts.minimizable) {
+            style |= WS_MINIMIZEBOX;
+        }
+        if (opts.maximizable) {
+            style |= WS_MAXIMIZEBOX;
+        }
+    }
+    if (opts.resizable) {
+        style |= WS_THICKFRAME;
+    }
+
+    return style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+}
+
+static DWORD WinExStyle(const WinOpts& opts) {
+
+    DWORD ex = WS_EX_NOREDIRECTIONBITMAP;
+    if (opts.utility) {
+        ex |= WS_EX_TOOLWINDOW;
+    }
+    if (opts.kind == WindowKind::PopUp) {
+        ex |= WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
+    }
+    if (!opts.activatable) {
+        ex |= WS_EX_NOACTIVATE;
+    }
+    return ex;
+}
+
+using AdjustForDpiFn = BOOL(WINAPI*)(LPRECT, DWORD, BOOL, DWORD, UINT);
+
+static void AdjustRect(RECT* r, DWORD style, DWORD ex, UINT dpi) {
+    static AdjustForDpiFn adjust = nullptr;
+    static bool looked = false;
+    if (!looked) {
+        looked = true;
+        HMODULE user = GetModuleHandleW(L"user32.dll");
+        adjust = user ? (AdjustForDpiFn)GetProcAddress(
+                            user, "AdjustWindowRectExForDpi")
+                      : nullptr;
+    }
+    if (adjust) {
+        adjust(r, style, FALSE, ex, dpi);
+        return;
+    }
+    AdjustWindowRectEx(r, style, FALSE, ex);
+}
+
+static UINT FrameDpi(HWND hwnd) {
+    HMODULE user = GetModuleHandleW(L"user32.dll");
+    if (hwnd) {
+        auto forWindow =
+            user ? (GetDpiForWindowFn)GetProcAddress(user, "GetDpiForWindow")
+                 : nullptr;
+        if (forWindow) {
+            return forWindow(hwnd);
+        }
+    }
+    auto forSystem =
+        user ? (GetDpiForSystemFn)GetProcAddress(user, "GetDpiForSystem")
+             : nullptr;
+    return forSystem ? forSystem() : 96;
+}
+
+static void ApplyMinMaxSize(Window* win, HWND hwnd, MINMAXINFO* mmi) {
+    const Size& mn = win->opts.minSize;
+    const Size& mx = win->opts.maxSize;
+    bool hasMin = mn.w > 0 && mn.h > 0;
+    bool hasMax = mx.w > 0 || mx.h > 0;
+    if (!hasMin && !hasMax) {
+        return;
+    }
+    float dpi = HostDpi(hwnd);
+    DWORD style = (DWORD)GetWindowLongPtrW(hwnd, GWL_STYLE);
+    DWORD ex = (DWORD)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    UINT frameDpi = FrameDpi(hwnd);
+    auto outer = [&](Size content) {
+        RECT r = {0, 0, (LONG)lroundf(content.w * dpi / 96.f),
+                  (LONG)lroundf(content.h * dpi / 96.f)};
+        AdjustRect(&r, style, ex, frameDpi);
+        return r;
+    };
+    if (hasMin) {
+        RECT r = outer(mn);
+        mmi->ptMinTrackSize.x = r.right - r.left;
+        mmi->ptMinTrackSize.y = r.bottom - r.top;
+    }
+    if (hasMax) {
+        RECT r = outer(mx);
+        if (mx.w > 0) {
+            mmi->ptMaxTrackSize.x = r.right - r.left;
+        }
+        if (mx.h > 0) {
+            mmi->ptMaxTrackSize.y = r.bottom - r.top;
+        }
+    }
 }
 
 static bool ShiftDown() {
@@ -252722,7 +253816,13 @@ static bool SystemIsDarkMode() {
 }
 
 static void ConfigureDwmDarkMode(HWND hwnd) {
-    BOOL dark = SystemIsDarkMode() ? TRUE : FALSE;
+    Window* win = (Window*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    FrameAppearance appearance =
+        win && win->plat ? win->plat->frameAppearance : FrameAppearance::System;
+    bool isDark = appearance == FrameAppearance::System
+                      ? SystemIsDarkMode()
+                      : appearance == FrameAppearance::Dark;
+    BOOL dark = isDark ? TRUE : FALSE;
     DwmSetWindowAttribute(hwnd, 20  , &dark,
                           sizeof(dark));
 }
@@ -253532,9 +254632,38 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             break;
         case WM_MOUSEACTIVATE:
 
+            if (!win->opts.activatable) {
+                return MA_NOACTIVATE;
+            }
+
             if (LOWORD(lParam) == HTCLIENT) {
                 win->plat->firstMouse = true;
             }
+            break;
+        case WM_NCLBUTTONDBLCLK:
+
+            if (wParam == HTCAPTION && !win->opts.maximizable) {
+                return 0;
+            }
+            break;
+        case WM_GETMINMAXINFO: {
+            LRESULT res = DefWindowProcW(hwnd, msg, wParam, lParam);
+            ApplyMinMaxSize(win, hwnd, (MINMAXINFO*)lParam);
+            return res;
+        }
+        case WM_WINDOWPOSCHANGED: {
+            auto* wp = (const WINDOWPOS*)lParam;
+            bool moved = (wp->flags & SWP_NOMOVE) == 0;
+            bool sized = (wp->flags & SWP_NOSIZE) == 0;
+
+            LRESULT res = DefWindowProcW(hwnd, msg, wParam, lParam);
+            if (moved || sized || (wp->flags & SWP_SHOWWINDOW)) {
+                WindowBoundsNotify(win, WindowBoundsEvent::Changed);
+            }
+            return res;
+        }
+        case WM_EXITSIZEMOVE:
+            WindowBoundsNotify(win, WindowBoundsEvent::MoveResizeEnded);
             break;
         case WM_RBUTTONDOWN:
             MouseDown(win, MouseButton::Right, lParam);
@@ -253770,6 +254899,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             if (!WindowShouldClose(win)) {
                 return 0;
             }
+
+            WindowModalRelease(win);
             break;
         case WM_DESTROY: {
             RevokeFileDrop(win, hwnd);
@@ -253795,6 +254926,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
 void AppQuit(Window* win) {
     HWND hwnd = Hwnd(win);
     if (hwnd) {
+        WindowModalRelease(win);
         DestroyWindow(hwnd);
     }
 }
@@ -254008,6 +255140,147 @@ void AppActivate(Window* win) {
         ShowWindow(hwnd, SW_RESTORE);
     }
     SetForegroundWindow(hwnd);
+}
+
+static ScreenBounds FromRECT(const RECT& r) {
+    return {r.left, r.top, r.right - r.left, r.bottom - r.top};
+}
+
+ScreenBounds WindowFrameBounds(Window* win) {
+    HWND hwnd = Hwnd(win);
+    RECT r = {};
+    if (!hwnd || !GetWindowRect(hwnd, &r)) {
+        return {};
+    }
+    return FromRECT(r);
+}
+
+ScreenBounds WindowContentBounds(Window* win) {
+    HWND hwnd = Hwnd(win);
+    RECT r = {};
+    if (!hwnd || !GetClientRect(hwnd, &r)) {
+        return {};
+    }
+    POINT origin = {0, 0};
+    ClientToScreen(hwnd, &origin);
+    return {origin.x, origin.y, r.right, r.bottom};
+}
+
+void WindowSetFrameBounds(Window* win, ScreenBounds outer) {
+    HWND hwnd = Hwnd(win);
+    if (!hwnd || outer.IsEmpty()) {
+        return;
+    }
+    SetWindowPos(hwnd, nullptr, outer.x, outer.y, outer.w, outer.h,
+                 SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+ScreenBounds WindowFrameForContent(Window* nearby, const WinOpts& opts,
+                                   ScreenBounds content) {
+    RECT r = {content.x, content.y, content.x + content.w,
+              content.y + content.h};
+    AdjustRect(&r, WinStyle(opts), WinExStyle(opts), FrameDpi(Hwnd(nearby)));
+    return FromRECT(r);
+}
+
+static bool MonitorRects(Window* win, RECT* monitor, RECT* work) {
+    HWND hwnd = Hwnd(win);
+    HMONITOR mon = hwnd ? MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST)
+                        : MonitorFromPoint({0, 0}, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO mi = {sizeof(mi)};
+    if (!mon || !GetMonitorInfoW(mon, &mi)) {
+        return false;
+    }
+    *monitor = mi.rcMonitor;
+    *work = mi.rcWork;
+    return true;
+}
+
+ScreenBounds WindowDisplayBounds(Window* win) {
+    RECT monitor = {}, work = {};
+    if (!MonitorRects(win, &monitor, &work)) {
+        return {0, 0, GetSystemMetrics(SM_CXSCREEN),
+                GetSystemMetrics(SM_CYSCREEN)};
+    }
+    return FromRECT(monitor);
+}
+
+ScreenBounds WindowDisplayVisibleBounds(Window* win) {
+    RECT monitor = {}, work = {};
+    if (!MonitorRects(win, &monitor, &work)) {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &work, 0);
+    }
+    return FromRECT(work);
+}
+
+void PlatWindowShow(Window* win, bool visible, bool activate) {
+    HWND hwnd = Hwnd(win);
+    if (!hwnd) {
+        return;
+    }
+    if (!visible) {
+        ShowWindow(hwnd, SW_HIDE);
+        return;
+    }
+    activate = activate && win->opts.activatable;
+    ShowWindow(hwnd, activate ? SW_SHOW : SW_SHOWNOACTIVATE);
+    InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+bool WindowIsVisible(Window* win) {
+    HWND hwnd = Hwnd(win);
+    return hwnd && IsWindowVisible(hwnd);
+}
+
+void WindowActivateInApp(Window* win) {
+    HWND hwnd = Hwnd(win);
+    HWND active = GetActiveWindow();
+    if (hwnd && active && active != hwnd) {
+        SetActiveWindow(hwnd);
+    }
+}
+
+bool WindowIsActive(Window* win) {
+    HWND hwnd = Hwnd(win);
+    return hwnd && GetActiveWindow() == hwnd;
+}
+
+void PlatWindowSetParent(Window* win, Window* parent) {
+    HWND hwnd = Hwnd(win);
+    if (!hwnd) {
+        return;
+    }
+
+    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)Hwnd(parent));
+}
+
+void PlatWindowSetModal(Window* dlg, Window* parent, bool on) {
+    (void)dlg;
+    HWND hwnd = Hwnd(parent);
+    if (hwnd) {
+        EnableWindow(hwnd, on ? FALSE : TRUE);
+    }
+}
+
+void WindowSetMinSize(Window* win, Size content) {
+    if (win) {
+        win->opts.minSize = content;
+    }
+}
+
+void WindowSetMaxSize(Window* win, Size content) {
+    if (win) {
+        win->opts.maxSize = content;
+    }
+}
+
+void WindowSetFrameAppearance(Window* win, FrameAppearance appearance) {
+    HWND hwnd = Hwnd(win);
+    if (!hwnd || win->plat->frameAppearance == appearance) {
+        return;
+    }
+    win->plat->frameAppearance = appearance;
+    ConfigureDwmDarkMode(hwnd);
 }
 
 void AppMinimize(Window* win) {
@@ -255090,6 +256363,14 @@ bool PlatInit(App* app) {
 
         wc.hCursor = nullptr;
         wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+
+        HINSTANCE module = GetModuleHandleW(nullptr);
+        wc.hIcon = (HICON)LoadImageW(module, MAKEINTRESOURCEW(1), IMAGE_ICON, 0,
+                                     0, LR_DEFAULTSIZE | LR_SHARED);
+        wc.hIconSm =
+            (HICON)LoadImageW(module, MAKEINTRESOURCEW(1), IMAGE_ICON,
+                              GetSystemMetrics(SM_CXSMICON),
+                              GetSystemMetrics(SM_CYSMICON), LR_SHARED);
         wc.lpszClassName = kWndClass;
         RegisterClassExW(&wc);
         registered = true;
@@ -255113,40 +256394,46 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
     }
     win->plat = new PlatWindow();
 
-    DWORD style = WS_OVERLAPPEDWINDOW;
-    if (!opts.resizable) {
-        style &= ~WS_THICKFRAME;
-    }
-    if (ClientDecorated(win)) {
+    DWORD style = WinStyle(opts);
+    DWORD ex = WinExStyle(opts);
+    int x = 0;
+    int y = 0;
+    int pxW = 0;
+    int pxH = 0;
+    if (!opts.bounds.IsEmpty()) {
+        x = opts.bounds.x;
+        y = opts.bounds.y;
+        pxW = opts.bounds.w;
+        pxH = opts.bounds.h;
+    } else {
 
-        style = WS_OVERLAPPEDWINDOW & ~WS_CAPTION;
-        style |= WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-        if (opts.resizable) {
-            style |= WS_THICKFRAME;
-        }
+        RECT wa = {0, 0, GetSystemMetrics(SM_CXSCREEN),
+                   GetSystemMetrics(SM_CYSCREEN)};
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &wa, 0);
+        int sx = wa.right - wa.left;
+        int sy = wa.bottom - wa.top;
+        float scale = SystemDpi() / 96.f;
+        WindowClampToDisplay(&dipW, &dipH, (int)((float)sx / scale),
+                             (int)((float)sy / scale));
+        RECT wr = {0, 0, (LONG)lroundf((float)dipW * scale),
+                   (LONG)lroundf((float)dipH * scale)};
+        AdjustWindowRectEx(&wr, style, FALSE, ex);
+        pxW = wr.right - wr.left;
+        pxH = wr.bottom - wr.top;
+        x = wa.left + (sx - pxW) / 2;
+        y = wa.top + (sy - pxH) / 2;
     }
-
-    RECT wa = {0, 0, GetSystemMetrics(SM_CXSCREEN),
-               GetSystemMetrics(SM_CYSCREEN)};
-    SystemParametersInfoW(SPI_GETWORKAREA, 0, &wa, 0);
-    int sx = wa.right - wa.left;
-    int sy = wa.bottom - wa.top;
-    float scale = SystemDpi() / 96.f;
-    WindowClampToDisplay(&dipW, &dipH, (int)((float)sx / scale),
-                         (int)((float)sy / scale));
-    RECT wr = {0, 0, (LONG)lroundf((float)dipW * scale),
-               (LONG)lroundf((float)dipH * scale)};
-    AdjustWindowRectEx(&wr, style, FALSE, 0);
-    int pxW = wr.right - wr.left;
-    int pxH = wr.bottom - wr.top;
-    int x = wa.left + (sx - pxW) / 2;
-    int y = wa.top + (sy - pxH) / 2;
 
     WindowGeomRequested(&x, &y, &pxW, &pxH);
 
-    HWND hwnd = CreateWindowExW(
-        WS_EX_NOREDIRECTIONBITMAP, kWndClass, ToCWstrTemp(title), style, x, y,
-        pxW, pxH, nullptr, nullptr, GetModuleHandleW(nullptr), win);
+    HWND owner = nullptr;
+    if (opts.kind == WindowKind::Floating || opts.kind == WindowKind::Dialog) {
+        owner = Hwnd(opts.parent);
+    }
+
+    HWND hwnd =
+        CreateWindowExW(ex, kWndClass, ToCWstrTemp(title), style, x, y, pxW,
+                        pxH, owner, nullptr, GetModuleHandleW(nullptr), win);
     if (!hwnd) {
         delete win->plat;
         win->plat = nullptr;
@@ -255160,8 +256447,12 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
                      SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
                          SWP_NOACTIVATE);
     }
-    ShowWindow(hwnd, SW_SHOW);
-    UpdateWindow(hwnd);
+    if (opts.show) {
+        WindowModalTake(win);
+        bool activate = opts.focus && opts.activatable;
+        ShowWindow(hwnd, activate ? SW_SHOW : SW_SHOWNOACTIVATE);
+        UpdateWindow(hwnd);
+    }
     return win;
 }
 

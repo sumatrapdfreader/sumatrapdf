@@ -807,6 +807,30 @@ void AppShellToggleDpiOverride() {
     }
 }
 
+constexpr UINT_PTR kToolCmdSubclassId = 2;
+
+static LRESULT CALLBACK ToolCmdSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+    if (msg == WM_COMMAND && HIWORD(wp) == 0 && LOWORD(wp) > 0) {
+        // tests send the palette Ctrl+A / Ctrl+C that way
+        MainWindow* win = ToolWindowOwnerFromHwnd(hwnd);
+        if (IsMainWindowValid(win)) {
+            ExecuteCmd(win, (int)LOWORD(wp));
+            return 0;
+        }
+    }
+    if (msg == WM_NCDESTROY) {
+        RemoveWindowSubclass(hwnd, ToolCmdSubclass, kToolCmdSubclassId);
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+// orig: a command id sent at a tool window runs on its owner
+void AppShellClaimToolHwnd(HWND hwnd) {
+    if (hwnd) {
+        SetWindowSubclass(hwnd, ToolCmdSubclass, kToolCmdSubclassId, 0);
+    }
+}
+
 void AppShellEnableFileDrop(MainWindow* win) {
     HWND hwnd = nullptr;
     EnumThreadWindows(GetCurrentThreadId(), FindGpuiWnd, (LPARAM)&hwnd);

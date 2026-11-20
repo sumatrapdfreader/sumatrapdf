@@ -42,7 +42,6 @@
 #include "SumatraDialogs.h"
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
-#include "gui/ToolWindowPlat.h"
 #include "gui/WasmBridge.h"
 #include "AnnotFilterToolbar.h"
 #include "AnnotTextPopup.h"
@@ -2292,7 +2291,7 @@ TempStr AnnotationHoverOverlayStateTemp(MainWindow* win) {
     ox = origin.x;
     oy = origin.y;
 #else
-    Rect content = win->gpuiWin ? ToolWinNativeContentRect(win->gpuiWin) : Rect{};
+    Rect content = win->gpuiWin ? FromGpui(gp::WindowContentBounds(win->gpuiWin)) : Rect{};
     if (content.IsEmpty()) {
         content = AppShellWindowScreenRect(win);
     }

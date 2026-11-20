@@ -1637,8 +1637,6 @@ export const targets: Target[] = [
       "src/ng/BrowserViewCommon.cpp",
       "src/ng/gui/NavFilesUI.cpp",
       "src/ng/gui/ToolWindow.cpp",
-      "src/ng/gui/ToolWindow_mac.mm",
-      "src/ng/gui/ToolWindow_linux.cpp",
       "src/ng/ExternalViewers.cpp",
       "src/ng/gui/NativeWindow.cpp",
       "src/ng/gui/NativeWindow_mac.mm",

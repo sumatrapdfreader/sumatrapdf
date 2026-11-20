@@ -38,7 +38,6 @@
 #include "WindowTab.h"
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
-#include "gui/ToolWindowPlat.h"
 #include "SearchAndDDE.h"
 #include "FindBar.h"
 #include "SvgIcons.h"
@@ -646,7 +645,7 @@ static Rect HoverBoundsScreen(MainWindow* win, gp::Bounds b) {
 #else
     // content rect and gpui bounds are both points; CanvasScale is dips per pixel
     k = 1;
-    Rect content = win && win->gpuiWin ? ToolWinNativeContentRect(win->gpuiWin) : Rect{};
+    Rect content = win && win->gpuiWin ? FromGpui(gp::WindowContentBounds(win->gpuiWin)) : Rect{};
     if (content.IsEmpty()) {
         content = AppShellWindowScreenRect(win);
     }

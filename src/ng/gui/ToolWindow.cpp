@@ -3,12 +3,6 @@
 
 #include "gui/GpuiBridge.h"
 #include "base/UITask.h"
-#if OS_WIN
-#include "base/Win.h"
-#include <commctrl.h>
-#include <dwmapi.h>
-#include <windowsx.h>
-#endif
 
 #include "gui/UIModels.h"
 #include "VirtKeys.h"
@@ -27,9 +21,6 @@
 #include "gui/DragDrop.h"
 #include "SumatraDialogs.h"
 #include "gui/ToolWindow.h"
-#if !OS_WIN && !OS_WASM
-#include "gui/ToolWindowPlat.h"
-#endif
 
 #include "SumatraLog.h"
 
@@ -56,21 +47,9 @@ struct ToolWindow {
     bool closing = false;
     // ToolWindowSetVisible(false)
     bool hidden = false;
-    // the user is dragging or sizing it; onExitSizeMove runs when that ends
-    bool userSizing = false;
-    // a no-activate window gave the key back to its owner after it was shown
-    bool focusedBack = false;
-    // the native frame has matched the rect we set; later deltas are the user
-    bool frameSettled = false;
-    int settleFrames = 0;
     Str title; // owned; what the caption shows
-#if OS_WIN
-    HWND hwnd = nullptr;
-    bool styled = false;
+    // the caption's theme last set: -1 none yet, 0 light, 1 dark
     int darkCaption = -1;
-    // the main window's handle while this modal window keeps it disabled
-    HWND hwndDisabled = nullptr;
-#endif
 };
 
 // open or about to be made; a closed one leaves at once and is deleted from
@@ -212,24 +191,18 @@ static void Forget(ToolWindow* tw) {
     uitask::Post(MkFunc0(FinishClosed, tw), "ToolWindowFinishClosed");
 }
 
+static gp::Window* OwnerGpui(MainWindow* owner) {
+    return owner ? owner->gpuiWin : nullptr;
+}
+
 #if OS_WIN
-
-constexpr UINT_PTR kToolSubclassId = 2;
-// gpui's win32 window class (ext/gpui/gpui.cpp)
-static const WCHAR* kGpuiToolWndClass = L"GpuiSystemMonitor";
-
 bool ToolWindowOwnsHwnd(HWND hwnd) {
-    for (ToolWindow* tw : gToolWindows) {
-        if (tw->hwnd == hwnd) {
-            return true;
-        }
-    }
-    return false;
+    return ToolWindowFromHwnd(hwnd) != nullptr;
 }
 
 ToolWindow* ToolWindowFromHwnd(HWND hwnd) {
     for (ToolWindow* tw : gToolWindows) {
-        if (tw->hwnd == hwnd) {
+        if (tw->gw && (HWND)gp::PlatWindowHandle(tw->gw) == hwnd) {
             return tw;
         }
     }
@@ -237,43 +210,38 @@ ToolWindow* ToolWindowFromHwnd(HWND hwnd) {
 }
 
 HWND ToolWindowHwnd(ToolWindow* tw) {
-    return IsLive(tw) ? tw->hwnd : nullptr;
+    return IsLive(tw) && tw->gw ? (HWND)gp::PlatWindowHandle(tw->gw) : nullptr;
 }
 
 MainWindow* ToolWindowOwnerFromHwnd(HWND hwnd) {
-    for (ToolWindow* tw : gToolWindows) {
-        if (tw->hwnd == hwnd) {
-            return tw->owner;
-        }
-    }
-    return nullptr;
+    ToolWindow* tw = ToolWindowFromHwnd(hwnd);
+    return tw ? tw->owner : nullptr;
 }
+#endif
 
-static DWORD ToolStyle(const ToolWindowDesc& desc) {
-    DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-    if (desc.frame == ToolWinFrame::Overlapped) {
-        style |= WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-    } else if (desc.frame == ToolWinFrame::Caption) {
-        // orig's tool windows are WS_POPUP | WS_CAPTION
-        style |= (desc.style == ToolWinStyle::Tool ? WS_POPUP : WS_OVERLAPPED) | WS_CAPTION | WS_SYSMENU;
-    } else {
-        style |= WS_POPUP;
+// orig's window styles as gpui's window options
+static gp::WinOpts ToolOpts(const ToolWindowDesc& desc, MainWindow* owner) {
+    gp::WinOpts opts;
+    opts.frameless = desc.frame == ToolWinFrame::None;
+    opts.utility = desc.style == ToolWinStyle::Tool;
+    opts.resizable = desc.resize == ToolWinResize::Resizable;
+    opts.minimizable = desc.frame == ToolWinFrame::Overlapped;
+    opts.maximizable = desc.frame == ToolWinFrame::Overlapped;
+    opts.activatable = desc.activate == ToolWinActivate::Yes;
+    opts.focus = opts.activatable;
+    if (desc.modal == ToolWinModal::Yes) {
+        opts.kind = gp::WindowKind::Dialog;
+    } else if (desc.owner == ToolWinOwner::Owned) {
+        opts.kind = gp::WindowKind::Floating;
     }
-    if (desc.resize == ToolWinResize::Resizable) {
-        style |= WS_THICKFRAME;
+    if (opts.kind != gp::WindowKind::Normal) {
+        opts.parent = OwnerGpui(owner);
     }
-    return style;
-}
-
-static DWORD ToolExStyle(const ToolWindowDesc& desc) {
-    DWORD ex = 0;
-    if (desc.style == ToolWinStyle::Tool) {
-        ex |= WS_EX_TOOLWINDOW;
+    if (!desc.minClient.IsEmpty()) {
+        opts.minSize = ToGpui(desc.minClient);
     }
-    if (desc.activate == ToolWinActivate::No) {
-        ex |= WS_EX_NOACTIVATE;
-    }
-    return ex;
+    opts.maxSize = ToGpui(desc.maxClient);
+    return opts;
 }
 
 static int OwnerDpi(MainWindow* owner) {
@@ -283,16 +251,19 @@ static int OwnerDpi(MainWindow* owner) {
 
 Size ToolWindowOuterSize(const ToolWindowDesc& desc, MainWindow* owner, Size clientDip) {
     int dpi = OwnerDpi(owner);
-    RECT r{0, 0, MulDiv(clientDip.dx, dpi, 96), MulDiv(clientDip.dy, dpi, 96)};
-    AdjustWindowRectExForDpi(&r, ToolStyle(desc), FALSE, ToolExStyle(desc), (UINT)dpi);
-    return Size(r.right - r.left, r.bottom - r.top);
+    Rect client{0, 0, MulDiv(clientDip.dx, dpi, 96), MulDiv(clientDip.dy, dpi, 96)};
+    gp::ScreenBounds r = gp::WindowFrameForContent(OwnerGpui(owner), ToolOpts(desc, owner), ToGpuiScreen(client));
+    return Size(r.w, r.h);
 }
 
 Rect ToolWindowCenteredOuter(MainWindow* owner, Size sz) {
-    HWND hwndOwner = AppShellNativeHwnd(owner);
-    Rect rcOwner = HwndWindowRect(hwndOwner);
-    Rect r{rcOwner.x + (rcOwner.dx - sz.dx) / 2, rcOwner.y + (rcOwner.dy - sz.dy) / 2, sz.dx, sz.dy};
-    return ShiftRectToWorkArea(r, hwndOwner, true);
+    Rect frame = AppShellWindowScreenRect(owner);
+    if (frame.IsEmpty()) {
+        return {};
+    }
+    gp::ScreenBounds r = gp::ScreenBoundsCentered(gp::ScreenBounds{0, 0, sz.dx, sz.dy}, ToGpuiScreen(frame));
+    gp::ScreenBounds work = gp::WindowDisplayVisibleBounds(OwnerGpui(owner));
+    return FromGpui(gp::ScreenBoundsShiftInto(r, work, true));
 }
 
 Rect ToolWindowCenteredRect(const ToolWindowDesc& desc, MainWindow* owner, Size clientDip) {
@@ -303,7 +274,8 @@ Rect ToolWindowRect(ToolWindow* tw) {
     if (!IsLive(tw)) {
         return {};
     }
-    return tw->hwnd ? HwndWindowRect(tw->hwnd) : tw->outer;
+    Rect r = tw->gw ? FromGpui(gp::WindowFrameBounds(tw->gw)) : Rect{};
+    return r.IsEmpty() ? tw->outer : r;
 }
 
 void ToolWindowMove(ToolWindow* tw, Rect outer) {
@@ -311,80 +283,71 @@ void ToolWindowMove(ToolWindow* tw, Rect outer) {
         return;
     }
     tw->outer = outer;
-    if (tw->hwnd && tw->styled) {
-        SetWindowPos(tw->hwnd, nullptr, outer.x, outer.y, outer.dx, outer.dy, SWP_NOZORDER | SWP_NOACTIVATE);
+    if (tw->gw) {
+        gp::WindowSetFrameBounds(tw->gw, ToGpuiScreen(outer));
     }
 }
 
+// orig's SetForegroundWindow(hwnd)
 void ToolWindowActivate(ToolWindow* tw) {
-    if (IsLive(tw) && tw->hwnd) {
-        SetForegroundWindow(tw->hwnd);
+    if (IsLive(tw) && tw->gw) {
+        gp::AppActivate(tw->gw);
     }
 }
 
-// the active window of this thread: what gets the keys while the program is
-// the foreground one
+// the active window of the program: what gets the keys while it is the
+// foreground one
 bool ToolWindowIsActive(ToolWindow* tw) {
-    return IsLive(tw) && tw->hwnd && GetActiveWindow() == tw->hwnd;
+    return IsLive(tw) && tw->gw && gp::WindowIsActive(tw->gw);
 }
-
-static void EndModal(ToolWindow* tw);
 
 bool ToolWindowIsVisible(ToolWindow* tw) {
     return IsLive(tw) && !tw->hidden;
 }
 
+// a hidden modal window gives its main window back (gpui's Dialog does that)
 void ToolWindowSetVisible(ToolWindow* tw, bool visible) {
     if (!IsLive(tw) || tw->closing || tw->hidden == !visible) {
         return;
     }
     tw->hidden = !visible;
-    if (!tw->hwnd || !tw->styled) {
-        // not made yet: WM_SHOWWINDOW's styling sees the flag
+    if (!tw->gw) {
+        // not made yet: CreateNow sees the flag
         return;
     }
-    HWND hwndOwner = AppShellNativeHwnd(tw->owner);
-    if (!visible) {
-        EndModal(tw);
-        ShowWindow(tw->hwnd, SW_HIDE);
-        return;
+    gp::WindowSetVisible(tw->gw, visible, tw->desc.activate == ToolWinActivate::Yes);
+    if (visible) {
+        ToolWindowInvalidate(tw);
     }
-    if (tw->desc.modal == ToolWinModal::Yes && hwndOwner) {
-        tw->hwndDisabled = hwndOwner;
-        EnableWindow(hwndOwner, FALSE);
-    }
-    ShowWindow(tw->hwnd, tw->desc.activate == ToolWinActivate::No ? SW_SHOWNOACTIVATE : SW_SHOW);
-    ToolWindowInvalidate(tw);
 }
 
 // a docked window goes where its content says, without being activated
 static void FollowOne(ToolWindow* tw) {
-    if (!tw->desc.place || tw->closing || !tw->hwnd || !tw->styled || !IsMainWindowValid(tw->owner)) {
+    if (!tw->desc.place || tw->closing || !tw->gw || !IsMainWindowValid(tw->owner)) {
         return;
     }
-    HWND hwndOwner = AppShellNativeHwnd(tw->owner);
+    gp::Window* ownerGw = OwnerGpui(tw->owner);
     // the system hides an owned window with its minimized owner and shows it
     // again itself
-    if (!hwndOwner || IsIconic(hwndOwner)) {
+    if (!ownerGw || gp::AppIsMinimized(ownerGw)) {
         return;
     }
     Rect r = tw->hidden ? Rect{} : tw->desc.place(tw->owner, tw);
-    bool visible = IsWindowVisible(tw->hwnd);
+    bool visible = gp::WindowIsVisible(tw->gw);
     if (r.IsEmpty()) {
         if (visible) {
-            ShowWindow(tw->hwnd, SW_HIDE);
+            gp::WindowSetVisible(tw->gw, false, false);
         }
         return;
     }
-    if (visible && r == HwndWindowRect(tw->hwnd)) {
+    if (visible && r == FromGpui(gp::WindowFrameBounds(tw->gw))) {
         return;
     }
     tw->outer = r;
-    UINT flags = SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER;
+    gp::WindowSetFrameBounds(tw->gw, ToGpuiScreen(r));
     if (!visible) {
-        flags |= SWP_SHOWWINDOW;
+        gp::WindowSetVisible(tw->gw, true, false);
     }
-    SetWindowPos(tw->hwnd, nullptr, r.x, r.y, r.dx, r.dy, flags);
 }
 
 void ToolWindowsFollow(MainWindow* win) {
@@ -411,77 +374,29 @@ Rect ToolWindowDockedBarRect(MainWindow* owner, int marginDip, float barDyDip) {
     return Rect{x, y, barDx, barDy};
 }
 
+// client area to client area
 Point ToolWindowOffsetInOwner(ToolWindow* tw) {
-    HWND hwndOwner = IsLive(tw) ? AppShellNativeHwnd(tw->owner) : nullptr;
-    if (!hwndOwner || !tw->hwnd) {
+    gp::Window* ownerGw = IsLive(tw) ? OwnerGpui(tw->owner) : nullptr;
+    if (!ownerGw || !tw->gw) {
         return {};
     }
-    POINT pt{0, 0};
-    MapWindowPoints(tw->hwnd, hwndOwner, &pt, 1);
+    gp::ScreenBounds mine = gp::WindowContentBounds(tw->gw);
+    gp::ScreenBounds owner = gp::WindowContentBounds(ownerGw);
+    if (mine.IsEmpty() || owner.IsEmpty()) {
+        return {};
+    }
     int dpi = OwnerDpi(tw->owner);
-    return Point{MulDiv(pt.x, 96, dpi), MulDiv(pt.y, 96, dpi)};
+    return Point{MulDiv(mine.x - owner.x, 96, dpi), MulDiv(mine.y - owner.y, 96, dpi)};
 }
 
 // orig's DarkModeApplyToTitleBar: the caption follows the theme, not the system
 static void SyncCaptionTheme(ToolWindow* tw) {
     int dark = IsLightColor(ThemeWindowBackgroundColor()) ? 0 : 1;
-    if (!tw->hwnd || dark == tw->darkCaption) {
+    if (!tw->gw || dark == tw->darkCaption) {
         return;
     }
     tw->darkCaption = dark;
-    BOOL on = dark ? TRUE : FALSE;
-    DwmSetWindowAttribute(tw->hwnd, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &on, sizeof(on));
-}
-
-// what gpui made is an activated WS_OVERLAPPEDWINDOW without an owner; this
-// runs from WM_SHOWWINDOW, before it is on screen
-static void ApplyHwndStyle(ToolWindow* tw) {
-    HWND hwnd = tw->hwnd;
-    const ToolWindowDesc& desc = tw->desc;
-    LONG_PTR visible = GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_VISIBLE;
-    SetWindowLongPtrW(hwnd, GWL_STYLE, (LONG_PTR)ToolStyle(desc) | visible);
-    LONG_PTR ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-    SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex | (LONG_PTR)ToolExStyle(desc));
-    HWND hwndOwner = AppShellNativeHwnd(tw->owner);
-    if (desc.owner == ToolWinOwner::Owned && hwndOwner) {
-        SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)hwndOwner);
-    }
-    if (desc.frame != ToolWinFrame::None && desc.style == ToolWinStyle::Normal) {
-        HICON icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-        SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)icon);
-        SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)icon);
-    }
-    SyncCaptionTheme(tw);
-    if (desc.modal == ToolWinModal::Yes && hwndOwner) {
-        tw->hwndDisabled = hwndOwner;
-        EnableWindow(hwndOwner, FALSE);
-    }
-    Rect r = tw->outer;
-    SetWindowPos(hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOACTIVATE);
-}
-
-// what a win32 dialog does before it is destroyed: the owner takes input
-// again and, if the dialog was the active window, becomes it (a disabled
-// window cannot be activated, and destroying the active window of a thread
-// whose other windows are disabled hands the foreground to another program)
-static void EndModal(ToolWindow* tw) {
-    HWND hwndOwner = tw->hwndDisabled;
-    if (!hwndOwner) {
-        return;
-    }
-    tw->hwndDisabled = nullptr;
-    for (ToolWindow* other : gToolWindows) {
-        if (other != tw && other->hwndDisabled == hwndOwner) {
-            return;
-        }
-    }
-    if (!IsWindow(hwndOwner)) {
-        return;
-    }
-    EnableWindow(hwndOwner, TRUE);
-    if (tw->hwnd && GetActiveWindow() == tw->hwnd) {
-        SetActiveWindow(hwndOwner);
-    }
+    gp::WindowSetFrameAppearance(tw->gw, dark ? gp::FrameAppearance::Dark : gp::FrameAppearance::Light);
 }
 
 static void RunOnActivate(ToolWindow* tw, bool active) {
@@ -498,492 +413,48 @@ static void RunOnDeactivated(ToolWindow* tw) {
     RunOnActivate(tw, false);
 }
 
-static LRESULT CALLBACK ToolSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR data) {
+// orig's WM_ACTIVATE. The listeners run their own code; not from inside the
+// platform's notification
+static void ToolOnActivation(void* data, gp::Window*, bool active) {
     auto* tw = (ToolWindow*)data;
-    switch (msg) {
-        case WM_SHOWWINDOW:
-            if (wp && !tw->styled) {
-                tw->styled = true;
-                ApplyHwndStyle(tw);
-            }
-            break;
-        case WM_NCHITTEST: {
-            LRESULT hit = DefSubclassProc(hwnd, msg, wp, lp);
-            if (hit != HTCLIENT || !tw->desc.isClientPoint || !IsMainWindowValid(tw->owner)) {
-                return hit;
-            }
-            POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
-            ScreenToClient(hwnd, &pt);
-            int dpi = (int)GetDpiForWindow(hwnd);
-            Point dip{MulDiv(pt.x, 96, dpi), MulDiv(pt.y, 96, dpi)};
-            return tw->desc.isClientPoint(tw->owner, dip) ? HTCLIENT : HTCAPTION;
-        }
-        case WM_MOUSEACTIVATE:
-            // orig's WS_EX_NOACTIVATE popups: a click on one leaves the main
-            // window the active one
-            if (tw->desc.activate == ToolWinActivate::No) {
-                DefSubclassProc(hwnd, msg, wp, lp);
-                return MA_NOACTIVATE;
-            }
-            break;
-        case WM_NCLBUTTONDBLCLK:
-            // a caption double-click would maximize a window that has no
-            // maximize box
-            if (tw->desc.isClientPoint) {
-                return 0;
-            }
-            break;
-        case WM_COMMAND:
-            // a command id sent at the tool window (tests send the palette
-            // Ctrl+A / Ctrl+C that way) runs on its owner, like orig
-            if (HIWORD(wp) == 0 && LOWORD(wp) > 0 && IsMainWindowValid(tw->owner)) {
-                ExecuteCmd(tw->owner, (int)LOWORD(wp));
-                return 0;
-            }
-            break;
-        case WM_GETMINMAXINFO: {
-            LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
-            if (!IsMainWindowValid(tw->owner)) {
-                return res;
-            }
-            auto* mmi = (MINMAXINFO*)lp;
-            Size minClient = tw->desc.minClient;
-            if (!minClient.IsEmpty()) {
-                Size sz = ToolWindowOuterSize(tw->desc, tw->owner, minClient);
-                mmi->ptMinTrackSize.x = sz.dx;
-                mmi->ptMinTrackSize.y = sz.dy;
-            }
-            Size maxClient = tw->desc.maxClient;
-            if (maxClient.dx > 0 || maxClient.dy > 0) {
-                Size sz = ToolWindowOuterSize(tw->desc, tw->owner, maxClient);
-                if (maxClient.dx > 0) {
-                    mmi->ptMaxTrackSize.x = sz.dx;
-                }
-                if (maxClient.dy > 0) {
-                    mmi->ptMaxTrackSize.y = sz.dy;
-                }
-            }
-            return res;
-        }
-        case WM_ACTIVATE:
-            // the listeners run their own code; not from inside the message
-            if (tw->desc.onActivate) {
-                bool active = LOWORD(wp) != WA_INACTIVE;
-                uitask::Post(MkFunc0(active ? RunOnActivated : RunOnDeactivated, tw), "ToolWindowActivate");
-            }
-            break;
-        case WM_WINDOWPOSCHANGED:
-            if (tw->styled && !IsIconic(hwnd) && !IsZoomed(hwnd) && IsWindowVisible(hwnd)) {
-                tw->outer = HwndWindowRect(hwnd);
-                if (tw->desc.onMoved && IsMainWindowValid(tw->owner)) {
-                    tw->desc.onMoved(tw->owner, tw->outer);
-                }
-            }
-            break;
-        case WM_CLOSE:
-            EndModal(tw);
-            break;
-        case WM_DESTROY:
-            EndModal(tw);
-            break;
-        case WM_EXITSIZEMOVE:
-            if (tw->desc.onExitSizeMove && IsMainWindowValid(tw->owner)) {
-                tw->desc.onExitSizeMove(tw->owner, HwndWindowRect(hwnd));
-            }
-            break;
-        case WM_NCDESTROY: {
-            RemoveWindowSubclass(hwnd, ToolSubclass, kToolSubclassId);
-            LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
-            tw->hwnd = nullptr;
-            if (IsLive(tw)) {
-                Forget(tw);
-            }
-            return res;
-        }
-        default:
-            break;
+    if (IsLive(tw) && tw->desc.onActivate) {
+        uitask::Post(MkFunc0(active ? RunOnActivated : RunOnDeactivated, tw), "ToolWindowActivate");
     }
-    return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-// the window being made, for the hook below
-static ToolWindow* gCreating = nullptr;
-static HHOOK gCbtHook = nullptr;
-
-// ng: gpui creates a window centered in the work area and shows it activated.
-// The hook gives it its rectangle before it exists on screen, subclasses it
-// (so the style is in place before it is shown) and keeps a no-activate window
-// from taking the activation
-static LRESULT CALLBACK ToolCbtProc(int code, WPARAM wp, LPARAM lp) {
-    ToolWindow* tw = gCreating;
-    if (tw && code == HCBT_CREATEWND && !tw->hwnd) {
-        auto* cw = (CBT_CREATEWNDW*)lp;
-        HWND hwnd = (HWND)wp;
-        WCHAR cls[64]{};
-        GetClassNameW(hwnd, cls, dimof(cls));
-        if (!cw->lpcs->hwndParent && wstr::EqI(WStr(cls), WStr((WCHAR*)kGpuiToolWndClass))) {
-            tw->hwnd = hwnd;
-            cw->lpcs->x = tw->outer.x;
-            cw->lpcs->y = tw->outer.y;
-            cw->lpcs->cx = tw->outer.dx;
-            cw->lpcs->cy = tw->outer.dy;
-            SetWindowSubclass(hwnd, ToolSubclass, kToolSubclassId, (DWORD_PTR)tw);
-        }
-    }
-    if (tw && code == HCBT_ACTIVATE && (HWND)wp == tw->hwnd && tw->desc.activate == ToolWinActivate::No) {
-        return 1;
-    }
-    return CallNextHookEx(gCbtHook, code, wp, lp);
-}
-
-static void CreateNow(ToolWindow* tw) {
-    if (!IsLive(tw) || tw->gw) {
+// orig's WM_WINDOWPOSCHANGED and WM_EXITSIZEMOVE
+static void ToolOnBounds(void* data, gp::Window* gw, gp::WindowBoundsEvent ev) {
+    auto* tw = (ToolWindow*)data;
+    if (!IsLive(tw) || tw->gw != gw || !IsMainWindowValid(tw->owner)) {
         return;
     }
-    if (!IsMainWindowValidAndNotClosing(tw->owner)) {
-        Forget(tw);
-        return;
-    }
-    gp::App* app = AppShellGetApp();
-    tw->view = gp::EntityNew<ToolRootView>(app);
-    auto* view = (ToolRootView*)gp::EntityGet(app, tw->view.id);
-    view->tw = tw;
-    str::ReplaceWithCopy(&tw->title, tw->desc.title ? tw->desc.title() : Str{});
-
-    gCreating = tw;
-    gCbtHook = SetWindowsHookExW(WH_CBT, ToolCbtProc, nullptr, GetCurrentThreadId());
-    // the size is the hook's; this one only has to be a valid one
-    gp::Window* gw = gp::WindowOpenView(app, ToGpui(tw->title), 320, 240, tw->view.id, gp::WinOpts{});
-    if (gCbtHook) {
-        UnhookWindowsHookEx(gCbtHook);
-    }
-    gCbtHook = nullptr;
-    gCreating = nullptr;
-    if (!gw || !tw->hwnd) {
-        logf("ToolWindow: could not create '%s'\n", Str(tw->desc.name));
-        if (gw) {
-            gp::AppQuit(gw);
-        }
-        if (IsLive(tw)) {
-            Forget(tw);
+    if (ev == gp::WindowBoundsEvent::MoveResizeEnded) {
+        if (tw->desc.onExitSizeMove) {
+            tw->desc.onExitSizeMove(tw->owner, ToolWindowRect(tw));
         }
         return;
     }
-    tw->gw = gw;
-    if (tw->hidden) {
-        // hidden before it was made
-        EndModal(tw);
-        ShowWindow(tw->hwnd, SW_HIDE);
-    }
-    if (tw->desc.onTick) {
-        gp::WindowSetInterval(gw, tw->desc.tickMs, gp::ListenTo(tw->view, &ToolRootView::OnTick));
-    }
-    logf("ToolWindow: '%s' hwnd 0x%p at %d,%d %dx%d\n", Str(tw->desc.name), (void*)tw->hwnd, tw->outer.x, tw->outer.y,
-         tw->outer.dx, tw->outer.dy);
-    gp::AppInvalidate(gw);
-}
-
-static void DestroyNow(ToolWindow* tw) {
-    if (!IsLive(tw)) {
+    if (gp::AppIsMinimized(gw) || gp::AppIsMaximized(gw) || !gp::WindowIsVisible(gw)) {
         return;
     }
-    if (tw->gw && tw->hwnd) {
-        EndModal(tw);
-        // WM_NCDESTROY forgets it
-        gp::AppQuit(tw->gw);
-        return;
-    }
-    Forget(tw);
-}
-
-static void SyncTitle(ToolWindow* tw) {
-    Str title = tw->desc.title ? tw->desc.title() : Str{};
-    if (str::Eq(title, tw->title)) {
-        return;
-    }
-    str::ReplaceWithCopy(&tw->title, title);
-    gp::AppSetTitle(tw->gw, ToGpui(tw->title));
-}
-
-#else // !OS_WIN
-
-#if OS_WASM
-
-Size ToolWindowOuterSize(const ToolWindowDesc&, MainWindow*, Size clientDip) {
-    return clientDip;
-}
-
-Rect ToolWindowCenteredOuter(MainWindow*, Size) {
-    return {};
-}
-
-Rect ToolWindowCenteredRect(const ToolWindowDesc&, MainWindow*, Size) {
-    return {};
-}
-
-Rect ToolWindowRect(ToolWindow*) {
-    return {};
-}
-
-void ToolWindowMove(ToolWindow*, Rect) {}
-
-void ToolWindowActivate(ToolWindow*) {}
-
-bool ToolWindowIsActive(ToolWindow*) {
-    return false;
-}
-
-void ToolWindowSetVisible(ToolWindow*, bool) {}
-
-bool ToolWindowIsVisible(ToolWindow* tw) {
-    return tw != nullptr;
-}
-
-void ToolWindowsFollow(MainWindow*) {}
-
-Rect ToolWindowDockedBarRect(MainWindow*, int, float) {
-    return {};
-}
-
-Point ToolWindowOffsetInOwner(ToolWindow*) {
-    return {};
-}
-
-static void CreateNow(ToolWindow*) {}
-
-static void DestroyNow(ToolWindow* tw) {
-    if (IsLive(tw)) {
-        Forget(tw);
-    }
-}
-
-static void SyncTitle(ToolWindow*) {}
-
-static void NoteFrame(ToolWindow*) {}
-
-#else // macOS, Linux
-
-static bool TitledFrame(const ToolWindowDesc& desc) {
-    return desc.frame != ToolWinFrame::None;
-}
-
-static void EndModalNative(ToolWindow* tw) {
-    if (!tw || tw->desc.modal != ToolWinModal::Yes) {
-        return;
-    }
-    gp::Window* owner = tw->owner ? tw->owner->gpuiWin : nullptr;
-    ToolWinNativeSetModal(tw->gw, owner, false);
-}
-
-static bool NearPx(int a, int b) {
-    return a - b < 4 && b - a < 4;
-}
-
-static bool FrameNear(Rect a, Rect b) {
-    return NearPx(a.x, b.x) && NearPx(a.y, b.y) && NearPx(a.dx, b.dx) && NearPx(a.dy, b.dy);
-}
-
-static void PlaceFrame(ToolWindow* tw, Rect outer, bool titled) {
-    tw->outer = outer;
-    tw->frameSettled = false;
-    tw->settleFrames = 0;
-    ToolWinNativeSetFrame(tw->gw, outer, titled);
-}
-
-static void NoteFrame(ToolWindow* tw) {
-    if (!tw->gw) {
-        return;
-    }
-    Rect now = ToolWinNativeFrame(tw->gw);
+    Rect now = FromGpui(gp::WindowFrameBounds(gw));
     if (now.IsEmpty()) {
         return;
     }
-    bool moved = !FrameNear(now, tw->outer);
-    // a window manager can land a few pixels off the rect we asked for; that
-    // is not the user dragging, and must not overwrite a saved position
-    bool reportMove = false;
-    if (!tw->frameSettled) {
-        if (!moved) {
-            tw->frameSettled = true;
-        } else if (ToolWinNativeMouseDown() || ++tw->settleFrames > 8) {
-            tw->outer = now;
-            tw->frameSettled = true;
-        }
-    } else if (moved) {
-        reportMove = true;
+    tw->outer = now;
+    if (tw->desc.onMoved) {
+        tw->desc.onMoved(tw->owner, now);
     }
-    if (reportMove) {
-        tw->outer = now;
-        tw->userSizing = true;
-        if (tw->desc.onMoved && IsMainWindowValid(tw->owner)) {
-            tw->desc.onMoved(tw->owner, now);
+}
+
+// the close box, Alt+F4, AppQuit, the owner going: whichever way it went
+static void OnGpuiWindowClosed(void*, gp::Window* gw) {
+    for (ToolWindow* tw : gToolWindows) {
+        if (tw->gw == gw) {
+            Forget(tw);
+            return;
         }
     }
-    if (tw->userSizing && !ToolWinNativeMouseDown()) {
-        tw->userSizing = false;
-        if (tw->desc.onExitSizeMove && IsMainWindowValid(tw->owner)) {
-            tw->desc.onExitSizeMove(tw->owner, tw->outer);
-        }
-    }
-    // gpui shows a new window as the key window; a bar must not take the keys
-    if (tw->desc.activate == ToolWinActivate::No && !tw->focusedBack && ToolWinNativeIsActive(tw->gw) && tw->owner &&
-        tw->owner->gpuiWin) {
-        tw->focusedBack = true;
-        ToolWinNativeActivate(tw->owner->gpuiWin);
-    }
-}
-
-static bool ToolShouldClose(void* data, gp::Window*) {
-    auto* tw = (ToolWindow*)data;
-    if (!IsLive(tw)) {
-        return true;
-    }
-    if (!tw->closing) {
-        EndModalNative(tw);
-        Forget(tw);
-    }
-    return true;
-}
-
-static void ApplyNative(ToolWindow* tw) {
-    bool titled = TitledFrame(tw->desc);
-    bool utility = tw->desc.style == ToolWinStyle::Tool;
-    bool resizable = tw->desc.resize == ToolWinResize::Resizable;
-    bool wantsKey = !titled && tw->desc.activate == ToolWinActivate::Yes;
-    ToolWinNativeApplyStyle(tw->gw, titled, resizable, utility, !titled, wantsKey);
-    PlaceFrame(tw, tw->outer, titled);
-    gp::Window* owner = tw->owner ? tw->owner->gpuiWin : nullptr;
-    ToolWinNativeSetOwner(tw->gw, owner, tw->desc.owner == ToolWinOwner::Owned);
-    if (!tw->desc.minClient.IsEmpty()) {
-        ToolWinNativeSetMinClient(tw->gw, tw->desc.minClient.dx, tw->desc.minClient.dy);
-    }
-    if (tw->desc.maxClient.dx > 0 || tw->desc.maxClient.dy > 0) {
-        ToolWinNativeSetMaxClient(tw->gw, tw->desc.maxClient.dx, tw->desc.maxClient.dy);
-    }
-    if (tw->desc.modal == ToolWinModal::Yes && !tw->hidden && owner) {
-        ToolWinNativeSetModal(tw->gw, owner, true);
-    }
-    if (tw->hidden) {
-        ToolWinNativeShow(tw->gw, false, false);
-    }
-}
-
-Size ToolWindowOuterSize(const ToolWindowDesc& desc, MainWindow*, Size clientDip) {
-    bool titled = TitledFrame(desc);
-    Size chrome =
-        ToolWinNativeChrome(titled, desc.resize == ToolWinResize::Resizable, desc.style == ToolWinStyle::Tool);
-    return Size(clientDip.dx + chrome.dx, clientDip.dy + chrome.dy);
-}
-
-Rect ToolWindowCenteredOuter(MainWindow* owner, Size sz) {
-    Rect fr = AppShellWindowScreenRect(owner);
-    Rect r{fr.x + (fr.dx - sz.dx) / 2, fr.y + (fr.dy - sz.dy) / 2, sz.dx, sz.dy};
-    return AppShellShiftToWorkArea(r, owner, true);
-}
-
-Rect ToolWindowCenteredRect(const ToolWindowDesc& desc, MainWindow* owner, Size clientDip) {
-    return ToolWindowCenteredOuter(owner, ToolWindowOuterSize(desc, owner, clientDip));
-}
-
-Rect ToolWindowRect(ToolWindow* tw) {
-    if (!IsLive(tw)) {
-        return {};
-    }
-    Rect r = tw->gw ? ToolWinNativeFrame(tw->gw) : Rect{};
-    return r.IsEmpty() ? tw->outer : r;
-}
-
-void ToolWindowMove(ToolWindow* tw, Rect outer) {
-    if (!IsLive(tw) || outer.IsEmpty()) {
-        return;
-    }
-    if (tw->gw) {
-        PlaceFrame(tw, outer, TitledFrame(tw->desc));
-    } else {
-        tw->outer = outer;
-    }
-}
-
-void ToolWindowActivate(ToolWindow* tw) {
-    if (IsLive(tw) && tw->gw) {
-        ToolWinNativeActivate(tw->gw);
-    }
-}
-
-bool ToolWindowIsActive(ToolWindow* tw) {
-    return IsLive(tw) && tw->gw && ToolWinNativeIsActive(tw->gw);
-}
-
-bool ToolWindowIsVisible(ToolWindow* tw) {
-    return IsLive(tw) && !tw->hidden;
-}
-
-void ToolWindowSetVisible(ToolWindow* tw, bool visible) {
-    if (!IsLive(tw) || tw->closing || tw->hidden == !visible) {
-        return;
-    }
-    tw->hidden = !visible;
-    if (!tw->gw) {
-        return;
-    }
-    if (!visible) {
-        EndModalNative(tw);
-        ToolWinNativeShow(tw->gw, false, false);
-        return;
-    }
-    gp::Window* owner = tw->owner ? tw->owner->gpuiWin : nullptr;
-    if (tw->desc.modal == ToolWinModal::Yes && owner) {
-        ToolWinNativeSetModal(tw->gw, owner, true);
-    }
-    ToolWinNativeShow(tw->gw, true, tw->desc.activate == ToolWinActivate::Yes);
-    ToolWindowInvalidate(tw);
-}
-
-static void FollowOne(ToolWindow* tw) {
-    if (!tw->desc.place || tw->closing || !tw->gw || !IsMainWindowValid(tw->owner)) {
-        return;
-    }
-    Rect r = tw->hidden ? Rect{} : tw->desc.place(tw->owner, tw);
-    if (r.IsEmpty()) {
-        ToolWinNativeShow(tw->gw, false, false);
-        return;
-    }
-    PlaceFrame(tw, r, TitledFrame(tw->desc));
-    ToolWinNativeShow(tw->gw, true, false);
-}
-
-void ToolWindowsFollow(MainWindow* win) {
-    FollowOwned(win, FollowOne);
-}
-
-Rect ToolWindowDockedBarRect(MainWindow* owner, int marginDip, float barDyDip) {
-    Rect canvas = AppShellCanvasScreenRect(owner);
-    if (canvas.IsEmpty()) {
-        return {};
-    }
-    int dpi = std::max(AppShellWindowDpi(owner), 96);
-    int margin = MulDiv(marginDip, dpi, 96);
-    int barDx = std::max(canvas.dx - (2 * margin), 0);
-    int barDy = (int)(barDyDip * (float)dpi / 96.f + 0.5f);
-    if (barDx <= 0 || barDy <= 0) {
-        return {};
-    }
-    int x = canvas.x + margin;
-    int y = canvas.y + canvas.dy - barDy - margin;
-    if (y < canvas.y + margin) {
-        y = canvas.y + margin;
-    }
-    return Rect{x, y, barDx, barDy};
-}
-
-Point ToolWindowOffsetInOwner(ToolWindow* tw) {
-    if (!IsLive(tw) || !tw->gw) {
-        return {};
-    }
-    Rect owner = AppShellWindowScreenRect(tw->owner);
-    Rect mine = ToolWindowRect(tw);
-    int dpi = std::max(AppShellWindowDpi(tw->owner), 96);
-    return Point{MulDiv(mine.x - owner.x, 96, dpi), MulDiv(mine.y - owner.y, 96, dpi)};
 }
 
 static void CreateNow(ToolWindow* tw) {
@@ -995,19 +466,21 @@ static void CreateNow(ToolWindow* tw) {
         return;
     }
     gp::App* app = AppShellGetApp();
+    static bool observing = false;
+    if (!observing) {
+        observing = true;
+        gp::AppOnWindowClosed(app, OnGpuiWindowClosed, nullptr);
+    }
     tw->view = gp::EntityNew<ToolRootView>(app);
     auto* view = (ToolRootView*)gp::EntityGet(app, tw->view.id);
     view->tw = tw;
     str::ReplaceWithCopy(&tw->title, tw->desc.title ? tw->desc.title() : Str{});
 
-    bool titled = TitledFrame(tw->desc);
-    Size chrome =
-        ToolWinNativeChrome(titled, tw->desc.resize == ToolWinResize::Resizable, tw->desc.style == ToolWinStyle::Tool);
-    int dipW = std::max(tw->outer.dx - chrome.dx, 1);
-    int dipH = std::max(tw->outer.dy - chrome.dy, 1);
-    gp::WinOpts opts;
-    opts.borderless = !titled;
-    gp::Window* gw = gp::WindowOpenView(app, ToGpui(tw->title), dipW, dipH, tw->view.id, opts);
+    // made hidden, so the observers hear its first activation and placement
+    gp::WinOpts opts = ToolOpts(tw->desc, tw->owner);
+    opts.bounds = ToGpuiScreen(tw->outer);
+    opts.show = false;
+    gp::Window* gw = gp::WindowOpenView(app, ToGpui(tw->title), 320, 240, tw->view.id, opts);
     if (!gw) {
         logf("ToolWindow: could not create '%s'\n", Str(tw->desc.name));
         if (IsLive(tw)) {
@@ -1016,10 +489,18 @@ static void CreateNow(ToolWindow* tw) {
         return;
     }
     tw->gw = gw;
-    gp::WindowOnShouldClose(gw, ToolShouldClose, tw);
-    ApplyNative(tw);
+#if OS_WIN
+    // a command id sent at the tool window runs on its owner, like orig
+    AppShellClaimToolHwnd((HWND)gp::PlatWindowHandle(gw));
+#endif
+    SyncCaptionTheme(tw);
+    gp::WindowOnBoundsChanged(gw, ToolOnBounds, tw);
+    gp::WindowOnActivationChanged(gw, ToolOnActivation, tw);
     if (tw->desc.onTick) {
         gp::WindowSetInterval(gw, tw->desc.tickMs, gp::ListenTo(tw->view, &ToolRootView::OnTick));
+    }
+    if (!tw->hidden) {
+        gp::WindowSetVisible(gw, true, tw->desc.activate == ToolWinActivate::Yes);
     }
     logf("ToolWindow: '%s' at %d,%d %dx%d\n", Str(tw->desc.name), tw->outer.x, tw->outer.y, tw->outer.dx, tw->outer.dy);
     gp::AppInvalidate(gw);
@@ -1029,16 +510,13 @@ static void DestroyNow(ToolWindow* tw) {
     if (!IsLive(tw)) {
         return;
     }
-    EndModalNative(tw);
     if (tw->gw) {
-        gp::Window* gw = tw->gw;
-        gp::AppQuit(gw);
-        if (IsLive(tw)) {
-            Forget(tw);
-        }
-        return;
+        // OnGpuiWindowClosed forgets it
+        gp::AppQuit(tw->gw);
     }
-    Forget(tw);
+    if (IsLive(tw)) {
+        Forget(tw);
+    }
 }
 
 static void SyncTitle(ToolWindow* tw) {
@@ -1051,9 +529,6 @@ static void SyncTitle(ToolWindow* tw) {
         gp::AppSetTitle(tw->gw, ToGpui(tw->title));
     }
 }
-
-#endif // macOS, Linux
-#endif // !OS_WIN
 
 // gpui's size for the text of an input or a button
 constexpr float kGpuiUiFontPx = 14;
@@ -1069,11 +544,9 @@ void ToolWindowSetMinClient(ToolWindow* tw, Size minClientDip) {
         return;
     }
     tw->desc.minClient = minClientDip;
-#if !OS_WIN && !OS_WASM
-    if (tw->gw && !minClientDip.IsEmpty()) {
-        ToolWinNativeSetMinClient(tw->gw, minClientDip.dx, minClientDip.dy);
+    if (tw->gw) {
+        gp::WindowSetMinSize(tw->gw, minClientDip.IsEmpty() ? gp::Size{} : ToGpui(minClientDip));
     }
-#endif
 }
 
 void ToolWindowSetMaxClient(ToolWindow* tw, Size maxClientDip) {
@@ -1081,11 +554,9 @@ void ToolWindowSetMaxClient(ToolWindow* tw, Size maxClientDip) {
         return;
     }
     tw->desc.maxClient = maxClientDip;
-#if !OS_WIN && !OS_WASM
     if (tw->gw) {
-        ToolWinNativeSetMaxClient(tw->gw, maxClientDip.dx, maxClientDip.dy);
+        gp::WindowSetMaxSize(tw->gw, ToGpui(maxClientDip));
     }
-#endif
 }
 
 void ToolWindowSetClientSize(ToolWindow* tw, Size clientDip) {
@@ -1123,16 +594,10 @@ void ToolWindowSetOwner(ToolWindow* tw, MainWindow* owner) {
         return;
     }
     tw->owner = owner;
-#if OS_WIN
-    HWND hwndOwner = AppShellNativeHwnd(owner);
-    if (tw->hwnd && tw->styled && tw->desc.owner == ToolWinOwner::Owned && hwndOwner) {
-        SetWindowLongPtrW(tw->hwnd, GWLP_HWNDPARENT, (LONG_PTR)hwndOwner);
+    if (tw->gw && OwnerGpui(owner)) {
+        // gpui applies it to owned kinds only; a top-level one keeps none
+        gp::WindowSetParent(tw->gw, OwnerGpui(owner));
     }
-#elif !OS_WASM
-    if (tw->gw) {
-        ToolWinNativeSetOwner(tw->gw, owner ? owner->gpuiWin : nullptr, tw->desc.owner == ToolWinOwner::Owned);
-    }
-#endif
     ToolWindowInvalidate(tw);
 }
 
@@ -1173,11 +638,7 @@ gp::El* ToolRootView::Render(ToolRootView* self, gp::Ctx* cx) {
         return root;
     }
     SyncTitle(tw);
-#if OS_WIN
     SyncCaptionTheme(tw);
-#else
-    NoteFrame(tw);
-#endif
     root->OnKeyDown(gp::Listen(cx, &ToolRootView::OnKeyDown));
     root->CaptureKeyDown(gp::Listen(cx, &ToolRootView::OnCaptureKey));
     if (tw->desc.onKeyUp) {
@@ -1342,17 +803,17 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
             out.Append(fmt("\n%s made=%d rect=%d,%d,%d,%d", Str(tw->desc.name), tw->gw ? 1 : 0, r.x, r.y, r.dx, r.dy));
 #if !OS_WIN
             out.Append(fmt(" title='%s'", tw->title));
-#endif
-#if OS_WIN
-            if (tw->hwnd) {
-                Rect cr = HwndClientRect(tw->hwnd);
-                HWND hwndMain = AppShellNativeHwnd(tw->owner);
-                out.Append(fmt(" hwnd=%d client=%d,%d style=%x exstyle=%x owner=%d visible=%d active=%d title='%s'",
-                               (int)(INT_PTR)tw->hwnd, cr.dx, cr.dy, (int)GetWindowLongPtrW(tw->hwnd, GWL_STYLE),
-                               (int)GetWindowLongPtrW(tw->hwnd, GWL_EXSTYLE),
-                               (int)(INT_PTR)GetWindow(tw->hwnd, GW_OWNER), IsWindowVisible(tw->hwnd) ? 1 : 0,
-                               ToolWindowIsActive(tw) ? 1 : 0, tw->title));
-                out.Append(fmt(" mainEnabled=%d", hwndMain && IsWindowEnabled(hwndMain) ? 1 : 0));
+#else
+            if (tw->gw) {
+                gp::Window* gw = tw->gw;
+                gp::ScreenBounds cr = gp::WindowContentBounds(gw);
+                bool owned = gw->opts.kind != gp::WindowKind::Normal && gw->opts.parent;
+                void* owner = owned ? gp::PlatWindowHandle(gw->opts.parent) : nullptr;
+                gp::Window* mainGw = OwnerGpui(tw->owner);
+                out.Append(fmt(" hwnd=%d client=%d,%d owner=%d visible=%d active=%d title='%s'",
+                               (int)(INT_PTR)gp::PlatWindowHandle(gw), cr.w, cr.h, (int)(INT_PTR)owner,
+                               gp::WindowIsVisible(gw) ? 1 : 0, ToolWindowIsActive(tw) ? 1 : 0, tw->title));
+                out.Append(fmt(" mainEnabled=%d", mainGw && gp::WindowIsEnabled(mainGw) ? 1 : 0));
             }
 #endif
         }
@@ -1385,9 +846,9 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
         return StrL("OK");
     }
     if (str::Eq(action, StrL("input"))) {
-#if !OS_WIN && !OS_WASM
+#if OS_DARWIN
         if (str::Eq(kind, StrL("mackey"))) {
-            ToolWinNativeInjectKey(tw->gw, a);
+            gp::WindowSendNativeKey(tw->gw, a);
             return StrL("OK");
         }
 #endif

@@ -80,7 +80,6 @@
 #include "Tabs.h"
 #include "Toolbar.h"
 #include "gui/AppShell.h"
-#include "gui/ToolWindowPlat.h"
 #include "gui/ToolWindow.h"
 #include "gui/NativeFileDlg.h"
 #include "gui/DocCanvas.h"
@@ -1331,8 +1330,8 @@ TempStr FrameNcStripsResultTemp(int* exitCodeOut) {
     if (!win || !win->gpuiWin) {
         return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
     }
-    wr = ToolWinNativeFrame(win->gpuiWin);
-    Rect cr = ToolWinNativeContentRect(win->gpuiWin);
+    wr = FromGpui(gp::WindowFrameBounds(win->gpuiWin));
+    Rect cr = FromGpui(gp::WindowContentBounds(win->gpuiWin));
     if (wr.IsEmpty() || cr.IsEmpty()) {
         return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
     }
@@ -2696,7 +2695,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
 #if !OS_WIN && !OS_WASM
             // frame-client dips plus this origin are screen pixels, which is
             // what a drop-down's box is reported in
-            Rect content = ToolWinNativeContentRect(win->gpuiWin);
+            Rect content = FromGpui(gp::WindowContentBounds(win->gpuiWin));
             out.Append(fmt("content origin=%d,%d\n", content.x, content.y));
 #endif
             Rect sysMenu;

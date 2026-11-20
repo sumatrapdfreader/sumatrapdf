@@ -71,12 +71,3 @@ void AppShellOpenDocsReady() {
     gOpenDocsReady = true;
     OpenQueuedDocs();
 }
-
-// orig's HwndSetFocus(hwndFrame) from one of its tool windows: the frame gets
-// the keys again. Only inside the app: it does not take the focus from another one
-void AppShellMakeKeyWindow(MainWindow* win) {
-    NSView* view = win ? (__bridge NSView*)gp::PlatWindowHandle(win->gpuiWin) : nil;
-    if (view.window && NSApp.isActive && !view.window.isKeyWindow) {
-        [view.window makeKeyWindow];
-    }
-}
