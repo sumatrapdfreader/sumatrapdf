@@ -217,7 +217,7 @@ bool MacInstallUpdateZip(Str zipPath) {
     const char* dittoArgv[] = {"/usr/bin/ditto", "-x", "-k", zipPath.s, stage, nullptr};
     TempStr newApp = path::JoinTemp(stageDir, kZippedAppName);
     TempStr oldApp = path::JoinTemp(stageDir, StrL("old.app"));
-    if (!RunAndWait(dittoArgv) || !file::Exists(newApp)) {
+    if (!RunAndWait(dittoArgv) || !dir::Exists(newApp)) {
         logf("MacInstallUpdateZip: unpacking '%s' failed\n", zipPath);
         RemoveDir(stageDir);
         return false;
