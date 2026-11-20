@@ -607,6 +607,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6405", issue6405],
   ["issue-6236", issue6236],
   ["issue-6169", issue6169],
   ["issue-5736", issue5736],
@@ -1046,7 +1047,6 @@ export const tests: NamedTest[] = [
   ["issue-4315", issue4315],
   ["issue-6399", issue6399],
   ["issue-6400", issue6400],
-  ["issue-6405", issue6405],
   ["issue-6406", issue6406],
   ["issue-6409", issue6409],
   ["issue-6411", issue6411],

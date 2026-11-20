@@ -23,6 +23,19 @@ async function wheelDown(canvas: number, notches: number): Promise<void> {
   }
 }
 
+// smooth scroll animates after the wheel messages; wait until the position stops changing
+async function stableScrollPos(canvas: number): Promise<number> {
+  let last = getScrollInfo(canvas).pos;
+  let same = 0;
+  for (let i = 0; i < 100 && same < 5; i++) {
+    await sleep(50);
+    const pos = getScrollInfo(canvas).pos;
+    same = pos === last ? same + 1 : 0;
+    last = pos;
+  }
+  return last;
+}
+
 async function currentTab(client: ControlClient): Promise<string> {
   const res = await client.request(ControlCommand.TestCurrentTab, []);
   return String(res[1] ?? "").trim();
@@ -60,8 +73,7 @@ export async function testit(): Promise<void> {
       throw new Error("issue-6405: no canvas");
     }
     await wheelDown(canvas, 40);
-    await sleep(300);
-    const want = getScrollInfo(canvas).pos;
+    const want = await stableScrollPos(canvas);
     if (want <= 0) {
       throw new Error(`issue-6405: image did not scroll: ${JSON.stringify(getScrollInfo(canvas))}`);
     }
