@@ -1658,6 +1658,7 @@ export const targets: Target[] = [
       "src/ng/ExplorerQuickLook.cpp",
       "src/ng/UpdateCheck.cpp",
       "src/ng/UpdateCheckCommon.cpp",
+      "src/ng/UpdateSelf_mac.mm",
       "src/ng/UpdateTemp.cpp",
       "src/ng/Installer.cpp",
       "src/ng/InstallerCommon.cpp",

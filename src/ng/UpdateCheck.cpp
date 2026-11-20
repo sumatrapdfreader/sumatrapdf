@@ -18,6 +18,7 @@
 #endif
 #if OS_DARWIN
 #include <sys/sysctl.h>
+#include <unistd.h>
 #endif
 
 #include "gui/UIModels.h"
@@ -109,10 +110,17 @@ BuiltOn: 2026-08-21
 Installer64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64-install.exe
 ...
 
-ng: macOS and Linux have no installer to run, so their info names what the
-browser should open instead:
+ng: Linux has no installer to run, so its info names what the browser should
+open instead:
 
-DownloadPage: https://www.sumatrapdfreader.org/dlng/mac/14276/SumatraPDF-mac-arm64.zip
+DownloadPage: https://www.sumatrapdfreader.org/dlng/linux/26.10.03/...
+
+A mac build replaces itself with the .zip of its architecture and opens the
+.dmg in the browser when it can't (see ParseUpdateInfo):
+
+ZipArm64: https://www.sumatrapdfreader.org/dlng/mac/26.10.03/SumatraPDF-mac-arm64.zip
+ZipArm64Sha256: <hex>
+DmgArm64: https://www.sumatrapdfreader.org/dlng/mac/26.10.03/SumatraPDF-mac-arm64.dmg
 */
 
 static void OpenWebPage(Str url) {
@@ -144,6 +152,18 @@ bool StartInstallerAutoUpgrade(Str installerPath) {
 static void ExitAfterStartingUpdater() {
     // Exit immediately so the updater can overwrite our exe
     ::ExitProcess(0);
+}
+
+#elif OS_DARWIN
+
+// installerPath is the downloaded .zip of SumatraPDF.app
+bool StartInstallerAutoUpgrade(Str installerPath) {
+    return MacInstallUpdateZip(installerPath);
+}
+
+static void ExitAfterStartingUpdater() {
+    // as ExitProcess() on Windows; the relauncher waits for us to be gone
+    _exit(0);
 }
 
 #else
@@ -296,6 +316,31 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     } else {
         file::Delete(installerPath);
     }
+#elif OS_DARWIN
+    UpdateInfo* updateInfo = data->updateInfo;
+    TempStr zipPath = MacUpdateZipPathTemp();
+    constexpr int kMaxUpdateDownloadSize = 256 * 1024 * 1024;
+    gp::HttpRsp gr;
+    bool ok = len(zipPath) > 0 && gp::HttpGet(ToGpui(updateInfo->dlURL), &gr) && gr.status == 200 && gr.body.len > 0 &&
+              gr.body.len < kMaxUpdateDownloadSize;
+    Str body = ok ? Str((char*)gr.body.els, gr.body.len) : Str();
+    if (ok && len(updateInfo->dlSha256) > 0) {
+        u8 digest[32];
+        CalcSHA2Digest(body, digest);
+        TempStr got = str::MemToHexTemp(Str((char*)digest, 32));
+        ok = str::EqI(got, updateInfo->dlSha256);
+        if (!ok) {
+            logf("DownloadUpdateAsync: sha256 is %s, expected %s\n", got, updateInfo->dlSha256);
+        }
+    }
+    ok = ok && file::WriteFile(zipPath, body);
+    gp::HttpRspFree(&gr);
+    logf("DownloadUpdateAsync: ok=%d, downloaded '%s' to '%s'\n", (int)ok, updateInfo->dlURL, zipPath);
+    if (ok) {
+        updateInfo->installerPath = str::Dup(zipPath);
+    } else if (len(zipPath) > 0) {
+        file::Delete(zipPath);
+    }
 #endif
 
     // process the rest on ui thread to avoid threading issues
@@ -365,6 +410,12 @@ void DownloadAndInstallPendingUpdate(MainWindow* win) {
 }
 
 static bool ShouldDownloadUpdate(UpdateInfo* updateInfo) {
+#if OS_DARWIN
+    // a version not built for our architecture (yet)
+    if (len(updateInfo->dlURL) == 0) {
+        return false;
+    }
+#endif
     // a store build lets the store install updates
     return ShouldOfferProgramUpdate(updateInfo->latestVer, currentVersion, gIsStoreBuild);
 }
@@ -437,6 +488,13 @@ static DWORD MaybeStartUpdateDownload(MainWindow* win, HttpRsp* rsp, UpdateCheck
         delete updateInfo;
         return 0;
     }
+
+#if OS_DARWIN
+    // e.g. run from the disk image: the browser gets the .dmg instead
+    if (!MacCanUpdateSelf()) {
+        str::FreePtr(&updateInfo->dlURL);
+    }
+#endif
 
     if (len(updateInfo->dlURL) == 0) {
         // currently for release builds we don't set this and redirect to a website instead
@@ -649,6 +707,11 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
         delete rsp;
         str::Builder url;
         BuildUpdateURL(url, updateInfoURL, updateCheckType);
+#if OS_DARWIN
+        // tells installs apart in the update check stats
+        url.Append(StrL("&id="));
+        url.Append(MacMachineIdHashTemp());
+#endif
         Str uri = ToStr(url);
         rsp = new HttpRsp;
         str::ReplaceWithCopy(&rsp->url, uri);

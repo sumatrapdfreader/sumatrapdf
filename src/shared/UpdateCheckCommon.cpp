@@ -119,6 +119,19 @@ UpdateInfo* ParseUpdateInfo(Str d) {
     res->portable32 = str::Dup(node->GetValue(StrL("PortableExe32")));
     res->downloadPage = str::Dup(node->GetValue(StrL("DownloadPage")));
 
+#if OS_DARWIN
+    // ng: a mac build replaces itself with the .zip of its architecture:
+    // ZipArm64 / ZipX64, ZipArm64Sha256 / ZipX64Sha256; DmgArm64 / DmgX64 is
+    // what the browser gets when we can't
+    Str arch = IsArmBuild() ? StrL("Arm64") : StrL("X64");
+    res->dlURL = str::Dup(node->GetValue(fmt("Zip%s", arch)));
+    res->dlSha256 = str::Dup(node->GetValue(fmt("Zip%sSha256", arch)));
+    Str dmg = node->GetValue(fmt("Dmg%s", arch));
+    if (len(dmg) > 0) {
+        str::ReplaceWithCopy(&res->downloadPage, dmg);
+    }
+#else
+
     // figure out which executable to download
     Str dlURL;
     bool isDll = IsDllBuild();
@@ -130,6 +143,7 @@ UpdateInfo* ParseUpdateInfo(Str d) {
         dlURL = isDll ? res->installer32 : res->portable32;
     }
     res->dlURL = str::Dup(dlURL);
+#endif
     return res;
 }
 

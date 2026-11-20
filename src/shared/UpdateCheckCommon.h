@@ -49,6 +49,14 @@ bool IsProcess64();
 bool IsArmBuild();
 #endif
 
+#if OS_DARWIN
+// ng: UpdateSelf_mac.mm
+TempStr MacMachineIdHashTemp();
+TempStr MacUpdateZipPathTemp();
+bool MacCanUpdateSelf();
+bool MacInstallUpdateZip(Str zipPath);
+#endif
+
 struct UpdateInfo {
     // the window that asked: orig keeps its frame, ng the window
     HWND hwndParent = nullptr;
@@ -65,6 +73,7 @@ struct UpdateInfo {
     Str portableArm64;
 
     Str dlURL;
+    Str dlSha256; // optional, of what dlURL downloads (ng mac)
     Str installerPath;
     Str builtOn; // optional "yyyy-mm-dd" from the update-check file
     // optional, where the browser gets this build when we can't install it (ng)
@@ -80,6 +89,7 @@ struct UpdateInfo {
         str::Free(installerArm64);
         str::Free(portableArm64);
         str::Free(dlURL);
+        str::Free(dlSha256);
         str::Free(installerPath);
         str::Free(builtOn);
         str::Free(downloadPage);
