@@ -282,7 +282,10 @@ static void ApplyAIChatSettingsToUI(MainWindow* win) {
         StrVec models;
         p->BuildModelsList(models);
         Str model = AIChatResolveModel(models, p->GetModel(), p->defaultModel);
-        int modelIdx = std::max(AIChatFindModelInList(models, model), 0);
+        int modelIdx = AIChatFindModelInList(models, model);
+        if (modelIdx < 0 && len(models) > 0) {
+            modelIdx = 0;
+        }
         CbSetCurrentSelection(win->aiChatModelCombo, modelIdx);
     }
     if (win->aiChatOptionCombo) {
