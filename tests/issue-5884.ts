@@ -4,7 +4,8 @@
 //
 // The session has three tabs in three folders: a.pdf (selected), b.pdf and a
 // missing c.pdf. After the restore only a.pdf's folder may be watched and the
-// missing file must not have been noticed yet; selecting b.pdf loads it.
+// missing file must not have been noticed yet; selecting b.pdf loads it in the
+// background, without freezing the UI while the (simulated) drive spins up.
 //
 // Run: bun tests/issue-5884.ts [--no-build]
 
@@ -16,6 +17,7 @@ import { killAndWait, launchControlled } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
 const SRC_PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+const LOAD_DELAY_MS = 3000;
 
 function setup(dir: string): { a: string; b: string; c: string } {
   rmSync(dir, { recursive: true, force: true });
@@ -88,11 +90,20 @@ export async function testit(): Promise<void> {
       throw new Error("issue-5884: a lazy tab's file was checked before the tab was selected");
     }
 
+    // a lazy tab loads in the background: selecting it while its drive spins
+    // up must not freeze the UI (TestStripGroups runs on the UI thread)
+    await client.request(ControlCommand.TestLoadDelay, [LOAD_DELAY_MS]);
+    const t0 = Date.now();
     // tabs: Home, a.pdf, b.pdf, c.pdf
     await selectTab(client, 2);
+    const selectMs = Date.now() - t0;
+    if (selectMs >= LOAD_DELAY_MS / 2) {
+      throw new Error(`issue-5884: selecting a lazy tab blocked the UI for ${selectMs} ms`);
+    }
     if (!(await waitLog(logPath, (l) => watched(l, join(dir, "dirB"))))) {
       throw new Error("issue-5884: selecting the lazy tab didn't load it");
     }
+    await client.request(ControlCommand.TestLoadDelay, [0]);
     // the missing file is noticed when its tab is selected
     await selectTab(client, 3);
     const missing = /(not found|does not exist).*c\.pdf|c\.pdf.*(not found|does not exist)/i;

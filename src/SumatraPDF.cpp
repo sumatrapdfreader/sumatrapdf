@@ -3222,14 +3222,17 @@ void ReloadTab(WindowTab* tab) {
 
 // return true if adjustd path
 static bool AdjustPathForMaybeMovedFile(LoadArgs* args) {
+    // decided before touching the file: the check blocks on a sleeping drive
+    bool failEarly = args->win && !args->forceReuse && !args->engine;
+    if (!failEarly) {
+        return false;
+    }
     Str path = args->FilePath();
     if (DocumentPathExists(path)) {
         return false;
     }
-    bool failEarly = args->win && !args->forceReuse && !args->engine;
-    bool fileInHistory = FileHistoryFindByPath(path) != nullptr;
-    if (!failEarly || !fileInHistory) {
-        return failEarly;
+    if (!FileHistoryFindByPath(path)) {
+        return true;
     }
     // try to find non-existent files with history data
     // on a different removable drive before failing
@@ -3654,6 +3657,16 @@ struct LoadDocumentAsyncData {
 
 static void LoadDocumentAsync(LoadDocumentAsyncData* d);
 
+// -dbg-control TestLoadDelay: makes opening a document as slow as a sleeping drive
+AtomicInt gTestLoadDelayMs = 0;
+
+static void MaybeTestLoadDelay() {
+    int ms = AtomicIntGet(&gTestLoadDelayMs);
+    if (ms > 0) {
+        ::Sleep(ms);
+    }
+}
+
 // When loading many documents at once (e.g. multiple files on the cmd-line or
 // dropped together) we don't want to spawn an unbounded number of loading
 // threads. Cap the number of concurrent background loads and queue the rest;
@@ -3952,6 +3965,7 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     HwndPasswordUI pwdUI(args->hwndPwdParent);
     bool chmInFixedUI = gSettings->chmUI.useFixedPageUI;
     if (!engine) {
+        MaybeTestLoadDelay();
         engine = CreateEngineFromFile(path, &pwdUI, chmInFixedUI);
     }
     if (engine && engine->pageCount <= 0) {
@@ -4369,6 +4383,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
     HwndPasswordUI pwdUI(win->hwndFrame);
     DocController* ctrl = nullptr;
     if (!args->lazyLoad) {
+        MaybeTestLoadDelay();
         ctrl = CreateControllerForEngineOrFile(args->engine, path, &pwdUI, win);
         {
             auto durMs = TimeSinceInMs(timeStart);
@@ -4414,6 +4429,20 @@ MainWindow* LoadDocument(LoadArgs* args) {
 MainWindow* LoadDocument(MainWindow* win, Str path) {
     LoadArgs args(path, win);
     return LoadDocument(&args);
+}
+
+// First load of a lazy tab (LazyLoading), on a background thread: its file may
+// be on a sleeping drive and the UI must stay usable while the drive spins up
+static void StartLazyTabLoad(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || tab->IsNonDocumentTab() || tab->IsDocLoaded() || len(tab->filePath) == 0) {
+        return;
+    }
+    LoadArgs args(tab->filePath, win);
+    args.forceReuse = true;
+    args.noSavePrefs = true;
+    args.tabState = tab->tabState;
+    StartLoadDocument(&args);
 }
 
 // Loads document data into the MainWindow.
@@ -4580,7 +4609,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         logf("LoadModelIntoTab: tab 0x%p has Type::None, skipping reload\n", tab);
     } else if (!tab->IsAboutTab()) {
         if (gSettings->lazyLoading && !tab->ctrl && tab->loadState == WindowTab::LoadState::None) {
-            ReloadDocument(win, false);
+            StartLazyTabLoad(win);
         } else {
             if (tab->reloadOnFocus) {
                 tab->reloadOnFocus = false;
@@ -17571,7 +17600,7 @@ ContinueOpenWindow:
             StripGroupRestoreDone(win, groupsRestore);
             if (gSettings->lazyLoading) {
                 // trigger loading of the document
-                ReloadDocument(win, false);
+                StartLazyTabLoad(win);
             }
             int windowState = data->windowState;
             TempStr desktopId = str::DupTemp(data->virtualDesktopId);

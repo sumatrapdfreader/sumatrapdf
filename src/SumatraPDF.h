@@ -86,6 +86,7 @@ extern bool gMyWindowWasEmbedded;
 extern Favorites gFavorites;
 extern WNDPROC DefWndProcCloseButton;
 extern RenderCache* gRenderCache;
+extern AtomicInt gTestLoadDelayMs;
 
 extern bool gSupressNextAltMenuTrigger;
 extern HBITMAP gBitmapReloadingCue;

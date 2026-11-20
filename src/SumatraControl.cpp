@@ -721,6 +721,9 @@ enum class ControlCmd : u16 {
     // [action, a, b, c]: "drop" from to groupPos, "move" dir, "select" idx, or
     // "" for the state; answers with the strip groups and tabs (StripGroupsStateTemp)
     TestStripGroups = 169,
+    // 170 is ng's TestCaptureWindow
+    // [ms]: every document open waits this long first, like a sleeping drive
+    TestLoadDelay = 171,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1427,6 +1430,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestLoadDelay: {
+            i32 ms = 0;
+            IntArg(req, 0, ms);
+            AtomicIntSet(&gTestLoadDelayMs, ms);
+            AppendTestResult(req, 0, fmt("%d", ms));
             break;
         }
 

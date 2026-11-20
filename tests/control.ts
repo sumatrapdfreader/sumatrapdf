@@ -186,6 +186,8 @@ export enum ControlCommand {
   TestStripGroups = 169,
   // ng only (macOS): [path, mode]: a PNG of the first window as drawn
   TestCaptureWindow = 170,
+  // [ms]: every document open waits this long first, like a sleeping drive
+  TestLoadDelay = 171,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
