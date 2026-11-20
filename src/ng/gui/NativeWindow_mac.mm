@@ -19,20 +19,6 @@
 #include "MainWindow.h"
 #include "gui/AppShell.h"
 
-// Backing pixels per point. The canvas is drawn in points, so a tile rendered
-// at GetZoomReal is upscaled on a Retina display.
-float AppShellRenderScale(gpui::Window* win) {
-    NSView* view = (__bridge NSView*)gp::PlatWindowHandle(win);
-    if (!view || !view.window) {
-        return 1;
-    }
-    float scale = (float)view.window.backingScaleFactor;
-    if (!(scale > 0)) {
-        return 1;
-    }
-    return scale;
-}
-
 static StrVec gOpenDocs;
 static bool gOpenDocsReady = false;
 

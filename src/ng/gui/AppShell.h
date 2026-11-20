@@ -157,9 +157,6 @@ void AppShellOnDpiChanged(MainWindow* win, int dpi);
 #if OS_WIN
 void AppShellToggleDpiOverride();
 #endif
-#if OS_DARWIN || OS_WASM
-float AppShellRenderScale(gpui::Window* win);
-#endif
 #if OS_DARWIN
 void AppShellHandleOpenDocs(gpui::App* app);
 void AppShellOpenDocsReady();

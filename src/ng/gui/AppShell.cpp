@@ -950,6 +950,14 @@ bool AppShellIsFrameFocused(MainWindow* win) {
     return !focused.IsValid() || gp::FocusHandleIsFocused(win->gpuiWin, win->shell->frameFocus);
 }
 
+#if !OS_WIN
+// the OS's preferred languages, as BCP 47 tags ("zh-Hans-CN") or $LANG values
+void GetSystemPreferredLocales(StrVec& out) {
+    Str all = FromGpui(gp::PlatPreferredLocalesTemp());
+    Split(&out, all, StrL("\n"), true);
+}
+#endif
+
 void AppShellFocusFrame(MainWindow* win) {
     if (!win || !win->gpuiWin || !win->shell) {
         return;
@@ -3204,7 +3212,7 @@ static void ApplyRenderScale(MainWindow* win) {
     if (!dm) {
         return;
     }
-    float scale = AppShellRenderScale(win->gpuiWin);
+    float scale = gp::WindowScaleFactor(win->gpuiWin);
     if (!(scale > 0)) {
         scale = 1;
     }

@@ -650,7 +650,6 @@ const appSources = [
   "src/ng/Theme.cpp",
   "src/ng/TranslationLangs.cpp",
   "src/ng/Translations.cpp",
-  "src/ng/SystemLocale_mac.mm",
   // the browser's file picker, downloads and OPFS write-back (wasm only,
   // and no gpui in it, so it belongs here rather than in the app target)
   "src/ng/gui/WasmBridge_wasm.cpp",
@@ -1643,7 +1642,6 @@ export const targets: Target[] = [
       "src/ng/ExternalViewers.cpp",
       "src/ng/gui/NativeWindow.cpp",
       "src/ng/gui/NativeWindow_mac.mm",
-      "src/ng/gui/NativeWindow_wasm.cpp",
       "src/ng/gui/OleDragDrop_win.cpp",
       "src/ng/OleDragDropCommon_win.cpp",
       "src/ng/WebViewCapture_win.cpp",

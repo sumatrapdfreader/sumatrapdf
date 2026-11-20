@@ -18515,6 +18515,42 @@ KeyMatch KeymapMatch(const KeyChord& chord, const uint32_t* contexts,
 
 }
 
+#line 1 "src/gpui/locale.cpp"
+
+namespace gpui {
+
+TempStr PlatPreferredLocaleTemp() {
+    Str all = PlatPreferredLocalesTemp();
+    for (int i = 0; i < len(all); i++) {
+        if (all.s[i] == '\n') {
+            return Str(all.s, i);
+        }
+    }
+    return all;
+}
+
+void PlatLocaleListAdd(StrBuilder* out, Str locale) {
+    if (len(locale) == 0) {
+        return;
+    }
+    int start = 0;
+    for (int i = 0; i <= len(*out); i++) {
+        if (i < len(*out) && out->els[i] != '\n') {
+            continue;
+        }
+        if (StrEq(Str(out->els + start, i - start), locale)) {
+            return;
+        }
+        start = i + 1;
+    }
+    if (len(*out) > 0) {
+        out->AppendChar('\n');
+    }
+    out->Append(locale);
+}
+
+}
+
 #line 1 "src/gpui/paint_backend.cpp"
 
 namespace gpui {
@@ -238903,7 +238939,7 @@ bool AccessibilityWinSmokeTest(Window* win, uint32_t nodeId) {
 
 namespace gpui {
 
-TempStr PlatPreferredLocaleTemp() {
+TempStr PlatPreferredLocalesTemp() {
     const char* keys[] = {"persist.sys.locale", "persist.sys.language",
                           "ro.product.locale", "ro.product.locale.language"};
     char locale[PROP_VALUE_MAX] = {};
@@ -238934,22 +238970,23 @@ GPUI_DEFINE_APPLE_LOCALE()
 
 namespace gpui {
 
-TempStr PlatPreferredLocaleTemp() {
+TempStr PlatPreferredLocalesTemp() {
+    StrBuilder out(GetTempArena());
     const char* languages = getenv("LANGUAGE");
-    if (languages) {
-        while (*languages == ':') languages++;
-        if (*languages) {
-            const char* end = strchr(languages, ':');
-            return StrDupTemp(end ? Str(languages, (int)(end - languages))
-                                  : Str(languages));
-        }
+    while (languages && *languages) {
+        const char* end = strchr(languages, ':');
+        int n = end ? (int)(end - languages) : (int)strlen(languages);
+        PlatLocaleListAdd(&out, Str(languages, n));
+        languages = end ? end + 1 : nullptr;
     }
     const char* vars[] = {"LC_ALL", "LC_MESSAGES", "LANG"};
     for (const char* name : vars) {
         const char* value = getenv(name);
-        if (value && *value) return StrDupTemp(Str(value));
+        if (value && *value) {
+            PlatLocaleListAdd(&out, Str(value));
+        }
     }
-    return {};
+    return out.TakeStr();
 }
 
 }
@@ -238972,19 +239009,22 @@ GPUI_DEFINE_APPLE_LOCALE()
 
 namespace gpui {
 
-EM_JS(void, GpJsPreferredLocale, (char* out, int cap), {
+EM_JS(void, GpJsPreferredLocales, (char* out, int cap), {
     const nav = globalThis.navigator;
-    const locale = nav ? (nav.languages || [])[0] || nav.language || "" : "";
-    const bytes = new TextEncoder().encode(locale);
+    const list =
+        nav ? (nav.languages && nav.languages.length ? nav.languages
+                                                     : [nav.language || ""])
+            : [];
+    const bytes = new TextEncoder().encode(list.join(String.fromCharCode(10)));
     const count = Math.min(bytes.length, cap - 1);
     HEAPU8.set(bytes.subarray(0, count), out);
     HEAPU8[out + count] = 0;
 });
 
-TempStr PlatPreferredLocaleTemp() {
-    char locale[256] = {};
-    GpJsPreferredLocale(locale, sizeof(locale));
-    return StrDupTemp(Str(locale));
+TempStr PlatPreferredLocalesTemp() {
+    char locales[1024] = {};
+    GpJsPreferredLocales(locales, sizeof(locales));
+    return StrDupTemp(Str(locales));
 }
 
 }
@@ -238996,7 +239036,7 @@ TempStr PlatPreferredLocaleTemp() {
 
 namespace gpui {
 
-TempStr PlatPreferredLocaleTemp() {
+TempStr PlatPreferredLocalesTemp() {
     ULONG languages = 0;
     ULONG size = 0;
     if (!GetUserPreferredUILanguages(MUI_LANGUAGE_NAME, &languages, nullptr,
@@ -239011,10 +239051,17 @@ TempStr PlatPreferredLocaleTemp() {
         languages == 0) {
         return {};
     }
-    char locale[256] = {};
-    int n = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, names, -1,
-                                locale, sizeof(locale), nullptr, nullptr);
-    return n > 1 ? StrDupTemp(Str(locale, n - 1)) : Str{};
+
+    StrBuilder out(GetTempArena());
+    for (const WCHAR* name = names; *name; name += wcslen(name) + 1) {
+        char locale[256] = {};
+        int n = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, name, -1,
+                                    locale, sizeof(locale), nullptr, nullptr);
+        if (n > 1) {
+            PlatLocaleListAdd(&out, Str(locale, n - 1));
+        }
+    }
+    return out.TakeStr();
 }
 
 }
@@ -246488,6 +246535,10 @@ bool WindowClientDecorated(Window* win) {
     return !framed;
 }
 
+float WindowScaleFactor(Window*) {
+    return 1;
+}
+
 void AppActivate(Window* win) {
     if (!win || !win->plat) {
         return;
@@ -248328,6 +248379,14 @@ bool WindowClientDecorated(Window* win) {
     return win && (win->opts.clientTitleBar || win->opts.borderless);
 }
 
+float WindowScaleFactor(Window* win) {
+    if (!win || !win->plat || !win->plat->window) {
+        return 1;
+    }
+    float scale = (float)[win->plat->window backingScaleFactor];
+    return scale > 0 ? scale : 1;
+}
+
 void AppActivate(Window* win) {
     if (!win || !win->plat) {
         return;
@@ -250045,6 +250104,15 @@ bool WindowClientDecorated(Window* win) {
     return win && (win->opts.clientTitleBar || win->opts.borderless);
 }
 
+EM_JS(double, GpJsDevicePixelRatio, (), {
+    const dpr = globalThis.devicePixelRatio;
+    return typeof dpr == "number" && dpr > 0 ? dpr : 1;
+});
+
+float WindowScaleFactor(Window*) {
+    return (float)GpJsDevicePixelRatio();
+}
+
 void AppActivate(Window* win) {
     (void)win;
 }
@@ -251243,6 +251311,10 @@ void PlatInvalidate(Window* win) {
 bool WindowClientDecorated(Window* win) {
 
     return win && (win->opts.clientTitleBar || win->opts.borderless);
+}
+
+float WindowScaleFactor(Window* win) {
+    return win && win->paint.dpi > 0 ? win->paint.dpi / 96.f : 1.f;
 }
 
 void AppActivate(Window* win) {

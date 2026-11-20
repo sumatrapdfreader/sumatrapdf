@@ -10031,6 +10031,8 @@ bool AppMenuRowForId(const App* app, int id, uint32_t* action, int64_t* arg);
 void AppMenuClear(App* app);
 
 void AppActivate(Window* win);
+
+float WindowScaleFactor(Window* win);
 void AppMinimize(Window* win);
 void AppToggleMaximize(Window* win);
 
@@ -38496,20 +38498,22 @@ int ImageCacheEncodedCount(App* app = nullptr);
 
 #line 1 "src/gpui/locale_apple.h"
 
-#define GPUI_DEFINE_APPLE_LOCALE()                                      \
-    TempStr PlatPreferredLocaleTemp() {                                 \
-        CFArrayRef names = CFLocaleCopyPreferredLanguages();            \
-        if (!names) return {};                                          \
-        char locale[256] = {};                                          \
-        if (CFArrayGetCount(names) > 0) {                               \
-            auto first = (CFStringRef)CFArrayGetValueAtIndex(names, 0); \
-            if (!CFStringGetCString(first, locale, sizeof(locale),      \
-                                    kCFStringEncodingUTF8)) {           \
-                locale[0] = 0;                                          \
-            }                                                           \
-        }                                                               \
-        CFRelease(names);                                               \
-        return StrDupTemp(Str(locale));                                 \
+#define GPUI_DEFINE_APPLE_LOCALE()                                     \
+    TempStr PlatPreferredLocalesTemp() {                               \
+        CFArrayRef names = CFLocaleCopyPreferredLanguages();           \
+        if (!names) return {};                                         \
+        StrBuilder out(GetTempArena());                                \
+        CFIndex n = CFArrayGetCount(names);                            \
+        for (CFIndex i = 0; i < n; i++) {                              \
+            auto name = (CFStringRef)CFArrayGetValueAtIndex(names, i); \
+            char locale[256] = {};                                     \
+            if (CFStringGetCString(name, locale, sizeof(locale),       \
+                                   kCFStringEncodingUTF8)) {           \
+                PlatLocaleListAdd(&out, Str(locale));                  \
+            }                                                          \
+        }                                                              \
+        CFRelease(names);                                              \
+        return out.TakeStr();                                          \
     }
 
 #line 1 "src/gpui/paint.h"
@@ -38938,6 +38942,10 @@ void WindowDrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
 void WindowDrawFrameHeadless(Window* win, float dipW, float dipH);
 
 TempStr PlatPreferredLocaleTemp();
+
+TempStr PlatPreferredLocalesTemp();
+
+void PlatLocaleListAdd(StrBuilder* out, Str locale);
 
 #if GPUI_OS_WINDOWS || GPUI_OS_MAC
 bool PlatAutoHideScrollbars();

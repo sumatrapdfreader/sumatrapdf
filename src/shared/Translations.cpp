@@ -345,10 +345,6 @@ void Destroy() {
 
 } // namespace trans
 
-#if !OS_WIN && !OS_DARWIN
-void GetSystemPreferredLocales(StrVec&) {}
-#endif
-
 #if IS_DEBUG
 // translations.txt keeps C escapes; unescaped they must equal the compiled Tr() literal
 bool Translations_UnitTestLocale() {
