@@ -3687,6 +3687,7 @@ struct DocCanvasView {
     static void OnWheel(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev);
     static void OnWheelOverScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev);
     static void OnWheelOverHScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev);
+    static void OnPinch(DocCanvasView* self, gp::Ctx* cx, const gp::PinchEvent* ev);
     static void OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
     static void OnUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev);
     static void OnHover(DocCanvasView* self, gp::Ctx* cx, const gp::HoverEvent* ev);
@@ -3896,6 +3897,20 @@ void DocCanvasView::OnWheelOverScrollbar(DocCanvasView* self, gp::Ctx* cx, const
     gWheelOverVScrollbar = false;
     // or the scrollbar scrolls by its own step from where it was
     const_cast<gp::ScrollWheelEvent*>(ev)->propagate = false;
+}
+
+// gpui's PinchEvent (a macOS trackpad pinch) zooms the document
+void DocCanvasView::OnPinch(DocCanvasView* self, gp::Ctx* cx, const gp::PinchEvent* ev) {
+    PinchPhase phase = PinchPhase::Change;
+    if (ev->phase == gp::TouchPhase::Started) {
+        phase = PinchPhase::Begin;
+    } else if (ev->phase == gp::TouchPhase::Ended || ev->phase == gp::TouchPhase::Cancelled) {
+        phase = PinchPhase::End;
+    }
+    if (DocCanvasPinch(self->win, phase, ev->delta, ev->x, ev->y)) {
+        const_cast<gp::PinchEvent*>(ev)->propagate = false;
+        gp::Notify(cx);
+    }
 }
 
 void DocCanvasView::OnWheelOverHScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev) {
@@ -4334,7 +4349,8 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
                          ->OnMouseUp(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnUp))
                          ->OnMouseMove(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnMove))
                          ->OnHover(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnHover))
-                         ->OnScrollWheel(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnWheel));
+                         ->OnScrollWheel(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnWheel))
+                         ->OnPinch(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnPinch));
     canvas->customPaint = &DocCanvasView::OnPaint;
     canvas->customUser = win;
     // ng: ContextMenu::IntoEl() returns the child it was given with its own

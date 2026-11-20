@@ -9019,6 +9019,11 @@ El* El::OnScrollWheel(Listener fn) {
     onScrollWheel = fn;
     return this;
 }
+El* El::OnPinch(Listener fn) {
+    if (!lifecycle) lifecycle = ArenaNew<ElLifecycle>(arena);
+    lifecycle->onPinch = fn;
+    return this;
+}
 
 El* El::OnClickAction(uint32_t action, int64_t arg) {
     clickAction = action;
@@ -14219,9 +14224,11 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         e->onMouseDown.IsValid() || e->onMouseUp.IsValid() ||
         e->onLongPress.IsValid() || e->onDragMove.IsValid() ||
         e->onMouseDownOut.IsValid() || e->onMouseUpOut.IsValid() ||
-        e->onScrollWheel.IsValid() || e->drag.IsValid() ||
-        e->onDrop.IsValid() || e->cursor != CursorKind::Arrow || e->slider ||
-        e->stopMouseDown || e->suppressTextSelection || e->keepTextSelection ||
+        e->onScrollWheel.IsValid() ||
+        (e->lifecycle && e->lifecycle->onPinch.IsValid()) ||
+        e->drag.IsValid() || e->onDrop.IsValid() ||
+        e->cursor != CursorKind::Arrow || e->slider || e->stopMouseDown ||
+        e->suppressTextSelection || e->keepTextSelection ||
         e->textHoverCursor || e->scrollMaskAxes;
     if (hasHitbox) {
         HitRect hr;
@@ -14255,6 +14262,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         hr.onMouseDownOut = e->onMouseDownOut;
         hr.onMouseUpOut = e->onMouseUpOut;
         hr.onScrollWheel = e->onScrollWheel;
+        hr.onPinch = e->lifecycle ? e->lifecycle->onPinch : Listener{};
         hr.dropKind = e->dropKind;
         hr.onDrop = e->onDrop;
         hr.cursor = e->cursor;
@@ -23245,6 +23253,11 @@ void TestSimulateScrollWheel(Window* win, Point position, Point delta,
                                    true, modifiers, TouchPhase::Moved));
 }
 
+void TestSimulatePinch(Window* win, Point position, float delta,
+                       TouchPhase phase, Modifiers modifiers) {
+    Simulate(win, InputPinch(position.x, position.y, delta, modifiers, phase));
+}
+
 void TestSimulateClick(Window* win, Point position, Modifiers modifiers) {
     TestSimulateMouseDown(win, position, MouseButton::Left, modifiers);
     TestSimulateMouseUp(win, position, MouseButton::Left, modifiers);
@@ -26266,6 +26279,25 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
 
 static void DispatchFileDrop(Window* win, const FileDropEvent& in);
 
+static void DispatchPinch(Window* win, const PinchEvent& in) {
+    Vec<int> chain;
+    HitChain(win, in.x, in.y, &chain);
+    for (int k = 0; k < len(chain); k++) {
+        const HitRect& hr = win->paint.hits[chain[k]];
+        if (!hr.onPinch.IsValid()) {
+            continue;
+        }
+        PinchEvent ev = in;
+        ev.propagate = true;
+        ListenerCall(win->app, win, hr.onPinch, &ev);
+        if (!ev.propagate) {
+            break;
+        }
+    }
+    VecReset(chain);
+    AppInvalidate(win);
+}
+
 void WindowDispatchInput(Window* win, const PlatformInput* input) {
     if (!win || !input) {
         return;
@@ -26478,6 +26510,9 @@ void WindowDispatchInput(Window* win, const PlatformInput* input) {
         case PlatformInputKind::FileDrop:
             DispatchFileDrop(win, input->fileDrop);
             break;
+        case PlatformInputKind::Pinch:
+            DispatchPinch(win, input->pinch);
+            break;
     }
 }
 
@@ -26528,6 +26563,18 @@ PlatformInput InputMouseExited(float x, float y, bool pressed,
     in.mouseExited.pressed = pressed;
     in.mouseExited.pressedButton = pressedButton;
     in.mouseExited.modifiers = modifiers;
+    return in;
+}
+
+PlatformInput InputPinch(float x, float y, float delta, Modifiers modifiers,
+                         TouchPhase phase) {
+    PlatformInput in = {};
+    in.kind = PlatformInputKind::Pinch;
+    in.pinch.x = x;
+    in.pinch.y = y;
+    in.pinch.delta = delta;
+    in.pinch.modifiers = modifiers;
+    in.pinch.phase = phase;
     return in;
 }
 
@@ -27594,6 +27641,18 @@ void AppSetHostThemeHandler(App* app, void (*handler)(App*, bool dark)) {
 void AppHostSetTheme(App* app, bool dark) {
     if (app && app->hostThemeHandler) {
         app->hostThemeHandler(app, dark);
+    }
+}
+
+void AppOnOpenUrls(App* app, OpenUrlsFn fn) {
+    if (app) {
+        app->onOpenUrls = fn;
+    }
+}
+
+void AppOpenUrls(App* app, const Str* urls, int n) {
+    if (app && app->onOpenUrls && n > 0) {
+        app->onOpenUrls(app, urls, n);
     }
 }
 
@@ -247743,6 +247802,21 @@ static gpui::Str TextInputString(id string) {
     gpui::WindowDispatchInput(win, &in);
 }
 
+- (void)magnifyWithEvent:(NSEvent*)event {
+    NSPoint p = [self gpuiPoint:event];
+    gpui::TouchPhase phase = gpui::TouchPhase::Moved;
+    NSEventPhase ph = [event phase];
+    if (ph & (NSEventPhaseMayBegin | NSEventPhaseBegan)) {
+        phase = gpui::TouchPhase::Started;
+    } else if (ph & NSEventPhaseEnded) {
+        phase = gpui::TouchPhase::Ended;
+    }
+    gpui::PlatformInput in =
+        gpui::InputPinch((float)p.x, (float)p.y, (float)[event magnification],
+                         gpui::ModsOf(event), phase);
+    gpui::WindowDispatchInput(win, &in);
+}
+
 - (void)keyDown:(NSEvent*)event {
 
     if (gpui::WindowMacKeyDown(win, event)) {
@@ -248723,6 +248797,8 @@ int PlatShowMenu(Window* win, const PlatMenuItem* items, int n, float x,
 namespace gpui {
 
 static App* gRunningApp = nullptr;
+
+static App* gPlatApp = nullptr;
 static GpuiAppMenuTarget* gAppMenuTarget = nil;
 
 }
@@ -248738,6 +248814,19 @@ static GpuiAppMenuTarget* gAppMenuTarget = nil;
         gpui::AppQuitAll(gpui::gRunningApp);
     }
     return NSTerminateCancel;
+}
+
+- (void)application:(NSApplication*)application
+           openURLs:(NSArray<NSURL*>*)urls {
+    (void)application;
+    gpui::Vec<gpui::Str> strs;
+    for (NSURL* url in urls) {
+        const char* s = url.absoluteString.UTF8String;
+        if (s) {
+            gpui::VecAppend(strs, gpui::Str((char*)s));
+        }
+    }
+    gpui::AppOpenUrls(gpui::gPlatApp, strs.els, gpui::len(strs));
 }
 @end
 
@@ -248980,10 +249069,14 @@ static void UpdateImePosition(Window* win) {
 }
 
 bool PlatInit(App* app) {
-    (void)app;
+    gPlatApp = app;
     PlatInstallImePositionUpdate(UpdateImePosition);
     @autoreleasepool {
         [NSApplication sharedApplication];
+
+        NSProcessInfo* info = [NSProcessInfo processInfo];
+        info.automaticTerminationSupportEnabled = NO;
+        [info disableAutomaticTermination:@"gpui"];
 
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 

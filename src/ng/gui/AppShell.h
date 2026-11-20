@@ -161,10 +161,8 @@ void AppShellToggleDpiOverride();
 float AppShellRenderScale(gpui::Window* win);
 #endif
 #if OS_DARWIN
-void AppShellDisableAutoTermination();
-void AppShellHandleOpenDocs();
+void AppShellHandleOpenDocs(gpui::App* app);
 void AppShellOpenDocsReady();
-void AppShellHandleMagnify();
 TempStr AppShellCaptureWindowTemp(MainWindow* win, Str path, Str mode);
 #endif
 #if OS_DARWIN || OS_WIN

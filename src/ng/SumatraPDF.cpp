@@ -7454,9 +7454,6 @@ int GpuiMain(int argc, char** argv) {
         return toolRes;
     }
     gAppStartTime = TimeGet();
-#if OS_DARWIN
-    AppShellDisableAutoTermination();
-#endif
 #if OS_WIN
     // ng: orig's WinMain does this; without it WIC and GDI+ decode nothing, so
     // e.g. reading a cached thumbnail back fails
@@ -7691,8 +7688,7 @@ int GpuiMain(int argc, char** argv) {
 
     gp::App* app = gp::AppNew();
 #if OS_DARWIN
-    AppShellHandleOpenDocs();
-    AppShellHandleMagnify();
+    AppShellHandleOpenDocs(app);
 #endif
     gpc::Init(app);
     // the current theme's colors become gpui's before the first element is built

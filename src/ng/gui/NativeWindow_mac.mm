@@ -18,16 +18,6 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "gui/AppShell.h"
-#include "gui/DocCanvas.h"
-
-// AppKit turns automatic termination back on at the end of launch when it
-// still counts zero windows. Under lldb the app never becomes frontmost, so
-// that quits the process with status 0.
-void AppShellDisableAutoTermination() {
-    NSProcessInfo* info = [NSProcessInfo processInfo];
-    info.automaticTerminationSupportEnabled = NO;
-    [info disableAutomaticTermination:@"SumatraPDF"];
-}
 
 // Backing pixels per point. The canvas is drawn in points, so a tile rendered
 // at GetZoomReal is upscaled on a Retina display.
@@ -73,78 +63,23 @@ static void OpenQueuedDocs() {
     AppShellActivateWindow(win);
 }
 
-@interface SumatraOpenDocs : NSObject
-@end
-
-@implementation SumatraOpenDocs
-- (void)openDocs:(NSAppleEventDescriptor*)event withReply:(NSAppleEventDescriptor*)reply {
-    (void)reply;
-    NSAppleEventDescriptor* docs = [[event paramDescriptorForKeyword:keyDirectObject] coerceToDescriptorType:typeAEList];
-    for (NSInteger i = 1; i <= docs.numberOfItems; i++) {
-        NSString* path = [[docs descriptorAtIndex:i] fileURLValue].path;
-        if (path) {
-            gOpenDocs.Append(Str((char*)path.UTF8String));
+static void OnOpenUrls(gp::App*, const gp::Str* urls, int n) {
+    for (int i = 0; i < n; i++) {
+        if (!gp::StrStartsWith(urls[i], "file://")) {
+            continue;
         }
+        gOpenDocs.Append(FromGpui(wry::PathFromFileUriTemp(urls[i])));
     }
     if (gOpenDocsReady) {
         uitask::Post(MkFunc0Void(OpenQueuedDocs), "OpenQueuedDocs");
     }
 }
-@end
 
-// Finder's "Open With" and `open -a` deliver documents as an Apple event, not
-// in argv. Those arriving before the first window exists wait in gOpenDocs.
-void AppShellHandleOpenDocs() {
-    static SumatraOpenDocs* handler = [[SumatraOpenDocs alloc] init];
-    [[NSAppleEventManager sharedAppleEventManager] setEventHandler:handler
-                                                       andSelector:@selector(openDocs:withReply:)
-                                                     forEventClass:kCoreEventClass
-                                                        andEventID:kAEOpenDocuments];
-}
-
-static MainWindow* MainWindowOfNSWindow(NSWindow* nsWin, NSView** viewOut) {
-    for (MainWindow* win : gWindows) {
-        NSView* view = (__bridge NSView*)gp::PlatWindowHandle(win->gpuiWin);
-        if (nsWin && view.window == nsWin) {
-            *viewOut = view;
-            return win;
-        }
-    }
-    return nullptr;
-}
-
-static PinchPhase PinchPhaseOf(NSEvent* event) {
-    NSEventPhase ph = event.phase;
-    if (ph & NSEventPhaseBegan) {
-        return PinchPhase::Begin;
-    }
-    if (ph & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
-        return PinchPhase::End;
-    }
-    return PinchPhase::Change;
-}
-
-// a magnify event over a document zooms it; nil swallows the event
-static NSEvent* OnMagnify(NSEvent* event) {
-    NSView* view = nil;
-    MainWindow* win = MainWindowOfNSWindow(event.window, &view);
-    if (!win) {
-        return event;
-    }
-    // gpui's view is flipped: this is the same point its mouse events carry
-    NSPoint p = [view convertPoint:event.locationInWindow fromView:nil];
-    bool handled = DocCanvasPinch(win, PinchPhaseOf(event), (float)event.magnification, (float)p.x, (float)p.y);
-    return handled ? nil : event;
-}
-
-// gpui's Mac view has no magnifyWithEvent:, so a trackpad pinch would go
-// nowhere. A local monitor sees it before the view does.
-// TODO: move into gpui as a gesture event
-void AppShellHandleMagnify() {
-    [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskMagnify
-                                          handler:^NSEvent*(NSEvent* event) {
-                                              return OnMagnify(event);
-                                          }];
+// Finder's "Open With" and `open -a` deliver documents through gpui's
+// on_open_urls, not in argv. Those arriving before the first window exists
+// wait in gOpenDocs.
+void AppShellHandleOpenDocs(gp::App* app) {
+    gp::AppOnOpenUrls(app, OnOpenUrls);
 }
 
 void AppShellOpenDocsReady() {

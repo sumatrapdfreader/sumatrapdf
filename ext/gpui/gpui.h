@@ -4322,6 +4322,15 @@ struct DropEvent {
     Str externalPaths = {};
 };
 
+struct PinchEvent {
+    float x = 0;
+    float y = 0;
+    float delta = 0;
+    Modifiers modifiers = {};
+    TouchPhase phase = TouchPhase::Moved;
+    bool propagate = true;
+};
+
 enum class FileDropPhase : uint8_t {
     Entered,
     Pending,
@@ -4381,7 +4390,8 @@ enum class PlatformInputKind : uint8_t {
     ScrollWheel,
     TouchDrag,
     LongPress,
-    FileDrop
+    FileDrop,
+    Pinch
 };
 
 struct PlatformInput {
@@ -4395,6 +4405,7 @@ struct PlatformInput {
         TouchDragEvent touchDrag;
         LongPressEvent longPress;
         FileDropEvent fileDrop;
+        PinchEvent pinch;
     };
 };
 
@@ -5883,6 +5894,8 @@ struct ElLifecycle {
     void (*afterPaint)(PaintCtx* ctx, El* e, void* user) = nullptr;
     void* user = nullptr;
     const LinkTooltipTarget* linkTooltip = nullptr;
+
+    Listener onPinch;
     const TextHighlight* highlights = nullptr;
     int highlightCount = 0;
     TextFontRanges fontRanges;
@@ -6477,6 +6490,8 @@ struct El {
     El* OnKeyUp(Listener fn);
 
     El* OnScrollWheel(Listener fn);
+
+    El* OnPinch(Listener fn);
     El* TabIndex(int v);
     El* TabStop(bool v);
 
@@ -6591,6 +6606,8 @@ struct HitRect {
     Listener onMouseUpOut;
 
     Listener onScrollWheel;
+
+    Listener onPinch;
     Str dropKind = {};
     Listener onDrop;
     CursorKind cursor = CursorKind::Arrow;
@@ -9004,6 +9021,7 @@ struct App {
     Vec<Window*> windows;
 
     void (*hostThemeHandler)(App*, bool dark) = nullptr;
+    void (*onOpenUrls)(App*, const Str* urls, int n) = nullptr;
 
     Vec<EntitySlot> entities;
     Vec<int32_t> freeSlots;
@@ -9936,6 +9954,10 @@ void AppRefreshWindows(App* app);
 
 void AppSetHostThemeHandler(App* app, void (*handler)(App*, bool dark));
 void AppHostSetTheme(App* app, bool dark);
+
+using OpenUrlsFn = void (*)(App* app, const Str* urls, int n);
+void AppOnOpenUrls(App* app, OpenUrlsFn fn);
+void AppOpenUrls(App* app, const Str* urls, int n);
 
 void AppOnShutdown(void (*fn)());
 
@@ -38974,6 +38996,8 @@ PlatformInput InputTouchDrag(TouchPhase phase, Point start, Point position);
 PlatformInput InputLongPress(TouchPhase phase, Point start, Point position);
 
 PlatformInput InputFileDrop(FileDropPhase phase, float x, float y, Str paths);
+PlatformInput InputPinch(float x, float y, float delta, Modifiers modifiers,
+                         TouchPhase phase);
 
 Str FileUriListToPaths(Arena* a, Str list);
 
@@ -39312,6 +39336,10 @@ void TestSimulateClick(Window* win, Point position, Modifiers modifiers = {});
 
 void TestSimulateScrollWheel(Window* win, Point position, Point delta,
                              Modifiers modifiers = {});
+
+void TestSimulatePinch(Window* win, Point position, float delta,
+                       TouchPhase phase = TouchPhase::Moved,
+                       Modifiers modifiers = {});
 
 bool TestDispatchAction(Window* win, uint32_t action, int64_t arg = 0);
 
