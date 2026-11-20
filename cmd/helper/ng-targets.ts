@@ -1657,6 +1657,7 @@ export const targets: Target[] = [
       "src/ng/UpdateCheck.cpp",
       "src/ng/UpdateCheckCommon.cpp",
       "src/ng/UpdateSelf_mac.mm",
+      "src/ng/ReuseInstance_posix.cpp",
       "src/ng/UpdateTemp.cpp",
       "src/ng/Installer.cpp",
       "src/ng/InstallerCommon.cpp",

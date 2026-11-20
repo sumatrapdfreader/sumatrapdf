@@ -143,3 +143,4 @@ void ShowPrintersDialog(bool consoleOnly = false);
 bool IsValidPageRange(Str ranges);
 bool IsBenchPagesInfo(Str s);
 bool ParsePageRanges(Str ranges, Vec<PageRange>& result);
+TempStr OpenDdeCmdTemp(Str fullPath, const Flags& i, bool isFirstWin, u32 newWindow);

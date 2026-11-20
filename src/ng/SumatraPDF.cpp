@@ -94,6 +94,7 @@
 #include "TextSearch.h"
 #include "AppTools.h"
 #include "SearchAndDDE.h"
+#include "ReuseInstance.h"
 #include "FindBar.h"
 #include "Toolbar.h"
 #include "ReadingBar.h"
@@ -7752,6 +7753,19 @@ int GpuiMain(int argc, char** argv) {
         uitask::Destroy();
         return 0;
     }
+#elif !OS_WASM
+    if (ForwardToRunningInstance(*gFlags, &gOtherInstanceRunning)) {
+        CleanUpSettings();
+        trans::Destroy();
+        FreeAcceleratorTables();
+        delete gFlags;
+        gFlags = nullptr;
+        uitask::Destroy();
+        return 0;
+    }
+    // what a forwarding process sends runs once the loop starts, after the
+    // command line of this one is open
+    StartInstanceServer();
 #endif
 
 #if OS_WIN
@@ -7920,6 +7934,10 @@ int GpuiMain(int argc, char** argv) {
     }
 
     int res = AppShellRun(app);
+#if !OS_WIN && !OS_WASM
+    // a process started while we shut down mustn't forward to us
+    StopInstanceServer();
+#endif
     StopUiHangDetector();
     SavePerfLog();
     UnregisterSettingsForFileChanges();

@@ -928,3 +928,36 @@ void ParseFlagsArgv(Arena* a, int argc, char** argv, Flags& i, Str toolNames) {
     };
     ParseFlagNodes(a, root, i, toolNames);
 }
+
+// The DDE commands that open fullPath in a running instance the way this
+// command line would open it here. newWindow 2 forces a new window.
+TempStr OpenDdeCmdTemp(Str fullPath, const Flags& i, bool isFirstWin, u32 newWindow) {
+    str::Builder cmd;
+    cmd.Append(fmt("[Open(\"%s\", %d, 1, 0)]", fullPath, newWindow));
+    if (i.namedDest && isFirstWin) {
+        cmd.Append(fmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath, i.namedDest));
+    } else if (i.pageNumber > 0 && isFirstWin) {
+        cmd.Append(fmt("[GotoPage(\"%s\", %d)]", fullPath, i.pageNumber));
+    }
+    if ((i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom ||
+         i.startScroll.x != -1 && i.startScroll.y != -1) &&
+        isFirstWin) {
+        Str viewModeStr = DisplayModeToString(i.startView);
+        cmd.Append(fmt("[SetView(\"%s\", \"%s\", %.2f, %d, %d)]", fullPath, viewModeStr, i.startZoom, i.startScroll.x,
+                       i.startScroll.y));
+    }
+    if (i.forwardSearchOrigin && i.forwardSearchLine) {
+        TempStr srcPath = path::NormalizeTemp(i.forwardSearchOrigin);
+        cmd.Append(fmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath, srcPath, i.forwardSearchLine));
+    }
+    if (i.search) {
+        // HandleSearchCmd unescapes "" to "
+        TempStr term = str::ReplaceTemp(i.search, StrL("\""), StrL("\"\""));
+        cmd.Append(fmt("[Search(\"%s\",\"%s\")]", fullPath, term));
+    }
+    if ((i.enterPresentation || i.enterFullScreen) && isFirstWin) {
+        Str name = i.enterPresentation ? StrL("Presentation") : StrL("FullScreen");
+        cmd.Append(fmt("[%s(\"%s\")]", name, fullPath));
+    }
+    return ToStrTemp(cmd);
+}
