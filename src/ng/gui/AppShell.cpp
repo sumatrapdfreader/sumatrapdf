@@ -2040,6 +2040,12 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
             }
             return canvas;
         }
+        // a lazy tab loading in the background, as orig's canvas says
+        if (tab && tab->loadState == WindowTab::LoadState::Loading && len(tab->filePath) > 0) {
+            TempStr msg = fmt(Tr("Loading %s ...").s, path::GetBaseNameTemp(tab->filePath));
+            canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, msg))->Font(16)->Fg(th.foreground));
+            return canvas;
+        }
         canvas->Child(gp::TextEl(cx->a, GStrL("SumatraPDF is a PDF reader"))->Font(16)->Fg(th.mutedFg));
         return canvas;
     }

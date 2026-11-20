@@ -1660,6 +1660,94 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
     return LoadDocumentFinish(win, fullPath, ctrl, prefs, reuse, timeStart);
 }
 
+// -dbg-control TestLoadDelay: makes opening a document as slow as a sleeping drive
+AtomicInt gTestLoadDelayMs = 0;
+
+// orig's StartLoadDocument for a lazy tab: the slow part (waking the drive,
+// parsing the file) runs on a thread so the UI stays usable meanwhile
+struct LazyTabLoad {
+    WindowTab* tab = nullptr;
+    Str path;
+    FileEBookUI* fileEBookUI = nullptr;
+    float ebookLayoutAspect = 0;
+    bool chmInFixedUI = false;
+    // browser-view and chm documents only get the drive woken up here
+    bool createEngine = false;
+    EngineBase* engine = nullptr;
+    ~LazyTabLoad() {
+        str::Free(path);
+        DeleteFileEBookUI(fileEBookUI);
+        SafeEngineRelease(&engine);
+    }
+};
+
+static void LazyTabLoadDone(LazyTabLoad* d) {
+    AutoDelete delData(d);
+    WindowTab* tab = d->tab;
+    MainWindow* win = FindMainWindowByTab(tab);
+    if (!win || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    if (tab->loadState != WindowTab::LoadState::Loading || !str::Eq(tab->filePath, d->path)) {
+        return;
+    }
+    if (!IsCurrentTab(win, tab)) {
+        // loads again when selected, quickly now that the drive is awake
+        tab->loadState = WindowTab::LoadState::None;
+        return;
+    }
+    EngineBase* engine = d->engine;
+    d->engine = nullptr;
+    FinishLazyTabLoad(tab, engine);
+}
+
+static void LazyTabLoadThread(LazyTabLoad* d) {
+    int delayMs = AtomicIntGet(&gTestLoadDelayMs);
+    if (delayMs > 0) {
+        SleepInMs(delayMs);
+    }
+    if (d->createEngine && DocumentPathExists(d->path)) {
+        SetLoadThreadFileEBookUI(d->fileEBookUI);
+        float prevAspect = EngineMupdfSetEbookLayoutAspect(d->ebookLayoutAspect);
+        // no password prompt off the UI thread: FinishLazyTabLoad's regular
+        // load asks for it
+        d->engine = CreateEngineFromFile(d->path, nullptr, d->chmInFixedUI);
+        EngineMupdfSetEbookLayoutAspect(prevAspect);
+        SetLoadThreadFileEBookUI(nullptr);
+        if (d->engine && d->engine->pageCount <= 0) {
+            SafeEngineRelease(&d->engine);
+        }
+    } else {
+        DocumentPathExists(d->path);
+    }
+    uitask::Post(MkFunc0<LazyTabLoad>(LazyTabLoadDone, d), "LazyTabLoadDone");
+}
+
+void StartLazyTabLoad(WindowTab* tab) {
+    MainWindow* win = tab->win;
+    auto* d = new LazyTabLoad;
+    d->tab = tab;
+    d->path = str::Dup(tab->filePath);
+    FileType kind = GuessFileTypeFromName(d->path);
+    d->chmInFixedUI = gSettings->chmUI.useFixedPageUI || !BrowserViewAvailable();
+    bool chmInBrowser = !d->chmInFixedUI && ChmModel::IsSupportedFileType(kind);
+    bool mdInBrowser = ShouldUseBrowserView(kind) && BrowserViewAvailable();
+    d->createEngine = !chmInBrowser && !mdInBrowser;
+    d->ebookLayoutAspect = EbookLayoutAspectForLoad(win, d->path);
+    d->fileEBookUI = CopyFileEBookUI(GetFileEBookUI(d->path));
+    tab->loadState = WindowTab::LoadState::Loading;
+    AppShellInvalidate(win);
+    RunAsync(MkFunc0<LazyTabLoad>(LazyTabLoadThread, d), StrL("LazyTabLoad"));
+}
+
+// LoadDocument into the current tab with an engine a lazy tab's background
+// load created
+void LoadDocumentWithEngine(MainWindow* win, Str path, EngineBase* engine) {
+    auto timeStart = TimeGet();
+    DocController* ctrl = new DisplayModel(engine, win->cbHandler);
+    LoadDocumentFinish(win, path, ctrl, LoadPrefs::DontSave, LoadReuse::CurrentTab, timeStart);
+}
+
 static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab);
 
 // ShowThumbnailsIfNoToc: a document without bookmarks opens with page

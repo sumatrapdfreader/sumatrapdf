@@ -22,6 +22,7 @@ struct MainWindow;
 struct WindowTab;
 struct DocController;
 struct DocControllerCallback;
+class EngineBase;
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win);
 void DeleteControllerAsync(DocController* ctrl);
@@ -130,6 +131,9 @@ void PlaceMainWindowLater(MainWindow* win, Rect pos, bool maximize);
 void DuplicateTabInNewWindow(WindowTab* tab);
 void DuplicateTabInNewTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
+void StartLazyTabLoad(WindowTab* tab);
+void LoadDocumentWithEngine(MainWindow* win, Str path, EngineBase* engine);
+extern AtomicInt gTestLoadDelayMs;
 bool ForwardBrowserMsg(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp);
 bool ScrollBrowserDocKey(MainWindow* win, int vk);
 // the shell's tick: the delayed reload the file watcher asked for

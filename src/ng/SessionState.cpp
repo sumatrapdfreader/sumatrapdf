@@ -301,8 +301,17 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
     if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab)) {
         return;
     }
+    logf("LoadLazyTabIfNeeded: '%s'\n", tab->filePath);
+    StartLazyTabLoad(tab);
+}
+
+// The UI-thread half of a lazy tab's load. engine is what the background load
+// created; without one (browser view, password, failure) the regular load
+// runs, quickly now that the drive is awake.
+void FinishLazyTabLoad(WindowTab* tab, EngineBase* engine) {
+    MainWindow* win = tab->win;
     // a file that has gone away keeps its tab, marked as failed, as orig's
-    if (!DocumentPathExists(tab->filePath)) {
+    if (!engine && !DocumentPathExists(tab->filePath)) {
         logf("LoadLazyTabIfNeeded: file not found '%s'\n", tab->filePath);
         FileHistoryDemote(tab->filePath, true);
         tab->loadState = WindowTab::LoadState::Error;
@@ -312,9 +321,11 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
     // RememberOpenedFiles = false frees the borrowed TabState on save.
     // The file still has to load; there is just no remembered view.
     TabState* state = tab->tabState;
-    logf("LoadLazyTabIfNeeded: '%s'\n", tab->filePath);
-    tab->loadState = WindowTab::LoadState::Loading;
-    ReloadDocument(win, false);
+    if (engine) {
+        LoadDocumentWithEngine(win, tab->filePath, engine);
+    } else {
+        ReloadDocument(win, false);
+    }
     WindowTab* curr = win->CurrentTab();
     if (curr && curr->ctrl) {
         if (state) {

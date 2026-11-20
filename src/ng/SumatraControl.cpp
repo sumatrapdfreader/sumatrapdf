@@ -688,6 +688,8 @@ enum class ControlCmd : u16 {
     TestStripGroups = 169,
     // ng only (macOS): [path, mode]: a PNG of the first window as drawn ("all": with its other windows)
     TestCaptureWindow = 170,
+    // [ms]: every document open waits this long first, like a sleeping drive
+    TestLoadDelay = 171,
     // [action, pageNo, x, y, length, unit]: drives the Measure tool
     TestMeasurement = 159,
 };
@@ -1995,6 +1997,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 TabsSelect(win, a);
             }
             AppendTestResult(req, 0, StripGroupsStateTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestLoadDelay: {
+            i32 ms = 0;
+            IntArg(req, 0, ms);
+            AtomicIntSet(&gTestLoadDelayMs, ms);
+            AppendTestResult(req, 0, fmt("%d", ms));
             break;
         }
 
