@@ -184,6 +184,8 @@ export enum ControlCommand {
   // [action, a, b, c]: "drop" from to groupPos, "move" dir, "select" idx, or
   // "" for the state; answers with the strip groups and tabs
   TestStripGroups = 169,
+  // ng only (macOS): [path, mode]: a PNG of the first window as drawn
+  TestCaptureWindow = 170,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

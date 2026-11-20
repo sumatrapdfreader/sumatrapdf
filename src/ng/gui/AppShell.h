@@ -165,6 +165,7 @@ void AppShellDisableAutoTermination();
 void AppShellHandleOpenDocs();
 void AppShellOpenDocsReady();
 void AppShellHandleMagnify();
+TempStr AppShellCaptureWindowTemp(MainWindow* win, Str path, Str mode);
 #endif
 // presentation mode's auto-hidden cursor (orig hides it with SetCursor(null))
 void AppShellShowCursor(MainWindow* win, bool show);

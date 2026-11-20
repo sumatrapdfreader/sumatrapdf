@@ -687,6 +687,8 @@ enum class ControlCmd : u16 {
     // [action, a, b, c]: "drop" from to groupPos, "move" dir, "select" idx, or
     // "" for the state; answers with the strip groups and tabs (StripGroupsStateTemp)
     TestStripGroups = 169,
+    // ng only (macOS): [path, mode]: a PNG of the first window as drawn ("all": with its other windows)
+    TestCaptureWindow = 170,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1992,6 +1994,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 TabsSelect(win, a);
             }
             AppendTestResult(req, 0, StripGroupsStateTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestCaptureWindow: {
+#if OS_DARWIN
+            Str path = StringArg(req, 0);
+            if (len(path) == 0) {
+                AppendError(req, StrL("TestCaptureWindow expects string path [, string mode]"));
+                break;
+            }
+            Str res = AppShellCaptureWindowTemp(FirstWindow(), path, StringArg(req, 1));
+            AppendTestResult(req, str::StartsWith(res, StrL("OK")) ? 0 : 1, res);
+#else
+            AppendTestResult(req, 1, StrL("NOTPORTED 170"));
+#endif
             break;
         }
 

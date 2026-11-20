@@ -67,10 +67,11 @@ pkill -f "SumatraPDF.app/Contents/MacOS/SumatraPDF -for-testing"
 
 ## Gotchas
 
-- Screenshots don't work here: the terminal has no Screen Recording permission,
-  so `screencapture -R` returns only the wallpaper and `screencapture -l <id>`
-  fails with "could not create image from window". Assert on control-channel
-  replies and the log instead.
+- `screencapture` needs Screen Recording permission, which the terminal lacks.
+  Use `TestCaptureWindow <path.png> [all]` instead: the app draws its first
+  window into a PNG at backing scale (tabs, toolbar, canvas, overlays, gpui
+  popups); `all` adds its other windows (tool windows, with title bars) where
+  they are on screen. A WKWebView (AI chat) comes from its own snapshot.
 - `clang-format` is not installed, so `bun cmd/ng-format.ts` does nothing; say
   so instead of claiming the C/C++ edits are formatted.
 - Quit what you launch. `pkill -f` with the `-for-testing` argument in the

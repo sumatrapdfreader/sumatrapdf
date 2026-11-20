@@ -704,7 +704,7 @@ enum class ControlCmd : u16 {
     TestMeasurement = 159,
     // [action, pageNo, imageIdx, path]: replace / edit an image embedded in the PDF
     TestImageReplace = 160,
-    // 161, 162: ng only (TestPerfStats, TestOverlayState); tests/lint-control-ids.ts
+    // 161, 162, 170: ng only (TestPerfStats, TestOverlayState, TestCaptureWindow); tests/lint-control-ids.ts
     // checks ids mean the same command in both apps and tests/control.ts
     // [timeoutMs]: blocks until the home page painted after startup
     WaitHomePainted = 163,
