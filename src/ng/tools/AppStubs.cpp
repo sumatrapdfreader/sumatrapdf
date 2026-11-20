@@ -79,6 +79,11 @@ void SetCurrentLanguageAndRefreshUI(Str langCode) {
     SetCurrentLang(langCode);
 }
 
+#if !OS_WIN
+// AppShell.cpp (gpui) asks the OS; the tools go by $LANG alone
+void GetSystemPreferredLocales(StrVec&) {}
+#endif
+
 void UpdateDocumentColors() {}
 
 void UpdateFixedPageScrollbarsVisibility() {}
