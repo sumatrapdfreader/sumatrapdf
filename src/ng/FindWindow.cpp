@@ -432,8 +432,9 @@ static gp::InputState* EnsurePagesEdit(MainWindow* win) {
 }
 
 void ShowFindWindow(MainWindow* win) {
-    // hiding the bar aborts a running search (e.g. -search); restart it below
+    // hiding the bar aborts a running search or count (e.g. -search); restart below
     bool wasFinding = win->findThread != nullptr;
+    bool wasCounting = win->findCountThread != nullptr;
     // one find UI at a time: SearchUIFloating can change while the bar is up
     if (IsFindBarVisible(win)) {
         HideFindBar(win);
@@ -461,6 +462,9 @@ void ShowFindWindow(MainWindow* win) {
     FindWindowRefreshResults(win);
     if (wasFinding && !win->findThread && len(term) > 0) {
         FindTextOnThread(win, TextSearch::Direction::Forward, term, true, true);
+    }
+    if (wasCounting && !win->findCountThread) {
+        EnsureFindSnippets(win);
     }
     if (FindEditTextLen(win) == 0 || win->findThread) {
         return;
