@@ -1482,7 +1482,7 @@ TempStr SetFormChoiceResultTemp(int pageNo, int idx, Str value, int* exitCodeOut
 }
 
 // Render one page and count red / non-white pixels (issue #3415: WebP in EPUB paints).
-TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo, int zoomPercent) {
+TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo, int zoomPercent, RenderTarget target) {
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -1527,7 +1527,7 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo, int z
     }
 
     float zoom = zoomPercent > 0 ? (float)zoomPercent / 100.f : 1.f;
-    RenderPageArgs rargs(pageNo, zoom, 0, nullptr, RenderTarget::Export);
+    RenderPageArgs rargs(pageNo, zoom, 0, nullptr, target);
     Pixmap* bmp = engine->RenderPage(rargs);
     if (!bmp || !bmp->data) {
         FreePixmap(bmp);

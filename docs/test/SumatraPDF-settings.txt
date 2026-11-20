@@ -101,6 +101,7 @@ TreeFontSize = 0
 UIFontSize = 0
 DisableAntiAlias = false
 EngineeringDrawingEnhance = off
+ShowLineWeights = true
 DisableAutoLinks = false
 UseSysColors = false
 UseTabs = true

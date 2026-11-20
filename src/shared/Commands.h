@@ -397,8 +397,9 @@ enum {
     CmdStripGroupColor = 591,
     CmdStripGroupUngroup = 592,
     CmdStripGroupClose = 593,
+    CmdToggleLineWeights = 594,
 
-    CmdLast = 593,
+    CmdLast = 594,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

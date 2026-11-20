@@ -930,6 +930,10 @@ struct Settings {
     // from numbered headings in its text (Generate Table Of Contents
     // command does it on demand)
     bool autoGenerateTOC;
+    // if false, lines in documents are drawn one pixel wide, whatever
+    // their width, like Acrobat's Line Weights turned off. Only on screen.
+    // Toggle with CmdToggleLineWeights
+    bool showLineWeights;
     // list of handlers for selected text, shown in context menu when text
     // selection is active. See [docs for more
     // information](https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)

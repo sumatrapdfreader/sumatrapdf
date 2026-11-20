@@ -1683,15 +1683,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestRenderPageColors: {
             Str path = StringArg(req, 0);
             if (len(path) == 0) {
-                AppendError(req, StrL("TestRenderPageColors expects string path [, int pageNo] [, int zoomPercent]"));
+                AppendError(req, StrL("TestRenderPageColors expects string path [, int pageNo] [, int zoomPercent] "
+                                      "[, int view]"));
                 break;
             }
             i32 pageNo = 1;
             i32 zoomPercent = 100;
+            i32 view = 0;
             IntArg(req, 1, pageNo);
             IntArg(req, 2, zoomPercent);
+            IntArg(req, 3, view);
+            RenderTarget target = view ? RenderTarget::View : RenderTarget::Export;
             int exitCode = 0;
-            Str res = PageRenderColorsResultTemp(path, &exitCode, pageNo, zoomPercent);
+            Str res = PageRenderColorsResultTemp(path, &exitCode, pageNo, zoomPercent, target);
             AppendTestResult(req, exitCode, res);
             break;
         }

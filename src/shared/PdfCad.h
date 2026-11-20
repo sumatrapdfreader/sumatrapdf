@@ -55,4 +55,7 @@ struct CadMinLineWidthScope {
 };
 
 fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner);
+void SetShowLineWeights(bool show);
+bool GetShowLineWeights();
+fz_device* PdfHairlineWrapDevice(fz_context* ctx, fz_device* inner);
 void PdfCadEnhancePixmap(fz_context* ctx, fz_pixmap* pix, float zoom, bool rasterDominant);

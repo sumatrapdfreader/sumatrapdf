@@ -7845,6 +7845,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             if (CadEnhanceActive()) {
                 dev = PdfCadEnhanceWrapDevice(ctx, dev);
             }
+            if (args.target == RenderTarget::View && !GetShowLineWeights()) {
+                dev = PdfHairlineWrapDevice(ctx, dev);
+            }
             fz_run_display_list(ctx, keptList, dev, fz_identity, pRect, fzcookie);
             if (RenderAborted(fzcookie)) {
                 UnhookAbortedDevices(drawDev, dev);
@@ -7889,14 +7892,20 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     const char* usageZ = CStrTemp(usage);
 
     pdf_page* pdfpage = nullptr;
+    fz_device* drawDev = nullptr;
     fz_var(pdfpage);
+    fz_var(drawDev);
     if (pdfdoc) {
         fz_try(ctx) {
             pdfpage = pdf_page_from_fz_page(ctx, page);
             ClearRenderedPagePixmap(ctx, target.fz, args);
             dev = fz_new_draw_device(ctx, ctm, target.fz);
+            drawDev = dev;
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
+            }
+            if (args.target == RenderTarget::View && !GetShowLineWeights()) {
+                dev = PdfHairlineWrapDevice(ctx, dev);
             }
             if (hideAnnotations) {
                 pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
@@ -7914,7 +7923,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 pdf_run_page_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             }
             if (RenderAborted(fzcookie)) {
-                UnhookAbortedDevices(dev, nullptr);
+                UnhookAbortedDevices(drawDev, dev == drawDev ? nullptr : dev);
             } else {
                 fz_close_device(ctx, dev);
                 if (CadEnhanceActive() && cadRasterDominant) {

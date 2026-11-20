@@ -12441,6 +12441,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdToggleLineWeights:
+            ToggleLineWeights();
+            break;
+
         case CmdToggleEngineeringDrawingEnhance: {
             DisplayModel* fixedDm = win->AsFixed();
             if (fixedDm) {

@@ -223,5 +223,6 @@ static Kind kNotifDocErrors = "docErrors";
 static Kind kNotifDefaultApp = "defaultApp";
 static Kind kNotifThumbnailProgress = "thumbnailProgress";
 int SidebarNativeDx(MainWindow* win);
+void ToggleLineWeights();
 
 int SidebarExtraDx(MainWindow* win);

@@ -2171,6 +2171,13 @@ const globalPrefs: Field[] = [
     .enum(["off", "auto", "on"])
     .ver("3.7"),
   field(
+    "ShowLineWeights",
+    Bool,
+    true,
+    "if false, lines in documents are drawn one pixel wide, whatever their width, like Acrobat's " +
+      "Line Weights turned off. Only on screen. Toggle with CmdToggleLineWeights",
+  ).ver("3.7"),
+  field(
     "DisableAutoLinks",
     Bool,
     false,

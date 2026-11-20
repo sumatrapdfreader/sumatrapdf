@@ -403,6 +403,7 @@ const CommandInfo gCommands[] = {
     {CmdStripGroupColor, "CmdStripGroupColor\0", StrL("Change Group Color")},
     {CmdStripGroupUngroup, "CmdStripGroupUngroup\0", StrL("Ungroup Tabs")},
     {CmdStripGroupClose, "CmdStripGroupClose\0", StrL("Close Group")},
+    {CmdToggleLineWeights, "CmdToggleLineWeights\0", StrL("Show Line Weights")},
 };
 const int gCommandsCount = dimofi(gCommands);
 
@@ -514,6 +515,7 @@ static const ArgSpec argSpecs[] = {
     {CmdToggleMirror, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleReadColumns, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdToggleColumnsWholePage, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleLineWeights, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdFavoriteToggle, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdFindToggleMatchCase, kCmdArgState, CommandArg::Type::Bool}, // default
     {CmdFindToggleMatchWholeWord, kCmdArgState, CommandArg::Type::Bool}, // default

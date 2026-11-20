@@ -656,6 +656,44 @@ fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner) {
     return dev;
 }
 
+// ShowLineWeights; false draws every stroke one pixel wide (on screen only)
+static bool gShowLineWeights = true;
+
+void SetShowLineWeights(bool show) {
+    gShowLineWeights = show;
+}
+
+bool GetShowLineWeights() {
+    return gShowLineWeights;
+}
+
+// one device pixel wide: a width of 0 draws thinner, too faint with anti-aliasing
+static void hairline_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path, const fz_stroke_state* stroke,
+                                 fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
+                                 fz_color_params color_params) {
+    fz_stroke_state* thin = fz_clone_stroke_state(ctx, stroke);
+    float expansion = fz_matrix_expansion(ctm);
+    thin->linewidth = expansion > 0 ? 1.f / expansion : 0;
+    fz_try(ctx) {
+        fz_stroke_path(ctx, dev->passthrough, path, thin, ctm, colorspace, color, alpha, color_params);
+    }
+    fz_always(ctx) {
+        fz_drop_stroke_state(ctx, thin);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+}
+
+// Wrap <inner> so that strokes ignore their width, like Acrobat's Line Weights
+// turned off. Takes ownership of <inner>: dropping the wrapper drops it.
+fz_device* PdfHairlineWrapDevice(fz_context* ctx, fz_device* inner) {
+    fz_device* dev = fz_new_passthrough_device_of_size(ctx, inner, sizeof(fz_device));
+    fz_drop_device(ctx, inner);
+    dev->stroke_path = hairline_stroke_path;
+    return dev;
+}
+
 static unsigned char CadClampByte(float v) {
     if (v <= 0.f) {
         return 0;

@@ -794,6 +794,7 @@ bool LoadSettings() {
         gSettings->showAnnotationAuthorInTooltip ? AnnotAuthorVisibility::Show : AnnotAuthorVisibility::Hide;
     EngineMupdfSetAnnotAuthorInTooltip(authorVisibility);
     SetEngineeringDrawingEnhanceMode(gSettings->engineeringDrawingEnhance);
+    SetShowLineWeights(gSettings->showLineWeights);
     ExplorerQuickLookApplyFromSettings();
 
     if (trans::ValidateLangCode(gprefs->uiLanguage)) {

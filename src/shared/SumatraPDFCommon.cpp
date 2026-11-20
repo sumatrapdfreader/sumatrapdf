@@ -44,6 +44,7 @@
 #include "FileHistory.h"
 #include "PdfSync.h"
 #include "RenderCache.h"
+#include "PdfCad.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
@@ -1676,6 +1677,9 @@ bool ToggleCmdState(MainWindow* win, CustomCommand* cmd, int cmdId, bool& on) {
             return true;
         case CmdToggleGrayscale:
             on = gSettings->fixedPageUI.grayscale;
+            return true;
+        case CmdToggleLineWeights:
+            on = gSettings->showLineWeights;
             return true;
         case CmdToggleFavoritesSort:
             on = gSettings->sortFavoritesByName;
@@ -3800,4 +3804,18 @@ void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
         ScheduleSaveSettings();
     }
     RemoveNotification(ev->wnd);
+}
+
+// CmdToggleLineWeights: lines at their width, or all one pixel wide
+void ToggleLineWeights() {
+    gSettings->showLineWeights = !gSettings->showLineWeights;
+    SetShowLineWeights(gSettings->showLineWeights);
+    // pages cached in any tab were drawn the other way
+    if (gRenderCache) {
+        gRenderCache->BumpDarkModeEpoch();
+    }
+    for (MainWindow* win : gWindows) {
+        MainWindowRerender(win);
+    }
+    ScheduleSaveSettings();
 }

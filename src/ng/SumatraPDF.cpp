@@ -6218,6 +6218,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ScheduleSaveSettings();
             break;
 
+        case CmdToggleLineWeights:
+            ToggleLineWeights();
+            break;
+
         case CmdToggleEngineeringDrawingEnhance:
             if (dm) {
                 EngineMupdfToggleCadEnhance(dm->GetEngine());

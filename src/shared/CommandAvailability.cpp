@@ -70,6 +70,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdToggleWindowsSearchFilter,
     CmdInvertColors,
     CmdToggleGrayscale,
+    CmdToggleLineWeights,
     CmdFavoriteToggle,
     CmdFavoriteShowInTab,
     CmdEditFavorites,
