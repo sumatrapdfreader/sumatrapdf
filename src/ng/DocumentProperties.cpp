@@ -627,7 +627,7 @@ static gp::El* PropsToolBuild(MainWindow*, gp::Ctx* cx) {
                        ->PadX(kPropsEditMarginDx)
                        ->PadY(kPropsEditMarginDy)
                        ->ClipY()
-                       ->ScrollY(state->scrollY)
+                       ->ScrollY((float)state->scrollY)
                        ->ScrollX(state->scrollX)
                        ->ScrollFromPath()
                        ->Bg(ToGpui(colBg))

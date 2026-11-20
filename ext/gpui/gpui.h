@@ -99,6 +99,9 @@ char (&DimofSizeHelper(T (&array)[N]) noexcept)[N];
 #ifndef dimof
 #define dimof(array) (sizeof(::base::DimofSizeHelper(array)))
 #endif
+#ifndef dimofi
+#define dimofi(array) ((int)sizeof(::base::DimofSizeHelper(array)))
+#endif
 
 enum : uint16_t {
     kMaxPath = 1024
@@ -138,7 +141,7 @@ void Panic(const char* msg);
 
 using TempStr = Str;
 
-#define StrL(lit) ::base::Str{(char*)(lit), (int)dimof(lit) - 1}
+#define StrL(lit) ::base::Str{(char*)(lit), dimofi(lit) - 1}
 
 TempStr AllocStrTemp(int size);
 TempStr StrDupTemp(Str s);
@@ -208,6 +211,8 @@ struct PlatFacts {
 
     bool secondaryIsCommand = false;
 
+    bool wordDeleteStopsAtWhitespace = true;
+
     bool showsWindowControls = true;
 
     bool titleBarCloseIsElement = false;
@@ -221,6 +226,8 @@ struct PlatFacts {
     bool scrollBounceTouch = false;
 
     bool overscrollPhaselessStops = false;
+
+    bool autoHideScrollbars = true;
     const char* monoFontName = "DejaVu Sans Mono";
 
     const char* shellDataDir = "/.local/share";
@@ -248,6 +255,7 @@ char PlatPathSep();
 bool PlatPathsCaseFold();
 bool PlatIsWindows();
 bool PlatSecondaryIsCommand();
+bool PlatWordDeleteStopsAtWhitespace();
 bool PlatShowsWindowControls();
 bool PlatTitleBarCloseIsElement();
 float PlatCaretWidth();
@@ -4676,7 +4684,9 @@ enum class Justify : uint8_t {
     SpaceAround,
     SpaceEvenly,
 
-    Normal
+    Normal,
+    FlexStart,
+    FlexEnd
 };
 
 enum class Overflow : uint8_t {
@@ -4787,6 +4797,7 @@ struct ScrollbarMotion {
 };
 
 ScrollbarMotion ScrollbarMotionFor(ScrollbarMode mode);
+ScrollbarMotion ScrollbarMotionFor(ScrollbarMode mode, bool reduced);
 
 struct ScrollbarVisibility {
     float opacity = 0;
@@ -4922,7 +4933,7 @@ struct PaintCtx;
 
 void InputPaintOverviewRuler(InputState* s, PaintCtx* ctx, float trackX,
                              float trackY, float trackW, float trackH,
-                             float contentHeight, float paddingTop,
+                             double contentHeight, float paddingTop,
                              float lineHeight);
 
 struct TextSpan {
@@ -4954,6 +4965,7 @@ struct WhitespaceMark {
     float x = 0;
     float y = 0;
     float h = 0;
+    float tabWidth = 0;
     bool tab = false;
 };
 
@@ -5170,6 +5182,50 @@ enum class FontWeight : uint16_t {
     Bold = 700,
     ExtraBold = 800,
     Black = 900
+};
+
+enum class HighlightFontStyle : uint8_t {
+    Inherit,
+    Normal,
+    Italic,
+    Oblique
+};
+
+struct HighlightStroke {
+    float thickness = 0;
+    Rgba color = {};
+    bool hasColor = false;
+};
+
+struct HighlightStyle {
+    Rgba color = {};
+    Rgba background = {0, 0, 0, 0};
+    HighlightStroke underline;
+    HighlightStroke strike;
+    FontWeight weight = {};
+    HighlightFontStyle fontStyle = HighlightFontStyle::Inherit;
+    float fade = 0;
+    bool hasColor = false;
+    bool wavy = false;
+};
+
+struct TextHighlight {
+    int lo = 0;
+    int hi = 0;
+    HighlightStyle style;
+};
+
+struct TextFontRange {
+    int lo = 0;
+    int hi = 0;
+    uint16_t weight = 0;
+    HighlightFontStyle style = HighlightFontStyle::Inherit;
+    uint8_t padding = 0;
+};
+
+struct TextFontRanges {
+    const TextFontRange* ranges = nullptr;
+    int count = 0;
 };
 
 enum class TextAlign : uint8_t {
@@ -5481,6 +5537,8 @@ struct SelSource {
     Str post;
 
     const SelBlock* block = nullptr;
+
+    Str inlineSource = {};
 };
 
 struct SourceSegment {
@@ -5766,6 +5824,10 @@ struct AccessibilityInfo {
     unsigned int hasExpanded : 1 = false;
     unsigned int activeDescendant : 1 = false;
     unsigned int disabled : 1 = false;
+
+    Str PlatformName() const {
+        return role == AccessibilityRole::Label && !label.s ? value : label;
+    }
 };
 
 static_assert(sizeof(AccessibilityInfo) <= 136,
@@ -5789,6 +5851,8 @@ struct ElStyleStates {
 
     ArenaStr groupName = kArenaStrNone;
     ArenaStr groupHoverName = kArenaStrNone;
+    ArenaStr groupActiveName = kArenaStrNone;
+    const struct StateStyle* groupActive = nullptr;
 };
 
 struct Selection;
@@ -5804,11 +5868,38 @@ struct ElRefiner {
     }
 };
 
+struct LinkTooltipTarget;
+
+struct AccessibilityDocumentText {
+    Str text = {};
+    const Str* lines = nullptr;
+    int lineCount = 0;
+    bool selectAll = false;
+};
+
 struct ElLifecycle {
     void (*prepareStyle)(PaintCtx* ctx, El* e, Rgba inherited,
                          void* user) = nullptr;
     void (*afterPaint)(PaintCtx* ctx, El* e, void* user) = nullptr;
     void* user = nullptr;
+    const LinkTooltipTarget* linkTooltip = nullptr;
+    const TextHighlight* highlights = nullptr;
+    int highlightCount = 0;
+    TextFontRanges fontRanges;
+    AccessibilityDocumentText (*accessibilityDocument)(void*) = nullptr;
+    void* accessibilityDocumentData = nullptr;
+    bool auxiliaryClick = false;
+    bool auxiliaryRightClick = false;
+};
+
+using LinkTooltipFn = El* (*)(Ctx * cx, Str url, void* data);
+
+struct LinkTooltipTarget {
+    Str url;
+    LinkTooltipFn build;
+    void* data;
+    EntityId owner;
+    const El* rendering = nullptr;
 };
 
 struct El {
@@ -6003,13 +6094,19 @@ struct El {
 
     unsigned int clickFromPath : 1 = false;
 
+    unsigned int buttonDisabled : 1 = false;
+
     unsigned int scrollFromPath : 1 = false;
 
     unsigned int stopClick : 1 = false;
 
     unsigned int stopMouseDown : 1 = false;
 
+    unsigned int focusOnMouseDownBubble : 1 = false;
+
     unsigned int suppressTextSelection : 1 = false;
+    unsigned int keepTextSelection : 1 = false;
+    unsigned int textHoverCursor : 1 = false;
 
     unsigned int lineSpan : 1 = false;
 
@@ -6025,6 +6122,7 @@ struct El {
     unsigned int selJoin : 1 = false;
 
     unsigned int selBlockPlugin : 1 = false;
+    unsigned int selInlinePlugin : 1 = false;
 
     unsigned int selTableCell : 1 = false;
     unsigned int caretLineEndAffinity : 1 = false;
@@ -6040,7 +6138,11 @@ struct El {
 
     unsigned int glyphSelection : 1 = false;
 
+    unsigned int selectionParagraph : 1 = false;
+
     unsigned int rootTooltip : 1 = false;
+    unsigned int managesTabFocus : 1 = false;
+    unsigned int reverseTabOrder : 1 = false;
 
     IconName icon = IconName::None;
     ElKind kind = ElKind::Div;
@@ -6062,6 +6164,7 @@ struct El {
     El* FlexRow();
     El* FlexCol();
     El* FlexRowReverse();
+    El* FlexRowDir(const App* app);
     El* FlexColReverse();
     El* FlexWrap();
     El* Grow(float g = 1);
@@ -6117,6 +6220,8 @@ struct El {
     El* PadY(float v);
     El* PadL(float v);
     El* PadR(float v);
+    El* PadS(float v, const App* app);
+    El* PadE(float v, const App* app);
     El* PadT(float v);
     El* PadB(float v);
     El* Margin(float v);
@@ -6124,6 +6229,8 @@ struct El {
     El* MarginY(float v);
     El* MarginL(float v);
     El* MarginR(float v);
+    El* MarginS(float v, const App* app);
+    El* MarginE(float v, const App* app);
     El* MarginT(float v);
     El* MarginB(float v);
 
@@ -6141,16 +6248,22 @@ struct El {
     El* JustifyCenter();
     El* JustifyEnd();
     El* JustifyStart();
+    El* JustifyFlexStart();
+    El* JustifyFlexEnd();
     El* Bg(Background c);
     El* Border(float width, Rgba c);
     El* BorderT(float width, Rgba c);
     El* BorderB(float width, Rgba c);
     El* BorderL(float width, Rgba c);
     El* BorderR(float width, Rgba c);
+    El* BorderS(float width, Rgba c, const App* app);
+    El* BorderE(float width, Rgba c, const App* app);
     El* Shadows(const BoxShadow* values, int count);
     El* Radius(float r);
 
     El* Corners(float tl, float tr, float br, float bl);
+    El* RadiusS(float radius, const App* app);
+    El* RadiusE(float radius, const App* app);
     El* Fg(Rgba c);
     El* Font(float px);
     El* LineHeight(float mult);
@@ -6161,6 +6274,8 @@ struct El {
     El* TextLeft() { return TextAlignment(TextAlign::Left); }
     El* TextCenter() { return TextAlignment(TextAlign::Center); }
     El* TextRight() { return TextAlignment(TextAlign::Right); }
+    El* TextStart(const App* app);
+    El* TextEnd(const App* app);
     El* Truncate();
     El* ClipY();
     El* ScrollY(float off);
@@ -6223,7 +6338,11 @@ struct El {
     El* StopMouseDown();
 
     El* StopClick();
+
+    El* AuxiliaryClick(bool right);
     El* SuppressTextSelection();
+
+    El* KeepTextSelection();
     El* OnDrop(Str acceptKind, Listener l);
 
     El* Refine(const Style& s, uint32_t fields);
@@ -6267,6 +6386,8 @@ struct El {
 
     El* IndentGuides(Rgba color, int indentCount, int tabSize);
     El* Spans(const TextSpan* runs, int n);
+
+    El* Highlights(const TextHighlight* runs, int n);
 
     El* MarkRange(int lo, int hi);
     El* Caret(int off, Rgba color, float width = 1,
@@ -6312,6 +6433,8 @@ struct El {
     El* Left(float v);
     El* Bottom(float v);
     El* Right(float v);
+    El* InsetS(float v, const App* app);
+    El* InsetE(float v, const App* app);
 
     El* Inset0();
     El* LeftRel(float frac);
@@ -6330,6 +6453,8 @@ struct El {
     El* Group(Str name);
 
     El* GroupHover(const struct StateStyle& s, Str name);
+
+    El* GroupActive(const struct StateStyle& s, Str name);
     El* GroupHoverVisible();
 
     El* GroupHoverBg(Background c);
@@ -6434,7 +6559,14 @@ float ChartRadarFraction(float lo, float hi, float v);
 El* ChartEl(Arena* a, const float* ys, int n, Rgba stroke, Rgba fillTop,
             Rgba fillBot, int tickMargin);
 
+struct PaintDismissScope {
+    int focusId = 0;
+    const PaintDismissScope* parent = nullptr;
+};
+
 struct HitRect {
+
+    const PaintDismissScope* popupDismissScope = nullptr;
 
     int focusId = 0;
     int id = 0;
@@ -6468,6 +6600,7 @@ struct HitRect {
     int tooltipShowDelayMs = -1;
 
     bool rootTooltip = false;
+    const LinkTooltipTarget* linkTooltip = nullptr;
     SliderState* slider = nullptr;
     Axis sliderAxis = Axis::Horizontal;
     InputState* input = nullptr;
@@ -6477,8 +6610,13 @@ struct HitRect {
     int clickActionFocusId = 0;
 
     bool stopClick = false;
+    bool auxiliaryClick = false;
+    bool auxiliaryRightClick = false;
     bool stopMouseDown = false;
+    bool focusOnMouseDownBubble = false;
     bool suppressTextSelection = false;
+    bool keepTextSelection = false;
+    bool textHoverCursor = false;
 
     int paintLayer = 0;
 
@@ -6505,6 +6643,9 @@ struct AccessibilityNode {
     int clickActionFocusId = 0;
     SliderState* slider = nullptr;
     InputState* input = nullptr;
+
+    int textSelectionStart = -1;
+    int textSelectionEnd = -1;
 };
 
 struct ScrollRect {
@@ -6517,6 +6658,7 @@ struct ScrollRect {
 
     float viewportW = 0;
     float viewportH = 0;
+    float horizontalBarInset = 0;
     ScrollbarMode mode = ScrollbarMode::Always;
 
     bool barX = true;
@@ -6558,6 +6700,7 @@ struct ScrollEvent {
 
 struct TextHit {
     Bounds bounds = {};
+    Bounds contentMask = {};
     Str text;
     float font = 14;
     float maxW = 0;
@@ -6583,6 +6726,10 @@ struct TextHit {
 
     bool inCell = false;
     Bounds cell = {};
+
+    const El* highlightedElement = nullptr;
+    const El* paragraph = nullptr;
+    bool inlinePlugin = false;
 };
 
 struct TextMeasCache {
@@ -6697,6 +6844,7 @@ struct NamedGroupBound {
 struct NamedGroupFrame {
     Str name = {};
     bool hovered = false;
+    bool active = false;
 };
 
 struct PaintCtx {
@@ -6759,10 +6907,19 @@ struct PaintCtx {
     int pickTier = 0;
     InspectorPick pick = {};
     Vec<HitRect> hits;
+    bool hasLinkTooltipHits = false;
 
-    Vec<El*> deferredPaint;
+    struct DeferredPaint {
+        El* element;
+        const PaintDismissScope* dismissScope;
+        const El* paragraph;
+    };
+    Vec<DeferredPaint> deferredPaint;
+    const PaintDismissScope* dismissScope = nullptr;
+    const PaintDismissScope* popupDismissScope = nullptr;
     Vec<ScrollRect> scrolls;
     Vec<TextHit> texts;
+    const El* selectionParagraph = nullptr;
 
     Vec<Bounds> tableCells;
     Bounds tableCell = {};
@@ -6783,6 +6940,8 @@ struct PaintCtx {
 
     int blockPluginDepth = 0;
     TextMeasCache textCache;
+
+    TextFontRanges textFontRanges;
 
     PaintCtx() = default;
 };
@@ -7059,7 +7218,7 @@ struct LayoutMode {
     int maxRows = 0;
 
     int tabSize = 2;
-    bool lineNumber = false;
+    bool lineNumber = true;
 
     bool folding = false;
 };
@@ -7220,6 +7379,8 @@ struct WidthCache;
 struct WrapCharWidthSlot {
     uint32_t c = 0;
     float width = 0;
+
+    uint8_t additive = 0;
 };
 
 struct InputWrapMap {
@@ -7289,6 +7450,8 @@ struct FoldMap {
 void FoldMapSetCandidates(FoldMap* m, const FoldRange* ranges, int n);
 
 void FoldMapSetFolded(FoldMap* m, int startLine, bool folded);
+
+void FoldMapSetFoldedLines(FoldMap* m, const int* starts, int count);
 void FoldMapToggle(FoldMap* m, int startLine);
 bool FoldMapIsFolded(const FoldMap* m, int startLine);
 bool FoldMapIsCandidate(const FoldMap* m, int startLine);
@@ -7615,6 +7778,13 @@ struct DiagnosticColors {
 
 enum class InputAction : uint8_t;
 
+struct InputActionCapture {
+    InputAction action;
+    bool shift;
+    bool secondary;
+    bool& consumed;
+};
+
 enum class InputOverlayKind : uint8_t {
     Completion,
     CodeAction
@@ -7794,6 +7964,7 @@ struct InputState {
     bool hasPendingContextMenu = false;
     Point pendingContextMenuAt = {};
     int pendingContextMenuOffset = 0;
+    int contextMenuOffset = -1;
     bool loading = false;
 
     bool numberHasMin = false;
@@ -7839,6 +8010,7 @@ struct InputState {
     Bounds lastFoldBackground = {};
 
     Bounds gutterBox = {};
+    float gutterLaneW = 0;
     bool softWrap = true;
 
     bool showWhitespaces = false;
@@ -7854,6 +8026,9 @@ struct InputState {
 
     EntityId blink = {};
     Listener onChange = {};
+
+    Listener onSuggestionEvent = {};
+    Listener captureSuggestionAction = {};
 
     Listener onEdits = {};
 
@@ -7906,6 +8081,8 @@ struct InputState {
     struct InputPaintedRows* paintedRows = nullptr;
     uint64_t paintedRowsFrame = 0;
 
+    float textOriginOffset = -1.f;
+
     InputSyntaxCache* syntaxCache = nullptr;
 
     CodeActionSession codeActions;
@@ -7954,6 +8131,7 @@ struct InputState {
     Bounds contentBox = {};
 
     bool chipLine = false;
+    bool revealSingleLineCaret = false;
 
     Bounds inputBounds = {};
 
@@ -7967,7 +8145,11 @@ struct InputState {
     Bounds popoverBounds = {};
 
     float scrollX = 0;
-    float scrollY = 0;
+    double scrollY = 0;
+
+    double layoutOriginY = 0;
+    double deferredScrollY = 0;
+    bool hasDeferredScrollY = false;
     float viewW = 0;
     float viewH = 0;
 
@@ -7976,7 +8158,7 @@ struct InputState {
 
     float caretX = 0;
     float contentW = 0;
-    float contentH = 0;
+    double contentH = 0;
 
     bool longestLineSet = false;
     uint64_t longestLineDoc = 0;
@@ -8013,11 +8195,11 @@ struct InputState {
     bool caretGeomValid = false;
     bool resizeRevealOwned = false;
     float caretGeomX = 0;
-    float caretGeomY = 0;
+    double caretGeomY = 0;
     float caretGeomW = 0;
     float caretGeomH = 0;
     float caretGeomScrollX = 0;
-    float caretGeomScrollY = 0;
+    double caretGeomScrollY = 0;
     float caretGeomViewW = 0;
     float caretGeomViewH = 0;
     float caretGeomLineH = 0;
@@ -8068,6 +8250,11 @@ float InputClampVerticalScrollOffset(float scroll, float scrollHeight,
 
 int InputLineNumberLen(int totalLines);
 int InputDisplayedLineNumber(int number);
+
+double InputScrollYF64(const InputState* s);
+double InputContentHeightF64(const InputState* s);
+void InputSetScrollYF64(InputState* s, App* app, Window* win, double y);
+void InputScrollByYF64(InputState* s, App* app, Window* win, double deltaY);
 float InputCursorSurroundingPadding(bool isAutoGrow, int overrideLines,
                                     int visibleLines, float lineH);
 
@@ -8122,6 +8309,8 @@ bool InputIsCopyable(const InputState* s);
 
 int InputCursor(const InputState* s);
 
+int InputContextMenuOffset(const InputState* s);
+
 RopePoint InputCursorPosition(const InputState* s);
 
 void InputSetValue(InputState* s, Str value);
@@ -8155,6 +8344,8 @@ int InputPreviousStartOfWord(const InputState* s);
 int InputNextEndOfWord(const InputState* s);
 int InputPreviousStartOfWordAt(const InputState* s, int offset);
 int InputNextEndOfWordAt(const InputState* s, int offset);
+int InputNextWordDeleteEndAt(const InputState* s, int offset,
+                             bool stopAtWhitespace);
 
 void InputMoveTo(InputState* s, App* app, Window* win, int offset);
 void InputMoveToWithAffinity(InputState* s, App* app, Window* win, int offset,
@@ -8261,7 +8452,7 @@ InputAction InputActionForKey(const InputState* s, int vk, bool shift,
                               bool ctrl, bool alt, bool platform = false);
 
 bool InputPerform(InputState* s, App* app, Window* win, InputAction action,
-                  bool shift);
+                  bool shift, bool secondary = false);
 
 Str InputCompletionQuery(const InputState* s, int* startOut);
 
@@ -8389,6 +8580,7 @@ int InputSearchReplaceAll(InputState* s, App* app, Window* win, Str with);
 void InputUpdateSearch(InputState* s);
 
 void InputFocus(InputState* s, App* app, Window* win);
+void InputCancelMouseGesture(InputState* s);
 void InputBlur(InputState* s, App* app, Window* win);
 
 int InputIndexForPosition(const InputState* s, PaintCtx* ctx, float x, float y,
@@ -8402,6 +8594,13 @@ void InputToggleFold(InputState* s, App* app, Window* win, int line);
 bool InputUnfoldAt(InputState* s, App* app, Window* win, RopePoint position);
 
 void InputSetFoldCandidates(InputState* s, const FoldRange* ranges, int n);
+const FoldRange* InputFoldCandidates(const InputState* s, int* count);
+bool InputSetFolded(InputState* s, App* app, Window* win, int startLine,
+                    bool folded);
+void InputFoldAll(InputState* s, App* app, Window* win);
+void InputUnfoldAll(InputState* s, App* app, Window* win);
+
+void InputFoldAtLevel(InputState* s, App* app, Window* win, int level);
 
 void InputSetFoldPlaceholderRenderer(InputState* s,
                                      FoldPlaceholderRenderer renderer);
@@ -8495,17 +8694,25 @@ void SliderUpdateThumbPos(SliderState* s);
 
 float SliderSnapToStep(float value, float min, float max, float step);
 
-bool SliderUpdateByPosition(SliderState* s, Axis axis, Point pos, bool isStart);
+bool SliderUpdateByPosition(SliderState* s, Axis axis, Point pos, bool isStart,
+                            bool rtl = false);
 
-bool SliderIsStartAt(const SliderState* s, Axis axis, Point pos);
+bool SliderIsStartAt(const SliderState* s, Axis axis, Point pos,
+                     bool rtl = false);
 
 bool SliderHandleRelease(SliderState* s);
+
+float SliderAccessibilityStep(const SliderState* s);
+bool SliderStepThumb(SliderState* s, bool isStart, float delta);
+bool SliderSetThumbValue(SliderState* s, bool isStart, float target);
 
 bool SliderStepBy(SliderState* s, int dir, bool isStart);
 
 bool SliderMoveTo(SliderState* s, float want, bool isStart);
 
-bool SliderKeyMove(SliderState* s, int key, bool isStart);
+bool SliderKeyMove(SliderState* s, int key, bool isStart,
+                   Axis axis = Axis::Horizontal, bool rtl = false,
+                   bool* moved = nullptr);
 
 struct Overlay {
     int kind = 0;
@@ -8666,7 +8873,8 @@ int CopyTextHitsInEntity(PaintCtx* ctx, int selA, int selB, int scope,
 bool TextMultiClickRange(PaintCtx* ctx, float x, float y, int clickCount,
                          int* outA, int* outB);
 bool TextMultiClickRangeIn(PaintCtx* ctx, float x, float y, int clickCount,
-                           int scope, int* outA, int* outB, int* outScope);
+                           int scope, int* outA, int* outB, int* outScope,
+                           Point* paragraphEnds = nullptr);
 int HashClickId(Str s);
 
 const uint32_t kFnv1aBasis32 = 2166136261u;
@@ -8894,6 +9102,7 @@ struct Window {
     uint32_t tooltipOwnerPath = 0;
 
     bool lastInputKeyboard = false;
+    bool hasRovingTabs = false;
 
     float remSize = 16;
     int focusId = 0;
@@ -8904,6 +9113,7 @@ struct Window {
     int nextBlurSubId = 1;
     float mouseX = 0;
     float mouseY = 0;
+    bool pointerInWindow = false;
 
     Modifiers mouseModifiers = {};
 
@@ -8965,6 +9175,8 @@ struct Window {
     MouseButton pressedButton = MouseButton::Left;
     Modifiers pressedModifiers = {};
 
+    int auxiliaryPressedId = 0;
+    MouseButton auxiliaryPressedButton = MouseButton::Left;
     DragPayload activeDrag = {};
     int dragOverId = 0;
 
@@ -9530,8 +9742,8 @@ inline void InputInsert(InputState* s, Ctx* cx, Str value) {
     InputInsert(s, cx->app, cx->win, value);
 }
 inline bool InputPerform(InputState* s, Ctx* cx, InputAction action,
-                         bool shift = false) {
-    return InputPerform(s, cx->app, cx->win, action, shift);
+                         bool shift = false, bool secondary = false) {
+    return InputPerform(s, cx->app, cx->win, action, shift, secondary);
 }
 
 Window* WindowOpenView(App* app, Str title, int dipW, int dipH, EntityId root,
@@ -9635,6 +9847,17 @@ const AccessibilityNode* WindowAccessibilityNode(const Window* win,
                                                  uint32_t nodeId);
 
 int WindowAccessibilityNodeIndex(const Window* win, uint32_t nodeId);
+
+Str WindowAccessibilityTextValue(const AccessibilityNode& node);
+bool WindowAccessibilityTextSelection(const AccessibilityNode& node,
+                                      Selection* out);
+int WindowAccessibilityTextCaret(const AccessibilityNode& node);
+
+Selection AccessibilityTextLineAt(Str text, int offset);
+bool AccessibilityTextLineRange(Str text, int row, Selection* out);
+bool WindowAccessibilityTextRangeBounds(Window* win,
+                                        const AccessibilityNode& node,
+                                        Selection range, Bounds* out);
 bool WindowAccessibilityPerform(Window* win, uint32_t nodeId,
                                 AccessibilityAction action, Str value = {});
 
@@ -9717,6 +9940,40 @@ void AppHostSetTheme(App* app, bool dark);
 void AppOnShutdown(void (*fn)());
 
 bool WindowClientDecorated(Window* win);
+
+enum class WindowButton : uint8_t {
+    Unset,
+    Minimize,
+    Maximize,
+    Close
+};
+inline constexpr int kWindowButtonsPerSide = 3;
+
+struct WindowButtonLayout {
+    bool physicalSides = false;
+    WindowButton left[kWindowButtonsPerSide] = {};
+    WindowButton right[kWindowButtonsPerSide] = {
+        WindowButton::Minimize, WindowButton::Maximize, WindowButton::Close};
+};
+
+struct WindowButtonSupport {
+    bool minimize = true;
+    bool maximize = true;
+    bool Has(WindowButton button) const;
+};
+
+bool WindowButtonLayoutParse(Str specification, WindowButtonLayout* out);
+#if GPUI_OS_LINUX
+WindowButtonLayout WindowGetButtonLayout();
+WindowButtonSupport WindowGetButtonSupport(Window* win);
+#else
+inline WindowButtonLayout WindowGetButtonLayout() {
+    return {};
+}
+inline WindowButtonSupport WindowGetButtonSupport(Window*) {
+    return {};
+}
+#endif
 
 struct MenuRow {
     Str label = {};
@@ -10357,7 +10614,8 @@ namespace gpui {
 
 El* ControlBox(Arena* a, Str id);
 
-El* ControlFocus(El* e, FocusHandle focus, Str id, int tabIndex, bool tabStop);
+El* ControlFocus(El* e, FocusHandle focus, Str id, int tabIndex, bool tabStop,
+                 bool disabled = false, Window* window = nullptr);
 
 struct ButtonStyles {
     StateStyle selected = {};
@@ -10368,6 +10626,7 @@ struct Button {
     static El* New(Ctx* cx, Str id, bool disabled = false,
                    Listener onClick = {}, bool focusable = true,
                    const ButtonStyles* styles = nullptr, bool selected = false);
+    static bool IsDisabled(const El* button);
 };
 }
 
@@ -10929,14 +11188,26 @@ struct Interpolate<MotionTransform> {
     }
 };
 
+enum class ReducedMotion : uint8_t {
+    Finish,
+    Continue,
+};
+
 struct Transition {
     float durationMs = 0;
     float delayMs = 0;
     Easing easing = Easing::Custom(EaseOutCubic);
+    ReducedMotion reducedMotion = ReducedMotion::Finish;
 
     static Transition New(float durationMs) {
         Transition policy;
         policy.durationMs = durationMs;
+        return policy;
+    }
+
+    Transition WithReducedMotion(ReducedMotion behavior) const {
+        Transition policy = *this;
+        policy.reducedMotion = behavior;
         return policy;
     }
 
@@ -10987,6 +11258,7 @@ struct TransitionId {
 }
 
 using Motion = motion::Transition;
+using ReducedMotion = motion::ReducedMotion;
 
 inline Motion MotionNew(float durationMs) {
     return motion::Transition::New(durationMs);
@@ -11013,9 +11285,18 @@ inline float MotionProgress(const Motion& m, float elapsedMs) {
 
 float MotionSample(const Motion& m, float progress);
 
-bool MotionReduced();
+bool MotionReduced(const App* app = nullptr);
 
-void MotionSetReduced(bool on);
+void MotionSetReduced(bool on, App* app = nullptr);
+
+enum class ReduceMotionPreference : uint8_t {
+    System,
+    Reduce,
+    Allow
+};
+
+void SetReduceMotionPreference(ReduceMotionPreference preference,
+                               App* app = nullptr);
 
 void MotionResetReduceForTest();
 
@@ -11162,7 +11443,7 @@ struct Sequence {
         };
         if (!state->init) start(0, from, now);
 
-        if (MotionReduced()) {
+        if (MotionReduced(cx ? cx->app : nullptr)) {
             start(last, steps[last].target, now);
             out.value = steps[last].target;
             out.step = last;
@@ -11228,7 +11509,8 @@ MotionStep<T> MotionAdvance(MotionState<T>* st, T target, const Motion& m,
         st->init = true;
         MotionStart(st, target, target, m, target, now, 1.f, m.durationMs);
     }
-    if (reduced || m.durationMs <= 0) {
+    if ((reduced && m.reducedMotion == motion::ReducedMotion::Finish) ||
+        m.durationMs <= 0) {
         if (!MotionEq(st->from, target) || !MotionEq(st->target, target)) {
             MotionStart(st, target, target, m, target, now, 1.f, m.durationMs);
         }
@@ -11373,6 +11655,17 @@ inline void SpringSeed(Ctx* cx, uint32_t key, float from) {
 }
 
 template <typename T>
+MotionStep<T> SampleMotionState(Ctx* cx, MotionState<T>* st, T target,
+                                const Motion& m) {
+    MotionStep<T> step = MotionAdvance(st, target, m, MotionNow(cx),
+                                       MotionReduced(cx ? cx->app : nullptr));
+    if (step.running) {
+        MotionWantsFrame(cx);
+    }
+    return step;
+}
+
+template <typename T>
 MotionStep<T> MotionValueWithStatus(Ctx* cx, uint32_t key, T target,
                                     const Motion& m) {
     auto* st =
@@ -11383,12 +11676,7 @@ MotionStep<T> MotionValueWithStatus(Ctx* cx, uint32_t key, T target,
         out.status = MotionStatus::Finished;
         return out;
     }
-    MotionStep<T> step =
-        MotionAdvance(st, target, m, MotionNow(cx), MotionReduced());
-    if (step.running) {
-        MotionWantsFrame(cx);
-    }
-    return step;
+    return SampleMotionState(cx, st, target, m);
 }
 
 template <typename T>
@@ -11614,6 +11902,15 @@ template <typename T>
 using MotionValue = gpui::MotionStep<T>;
 
 template <typename T>
+struct TransitionState {
+    MotionState<T> history;
+
+    MotionValue<T> Sample(Ctx* cx, T target, const Transition& policy) {
+        return SampleMotionState(cx, &history, target, policy);
+    }
+};
+
+template <typename T>
 T transition(Ctx* cx, TransitionId id, T target, const Transition& policy) {
     return gpui::MotionValue(cx, id.key, target, policy);
 }
@@ -11641,6 +11938,8 @@ inline float spring(Ctx* cx, TransitionId id, float target,
 }
 
 }
+
+using motion::TransitionState;
 
 }
 
@@ -12113,8 +12412,10 @@ struct ResizableState {
     static void OnHandleUp(ResizableState* self, Ctx* cx,
                            const MouseUpEvent* ev);
     static void OnSettled(ResizableState* self, Ctx* cx, const void*);
+    static void OnHandleCanceled(ResizableState* self, Ctx* cx, const void*);
 
     const Vec<float>& Sizes() const { return sizes; }
+    bool IsResizing() const { return dragging >= 0; }
     float ContainerSize() const {
         return AxisIsHorizontal(axis) ? bounds.w : bounds.h;
     }
@@ -12563,6 +12864,9 @@ struct DockState {
     bool toggleButtonVisible = true;
 
     bool closeButtonVisible = false;
+    bool collapsedTabBarVisible = true;
+
+    float closedBottomExtent = kClosedBottomStrip;
 
     bool hasVersion = false;
     int version = 0;
@@ -12688,6 +12992,7 @@ int DockNodeOfPanel(const DockState* s, int panelIx);
 int DockPanelByName(const DockState* s, Str name);
 
 DockPlacement DockPlacementOfNode(const DockState* s, int node);
+DockPlacement DockPhysicalPlacement(DockPlacement placement, const App* app);
 
 int DockVisibleCount(const DockState* s, int node);
 
@@ -12717,8 +13022,6 @@ struct DockCtx {
 };
 
 using DockContext = DockCtx;
-
-float DockExtent(const DockCtx* dock);
 
 El* DockFrame(Ctx* cx, const DockCtx* dock, float size);
 
@@ -12835,6 +13138,8 @@ struct DockRenderer {
     El* (*dropIndicator)(Ctx* cx, void* data, Bounds to) = nullptr;
 
     El* (*dragPreview)(Ctx* cx, void* data, const DockPanelDef* def) = nullptr;
+
+    float (*closedDockExtent)(void* data, const DockCtx* d) = nullptr;
 };
 
 using DockAreaRenderer = DockRenderer;
@@ -14496,6 +14801,11 @@ struct RangeDecorationCollection {
 RangeDecorationCollection InputCreateRangeDecorationsCollection(
     InputState* s, const RangeDecoration* decorations, int n);
 
+void InputTextareaSetDecorations(InputState* s,
+                                 const TextDecoration* decorations, int n,
+                                 Ctx* cx);
+const TextDecoration* InputTextareaDecorations(const InputState* s, int* count);
+
 TextDecorationCollection InputCreateDecorationsCollection(
     InputState* s, const TextDecoration* decorations, int n);
 
@@ -14575,8 +14885,8 @@ struct GutterMark {
     bool pill = false;
 };
 
-int InputLayoutGutterMarks(const InputState* s, float originX, float originY,
-                           float lineH, float viewTop, float viewBottom,
+int InputLayoutGutterMarks(const InputState* s, float originX, double originY,
+                           float lineH, double viewTop, double viewBottom,
                            GutterMark* out, int cap);
 
 struct OverviewRulerMark {
@@ -14589,7 +14899,7 @@ struct OverviewRulerMark {
 };
 
 int InputLayoutOverviewRuler(InputState* s, float trackX, float trackY,
-                             float trackW, float trackH, float contentHeight,
+                             float trackW, float trackH, double contentHeight,
                              float paddingTop, float lineH,
                              OverviewRulerMark* out, int cap);
 
@@ -14748,6 +15058,8 @@ struct DisplayMap {
     int BufferLineToDisplayRow(int line) const;
     void SetFoldCandidates(const FoldRange* ranges, int n);
     void SetFolded(int startLine, bool folded);
+    void SetFoldedLines(const int* starts, int count);
+    const Vec<FoldRange>& FoldCandidates() const { return foldMap.candidates; }
     void ToggleFold(int startLine);
     bool IsFoldedAt(int startLine) const;
     bool IsFoldCandidate(int startLine) const;
@@ -14893,15 +15205,21 @@ void MeasuredWrapBoundaries(Str text, float width, WrappingIndent indent,
                             WrapCharWidth hint = nullptr,
                             void* hintUser = nullptr);
 
+struct MeasuredWrapScratch {
+    Vec<int> ends;
+    Vec<int> opportunities;
+};
 void MeasuredWrap(Str text, float width, WrappingIndent indent,
                   WrapMeasureFn measure, void* user, Vec<WrapBoundary>* out,
-                  WidthRange* valid);
+                  WidthRange* valid, MeasuredWrapScratch* scratch = nullptr,
+                  bool scalarBoundaries = false);
 
 using WrapLineFn = void (*)(void* user, Str line, int base,
                             Vec<WrapBoundary>* out);
 void TextWrapperWrapItem(Str line, bool wrap, WrappingIndent indent,
                          WrapLineFn wrapLine, void* user, Vec<int>* rows,
-                         int* indentChars);
+                         int* indentChars,
+                         Vec<WrapBoundary>* scratch = nullptr);
 
 }
 
@@ -15069,7 +15387,8 @@ enum class InlineTokenError : uint8_t {
     TextMismatch,
     UnsupportedMode,
     ValidationRejected,
-    CompositionActive
+    CompositionActive,
+    SplitsSelection
 };
 
 const char* InlineTokenErrorMessage(InlineTokenError e);
@@ -15126,6 +15445,9 @@ struct InputContent {
 InputContent InputContentDup(const InputContent& content);
 void InputContentFree(InputContent* content);
 InputContent InputGetContent(const InputState* s);
+
+InlineTokenError InputSetTokens(InputState* s, App* app, Window* win,
+                                const InputContent& content);
 
 struct InlineTokenContext {
     InlineTokenSpan span = {};
@@ -15321,6 +15643,8 @@ struct EditorScrollbarContext {
 
     Point Offset() const;
     void SetOffset(Point value) const;
+    double ScrollYF64() const;
+    double ContentHeightF64() const;
 
     Size ContentSize() const;
 };
@@ -15329,6 +15653,11 @@ void InputSetEditorPaddings(InputState* s, Edges paddings);
 void SetScrollbarRenderer(InputState* s, EditorScrollbarRenderer renderer,
                           void* user = nullptr, void (*drop)(void*) = nullptr);
 void EditorScrollbarPrePaint(PaintCtx* ctx, El* e, void* user);
+
+float InputCeilToDevicePixel(float height, float dpi);
+float InputFitContentHeight(float content, float viewport, float dpi);
+double InputFitContentHeightF64(double content, float viewport, float dpi);
+float InputLayoutScrollY(const InputState* s);
 
 struct InputBase {
     static El* New(Ctx* cx, Str id, bool interactive = false,
@@ -15357,6 +15686,30 @@ void InputSetAccessibility(InputState* state, const InputAccessibility& value);
 void InputAccessibilityFocus(InputState* state, Window* win);
 bool InputAccessibilitySetValue(InputState* state, App* app, Window* win,
                                 const Str* value);
+
+struct EditorLineNumberLayout {
+    float width = 0;
+    float gap = 6;
+    float font = 0;
+    uint16_t fontWord = 0;
+    float baselineOffset = 0;
+};
+
+struct EditorLineNumberRenderer {
+    const void* user = nullptr;
+    EditorLineNumberLayout (*measure)(Ctx*, const void*, int digits,
+                                      float bodyFont, uint16_t bodyWord,
+                                      float lineH) = nullptr;
+    El* (*render)(Ctx*, const void*, int number, bool active,
+                  const EditorLineNumberLayout&, float lineH) = nullptr;
+};
+
+float InputMeasureLineNumberLane(Ctx* cx, int digits, float font,
+                                 uint16_t fontWord);
+float InputLineNumberBaseline(Ctx* cx, float font, uint16_t fontWord,
+                              float lineH);
+El* InputRenderLineNumber(Ctx* cx, int number, Rgba color,
+                          const EditorLineNumberLayout& layout, float lineH);
 
 struct InputEditorStyle {
     Rgba foreground = {0, 0, 0, 0};
@@ -15398,6 +15751,7 @@ struct InputEditorStyle {
     Rgba indentGuide = {0, 0, 0, 0};
 
     int indentWidth = 4;
+    EditorLineNumberRenderer lineNumbers = {};
 };
 
 InputEditorStyle InputEditorStyleResolve(const InputEditorStyle& projected,
@@ -15433,6 +15787,13 @@ bool InputLastCaretPoint(const InputState* s, Window* win, int offset,
 
 bool InputRangeToBounds(const InputState* s, Window* win, Selection range,
                         Bounds* out);
+
+bool InputImeCandidateBounds(const InputState* s, Window* win, Selection range,
+                             Bounds* out);
+
+int InputCharacterIndexForPoint(const InputState* s, Window* win, Point at);
+
+bool InputTextOriginOffset(const InputState* s, float* out);
 
 struct InputPaintedVisualRow {
     int start = 0;
@@ -15513,6 +15874,9 @@ struct KeyChord {
     bool platform = false;
 
     bool function = false;
+
+    const char* boundSymbol = nullptr;
+    bool explicitShift = false;
 };
 
 bool KeyChordParse(Str spec, KeyChord* out);
@@ -15650,6 +16014,33 @@ InputAction InputActionOf(uint32_t id, int64_t arg = 0);
 
 constexpr bool InputEnterShift(int64_t arg) {
     return (arg & 2) != 0;
+}
+
+constexpr bool InputEnterSecondary(int64_t arg) {
+    return (arg & 1) != 0;
+}
+
+}
+
+#line 1 "src/base/layout_direction.h"
+
+namespace gpui {
+
+enum class LayoutDirection : uint8_t {
+    Ltr,
+    Rtl
+};
+
+LayoutDirection LayoutDirectionGlobal(const App* app);
+void LayoutDirectionSetGlobal(App* app, LayoutDirection direction);
+LayoutDirection LayoutDirectionFromLocale(Str locale);
+LayoutDirection LayoutDirectionSystem();
+void LayoutDirectionInit(App* app);
+Anchor LogicalAnchor(Anchor anchor, const App* app);
+IconName DirectionalChevron(const App* app, bool towardEnd);
+
+inline bool LayoutIsRtl(const App* app) {
+    return LayoutDirectionGlobal(app) == LayoutDirection::Rtl;
 }
 
 }
@@ -15913,7 +16304,8 @@ struct NumberInput {
 
     static El* Compose(Ctx* cx, Str id, InputState* state, bool disabled,
                        El* decrement, El* input, El* increment,
-                       bool controlsRight = false, El* children = nullptr);
+                       bool controlsRight = false, El* children = nullptr,
+                       bool stepper = true);
 };
 }
 
@@ -16045,6 +16437,7 @@ struct Positioner {
     float offset = 0;
     float margin = 4;
     bool occlude = false;
+    bool rtl = false;
     PositionerOnPositionFn onPosition = nullptr;
     void* onPositionUser = nullptr;
     ArenaVec<El*> children;
@@ -16111,6 +16504,7 @@ struct Popup {
 
     bool askFrame = false;
     Window* win = nullptr;
+    App* app = nullptr;
 
     static Popup* New(Ctx* cx, Str id, El* trigger,
                       PopupAnchor anchor = PopupAnchor::TopLeft);
@@ -16676,7 +17070,8 @@ struct RadioStyles {
 struct Radio {
     static El* New(Ctx* cx, Str id, bool checked = false, bool disabled = false,
                    Listener onChange = {}, const RadioStyles* styles = nullptr,
-                   const StateStyle* instance = nullptr);
+                   const StateStyle* instance = nullptr, int tabIndex = 0,
+                   bool tabStop = true, FocusHandle focus = {});
 };
 }
 
@@ -17112,6 +17507,7 @@ struct TextSelectionRegistration {
     uint64_t documentOrder = 0;
     const Bounds* textBounds = nullptr;
     int textBoundsCount = 0;
+    bool selfScroll = false;
 
     static TextSelectionRegistration New(Bounds hitbox, Bounds bounds);
     TextSelectionRegistration WithScrollOffset(Point value) const;
@@ -17119,6 +17515,8 @@ struct TextSelectionRegistration {
     TextSelectionRegistration WithDocumentOrder(uint64_t value) const;
     TextSelectionRegistration WithTextBounds(const Bounds* values,
                                              int count) const;
+
+    TextSelectionRegistration WithSelfScroll(bool value = true) const;
 };
 
 struct TextSelectionRun {
@@ -17286,6 +17684,12 @@ struct WindowSelection {
 
     bool anchorInsideText = false;
     EntityId anchorParticipant = {};
+    AutoScroll autoScroll;
+    Point autoScrollPointer = {};
+    Bounds autoScrollLastBounds = {};
+    Point autoScrollLastOffset = {};
+    int autoScrollStalled = 0;
+    bool autoScrollRelayout = false;
 
     bool hasAnchorCell = false;
     Bounds anchorCell = {};
@@ -17316,9 +17720,12 @@ bool WindowSelectionTouchSnapshot(Window* win, TouchSelectionSnapshot* out);
 void WindowSelectionCloseEditMenu(Window* win);
 void WindowSelectionRegisterTouchUi(Window* win, Bounds bounds);
 bool WindowSelectionTouchUiContains(const Window* win, Point at);
+bool WindowKeepsTextSelectionAt(Window* win, Point at);
 
 WindowSelection* WindowSelectionOf(Window* win);
 void WindowSelectionFree(Window* win);
+
+void WindowSelectionAutoScrollTick(Window* win);
 
 void WindowSelectionPress(Window* win, float x, float y, int clickCount,
                           bool extend);
@@ -17377,6 +17784,10 @@ struct SelectableText {
 
     Rgba selectionColor = {};
     bool hasSelectionColor = false;
+    const TextHighlight* highlights = nullptr;
+    int highlightCount = 0;
+    Selection revealRange = {-1, -1};
+    Listener onReveal = {};
 
     static SelectableText* New(Ctx* cx, Str id, Str text);
     static SelectableText* WithHandle(Ctx* cx, Str id,
@@ -17386,7 +17797,12 @@ struct SelectableText {
     SelectableText* TextStyle(float fontSize, Rgba textColor);
     SelectableText* Font(float fontSize);
     SelectableText* Semibold();
+    SelectableText* Highlights(const TextHighlight* runs, int count);
     SelectableText* SelectionColor(Rgba value);
+
+    SelectableText* RevealRange(Selection range);
+
+    SelectableText* OnReveal(Listener listener);
     El* IntoEl();
 };
 
@@ -17912,8 +18328,10 @@ struct TabStyles {
 };
 
 struct Tabs {
-    static El* New(Ctx* cx, Str id);
+    static El* New(Ctx* cx, Str id, Axis axis = Axis::Horizontal);
 };
+
+void TabsPrepareFocus(Window* win, El* root);
 
 struct Tab {
     static El* New(Ctx* cx, Str id, bool disabled = false,
@@ -19167,10 +19585,13 @@ struct MarkdownExtensions {
     uint64_t parserRevision = 0;
     bool enableMdx = false;
     bool enableFrontmatter = false;
+    bool disableRawHtml = false;
 
     MarkdownExtensions& ParserRevision(uint64_t value);
     MarkdownExtensions& Mdx();
     MarkdownExtensions& Frontmatter();
+
+    MarkdownExtensions& RawHtml(bool enabled);
     MarkdownExtensions& BlockParser(Arena* a, MarkdownBlockParserFn fn,
                                     void* data = nullptr);
     MarkdownExtensions& BlockRenderer(Arena* a, Str name,
@@ -19226,6 +19647,7 @@ struct MdRun {
     bool hasImgSpan = false;
 
     Str href = {};
+    Str linkTitle = {};
 
     Str imgSrc = {};
 
@@ -19733,6 +20155,10 @@ struct TextViewState {
 
     int selectAllAnchor = -1;
     int selectAllCursor = -1;
+    int selectAllScope = 0;
+
+    Vec<Str> accessibilityLines;
+    uint64_t accessibilityLineRevision = UINT64_MAX;
     bool streamFadePending = false;
     bool streamFadeReplace = false;
 
@@ -19799,6 +20225,7 @@ struct TextViewState {
     void SelectAll(Window* window, App* app);
 
     gpui::RenderedText RenderedText() const;
+    AccessibilityDocumentText AccessibilityText(Window* window);
 
     RangeHighlightError SetRangeHighlights(const RangeHighlight* highlights,
                                            int count, App* app,
@@ -19823,7 +20250,8 @@ struct TextViewState {
     void RecordStreamFade(const RenderedIndex* prev, const RenderedIndex* next,
                           double now);
 
-    int StreamFadeFrame(Arena* a, double now, StreamFadeRange** out);
+    int StreamFadeFrame(Arena* a, double now, StreamFadeRange** out,
+                        const App* app = nullptr);
     static void OnAction(TextViewState* self, Ctx* cx,
                          const ActionEvent* event);
     static void OnScroll(TextViewState* self, Ctx* cx,
@@ -19853,6 +20281,23 @@ uint32_t OrderedListOrdinal(uint32_t start, uint32_t ix);
 
 Str ListItemPrefix(Arena* a, uint32_t ix, uint32_t start, bool ordered,
                    int depth);
+
+struct TextViewLink {
+    Str url = {};
+    Str title = {};
+
+    static TextViewLink New(Str url) { return {url, {}}; }
+    TextViewLink& Url(Str value) {
+        url = value;
+        return *this;
+    }
+    TextViewLink& Title(Str value) {
+        title = value;
+        return *this;
+    }
+};
+
+using TextViewLinkFn = bool (*)(TextViewLink* link, const App* app, void* data);
 
 struct TextViewLinkBinding {
     int64_t context = 0;
@@ -19892,6 +20337,35 @@ struct FlowPosition {
     bool isLast = true;
 };
 
+namespace editor_host {
+
+enum class CaretAffinity : uint8_t {
+    Downstream,
+    Upstream,
+};
+
+struct Caret {
+    int index = 0;
+    CaretAffinity affinity = CaretAffinity::Downstream;
+
+    static Caret New(int index) { return {index, CaretAffinity::Downstream}; }
+    static Caret Upstream(int index) {
+        return {index, CaretAffinity::Upstream};
+    }
+};
+
+struct LeafPiece {
+    Bounds bounds;
+    int start;
+    int end;
+    float font;
+    float lineH;
+    uint16_t weight;
+    bool atom;
+};
+
+}
+
 struct LeafGeometry {
     uint64_t key = 0;
     Bounds bounds = {};
@@ -19907,11 +20381,17 @@ struct LeafGeometry {
     PaintCtx* paint = nullptr;
     float originX = 0;
     float originY = 0;
+    editor_host::LeafPiece* pieces = nullptr;
+    int pieceCount = 0;
+    bool mixed = false;
 
     int len() const { return textLen; }
     bool isEmpty() const { return textLen == 0; }
     Point PositionForIndex(int index) const;
     int IndexForPosition(Point at) const;
+    Point PositionForCaret(editor_host::Caret caret) const;
+    editor_host::Caret CaretForPosition(Point at) const;
+    const editor_host::LeafPiece* AtomAt(Point at) const;
 };
 
 MdNode* ParseMarkdown(Arena* a, Str source);
@@ -19938,6 +20418,8 @@ struct TextView {
     float paragraphGap = 12;
 
     bool selectable = true;
+    CursorKind hoverCursor = CursorKind::Arrow;
+    bool hasHoverCursor = false;
 
     bool html = false;
 
@@ -19956,6 +20438,11 @@ struct TextView {
 
     ImageSourceFn imageSource = nullptr;
     void* imageSourceData = nullptr;
+    TextViewLinkFn linkHook = nullptr;
+    void* linkHookData = nullptr;
+    LinkTooltipFn linkTooltip = nullptr;
+    void* linkTooltipData = nullptr;
+    const El* tooltipRendering = nullptr;
 
     ArenaVec<MdPlugin> plugins{};
 
@@ -20038,6 +20525,8 @@ struct TextView {
     TextView* Refine(const gpui::Style& style, uint32_t fields);
     TextView* Selectable(bool on = true);
 
+    TextView* Cursor(CursorKind kind);
+
     TextView* SelFormat(gpui::SelectionFormat fmt);
     TextView* TableColumnWidth(float px);
     TextView* TableScroll(bool on = true);
@@ -20052,6 +20541,10 @@ struct TextView {
     TextView* StreamFade(bool value = true);
 
     TextView* OnLink(Listener fn);
+
+    TextView* Link(TextViewLinkFn hook, void* data = nullptr);
+
+    TextView* LinkTooltip(LinkTooltipFn build, void* data = nullptr);
 
     TextView* OnTaskToggle(Listener fn);
 
@@ -20071,6 +20564,7 @@ struct TextView {
     TextView* Plugin(Str name, MdPluginParseFn parse, MdPluginRenderFn render,
                      void* data = nullptr);
     TextView* MarkdownExtensionsSet(const MarkdownExtensions& extensions);
+    TextView* MarkdownRawHtml(bool enabled);
     TextView* MarkdownBlockParser(MarkdownBlockParserFn parser,
                                   void* data = nullptr);
     TextView* MarkdownBlockRenderer(Str name, MarkdownBlockRenderFn renderer,
@@ -20124,6 +20618,9 @@ struct TextView {
     El* SrcMap(El* t, const SourceSegment* segments, int count, int offset,
                bool atomic = false);
     Listener LinkListener(Str href);
+    void BindViewLink(El* element, Str href);
+    void BindLinkedImage(El* image, Str href);
+    int nextLinkedImage = 0;
 
     Str BlockText(MdNode* n);
     El* PluginBlock(MdNode* n);
@@ -20158,8 +20655,6 @@ struct TextView {
     El* CodeLines(Str code, const ArenaVec<CodeHighlight>& spans,
                   const SourceSegment* segments, int segmentCount,
                   const MdNode* leaf = nullptr);
-
-    El* ImageRun(MdRun* r, float font, Rgba color, bool inFlow);
 
     El* Word(Str w, float font, Rgba color, uint8_t marks, int weight, Str href,
              Rgba highlight = {}, bool hasHighlight = false);
@@ -20262,6 +20757,9 @@ uint32_t CharLowerSimple(uint32_t c);
 
 int Utf8ClipLeft(Str s, int off);
 
+int TextPreviousGraphemeBoundary(Str text, int offset);
+int TextNextGraphemeBoundary(Str text, int offset);
+
 bool TextWordRangeAt(Str s, int off, int* outA, int* outB);
 
 void TextLineRangeAt(Str s, int off, int* outA, int* outB);
@@ -20300,6 +20798,7 @@ struct HtmlInlineTag {
     bool isBreak = false;
 
     Str href = {};
+    Str linkTitle = {};
     Str alt = {};
     Str src = {};
     float width = 0;
@@ -20844,7 +21343,8 @@ struct ToggleStyles {
 struct Toggle {
     static El* New(Ctx* cx, Str id, bool pressed = false, bool disabled = false,
                    Listener onChange = {}, const ToggleStyles* styles = nullptr,
-                   const StateStyle* instance = nullptr);
+                   const StateStyle* instance = nullptr, int tabIndex = 0,
+                   bool tabStop = true, FocusHandle focus = {});
 };
 }
 
@@ -20954,12 +21454,20 @@ using TooltipRenderer = El* (*)(Ctx * cx, El* view,
                                 const TooltipTransition& transition,
                                 void* data);
 
+void TooltipInstallRenderer(App* app, TooltipRenderer renderer);
+El* TooltipRenderAnimated(Ctx* cx, El* view,
+                          const TooltipTransition& transition, void* data);
+
 struct TooltipRequest {
     TooltipBuilder build = nullptr;
+    LinkTooltipFn buildLink = nullptr;
+    EntityId linkOwner = {};
+    Bounds linkRendering = {};
     void* buildData = nullptr;
     Bounds triggerBounds = {};
     gpui::Placement preferredPlacement = gpui::Placement::Top;
     bool hasPreferredPlacement = false;
+    float offset = 0;
 
     bool hasShowDelay = false;
     int showDelayMs = 0;
@@ -20971,6 +21479,7 @@ struct TooltipRequest {
 
     TooltipRequest& WithPlacement(gpui::Placement value);
     TooltipRequest& Placement(gpui::Placement value);
+    TooltipRequest& WithOffset(float value);
     TooltipRequest& WithShowDelay(int ms);
 };
 
@@ -21009,6 +21518,7 @@ struct TooltipPositioner {
 
     static TooltipPositioner* New(Ctx* cx, Bounds triggerBounds);
     TooltipPositioner* Placement(gpui::Placement value);
+    TooltipPositioner* Offset(float value);
     TooltipPositioner* Child(El* child);
     El* IntoEl();
 };
@@ -21020,6 +21530,7 @@ void TooltipRequestHide(Window* win);
 void TooltipHide(Window* win);
 
 void TooltipDismissRemoved(Window* win);
+void TooltipUpdateLinkAtPointer(Window* win);
 const TooltipOverlay* TooltipShowing(Window* win);
 
 }
@@ -21085,6 +21596,8 @@ struct VirtualListScrollHandle {
 
     int pendingOffset = 0;
     ScrollStrategy pendingStrategy = ScrollStrategy::Top;
+
+    float pendingInItem = 0;
 };
 
 void VirtualListScrollToItemDeferred(VirtualListScrollHandle* h, int ix,
@@ -21688,6 +22201,7 @@ struct Theme {
     Rgba listEven;
     Rgba listHead;
     Rgba listHover;
+    Rgba listHighlightFg;
     Rgba tableHover;
 
     Rgba sliderBar;
@@ -21703,6 +22217,8 @@ struct Theme {
 
     float radius;
     float radiusLg;
+
+    float windowRadius = 0;
 
     float radiusFull;
     ThemeMode mode = ThemeMode::Light;
@@ -21799,6 +22315,8 @@ ThemeMode ThemeGet(const App* app);
 
 ScrollbarMode ScrollbarModeNow(const App* app);
 void ScrollbarModeSet(App* app, ScrollbarMode mode);
+ScrollbarMode ScrollbarModeForSystem(bool autoHide, bool windows);
+void ThemeSyncScrollbarAppearance(App* app);
 
 SemanticThemeTokens ThemeSemanticTokens(const Theme& theme,
                                         float fontSize = 0.f);
@@ -21996,6 +22514,7 @@ struct ThemeConfig {
     float monoFontSize = 0;
     float radius = -1;
     float radiusLg = -1;
+    float windowRadius = -1;
     bool shadow = true;
     bool hasShadow = false;
 
@@ -23097,6 +23616,8 @@ enum class MessageAlignment : uint8_t {
     End
 };
 
+bool MessageAlignedRight(MessageAlignment alignment, const App* app);
+
 El* MessageGroupColumn(Ctx* cx, const ArenaVec<El*>& children,
                        const Style& style, uint32_t styleSet);
 
@@ -23326,6 +23847,7 @@ struct ButtonCustomVariant {
     Rgba active = {};
 
     static ButtonCustomVariant New(const App* app);
+
     ButtonCustomVariant Color(Rgba value) const;
     ButtonCustomVariant Foreground(Rgba value) const;
     ButtonCustomVariant Hover(Rgba value) const;
@@ -23460,6 +23982,8 @@ struct Button {
     bool hasAccessibilityRole = false;
     bool accessibilityToggled = false;
     bool hasAccessibilityToggled = false;
+    bool accessibilityExpanded = false;
+    bool hasAccessibilityExpanded = false;
     El* extra = nullptr;
     ArenaVec<El*> children;
 
@@ -23541,6 +24065,8 @@ struct Button {
     Button* Role(AccessibilityRole role);
 
     Button* Toggled(bool v = true);
+
+    Button* AriaExpanded(bool expanded);
     Button* OnClick(Listener l);
     Button* OnHover(Listener l);
     Button* OnClickAction(uint32_t action, int64_t arg = 0);
@@ -24761,12 +25287,16 @@ struct Checkbox : ChoiceBuilder<Checkbox> {
     El* child = nullptr;
     AccessibilityRole accessibilityRole = AccessibilityRole::CheckBox;
     float w = 0;
+    bool indeterminate = false;
 
+    Checkbox* Indeterminate(bool value = true);
     Checkbox* Child(El* e);
     Checkbox* W(float v);
     Checkbox* Role(AccessibilityRole role);
     El* IntoEl();
 };
+
+El* ChoiceMark(Ctx* cx, Str id, IconName mark, bool disabled, float size);
 
 El* ChoiceLabelColumn(Ctx* cx, El* indicator, float box, Str label, Str hint,
                       UiSize size, bool disabled, bool wrapLabel);
@@ -24800,6 +25330,7 @@ struct Clipboard {
     Ctx* cx = nullptr;
     Str id = {};
     Str value = {};
+    Str label = {};
     Str tooltipText = {};
     int tooltipShowDelayMs = -1;
     Str accessibilityLabel = {};
@@ -24808,10 +25339,11 @@ struct Clipboard {
 
     static Clipboard* New(Ctx* cx, Str id);
     Clipboard* Value(Str v);
+    Clipboard* Label(Str text);
     Clipboard* Tooltip(Str t);
     Clipboard* TooltipShowDelay(int ms);
 
-    Clipboard* AccessibilityLabel(Str label);
+    Clipboard* AccessibilityLabel(Str name);
     Clipboard* OnCopied(Listener fn);
     Clipboard* WithSize(UiSize sizeValue);
     El* IntoEl();
@@ -25026,6 +25558,7 @@ struct ListState {
     Listener onEvent = {};
 
     Listener onPerformSearch = {};
+    Listener onCancelSearch = {};
     Listener onSetSelectedIndex = {};
     Listener onSetRightClickedIndex = {};
     Listener onConfirm = {};
@@ -25086,6 +25619,8 @@ bool ListRightClickedIndex(const ListState* s, IndexPath* out);
 void ListSetItemToMeasureIndex(ListState* s, Ctx* cx, IndexPath path);
 
 void ListSetQuery(ListState* s, Ctx* cx, Str query);
+void ListSearchFromInput(ListState* s, Ctx* cx, Str query);
+void ListCancelSearch(ListState* s, Ctx* cx);
 void ListRequestLoadMore(ListState* s, Ctx* cx);
 
 int ListNextIndex(const ListState* s);
@@ -25158,12 +25693,16 @@ struct ListDelegate {
     int (*loadMoreThreshold)(void* data) = nullptr;
 
     Listener performSearch = {};
+    Listener cancelSearch = {};
     Listener setSelectedIndex = {};
     Listener setRightClickedIndex = {};
     Listener confirm = {};
     Listener cancel = {};
     Listener loadMore = {};
 };
+
+void ListSyncDelegate(Ctx* cx, ListState* s, const ListDelegate& delegate,
+                      bool delegateSet);
 
 struct List {
     Arena* a = nullptr;
@@ -25184,6 +25723,7 @@ struct List {
     Str searchPlaceholder = {};
     UiSize size = UiSize::Medium;
     bool scrollbarVisible = true;
+    bool keepInputFocus = false;
 
     float padding = 0;
 
@@ -25210,6 +25750,7 @@ struct List {
     List* Initial(El* e);
     List* Empty(El* e);
     List* H(float px);
+    float ContentHeight(float maxH) const;
     El* IntoEl();
 };
 
@@ -25273,6 +25814,10 @@ struct SearchableListDelegate {
                          const SearchableListChange* changes, int n) = nullptr;
     void (*onConfirm)(void* user, const SearchableListState* state,
                       IndexPath path, bool secondary) = nullptr;
+
+    El* (*renderHighlightedItem)(void* user, Ctx* cx, IndexPath path,
+                                 const SearchableListItem* item,
+                                 Str query) = nullptr;
 
     static SearchableListDelegate Items(const SearchableListItem* items,
                                         int nItems);
@@ -25397,6 +25942,13 @@ struct SearchableListState {
     Vec<int> selected;
     bool open = false;
 
+    int8_t menuPlacement = -1;
+    float heldItemsHeight = 0;
+    void ResetMenuGeometry() {
+        menuPlacement = -1;
+        heldItemsHeight = 0;
+    }
+
     Bounds triggerBounds = {};
 
     bool closedByConfirm = false;
@@ -25488,6 +26040,7 @@ struct SearchableListContent {
 
     IconName checkIcon = IconName::Check;
     UiSize size = UiSize::Medium;
+    bool highlightMatches = false;
     SearchableListDelegate delegate = {};
     bool hasDelegate = false;
 };
@@ -25517,12 +26070,18 @@ struct SearchableContentBuilder : Base {
         this->size = s;
         return This();
     }
+    Self* HighlightMatches(bool on = true) {
+        this->highlightMatches = on;
+        return This();
+    }
     Self* Delegate(const SearchableListDelegate& value) {
         this->delegate = value;
         this->hasDelegate = true;
         return This();
     }
 };
+
+El* SearchableListPlaceMenu(Ctx* cx, El* menu, SearchableListState* state);
 
 struct SearchableList
     : SearchableContentBuilder<SearchableList, SearchableListContent> {
@@ -26030,6 +26589,8 @@ struct CommandState {
     bool searchable = true;
 
     bool filterable = true;
+    bool highlightMatches = false;
+    Str HighlightedQuery() const;
     Vec<CommandRow> rows;
     Vec<CommandMatch> matched;
 
@@ -26100,6 +26661,7 @@ struct Command {
     int nEntries = 0;
     bool searchable = true;
     bool filterable = true;
+    bool highlightMatches = false;
     Str placeholder = {};
 
     El* empty = nullptr;
@@ -26128,6 +26690,7 @@ struct Command {
     Command* Searchable(bool v);
 
     Command* Filterable(bool v);
+    Command* HighlightMatches(bool v = true);
     Command* Placeholder(Str s);
     Command* Empty(El* e);
     Command* Header(El* e);
@@ -26565,6 +27128,8 @@ struct DialogMount {
     bool bound = false;
     uint32_t id = 0;
     int layerIx = 0;
+
+    int stackDepth = 0;
     bool closing = false;
     bool topmost = true;
     bool showOverlay = true;
@@ -26970,6 +27535,26 @@ struct DiffDecoration {
     }
 };
 
+struct DiffSpanHighlight {
+    DiffLinePosition position = {};
+    ByteRange span = {};
+    bool hasBackground = false;
+    bool hasForeground = false;
+    Rgba background = {};
+    Rgba foreground = {};
+    static DiffSpanHighlight New(DiffLinePosition position, ByteRange span);
+    DiffSpanHighlight WithBackground(Rgba fill) const;
+    DiffSpanHighlight WithForeground(Rgba color) const;
+    const DiffLinePosition& Position() const { return position; }
+    ByteRange Span() const { return span; }
+    const Rgba* Background() const {
+        return hasBackground ? &background : nullptr;
+    }
+    const Rgba* Foreground() const {
+        return hasForeground ? &foreground : nullptr;
+    }
+};
+
 struct DiffGutterMarker {
     Str id = {};
     DiffLinePosition position = {};
@@ -27238,6 +27823,10 @@ struct DiffState {
     Vec<int> rowFileBase;
     int scrollItem = 0;
     VirtualListScrollHandle listScroll = {};
+    float horizontalScrollX = 0;
+    float horizontalCodeWidth = 0;
+    float horizontalCodeFont = 0;
+    int horizontalNumberDigits = 0;
     FocusHandle focus = {};
     bool hasSelection = false;
     DiffLineRange selected = {};
@@ -27303,6 +27892,10 @@ struct DiffState {
                                   int ix) const;
     void ExpandUnchanged(Ctx* cx);
     void CollapseUnchanged(Ctx* cx);
+
+    void SetFilesCollapsed(const Str* paths, int count, bool collapsed,
+                           Ctx* cx);
+    void SetAllFilesCollapsed(bool collapsed, Ctx* cx);
     void SetFileCollapsed(Str path, bool collapsed, Ctx* cx);
     bool ConflictResolution(Str path, int ix,
                             DiffConflictResolution* out) const;
@@ -27348,6 +27941,7 @@ struct Diff {
     DiffChangeIndicator changeIndicator = DiffChangeIndicator::Signs;
     bool changeBackground = true;
     bool softWrap = false;
+    float splitRatio = 0.5f;
 
     const DiffAnnotation* annotations = nullptr;
     int annotationCount = 0;
@@ -27356,6 +27950,8 @@ struct Diff {
 
     const DiffDecoration* decorations = nullptr;
     int decorationCount = 0;
+    const DiffSpanHighlight** spanHighlights = nullptr;
+    int spanHighlightCount = 0;
     const DiffGutterMarker* gutterMarkers = nullptr;
     int gutterMarkerCount = 0;
     El* (*gutterMarkerContent)(Ctx*, const DiffGutterMarker*, void*) = nullptr;
@@ -27381,10 +27977,13 @@ struct Diff {
     Diff* ChangeIndicator(DiffChangeIndicator v);
     Diff* ChangeBackground(bool v);
     Diff* SoftWrap(bool v);
+
+    Diff* SplitRatio(float ratio);
     Diff* Annotations(const DiffAnnotation* items, int count);
     Diff* RenderAnnotation(El* (*fn)(Ctx*, const DiffAnnotation*, void*),
                            void* user);
     Diff* Decorations(const DiffDecoration* items, int count);
+    Diff* SpanHighlights(const DiffSpanHighlight* items, int count);
     Diff* GutterMarkers(const DiffGutterMarker* items, int count);
     Diff* RenderGutterMarker(El* (*fn)(Ctx*, const DiffGutterMarker*, void*),
                              void* user);
@@ -27431,6 +28030,8 @@ namespace gpui {
 
 namespace component {
 
+using gpui::kClosedBottomStrip;
+
 using Panel = DockPanelDef;
 using PanelView = DockPanelDef;
 using PanelStyle = DockPanelStyle;
@@ -27474,6 +28075,8 @@ struct DockSkin {
 
     bool IsCloseButtonVisible(App* app) const;
     void SetCloseButtonVisible(App* app, Window* win, bool visible);
+    bool IsCollapsedTabBarVisible(App* app) const;
+    void SetCollapsedTabBarVisible(App* app, Window* win, bool visible);
     const DockRenderer* Renderer() const;
 };
 
@@ -27896,6 +28499,8 @@ namespace gpui {
 
 namespace component {
 
+struct GutterStyle;
+
 struct Highlighter {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
@@ -27910,6 +28515,7 @@ struct Highlighter {
     float fontSize = 0;
 
     Str fontFamily = {};
+    const GutterStyle* gutterStyle = nullptr;
 
     SyntaxLang lang = SyntaxLangNone;
 
@@ -28141,7 +28747,8 @@ struct AnyInputState {
 enum class InputAlign : uint8_t {
     Left,
     Center,
-    Right
+    Right,
+    Start
 };
 
 enum class InputContentType : uint8_t {
@@ -28243,6 +28850,9 @@ struct InputFieldHooks : EditorHooks<Self> {
     }
 };
 
+struct List;
+struct ListDelegate;
+
 struct Input : InputFieldHooks<Input> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
@@ -28253,7 +28863,7 @@ struct Input : InputFieldHooks<Input> {
     El* prefix = nullptr;
     El* suffix = nullptr;
     UiSize size = UiSize::Medium;
-    InputAlign align = InputAlign::Left;
+    InputAlign align = InputAlign::Start;
     bool disabled = false;
     bool cleanable = false;
 
@@ -28272,6 +28882,7 @@ struct Input : InputFieldHooks<Input> {
     bool hasTextColor = false;
     Listener onChange;
     Listener onFocus;
+    component::List* suggestionList = nullptr;
     Listener onClear;
     Listener onToggleMask;
 
@@ -28279,6 +28890,9 @@ struct Input : InputFieldHooks<Input> {
 
     static Input* New(Ctx* cx, Str id, InputState* state);
     Input* Label(Str s);
+
+    Input* List(component::List* suggestions);
+    Input* List(Entity<ListState> list, const ListDelegate& delegate);
     Input* WithSize(UiSize s);
     Input* Align(InputAlign v);
     Input* Disabled(bool v);
@@ -28329,6 +28943,28 @@ struct SearchPanel {
     El* IntoEl();
 };
 
+struct GutterStyle {
+    float gap = 0;
+    float fontSize = 0;
+    Str fontFamily = {};
+    Rgba lineNumberColor = {};
+    Rgba activeLineNumberColor = {};
+    bool hasGap = false;
+    bool gapInRems = false;
+    bool hasFontSize = false;
+    bool fontSizeInRems = false;
+    bool hasFontFamily = false;
+    bool hasLineNumberColor = false;
+    bool hasActiveLineNumberColor = false;
+
+    GutterStyle WithGap(float value, bool rems = false) const;
+    GutterStyle WithLineNumberColor(Rgba value) const;
+    GutterStyle WithActiveLineNumberColor(Rgba value) const;
+    GutterStyle WithLineNumberFontFamily(Str value) const;
+    GutterStyle WithLineNumberFontSize(float value, bool rems = false) const;
+    void ApplyOverrides(const GutterStyle& value);
+};
+
 struct Editor : EditorHooks<Editor> {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
@@ -28346,6 +28982,7 @@ struct Editor : EditorHooks<Editor> {
     int tabIndex = 0;
     AccessibilityRole accessibilityRole = AccessibilityRole::MultilineTextInput;
     Str ariaLabel = {};
+    component::GutterStyle gutterStyle = {};
 
     Str language = {};
     const TextSpan* decorations = nullptr;
@@ -28367,6 +29004,7 @@ struct Editor : EditorHooks<Editor> {
     Editor* Font(float value);
 
     Editor* FontFamily(Str family);
+    Editor* GutterStyle(const component::GutterStyle& value);
     Editor* Appearance(bool value);
     Editor* Bordered(bool value);
     Editor* Disabled(bool value);
@@ -28603,6 +29241,7 @@ struct NumberInput : NumberRange {
     bool disabled = false;
     bool appearance = true;
     bool focusRing = true;
+    bool showStepper = true;
 
     Str accessibilityLabel = {};
     El* suffix = nullptr;
@@ -28628,6 +29267,8 @@ struct NumberInput : NumberRange {
     NumberInput* FocusRing(bool v);
 
     NumberInput* AccessibilityLabel(Str label);
+
+    NumberInput* Stepper(bool v);
     NumberInput* Suffix(El* el);
     NumberInput* Bg(Background c);
     NumberInput* TextColor(Rgba c);
@@ -28703,9 +29344,14 @@ struct HighlightsMatch {
     bool IsPrefix() const;
 };
 
+void LabelMatchRanges(Str text, Str query, Vec<Selection>* out);
+bool LabelQueryMatches(Str text, Str query);
+El* HighlightedLabel(Ctx* cx, Str text, Str query);
+
 struct Label {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
+    Str id = {};
     Str text = {};
     Str secondary = {};
     bool hasSecondary = false;
@@ -28718,7 +29364,11 @@ struct Label {
     int align = 0;
     float lineHeight = 1.25f;
 
-    static Label* New(Ctx* cx, Str text);
+    static Label* New(Ctx* cx, Str text, const char* file = __builtin_FILE(),
+                      int line = __builtin_LINE(),
+                      int column = GPUI_CALLER_COLUMN());
+
+    Label* Id(Str value);
     Label* Secondary(Str s);
     Label* Masked(bool v);
     Label* Semibold();
@@ -29131,12 +29781,15 @@ struct ContextMenuState {
 
     bool open = false;
     Point position = {};
+    Point windowPosition = {};
     FocusHandle triggerFocus = {};
 
     static void OnMouseDown(ContextMenuState* self, Ctx* cx,
                             const MouseDownEvent* ev);
     static void OnLongPress(ContextMenuState* self, Ctx* cx,
                             const LongPressEvent* ev);
+    static void OnMouseUpOut(ContextMenuState* self, Ctx* cx,
+                             const MouseUpEvent* ev);
 };
 
 struct ContextMenu {
@@ -29321,6 +29974,8 @@ struct MessageScrollerState {
     bool RemeasureItems(Ctx* cx, int start, int end);
 
     bool ScrollToItem(Ctx* cx, int index);
+
+    bool ScrollToOffset(Ctx* cx, ListOffset offset);
 
     void ScrollToEnd(Ctx* cx);
 
@@ -30352,6 +31007,8 @@ enum class SheetPlacement : uint8_t {
     Bottom
 };
 
+SheetPlacement SheetPhysicalPlacement(SheetPlacement placement, const App* app);
+
 struct Sheet : SlotBuilder<Sheet> {
     Str title = {};
     El* titleEl = nullptr;
@@ -30403,9 +31060,11 @@ const float kWindowBorderSize = 1;
 
 const float kWindowResizeHitSize = 4;
 
-const float kWindowBorderRadius = 0;
-
 using WindowTiling = gpui::Tiling;
+
+Corners WindowCornerRadii(float radius, bool clientDecorated,
+                          WindowTiling tiling);
+Corners WindowCornerRadii(Window* window, const App* app);
 
 Edges WindowBorderInsets(float shadowSize, WindowTiling tiling);
 
@@ -31139,7 +31798,10 @@ struct SidebarGroup {
     ArenaVec<SidebarItem> children;
     bool collapsed = false;
 
+    El* suffix = nullptr;
+
     static SidebarGroup* New(Ctx* cx, Str label);
+    SidebarGroup* Suffix(El* child);
     SidebarGroup* Child(SidebarMenu* menu);
     SidebarGroup* Child(SidebarMenuItem* item);
     SidebarGroup* Child(SidebarItem item);
@@ -31271,6 +31933,8 @@ struct Slider {
 
     bool reverse = false;
     bool disabled = false;
+    bool tabStop = true;
+    int tabIndex = 0;
 
     Axis axis = Axis::Horizontal;
 
@@ -31287,6 +31951,8 @@ struct Slider {
     Slider* Vertical(bool v = true);
     Slider* WithAxis(Axis v);
     Slider* Disabled(bool v = true);
+    Slider* TabStop(bool v = true);
+    Slider* TabIndex(int v);
     Slider* W(float px);
 
     Slider* WFill();
@@ -32636,6 +33302,8 @@ struct DataTable {
 
     bool scrollbarV = true;
     bool scrollbarH = true;
+    bool hasScrollbarMode = false;
+    gpui::ScrollbarMode scrollbarMode = gpui::ScrollbarMode::Always;
 
     int scrollBounce = -1;
 
@@ -32684,6 +33352,8 @@ struct DataTable {
     DataTable* AccessibilityLabel(Str s);
     DataTable* FixedColsBorder(bool v);
     DataTable* ScrollbarVisible(bool vertical, bool horizontal);
+
+    DataTable* ScrollbarMode(gpui::ScrollbarMode mode);
 
     DataTable* ScrollBounce(bool v);
     DataTable* WithSize(UiSize s);
@@ -32756,15 +33426,20 @@ struct TableCell {
 struct TableRow {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
+    Str id = {};
     int ix = 0;
     UiSize size = UiSize::Medium;
     bool hasBg = false;
     Background bg = {};
+    StateStyle* hoverStyle = nullptr;
     ArenaVec<TableCellEl*> cells;
     ElRefiner refiner = {};
 
     static TableRow* New(Ctx* cx);
+
+    TableRow* Id(Str name);
     TableRow* Bg(Background c);
+    TableRow* Hover(const StateStyle& style);
     TableRow* Child(TableCellEl* c);
     El* IntoEl();
 };
@@ -32947,6 +33622,7 @@ using TextViewMotion = gpui::TextViewMotion;
 using TextViewState = gpui::TextViewState;
 using TextViewLayoutState = gpui::TextViewLayoutState;
 using TextView = gpui::TextView;
+using TextViewLink = gpui::TextViewLink;
 using TaskToggleEvent = gpui::TaskToggleEvent;
 
 using Text = gpui::Text;
@@ -33121,8 +33797,10 @@ struct Tooltip {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
     Str text = {};
+    float maxWidth = kAuto;
 
     static Tooltip* New(Ctx* cx, Str text);
+    Tooltip* MaxW(float value);
     El* IntoEl();
 };
 
@@ -33381,6 +34059,1893 @@ TempStr FormatPctTemp(float v, int decimals);
 bool SysSelfPrivateMemory(uint64_t* bytes);
 
 bool SysSelfThreadCpu(double* seconds);
+}
+
+#line 1 "src/base/grapheme_data.h"
+
+namespace gpui {
+
+enum class GraphemeCategory : uint8_t {
+    Other,
+    Control,
+    Cr,
+    Extend,
+    ExtendedPictographic,
+    IndicConsonant,
+    L,
+    Lf,
+    Lv,
+    Lvt,
+    Prepend,
+    RegionalIndicator,
+    SpacingMark,
+    T,
+    V,
+    Zwj,
+};
+
+enum class IndicBreakCategory : uint8_t {
+    Other,
+    Extend,
+    Linker
+};
+
+template <typename Kind>
+struct GraphemeRange {
+    uint32_t first;
+    uint32_t last;
+    Kind kind;
+};
+
+static constexpr GraphemeRange<GraphemeCategory> kGraphemeRanges[] = {
+    {0x0, 0x9, GraphemeCategory::Control},
+    {0xa, 0xa, GraphemeCategory::Lf},
+    {0xb, 0xc, GraphemeCategory::Control},
+    {0xd, 0xd, GraphemeCategory::Cr},
+    {0xe, 0x1f, GraphemeCategory::Control},
+    {0x7f, 0x9f, GraphemeCategory::Control},
+    {0xa9, 0xa9, GraphemeCategory::ExtendedPictographic},
+    {0xad, 0xad, GraphemeCategory::Control},
+    {0xae, 0xae, GraphemeCategory::ExtendedPictographic},
+    {0x300, 0x36f, GraphemeCategory::Extend},
+    {0x483, 0x489, GraphemeCategory::Extend},
+    {0x591, 0x5bd, GraphemeCategory::Extend},
+    {0x5bf, 0x5bf, GraphemeCategory::Extend},
+    {0x5c1, 0x5c2, GraphemeCategory::Extend},
+    {0x5c4, 0x5c5, GraphemeCategory::Extend},
+    {0x5c7, 0x5c7, GraphemeCategory::Extend},
+    {0x600, 0x605, GraphemeCategory::Prepend},
+    {0x610, 0x61a, GraphemeCategory::Extend},
+    {0x61c, 0x61c, GraphemeCategory::Control},
+    {0x64b, 0x65f, GraphemeCategory::Extend},
+    {0x670, 0x670, GraphemeCategory::Extend},
+    {0x6d6, 0x6dc, GraphemeCategory::Extend},
+    {0x6dd, 0x6dd, GraphemeCategory::Prepend},
+    {0x6df, 0x6e4, GraphemeCategory::Extend},
+    {0x6e7, 0x6e8, GraphemeCategory::Extend},
+    {0x6ea, 0x6ed, GraphemeCategory::Extend},
+    {0x70f, 0x70f, GraphemeCategory::Prepend},
+    {0x711, 0x711, GraphemeCategory::Extend},
+    {0x730, 0x74a, GraphemeCategory::Extend},
+    {0x7a6, 0x7b0, GraphemeCategory::Extend},
+    {0x7eb, 0x7f3, GraphemeCategory::Extend},
+    {0x7fd, 0x7fd, GraphemeCategory::Extend},
+    {0x816, 0x819, GraphemeCategory::Extend},
+    {0x81b, 0x823, GraphemeCategory::Extend},
+    {0x825, 0x827, GraphemeCategory::Extend},
+    {0x829, 0x82d, GraphemeCategory::Extend},
+    {0x859, 0x85b, GraphemeCategory::Extend},
+    {0x890, 0x891, GraphemeCategory::Prepend},
+    {0x897, 0x89f, GraphemeCategory::Extend},
+    {0x8ca, 0x8e1, GraphemeCategory::Extend},
+    {0x8e2, 0x8e2, GraphemeCategory::Prepend},
+    {0x8e3, 0x902, GraphemeCategory::Extend},
+    {0x903, 0x903, GraphemeCategory::SpacingMark},
+    {0x915, 0x939, GraphemeCategory::IndicConsonant},
+    {0x93a, 0x93a, GraphemeCategory::Extend},
+    {0x93b, 0x93b, GraphemeCategory::SpacingMark},
+    {0x93c, 0x93c, GraphemeCategory::Extend},
+    {0x93e, 0x940, GraphemeCategory::SpacingMark},
+    {0x941, 0x948, GraphemeCategory::Extend},
+    {0x949, 0x94c, GraphemeCategory::SpacingMark},
+    {0x94d, 0x94d, GraphemeCategory::Extend},
+    {0x94e, 0x94f, GraphemeCategory::SpacingMark},
+    {0x951, 0x957, GraphemeCategory::Extend},
+    {0x958, 0x95f, GraphemeCategory::IndicConsonant},
+    {0x962, 0x963, GraphemeCategory::Extend},
+    {0x978, 0x97f, GraphemeCategory::IndicConsonant},
+    {0x981, 0x981, GraphemeCategory::Extend},
+    {0x982, 0x983, GraphemeCategory::SpacingMark},
+    {0x995, 0x9a8, GraphemeCategory::IndicConsonant},
+    {0x9aa, 0x9b0, GraphemeCategory::IndicConsonant},
+    {0x9b2, 0x9b2, GraphemeCategory::IndicConsonant},
+    {0x9b6, 0x9b9, GraphemeCategory::IndicConsonant},
+    {0x9bc, 0x9bc, GraphemeCategory::Extend},
+    {0x9be, 0x9be, GraphemeCategory::Extend},
+    {0x9bf, 0x9c0, GraphemeCategory::SpacingMark},
+    {0x9c1, 0x9c4, GraphemeCategory::Extend},
+    {0x9c7, 0x9c8, GraphemeCategory::SpacingMark},
+    {0x9cb, 0x9cc, GraphemeCategory::SpacingMark},
+    {0x9cd, 0x9cd, GraphemeCategory::Extend},
+    {0x9d7, 0x9d7, GraphemeCategory::Extend},
+    {0x9dc, 0x9dd, GraphemeCategory::IndicConsonant},
+    {0x9df, 0x9df, GraphemeCategory::IndicConsonant},
+    {0x9e2, 0x9e3, GraphemeCategory::Extend},
+    {0x9f0, 0x9f1, GraphemeCategory::IndicConsonant},
+    {0x9fe, 0x9fe, GraphemeCategory::Extend},
+    {0xa01, 0xa02, GraphemeCategory::Extend},
+    {0xa03, 0xa03, GraphemeCategory::SpacingMark},
+    {0xa3c, 0xa3c, GraphemeCategory::Extend},
+    {0xa3e, 0xa40, GraphemeCategory::SpacingMark},
+    {0xa41, 0xa42, GraphemeCategory::Extend},
+    {0xa47, 0xa48, GraphemeCategory::Extend},
+    {0xa4b, 0xa4d, GraphemeCategory::Extend},
+    {0xa51, 0xa51, GraphemeCategory::Extend},
+    {0xa70, 0xa71, GraphemeCategory::Extend},
+    {0xa75, 0xa75, GraphemeCategory::Extend},
+    {0xa81, 0xa82, GraphemeCategory::Extend},
+    {0xa83, 0xa83, GraphemeCategory::SpacingMark},
+    {0xa95, 0xaa8, GraphemeCategory::IndicConsonant},
+    {0xaaa, 0xab0, GraphemeCategory::IndicConsonant},
+    {0xab2, 0xab3, GraphemeCategory::IndicConsonant},
+    {0xab5, 0xab9, GraphemeCategory::IndicConsonant},
+    {0xabc, 0xabc, GraphemeCategory::Extend},
+    {0xabe, 0xac0, GraphemeCategory::SpacingMark},
+    {0xac1, 0xac5, GraphemeCategory::Extend},
+    {0xac7, 0xac8, GraphemeCategory::Extend},
+    {0xac9, 0xac9, GraphemeCategory::SpacingMark},
+    {0xacb, 0xacc, GraphemeCategory::SpacingMark},
+    {0xacd, 0xacd, GraphemeCategory::Extend},
+    {0xae2, 0xae3, GraphemeCategory::Extend},
+    {0xaf9, 0xaf9, GraphemeCategory::IndicConsonant},
+    {0xafa, 0xaff, GraphemeCategory::Extend},
+    {0xb01, 0xb01, GraphemeCategory::Extend},
+    {0xb02, 0xb03, GraphemeCategory::SpacingMark},
+    {0xb15, 0xb28, GraphemeCategory::IndicConsonant},
+    {0xb2a, 0xb30, GraphemeCategory::IndicConsonant},
+    {0xb32, 0xb33, GraphemeCategory::IndicConsonant},
+    {0xb35, 0xb39, GraphemeCategory::IndicConsonant},
+    {0xb3c, 0xb3c, GraphemeCategory::Extend},
+    {0xb3e, 0xb3f, GraphemeCategory::Extend},
+    {0xb40, 0xb40, GraphemeCategory::SpacingMark},
+    {0xb41, 0xb44, GraphemeCategory::Extend},
+    {0xb47, 0xb48, GraphemeCategory::SpacingMark},
+    {0xb4b, 0xb4c, GraphemeCategory::SpacingMark},
+    {0xb4d, 0xb4d, GraphemeCategory::Extend},
+    {0xb55, 0xb57, GraphemeCategory::Extend},
+    {0xb5c, 0xb5d, GraphemeCategory::IndicConsonant},
+    {0xb5f, 0xb5f, GraphemeCategory::IndicConsonant},
+    {0xb62, 0xb63, GraphemeCategory::Extend},
+    {0xb71, 0xb71, GraphemeCategory::IndicConsonant},
+    {0xb82, 0xb82, GraphemeCategory::Extend},
+    {0xbbe, 0xbbe, GraphemeCategory::Extend},
+    {0xbbf, 0xbbf, GraphemeCategory::SpacingMark},
+    {0xbc0, 0xbc0, GraphemeCategory::Extend},
+    {0xbc1, 0xbc2, GraphemeCategory::SpacingMark},
+    {0xbc6, 0xbc8, GraphemeCategory::SpacingMark},
+    {0xbca, 0xbcc, GraphemeCategory::SpacingMark},
+    {0xbcd, 0xbcd, GraphemeCategory::Extend},
+    {0xbd7, 0xbd7, GraphemeCategory::Extend},
+    {0xc00, 0xc00, GraphemeCategory::Extend},
+    {0xc01, 0xc03, GraphemeCategory::SpacingMark},
+    {0xc04, 0xc04, GraphemeCategory::Extend},
+    {0xc15, 0xc28, GraphemeCategory::IndicConsonant},
+    {0xc2a, 0xc39, GraphemeCategory::IndicConsonant},
+    {0xc3c, 0xc3c, GraphemeCategory::Extend},
+    {0xc3e, 0xc40, GraphemeCategory::Extend},
+    {0xc41, 0xc44, GraphemeCategory::SpacingMark},
+    {0xc46, 0xc48, GraphemeCategory::Extend},
+    {0xc4a, 0xc4d, GraphemeCategory::Extend},
+    {0xc55, 0xc56, GraphemeCategory::Extend},
+    {0xc58, 0xc5a, GraphemeCategory::IndicConsonant},
+    {0xc62, 0xc63, GraphemeCategory::Extend},
+    {0xc81, 0xc81, GraphemeCategory::Extend},
+    {0xc82, 0xc83, GraphemeCategory::SpacingMark},
+    {0xcbc, 0xcbc, GraphemeCategory::Extend},
+    {0xcbe, 0xcbe, GraphemeCategory::SpacingMark},
+    {0xcbf, 0xcc0, GraphemeCategory::Extend},
+    {0xcc1, 0xcc1, GraphemeCategory::SpacingMark},
+    {0xcc2, 0xcc2, GraphemeCategory::Extend},
+    {0xcc3, 0xcc4, GraphemeCategory::SpacingMark},
+    {0xcc6, 0xcc8, GraphemeCategory::Extend},
+    {0xcca, 0xccd, GraphemeCategory::Extend},
+    {0xcd5, 0xcd6, GraphemeCategory::Extend},
+    {0xce2, 0xce3, GraphemeCategory::Extend},
+    {0xcf3, 0xcf3, GraphemeCategory::SpacingMark},
+    {0xd00, 0xd01, GraphemeCategory::Extend},
+    {0xd02, 0xd03, GraphemeCategory::SpacingMark},
+    {0xd15, 0xd3a, GraphemeCategory::IndicConsonant},
+    {0xd3b, 0xd3c, GraphemeCategory::Extend},
+    {0xd3e, 0xd3e, GraphemeCategory::Extend},
+    {0xd3f, 0xd40, GraphemeCategory::SpacingMark},
+    {0xd41, 0xd44, GraphemeCategory::Extend},
+    {0xd46, 0xd48, GraphemeCategory::SpacingMark},
+    {0xd4a, 0xd4c, GraphemeCategory::SpacingMark},
+    {0xd4d, 0xd4d, GraphemeCategory::Extend},
+    {0xd4e, 0xd4e, GraphemeCategory::Prepend},
+    {0xd57, 0xd57, GraphemeCategory::Extend},
+    {0xd62, 0xd63, GraphemeCategory::Extend},
+    {0xd81, 0xd81, GraphemeCategory::Extend},
+    {0xd82, 0xd83, GraphemeCategory::SpacingMark},
+    {0xdca, 0xdca, GraphemeCategory::Extend},
+    {0xdcf, 0xdcf, GraphemeCategory::Extend},
+    {0xdd0, 0xdd1, GraphemeCategory::SpacingMark},
+    {0xdd2, 0xdd4, GraphemeCategory::Extend},
+    {0xdd6, 0xdd6, GraphemeCategory::Extend},
+    {0xdd8, 0xdde, GraphemeCategory::SpacingMark},
+    {0xddf, 0xddf, GraphemeCategory::Extend},
+    {0xdf2, 0xdf3, GraphemeCategory::SpacingMark},
+    {0xe31, 0xe31, GraphemeCategory::Extend},
+    {0xe33, 0xe33, GraphemeCategory::SpacingMark},
+    {0xe34, 0xe3a, GraphemeCategory::Extend},
+    {0xe47, 0xe4e, GraphemeCategory::Extend},
+    {0xeb1, 0xeb1, GraphemeCategory::Extend},
+    {0xeb3, 0xeb3, GraphemeCategory::SpacingMark},
+    {0xeb4, 0xebc, GraphemeCategory::Extend},
+    {0xec8, 0xece, GraphemeCategory::Extend},
+    {0xf18, 0xf19, GraphemeCategory::Extend},
+    {0xf35, 0xf35, GraphemeCategory::Extend},
+    {0xf37, 0xf37, GraphemeCategory::Extend},
+    {0xf39, 0xf39, GraphemeCategory::Extend},
+    {0xf3e, 0xf3f, GraphemeCategory::SpacingMark},
+    {0xf71, 0xf7e, GraphemeCategory::Extend},
+    {0xf7f, 0xf7f, GraphemeCategory::SpacingMark},
+    {0xf80, 0xf84, GraphemeCategory::Extend},
+    {0xf86, 0xf87, GraphemeCategory::Extend},
+    {0xf8d, 0xf97, GraphemeCategory::Extend},
+    {0xf99, 0xfbc, GraphemeCategory::Extend},
+    {0xfc6, 0xfc6, GraphemeCategory::Extend},
+    {0x1000, 0x102a, GraphemeCategory::IndicConsonant},
+    {0x102d, 0x1030, GraphemeCategory::Extend},
+    {0x1031, 0x1031, GraphemeCategory::SpacingMark},
+    {0x1032, 0x1037, GraphemeCategory::Extend},
+    {0x1039, 0x103a, GraphemeCategory::Extend},
+    {0x103b, 0x103c, GraphemeCategory::SpacingMark},
+    {0x103d, 0x103e, GraphemeCategory::Extend},
+    {0x103f, 0x103f, GraphemeCategory::IndicConsonant},
+    {0x1050, 0x1055, GraphemeCategory::IndicConsonant},
+    {0x1056, 0x1057, GraphemeCategory::SpacingMark},
+    {0x1058, 0x1059, GraphemeCategory::Extend},
+    {0x105a, 0x105d, GraphemeCategory::IndicConsonant},
+    {0x105e, 0x1060, GraphemeCategory::Extend},
+    {0x1061, 0x1061, GraphemeCategory::IndicConsonant},
+    {0x1065, 0x1066, GraphemeCategory::IndicConsonant},
+    {0x106e, 0x1070, GraphemeCategory::IndicConsonant},
+    {0x1071, 0x1074, GraphemeCategory::Extend},
+    {0x1075, 0x1081, GraphemeCategory::IndicConsonant},
+    {0x1082, 0x1082, GraphemeCategory::Extend},
+    {0x1084, 0x1084, GraphemeCategory::SpacingMark},
+    {0x1085, 0x1086, GraphemeCategory::Extend},
+    {0x108d, 0x108d, GraphemeCategory::Extend},
+    {0x108e, 0x108e, GraphemeCategory::IndicConsonant},
+    {0x109d, 0x109d, GraphemeCategory::Extend},
+    {0x1100, 0x115f, GraphemeCategory::L},
+    {0x1160, 0x11a7, GraphemeCategory::V},
+    {0x11a8, 0x11ff, GraphemeCategory::T},
+    {0x135d, 0x135f, GraphemeCategory::Extend},
+    {0x1712, 0x1715, GraphemeCategory::Extend},
+    {0x1732, 0x1734, GraphemeCategory::Extend},
+    {0x1752, 0x1753, GraphemeCategory::Extend},
+    {0x1772, 0x1773, GraphemeCategory::Extend},
+    {0x1780, 0x17b3, GraphemeCategory::IndicConsonant},
+    {0x17b4, 0x17b5, GraphemeCategory::Extend},
+    {0x17b6, 0x17b6, GraphemeCategory::SpacingMark},
+    {0x17b7, 0x17bd, GraphemeCategory::Extend},
+    {0x17be, 0x17c5, GraphemeCategory::SpacingMark},
+    {0x17c6, 0x17c6, GraphemeCategory::Extend},
+    {0x17c7, 0x17c8, GraphemeCategory::SpacingMark},
+    {0x17c9, 0x17d3, GraphemeCategory::Extend},
+    {0x17dd, 0x17dd, GraphemeCategory::Extend},
+    {0x180b, 0x180d, GraphemeCategory::Extend},
+    {0x180e, 0x180e, GraphemeCategory::Control},
+    {0x180f, 0x180f, GraphemeCategory::Extend},
+    {0x1885, 0x1886, GraphemeCategory::Extend},
+    {0x18a9, 0x18a9, GraphemeCategory::Extend},
+    {0x1920, 0x1922, GraphemeCategory::Extend},
+    {0x1923, 0x1926, GraphemeCategory::SpacingMark},
+    {0x1927, 0x1928, GraphemeCategory::Extend},
+    {0x1929, 0x192b, GraphemeCategory::SpacingMark},
+    {0x1930, 0x1931, GraphemeCategory::SpacingMark},
+    {0x1932, 0x1932, GraphemeCategory::Extend},
+    {0x1933, 0x1938, GraphemeCategory::SpacingMark},
+    {0x1939, 0x193b, GraphemeCategory::Extend},
+    {0x1a17, 0x1a18, GraphemeCategory::Extend},
+    {0x1a19, 0x1a1a, GraphemeCategory::SpacingMark},
+    {0x1a1b, 0x1a1b, GraphemeCategory::Extend},
+    {0x1a20, 0x1a54, GraphemeCategory::IndicConsonant},
+    {0x1a55, 0x1a55, GraphemeCategory::SpacingMark},
+    {0x1a56, 0x1a56, GraphemeCategory::Extend},
+    {0x1a57, 0x1a57, GraphemeCategory::SpacingMark},
+    {0x1a58, 0x1a5e, GraphemeCategory::Extend},
+    {0x1a60, 0x1a60, GraphemeCategory::Extend},
+    {0x1a62, 0x1a62, GraphemeCategory::Extend},
+    {0x1a65, 0x1a6c, GraphemeCategory::Extend},
+    {0x1a6d, 0x1a72, GraphemeCategory::SpacingMark},
+    {0x1a73, 0x1a7c, GraphemeCategory::Extend},
+    {0x1a7f, 0x1a7f, GraphemeCategory::Extend},
+    {0x1ab0, 0x1add, GraphemeCategory::Extend},
+    {0x1ae0, 0x1aeb, GraphemeCategory::Extend},
+    {0x1b00, 0x1b03, GraphemeCategory::Extend},
+    {0x1b04, 0x1b04, GraphemeCategory::SpacingMark},
+    {0x1b0b, 0x1b0c, GraphemeCategory::IndicConsonant},
+    {0x1b13, 0x1b33, GraphemeCategory::IndicConsonant},
+    {0x1b34, 0x1b3d, GraphemeCategory::Extend},
+    {0x1b3e, 0x1b41, GraphemeCategory::SpacingMark},
+    {0x1b42, 0x1b44, GraphemeCategory::Extend},
+    {0x1b45, 0x1b4c, GraphemeCategory::IndicConsonant},
+    {0x1b6b, 0x1b73, GraphemeCategory::Extend},
+    {0x1b80, 0x1b81, GraphemeCategory::Extend},
+    {0x1b82, 0x1b82, GraphemeCategory::SpacingMark},
+    {0x1b83, 0x1ba0, GraphemeCategory::IndicConsonant},
+    {0x1ba1, 0x1ba1, GraphemeCategory::SpacingMark},
+    {0x1ba2, 0x1ba5, GraphemeCategory::Extend},
+    {0x1ba6, 0x1ba7, GraphemeCategory::SpacingMark},
+    {0x1ba8, 0x1bad, GraphemeCategory::Extend},
+    {0x1bae, 0x1baf, GraphemeCategory::IndicConsonant},
+    {0x1bbb, 0x1bbd, GraphemeCategory::IndicConsonant},
+    {0x1be6, 0x1be6, GraphemeCategory::Extend},
+    {0x1be7, 0x1be7, GraphemeCategory::SpacingMark},
+    {0x1be8, 0x1be9, GraphemeCategory::Extend},
+    {0x1bea, 0x1bec, GraphemeCategory::SpacingMark},
+    {0x1bed, 0x1bed, GraphemeCategory::Extend},
+    {0x1bee, 0x1bee, GraphemeCategory::SpacingMark},
+    {0x1bef, 0x1bf3, GraphemeCategory::Extend},
+    {0x1c24, 0x1c2b, GraphemeCategory::SpacingMark},
+    {0x1c2c, 0x1c33, GraphemeCategory::Extend},
+    {0x1c34, 0x1c35, GraphemeCategory::SpacingMark},
+    {0x1c36, 0x1c37, GraphemeCategory::Extend},
+    {0x1cd0, 0x1cd2, GraphemeCategory::Extend},
+    {0x1cd4, 0x1ce0, GraphemeCategory::Extend},
+    {0x1ce1, 0x1ce1, GraphemeCategory::SpacingMark},
+    {0x1ce2, 0x1ce8, GraphemeCategory::Extend},
+    {0x1ced, 0x1ced, GraphemeCategory::Extend},
+    {0x1cf4, 0x1cf4, GraphemeCategory::Extend},
+    {0x1cf7, 0x1cf7, GraphemeCategory::SpacingMark},
+    {0x1cf8, 0x1cf9, GraphemeCategory::Extend},
+    {0x1dc0, 0x1dff, GraphemeCategory::Extend},
+    {0x200b, 0x200b, GraphemeCategory::Control},
+    {0x200c, 0x200c, GraphemeCategory::Extend},
+    {0x200d, 0x200d, GraphemeCategory::Zwj},
+    {0x200e, 0x200f, GraphemeCategory::Control},
+    {0x2028, 0x202e, GraphemeCategory::Control},
+    {0x203c, 0x203c, GraphemeCategory::ExtendedPictographic},
+    {0x2049, 0x2049, GraphemeCategory::ExtendedPictographic},
+    {0x2060, 0x206f, GraphemeCategory::Control},
+    {0x20d0, 0x20f0, GraphemeCategory::Extend},
+    {0x2122, 0x2122, GraphemeCategory::ExtendedPictographic},
+    {0x2139, 0x2139, GraphemeCategory::ExtendedPictographic},
+    {0x2194, 0x2199, GraphemeCategory::ExtendedPictographic},
+    {0x21a9, 0x21aa, GraphemeCategory::ExtendedPictographic},
+    {0x231a, 0x231b, GraphemeCategory::ExtendedPictographic},
+    {0x2328, 0x2328, GraphemeCategory::ExtendedPictographic},
+    {0x23cf, 0x23cf, GraphemeCategory::ExtendedPictographic},
+    {0x23e9, 0x23f3, GraphemeCategory::ExtendedPictographic},
+    {0x23f8, 0x23fa, GraphemeCategory::ExtendedPictographic},
+    {0x24c2, 0x24c2, GraphemeCategory::ExtendedPictographic},
+    {0x25aa, 0x25ab, GraphemeCategory::ExtendedPictographic},
+    {0x25b6, 0x25b6, GraphemeCategory::ExtendedPictographic},
+    {0x25c0, 0x25c0, GraphemeCategory::ExtendedPictographic},
+    {0x25fb, 0x25fe, GraphemeCategory::ExtendedPictographic},
+    {0x2600, 0x2604, GraphemeCategory::ExtendedPictographic},
+    {0x260e, 0x260e, GraphemeCategory::ExtendedPictographic},
+    {0x2611, 0x2611, GraphemeCategory::ExtendedPictographic},
+    {0x2614, 0x2615, GraphemeCategory::ExtendedPictographic},
+    {0x2618, 0x2618, GraphemeCategory::ExtendedPictographic},
+    {0x261d, 0x261d, GraphemeCategory::ExtendedPictographic},
+    {0x2620, 0x2620, GraphemeCategory::ExtendedPictographic},
+    {0x2622, 0x2623, GraphemeCategory::ExtendedPictographic},
+    {0x2626, 0x2626, GraphemeCategory::ExtendedPictographic},
+    {0x262a, 0x262a, GraphemeCategory::ExtendedPictographic},
+    {0x262e, 0x262f, GraphemeCategory::ExtendedPictographic},
+    {0x2638, 0x263a, GraphemeCategory::ExtendedPictographic},
+    {0x2640, 0x2640, GraphemeCategory::ExtendedPictographic},
+    {0x2642, 0x2642, GraphemeCategory::ExtendedPictographic},
+    {0x2648, 0x2653, GraphemeCategory::ExtendedPictographic},
+    {0x265f, 0x2660, GraphemeCategory::ExtendedPictographic},
+    {0x2663, 0x2663, GraphemeCategory::ExtendedPictographic},
+    {0x2665, 0x2666, GraphemeCategory::ExtendedPictographic},
+    {0x2668, 0x2668, GraphemeCategory::ExtendedPictographic},
+    {0x267b, 0x267b, GraphemeCategory::ExtendedPictographic},
+    {0x267e, 0x267f, GraphemeCategory::ExtendedPictographic},
+    {0x2692, 0x2697, GraphemeCategory::ExtendedPictographic},
+    {0x2699, 0x2699, GraphemeCategory::ExtendedPictographic},
+    {0x269b, 0x269c, GraphemeCategory::ExtendedPictographic},
+    {0x26a0, 0x26a1, GraphemeCategory::ExtendedPictographic},
+    {0x26a7, 0x26a7, GraphemeCategory::ExtendedPictographic},
+    {0x26aa, 0x26ab, GraphemeCategory::ExtendedPictographic},
+    {0x26b0, 0x26b1, GraphemeCategory::ExtendedPictographic},
+    {0x26bd, 0x26be, GraphemeCategory::ExtendedPictographic},
+    {0x26c4, 0x26c5, GraphemeCategory::ExtendedPictographic},
+    {0x26c8, 0x26c8, GraphemeCategory::ExtendedPictographic},
+    {0x26ce, 0x26cf, GraphemeCategory::ExtendedPictographic},
+    {0x26d1, 0x26d1, GraphemeCategory::ExtendedPictographic},
+    {0x26d3, 0x26d4, GraphemeCategory::ExtendedPictographic},
+    {0x26e9, 0x26ea, GraphemeCategory::ExtendedPictographic},
+    {0x26f0, 0x26f5, GraphemeCategory::ExtendedPictographic},
+    {0x26f7, 0x26fa, GraphemeCategory::ExtendedPictographic},
+    {0x26fd, 0x26fd, GraphemeCategory::ExtendedPictographic},
+    {0x2702, 0x2702, GraphemeCategory::ExtendedPictographic},
+    {0x2705, 0x2705, GraphemeCategory::ExtendedPictographic},
+    {0x2708, 0x270d, GraphemeCategory::ExtendedPictographic},
+    {0x270f, 0x270f, GraphemeCategory::ExtendedPictographic},
+    {0x2712, 0x2712, GraphemeCategory::ExtendedPictographic},
+    {0x2714, 0x2714, GraphemeCategory::ExtendedPictographic},
+    {0x2716, 0x2716, GraphemeCategory::ExtendedPictographic},
+    {0x271d, 0x271d, GraphemeCategory::ExtendedPictographic},
+    {0x2721, 0x2721, GraphemeCategory::ExtendedPictographic},
+    {0x2728, 0x2728, GraphemeCategory::ExtendedPictographic},
+    {0x2733, 0x2734, GraphemeCategory::ExtendedPictographic},
+    {0x2744, 0x2744, GraphemeCategory::ExtendedPictographic},
+    {0x2747, 0x2747, GraphemeCategory::ExtendedPictographic},
+    {0x274c, 0x274c, GraphemeCategory::ExtendedPictographic},
+    {0x274e, 0x274e, GraphemeCategory::ExtendedPictographic},
+    {0x2753, 0x2755, GraphemeCategory::ExtendedPictographic},
+    {0x2757, 0x2757, GraphemeCategory::ExtendedPictographic},
+    {0x2763, 0x2764, GraphemeCategory::ExtendedPictographic},
+    {0x2795, 0x2797, GraphemeCategory::ExtendedPictographic},
+    {0x27a1, 0x27a1, GraphemeCategory::ExtendedPictographic},
+    {0x27b0, 0x27b0, GraphemeCategory::ExtendedPictographic},
+    {0x27bf, 0x27bf, GraphemeCategory::ExtendedPictographic},
+    {0x2934, 0x2935, GraphemeCategory::ExtendedPictographic},
+    {0x2b05, 0x2b07, GraphemeCategory::ExtendedPictographic},
+    {0x2b1b, 0x2b1c, GraphemeCategory::ExtendedPictographic},
+    {0x2b50, 0x2b50, GraphemeCategory::ExtendedPictographic},
+    {0x2b55, 0x2b55, GraphemeCategory::ExtendedPictographic},
+    {0x2cef, 0x2cf1, GraphemeCategory::Extend},
+    {0x2d7f, 0x2d7f, GraphemeCategory::Extend},
+    {0x2de0, 0x2dff, GraphemeCategory::Extend},
+    {0x302a, 0x302f, GraphemeCategory::Extend},
+    {0x3030, 0x3030, GraphemeCategory::ExtendedPictographic},
+    {0x303d, 0x303d, GraphemeCategory::ExtendedPictographic},
+    {0x3099, 0x309a, GraphemeCategory::Extend},
+    {0x3297, 0x3297, GraphemeCategory::ExtendedPictographic},
+    {0x3299, 0x3299, GraphemeCategory::ExtendedPictographic},
+    {0xa66f, 0xa672, GraphemeCategory::Extend},
+    {0xa674, 0xa67d, GraphemeCategory::Extend},
+    {0xa69e, 0xa69f, GraphemeCategory::Extend},
+    {0xa6f0, 0xa6f1, GraphemeCategory::Extend},
+    {0xa802, 0xa802, GraphemeCategory::Extend},
+    {0xa806, 0xa806, GraphemeCategory::Extend},
+    {0xa80b, 0xa80b, GraphemeCategory::Extend},
+    {0xa823, 0xa824, GraphemeCategory::SpacingMark},
+    {0xa825, 0xa826, GraphemeCategory::Extend},
+    {0xa827, 0xa827, GraphemeCategory::SpacingMark},
+    {0xa82c, 0xa82c, GraphemeCategory::Extend},
+    {0xa880, 0xa881, GraphemeCategory::SpacingMark},
+    {0xa8b4, 0xa8c3, GraphemeCategory::SpacingMark},
+    {0xa8c4, 0xa8c5, GraphemeCategory::Extend},
+    {0xa8e0, 0xa8f1, GraphemeCategory::Extend},
+    {0xa8ff, 0xa8ff, GraphemeCategory::Extend},
+    {0xa926, 0xa92d, GraphemeCategory::Extend},
+    {0xa947, 0xa951, GraphemeCategory::Extend},
+    {0xa952, 0xa952, GraphemeCategory::SpacingMark},
+    {0xa953, 0xa953, GraphemeCategory::Extend},
+    {0xa960, 0xa97c, GraphemeCategory::L},
+    {0xa980, 0xa982, GraphemeCategory::Extend},
+    {0xa983, 0xa983, GraphemeCategory::SpacingMark},
+    {0xa989, 0xa98b, GraphemeCategory::IndicConsonant},
+    {0xa98f, 0xa9b2, GraphemeCategory::IndicConsonant},
+    {0xa9b3, 0xa9b3, GraphemeCategory::Extend},
+    {0xa9b4, 0xa9b5, GraphemeCategory::SpacingMark},
+    {0xa9b6, 0xa9b9, GraphemeCategory::Extend},
+    {0xa9ba, 0xa9bb, GraphemeCategory::SpacingMark},
+    {0xa9bc, 0xa9bd, GraphemeCategory::Extend},
+    {0xa9be, 0xa9bf, GraphemeCategory::SpacingMark},
+    {0xa9c0, 0xa9c0, GraphemeCategory::Extend},
+    {0xa9e0, 0xa9e4, GraphemeCategory::IndicConsonant},
+    {0xa9e5, 0xa9e5, GraphemeCategory::Extend},
+    {0xa9e7, 0xa9ef, GraphemeCategory::IndicConsonant},
+    {0xa9fa, 0xa9fe, GraphemeCategory::IndicConsonant},
+    {0xaa29, 0xaa2e, GraphemeCategory::Extend},
+    {0xaa2f, 0xaa30, GraphemeCategory::SpacingMark},
+    {0xaa31, 0xaa32, GraphemeCategory::Extend},
+    {0xaa33, 0xaa34, GraphemeCategory::SpacingMark},
+    {0xaa35, 0xaa36, GraphemeCategory::Extend},
+    {0xaa43, 0xaa43, GraphemeCategory::Extend},
+    {0xaa4c, 0xaa4c, GraphemeCategory::Extend},
+    {0xaa4d, 0xaa4d, GraphemeCategory::SpacingMark},
+    {0xaa60, 0xaa6f, GraphemeCategory::IndicConsonant},
+    {0xaa71, 0xaa73, GraphemeCategory::IndicConsonant},
+    {0xaa7a, 0xaa7a, GraphemeCategory::IndicConsonant},
+    {0xaa7c, 0xaa7c, GraphemeCategory::Extend},
+    {0xaa7e, 0xaa7f, GraphemeCategory::IndicConsonant},
+    {0xaab0, 0xaab0, GraphemeCategory::Extend},
+    {0xaab2, 0xaab4, GraphemeCategory::Extend},
+    {0xaab7, 0xaab8, GraphemeCategory::Extend},
+    {0xaabe, 0xaabf, GraphemeCategory::Extend},
+    {0xaac1, 0xaac1, GraphemeCategory::Extend},
+    {0xaae0, 0xaaea, GraphemeCategory::IndicConsonant},
+    {0xaaeb, 0xaaeb, GraphemeCategory::SpacingMark},
+    {0xaaec, 0xaaed, GraphemeCategory::Extend},
+    {0xaaee, 0xaaef, GraphemeCategory::SpacingMark},
+    {0xaaf5, 0xaaf5, GraphemeCategory::SpacingMark},
+    {0xaaf6, 0xaaf6, GraphemeCategory::Extend},
+    {0xabc0, 0xabda, GraphemeCategory::IndicConsonant},
+    {0xabe3, 0xabe4, GraphemeCategory::SpacingMark},
+    {0xabe5, 0xabe5, GraphemeCategory::Extend},
+    {0xabe6, 0xabe7, GraphemeCategory::SpacingMark},
+    {0xabe8, 0xabe8, GraphemeCategory::Extend},
+    {0xabe9, 0xabea, GraphemeCategory::SpacingMark},
+    {0xabec, 0xabec, GraphemeCategory::SpacingMark},
+    {0xabed, 0xabed, GraphemeCategory::Extend},
+    {0xd7b0, 0xd7c6, GraphemeCategory::V},
+    {0xd7cb, 0xd7fb, GraphemeCategory::T},
+    {0xfb1e, 0xfb1e, GraphemeCategory::Extend},
+    {0xfe00, 0xfe0f, GraphemeCategory::Extend},
+    {0xfe20, 0xfe2f, GraphemeCategory::Extend},
+    {0xfeff, 0xfeff, GraphemeCategory::Control},
+    {0xff9e, 0xff9f, GraphemeCategory::Extend},
+    {0xfff0, 0xfffb, GraphemeCategory::Control},
+    {0x101fd, 0x101fd, GraphemeCategory::Extend},
+    {0x102e0, 0x102e0, GraphemeCategory::Extend},
+    {0x10376, 0x1037a, GraphemeCategory::Extend},
+    {0x10a00, 0x10a00, GraphemeCategory::IndicConsonant},
+    {0x10a01, 0x10a03, GraphemeCategory::Extend},
+    {0x10a05, 0x10a06, GraphemeCategory::Extend},
+    {0x10a0c, 0x10a0f, GraphemeCategory::Extend},
+    {0x10a10, 0x10a13, GraphemeCategory::IndicConsonant},
+    {0x10a15, 0x10a17, GraphemeCategory::IndicConsonant},
+    {0x10a19, 0x10a35, GraphemeCategory::IndicConsonant},
+    {0x10a38, 0x10a3a, GraphemeCategory::Extend},
+    {0x10a3f, 0x10a3f, GraphemeCategory::Extend},
+    {0x10ae5, 0x10ae6, GraphemeCategory::Extend},
+    {0x10d24, 0x10d27, GraphemeCategory::Extend},
+    {0x10d69, 0x10d6d, GraphemeCategory::Extend},
+    {0x10eab, 0x10eac, GraphemeCategory::Extend},
+    {0x10efa, 0x10eff, GraphemeCategory::Extend},
+    {0x10f46, 0x10f50, GraphemeCategory::Extend},
+    {0x10f82, 0x10f85, GraphemeCategory::Extend},
+    {0x11000, 0x11000, GraphemeCategory::SpacingMark},
+    {0x11001, 0x11001, GraphemeCategory::Extend},
+    {0x11002, 0x11002, GraphemeCategory::SpacingMark},
+    {0x11038, 0x11046, GraphemeCategory::Extend},
+    {0x11070, 0x11070, GraphemeCategory::Extend},
+    {0x11073, 0x11074, GraphemeCategory::Extend},
+    {0x1107f, 0x11081, GraphemeCategory::Extend},
+    {0x11082, 0x11082, GraphemeCategory::SpacingMark},
+    {0x110b0, 0x110b2, GraphemeCategory::SpacingMark},
+    {0x110b3, 0x110b6, GraphemeCategory::Extend},
+    {0x110b7, 0x110b8, GraphemeCategory::SpacingMark},
+    {0x110b9, 0x110ba, GraphemeCategory::Extend},
+    {0x110bd, 0x110bd, GraphemeCategory::Prepend},
+    {0x110c2, 0x110c2, GraphemeCategory::Extend},
+    {0x110cd, 0x110cd, GraphemeCategory::Prepend},
+    {0x11100, 0x11102, GraphemeCategory::Extend},
+    {0x11103, 0x11126, GraphemeCategory::IndicConsonant},
+    {0x11127, 0x1112b, GraphemeCategory::Extend},
+    {0x1112c, 0x1112c, GraphemeCategory::SpacingMark},
+    {0x1112d, 0x11134, GraphemeCategory::Extend},
+    {0x11144, 0x11144, GraphemeCategory::IndicConsonant},
+    {0x11145, 0x11146, GraphemeCategory::SpacingMark},
+    {0x11147, 0x11147, GraphemeCategory::IndicConsonant},
+    {0x11173, 0x11173, GraphemeCategory::Extend},
+    {0x11180, 0x11181, GraphemeCategory::Extend},
+    {0x11182, 0x11182, GraphemeCategory::SpacingMark},
+    {0x111b3, 0x111b5, GraphemeCategory::SpacingMark},
+    {0x111b6, 0x111be, GraphemeCategory::Extend},
+    {0x111bf, 0x111bf, GraphemeCategory::SpacingMark},
+    {0x111c0, 0x111c0, GraphemeCategory::Extend},
+    {0x111c2, 0x111c3, GraphemeCategory::Prepend},
+    {0x111c9, 0x111cc, GraphemeCategory::Extend},
+    {0x111ce, 0x111ce, GraphemeCategory::SpacingMark},
+    {0x111cf, 0x111cf, GraphemeCategory::Extend},
+    {0x1122c, 0x1122e, GraphemeCategory::SpacingMark},
+    {0x1122f, 0x11231, GraphemeCategory::Extend},
+    {0x11232, 0x11233, GraphemeCategory::SpacingMark},
+    {0x11234, 0x11237, GraphemeCategory::Extend},
+    {0x1123e, 0x1123e, GraphemeCategory::Extend},
+    {0x11241, 0x11241, GraphemeCategory::Extend},
+    {0x112df, 0x112df, GraphemeCategory::Extend},
+    {0x112e0, 0x112e2, GraphemeCategory::SpacingMark},
+    {0x112e3, 0x112ea, GraphemeCategory::Extend},
+    {0x11300, 0x11301, GraphemeCategory::Extend},
+    {0x11302, 0x11303, GraphemeCategory::SpacingMark},
+    {0x1133b, 0x1133c, GraphemeCategory::Extend},
+    {0x1133e, 0x1133e, GraphemeCategory::Extend},
+    {0x1133f, 0x1133f, GraphemeCategory::SpacingMark},
+    {0x11340, 0x11340, GraphemeCategory::Extend},
+    {0x11341, 0x11344, GraphemeCategory::SpacingMark},
+    {0x11347, 0x11348, GraphemeCategory::SpacingMark},
+    {0x1134b, 0x1134c, GraphemeCategory::SpacingMark},
+    {0x1134d, 0x1134d, GraphemeCategory::Extend},
+    {0x11357, 0x11357, GraphemeCategory::Extend},
+    {0x11362, 0x11363, GraphemeCategory::SpacingMark},
+    {0x11366, 0x1136c, GraphemeCategory::Extend},
+    {0x11370, 0x11374, GraphemeCategory::Extend},
+    {0x11380, 0x11389, GraphemeCategory::IndicConsonant},
+    {0x1138b, 0x1138b, GraphemeCategory::IndicConsonant},
+    {0x1138e, 0x1138e, GraphemeCategory::IndicConsonant},
+    {0x11390, 0x113b5, GraphemeCategory::IndicConsonant},
+    {0x113b8, 0x113b8, GraphemeCategory::Extend},
+    {0x113b9, 0x113ba, GraphemeCategory::SpacingMark},
+    {0x113bb, 0x113c0, GraphemeCategory::Extend},
+    {0x113c2, 0x113c2, GraphemeCategory::Extend},
+    {0x113c5, 0x113c5, GraphemeCategory::Extend},
+    {0x113c7, 0x113c9, GraphemeCategory::Extend},
+    {0x113ca, 0x113ca, GraphemeCategory::SpacingMark},
+    {0x113cc, 0x113cd, GraphemeCategory::SpacingMark},
+    {0x113ce, 0x113d0, GraphemeCategory::Extend},
+    {0x113d1, 0x113d1, GraphemeCategory::Prepend},
+    {0x113d2, 0x113d2, GraphemeCategory::Extend},
+    {0x113e1, 0x113e2, GraphemeCategory::Extend},
+    {0x11435, 0x11437, GraphemeCategory::SpacingMark},
+    {0x11438, 0x1143f, GraphemeCategory::Extend},
+    {0x11440, 0x11441, GraphemeCategory::SpacingMark},
+    {0x11442, 0x11444, GraphemeCategory::Extend},
+    {0x11445, 0x11445, GraphemeCategory::SpacingMark},
+    {0x11446, 0x11446, GraphemeCategory::Extend},
+    {0x1145e, 0x1145e, GraphemeCategory::Extend},
+    {0x114b0, 0x114b0, GraphemeCategory::Extend},
+    {0x114b1, 0x114b2, GraphemeCategory::SpacingMark},
+    {0x114b3, 0x114b8, GraphemeCategory::Extend},
+    {0x114b9, 0x114b9, GraphemeCategory::SpacingMark},
+    {0x114ba, 0x114ba, GraphemeCategory::Extend},
+    {0x114bb, 0x114bc, GraphemeCategory::SpacingMark},
+    {0x114bd, 0x114bd, GraphemeCategory::Extend},
+    {0x114be, 0x114be, GraphemeCategory::SpacingMark},
+    {0x114bf, 0x114c0, GraphemeCategory::Extend},
+    {0x114c1, 0x114c1, GraphemeCategory::SpacingMark},
+    {0x114c2, 0x114c3, GraphemeCategory::Extend},
+    {0x115af, 0x115af, GraphemeCategory::Extend},
+    {0x115b0, 0x115b1, GraphemeCategory::SpacingMark},
+    {0x115b2, 0x115b5, GraphemeCategory::Extend},
+    {0x115b8, 0x115bb, GraphemeCategory::SpacingMark},
+    {0x115bc, 0x115bd, GraphemeCategory::Extend},
+    {0x115be, 0x115be, GraphemeCategory::SpacingMark},
+    {0x115bf, 0x115c0, GraphemeCategory::Extend},
+    {0x115dc, 0x115dd, GraphemeCategory::Extend},
+    {0x11630, 0x11632, GraphemeCategory::SpacingMark},
+    {0x11633, 0x1163a, GraphemeCategory::Extend},
+    {0x1163b, 0x1163c, GraphemeCategory::SpacingMark},
+    {0x1163d, 0x1163d, GraphemeCategory::Extend},
+    {0x1163e, 0x1163e, GraphemeCategory::SpacingMark},
+    {0x1163f, 0x11640, GraphemeCategory::Extend},
+    {0x116ab, 0x116ab, GraphemeCategory::Extend},
+    {0x116ac, 0x116ac, GraphemeCategory::SpacingMark},
+    {0x116ad, 0x116ad, GraphemeCategory::Extend},
+    {0x116ae, 0x116af, GraphemeCategory::SpacingMark},
+    {0x116b0, 0x116b7, GraphemeCategory::Extend},
+    {0x1171d, 0x1171d, GraphemeCategory::Extend},
+    {0x1171e, 0x1171e, GraphemeCategory::SpacingMark},
+    {0x1171f, 0x1171f, GraphemeCategory::Extend},
+    {0x11722, 0x11725, GraphemeCategory::Extend},
+    {0x11726, 0x11726, GraphemeCategory::SpacingMark},
+    {0x11727, 0x1172b, GraphemeCategory::Extend},
+    {0x1182c, 0x1182e, GraphemeCategory::SpacingMark},
+    {0x1182f, 0x11837, GraphemeCategory::Extend},
+    {0x11838, 0x11838, GraphemeCategory::SpacingMark},
+    {0x11839, 0x1183a, GraphemeCategory::Extend},
+    {0x11900, 0x11906, GraphemeCategory::IndicConsonant},
+    {0x11909, 0x11909, GraphemeCategory::IndicConsonant},
+    {0x1190c, 0x11913, GraphemeCategory::IndicConsonant},
+    {0x11915, 0x11916, GraphemeCategory::IndicConsonant},
+    {0x11918, 0x1192f, GraphemeCategory::IndicConsonant},
+    {0x11930, 0x11930, GraphemeCategory::Extend},
+    {0x11931, 0x11935, GraphemeCategory::SpacingMark},
+    {0x11937, 0x11938, GraphemeCategory::SpacingMark},
+    {0x1193b, 0x1193e, GraphemeCategory::Extend},
+    {0x1193f, 0x1193f, GraphemeCategory::Prepend},
+    {0x11940, 0x11940, GraphemeCategory::SpacingMark},
+    {0x11941, 0x11941, GraphemeCategory::Prepend},
+    {0x11942, 0x11942, GraphemeCategory::SpacingMark},
+    {0x11943, 0x11943, GraphemeCategory::Extend},
+    {0x119d1, 0x119d3, GraphemeCategory::SpacingMark},
+    {0x119d4, 0x119d7, GraphemeCategory::Extend},
+    {0x119da, 0x119db, GraphemeCategory::Extend},
+    {0x119dc, 0x119df, GraphemeCategory::SpacingMark},
+    {0x119e0, 0x119e0, GraphemeCategory::Extend},
+    {0x119e4, 0x119e4, GraphemeCategory::SpacingMark},
+    {0x11a00, 0x11a00, GraphemeCategory::IndicConsonant},
+    {0x11a01, 0x11a0a, GraphemeCategory::Extend},
+    {0x11a0b, 0x11a32, GraphemeCategory::IndicConsonant},
+    {0x11a33, 0x11a38, GraphemeCategory::Extend},
+    {0x11a39, 0x11a39, GraphemeCategory::SpacingMark},
+    {0x11a3b, 0x11a3e, GraphemeCategory::Extend},
+    {0x11a47, 0x11a47, GraphemeCategory::Extend},
+    {0x11a50, 0x11a50, GraphemeCategory::IndicConsonant},
+    {0x11a51, 0x11a56, GraphemeCategory::Extend},
+    {0x11a57, 0x11a58, GraphemeCategory::SpacingMark},
+    {0x11a59, 0x11a5b, GraphemeCategory::Extend},
+    {0x11a5c, 0x11a83, GraphemeCategory::IndicConsonant},
+    {0x11a84, 0x11a89, GraphemeCategory::Prepend},
+    {0x11a8a, 0x11a96, GraphemeCategory::Extend},
+    {0x11a97, 0x11a97, GraphemeCategory::SpacingMark},
+    {0x11a98, 0x11a99, GraphemeCategory::Extend},
+    {0x11b60, 0x11b60, GraphemeCategory::Extend},
+    {0x11b61, 0x11b61, GraphemeCategory::SpacingMark},
+    {0x11b62, 0x11b64, GraphemeCategory::Extend},
+    {0x11b65, 0x11b65, GraphemeCategory::SpacingMark},
+    {0x11b66, 0x11b66, GraphemeCategory::Extend},
+    {0x11b67, 0x11b67, GraphemeCategory::SpacingMark},
+    {0x11c2f, 0x11c2f, GraphemeCategory::SpacingMark},
+    {0x11c30, 0x11c36, GraphemeCategory::Extend},
+    {0x11c38, 0x11c3d, GraphemeCategory::Extend},
+    {0x11c3e, 0x11c3e, GraphemeCategory::SpacingMark},
+    {0x11c3f, 0x11c3f, GraphemeCategory::Extend},
+    {0x11c92, 0x11ca7, GraphemeCategory::Extend},
+    {0x11ca9, 0x11ca9, GraphemeCategory::SpacingMark},
+    {0x11caa, 0x11cb0, GraphemeCategory::Extend},
+    {0x11cb1, 0x11cb1, GraphemeCategory::SpacingMark},
+    {0x11cb2, 0x11cb3, GraphemeCategory::Extend},
+    {0x11cb4, 0x11cb4, GraphemeCategory::SpacingMark},
+    {0x11cb5, 0x11cb6, GraphemeCategory::Extend},
+    {0x11d31, 0x11d36, GraphemeCategory::Extend},
+    {0x11d3a, 0x11d3a, GraphemeCategory::Extend},
+    {0x11d3c, 0x11d3d, GraphemeCategory::Extend},
+    {0x11d3f, 0x11d45, GraphemeCategory::Extend},
+    {0x11d46, 0x11d46, GraphemeCategory::Prepend},
+    {0x11d47, 0x11d47, GraphemeCategory::Extend},
+    {0x11d8a, 0x11d8e, GraphemeCategory::SpacingMark},
+    {0x11d90, 0x11d91, GraphemeCategory::Extend},
+    {0x11d93, 0x11d94, GraphemeCategory::SpacingMark},
+    {0x11d95, 0x11d95, GraphemeCategory::Extend},
+    {0x11d96, 0x11d96, GraphemeCategory::SpacingMark},
+    {0x11d97, 0x11d97, GraphemeCategory::Extend},
+    {0x11ef3, 0x11ef4, GraphemeCategory::Extend},
+    {0x11ef5, 0x11ef6, GraphemeCategory::SpacingMark},
+    {0x11f00, 0x11f01, GraphemeCategory::Extend},
+    {0x11f02, 0x11f02, GraphemeCategory::Prepend},
+    {0x11f03, 0x11f03, GraphemeCategory::SpacingMark},
+    {0x11f04, 0x11f10, GraphemeCategory::IndicConsonant},
+    {0x11f12, 0x11f33, GraphemeCategory::IndicConsonant},
+    {0x11f34, 0x11f35, GraphemeCategory::SpacingMark},
+    {0x11f36, 0x11f3a, GraphemeCategory::Extend},
+    {0x11f3e, 0x11f3f, GraphemeCategory::SpacingMark},
+    {0x11f40, 0x11f42, GraphemeCategory::Extend},
+    {0x11f5a, 0x11f5a, GraphemeCategory::Extend},
+    {0x13430, 0x1343f, GraphemeCategory::Control},
+    {0x13440, 0x13440, GraphemeCategory::Extend},
+    {0x13447, 0x13455, GraphemeCategory::Extend},
+    {0x1611e, 0x16129, GraphemeCategory::Extend},
+    {0x1612a, 0x1612c, GraphemeCategory::SpacingMark},
+    {0x1612d, 0x1612f, GraphemeCategory::Extend},
+    {0x16af0, 0x16af4, GraphemeCategory::Extend},
+    {0x16b30, 0x16b36, GraphemeCategory::Extend},
+    {0x16d63, 0x16d63, GraphemeCategory::V},
+    {0x16d67, 0x16d6a, GraphemeCategory::V},
+    {0x16f4f, 0x16f4f, GraphemeCategory::Extend},
+    {0x16f51, 0x16f87, GraphemeCategory::SpacingMark},
+    {0x16f8f, 0x16f92, GraphemeCategory::Extend},
+    {0x16fe4, 0x16fe4, GraphemeCategory::Extend},
+    {0x16ff0, 0x16ff1, GraphemeCategory::Extend},
+    {0x1bc9d, 0x1bc9e, GraphemeCategory::Extend},
+    {0x1bca0, 0x1bca3, GraphemeCategory::Control},
+    {0x1cf00, 0x1cf2d, GraphemeCategory::Extend},
+    {0x1cf30, 0x1cf46, GraphemeCategory::Extend},
+    {0x1d165, 0x1d169, GraphemeCategory::Extend},
+    {0x1d16d, 0x1d172, GraphemeCategory::Extend},
+    {0x1d173, 0x1d17a, GraphemeCategory::Control},
+    {0x1d17b, 0x1d182, GraphemeCategory::Extend},
+    {0x1d185, 0x1d18b, GraphemeCategory::Extend},
+    {0x1d1aa, 0x1d1ad, GraphemeCategory::Extend},
+    {0x1d242, 0x1d244, GraphemeCategory::Extend},
+    {0x1da00, 0x1da36, GraphemeCategory::Extend},
+    {0x1da3b, 0x1da6c, GraphemeCategory::Extend},
+    {0x1da75, 0x1da75, GraphemeCategory::Extend},
+    {0x1da84, 0x1da84, GraphemeCategory::Extend},
+    {0x1da9b, 0x1da9f, GraphemeCategory::Extend},
+    {0x1daa1, 0x1daaf, GraphemeCategory::Extend},
+    {0x1e000, 0x1e006, GraphemeCategory::Extend},
+    {0x1e008, 0x1e018, GraphemeCategory::Extend},
+    {0x1e01b, 0x1e021, GraphemeCategory::Extend},
+    {0x1e023, 0x1e024, GraphemeCategory::Extend},
+    {0x1e026, 0x1e02a, GraphemeCategory::Extend},
+    {0x1e08f, 0x1e08f, GraphemeCategory::Extend},
+    {0x1e130, 0x1e136, GraphemeCategory::Extend},
+    {0x1e2ae, 0x1e2ae, GraphemeCategory::Extend},
+    {0x1e2ec, 0x1e2ef, GraphemeCategory::Extend},
+    {0x1e4ec, 0x1e4ef, GraphemeCategory::Extend},
+    {0x1e5ee, 0x1e5ef, GraphemeCategory::Extend},
+    {0x1e6e3, 0x1e6e3, GraphemeCategory::Extend},
+    {0x1e6e6, 0x1e6e6, GraphemeCategory::Extend},
+    {0x1e6ee, 0x1e6ef, GraphemeCategory::Extend},
+    {0x1e6f5, 0x1e6f5, GraphemeCategory::Extend},
+    {0x1e8d0, 0x1e8d6, GraphemeCategory::Extend},
+    {0x1e944, 0x1e94a, GraphemeCategory::Extend},
+    {0x1f004, 0x1f004, GraphemeCategory::ExtendedPictographic},
+    {0x1f02c, 0x1f02f, GraphemeCategory::ExtendedPictographic},
+    {0x1f094, 0x1f09f, GraphemeCategory::ExtendedPictographic},
+    {0x1f0af, 0x1f0b0, GraphemeCategory::ExtendedPictographic},
+    {0x1f0c0, 0x1f0c0, GraphemeCategory::ExtendedPictographic},
+    {0x1f0cf, 0x1f0d0, GraphemeCategory::ExtendedPictographic},
+    {0x1f0f6, 0x1f0ff, GraphemeCategory::ExtendedPictographic},
+    {0x1f170, 0x1f171, GraphemeCategory::ExtendedPictographic},
+    {0x1f17e, 0x1f17f, GraphemeCategory::ExtendedPictographic},
+    {0x1f18e, 0x1f18e, GraphemeCategory::ExtendedPictographic},
+    {0x1f191, 0x1f19a, GraphemeCategory::ExtendedPictographic},
+    {0x1f1ae, 0x1f1e5, GraphemeCategory::ExtendedPictographic},
+    {0x1f1e6, 0x1f1ff, GraphemeCategory::RegionalIndicator},
+    {0x1f201, 0x1f20f, GraphemeCategory::ExtendedPictographic},
+    {0x1f21a, 0x1f21a, GraphemeCategory::ExtendedPictographic},
+    {0x1f22f, 0x1f22f, GraphemeCategory::ExtendedPictographic},
+    {0x1f232, 0x1f23a, GraphemeCategory::ExtendedPictographic},
+    {0x1f23c, 0x1f23f, GraphemeCategory::ExtendedPictographic},
+    {0x1f249, 0x1f25f, GraphemeCategory::ExtendedPictographic},
+    {0x1f266, 0x1f321, GraphemeCategory::ExtendedPictographic},
+    {0x1f324, 0x1f393, GraphemeCategory::ExtendedPictographic},
+    {0x1f396, 0x1f397, GraphemeCategory::ExtendedPictographic},
+    {0x1f399, 0x1f39b, GraphemeCategory::ExtendedPictographic},
+    {0x1f39e, 0x1f3f0, GraphemeCategory::ExtendedPictographic},
+    {0x1f3f3, 0x1f3f5, GraphemeCategory::ExtendedPictographic},
+    {0x1f3f7, 0x1f3fa, GraphemeCategory::ExtendedPictographic},
+    {0x1f3fb, 0x1f3ff, GraphemeCategory::Extend},
+    {0x1f400, 0x1f4fd, GraphemeCategory::ExtendedPictographic},
+    {0x1f4ff, 0x1f53d, GraphemeCategory::ExtendedPictographic},
+    {0x1f549, 0x1f54e, GraphemeCategory::ExtendedPictographic},
+    {0x1f550, 0x1f567, GraphemeCategory::ExtendedPictographic},
+    {0x1f56f, 0x1f570, GraphemeCategory::ExtendedPictographic},
+    {0x1f573, 0x1f57a, GraphemeCategory::ExtendedPictographic},
+    {0x1f587, 0x1f587, GraphemeCategory::ExtendedPictographic},
+    {0x1f58a, 0x1f58d, GraphemeCategory::ExtendedPictographic},
+    {0x1f590, 0x1f590, GraphemeCategory::ExtendedPictographic},
+    {0x1f595, 0x1f596, GraphemeCategory::ExtendedPictographic},
+    {0x1f5a4, 0x1f5a5, GraphemeCategory::ExtendedPictographic},
+    {0x1f5a8, 0x1f5a8, GraphemeCategory::ExtendedPictographic},
+    {0x1f5b1, 0x1f5b2, GraphemeCategory::ExtendedPictographic},
+    {0x1f5bc, 0x1f5bc, GraphemeCategory::ExtendedPictographic},
+    {0x1f5c2, 0x1f5c4, GraphemeCategory::ExtendedPictographic},
+    {0x1f5d1, 0x1f5d3, GraphemeCategory::ExtendedPictographic},
+    {0x1f5dc, 0x1f5de, GraphemeCategory::ExtendedPictographic},
+    {0x1f5e1, 0x1f5e1, GraphemeCategory::ExtendedPictographic},
+    {0x1f5e3, 0x1f5e3, GraphemeCategory::ExtendedPictographic},
+    {0x1f5e8, 0x1f5e8, GraphemeCategory::ExtendedPictographic},
+    {0x1f5ef, 0x1f5ef, GraphemeCategory::ExtendedPictographic},
+    {0x1f5f3, 0x1f5f3, GraphemeCategory::ExtendedPictographic},
+    {0x1f5fa, 0x1f64f, GraphemeCategory::ExtendedPictographic},
+    {0x1f680, 0x1f6c5, GraphemeCategory::ExtendedPictographic},
+    {0x1f6cb, 0x1f6d2, GraphemeCategory::ExtendedPictographic},
+    {0x1f6d5, 0x1f6e5, GraphemeCategory::ExtendedPictographic},
+    {0x1f6e9, 0x1f6e9, GraphemeCategory::ExtendedPictographic},
+    {0x1f6eb, 0x1f6f0, GraphemeCategory::ExtendedPictographic},
+    {0x1f6f3, 0x1f6ff, GraphemeCategory::ExtendedPictographic},
+    {0x1f7da, 0x1f7ff, GraphemeCategory::ExtendedPictographic},
+    {0x1f80c, 0x1f80f, GraphemeCategory::ExtendedPictographic},
+    {0x1f848, 0x1f84f, GraphemeCategory::ExtendedPictographic},
+    {0x1f85a, 0x1f85f, GraphemeCategory::ExtendedPictographic},
+    {0x1f888, 0x1f88f, GraphemeCategory::ExtendedPictographic},
+    {0x1f8ae, 0x1f8af, GraphemeCategory::ExtendedPictographic},
+    {0x1f8bc, 0x1f8bf, GraphemeCategory::ExtendedPictographic},
+    {0x1f8c2, 0x1f8cf, GraphemeCategory::ExtendedPictographic},
+    {0x1f8d9, 0x1f8ff, GraphemeCategory::ExtendedPictographic},
+    {0x1f90c, 0x1f93a, GraphemeCategory::ExtendedPictographic},
+    {0x1f93c, 0x1f945, GraphemeCategory::ExtendedPictographic},
+    {0x1f947, 0x1f9ff, GraphemeCategory::ExtendedPictographic},
+    {0x1fa58, 0x1fa5f, GraphemeCategory::ExtendedPictographic},
+    {0x1fa6e, 0x1faff, GraphemeCategory::ExtendedPictographic},
+    {0x1fc00, 0x1fffd, GraphemeCategory::ExtendedPictographic},
+    {0xe0000, 0xe001f, GraphemeCategory::Control},
+    {0xe0020, 0xe007f, GraphemeCategory::Extend},
+    {0xe0080, 0xe00ff, GraphemeCategory::Control},
+    {0xe0100, 0xe01ef, GraphemeCategory::Extend},
+    {0xe01f0, 0xe0fff, GraphemeCategory::Control},
+};
+
+static constexpr GraphemeRange<IndicBreakCategory> kIndicBreakRanges[] = {
+    {0x300, 0x36f, IndicBreakCategory::Extend},
+    {0x483, 0x489, IndicBreakCategory::Extend},
+    {0x591, 0x5bd, IndicBreakCategory::Extend},
+    {0x5bf, 0x5bf, IndicBreakCategory::Extend},
+    {0x5c1, 0x5c2, IndicBreakCategory::Extend},
+    {0x5c4, 0x5c5, IndicBreakCategory::Extend},
+    {0x5c7, 0x5c7, IndicBreakCategory::Extend},
+    {0x610, 0x61a, IndicBreakCategory::Extend},
+    {0x64b, 0x65f, IndicBreakCategory::Extend},
+    {0x670, 0x670, IndicBreakCategory::Extend},
+    {0x6d6, 0x6dc, IndicBreakCategory::Extend},
+    {0x6df, 0x6e4, IndicBreakCategory::Extend},
+    {0x6e7, 0x6e8, IndicBreakCategory::Extend},
+    {0x6ea, 0x6ed, IndicBreakCategory::Extend},
+    {0x711, 0x711, IndicBreakCategory::Extend},
+    {0x730, 0x74a, IndicBreakCategory::Extend},
+    {0x7a6, 0x7b0, IndicBreakCategory::Extend},
+    {0x7eb, 0x7f3, IndicBreakCategory::Extend},
+    {0x7fd, 0x7fd, IndicBreakCategory::Extend},
+    {0x816, 0x819, IndicBreakCategory::Extend},
+    {0x81b, 0x823, IndicBreakCategory::Extend},
+    {0x825, 0x827, IndicBreakCategory::Extend},
+    {0x829, 0x82d, IndicBreakCategory::Extend},
+    {0x859, 0x85b, IndicBreakCategory::Extend},
+    {0x897, 0x89f, IndicBreakCategory::Extend},
+    {0x8ca, 0x8e1, IndicBreakCategory::Extend},
+    {0x8e3, 0x902, IndicBreakCategory::Extend},
+    {0x93a, 0x93a, IndicBreakCategory::Extend},
+    {0x93c, 0x93c, IndicBreakCategory::Extend},
+    {0x941, 0x948, IndicBreakCategory::Extend},
+    {0x94d, 0x94d, IndicBreakCategory::Linker},
+    {0x951, 0x957, IndicBreakCategory::Extend},
+    {0x962, 0x963, IndicBreakCategory::Extend},
+    {0x981, 0x981, IndicBreakCategory::Extend},
+    {0x9bc, 0x9bc, IndicBreakCategory::Extend},
+    {0x9be, 0x9be, IndicBreakCategory::Extend},
+    {0x9c1, 0x9c4, IndicBreakCategory::Extend},
+    {0x9cd, 0x9cd, IndicBreakCategory::Linker},
+    {0x9d7, 0x9d7, IndicBreakCategory::Extend},
+    {0x9e2, 0x9e3, IndicBreakCategory::Extend},
+    {0x9fe, 0x9fe, IndicBreakCategory::Extend},
+    {0xa01, 0xa02, IndicBreakCategory::Extend},
+    {0xa3c, 0xa3c, IndicBreakCategory::Extend},
+    {0xa41, 0xa42, IndicBreakCategory::Extend},
+    {0xa47, 0xa48, IndicBreakCategory::Extend},
+    {0xa4b, 0xa4d, IndicBreakCategory::Extend},
+    {0xa51, 0xa51, IndicBreakCategory::Extend},
+    {0xa70, 0xa71, IndicBreakCategory::Extend},
+    {0xa75, 0xa75, IndicBreakCategory::Extend},
+    {0xa81, 0xa82, IndicBreakCategory::Extend},
+    {0xabc, 0xabc, IndicBreakCategory::Extend},
+    {0xac1, 0xac5, IndicBreakCategory::Extend},
+    {0xac7, 0xac8, IndicBreakCategory::Extend},
+    {0xacd, 0xacd, IndicBreakCategory::Linker},
+    {0xae2, 0xae3, IndicBreakCategory::Extend},
+    {0xafa, 0xaff, IndicBreakCategory::Extend},
+    {0xb01, 0xb01, IndicBreakCategory::Extend},
+    {0xb3c, 0xb3c, IndicBreakCategory::Extend},
+    {0xb3e, 0xb3f, IndicBreakCategory::Extend},
+    {0xb41, 0xb44, IndicBreakCategory::Extend},
+    {0xb4d, 0xb4d, IndicBreakCategory::Linker},
+    {0xb55, 0xb57, IndicBreakCategory::Extend},
+    {0xb62, 0xb63, IndicBreakCategory::Extend},
+    {0xb82, 0xb82, IndicBreakCategory::Extend},
+    {0xbbe, 0xbbe, IndicBreakCategory::Extend},
+    {0xbc0, 0xbc0, IndicBreakCategory::Extend},
+    {0xbcd, 0xbcd, IndicBreakCategory::Extend},
+    {0xbd7, 0xbd7, IndicBreakCategory::Extend},
+    {0xc00, 0xc00, IndicBreakCategory::Extend},
+    {0xc04, 0xc04, IndicBreakCategory::Extend},
+    {0xc3c, 0xc3c, IndicBreakCategory::Extend},
+    {0xc3e, 0xc40, IndicBreakCategory::Extend},
+    {0xc46, 0xc48, IndicBreakCategory::Extend},
+    {0xc4a, 0xc4c, IndicBreakCategory::Extend},
+    {0xc4d, 0xc4d, IndicBreakCategory::Linker},
+    {0xc55, 0xc56, IndicBreakCategory::Extend},
+    {0xc62, 0xc63, IndicBreakCategory::Extend},
+    {0xc81, 0xc81, IndicBreakCategory::Extend},
+    {0xcbc, 0xcbc, IndicBreakCategory::Extend},
+    {0xcbf, 0xcc0, IndicBreakCategory::Extend},
+    {0xcc2, 0xcc2, IndicBreakCategory::Extend},
+    {0xcc6, 0xcc8, IndicBreakCategory::Extend},
+    {0xcca, 0xccd, IndicBreakCategory::Extend},
+    {0xcd5, 0xcd6, IndicBreakCategory::Extend},
+    {0xce2, 0xce3, IndicBreakCategory::Extend},
+    {0xd00, 0xd01, IndicBreakCategory::Extend},
+    {0xd3b, 0xd3c, IndicBreakCategory::Extend},
+    {0xd3e, 0xd3e, IndicBreakCategory::Extend},
+    {0xd41, 0xd44, IndicBreakCategory::Extend},
+    {0xd4d, 0xd4d, IndicBreakCategory::Linker},
+    {0xd57, 0xd57, IndicBreakCategory::Extend},
+    {0xd62, 0xd63, IndicBreakCategory::Extend},
+    {0xd81, 0xd81, IndicBreakCategory::Extend},
+    {0xdca, 0xdca, IndicBreakCategory::Extend},
+    {0xdcf, 0xdcf, IndicBreakCategory::Extend},
+    {0xdd2, 0xdd4, IndicBreakCategory::Extend},
+    {0xdd6, 0xdd6, IndicBreakCategory::Extend},
+    {0xddf, 0xddf, IndicBreakCategory::Extend},
+    {0xe31, 0xe31, IndicBreakCategory::Extend},
+    {0xe34, 0xe3a, IndicBreakCategory::Extend},
+    {0xe47, 0xe4e, IndicBreakCategory::Extend},
+    {0xeb1, 0xeb1, IndicBreakCategory::Extend},
+    {0xeb4, 0xebc, IndicBreakCategory::Extend},
+    {0xec8, 0xece, IndicBreakCategory::Extend},
+    {0xf18, 0xf19, IndicBreakCategory::Extend},
+    {0xf35, 0xf35, IndicBreakCategory::Extend},
+    {0xf37, 0xf37, IndicBreakCategory::Extend},
+    {0xf39, 0xf39, IndicBreakCategory::Extend},
+    {0xf71, 0xf7e, IndicBreakCategory::Extend},
+    {0xf80, 0xf84, IndicBreakCategory::Extend},
+    {0xf86, 0xf87, IndicBreakCategory::Extend},
+    {0xf8d, 0xf97, IndicBreakCategory::Extend},
+    {0xf99, 0xfbc, IndicBreakCategory::Extend},
+    {0xfc6, 0xfc6, IndicBreakCategory::Extend},
+    {0x102d, 0x1030, IndicBreakCategory::Extend},
+    {0x1032, 0x1037, IndicBreakCategory::Extend},
+    {0x1039, 0x1039, IndicBreakCategory::Linker},
+    {0x103a, 0x103a, IndicBreakCategory::Extend},
+    {0x103d, 0x103e, IndicBreakCategory::Extend},
+    {0x1058, 0x1059, IndicBreakCategory::Extend},
+    {0x105e, 0x1060, IndicBreakCategory::Extend},
+    {0x1071, 0x1074, IndicBreakCategory::Extend},
+    {0x1082, 0x1082, IndicBreakCategory::Extend},
+    {0x1085, 0x1086, IndicBreakCategory::Extend},
+    {0x108d, 0x108d, IndicBreakCategory::Extend},
+    {0x109d, 0x109d, IndicBreakCategory::Extend},
+    {0x135d, 0x135f, IndicBreakCategory::Extend},
+    {0x1712, 0x1715, IndicBreakCategory::Extend},
+    {0x1732, 0x1734, IndicBreakCategory::Extend},
+    {0x1752, 0x1753, IndicBreakCategory::Extend},
+    {0x1772, 0x1773, IndicBreakCategory::Extend},
+    {0x17b4, 0x17b5, IndicBreakCategory::Extend},
+    {0x17b7, 0x17bd, IndicBreakCategory::Extend},
+    {0x17c6, 0x17c6, IndicBreakCategory::Extend},
+    {0x17c9, 0x17d1, IndicBreakCategory::Extend},
+    {0x17d2, 0x17d2, IndicBreakCategory::Linker},
+    {0x17d3, 0x17d3, IndicBreakCategory::Extend},
+    {0x17dd, 0x17dd, IndicBreakCategory::Extend},
+    {0x180b, 0x180d, IndicBreakCategory::Extend},
+    {0x180f, 0x180f, IndicBreakCategory::Extend},
+    {0x1885, 0x1886, IndicBreakCategory::Extend},
+    {0x18a9, 0x18a9, IndicBreakCategory::Extend},
+    {0x1920, 0x1922, IndicBreakCategory::Extend},
+    {0x1927, 0x1928, IndicBreakCategory::Extend},
+    {0x1932, 0x1932, IndicBreakCategory::Extend},
+    {0x1939, 0x193b, IndicBreakCategory::Extend},
+    {0x1a17, 0x1a18, IndicBreakCategory::Extend},
+    {0x1a1b, 0x1a1b, IndicBreakCategory::Extend},
+    {0x1a56, 0x1a56, IndicBreakCategory::Extend},
+    {0x1a58, 0x1a5e, IndicBreakCategory::Extend},
+    {0x1a60, 0x1a60, IndicBreakCategory::Linker},
+    {0x1a62, 0x1a62, IndicBreakCategory::Extend},
+    {0x1a65, 0x1a6c, IndicBreakCategory::Extend},
+    {0x1a73, 0x1a7c, IndicBreakCategory::Extend},
+    {0x1a7f, 0x1a7f, IndicBreakCategory::Extend},
+    {0x1ab0, 0x1add, IndicBreakCategory::Extend},
+    {0x1ae0, 0x1aeb, IndicBreakCategory::Extend},
+    {0x1b00, 0x1b03, IndicBreakCategory::Extend},
+    {0x1b34, 0x1b3d, IndicBreakCategory::Extend},
+    {0x1b42, 0x1b43, IndicBreakCategory::Extend},
+    {0x1b44, 0x1b44, IndicBreakCategory::Linker},
+    {0x1b6b, 0x1b73, IndicBreakCategory::Extend},
+    {0x1b80, 0x1b81, IndicBreakCategory::Extend},
+    {0x1ba2, 0x1ba5, IndicBreakCategory::Extend},
+    {0x1ba8, 0x1baa, IndicBreakCategory::Extend},
+    {0x1bab, 0x1bab, IndicBreakCategory::Linker},
+    {0x1bac, 0x1bad, IndicBreakCategory::Extend},
+    {0x1be6, 0x1be6, IndicBreakCategory::Extend},
+    {0x1be8, 0x1be9, IndicBreakCategory::Extend},
+    {0x1bed, 0x1bed, IndicBreakCategory::Extend},
+    {0x1bef, 0x1bf3, IndicBreakCategory::Extend},
+    {0x1c2c, 0x1c33, IndicBreakCategory::Extend},
+    {0x1c36, 0x1c37, IndicBreakCategory::Extend},
+    {0x1cd0, 0x1cd2, IndicBreakCategory::Extend},
+    {0x1cd4, 0x1ce0, IndicBreakCategory::Extend},
+    {0x1ce2, 0x1ce8, IndicBreakCategory::Extend},
+    {0x1ced, 0x1ced, IndicBreakCategory::Extend},
+    {0x1cf4, 0x1cf4, IndicBreakCategory::Extend},
+    {0x1cf8, 0x1cf9, IndicBreakCategory::Extend},
+    {0x1dc0, 0x1dff, IndicBreakCategory::Extend},
+    {0x200d, 0x200d, IndicBreakCategory::Extend},
+    {0x20d0, 0x20f0, IndicBreakCategory::Extend},
+    {0x2cef, 0x2cf1, IndicBreakCategory::Extend},
+    {0x2d7f, 0x2d7f, IndicBreakCategory::Extend},
+    {0x2de0, 0x2dff, IndicBreakCategory::Extend},
+    {0x302a, 0x302f, IndicBreakCategory::Extend},
+    {0x3099, 0x309a, IndicBreakCategory::Extend},
+    {0xa66f, 0xa672, IndicBreakCategory::Extend},
+    {0xa674, 0xa67d, IndicBreakCategory::Extend},
+    {0xa69e, 0xa69f, IndicBreakCategory::Extend},
+    {0xa6f0, 0xa6f1, IndicBreakCategory::Extend},
+    {0xa802, 0xa802, IndicBreakCategory::Extend},
+    {0xa806, 0xa806, IndicBreakCategory::Extend},
+    {0xa80b, 0xa80b, IndicBreakCategory::Extend},
+    {0xa825, 0xa826, IndicBreakCategory::Extend},
+    {0xa82c, 0xa82c, IndicBreakCategory::Extend},
+    {0xa8c4, 0xa8c5, IndicBreakCategory::Extend},
+    {0xa8e0, 0xa8f1, IndicBreakCategory::Extend},
+    {0xa8ff, 0xa8ff, IndicBreakCategory::Extend},
+    {0xa926, 0xa92d, IndicBreakCategory::Extend},
+    {0xa947, 0xa951, IndicBreakCategory::Extend},
+    {0xa953, 0xa953, IndicBreakCategory::Extend},
+    {0xa980, 0xa982, IndicBreakCategory::Extend},
+    {0xa9b3, 0xa9b3, IndicBreakCategory::Extend},
+    {0xa9b6, 0xa9b9, IndicBreakCategory::Extend},
+    {0xa9bc, 0xa9bd, IndicBreakCategory::Extend},
+    {0xa9c0, 0xa9c0, IndicBreakCategory::Linker},
+    {0xa9e5, 0xa9e5, IndicBreakCategory::Extend},
+    {0xaa29, 0xaa2e, IndicBreakCategory::Extend},
+    {0xaa31, 0xaa32, IndicBreakCategory::Extend},
+    {0xaa35, 0xaa36, IndicBreakCategory::Extend},
+    {0xaa43, 0xaa43, IndicBreakCategory::Extend},
+    {0xaa4c, 0xaa4c, IndicBreakCategory::Extend},
+    {0xaa7c, 0xaa7c, IndicBreakCategory::Extend},
+    {0xaab0, 0xaab0, IndicBreakCategory::Extend},
+    {0xaab2, 0xaab4, IndicBreakCategory::Extend},
+    {0xaab7, 0xaab8, IndicBreakCategory::Extend},
+    {0xaabe, 0xaabf, IndicBreakCategory::Extend},
+    {0xaac1, 0xaac1, IndicBreakCategory::Extend},
+    {0xaaec, 0xaaed, IndicBreakCategory::Extend},
+    {0xaaf6, 0xaaf6, IndicBreakCategory::Linker},
+    {0xabe5, 0xabe5, IndicBreakCategory::Extend},
+    {0xabe8, 0xabe8, IndicBreakCategory::Extend},
+    {0xabed, 0xabed, IndicBreakCategory::Extend},
+    {0xfb1e, 0xfb1e, IndicBreakCategory::Extend},
+    {0xfe00, 0xfe0f, IndicBreakCategory::Extend},
+    {0xfe20, 0xfe2f, IndicBreakCategory::Extend},
+    {0xff9e, 0xff9f, IndicBreakCategory::Extend},
+    {0x101fd, 0x101fd, IndicBreakCategory::Extend},
+    {0x102e0, 0x102e0, IndicBreakCategory::Extend},
+    {0x10376, 0x1037a, IndicBreakCategory::Extend},
+    {0x10a01, 0x10a03, IndicBreakCategory::Extend},
+    {0x10a05, 0x10a06, IndicBreakCategory::Extend},
+    {0x10a0c, 0x10a0f, IndicBreakCategory::Extend},
+    {0x10a38, 0x10a3a, IndicBreakCategory::Extend},
+    {0x10a3f, 0x10a3f, IndicBreakCategory::Linker},
+    {0x10ae5, 0x10ae6, IndicBreakCategory::Extend},
+    {0x10d24, 0x10d27, IndicBreakCategory::Extend},
+    {0x10d69, 0x10d6d, IndicBreakCategory::Extend},
+    {0x10eab, 0x10eac, IndicBreakCategory::Extend},
+    {0x10efa, 0x10eff, IndicBreakCategory::Extend},
+    {0x10f46, 0x10f50, IndicBreakCategory::Extend},
+    {0x10f82, 0x10f85, IndicBreakCategory::Extend},
+    {0x11001, 0x11001, IndicBreakCategory::Extend},
+    {0x11038, 0x11046, IndicBreakCategory::Extend},
+    {0x11070, 0x11070, IndicBreakCategory::Extend},
+    {0x11073, 0x11074, IndicBreakCategory::Extend},
+    {0x1107f, 0x11081, IndicBreakCategory::Extend},
+    {0x110b3, 0x110b6, IndicBreakCategory::Extend},
+    {0x110b9, 0x110ba, IndicBreakCategory::Extend},
+    {0x110c2, 0x110c2, IndicBreakCategory::Extend},
+    {0x11100, 0x11102, IndicBreakCategory::Extend},
+    {0x11127, 0x1112b, IndicBreakCategory::Extend},
+    {0x1112d, 0x11132, IndicBreakCategory::Extend},
+    {0x11133, 0x11133, IndicBreakCategory::Linker},
+    {0x11134, 0x11134, IndicBreakCategory::Extend},
+    {0x11173, 0x11173, IndicBreakCategory::Extend},
+    {0x11180, 0x11181, IndicBreakCategory::Extend},
+    {0x111b6, 0x111be, IndicBreakCategory::Extend},
+    {0x111c0, 0x111c0, IndicBreakCategory::Extend},
+    {0x111c9, 0x111cc, IndicBreakCategory::Extend},
+    {0x111cf, 0x111cf, IndicBreakCategory::Extend},
+    {0x1122f, 0x11231, IndicBreakCategory::Extend},
+    {0x11234, 0x11237, IndicBreakCategory::Extend},
+    {0x1123e, 0x1123e, IndicBreakCategory::Extend},
+    {0x11241, 0x11241, IndicBreakCategory::Extend},
+    {0x112df, 0x112df, IndicBreakCategory::Extend},
+    {0x112e3, 0x112ea, IndicBreakCategory::Extend},
+    {0x11300, 0x11301, IndicBreakCategory::Extend},
+    {0x1133b, 0x1133c, IndicBreakCategory::Extend},
+    {0x1133e, 0x1133e, IndicBreakCategory::Extend},
+    {0x11340, 0x11340, IndicBreakCategory::Extend},
+    {0x1134d, 0x1134d, IndicBreakCategory::Extend},
+    {0x11357, 0x11357, IndicBreakCategory::Extend},
+    {0x11366, 0x1136c, IndicBreakCategory::Extend},
+    {0x11370, 0x11374, IndicBreakCategory::Extend},
+    {0x113b8, 0x113b8, IndicBreakCategory::Extend},
+    {0x113bb, 0x113c0, IndicBreakCategory::Extend},
+    {0x113c2, 0x113c2, IndicBreakCategory::Extend},
+    {0x113c5, 0x113c5, IndicBreakCategory::Extend},
+    {0x113c7, 0x113c9, IndicBreakCategory::Extend},
+    {0x113ce, 0x113cf, IndicBreakCategory::Extend},
+    {0x113d0, 0x113d0, IndicBreakCategory::Linker},
+    {0x113d2, 0x113d2, IndicBreakCategory::Extend},
+    {0x113e1, 0x113e2, IndicBreakCategory::Extend},
+    {0x11438, 0x1143f, IndicBreakCategory::Extend},
+    {0x11442, 0x11444, IndicBreakCategory::Extend},
+    {0x11446, 0x11446, IndicBreakCategory::Extend},
+    {0x1145e, 0x1145e, IndicBreakCategory::Extend},
+    {0x114b0, 0x114b0, IndicBreakCategory::Extend},
+    {0x114b3, 0x114b8, IndicBreakCategory::Extend},
+    {0x114ba, 0x114ba, IndicBreakCategory::Extend},
+    {0x114bd, 0x114bd, IndicBreakCategory::Extend},
+    {0x114bf, 0x114c0, IndicBreakCategory::Extend},
+    {0x114c2, 0x114c3, IndicBreakCategory::Extend},
+    {0x115af, 0x115af, IndicBreakCategory::Extend},
+    {0x115b2, 0x115b5, IndicBreakCategory::Extend},
+    {0x115bc, 0x115bd, IndicBreakCategory::Extend},
+    {0x115bf, 0x115c0, IndicBreakCategory::Extend},
+    {0x115dc, 0x115dd, IndicBreakCategory::Extend},
+    {0x11633, 0x1163a, IndicBreakCategory::Extend},
+    {0x1163d, 0x1163d, IndicBreakCategory::Extend},
+    {0x1163f, 0x11640, IndicBreakCategory::Extend},
+    {0x116ab, 0x116ab, IndicBreakCategory::Extend},
+    {0x116ad, 0x116ad, IndicBreakCategory::Extend},
+    {0x116b0, 0x116b7, IndicBreakCategory::Extend},
+    {0x1171d, 0x1171d, IndicBreakCategory::Extend},
+    {0x1171f, 0x1171f, IndicBreakCategory::Extend},
+    {0x11722, 0x11725, IndicBreakCategory::Extend},
+    {0x11727, 0x1172b, IndicBreakCategory::Extend},
+    {0x1182f, 0x11837, IndicBreakCategory::Extend},
+    {0x11839, 0x1183a, IndicBreakCategory::Extend},
+    {0x11930, 0x11930, IndicBreakCategory::Extend},
+    {0x1193b, 0x1193d, IndicBreakCategory::Extend},
+    {0x1193e, 0x1193e, IndicBreakCategory::Linker},
+    {0x11943, 0x11943, IndicBreakCategory::Extend},
+    {0x119d4, 0x119d7, IndicBreakCategory::Extend},
+    {0x119da, 0x119db, IndicBreakCategory::Extend},
+    {0x119e0, 0x119e0, IndicBreakCategory::Extend},
+    {0x11a01, 0x11a0a, IndicBreakCategory::Extend},
+    {0x11a33, 0x11a38, IndicBreakCategory::Extend},
+    {0x11a3b, 0x11a3e, IndicBreakCategory::Extend},
+    {0x11a47, 0x11a47, IndicBreakCategory::Linker},
+    {0x11a51, 0x11a56, IndicBreakCategory::Extend},
+    {0x11a59, 0x11a5b, IndicBreakCategory::Extend},
+    {0x11a8a, 0x11a96, IndicBreakCategory::Extend},
+    {0x11a98, 0x11a98, IndicBreakCategory::Extend},
+    {0x11a99, 0x11a99, IndicBreakCategory::Linker},
+    {0x11b60, 0x11b60, IndicBreakCategory::Extend},
+    {0x11b62, 0x11b64, IndicBreakCategory::Extend},
+    {0x11b66, 0x11b66, IndicBreakCategory::Extend},
+    {0x11c30, 0x11c36, IndicBreakCategory::Extend},
+    {0x11c38, 0x11c3d, IndicBreakCategory::Extend},
+    {0x11c3f, 0x11c3f, IndicBreakCategory::Extend},
+    {0x11c92, 0x11ca7, IndicBreakCategory::Extend},
+    {0x11caa, 0x11cb0, IndicBreakCategory::Extend},
+    {0x11cb2, 0x11cb3, IndicBreakCategory::Extend},
+    {0x11cb5, 0x11cb6, IndicBreakCategory::Extend},
+    {0x11d31, 0x11d36, IndicBreakCategory::Extend},
+    {0x11d3a, 0x11d3a, IndicBreakCategory::Extend},
+    {0x11d3c, 0x11d3d, IndicBreakCategory::Extend},
+    {0x11d3f, 0x11d45, IndicBreakCategory::Extend},
+    {0x11d47, 0x11d47, IndicBreakCategory::Extend},
+    {0x11d90, 0x11d91, IndicBreakCategory::Extend},
+    {0x11d95, 0x11d95, IndicBreakCategory::Extend},
+    {0x11d97, 0x11d97, IndicBreakCategory::Extend},
+    {0x11ef3, 0x11ef4, IndicBreakCategory::Extend},
+    {0x11f00, 0x11f01, IndicBreakCategory::Extend},
+    {0x11f36, 0x11f3a, IndicBreakCategory::Extend},
+    {0x11f40, 0x11f41, IndicBreakCategory::Extend},
+    {0x11f42, 0x11f42, IndicBreakCategory::Linker},
+    {0x11f5a, 0x11f5a, IndicBreakCategory::Extend},
+    {0x13440, 0x13440, IndicBreakCategory::Extend},
+    {0x13447, 0x13455, IndicBreakCategory::Extend},
+    {0x1611e, 0x16129, IndicBreakCategory::Extend},
+    {0x1612d, 0x1612f, IndicBreakCategory::Extend},
+    {0x16af0, 0x16af4, IndicBreakCategory::Extend},
+    {0x16b30, 0x16b36, IndicBreakCategory::Extend},
+    {0x16f4f, 0x16f4f, IndicBreakCategory::Extend},
+    {0x16f8f, 0x16f92, IndicBreakCategory::Extend},
+    {0x16fe4, 0x16fe4, IndicBreakCategory::Extend},
+    {0x16ff0, 0x16ff1, IndicBreakCategory::Extend},
+    {0x1bc9d, 0x1bc9e, IndicBreakCategory::Extend},
+    {0x1cf00, 0x1cf2d, IndicBreakCategory::Extend},
+    {0x1cf30, 0x1cf46, IndicBreakCategory::Extend},
+    {0x1d165, 0x1d169, IndicBreakCategory::Extend},
+    {0x1d16d, 0x1d172, IndicBreakCategory::Extend},
+    {0x1d17b, 0x1d182, IndicBreakCategory::Extend},
+    {0x1d185, 0x1d18b, IndicBreakCategory::Extend},
+    {0x1d1aa, 0x1d1ad, IndicBreakCategory::Extend},
+    {0x1d242, 0x1d244, IndicBreakCategory::Extend},
+    {0x1da00, 0x1da36, IndicBreakCategory::Extend},
+    {0x1da3b, 0x1da6c, IndicBreakCategory::Extend},
+    {0x1da75, 0x1da75, IndicBreakCategory::Extend},
+    {0x1da84, 0x1da84, IndicBreakCategory::Extend},
+    {0x1da9b, 0x1da9f, IndicBreakCategory::Extend},
+    {0x1daa1, 0x1daaf, IndicBreakCategory::Extend},
+    {0x1e000, 0x1e006, IndicBreakCategory::Extend},
+    {0x1e008, 0x1e018, IndicBreakCategory::Extend},
+    {0x1e01b, 0x1e021, IndicBreakCategory::Extend},
+    {0x1e023, 0x1e024, IndicBreakCategory::Extend},
+    {0x1e026, 0x1e02a, IndicBreakCategory::Extend},
+    {0x1e08f, 0x1e08f, IndicBreakCategory::Extend},
+    {0x1e130, 0x1e136, IndicBreakCategory::Extend},
+    {0x1e2ae, 0x1e2ae, IndicBreakCategory::Extend},
+    {0x1e2ec, 0x1e2ef, IndicBreakCategory::Extend},
+    {0x1e4ec, 0x1e4ef, IndicBreakCategory::Extend},
+    {0x1e5ee, 0x1e5ef, IndicBreakCategory::Extend},
+    {0x1e6e3, 0x1e6e3, IndicBreakCategory::Extend},
+    {0x1e6e6, 0x1e6e6, IndicBreakCategory::Extend},
+    {0x1e6ee, 0x1e6ef, IndicBreakCategory::Extend},
+    {0x1e6f5, 0x1e6f5, IndicBreakCategory::Extend},
+    {0x1e8d0, 0x1e8d6, IndicBreakCategory::Extend},
+    {0x1e944, 0x1e94a, IndicBreakCategory::Extend},
+    {0x1f3fb, 0x1f3ff, IndicBreakCategory::Extend},
+    {0xe0020, 0xe007f, IndicBreakCategory::Extend},
+    {0xe0100, 0xe01ef, IndicBreakCategory::Extend},
+};
+
+}
+
+#line 1 "src/base/unicode_bidi_data.h"
+
+namespace gpui {
+
+enum class ParagraphBidi : uint8_t {
+    Left,
+    Right,
+    Break,
+    Isolate,
+    EndIsolate,
+    Neutral
+};
+struct ParagraphBidiRange {
+    uint32_t first;
+    uint32_t last;
+    ParagraphBidi kind;
+};
+
+static constexpr ParagraphBidiRange kParagraphBidiRanges[] = {
+    {0x0000, 0x0009, ParagraphBidi::Neutral},
+    {0x000a, 0x000a, ParagraphBidi::Break},
+    {0x000b, 0x000c, ParagraphBidi::Neutral},
+    {0x000d, 0x000d, ParagraphBidi::Break},
+    {0x000e, 0x001b, ParagraphBidi::Neutral},
+    {0x001c, 0x001e, ParagraphBidi::Break},
+    {0x001f, 0x0040, ParagraphBidi::Neutral},
+    {0x005b, 0x0060, ParagraphBidi::Neutral},
+    {0x007b, 0x0084, ParagraphBidi::Neutral},
+    {0x0085, 0x0085, ParagraphBidi::Break},
+    {0x0086, 0x00a9, ParagraphBidi::Neutral},
+    {0x00ab, 0x00b4, ParagraphBidi::Neutral},
+    {0x00b6, 0x00b9, ParagraphBidi::Neutral},
+    {0x00bb, 0x00bf, ParagraphBidi::Neutral},
+    {0x00d7, 0x00d7, ParagraphBidi::Neutral},
+    {0x00f7, 0x00f7, ParagraphBidi::Neutral},
+    {0x02b9, 0x02ba, ParagraphBidi::Neutral},
+    {0x02c2, 0x02cf, ParagraphBidi::Neutral},
+    {0x02d2, 0x02df, ParagraphBidi::Neutral},
+    {0x02e5, 0x02ed, ParagraphBidi::Neutral},
+    {0x02ef, 0x036f, ParagraphBidi::Neutral},
+    {0x0374, 0x0375, ParagraphBidi::Neutral},
+    {0x037e, 0x037e, ParagraphBidi::Neutral},
+    {0x0384, 0x0385, ParagraphBidi::Neutral},
+    {0x0387, 0x0387, ParagraphBidi::Neutral},
+    {0x03f6, 0x03f6, ParagraphBidi::Neutral},
+    {0x0483, 0x0489, ParagraphBidi::Neutral},
+    {0x058a, 0x058a, ParagraphBidi::Neutral},
+    {0x058d, 0x058f, ParagraphBidi::Neutral},
+    {0x0590, 0x0590, ParagraphBidi::Right},
+    {0x0591, 0x05bd, ParagraphBidi::Neutral},
+    {0x05be, 0x05be, ParagraphBidi::Right},
+    {0x05bf, 0x05bf, ParagraphBidi::Neutral},
+    {0x05c0, 0x05c0, ParagraphBidi::Right},
+    {0x05c1, 0x05c2, ParagraphBidi::Neutral},
+    {0x05c3, 0x05c3, ParagraphBidi::Right},
+    {0x05c4, 0x05c5, ParagraphBidi::Neutral},
+    {0x05c6, 0x05c6, ParagraphBidi::Right},
+    {0x05c7, 0x05c7, ParagraphBidi::Neutral},
+    {0x05c8, 0x05ff, ParagraphBidi::Right},
+    {0x0600, 0x0607, ParagraphBidi::Neutral},
+    {0x0608, 0x0608, ParagraphBidi::Right},
+    {0x0609, 0x060a, ParagraphBidi::Neutral},
+    {0x060b, 0x060b, ParagraphBidi::Right},
+    {0x060c, 0x060c, ParagraphBidi::Neutral},
+    {0x060d, 0x060d, ParagraphBidi::Right},
+    {0x060e, 0x061a, ParagraphBidi::Neutral},
+    {0x061b, 0x064a, ParagraphBidi::Right},
+    {0x064b, 0x066c, ParagraphBidi::Neutral},
+    {0x066d, 0x066f, ParagraphBidi::Right},
+    {0x0670, 0x0670, ParagraphBidi::Neutral},
+    {0x0671, 0x06d5, ParagraphBidi::Right},
+    {0x06d6, 0x06e4, ParagraphBidi::Neutral},
+    {0x06e5, 0x06e6, ParagraphBidi::Right},
+    {0x06e7, 0x06ed, ParagraphBidi::Neutral},
+    {0x06ee, 0x06ef, ParagraphBidi::Right},
+    {0x06f0, 0x06f9, ParagraphBidi::Neutral},
+    {0x06fa, 0x0710, ParagraphBidi::Right},
+    {0x0711, 0x0711, ParagraphBidi::Neutral},
+    {0x0712, 0x072f, ParagraphBidi::Right},
+    {0x0730, 0x074a, ParagraphBidi::Neutral},
+    {0x074b, 0x07a5, ParagraphBidi::Right},
+    {0x07a6, 0x07b0, ParagraphBidi::Neutral},
+    {0x07b1, 0x07ea, ParagraphBidi::Right},
+    {0x07eb, 0x07f3, ParagraphBidi::Neutral},
+    {0x07f4, 0x07f5, ParagraphBidi::Right},
+    {0x07f6, 0x07f9, ParagraphBidi::Neutral},
+    {0x07fa, 0x07fc, ParagraphBidi::Right},
+    {0x07fd, 0x07fd, ParagraphBidi::Neutral},
+    {0x07fe, 0x0815, ParagraphBidi::Right},
+    {0x0816, 0x0819, ParagraphBidi::Neutral},
+    {0x081a, 0x081a, ParagraphBidi::Right},
+    {0x081b, 0x0823, ParagraphBidi::Neutral},
+    {0x0824, 0x0824, ParagraphBidi::Right},
+    {0x0825, 0x0827, ParagraphBidi::Neutral},
+    {0x0828, 0x0828, ParagraphBidi::Right},
+    {0x0829, 0x082d, ParagraphBidi::Neutral},
+    {0x082e, 0x0858, ParagraphBidi::Right},
+    {0x0859, 0x085b, ParagraphBidi::Neutral},
+    {0x085c, 0x088f, ParagraphBidi::Right},
+    {0x0890, 0x0891, ParagraphBidi::Neutral},
+    {0x0892, 0x0896, ParagraphBidi::Right},
+    {0x0897, 0x089f, ParagraphBidi::Neutral},
+    {0x08a0, 0x08c9, ParagraphBidi::Right},
+    {0x08ca, 0x0902, ParagraphBidi::Neutral},
+    {0x093a, 0x093a, ParagraphBidi::Neutral},
+    {0x093c, 0x093c, ParagraphBidi::Neutral},
+    {0x0941, 0x0948, ParagraphBidi::Neutral},
+    {0x094d, 0x094d, ParagraphBidi::Neutral},
+    {0x0951, 0x0957, ParagraphBidi::Neutral},
+    {0x0962, 0x0963, ParagraphBidi::Neutral},
+    {0x0981, 0x0981, ParagraphBidi::Neutral},
+    {0x09bc, 0x09bc, ParagraphBidi::Neutral},
+    {0x09c1, 0x09c4, ParagraphBidi::Neutral},
+    {0x09cd, 0x09cd, ParagraphBidi::Neutral},
+    {0x09e2, 0x09e3, ParagraphBidi::Neutral},
+    {0x09f2, 0x09f3, ParagraphBidi::Neutral},
+    {0x09fb, 0x09fb, ParagraphBidi::Neutral},
+    {0x09fe, 0x09fe, ParagraphBidi::Neutral},
+    {0x0a01, 0x0a02, ParagraphBidi::Neutral},
+    {0x0a3c, 0x0a3c, ParagraphBidi::Neutral},
+    {0x0a41, 0x0a42, ParagraphBidi::Neutral},
+    {0x0a47, 0x0a48, ParagraphBidi::Neutral},
+    {0x0a4b, 0x0a4d, ParagraphBidi::Neutral},
+    {0x0a51, 0x0a51, ParagraphBidi::Neutral},
+    {0x0a70, 0x0a71, ParagraphBidi::Neutral},
+    {0x0a75, 0x0a75, ParagraphBidi::Neutral},
+    {0x0a81, 0x0a82, ParagraphBidi::Neutral},
+    {0x0abc, 0x0abc, ParagraphBidi::Neutral},
+    {0x0ac1, 0x0ac5, ParagraphBidi::Neutral},
+    {0x0ac7, 0x0ac8, ParagraphBidi::Neutral},
+    {0x0acd, 0x0acd, ParagraphBidi::Neutral},
+    {0x0ae2, 0x0ae3, ParagraphBidi::Neutral},
+    {0x0af1, 0x0af1, ParagraphBidi::Neutral},
+    {0x0afa, 0x0aff, ParagraphBidi::Neutral},
+    {0x0b01, 0x0b01, ParagraphBidi::Neutral},
+    {0x0b3c, 0x0b3c, ParagraphBidi::Neutral},
+    {0x0b3f, 0x0b3f, ParagraphBidi::Neutral},
+    {0x0b41, 0x0b44, ParagraphBidi::Neutral},
+    {0x0b4d, 0x0b4d, ParagraphBidi::Neutral},
+    {0x0b55, 0x0b56, ParagraphBidi::Neutral},
+    {0x0b62, 0x0b63, ParagraphBidi::Neutral},
+    {0x0b82, 0x0b82, ParagraphBidi::Neutral},
+    {0x0bc0, 0x0bc0, ParagraphBidi::Neutral},
+    {0x0bcd, 0x0bcd, ParagraphBidi::Neutral},
+    {0x0bf3, 0x0bfa, ParagraphBidi::Neutral},
+    {0x0c00, 0x0c00, ParagraphBidi::Neutral},
+    {0x0c04, 0x0c04, ParagraphBidi::Neutral},
+    {0x0c3c, 0x0c3c, ParagraphBidi::Neutral},
+    {0x0c3e, 0x0c40, ParagraphBidi::Neutral},
+    {0x0c46, 0x0c48, ParagraphBidi::Neutral},
+    {0x0c4a, 0x0c4d, ParagraphBidi::Neutral},
+    {0x0c55, 0x0c56, ParagraphBidi::Neutral},
+    {0x0c62, 0x0c63, ParagraphBidi::Neutral},
+    {0x0c78, 0x0c7e, ParagraphBidi::Neutral},
+    {0x0c81, 0x0c81, ParagraphBidi::Neutral},
+    {0x0cbc, 0x0cbc, ParagraphBidi::Neutral},
+    {0x0ccc, 0x0ccd, ParagraphBidi::Neutral},
+    {0x0ce2, 0x0ce3, ParagraphBidi::Neutral},
+    {0x0d00, 0x0d01, ParagraphBidi::Neutral},
+    {0x0d3b, 0x0d3c, ParagraphBidi::Neutral},
+    {0x0d41, 0x0d44, ParagraphBidi::Neutral},
+    {0x0d4d, 0x0d4d, ParagraphBidi::Neutral},
+    {0x0d62, 0x0d63, ParagraphBidi::Neutral},
+    {0x0d81, 0x0d81, ParagraphBidi::Neutral},
+    {0x0dca, 0x0dca, ParagraphBidi::Neutral},
+    {0x0dd2, 0x0dd4, ParagraphBidi::Neutral},
+    {0x0dd6, 0x0dd6, ParagraphBidi::Neutral},
+    {0x0e31, 0x0e31, ParagraphBidi::Neutral},
+    {0x0e34, 0x0e3a, ParagraphBidi::Neutral},
+    {0x0e3f, 0x0e3f, ParagraphBidi::Neutral},
+    {0x0e47, 0x0e4e, ParagraphBidi::Neutral},
+    {0x0eb1, 0x0eb1, ParagraphBidi::Neutral},
+    {0x0eb4, 0x0ebc, ParagraphBidi::Neutral},
+    {0x0ec8, 0x0ece, ParagraphBidi::Neutral},
+    {0x0f18, 0x0f19, ParagraphBidi::Neutral},
+    {0x0f35, 0x0f35, ParagraphBidi::Neutral},
+    {0x0f37, 0x0f37, ParagraphBidi::Neutral},
+    {0x0f39, 0x0f3d, ParagraphBidi::Neutral},
+    {0x0f71, 0x0f7e, ParagraphBidi::Neutral},
+    {0x0f80, 0x0f84, ParagraphBidi::Neutral},
+    {0x0f86, 0x0f87, ParagraphBidi::Neutral},
+    {0x0f8d, 0x0f97, ParagraphBidi::Neutral},
+    {0x0f99, 0x0fbc, ParagraphBidi::Neutral},
+    {0x0fc6, 0x0fc6, ParagraphBidi::Neutral},
+    {0x102d, 0x1030, ParagraphBidi::Neutral},
+    {0x1032, 0x1037, ParagraphBidi::Neutral},
+    {0x1039, 0x103a, ParagraphBidi::Neutral},
+    {0x103d, 0x103e, ParagraphBidi::Neutral},
+    {0x1058, 0x1059, ParagraphBidi::Neutral},
+    {0x105e, 0x1060, ParagraphBidi::Neutral},
+    {0x1071, 0x1074, ParagraphBidi::Neutral},
+    {0x1082, 0x1082, ParagraphBidi::Neutral},
+    {0x1085, 0x1086, ParagraphBidi::Neutral},
+    {0x108d, 0x108d, ParagraphBidi::Neutral},
+    {0x109d, 0x109d, ParagraphBidi::Neutral},
+    {0x135d, 0x135f, ParagraphBidi::Neutral},
+    {0x1390, 0x1399, ParagraphBidi::Neutral},
+    {0x1400, 0x1400, ParagraphBidi::Neutral},
+    {0x1680, 0x1680, ParagraphBidi::Neutral},
+    {0x169b, 0x169c, ParagraphBidi::Neutral},
+    {0x1712, 0x1714, ParagraphBidi::Neutral},
+    {0x1732, 0x1733, ParagraphBidi::Neutral},
+    {0x1752, 0x1753, ParagraphBidi::Neutral},
+    {0x1772, 0x1773, ParagraphBidi::Neutral},
+    {0x17b4, 0x17b5, ParagraphBidi::Neutral},
+    {0x17b7, 0x17bd, ParagraphBidi::Neutral},
+    {0x17c6, 0x17c6, ParagraphBidi::Neutral},
+    {0x17c9, 0x17d3, ParagraphBidi::Neutral},
+    {0x17db, 0x17db, ParagraphBidi::Neutral},
+    {0x17dd, 0x17dd, ParagraphBidi::Neutral},
+    {0x17f0, 0x17f9, ParagraphBidi::Neutral},
+    {0x1800, 0x180f, ParagraphBidi::Neutral},
+    {0x1885, 0x1886, ParagraphBidi::Neutral},
+    {0x18a9, 0x18a9, ParagraphBidi::Neutral},
+    {0x1920, 0x1922, ParagraphBidi::Neutral},
+    {0x1927, 0x1928, ParagraphBidi::Neutral},
+    {0x1932, 0x1932, ParagraphBidi::Neutral},
+    {0x1939, 0x193b, ParagraphBidi::Neutral},
+    {0x1940, 0x1940, ParagraphBidi::Neutral},
+    {0x1944, 0x1945, ParagraphBidi::Neutral},
+    {0x19de, 0x19ff, ParagraphBidi::Neutral},
+    {0x1a17, 0x1a18, ParagraphBidi::Neutral},
+    {0x1a1b, 0x1a1b, ParagraphBidi::Neutral},
+    {0x1a56, 0x1a56, ParagraphBidi::Neutral},
+    {0x1a58, 0x1a5e, ParagraphBidi::Neutral},
+    {0x1a60, 0x1a60, ParagraphBidi::Neutral},
+    {0x1a62, 0x1a62, ParagraphBidi::Neutral},
+    {0x1a65, 0x1a6c, ParagraphBidi::Neutral},
+    {0x1a73, 0x1a7c, ParagraphBidi::Neutral},
+    {0x1a7f, 0x1a7f, ParagraphBidi::Neutral},
+    {0x1ab0, 0x1ace, ParagraphBidi::Neutral},
+    {0x1b00, 0x1b03, ParagraphBidi::Neutral},
+    {0x1b34, 0x1b34, ParagraphBidi::Neutral},
+    {0x1b36, 0x1b3a, ParagraphBidi::Neutral},
+    {0x1b3c, 0x1b3c, ParagraphBidi::Neutral},
+    {0x1b42, 0x1b42, ParagraphBidi::Neutral},
+    {0x1b6b, 0x1b73, ParagraphBidi::Neutral},
+    {0x1b80, 0x1b81, ParagraphBidi::Neutral},
+    {0x1ba2, 0x1ba5, ParagraphBidi::Neutral},
+    {0x1ba8, 0x1ba9, ParagraphBidi::Neutral},
+    {0x1bab, 0x1bad, ParagraphBidi::Neutral},
+    {0x1be6, 0x1be6, ParagraphBidi::Neutral},
+    {0x1be8, 0x1be9, ParagraphBidi::Neutral},
+    {0x1bed, 0x1bed, ParagraphBidi::Neutral},
+    {0x1bef, 0x1bf1, ParagraphBidi::Neutral},
+    {0x1c2c, 0x1c33, ParagraphBidi::Neutral},
+    {0x1c36, 0x1c37, ParagraphBidi::Neutral},
+    {0x1cd0, 0x1cd2, ParagraphBidi::Neutral},
+    {0x1cd4, 0x1ce0, ParagraphBidi::Neutral},
+    {0x1ce2, 0x1ce8, ParagraphBidi::Neutral},
+    {0x1ced, 0x1ced, ParagraphBidi::Neutral},
+    {0x1cf4, 0x1cf4, ParagraphBidi::Neutral},
+    {0x1cf8, 0x1cf9, ParagraphBidi::Neutral},
+    {0x1dc0, 0x1dff, ParagraphBidi::Neutral},
+    {0x1fbd, 0x1fbd, ParagraphBidi::Neutral},
+    {0x1fbf, 0x1fc1, ParagraphBidi::Neutral},
+    {0x1fcd, 0x1fcf, ParagraphBidi::Neutral},
+    {0x1fdd, 0x1fdf, ParagraphBidi::Neutral},
+    {0x1fed, 0x1fef, ParagraphBidi::Neutral},
+    {0x1ffd, 0x1ffe, ParagraphBidi::Neutral},
+    {0x2000, 0x200d, ParagraphBidi::Neutral},
+    {0x200f, 0x200f, ParagraphBidi::Right},
+    {0x2010, 0x2028, ParagraphBidi::Neutral},
+    {0x2029, 0x2029, ParagraphBidi::Break},
+    {0x202a, 0x2064, ParagraphBidi::Neutral},
+    {0x2066, 0x2068, ParagraphBidi::Isolate},
+    {0x2069, 0x2069, ParagraphBidi::EndIsolate},
+    {0x206a, 0x2070, ParagraphBidi::Neutral},
+    {0x2074, 0x207e, ParagraphBidi::Neutral},
+    {0x2080, 0x208e, ParagraphBidi::Neutral},
+    {0x20a0, 0x20f0, ParagraphBidi::Neutral},
+    {0x2100, 0x2101, ParagraphBidi::Neutral},
+    {0x2103, 0x2106, ParagraphBidi::Neutral},
+    {0x2108, 0x2109, ParagraphBidi::Neutral},
+    {0x2114, 0x2114, ParagraphBidi::Neutral},
+    {0x2116, 0x2118, ParagraphBidi::Neutral},
+    {0x211e, 0x2123, ParagraphBidi::Neutral},
+    {0x2125, 0x2125, ParagraphBidi::Neutral},
+    {0x2127, 0x2127, ParagraphBidi::Neutral},
+    {0x2129, 0x2129, ParagraphBidi::Neutral},
+    {0x212e, 0x212e, ParagraphBidi::Neutral},
+    {0x213a, 0x213b, ParagraphBidi::Neutral},
+    {0x2140, 0x2144, ParagraphBidi::Neutral},
+    {0x214a, 0x214d, ParagraphBidi::Neutral},
+    {0x2150, 0x215f, ParagraphBidi::Neutral},
+    {0x2189, 0x218b, ParagraphBidi::Neutral},
+    {0x2190, 0x2335, ParagraphBidi::Neutral},
+    {0x237b, 0x2394, ParagraphBidi::Neutral},
+    {0x2396, 0x2429, ParagraphBidi::Neutral},
+    {0x2440, 0x244a, ParagraphBidi::Neutral},
+    {0x2460, 0x249b, ParagraphBidi::Neutral},
+    {0x24ea, 0x26ab, ParagraphBidi::Neutral},
+    {0x26ad, 0x27ff, ParagraphBidi::Neutral},
+    {0x2900, 0x2b73, ParagraphBidi::Neutral},
+    {0x2b76, 0x2b95, ParagraphBidi::Neutral},
+    {0x2b97, 0x2bff, ParagraphBidi::Neutral},
+    {0x2ce5, 0x2cea, ParagraphBidi::Neutral},
+    {0x2cef, 0x2cf1, ParagraphBidi::Neutral},
+    {0x2cf9, 0x2cff, ParagraphBidi::Neutral},
+    {0x2d7f, 0x2d7f, ParagraphBidi::Neutral},
+    {0x2de0, 0x2e5d, ParagraphBidi::Neutral},
+    {0x2e80, 0x2e99, ParagraphBidi::Neutral},
+    {0x2e9b, 0x2ef3, ParagraphBidi::Neutral},
+    {0x2f00, 0x2fd5, ParagraphBidi::Neutral},
+    {0x2ff0, 0x3004, ParagraphBidi::Neutral},
+    {0x3008, 0x3020, ParagraphBidi::Neutral},
+    {0x302a, 0x302d, ParagraphBidi::Neutral},
+    {0x3030, 0x3030, ParagraphBidi::Neutral},
+    {0x3036, 0x3037, ParagraphBidi::Neutral},
+    {0x303d, 0x303f, ParagraphBidi::Neutral},
+    {0x3099, 0x309c, ParagraphBidi::Neutral},
+    {0x30a0, 0x30a0, ParagraphBidi::Neutral},
+    {0x30fb, 0x30fb, ParagraphBidi::Neutral},
+    {0x31c0, 0x31e5, ParagraphBidi::Neutral},
+    {0x31ef, 0x31ef, ParagraphBidi::Neutral},
+    {0x321d, 0x321e, ParagraphBidi::Neutral},
+    {0x3250, 0x325f, ParagraphBidi::Neutral},
+    {0x327c, 0x327e, ParagraphBidi::Neutral},
+    {0x32b1, 0x32bf, ParagraphBidi::Neutral},
+    {0x32cc, 0x32cf, ParagraphBidi::Neutral},
+    {0x3377, 0x337a, ParagraphBidi::Neutral},
+    {0x33de, 0x33df, ParagraphBidi::Neutral},
+    {0x33ff, 0x33ff, ParagraphBidi::Neutral},
+    {0x4dc0, 0x4dff, ParagraphBidi::Neutral},
+    {0xa490, 0xa4c6, ParagraphBidi::Neutral},
+    {0xa60d, 0xa60f, ParagraphBidi::Neutral},
+    {0xa66f, 0xa67f, ParagraphBidi::Neutral},
+    {0xa69e, 0xa69f, ParagraphBidi::Neutral},
+    {0xa6f0, 0xa6f1, ParagraphBidi::Neutral},
+    {0xa700, 0xa721, ParagraphBidi::Neutral},
+    {0xa788, 0xa788, ParagraphBidi::Neutral},
+    {0xa802, 0xa802, ParagraphBidi::Neutral},
+    {0xa806, 0xa806, ParagraphBidi::Neutral},
+    {0xa80b, 0xa80b, ParagraphBidi::Neutral},
+    {0xa825, 0xa826, ParagraphBidi::Neutral},
+    {0xa828, 0xa82c, ParagraphBidi::Neutral},
+    {0xa838, 0xa839, ParagraphBidi::Neutral},
+    {0xa874, 0xa877, ParagraphBidi::Neutral},
+    {0xa8c4, 0xa8c5, ParagraphBidi::Neutral},
+    {0xa8e0, 0xa8f1, ParagraphBidi::Neutral},
+    {0xa8ff, 0xa8ff, ParagraphBidi::Neutral},
+    {0xa926, 0xa92d, ParagraphBidi::Neutral},
+    {0xa947, 0xa951, ParagraphBidi::Neutral},
+    {0xa980, 0xa982, ParagraphBidi::Neutral},
+    {0xa9b3, 0xa9b3, ParagraphBidi::Neutral},
+    {0xa9b6, 0xa9b9, ParagraphBidi::Neutral},
+    {0xa9bc, 0xa9bd, ParagraphBidi::Neutral},
+    {0xa9e5, 0xa9e5, ParagraphBidi::Neutral},
+    {0xaa29, 0xaa2e, ParagraphBidi::Neutral},
+    {0xaa31, 0xaa32, ParagraphBidi::Neutral},
+    {0xaa35, 0xaa36, ParagraphBidi::Neutral},
+    {0xaa43, 0xaa43, ParagraphBidi::Neutral},
+    {0xaa4c, 0xaa4c, ParagraphBidi::Neutral},
+    {0xaa7c, 0xaa7c, ParagraphBidi::Neutral},
+    {0xaab0, 0xaab0, ParagraphBidi::Neutral},
+    {0xaab2, 0xaab4, ParagraphBidi::Neutral},
+    {0xaab7, 0xaab8, ParagraphBidi::Neutral},
+    {0xaabe, 0xaabf, ParagraphBidi::Neutral},
+    {0xaac1, 0xaac1, ParagraphBidi::Neutral},
+    {0xaaec, 0xaaed, ParagraphBidi::Neutral},
+    {0xaaf6, 0xaaf6, ParagraphBidi::Neutral},
+    {0xab6a, 0xab6b, ParagraphBidi::Neutral},
+    {0xabe5, 0xabe5, ParagraphBidi::Neutral},
+    {0xabe8, 0xabe8, ParagraphBidi::Neutral},
+    {0xabed, 0xabed, ParagraphBidi::Neutral},
+    {0xfb1d, 0xfb1d, ParagraphBidi::Right},
+    {0xfb1e, 0xfb1e, ParagraphBidi::Neutral},
+    {0xfb1f, 0xfb28, ParagraphBidi::Right},
+    {0xfb29, 0xfb29, ParagraphBidi::Neutral},
+    {0xfb2a, 0xfd3d, ParagraphBidi::Right},
+    {0xfd3e, 0xfd4f, ParagraphBidi::Neutral},
+    {0xfd50, 0xfdce, ParagraphBidi::Right},
+    {0xfdcf, 0xfdcf, ParagraphBidi::Neutral},
+    {0xfdf0, 0xfdfc, ParagraphBidi::Right},
+    {0xfdfd, 0xfe19, ParagraphBidi::Neutral},
+    {0xfe20, 0xfe52, ParagraphBidi::Neutral},
+    {0xfe54, 0xfe66, ParagraphBidi::Neutral},
+    {0xfe68, 0xfe6b, ParagraphBidi::Neutral},
+    {0xfe70, 0xfefe, ParagraphBidi::Right},
+    {0xfeff, 0xfeff, ParagraphBidi::Neutral},
+    {0xff01, 0xff20, ParagraphBidi::Neutral},
+    {0xff3b, 0xff40, ParagraphBidi::Neutral},
+    {0xff5b, 0xff65, ParagraphBidi::Neutral},
+    {0xffe0, 0xffe6, ParagraphBidi::Neutral},
+    {0xffe8, 0xffee, ParagraphBidi::Neutral},
+    {0xfff9, 0xfffd, ParagraphBidi::Neutral},
+    {0x10101, 0x10101, ParagraphBidi::Neutral},
+    {0x10140, 0x1018c, ParagraphBidi::Neutral},
+    {0x10190, 0x1019c, ParagraphBidi::Neutral},
+    {0x101a0, 0x101a0, ParagraphBidi::Neutral},
+    {0x101fd, 0x101fd, ParagraphBidi::Neutral},
+    {0x102e0, 0x102fb, ParagraphBidi::Neutral},
+    {0x10376, 0x1037a, ParagraphBidi::Neutral},
+    {0x10800, 0x1091e, ParagraphBidi::Right},
+    {0x1091f, 0x1091f, ParagraphBidi::Neutral},
+    {0x10920, 0x10a00, ParagraphBidi::Right},
+    {0x10a01, 0x10a03, ParagraphBidi::Neutral},
+    {0x10a04, 0x10a04, ParagraphBidi::Right},
+    {0x10a05, 0x10a06, ParagraphBidi::Neutral},
+    {0x10a07, 0x10a0b, ParagraphBidi::Right},
+    {0x10a0c, 0x10a0f, ParagraphBidi::Neutral},
+    {0x10a10, 0x10a37, ParagraphBidi::Right},
+    {0x10a38, 0x10a3a, ParagraphBidi::Neutral},
+    {0x10a3b, 0x10a3e, ParagraphBidi::Right},
+    {0x10a3f, 0x10a3f, ParagraphBidi::Neutral},
+    {0x10a40, 0x10ae4, ParagraphBidi::Right},
+    {0x10ae5, 0x10ae6, ParagraphBidi::Neutral},
+    {0x10ae7, 0x10b38, ParagraphBidi::Right},
+    {0x10b39, 0x10b3f, ParagraphBidi::Neutral},
+    {0x10b40, 0x10d23, ParagraphBidi::Right},
+    {0x10d24, 0x10d27, ParagraphBidi::Neutral},
+    {0x10d28, 0x10d2f, ParagraphBidi::Right},
+    {0x10d30, 0x10d39, ParagraphBidi::Neutral},
+    {0x10d3a, 0x10d3f, ParagraphBidi::Right},
+    {0x10d40, 0x10d49, ParagraphBidi::Neutral},
+    {0x10d4a, 0x10d68, ParagraphBidi::Right},
+    {0x10d69, 0x10d6e, ParagraphBidi::Neutral},
+    {0x10d6f, 0x10e5f, ParagraphBidi::Right},
+    {0x10e60, 0x10e7e, ParagraphBidi::Neutral},
+    {0x10e7f, 0x10eaa, ParagraphBidi::Right},
+    {0x10eab, 0x10eac, ParagraphBidi::Neutral},
+    {0x10ead, 0x10efb, ParagraphBidi::Right},
+    {0x10efc, 0x10eff, ParagraphBidi::Neutral},
+    {0x10f00, 0x10f45, ParagraphBidi::Right},
+    {0x10f46, 0x10f50, ParagraphBidi::Neutral},
+    {0x10f51, 0x10f81, ParagraphBidi::Right},
+    {0x10f82, 0x10f85, ParagraphBidi::Neutral},
+    {0x10f86, 0x10fff, ParagraphBidi::Right},
+    {0x11001, 0x11001, ParagraphBidi::Neutral},
+    {0x11038, 0x11046, ParagraphBidi::Neutral},
+    {0x11052, 0x11065, ParagraphBidi::Neutral},
+    {0x11070, 0x11070, ParagraphBidi::Neutral},
+    {0x11073, 0x11074, ParagraphBidi::Neutral},
+    {0x1107f, 0x11081, ParagraphBidi::Neutral},
+    {0x110b3, 0x110b6, ParagraphBidi::Neutral},
+    {0x110b9, 0x110ba, ParagraphBidi::Neutral},
+    {0x110c2, 0x110c2, ParagraphBidi::Neutral},
+    {0x11100, 0x11102, ParagraphBidi::Neutral},
+    {0x11127, 0x1112b, ParagraphBidi::Neutral},
+    {0x1112d, 0x11134, ParagraphBidi::Neutral},
+    {0x11173, 0x11173, ParagraphBidi::Neutral},
+    {0x11180, 0x11181, ParagraphBidi::Neutral},
+    {0x111b6, 0x111be, ParagraphBidi::Neutral},
+    {0x111c9, 0x111cc, ParagraphBidi::Neutral},
+    {0x111cf, 0x111cf, ParagraphBidi::Neutral},
+    {0x1122f, 0x11231, ParagraphBidi::Neutral},
+    {0x11234, 0x11234, ParagraphBidi::Neutral},
+    {0x11236, 0x11237, ParagraphBidi::Neutral},
+    {0x1123e, 0x1123e, ParagraphBidi::Neutral},
+    {0x11241, 0x11241, ParagraphBidi::Neutral},
+    {0x112df, 0x112df, ParagraphBidi::Neutral},
+    {0x112e3, 0x112ea, ParagraphBidi::Neutral},
+    {0x11300, 0x11301, ParagraphBidi::Neutral},
+    {0x1133b, 0x1133c, ParagraphBidi::Neutral},
+    {0x11340, 0x11340, ParagraphBidi::Neutral},
+    {0x11366, 0x1136c, ParagraphBidi::Neutral},
+    {0x11370, 0x11374, ParagraphBidi::Neutral},
+    {0x113bb, 0x113c0, ParagraphBidi::Neutral},
+    {0x113ce, 0x113ce, ParagraphBidi::Neutral},
+    {0x113d0, 0x113d0, ParagraphBidi::Neutral},
+    {0x113d2, 0x113d2, ParagraphBidi::Neutral},
+    {0x113e1, 0x113e2, ParagraphBidi::Neutral},
+    {0x11438, 0x1143f, ParagraphBidi::Neutral},
+    {0x11442, 0x11444, ParagraphBidi::Neutral},
+    {0x11446, 0x11446, ParagraphBidi::Neutral},
+    {0x1145e, 0x1145e, ParagraphBidi::Neutral},
+    {0x114b3, 0x114b8, ParagraphBidi::Neutral},
+    {0x114ba, 0x114ba, ParagraphBidi::Neutral},
+    {0x114bf, 0x114c0, ParagraphBidi::Neutral},
+    {0x114c2, 0x114c3, ParagraphBidi::Neutral},
+    {0x115b2, 0x115b5, ParagraphBidi::Neutral},
+    {0x115bc, 0x115bd, ParagraphBidi::Neutral},
+    {0x115bf, 0x115c0, ParagraphBidi::Neutral},
+    {0x115dc, 0x115dd, ParagraphBidi::Neutral},
+    {0x11633, 0x1163a, ParagraphBidi::Neutral},
+    {0x1163d, 0x1163d, ParagraphBidi::Neutral},
+    {0x1163f, 0x11640, ParagraphBidi::Neutral},
+    {0x11660, 0x1166c, ParagraphBidi::Neutral},
+    {0x116ab, 0x116ab, ParagraphBidi::Neutral},
+    {0x116ad, 0x116ad, ParagraphBidi::Neutral},
+    {0x116b0, 0x116b5, ParagraphBidi::Neutral},
+    {0x116b7, 0x116b7, ParagraphBidi::Neutral},
+    {0x1171d, 0x1171d, ParagraphBidi::Neutral},
+    {0x1171f, 0x1171f, ParagraphBidi::Neutral},
+    {0x11722, 0x11725, ParagraphBidi::Neutral},
+    {0x11727, 0x1172b, ParagraphBidi::Neutral},
+    {0x1182f, 0x11837, ParagraphBidi::Neutral},
+    {0x11839, 0x1183a, ParagraphBidi::Neutral},
+    {0x1193b, 0x1193c, ParagraphBidi::Neutral},
+    {0x1193e, 0x1193e, ParagraphBidi::Neutral},
+    {0x11943, 0x11943, ParagraphBidi::Neutral},
+    {0x119d4, 0x119d7, ParagraphBidi::Neutral},
+    {0x119da, 0x119db, ParagraphBidi::Neutral},
+    {0x119e0, 0x119e0, ParagraphBidi::Neutral},
+    {0x11a01, 0x11a06, ParagraphBidi::Neutral},
+    {0x11a09, 0x11a0a, ParagraphBidi::Neutral},
+    {0x11a33, 0x11a38, ParagraphBidi::Neutral},
+    {0x11a3b, 0x11a3e, ParagraphBidi::Neutral},
+    {0x11a47, 0x11a47, ParagraphBidi::Neutral},
+    {0x11a51, 0x11a56, ParagraphBidi::Neutral},
+    {0x11a59, 0x11a5b, ParagraphBidi::Neutral},
+    {0x11a8a, 0x11a96, ParagraphBidi::Neutral},
+    {0x11a98, 0x11a99, ParagraphBidi::Neutral},
+    {0x11c30, 0x11c36, ParagraphBidi::Neutral},
+    {0x11c38, 0x11c3d, ParagraphBidi::Neutral},
+    {0x11c92, 0x11ca7, ParagraphBidi::Neutral},
+    {0x11caa, 0x11cb0, ParagraphBidi::Neutral},
+    {0x11cb2, 0x11cb3, ParagraphBidi::Neutral},
+    {0x11cb5, 0x11cb6, ParagraphBidi::Neutral},
+    {0x11d31, 0x11d36, ParagraphBidi::Neutral},
+    {0x11d3a, 0x11d3a, ParagraphBidi::Neutral},
+    {0x11d3c, 0x11d3d, ParagraphBidi::Neutral},
+    {0x11d3f, 0x11d45, ParagraphBidi::Neutral},
+    {0x11d47, 0x11d47, ParagraphBidi::Neutral},
+    {0x11d90, 0x11d91, ParagraphBidi::Neutral},
+    {0x11d95, 0x11d95, ParagraphBidi::Neutral},
+    {0x11d97, 0x11d97, ParagraphBidi::Neutral},
+    {0x11ef3, 0x11ef4, ParagraphBidi::Neutral},
+    {0x11f00, 0x11f01, ParagraphBidi::Neutral},
+    {0x11f36, 0x11f3a, ParagraphBidi::Neutral},
+    {0x11f40, 0x11f40, ParagraphBidi::Neutral},
+    {0x11f42, 0x11f42, ParagraphBidi::Neutral},
+    {0x11f5a, 0x11f5a, ParagraphBidi::Neutral},
+    {0x11fd5, 0x11ff1, ParagraphBidi::Neutral},
+    {0x13440, 0x13440, ParagraphBidi::Neutral},
+    {0x13447, 0x13455, ParagraphBidi::Neutral},
+    {0x1611e, 0x16129, ParagraphBidi::Neutral},
+    {0x1612d, 0x1612f, ParagraphBidi::Neutral},
+    {0x16af0, 0x16af4, ParagraphBidi::Neutral},
+    {0x16b30, 0x16b36, ParagraphBidi::Neutral},
+    {0x16f4f, 0x16f4f, ParagraphBidi::Neutral},
+    {0x16f8f, 0x16f92, ParagraphBidi::Neutral},
+    {0x16fe2, 0x16fe2, ParagraphBidi::Neutral},
+    {0x16fe4, 0x16fe4, ParagraphBidi::Neutral},
+    {0x1bc9d, 0x1bc9e, ParagraphBidi::Neutral},
+    {0x1bca0, 0x1bca3, ParagraphBidi::Neutral},
+    {0x1cc00, 0x1ccd5, ParagraphBidi::Neutral},
+    {0x1ccf0, 0x1ccf9, ParagraphBidi::Neutral},
+    {0x1cd00, 0x1ceb3, ParagraphBidi::Neutral},
+    {0x1cf00, 0x1cf2d, ParagraphBidi::Neutral},
+    {0x1cf30, 0x1cf46, ParagraphBidi::Neutral},
+    {0x1d167, 0x1d169, ParagraphBidi::Neutral},
+    {0x1d173, 0x1d182, ParagraphBidi::Neutral},
+    {0x1d185, 0x1d18b, ParagraphBidi::Neutral},
+    {0x1d1aa, 0x1d1ad, ParagraphBidi::Neutral},
+    {0x1d1e9, 0x1d1ea, ParagraphBidi::Neutral},
+    {0x1d200, 0x1d245, ParagraphBidi::Neutral},
+    {0x1d300, 0x1d356, ParagraphBidi::Neutral},
+    {0x1d6c1, 0x1d6c1, ParagraphBidi::Neutral},
+    {0x1d6db, 0x1d6db, ParagraphBidi::Neutral},
+    {0x1d6fb, 0x1d6fb, ParagraphBidi::Neutral},
+    {0x1d715, 0x1d715, ParagraphBidi::Neutral},
+    {0x1d735, 0x1d735, ParagraphBidi::Neutral},
+    {0x1d74f, 0x1d74f, ParagraphBidi::Neutral},
+    {0x1d76f, 0x1d76f, ParagraphBidi::Neutral},
+    {0x1d789, 0x1d789, ParagraphBidi::Neutral},
+    {0x1d7a9, 0x1d7a9, ParagraphBidi::Neutral},
+    {0x1d7c3, 0x1d7c3, ParagraphBidi::Neutral},
+    {0x1d7ce, 0x1d7ff, ParagraphBidi::Neutral},
+    {0x1da00, 0x1da36, ParagraphBidi::Neutral},
+    {0x1da3b, 0x1da6c, ParagraphBidi::Neutral},
+    {0x1da75, 0x1da75, ParagraphBidi::Neutral},
+    {0x1da84, 0x1da84, ParagraphBidi::Neutral},
+    {0x1da9b, 0x1da9f, ParagraphBidi::Neutral},
+    {0x1daa1, 0x1daaf, ParagraphBidi::Neutral},
+    {0x1e000, 0x1e006, ParagraphBidi::Neutral},
+    {0x1e008, 0x1e018, ParagraphBidi::Neutral},
+    {0x1e01b, 0x1e021, ParagraphBidi::Neutral},
+    {0x1e023, 0x1e024, ParagraphBidi::Neutral},
+    {0x1e026, 0x1e02a, ParagraphBidi::Neutral},
+    {0x1e08f, 0x1e08f, ParagraphBidi::Neutral},
+    {0x1e130, 0x1e136, ParagraphBidi::Neutral},
+    {0x1e2ae, 0x1e2ae, ParagraphBidi::Neutral},
+    {0x1e2ec, 0x1e2ef, ParagraphBidi::Neutral},
+    {0x1e2ff, 0x1e2ff, ParagraphBidi::Neutral},
+    {0x1e4ec, 0x1e4ef, ParagraphBidi::Neutral},
+    {0x1e5ee, 0x1e5ef, ParagraphBidi::Neutral},
+    {0x1e800, 0x1e8cf, ParagraphBidi::Right},
+    {0x1e8d0, 0x1e8d6, ParagraphBidi::Neutral},
+    {0x1e8d7, 0x1e943, ParagraphBidi::Right},
+    {0x1e944, 0x1e94a, ParagraphBidi::Neutral},
+    {0x1e94b, 0x1eeef, ParagraphBidi::Right},
+    {0x1eef0, 0x1eef1, ParagraphBidi::Neutral},
+    {0x1eef2, 0x1efff, ParagraphBidi::Right},
+    {0x1f000, 0x1f02b, ParagraphBidi::Neutral},
+    {0x1f030, 0x1f093, ParagraphBidi::Neutral},
+    {0x1f0a0, 0x1f0ae, ParagraphBidi::Neutral},
+    {0x1f0b1, 0x1f0bf, ParagraphBidi::Neutral},
+    {0x1f0c1, 0x1f0cf, ParagraphBidi::Neutral},
+    {0x1f0d1, 0x1f0f5, ParagraphBidi::Neutral},
+    {0x1f100, 0x1f10f, ParagraphBidi::Neutral},
+    {0x1f12f, 0x1f12f, ParagraphBidi::Neutral},
+    {0x1f16a, 0x1f16f, ParagraphBidi::Neutral},
+    {0x1f1ad, 0x1f1ad, ParagraphBidi::Neutral},
+    {0x1f260, 0x1f265, ParagraphBidi::Neutral},
+    {0x1f300, 0x1f6d7, ParagraphBidi::Neutral},
+    {0x1f6dc, 0x1f6ec, ParagraphBidi::Neutral},
+    {0x1f6f0, 0x1f6fc, ParagraphBidi::Neutral},
+    {0x1f700, 0x1f776, ParagraphBidi::Neutral},
+    {0x1f77b, 0x1f7d9, ParagraphBidi::Neutral},
+    {0x1f7e0, 0x1f7eb, ParagraphBidi::Neutral},
+    {0x1f7f0, 0x1f7f0, ParagraphBidi::Neutral},
+    {0x1f800, 0x1f80b, ParagraphBidi::Neutral},
+    {0x1f810, 0x1f847, ParagraphBidi::Neutral},
+    {0x1f850, 0x1f859, ParagraphBidi::Neutral},
+    {0x1f860, 0x1f887, ParagraphBidi::Neutral},
+    {0x1f890, 0x1f8ad, ParagraphBidi::Neutral},
+    {0x1f8b0, 0x1f8bb, ParagraphBidi::Neutral},
+    {0x1f8c0, 0x1f8c1, ParagraphBidi::Neutral},
+    {0x1f900, 0x1fa53, ParagraphBidi::Neutral},
+    {0x1fa60, 0x1fa6d, ParagraphBidi::Neutral},
+    {0x1fa70, 0x1fa7c, ParagraphBidi::Neutral},
+    {0x1fa80, 0x1fa89, ParagraphBidi::Neutral},
+    {0x1fa8f, 0x1fac6, ParagraphBidi::Neutral},
+    {0x1face, 0x1fadc, ParagraphBidi::Neutral},
+    {0x1fadf, 0x1fae9, ParagraphBidi::Neutral},
+    {0x1faf0, 0x1faf8, ParagraphBidi::Neutral},
+    {0x1fb00, 0x1fb92, ParagraphBidi::Neutral},
+    {0x1fb94, 0x1fbf9, ParagraphBidi::Neutral},
+    {0xe0001, 0xe0001, ParagraphBidi::Neutral},
+    {0xe0020, 0xe007f, ParagraphBidi::Neutral},
+    {0xe0100, 0xe01ef, ParagraphBidi::Neutral},
+};
+
 }
 
 #line 1 "src/shell/error.h"
@@ -35907,6 +38472,24 @@ int ImageCacheEncodedCount(App* app = nullptr);
 
 }
 
+#line 1 "src/gpui/locale_apple.h"
+
+#define GPUI_DEFINE_APPLE_LOCALE()                                      \
+    TempStr PlatPreferredLocaleTemp() {                                 \
+        CFArrayRef names = CFLocaleCopyPreferredLanguages();            \
+        if (!names) return {};                                          \
+        char locale[256] = {};                                          \
+        if (CFArrayGetCount(names) > 0) {                               \
+            auto first = (CFStringRef)CFArrayGetValueAtIndex(names, 0); \
+            if (!CFStringGetCString(first, locale, sizeof(locale),      \
+                                    kCFStringEncodingUTF8)) {           \
+                locale[0] = 0;                                          \
+            }                                                           \
+        }                                                               \
+        CFRelease(names);                                               \
+        return StrDupTemp(Str(locale));                                 \
+    }
+
 #line 1 "src/gpui/paint.h"
 
 #include <math.h>
@@ -36332,6 +38915,16 @@ void WindowDrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
 
 void WindowDrawFrameHeadless(Window* win, float dipW, float dipH);
 
+TempStr PlatPreferredLocaleTemp();
+
+#if GPUI_OS_WINDOWS || GPUI_OS_MAC
+bool PlatAutoHideScrollbars();
+#else
+inline bool PlatAutoHideScrollbars() {
+    return base::kPlatFacts.autoHideScrollbars;
+}
+#endif
+
 bool PlatReduceMotion();
 
 #if GPUI_OS_LINUX
@@ -36399,6 +38992,8 @@ int WindowCurrentClickCount(Window* win);
 void WindowTimerTick(Window* win);
 
 int WindowChromeHit(Window* win, float x, float y);
+
+void WindowCancelPointerGesture(Window* win);
 
 int WindowTimerMs(Window* win);
 
@@ -36673,6 +39268,9 @@ namespace gpui {
 
 App* TestAppNew();
 void TestAppFree(App* app);
+
+RenderImage* TestMakeSizedImage(PaintApp* paint, int width, int height);
+ImageSource TestSizedImageSource(Str uri, void* bitmap);
 
 Window* TestWindowOpen(App* app, EntityId root, float w = 1920, float h = 1080,
                        float scale = 2);
@@ -43710,6 +46308,15 @@ bool WebViewSetTheme(WebView* webview, Theme theme);
 bool WebViewSetMemoryUsageLevel(WebView* webview, MemoryUsageLevel level);
 
 bool WebViewReparent(WebView* webview, void* parentWindow);
+
+#if GPUI_OS_LINUX
+
+#if GPUI_WRY_UNSUPPORTED
+inline void WebViewDetachX11Children(void*) {}
+#else
+void WebViewDetachX11Children(void* parentWindow);
+#endif
+#endif
 
 bool WebViewSetTrafficLightInset(WebView* webview, Position position);
 

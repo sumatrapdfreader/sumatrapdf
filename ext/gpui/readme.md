@@ -153,9 +153,41 @@ parsers need no libraries at all.
 
 No other dependencies, no nested build system, no STL containers.
 
+## Unicode grapheme data
+
+The grapheme property tables come from unicode-segmentation 1.13.3.
+
+```text
+Copyright (c) 2015 The Rust Project Developers
+
+Permission is hereby granted, free of charge, to any
+person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the
+Software without restriction, including without
+limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice
+shall be included in all copies or substantial portions
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+```
+
 ## This copy
 
-Amalgamated from gpui-kit-cpp [`3db6933f51b493deb35f389d3f2e2022b611545d`](https://github.com/kjk/gpui-kit-cpp/commit/3db6933f51b493deb35f389d3f2e2022b611545d).
+Amalgamated from gpui-kit-cpp [`6a8297c1795e0f100c327eb6f3c666b1d7cabfb9`](https://github.com/kjk/gpui-kit-cpp/commit/6a8297c1795e0f100c327eb6f3c666b1d7cabfb9).
 
-[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/3db6933f51b493deb35f389d3f2e2022b611545d...main)
+[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/6a8297c1795e0f100c327eb6f3c666b1d7cabfb9...main)
 shows every commit this copy is behind by; if that page is empty, it is current.

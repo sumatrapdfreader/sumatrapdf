@@ -7,7 +7,7 @@
 //   - NOMINMAX before the first <windows.h> (winsock2.h pulls it in, and
 //     gpui.h's own min/max-free code is parsed after that)
 //   - winsock2.h before <windows.h>, which our Base.h also requires
-//   - StrL / dimof are undefined after gpui.h so Base.h can define ours
+//   - StrL / dimof / dimofi are undefined after gpui.h so Base.h can define ours
 // After this header, `Str` / `Vec` / `Rect` / `Point` / `Size` are ours and
 // gpui's are `gp::Str` &c. Never `using namespace gpui` in such a file.
 
@@ -20,6 +20,7 @@
 
 #undef StrL
 #undef dimof
+#undef dimofi
 
 #include "base/Base.h"
 
