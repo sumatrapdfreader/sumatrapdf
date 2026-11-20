@@ -397,6 +397,7 @@ struct LitFile {
     Vec<LitEntry> entries;
     StrVec sectionNames;
     Str sectionData[kLitMaxSections]; // decoded caches, owned
+    bool sectionDecoding[kLitMaxSections] = {};
     Vec<LitManifestItem> manifest;
     int drmLevel = 0;
     u8 bookKey[8] = {};
@@ -738,6 +739,14 @@ Str LitFile::GetSection(int section) {
     if (!str::IsNull(sectionData[section])) {
         return sectionData[section];
     }
+    // a section's transform data can't be in that same section (#6569)
+    if (sectionDecoding[section]) {
+        return {};
+    }
+    sectionDecoding[section] = true;
+    defer {
+        sectionDecoding[section] = false;
+    };
     Str name = sectionNames.At(section);
     TempStr base = fmt("::DataSpace/Storage/%s", name);
     Str transform = GetFile(fmt("%s/Transform/List", Str(base)));
@@ -816,11 +825,7 @@ static TempStr LitNormPathTemp(Str path) {
 
 constexpr int kLitManifestGroups = 4;
 
-static bool LitParseManifest(LitFile* lit) {
-    Str raw = lit->GetFile(StrL("/manifest"));
-    if (str::IsNull(raw)) {
-        return false;
-    }
+static void LitReadManifestItems(LitFile* lit, Str raw) {
     int pos = 0;
     while (pos < len(raw)) {
         int slen = (u8)raw.s[pos++];
@@ -837,7 +842,7 @@ static bool LitParseManifest(LitFile* lit) {
             }
             for (int i = 0; i < nFiles; i++) {
                 if (len(raw) < 5 || pos > len(raw) - 5) {
-                    return len(lit->manifest) > 0;
+                    return;
                 }
                 pos += 4; // offset, unused
                 LitManifestItem item;
@@ -845,7 +850,7 @@ static bool LitParseManifest(LitFile* lit) {
                 TempStr path = LitSizedStringTemp(raw, &pos, false);
                 LitSizedStringTemp(raw, &pos, true); // consume unused MIME type
                 if (len(item.internal) == 0 || len(path) == 0) {
-                    return len(lit->manifest) > 0;
+                    return;
                 }
                 item.isSpine = (state == 0);
                 // normalize the original path: windows separators, drive
@@ -859,6 +864,16 @@ static bool LitParseManifest(LitFile* lit) {
             }
         }
     }
+}
+
+// A manifest cut short still gets its paths fixed up below: an item whose path
+// normalized to nothing crashed packaging it (#6569)
+static bool LitParseManifest(LitFile* lit) {
+    Str raw = lit->GetFile(StrL("/manifest"));
+    if (str::IsNull(raw)) {
+        return false;
+    }
+    LitReadManifestItems(lit, raw);
     // Strip complete directories shared by all items.
     if (len(lit->manifest) > 1) {
         Str first = lit->manifest[0].path;
