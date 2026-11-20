@@ -69,6 +69,12 @@ void DocCanvasAutoScrollTick(MainWindow* win, int elapsedMs);
 // orig's SmoothScroll: the exponential chase of the wheel / line-scroll target
 void DocCanvasSmoothScrollTick(MainWindow* win, int elapsedMs);
 void StopSmoothScroll(MainWindow* win);
+enum class PinchPhase {
+    Begin,
+    Change,
+    End,
+};
+bool DocCanvasPinch(MainWindow* win, PinchPhase phase, float magnification, float wx, float wy);
 
 // `nTrackPos` is the thumb position of a ScrollMsg::ThumbTrack
 void CanvasOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos = 0);

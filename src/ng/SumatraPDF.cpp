@@ -7686,6 +7686,7 @@ int GpuiMain(int argc, char** argv) {
     gp::App* app = gp::AppNew();
 #if OS_DARWIN
     AppShellHandleOpenDocs();
+    AppShellHandleMagnify();
 #endif
     gpc::Init(app);
     // the current theme's colors become gpui's before the first element is built

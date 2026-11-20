@@ -3786,6 +3786,62 @@ void DocCanvasWheelFromFrame(MainWindow* win, gp::Ctx* cx, const gp::ScrollWheel
     }
 }
 
+// the trackpad pinch in progress: the zoom it started at and the
+// magnification so far
+struct PinchState {
+    MainWindow* win = nullptr;
+    bool onCanvas = false;
+    float startZoom = 0;
+    float accum = 0;
+};
+static PinchState gPinch;
+
+// a pinch is the canvas' only when it starts over a fixed-layout document
+static void PinchBegin(MainWindow* win, bool onCanvas) {
+    gPinch = PinchState{};
+    gPinch.win = win;
+    gPinch.onCanvas = onCanvas && IsMainWindowValid(win) && win->AsFixed() && win->docCanvas;
+    if (!gPinch.onCanvas) {
+        return;
+    }
+    gPinch.startZoom = win->ctrl->GetZoomVirtual(true);
+    StopSmoothScroll(win);
+    win->dragStartPending = false;
+}
+
+// zoom = startZoom * (1 + magnification so far), continuous and anchored at
+// the pointer, as in Preview. accum is clamped so reversing acts at once.
+static void PinchZoom(MainWindow* win, float magnification, Point pt) {
+    float lo = kZoomMin / gPinch.startZoom - 1.f;
+    float hi = kZoomMax / gPinch.startZoom - 1.f;
+    gPinch.accum = limitValue(gPinch.accum + magnification, lo, hi);
+    SmartZoom(win, gPinch.startZoom * (1.f + gPinch.accum), &pt, false);
+    AppShellInvalidate(win);
+}
+
+// a trackpad pinch (macOS magnify event) at window point (wx, wy) in dips;
+// magnification is this event's delta (0.1 = 10% bigger). False when the
+// gesture isn't the canvas' and should go elsewhere.
+bool DocCanvasPinch(MainWindow* win, PinchPhase phase, float magnification, float wx, float wy) {
+    if (phase == PinchPhase::End) {
+        bool handled = gPinch.win == win && gPinch.onCanvas;
+        gPinch = PinchState{};
+        return handled;
+    }
+
+    Point pt;
+    bool onCanvas = IsMainWindowValid(win) && ToDoc(win, wx, wy, &pt);
+    // a change without its begin (the window wasn't ours then) starts one
+    if (phase == PinchPhase::Begin || gPinch.win != win) {
+        PinchBegin(win, onCanvas);
+    }
+    if (!gPinch.onCanvas || !IsMainWindowValid(win) || !win->AsFixed()) {
+        return false;
+    }
+    PinchZoom(win, magnification, pt);
+    return true;
+}
+
 // orig's overlay bar forwards the wheel to the canvas (OverlayScrollbar.cpp),
 // and a win32 bar is part of the canvas window: the wheel over the vertical
 // bar is a canvas wheel, with the FastScrollOverScrollbar branch reachable

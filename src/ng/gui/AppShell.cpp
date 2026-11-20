@@ -586,14 +586,23 @@ static bool ForwardTestWheelToBrowser(MainWindow* win, int delta, int mods) {
     return true;
 }
 
+// a trackpad pinch at (x, y) dips: phase 0 begin, 1 change, 2 end;
+// magnification in thousandths. Replies with the zoom after it.
+static TempStr TestPinchTemp(MainWindow* win, int x, int y, int phase, int milli) {
+    bool handled = DocCanvasPinch(win, (PinchPhase)phase, (float)milli / 1000.f, (float)x, (float)y);
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    float zoom = dm ? dm->GetZoomVirtual(true) : 0.f;
+    return fmt("OK handled=%d zoom=%.2f", handled ? 1 : 0, zoom);
+}
+
 // ng: kinds are key / keyup (a = vk, b = mods: 1 Ctrl, 2 Shift, 4 Alt,
 // 8 auto-repeat), char (a = code point), down / up / click (a, b = x, y in
 // dips; c = button: 0 left, 1 right, 2 middle; d = mods: 1 Ctrl, 2 Shift,
 // 4 Alt, 8 Command), move (c = pressed
 // button + 1, or 0), wheel (c = delta in 120ths of a notch, 1000000 + delta
 // for a horizontal one) and wheelxy (a trackpad slide: c = deltaY, d = deltaX
-// in 120ths of a notch, positive scrolls up / left). k is dips per unit of a
-// mouse x, y.
+// in 120ths of a notch, positive scrolls up / left) and pinch (see
+// TestPinchTemp). k is dips per unit of a mouse x, y.
 TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d, float k) {
     // a modal dialog in a window of its own has the input, as on screen: the
     // main window is disabled, so what a test sends "to the window" is the
@@ -626,6 +635,9 @@ TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d,
     // subclass proc; a real key still toggles from OnKeyDown.
     if (str::Eq(kind, StrL("char")) && SelectTextWithKeyboardOnChar(win, a)) {
         return StrL("OK");
+    }
+    if (str::Eq(kind, StrL("pinch"))) {
+        return TestPinchTemp(win, a, b, c, d);
     }
     return AppShellTestInputGpui(win ? win->gpuiWin : nullptr, kind, a, b, c, d, k);
 }
