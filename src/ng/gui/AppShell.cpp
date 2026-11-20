@@ -3171,6 +3171,10 @@ static void ShellApplyTickPace(ShellView* self, gp::Window* gw, int ms) {
 
 void ShellView::OnRearmTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent*) {
     self->tickRearmPosted = false;
+    // gp::AppFree() runs a re-arm posted before GpuiMain deleted the windows
+    if (!IsMainWindowValidAndNotClosing(self->win)) {
+        return;
+    }
     ShellApplyTickPace(self, cx->win, self->tickWanted);
 }
 
