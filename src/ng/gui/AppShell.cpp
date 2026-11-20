@@ -590,8 +590,10 @@ static bool ForwardTestWheelToBrowser(MainWindow* win, int delta, int mods) {
 // 8 auto-repeat), char (a = code point), down / up / click (a, b = x, y in
 // dips; c = button: 0 left, 1 right, 2 middle; d = mods: 1 Ctrl, 2 Shift,
 // 4 Alt, 8 Command), move (c = pressed
-// button + 1, or 0) and wheel (c = delta in 120ths of a notch, 1000000 + delta
-// for a horizontal one). k is dips per unit of a mouse x, y.
+// button + 1, or 0), wheel (c = delta in 120ths of a notch, 1000000 + delta
+// for a horizontal one) and wheelxy (a trackpad slide: c = deltaY, d = deltaX
+// in 120ths of a notch, positive scrolls up / left). k is dips per unit of a
+// mouse x, y.
 TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d, float k) {
     // a modal dialog in a window of its own has the input, as on screen: the
     // main window is disabled, so what a test sends "to the window" is the
@@ -664,6 +666,14 @@ TempStr AppShellTestInputGpui(gp::Window* gw, Str kind, int a, int b, int c, int
         float delta = (float)c / 120.f * gp::WheelNotchPixels(gw->app);
         gp::PlatformInput in = gp::InputScrollWheel(x, y, horizontal ? -delta : 0.f, horizontal ? 0.f : delta, false,
                                                     TestMods(d), gp::TouchPhase::Moved);
+        gp::WindowDispatchInput(gw, &in);
+        return StrL("OK");
+    }
+    if (str::Eq(kind, StrL("wheelxy"))) {
+        float notch = gp::WheelNotchPixels(gw->app);
+        float dy = (float)c / 120.f * notch;
+        float dx = (float)d / 120.f * notch;
+        gp::PlatformInput in = gp::InputScrollWheel(x, y, dx, dy, true, gp::Modifiers{}, gp::TouchPhase::Moved);
         gp::WindowDispatchInput(gw, &in);
         return StrL("OK");
     }

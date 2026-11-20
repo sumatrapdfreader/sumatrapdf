@@ -102,6 +102,8 @@ struct DocCanvasUI {
     // last wheel delta that was a fraction of a notch (a precision touchpad)
     TimeStamp wheelFineDeltaTime{};
     bool wheelFineDeltaSeen = false;
+    // sideways travel of a two-axis wheel (a trackpad) short of a pixel
+    int wheelAccumDeltaX = 0;
     // the page context menu, built when it is opened (orig's
     // OnWindowContextMenu), and the popup that shows it
     MenuModel* ctxMenu = nullptr;
@@ -1841,6 +1843,32 @@ void DocCanvasFrameWheel(MainWindow* win, int delta, bool isCtrl, bool isShift, 
     CanvasOnMouseWheel(win, delta, isCtrl, isShift, isAlt, Point{1, 1});
     gInMouseWheelScroll = false;
     AppShellInvalidate(win);
+}
+
+// The sideways part of a two-axis wheel event (a trackpad slide) pans the page
+// at Shift+wheel speed, by pixels: whole lines would make a slow slide jump.
+// No zoom, page turn or citation popup scroll.
+static void CanvasWheelPanX(MainWindow* win, int delta) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->NeedHScroll() || MouseAction::Scrolling == win->mouseAction || gDeltaPerLine <= 0) {
+        return;
+    }
+    if (gSettings->invertMouseWheel) {
+        delta = -delta;
+    }
+
+    // the rest of a pixel waits for the next event
+    int lineAmount = DpiScale(ScrollLineAmount(gSettings->scrollLineAmount));
+    DocCanvasUI* ui = Ui(win);
+    ui->wheelAccumDeltaX += delta * lineAmount;
+    int px = ui->wheelAccumDeltaX / gDeltaPerLine;
+    if (px == 0) {
+        return;
+    }
+    ui->wheelAccumDeltaX -= px * gDeltaPerLine;
+
+    // a positive delta goes left, as LineLeft
+    CanvasOnHScroll(win, ScrollMsg::ThumbTrack, win->scrollH.nPos - px);
 }
 
 // --- mouse ------------------------------------------------------------------
@@ -3715,7 +3743,13 @@ void DocCanvasView::OnWheel(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWh
     float raw = ev->deltaY != 0 ? ev->deltaY : ev->deltaX;
     bool isShift = ev->modifiers.shift || ev->deltaY == 0;
     int delta = (int)((raw / notch) * kWheelDelta);
-    if (delta == 0) {
+    // a diagonal trackpad slide carries both axes: deltaY scrolls, deltaX only
+    // pans. One-axis events (Shift+wheel, a tilt wheel) are handled as before.
+    int deltaX = 0;
+    if (!ev->modifiers.shift && ev->deltaY != 0) {
+        deltaX = (int)((ev->deltaX / notch) * kWheelDelta);
+    }
+    if (delta == 0 && deltaX == 0) {
         return;
     }
     Point pt;
@@ -3731,7 +3765,13 @@ void DocCanvasView::OnWheel(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWh
     if ((isRightButton || IsRightDragging(win)) && ev->deltaY != 0) {
         isCtrl = true;
     }
-    CanvasOnMouseWheel(win, delta, isCtrl, isShift, ev->modifiers.alt, pt);
+    if (delta != 0) {
+        CanvasOnMouseWheel(win, delta, isCtrl, isShift, ev->modifiers.alt, pt);
+    }
+    // a zoom gesture doesn't pan
+    if (deltaX != 0 && !isCtrl) {
+        CanvasWheelPanX(win, deltaX);
+    }
     gInMouseWheelScroll = false;
     gp::Notify(cx);
 }
