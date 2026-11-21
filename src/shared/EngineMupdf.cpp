@@ -1334,14 +1334,53 @@ static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<GlyphBox>& boxes) {
     VecRemoveLast(boxes);
 }
 
+// Letter after which a right-to-left line's leading space is drawn, or null.
+// SOLIDWORKS writes the space first but draws it after a word (#6576).
+static fz_stext_char* MovedSpaceAfter(const fz_stext_line* line) {
+    fz_stext_char* space = line->first_char;
+    if (!space || space->c != ' ') {
+        return nullptr;
+    }
+    fz_stext_char* first = space->next;
+    if (!first || !IsRtlCodepoint(first->c)) {
+        return nullptr;
+    }
+
+    // drawn right of the first letter, i.e. where a leading space belongs
+    fz_rect sr = fz_rect_from_quad(space->quad);
+    float tolerance = std::max(space->size, 1.f) * 0.1f;
+    if (sr.x0 >= fz_rect_from_quad(first->quad).x1 - tolerance) {
+        return nullptr;
+    }
+
+    // the letter whose left edge the space touches
+    for (fz_stext_char* c = first; c; c = c->next) {
+        if (c->c == ' ' || c->c == 0xAD) {
+            continue;
+        }
+        fz_rect r = fz_rect_from_quad(c->quad);
+        if (fabsf(r.x0 - sr.x1) <= tolerance) {
+            return c;
+        }
+    }
+    return nullptr;
+}
+
 static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& content, Vec<GlyphBox>& boxes,
                                  Vec<SeenGlyph>& seen, Str hardLineSep, Str softLineSep) {
     fz_stext_line* line = block->u.t.first_line;
     while (line) {
+        fz_stext_char* spaceAfter = MovedSpaceAfter(line);
+
         // Walk each line so tracking spaces can be dropped (issue #5627:
         // Turkish PDFs that space every syllable).
         fz_stext_char* c = line->first_char;
         while (c) {
+            // emitted after spaceAfter instead
+            if (spaceAfter && c == line->first_char) {
+                c = c->next;
+                continue;
+            }
             int rune = c->c;
             // Soft hyphens (U+00AD) are never typed by the user; drop them
             // so search for "softhyphen" matches text that contains SHY
@@ -1368,6 +1407,9 @@ static void AppendStextTextBlock(const fz_stext_block* block, str::Builder& cont
                 }
             }
             AddCharUtf8(line, c, content, boxes, seen);
+            if (c == spaceAfter) {
+                AddCharUtf8(line, line->first_char, content, boxes, seen);
+            }
             c = c->next;
         }
         // Soft-join reflow lines within a paragraph for better copy (#5793);
