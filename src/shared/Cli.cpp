@@ -14,6 +14,9 @@
 struct MainWindow;
 struct WindowTab;
 #include "PdfToolsCommon.h"
+#include "PdfCreator.h"
+#include "ImageReader.h"
+#include "SumatraConfig.h"
 #include "Annotation.h"
 #include "base/Pixmap.h"
 #include "Cli.h"
@@ -784,7 +787,7 @@ static int CmdImages(CliCtx& cx) {
 static int CmdRender(CliCtx& cx) {
     Str dest = OutputArg(cx);
     if (len(dest) == 0) {
-        return Fail(cx, kCliUsage, StrL("needs -o <file.png> (.png, .jpg, .webp ...)"));
+        return Fail(cx, kCliUsage, StrL("needs -o <file.png> (.png, .jpg, .bmp or .gif)"));
     }
     Str dpiStr = OptValue(cx, StrL("--dpi"));
     int dpi = len(dpiStr) > 0 ? ParseInt(dpiStr) : 150;
@@ -1077,6 +1080,45 @@ static int CmdSplit(CliCtx& cx) {
     }
     Out(cx.json ? fmt("{\"files\":[%s]}\n", ToStr(out)) : ToStrTemp(out));
     return kCliOk;
+}
+
+// a PDF with a page per image, in the order given; mupdf's decoders first
+// (JPEG, PNG, GIF, BMP, TIFF, JPEG 2000 keep their bytes), then SumatraPDF's
+// (WebP, HEIC, AVIF, ...)
+static int CmdImagesToPdf(CliCtx& cx) {
+    if (len(cx.positional) < 1) {
+        return Fail(cx, kCliUsage, StrL("usage: images-to-pdf <image> ... -o <out.pdf>"));
+    }
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, cx.positional, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    TempStr producer = fmt("SumatraPDF %s", currentVersion);
+    PdfCreator::SetProducerName(producer);
+    PdfCreator c;
+    for (Str path : cx.positional) {
+        Str data = file::ReadFile(path);
+        if (len(data) == 0) {
+            str::Free(data);
+            return Fail(cx, kCliCantOpen, fmt("can't read '%s'", path));
+        }
+        bool ok = c.AddPageFromImageData(data);
+        if (!ok && !ImageDecodedPixmapWouldBeHuge(data)) {
+            Pixmap* px = PixmapFromData(data);
+            ok = px && c.AddPageFromPixmap(px);
+            FreePixmap(px);
+        }
+        str::Free(data);
+        if (!ok) {
+            return Fail(cx, kCliCantOpen, fmt("'%s' isn't an image SumatraPDF can read", path));
+        }
+    }
+    dir::CreateForFile(dest);
+    if (!c.SaveToFile(dest)) {
+        return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+    }
+    return ReportPdfWritten(cx, dest, len(cx.positional));
 }
 
 static int CmdMerge(CliCtx& cx) {
@@ -2703,6 +2745,7 @@ Page ranges: `1-3,7,10-N` (N is the last page). Page numbers are 1-based.
 - `pages order <file.pdf> 3,1,2 -o out.pdf`
 - `pages rotate <file.pdf> 2-N 90 -o out.pdf` (clockwise: 90, 180, 270)
 - `merge a.pdf b.pdf -o both.pdf`
+- `images-to-pdf scan1.jpg scan2.png -o scans.pdf`
 - `split <file.pdf> -o folder/ [--every 10 | --ranges "1-3;4-N"]`
 - `compress <file.pdf> -o small.pdf`
 - `encrypt <file.pdf> -o locked.pdf --new-password-env NAME`
@@ -2791,7 +2834,7 @@ static const CliCmd gCmds[] = {
      "the pictures in the pages, as the document has them (a PDF's JPEGs, a comic's pages) or as PNG",
      "-o <folder>      where they go, as <name>-p<page>-<n>.<ext>\n--pages <range>  only these pages",
      "images report.pdf -o pics/\nimages comic.cbz --pages 1-5 -o pages/ --json", CmdImages},
-    {"render", "<file> -o <image>", "pages as images (PNG, JPEG, WebP, ... by the file's extension)",
+    {"render", "<file> -o <image>", "pages as images (PNG, JPEG, BMP or GIF, by the file's extension)",
      "-o <file>        the image; for several pages <N> in it is the page number\n--pages <range>  these pages "
      "(default: the first)\n--dpi <n>        resolution, default 150",
      "render paper.pdf -o page.png\nrender comic.cbz --pages 1-3 -o pages/<N>.jpg --dpi 96", CmdRender},
@@ -2809,6 +2852,9 @@ static const CliCmd gCmds[] = {
      CmdPages},
     {"merge", "<a.pdf> <b.pdf> ... -o <out.pdf>", "PDFs one after another in a new PDF", "-o <file>        the new PDF",
      "merge a.pdf b.pdf -o both.pdf", CmdMerge},
+    {"images-to-pdf", "<image> ... -o <out.pdf>",
+     "a PDF with a page per image (JPEG, PNG, GIF, TIFF, WebP, HEIC, AVIF, ...), in the order given",
+     "-o <file>        the new PDF", "images-to-pdf scan1.jpg scan2.jpg -o scans.pdf", CmdImagesToPdf},
     {"split", "<file.pdf> -o <folder>", "a PDF per page, or per group of pages, named <name>-<first>[-<last>].pdf",
      "-o <folder>      where the PDFs go\n--every <n>      n pages to a PDF (default 1)\n--ranges <r;r>   a PDF per "
      "range, e.g. \"1-3;4-9;10-N\"",

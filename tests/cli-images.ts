@@ -1,6 +1,7 @@
 // `SumatraPDF cli images` (src/shared/Cli.cpp): a PDF's JPEG comes out as the
 // same bytes, pictures without a format of their own as PNG, a comic's pages
-// and an EPUB's pictures too; --pages.
+// and an EPUB's pictures too; --pages. `cli images-to-pdf`: a page per image,
+// JPEG, PNG and WebP.
 //
 // ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-images.ts [--no-build]
@@ -88,6 +89,22 @@ export async function testit(): Promise<void> {
   r = cli(["images", join(ROOT, "tests", "issue-6007.epub"), "-o", join(dir, "epub")]);
   expect("an EPUB's pictures", r.code === 0 && readdirSync(join(dir, "epub")).length > 0, r);
   expect("no -o is 2", cli(["images", pdf]).code === 2, "");
+
+  // images-to-pdf: a JPEG, a PNG and a WebP
+  const src = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+  const imgs3: string[] = [];
+  for (const ext of ["jpg", "png"]) {
+    const f = join(dir, `page.${ext}`);
+    expect(`render ${ext}`, cli(["render", src, "--dpi", "24", "-o", f]).code === 0, "");
+    imgs3.push(f);
+  }
+  imgs3.push(join(ROOT, "ext", "mupdf", "docs", "images", "200x200-rect.webp"));
+  const made = join(dir, "made.pdf");
+  r = cli(["images-to-pdf", ...imgs3, "-o", made, "--json"]);
+  expect("images-to-pdf", r.code === 0 && JSON.parse(r.out).pages === 3, r);
+  expect("3 pages", JSON.parse(cli(["info", made, "--json"]).out).pages === 3, "");
+  r = cli(["images-to-pdf", imgs3[0]!, src, "-o", join(dir, "x.pdf")]);
+  expect("a PDF isn't an image: 3", r.code === 3, r);
   console.log(`${name}: OK`);
 }
 
