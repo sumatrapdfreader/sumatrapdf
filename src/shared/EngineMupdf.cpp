@@ -452,7 +452,12 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     if (len(pathStr) == 0) {
         return false;
     }
+#if OS_WIN
     path = str::ReplaceTemp(pathStr, StrL("/"), StrL("\\"));
+#else
+    // ng: '/' is the separator here; a '\\' path is not found
+    path = str::DupTemp(pathStr);
+#endif
 
     FileType kind = GuessFileTypeFromName(path);
     if (!IsEngineMupdfSupportedFileType(kind)) {
