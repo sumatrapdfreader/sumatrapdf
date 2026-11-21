@@ -138,6 +138,18 @@ function ngMenu(client: ControlClient): RowMenu {
         }
         await sleep(40);
       }
+      // the menu takes the keyboard before its first frame, and an arrow key
+      // with no rows laid out yet moves nothing
+      for (;;) {
+        const layout = String((await client.request(ControlCommand.TestToolWindow, ["layout", "annotlist"]))[1] ?? "");
+        if (MENU.every((label) => layout.includes(`'${label}'`))) {
+          break;
+        }
+        if (Date.now() > deadline) {
+          throw new Error(`issue-6365: the menu never drew its rows:\n${layout}`);
+        }
+        await sleep(40);
+      }
       const m = /menu=([^\n]*)/.exec((await state(client)).raw);
       return m && m[1] ? m[1].split("|") : [];
     },
