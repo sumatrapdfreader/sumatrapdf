@@ -43,6 +43,7 @@ What was compared:
 | Pen input took the mouse path: no pen drag selection, barrel drag was a right click, eraser drew ink | `756d278035`              | `pen-input`                       |
 | Next / prev file in folder loaded on the UI thread                                                   | `9208051ae8`              | `open-slow-drive`                 |
 | No copy progress on the Loading tab for a comic on a network drive                                   | `39281021c1`              | `open-slow-drive`                 |
+| No elapsed time on the Loading message ("Loading x ... 3s")                                          | `a593313927`              | `open-slow-drive`                 |
 | Edit Image in Another App, Replace Image Windows only                                                | `c7b93dcfea` `e09072172a` | `replace-image` (Windows)         |
 | SumatraPDF Web couldn't transfer files off Windows (now libcurl on posix)                            | `7e3b6bcad2` `dacf000946` | `ad-hoc-http-transfer`            |
 | ng-only `cli markdown` missed slightly lowered subscripts                                            | `a8542f1a25`              | `cli-markdown-cases`              |
@@ -85,8 +86,7 @@ Failures that were the test, not ng (fixed in the tests): `issue-3585`
 - Touch long-press and pen handling are Windows only: gpui emits `TouchEvent`
   only there. Orig's pen barrel button is a left drag, so neither app has a pen
   context menu.
-- The Loading message has no elapsed-seconds counter ("Loading x ... 3s").
-  Command-line files, reload and DDE `[Open]` load on the UI thread in both apps.
+- Command-line files, reload and DDE `[Open]` load on the UI thread in both apps.
 - SumatraPDF Web on Wasm: no browser-fetch path, transfers report failure.
 - Not compiled on macOS yet: gpui's `WindowAtPoint` (Cocoa) and ng's new code,
   including the libcurl transfers and Edit Image's `open` launch. Linux builds
