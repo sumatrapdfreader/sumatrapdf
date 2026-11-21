@@ -408,6 +408,7 @@ const commandsRaw = [
     "CmdToggleTextSelecting", "Start / Stop Selecting Text",
     "CmdPdfWatermark", "Add Watermark To PDF...",
     "CmdPdfAddPageNumbers", "Add Page Numbers To PDF...",
+    "CmdCloseWindow", "Close Window",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

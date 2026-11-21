@@ -216,6 +216,7 @@ static Accel gPlatformAccelerators[] = {
     {{kShift | kCmd | kVirt, VK_OEM_MINUS}, CmdZoomOut},
     // Use Selection for Find
     {{kCmd | kVirt, 'E'}, CmdFindNextSel},
+    {{kShift | kCmd | kVirt, 'W'}, CmdCloseWindow},
 
     {{kCmd | kVirt, '0'}, CmdZoomActualSize},
     {{kCmd | kVirt, VK_NUMPAD0}, CmdZoomActualSize},

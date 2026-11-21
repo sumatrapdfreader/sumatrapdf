@@ -10964,6 +10964,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             CloseAllTabs(win);
             break;
         }
+
+        case CmdCloseWindow:
+            // what the close button does: asks, then closes all the tabs
+            PostMessageW(win->hwndFrame, WM_CLOSE, 0, 0);
+            break;
         case CmdCloseMissingTabs:
             CloseMissingFileTabs(win);
             break;

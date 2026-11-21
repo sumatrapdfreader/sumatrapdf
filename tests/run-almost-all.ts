@@ -245,6 +245,7 @@ import { testit as cliSign } from "./cli-sign.ts";
 import { testit as startupWindowShown } from "./startup-window-shown.ts";
 import { testit as noExternalLaunch } from "./no-external-launch.ts";
 import { testit as homePageMacDelete } from "./home-page-mac-delete.ts";
+import { testit as closeWindow } from "./close-window.ts";
 import { testit as pdfStampDialog } from "./pdf-stamp-dialog.ts";
 import { testit as issue6487 } from "./issue-6487.ts";
 import { testit as issue6488 } from "./issue-6488.ts";
@@ -1189,6 +1190,7 @@ export const tests: NamedTest[] = [
   ["startup-window-shown", startupWindowShown],
   ["no-external-launch", noExternalLaunch],
   ["home-page-mac-delete", homePageMacDelete],
+  ["close-window", closeWindow],
   ["pdf-stamp-dialog", pdfStampDialog],
   ["issue-6487", issue6487],
   ["issue-6488", issue6488],

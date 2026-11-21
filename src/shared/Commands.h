@@ -401,8 +401,9 @@ enum {
     CmdToggleTextSelecting = 595,
     CmdPdfWatermark = 596,
     CmdPdfAddPageNumbers = 597,
+    CmdCloseWindow = 598,
 
-    CmdLast = 597,
+    CmdLast = 598,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

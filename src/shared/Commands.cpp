@@ -407,6 +407,7 @@ const CommandInfo gCommands[] = {
     {CmdToggleTextSelecting, "CmdToggleTextSelecting\0", StrL("Start / Stop Selecting Text")},
     {CmdPdfWatermark, "CmdPdfWatermark\0", StrL("Add Watermark To PDF...")},
     {CmdPdfAddPageNumbers, "CmdPdfAddPageNumbers\0", StrL("Add Page Numbers To PDF...")},
+    {CmdCloseWindow, "CmdCloseWindow\0", StrL("Close Window")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

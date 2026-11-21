@@ -3874,15 +3874,22 @@ static void RunWindowCloseRequest(MainWindow* win) {
     RequestCloseWindow(win, true);
 }
 
+// what the close button does (CmdCloseWindow): asks, then closes the window
+// with all its tabs. Posted: the caller may still be using the window
+void AppShellRequestCloseWindow(MainWindow* win) {
+    if (!IsMainWindowValid(win) || win->isBeingClosed || win->isClosePending) {
+        return;
+    }
+    win->isClosePending = true;
+    PostForWindow(win, RunWindowCloseRequest, "WindowCloseRequest");
+}
+
 static bool OnWindowShouldClose(void* data, gp::Window*) {
     auto* win = (MainWindow*)data;
     if (!IsMainWindowValid(win) || win->isBeingClosed) {
         return true;
     }
-    if (!win->isClosePending) {
-        win->isClosePending = true;
-        PostForWindow(win, RunWindowCloseRequest, "WindowCloseRequest");
-    }
+    AppShellRequestCloseWindow(win);
     return false;
 }
 

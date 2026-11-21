@@ -5749,6 +5749,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             CloseCurrentTab(win, true);
             break;
 
+        case CmdCloseWindow:
+            AppShellRequestCloseWindow(win);
+            break;
+
         case CmdCloseAllTabs:
             CloseAllTabs(win);
             if (!IsMainWindowValidAndNotClosing(win)) {

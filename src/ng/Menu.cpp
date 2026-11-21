@@ -846,6 +846,30 @@ static MenuDef menuDefEditMac[] = {
 };
 // clang-format on
 
+// Rows for the commands, after the row of afterCmd, wherever that is.
+static void InsertMenuRowsAfter(MenuModel* menu, int afterCmd, const int* cmds, int nCmds) {
+    MenuItemModel* after = MenuFind(menu, afterCmd);
+    for (MenuItemModel& top : menu->items) {
+        MenuModel* sub = top.submenu;
+        int idx = -1;
+        for (int i = 0; sub && after && i < len(sub->items); i++) {
+            if (&sub->items[i] == after) {
+                idx = i;
+            }
+        }
+        if (idx < 0) {
+            continue;
+        }
+        for (int i = 0; i < nCmds; i++) {
+            MenuItemModel row;
+            row.title = trans::GetTranslation(GetCommandDescription(cmds[i]));
+            row.cmdId = cmds[i];
+            VecInsertAt(sub->items, ++idx, row);
+        }
+        return;
+    }
+}
+
 // The macOS menu bar has About, Settings and Quit in the application menu
 // (AppShell.cpp's InstallNativeMenu) and Copy and Select All in Edit. The
 // menu bar is the system's: there is no Show Menu.
@@ -864,26 +888,10 @@ static void AdaptMenuToMac(MenuModel* menu, BuildMenuCtx* ctx) {
 
     // Find Next (⌘G) and the rest after Find, so the menu shows their keys
     static const int kFindCmds[] = {CmdFindNext, CmdFindPrev, CmdFindNextSel};
-    MenuItemModel* find = MenuFind(menu, CmdFindFirst);
-    for (MenuItemModel& top : menu->items) {
-        MenuModel* sub = top.submenu;
-        int idx = -1;
-        for (int i = 0; sub && find && i < len(sub->items); i++) {
-            if (&sub->items[i] == find) {
-                idx = i;
-            }
-        }
-        if (idx < 0) {
-            continue;
-        }
-        for (int cmdId : kFindCmds) {
-            MenuItemModel row;
-            row.title = trans::GetTranslation(GetCommandDescription(cmdId));
-            row.cmdId = cmdId;
-            VecInsertAt(sub->items, ++idx, row);
-        }
-        break;
-    }
+    InsertMenuRowsAfter(menu, CmdFindFirst, kFindCmds, dimof(kFindCmds));
+    // File > Close Window (⇧⌘W) after Close (⌘W)
+    static const int kCloseCmds[] = {CmdCloseWindow};
+    InsertMenuRowsAfter(menu, CmdClose, kCloseCmds, dimof(kCloseCmds));
 
     MenuItemModel edit;
     edit.title = Tr("&Edit");

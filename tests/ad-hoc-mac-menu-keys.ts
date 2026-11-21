@@ -43,8 +43,9 @@ function expect(what: string, ok: boolean, got: string): void {
   }
 }
 
-// AXMenuItemCmdModifiers of a plain ⌘ shortcut
+// AXMenuItemCmdModifiers of a ⌘ and a ⇧⌘ shortcut
 const kModsCmd = 0;
+const kModsShiftCmd = 1;
 
 function findItem(items: MacMenuItem[], menu: string, path: string): MacMenuItem | undefined {
   return items.find((it) => it.menu === menu && it.path === path);
@@ -72,6 +73,12 @@ function menuLayout(app: App): void {
   shortcut("Edit", "Select All", "A");
   shortcut("Window", "Minimize", "M");
   shortcut("Go To", "Find Next", "G");
+  const closeWindow = findItem(items, "File", "Close Window");
+  expect(
+    "File > Close Window is ⇧⌘W",
+    closeWindow?.key === "W" && closeWindow?.mods === kModsShiftCmd,
+    JSON.stringify(closeWindow),
+  );
   shortcut("Go To", "Find Next Selection", "E");
   absent("File", "Exit");
   absent("Help", "About");
