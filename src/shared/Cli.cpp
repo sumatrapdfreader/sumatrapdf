@@ -1066,11 +1066,81 @@ static int NumberedStart(Str s) {
 }
 
 // what markdown would take as markup at the start of a paragraph
+// "- ", "+ ", "#", ">", "|", "=" and "2024. " / "3) " (a list item's number)
 static TempStr EscapeLineStartTemp(Str s) {
-    if (len(s) > 0 && (s.s[0] == '#' || s.s[0] == '>' || s.s[0] == '|' || s.s[0] == '=')) {
+    int n = len(s);
+    if (n == 0) {
+        return {};
+    }
+    char c = s.s[0];
+    if (c == '#' || c == '>' || c == '|' || c == '=' || ((c == '-' || c == '+') && n > 1 && s.s[1] == ' ')) {
         return fmt("\\%s", s);
     }
+    int i = 0;
+    while (i < n && i < 9 && s.s[i] >= '0' && s.s[i] <= '9') {
+        i++;
+    }
+    if (i > 0 && i < n && (s.s[i] == '.' || s.s[i] == ')') && (i + 1 == n || s.s[i + 1] == ' ')) {
+        return fmt("%s\\%s", Str(s.s, i), Str(s.s + i, n - i));
+    }
     return str::DupTemp(s);
+}
+
+// an & that starts an entity: &amp; &#38; &#x26;
+static bool StartsEntity(Str s, int i) {
+    int n = len(s);
+    int k = i + 1;
+    if (k < n && s.s[k] == '#') {
+        k++;
+        bool hex = k < n && (s.s[k] == 'x' || s.s[k] == 'X');
+        if (hex) {
+            k++;
+        }
+        int start = k;
+        while (k < n && (isdigit((u8)s.s[k]) || (hex && isxdigit((u8)s.s[k])))) {
+            k++;
+        }
+        return k > start && k < n && s.s[k] == ';';
+    }
+    int start = k;
+    while (k < n && isalnum((u8)s.s[k])) {
+        k++;
+    }
+    return k > start && isalpha((u8)s.s[start]) && k < n && s.s[k] == ';';
+}
+
+// what markdown takes as markup inside a line: \ * _ [ ] ` < and an & that
+// starts an entity. # and > are text there
+static TempStr EscapeInlineTemp(Str s) {
+    str::Builder out;
+    for (int i = 0; i < len(s); i++) {
+        char c = s.s[i];
+        if (strchr("\\*_[]`<", c) || (c == '&' && StartsEntity(s, i))) {
+            out.AppendChar('\\');
+        }
+        out.AppendChar(c);
+    }
+    return ToStrTemp(out);
+}
+
+// a heading's text: inline escapes, and a # at the end isn't a closing #
+static TempStr EscapeHeadingTemp(Str s) {
+    TempStr t = EscapeInlineTemp(s);
+    if (len(t) > 0 && t.s[len(t) - 1] == '#') {
+        return fmt("%s\\#", Str(t.s, len(t) - 1));
+    }
+    return t;
+}
+
+// whether s has a letter or a digit: spaces and punctuation alone aren't marked bold
+static bool HasWordChar(Str s) {
+    for (int i = 0; i < len(s); i++) {
+        u8 c = (u8)s.s[i];
+        if (isalnum(c) || c >= 0x80) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // where each line of spans [from, to) starts, and to at the end
@@ -1184,9 +1254,13 @@ static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepL
         Str trimmed(text.s + a, b - a);
         Str trail(text.s + b, len(text) - b);
         const char* mark = s.mono ? "`" : (s.bold && s.italic) ? "***" : s.bold ? "**" : s.italic ? "*" : "";
+        if (!s.mono && !HasWordChar(trimmed)) {
+            mark = "";
+        }
         out.Append(lead);
         out.Append(Str(mark));
-        out.Append(trimmed);
+        // inside `code` everything is text
+        out.Append(s.mono ? str::DupTemp(trimmed) : EscapeInlineTemp(trimmed));
         out.Append(Str(mark));
         out.Append(trail);
     }
@@ -1353,7 +1427,7 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
             for (int k = 0; k < level; k++) {
                 h.AppendChar('#');
             }
-            h.Append(fmt(" %s", text));
+            h.Append(fmt(" %s", EscapeHeadingTemp(text)));
             out.Add(MdKind::Heading, ToStr(h));
         } else if (nMono * 10 >= nChars * 9) {
             out.Add(MdKind::Code, fmt("```\n%s\n```", BlockInlineTemp(p, i, end, true)));
@@ -1400,7 +1474,7 @@ static void PlainPageToMarkdown(EngineBase* engine, int pageNo, MdChunks& out) {
     str::Builder para;
     auto flush = [&]() {
         if (len(para) > 0) {
-            out.Add(MdKind::Para, EscapeLineStartTemp(ToStr(para)));
+            out.Add(MdKind::Para, EscapeLineStartTemp(EscapeInlineTemp(ToStr(para))));
             para.Reset();
         }
     };

@@ -13,15 +13,26 @@ import { assemblePdf, EXE, runStandalone, tmpPath, USE_NG } from "./util.ts";
 const name = "cli-markdown-cases";
 
 const FONTS =
-  "/F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> " +
-  "/F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> " +
-  "/F3 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>";
+  "/F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> " +
+  "/F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >> " +
+  "/F3 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding >> " +
+  "/F4 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-BoldOblique /Encoding /WinAnsiEncoding >>";
 
 // `s` in `size` pt type (/F1 Helvetica, /F2 bold, /F3 italic) at x, y. A
-// backslash in s is the PDF string's (\267 is a bullet); parentheses are text
+// backslash in s is the PDF string's (\267 is a bullet, WinAnsi's middle dot);
+// parentheses are text
 function textAt(font: string, x: number, y: number, s: string, size = 10): string {
   const str = s.replace(/[()]/g, (m) => `\\${m}`);
   return `BT /${font} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td (${str}) Tj ET\n`;
+}
+
+// one line of runs in different fonts, each [font, text], at x, y
+function runsAt(x: number, y: number, runs: [string, string][], size = 10): string {
+  let c = `BT ${x.toFixed(2)} ${y.toFixed(2)} Td `;
+  for (const [font, s] of runs) {
+    c += `/${font} ${size} Tf (${s.replace(/[()]/g, (m) => `\\${m}`)}) Tj `;
+  }
+  return c + "ET\n";
 }
 
 // a PDF with a page per content stream, US Letter
@@ -138,6 +149,63 @@ function testParagraphAcrossPages(): void {
   expect("a word broken across the page break", md.includes("an unfinished word"), md);
 }
 
+// inline_styles_keep_spaces_outside_markers
+function testInlineStyles(): void {
+  let c = runsAt(72, 700, [
+    ["F1", "a "],
+    ["F2", "bold "],
+    ["F1", "and "],
+    ["F3", "it"],
+    ["F1", "."],
+  ]);
+  // in a sentence: a bold line on its own is a heading
+  c += runsAt(72, 660, [
+    ["F1", "this is "],
+    ["F4", "both"],
+    ["F1", "."],
+  ]);
+  // punctuation and spaces alone are never marked
+  c += runsAt(72, 620, [
+    ["F1", "x"],
+    ["F2", ", "],
+    ["F1", "y"],
+  ]);
+  const ls = lines(markdownOf([c]));
+  for (const want of ["a **bold** and *it*.", "this is ***both***.", "x, y"]) {
+    expect(`'${want}'`, ls.includes(want), ls.join("\n"));
+  }
+}
+
+// escaping, pipes_and_ampersands_escaped_only_where_they_matter: markup
+// characters in the text are escaped, # and > only at the start, & only
+// when it starts an entity, | only at the start
+function testEscaping(): void {
+  const cases: [string, string][] = [
+    ["2*3 = a_b [x] `c` <d> \\\\", "2\\*3 = a\\_b \\[x\\] \\`c\\` \\<d> \\\\"],
+    ["# not a heading", "\\# not a heading"],
+    ["> nope", "\\> nope"],
+    ["2024. was a year", "2024\\. was a year"],
+    ["plain", "plain"],
+    ["*star* and #hash", "\\*star\\* and #hash"],
+    ["| a | b", "\\| a | b"],
+    ["a | b", "a | b"],
+    ["&amp; & &#38; &#x26; &x AT&T", "\\&amp; & \\&#38; \\&#x26; &x AT&T"],
+    ["Fish &amp; chips", "Fish \\&amp; chips"],
+  ];
+  // a PDF each: lines next to each other could be one paragraph
+  for (const [text, want] of cases) {
+    const md = markdownOf([textAt("F1", 72, 700, text)]);
+    expect(`'${text}' as '${want}'`, lines(md).includes(want), md);
+  }
+  // a heading's closing # is text
+  let h = textAt("F1", 72, 700, "C#", 24);
+  for (let i = 0; i < 20; i++) {
+    h += textAt("F1", 72, 650 - 14 * i, "Body text, long enough to be what most of the page is in.");
+  }
+  const hmd = markdownOf([h]);
+  expect("heading 'C\\#'", lines(hmd).includes("# C\\#"), hmd);
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
@@ -148,6 +216,8 @@ export async function testit(): Promise<void> {
   testRunningHeaders();
   testHyphenation();
   testParagraphAcrossPages();
+  testInlineStyles();
+  testEscaping();
   console.log(`${name}: OK`);
 }
 
