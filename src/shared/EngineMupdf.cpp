@@ -1330,8 +1330,7 @@ static void MaybeDropTrailingSoftHyphen(str::Builder& s, Vec<GlyphBox>& boxes) {
 }
 
 // Letter after which a right-to-left line's leading space is drawn, or null.
-// SOLIDWORKS writes " פח עובי" + "5" with the space first but draws it left
-// of "עובי", between the word and the number; copy gave "עובי5".
+// SOLIDWORKS writes the space first but draws it after a word (#6576).
 static fz_stext_char* MovedSpaceAfter(const fz_stext_line* line) {
     fz_stext_char* space = line->first_char;
     if (!space || space->c != ' ') {
