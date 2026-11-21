@@ -1492,7 +1492,14 @@ bool AppShellPromptForFiles(MainWindow* win, Str filter, StrVec* pathsOut) {
 
 // --- key bindings -----------------------------------------------------------
 
+static void OnCmdOutsideShell(gp::Window* gw, gp::ActionEvent* ev);
+
 static void BindKeys() {
+    static bool cmdFallbackSet = false;
+    if (!cmdFallbackSet) {
+        gp::AppOnAction(ActSumatraCmd(), OnCmdOutsideShell);
+        cmdFallbackSet = true;
+    }
     int n = 0;
     const AccelStroke* strokes = GetAcceleratorStrokes(n);
     auto* bindings = AllocArrayTemp<gp::KeyBinding>(n);
@@ -2512,6 +2519,67 @@ void ShellView::OnExternalDrop(ShellView* self, gp::Ctx*, const gp::DropEvent* e
     AppShellAcceptDrop(self->win, ev->x, ev->y, paths, n, FileDropPhase::Drop);
 }
 
+// The text edit a command means when a text field has focus, or None.
+static gp::InputAction EditActionOf(int cmdId) {
+    switch (cmdId) {
+        case CmdSelectAll:
+            return gp::InputAction::SelectAll;
+        case CmdCopySelection:
+            return gp::InputAction::Copy;
+        case CmdCutAnnotation:
+            return gp::InputAction::Cut;
+        case CmdPasteClipboardImage:
+            return gp::InputAction::Paste;
+        case CmdUndo:
+            return gp::InputAction::Undo;
+        case CmdRedo:
+            return gp::InputAction::Redo;
+    }
+    return gp::InputAction::None;
+}
+
+// A menu bar row takes its shortcut before a text field sees it: ⌘A in the
+// command palette must select the typed text, not the document.
+static bool SendEditToInput(gp::App* app, gp::Window* gw, int cmdId) {
+    gp::InputAction action = EditActionOf(cmdId);
+    gp::InputState* input = gw ? gw->input : nullptr;
+    if (action == gp::InputAction::None || !input || !input->focused) {
+        return false;
+    }
+    gp::InputPerform(input, app, gw, action, false);
+    return true;
+}
+
+// The main window a palette or tool window belongs to.
+static MainWindow* OwnerMainWindow(gp::Window* gw) {
+    for (; gw; gw = gw->opts.parent) {
+        for (MainWindow* win : gWindows) {
+            if (win && win->gpuiWin == gw) {
+                return win;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// A menu bar row chosen while a window without a shell (the command palette,
+// a tool window) is in front: its text field takes the edit commands, the
+// main window it belongs to the rest.
+static void OnCmdOutsideShell(gp::Window* gw, gp::ActionEvent* ev) {
+    int cmdId = (int)ev->arg;
+    if (SendEditToInput(gw->app, gw, cmdId)) {
+        gp::AppInvalidate(gw);
+        return;
+    }
+    MainWindow* win = OwnerMainWindow(gw);
+    if (!win || !IsMainWindowValidAndNotClosing(win)) {
+        ev->propagate = true;
+        return;
+    }
+    ExecuteCmd(win, cmdId);
+    AppShellInvalidate(win);
+}
+
 void ShellView::OnCmd(ShellView* self, gp::Ctx* cx, const gp::ActionEvent* ev) {
     if (gChordKey && !gCmdSuppressed) {
         gIgnoreRepeatKey = gChordKey;
@@ -2520,6 +2588,10 @@ void ShellView::OnCmd(ShellView* self, gp::Ctx* cx, const gp::ActionEvent* ev) {
     if (gCmdSuppressed) {
         gCmdSuppressed = false;
         const_cast<gp::ActionEvent*>(ev)->propagate = true;
+        return;
+    }
+    if (SendEditToInput(cx->app, cx->win, (int)ev->arg)) {
+        gp::Notify(cx);
         return;
     }
     ExecuteCmd(self->win, (int)ev->arg);
