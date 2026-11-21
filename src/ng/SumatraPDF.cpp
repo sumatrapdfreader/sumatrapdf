@@ -7338,9 +7338,23 @@ static bool ForwardToExistingInstance(Flags& flags, HANDLE* hMutex) {
     HWND existingInstanceHwnd = FindExistingSumatraProcessHwnd(hMutex, &openInNewWindow);
     gOtherInstanceRunning = existingInstanceHwnd != nullptr;
 
+    // Explorer's Space preview goes to the running instance, ReuseInstance or not
+    if (flags.quickLook && existingInstanceHwnd && !gForTesting) {
+        bool ok = false;
+        for (Str path : flags.fileNames) {
+            if (SendExplorerQuickLookToExisting(existingInstanceHwnd, path)) {
+                ok = true;
+            }
+        }
+        if (ok || len(flags.fileNames) == 0) {
+            return true;
+        }
+    }
+
     HWND existingHwnd = nullptr;
-    if (flags.printDialog || flags.configureRestrictedUse || gForTesting) {
-        // the print dialog and the test runs always use this process
+    bool pluginOrStress = flags.hwndPluginParent || len(flags.stressTestPath) > 0;
+    if (flags.printDialog || pluginOrStress || flags.configureRestrictedUse || gForTesting) {
+        // the print dialog, a plugin, a stress test and the test runs always use this process
     } else if (flags.reuseDdeInstance || flags.dde) {
         Vec<HWND> hwnds;
         AppShellFindOtherInstanceWindows(0, hwnds);
