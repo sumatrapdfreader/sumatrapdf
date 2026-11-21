@@ -50,6 +50,21 @@ async function waitMacTheme(client: ControlClient, open: boolean): Promise<void>
   throw new Error(`issue-5995: Change Theme dialog did not ${open ? "appear" : "close"}`);
 }
 
+// the dialog takes keys before its first frame, and a key with no rows laid
+// out yet moves nothing
+async function waitMacThemeDrawn(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let raw = "";
+  while (Date.now() < deadline) {
+    raw = String((await client.request(ControlCommand.TestToolWindow, ["layout", "changetheme"]))[1] ?? "");
+    if (raw.includes("label='Change'")) {
+      return;
+    }
+    await sleep(30);
+  }
+  throw new Error(`issue-5995: Change Theme dialog never drew:\n${raw}`);
+}
+
 async function macThemeKey(client: ControlClient, vk: number): Promise<void> {
   const res = await client.request(ControlCommand.TestToolWindow, ["input", "changetheme", "key", vk, 0, 0, 0]);
   const raw = String(res[1] ?? "");
@@ -82,6 +97,7 @@ async function chooseAdjacentTheme(appDataDir: string, key: number): Promise<voi
     sendCommand(frame, cmdId("CmdChangeTheme"));
     if (IS_MAC) {
       await waitMacTheme(client, true);
+      await waitMacThemeDrawn(client);
       await macThemeKey(client, key);
       await macThemeKey(client, VK_RETURN);
       await waitMacTheme(client, false);
