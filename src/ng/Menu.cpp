@@ -862,6 +862,29 @@ static void AdaptMenuToMac(MenuModel* menu, BuildMenuCtx* ctx) {
         }
     }
 
+    // Find Next (⌘G) and the rest after Find, so the menu shows their keys
+    static const int kFindCmds[] = {CmdFindNext, CmdFindPrev, CmdFindNextSel};
+    MenuItemModel* find = MenuFind(menu, CmdFindFirst);
+    for (MenuItemModel& top : menu->items) {
+        MenuModel* sub = top.submenu;
+        int idx = -1;
+        for (int i = 0; sub && find && i < len(sub->items); i++) {
+            if (&sub->items[i] == find) {
+                idx = i;
+            }
+        }
+        if (idx < 0) {
+            continue;
+        }
+        for (int cmdId : kFindCmds) {
+            MenuItemModel row;
+            row.title = trans::GetTranslation(GetCommandDescription(cmdId));
+            row.cmdId = cmdId;
+            VecInsertAt(sub->items, ++idx, row);
+        }
+        break;
+    }
+
     MenuItemModel edit;
     edit.title = Tr("&Edit");
     edit.submenu = BuildMenuFromDef(menuDefEditMac, ctx);

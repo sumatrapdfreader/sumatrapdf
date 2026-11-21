@@ -71,6 +71,8 @@ function menuLayout(app: App): void {
   shortcut("Edit", "Paste", "V");
   shortcut("Edit", "Select All", "A");
   shortcut("Window", "Minimize", "M");
+  shortcut("Go To", "Find Next", "G");
+  shortcut("Go To", "Find Next Selection", "E");
   absent("File", "Exit");
   absent("Help", "About");
   absent("View", "Show Menu");
@@ -93,6 +95,20 @@ async function tabKeys(app: App): Promise<void> {
   await sleep(2 * kSettleMs);
   const again = macFrontWindowTitle(app.pid);
   expect("⌃Tab switches again", again !== other, again);
+}
+
+// ⇧⌘= is how ⌘+ is typed: zoom in, not rotate (the Windows Ctrl+Shift+=)
+async function zoomKeys(app: App): Promise<void> {
+  const zoom = async () => Number(await field(app, / zoom=([\d.]+)/));
+  const before = await zoom();
+  macKeystroke(app.pid, "=", { cmd: true, shift: true });
+  await sleep(kSettleMs);
+  const bigger = await zoom();
+  expect("⇧⌘= zooms in", bigger > before, `${before} -> ${bigger}`);
+  macKeystroke(app.pid, "-", { cmd: true, shift: true });
+  await sleep(kSettleMs);
+  const back = await zoom();
+  expect("⇧⌘- zooms out", back < bigger, `${bigger} -> ${back}`);
 }
 
 async function minimizeKey(app: App): Promise<void> {
@@ -134,7 +150,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     menuLayout(app);
     // reading the menus moves the focus: each check takes it back first
-    const checks = [selectAllInTextField, tabKeys, minimizeKey]; // minimize last: the window is gone after it
+    const checks = [zoomKeys, selectAllInTextField, tabKeys, minimizeKey]; // minimize last: the window is gone after it
     for (const check of checks) {
       macActivate(app.pid);
       await sleep(kSettleMs);

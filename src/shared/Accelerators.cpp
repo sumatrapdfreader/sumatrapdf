@@ -211,6 +211,12 @@ static Accel gPlatformAccelerators[] = {
     {{kCmd | kVirt, 'D'}, CmdFavoriteAdd},
     {{kShift | kCmd | kVirt, VK_OEM_2}, CmdHelpOpenManual},
 
+    // ⌘+ is ⇧⌘= on most keyboards: zoom, not the built-in rotate
+    {{kShift | kCmd | kVirt, VK_OEM_PLUS}, CmdZoomIn},
+    {{kShift | kCmd | kVirt, VK_OEM_MINUS}, CmdZoomOut},
+    // Use Selection for Find
+    {{kCmd | kVirt, 'E'}, CmdFindNextSel},
+
     {{kCmd | kVirt, '0'}, CmdZoomActualSize},
     {{kCmd | kVirt, VK_NUMPAD0}, CmdZoomActualSize},
     {{kCmd | kVirt, '9'}, CmdZoomFitPage},
