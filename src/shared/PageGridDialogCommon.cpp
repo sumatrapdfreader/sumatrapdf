@@ -660,7 +660,14 @@ TempStr PageGridProbeTemp(DisplayModel* dm) {
     float yM = (yA + yB) * 0.5f;
     Point sA = dm->CvtToScreen(pageNo, PointF(ox + (yA - oy) * cot, yA));
     Point sB = dm->CvtToScreen(pageNo, PointF(ox + (yB - oy) * cot, yB));
-    Point sW = dm->CvtToScreen(pageNo, PointF(ox + g.widthPt + (yM - oy) * cot, yM));
+    // the first width line past the origin that crosses the page at yM: a
+    // slanted grid's lines leave the page sideways, and only a line on the page
+    // can be dragged
+    int k = 1;
+    if (g.widthPt > 0.f) {
+        k = std::max(1, (int)ceilf((box.x - ox - (yM - oy) * cot) / g.widthPt));
+    }
+    Point sW = dm->CvtToScreen(pageNo, PointF(ox + (float)k * g.widthPt + (yM - oy) * cot, yM));
     Point sH = dm->CvtToScreen(pageNo, PointF(ox + g.widthPt * 0.5f, oy + g.heightPt));
     return fmt("slant=%g x0=%d x1=%d sx=%d sy=%d hx=%d hy=%d", g.slantDeg, sA.x, sB.x, sW.x, sW.y, sH.x, sH.y);
 }
