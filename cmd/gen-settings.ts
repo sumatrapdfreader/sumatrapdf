@@ -525,12 +525,17 @@ const fixedPageUI: Field[] = [
   field("Grayscale", Bool, false, "if true, render document pages in grayscale. Toggle with CmdToggleGrayscale").ver(
     "3.7",
   ),
-  field("TextColor", Color, rgb(0x00, 0x00, 0x00), "color used instead of black for the document's text"),
+  field(
+    "TextColor",
+    Color,
+    rgb(0x00, 0x00, 0x00),
+    "color used instead of black for the document's text, also in ebooks",
+  ),
   field(
     "BackgroundColor",
     Color,
     rgb(0xff, 0xff, 0xff),
-    "color used instead of white for the document's page background",
+    "color used instead of white for the document's page background, also in ebooks",
   ),
   field(
     "SelectionColor",
@@ -2292,7 +2297,12 @@ const globalPrefs: Field[] = [
 
   struct("FixedPageUI", fixedPageUI, "customization options for PDF, XPS, DjVu and PostScript UI"),
   emptyLine(),
-  struct("EBookUI", ebookUI, "customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)"),
+  struct(
+    "EBookUI",
+    ebookUI,
+    "customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text). " +
+      "text and page colors are FixedPageUI.TextColor and BackgroundColor",
+  ),
   emptyLine(),
   struct("ComicBookUI", comicBookUI, "customization options for Comic Book UI"),
   emptyLine(),

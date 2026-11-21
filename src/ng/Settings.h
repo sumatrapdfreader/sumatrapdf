@@ -625,7 +625,8 @@ struct AIChat {
 };
 
 // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
-// plain text)
+// plain text). text and page colors are FixedPageUI.TextColor and
+// BackgroundColor
 struct EBookUI {
     // default font family for ebooks (e.g. Segoe UI, Georgia, Microsoft
     // YaHei). empty uses the engine default (typically a serif). applied
@@ -762,9 +763,10 @@ struct FixedPageUI {
     // if true, render document pages in grayscale. Toggle with
     // CmdToggleGrayscale
     bool grayscale;
-    // color used instead of black for the document's text
+    // color used instead of black for the document's text, also in ebooks
     ParsedColor textColor;
-    // color used instead of white for the document's page background
+    // color used instead of white for the document's page background, also
+    // in ebooks
     ParsedColor backgroundColor;
     // color value for the text selection rectangle (also used to highlight
     // found text). Use an #aarrggbb value to control opacity: a smaller
@@ -1112,7 +1114,8 @@ struct Settings {
     // appearance of the AI chat sidebar, shared by all backends
     AIChat aiChat;
     // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
-    // plain text)
+    // plain text). text and page colors are FixedPageUI.TextColor and
+    // BackgroundColor
     EBookUI eBookUI;
     // customization options for Comic Book UI
     ComicBookUI comicBookUI;
