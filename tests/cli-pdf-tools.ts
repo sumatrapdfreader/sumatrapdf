@@ -6,7 +6,7 @@
 // Run: bun tests/cli-pdf-tools.ts [--no-build]
 
 import { readdirSync, readFileSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { EXE, makePdf, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
 
 const name = "cli-pdf-tools";
@@ -44,7 +44,7 @@ function testSplit(dir: string): void {
   expect(`a PDF per page ${JSON.stringify(each)}`, each.length === 12 && each[0] === "twelve-01.pdf", r);
 
   r = cli(["split", src, "--every", "5", "-o", join(dir, "fives"), "--json"]);
-  const files = JSON.parse(r.out).files.map((f: any) => [f.file.split("/").pop(), f.pages]);
+  const files = JSON.parse(r.out).files.map((f: any) => [basename(f.file), f.pages]);
   const want = [
     ["twelve-01-05.pdf", 5],
     ["twelve-06-10.pdf", 5],
