@@ -115,16 +115,33 @@ static Str OptValue(CliCtx& cx, Str name) {
 
 // the options that take a value; any other --name is a flag
 static bool OptTakesValue(Str name) {
-    static const char* names[] = {"--pages", "--password", "--password-env", "--new-password", "--new-password-env",
-                                  "-o",      "--output",   "--dpi",          "--install",      "--opacity",
-                                  "--color", "--size",     "--format",       "--position",     "--start",
-                                  "--margin"};
+    static const char* names[] = {"--pages",  "--password", "--password-env", "--new-password", "--new-password-env",
+                                  "-o",       "--output",   "--dpi",          "--install",      "--opacity",
+                                  "--color",  "--size",     "--format",       "--position",     "--start",
+                                  "--margin", "--every",    "--ranges"};
     for (const char* n : names) {
         if (str::Eq(name, Str(n))) {
             return true;
         }
     }
     return false;
+}
+
+// a number option: def without it; false after reporting a bad one
+static bool FloatOpt(CliCtx& cx, Str name, float def, float lo, float hi, float* out, int* code) {
+    Str v = OptValue(cx, name);
+    *out = def;
+    if (len(v) == 0) {
+        return true;
+    }
+    char* end = nullptr;
+    double d = strtod(CStrTemp(v), &end);
+    if (!end || *end != 0 || d < lo || d > hi) {
+        *code = Fail(cx, kCliUsage, fmt("%s %s: use a number from %g to %g", name, v, (double)lo, (double)hi));
+        return false;
+    }
+    *out = (float)d;
+    return true;
 }
 
 //--- documents
@@ -879,6 +896,92 @@ static int CmdPages(CliCtx& cx) {
         return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
     }
     return ReportPdfWritten(cx, dest, len(pages));
+}
+
+// a PDF per group of pages: one each (default), --every N, or --ranges
+// "1-3;4-9;10-N"; into the folder -o, as <name>-<first>[-<last>].pdf
+static int CmdSplit(CliCtx& cx) {
+    Str path = cx.positional[0];
+    Str dir = OutputArg(cx);
+    if (len(dir) == 0) {
+        return Fail(cx, kCliUsage, StrL("needs -o <folder> for the PDFs"));
+    }
+    float every = 0;
+    int code = kCliOk;
+    if (!FloatOpt(cx, StrL("--every"), 1, 1, 100000, &every, &code)) {
+        return code;
+    }
+    int n = CheckPdf(cx, path, &code);
+    if (n == 0) {
+        return code;
+    }
+    // the groups, as page lists
+    Vec<int> groupStarts;
+    Vec<int> pages;
+    Str ranges = OptValue(cx, StrL("--ranges"));
+    if (len(ranges) > 0) {
+        StrVec parts;
+        Split(&parts, ranges, StrL(";"), true);
+        for (Str part : parts) {
+            Vec<int> group;
+            if (!ParseDeletePages(part, n, group)) {
+                return Fail(cx, kCliUsage, fmt("--ranges: '%s' isn't a page range of 1-%d", part, n));
+            }
+            VecAppend(groupStarts, len(pages));
+            for (int p : group) {
+                VecAppend(pages, p);
+            }
+        }
+    } else {
+        for (int p = 1; p <= n; p++) {
+            if ((p - 1) % (int)every == 0) {
+                VecAppend(groupStarts, len(pages));
+            }
+            VecAppend(pages, p);
+        }
+    }
+    VecAppend(groupStarts, len(pages));
+    // page numbers padded to the same width, so the files sort in order
+    int width = len(fmt("%d", n));
+    TempStr base = path::GetPathNoExtTemp(path::GetBaseNameTemp(path));
+    Vec<PdfMergeSource> srcs;
+    VecAppend(srcs, PdfMergeSource{path, cx.password});
+    str::Builder out;
+    for (int g = 0; g + 1 < len(groupStarts); g++) {
+        int from = groupStarts[g];
+        int to = groupStarts[g + 1];
+        int first = pages[from];
+        int last = pages[to - 1];
+        auto padded = [width](int v) {
+            TempStr num = fmt("%d", v);
+            while (len(num) < width) {
+                num = fmt("0%s", num);
+            }
+            return num;
+        };
+        TempStr name = to - from == 1 ? fmt("%s-%s.pdf", base, padded(first))
+                                      : fmt("%s-%s-%s.pdf", base, padded(first), padded(last));
+        TempStr dest = path::JoinTemp(dir, name);
+        if (SamePath(dest, path)) {
+            return Fail(cx, kCliUsage, fmt("won't write over the input '%s'", path));
+        }
+        Vec<PdfMergePage> group;
+        for (int k = from; k < to; k++) {
+            VecAppend(group, PdfMergePage{0, pages[k], 0});
+        }
+        dir::CreateForFile(dest);
+        if (!EngineMupdfMergePdfs(srcs, group, dest)) {
+            return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+        }
+        if (cx.json) {
+            out.Append(fmt("%s{\"file\":%s,\"first\":%d,\"last\":%d,\"pages\":%d}", g > 0 ? StrL(",") : StrL(""),
+                           JStr(dest), first, last, to - from));
+        } else {
+            out.Append(fmt("%s: %d %s\n", dest, to - from, to - from == 1 ? StrL("page") : StrL("pages")));
+        }
+    }
+    Out(cx.json ? fmt("{\"files\":[%s]}\n", ToStr(out)) : ToStrTemp(out));
+    return kCliOk;
 }
 
 static int CmdMerge(CliCtx& cx) {
@@ -2317,23 +2420,6 @@ static bool ParseHexColor(Str s, u8* r, u8* g, u8* b) {
     return true;
 }
 
-// a number option: def without it; false after reporting a bad one
-static bool FloatOpt(CliCtx& cx, Str name, float def, float lo, float hi, float* out, int* code) {
-    Str v = OptValue(cx, name);
-    *out = def;
-    if (len(v) == 0) {
-        return true;
-    }
-    char* end = nullptr;
-    double d = strtod(CStrTemp(v), &end);
-    if (!end || *end != 0 || d < lo || d > hi) {
-        *code = Fail(cx, kCliUsage, fmt("%s %s: use a number from %g to %g", name, v, (double)lo, (double)hi));
-        return false;
-    }
-    *out = (float)d;
-    return true;
-}
-
 // the stamps on the PDF given, saved as -o
 static int StampPdf(CliCtx& cx, Str path, Vec<PdfStamp>& stamps, Str dest, int nPages) {
     int code = kCliOk;
@@ -2520,6 +2606,7 @@ Page ranges: `1-3,7,10-N` (N is the last page). Page numbers are 1-based.
 - `pages order <file.pdf> 3,1,2 -o out.pdf`
 - `pages rotate <file.pdf> 2-N 90 -o out.pdf` (clockwise: 90, 180, 270)
 - `merge a.pdf b.pdf -o both.pdf`
+- `split <file.pdf> -o folder/ [--every 10 | --ranges "1-3;4-N"]`
 - `compress <file.pdf> -o small.pdf`
 - `encrypt <file.pdf> -o locked.pdf --new-password-env NAME`
 - `decrypt <file.pdf> -o open.pdf --password-env NAME`
@@ -2621,6 +2708,10 @@ static const CliCmd gCmds[] = {
      CmdPages},
     {"merge", "<a.pdf> <b.pdf> ... -o <out.pdf>", "PDFs one after another in a new PDF", "-o <file>        the new PDF",
      "merge a.pdf b.pdf -o both.pdf", CmdMerge},
+    {"split", "<file.pdf> -o <folder>", "a PDF per page, or per group of pages, named <name>-<first>[-<last>].pdf",
+     "-o <folder>      where the PDFs go\n--every <n>      n pages to a PDF (default 1)\n--ranges <r;r>   a PDF per "
+     "range, e.g. \"1-3;4-9;10-N\"",
+     "split book.pdf -o chapters/ --ranges \"1-12;13-40;41-N\"\nsplit scan.pdf -o pages/", CmdSplit},
     {"compress", "<file.pdf> -o <out.pdf>", "a smaller copy of a PDF (same quality: unused objects and streams go)",
      "-o <file>        the new PDF", "compress big.pdf -o small.pdf --json", CmdCompress},
     {"decompress", "<file.pdf> -o <out.pdf>", "a copy of a PDF with its streams uncompressed, for reading its insides",
