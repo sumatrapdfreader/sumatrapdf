@@ -63,7 +63,8 @@ function markdownOf(pages: string[], args: string[] = ["--no-page-markers"]): st
   if (p.exitCode !== 0) {
     throw new Error(`${name}: markdown failed (${p.exitCode}): ${p.stderr.toString()}`);
   }
-  return p.stdout.toString();
+  // Windows text output ends lines with CRLF
+  return p.stdout.toString().replace(/\r\n/g, "\n");
 }
 
 function expect(what: string, ok: boolean, md: string): void {
@@ -310,7 +311,7 @@ function testEpubTable(): void {
     ]),
   );
   const p = Bun.spawnSync([EXE, "cli", "markdown", path, "--no-page-markers"], { stdout: "pipe", stderr: "pipe" });
-  const md = p.stdout.toString();
+  const md = p.stdout.toString().replace(/\r\n/g, "\n");
   const table = "| **Format** | **Pages** |\n| --- | --- |\n| PDF | 40 |\n| EPUB | 5 |";
   expect("the EPUB's table", md.includes(table), md);
   expect("the header row isn't a heading", !md.includes("# Format"), md);

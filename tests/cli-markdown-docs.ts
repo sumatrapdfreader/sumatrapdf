@@ -19,7 +19,8 @@ type Res = { code: number; out: string; err: string };
 
 function cli(args: string[]): Res {
   const p = Bun.spawnSync([EXE, "cli", ...args], { stdout: "pipe", stderr: "pipe" });
-  return { code: p.exitCode ?? -1, out: p.stdout.toString(), err: p.stderr.toString() };
+  // Windows text output ends lines with CRLF
+  return { code: p.exitCode ?? -1, out: p.stdout.toString().replace(/\r\n/g, "\n"), err: p.stderr.toString() };
 }
 
 function expect(what: string, ok: boolean, res: Res | string): void {
