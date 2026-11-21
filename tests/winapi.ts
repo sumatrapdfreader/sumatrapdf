@@ -18,6 +18,7 @@ import { IS_MAC, IS_WIN } from "./host.ts";
 import {
   macClientToScreen,
   macControlRequest,
+  macCaptureClientPixels,
   macDdeExecute,
   macFrameClientRect,
   macFrameVisible,
@@ -1800,6 +1801,10 @@ export function captureWindowPixels(
   hwnd: number,
   area: "client" | "window" = "client",
 ): { w: number; h: number; data: Uint8Array } | null {
+  // the app draws the window into a PNG; there is no non-client area
+  if (IS_MAC) {
+    return macCaptureClientPixels();
+  }
   const rc = area === "client" ? getClientRect(hwnd) : getWindowRect(hwnd);
   const w = rc.right - rc.left;
   const h = rc.bottom - rc.top;

@@ -2,8 +2,9 @@
 // async client already holds one connection, so window messages use a second
 // socket. The server polls both.
 
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { inflateSync } from "node:zlib";
 import { dlopen, FFIType, ptr, toArrayBuffer } from "bun:ffi";
 import { IS_WIN } from "./host.ts";
 
@@ -11,6 +12,7 @@ export const TestLayout = 70;
 const TestInvokeCommand = 87;
 const TestInput = 121;
 const TestDdeExecute = 129;
+const TestCaptureWindow = 170;
 const kCopyDataDdeW = 0x44646557;
 
 const WM_KILLFOCUS = 0x0008;
@@ -477,6 +479,109 @@ export function macFrameVisible(): boolean {
   } catch {
     return false;
   }
+}
+
+// RGBA rows of an 8-bit RGB or RGBA, non-interlaced PNG (what AppKit writes)
+function decodePng(png: Buffer): { w: number; h: number; rgba: Uint8Array } {
+  let pos = 8;
+  let w = 0;
+  let h = 0;
+  let channels = 0;
+  const idat: Buffer[] = [];
+  while (pos + 8 <= png.length) {
+    const n = png.readUInt32BE(pos);
+    const type = png.toString("latin1", pos + 4, pos + 8);
+    const data = png.subarray(pos + 8, pos + 8 + n);
+    if (type === "IHDR") {
+      w = data.readUInt32BE(0);
+      h = data.readUInt32BE(4);
+      const depth = data[8];
+      const colorType = data[9];
+      channels = colorType === 6 ? 4 : colorType === 2 ? 3 : 0;
+      if (depth !== 8 || !channels || data[12] !== 0) {
+        throw new Error(`decodePng: unsupported PNG (depth ${depth}, color type ${colorType}, interlace ${data[12]})`);
+      }
+    } else if (type === "IDAT") {
+      idat.push(data);
+    }
+    pos += 12 + n;
+  }
+  const raw = inflateSync(Buffer.concat(idat));
+  const stride = w * channels;
+  const out = new Uint8Array(w * h * 4);
+  let prev = new Uint8Array(stride);
+  for (let y = 0; y < h; y++) {
+    const filter = raw[y * (stride + 1)];
+    const line = raw.subarray(y * (stride + 1) + 1, (y + 1) * (stride + 1));
+    const cur = new Uint8Array(stride);
+    for (let i = 0; i < stride; i++) {
+      const a = i >= channels ? cur[i - channels]! : 0;
+      const b = prev[i]!;
+      const c = i >= channels ? prev[i - channels]! : 0;
+      let v = line[i]!;
+      if (filter === 1) {
+        v += a;
+      } else if (filter === 2) {
+        v += b;
+      } else if (filter === 3) {
+        v += (a + b) >> 1;
+      } else if (filter === 4) {
+        const p = a + b - c;
+        const pa = Math.abs(p - a);
+        const pb = Math.abs(p - b);
+        const pc = Math.abs(p - c);
+        v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+      }
+      cur[i] = v & 0xff;
+    }
+    for (let x = 0; x < w; x++) {
+      const o = (y * w + x) * 4;
+      out[o] = cur[x * channels]!;
+      out[o + 1] = cur[x * channels + 1]!;
+      out[o + 2] = cur[x * channels + 2]!;
+      out[o + 3] = channels === 4 ? cur[x * channels + 3]! : 255;
+    }
+    prev = cur;
+  }
+  return { w, h, rgba: out };
+}
+
+// captureWindowPixels on macOS: the first window as drawn, as BGRA (4 bytes a
+// pixel, top-down) in client coordinates, which are points: the capture is in
+// device pixels, sampled at each point's center
+export function macCaptureClientPixels(): { w: number; h: number; data: Uint8Array } | null {
+  const rc = macFrameClientRect();
+  const w = rc.right - rc.left;
+  const h = rc.bottom - rc.top;
+  if (w <= 0 || h <= 0) {
+    return null;
+  }
+  // util.ts's tmpPath() dir: util.ts imports this file
+  const dir = join(import.meta.dir, "..", ".work", "tests-tmp", "tmp");
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, `capture-${process.pid}.png`);
+  const res = macControlRequest(TestCaptureWindow, [path]);
+  if (res[0] !== 0) {
+    return null;
+  }
+  const png = decodePng(readFileSync(path));
+  rmSync(path, { force: true });
+  const sx = png.w / w;
+  const sy = png.h / h;
+  const data = new Uint8Array(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    const py = Math.min(png.h - 1, Math.floor((y + 0.5) * sy));
+    for (let x = 0; x < w; x++) {
+      const px = Math.min(png.w - 1, Math.floor((x + 0.5) * sx));
+      const i = (py * png.w + px) * 4;
+      const o = (y * w + x) * 4;
+      data[o] = png.rgba[i + 2]!;
+      data[o + 1] = png.rgba[i + 1]!;
+      data[o + 2] = png.rgba[i]!;
+      data[o + 3] = png.rgba[i + 3]!;
+    }
+  }
+  return { w, h, data };
 }
 
 export function macFrameClientRect(): { left: number; top: number; right: number; bottom: number } {
