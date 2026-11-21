@@ -12,6 +12,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
@@ -44,11 +45,14 @@ function readLog(path: string): string {
 }
 
 // a folder the file watcher started watching
+// Windows watches a file's folder; macOS polls the file itself
 function watched(log: string, dir: string): boolean {
+  const lines = log.split("\n");
+  if (IS_MAC) {
+    return lines.some((l) => l.startsWith("FileWatcherSubscribe: watching") && l.includes(`'${dir}/`));
+  }
   const want = dir.replaceAll("/", "\\").toLowerCase();
-  return log
-    .split("\n")
-    .some((l) => l.startsWith("StartMonitoringDirForChangesAPC()") && l.toLowerCase().includes(want));
+  return lines.some((l) => l.startsWith("StartMonitoringDirForChangesAPC()") && l.toLowerCase().includes(want));
 }
 
 async function waitLog(path: string, pred: (log: string) => boolean): Promise<boolean> {

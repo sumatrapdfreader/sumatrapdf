@@ -92,6 +92,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) 
     file->size = file::GetSize(path);
     file->exists = true;
     ListInsertFront(&gWatchedFiles, file);
+    logf("FileWatcherSubscribe: watching '%s'\n", path);
     return file;
 }
 
