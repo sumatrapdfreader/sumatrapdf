@@ -153,6 +153,7 @@ struct ShellView {
     static void OnSystemMenuDrag(ShellView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev);
     static void OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev);
     static void OnRearmTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent*);
+    static void OnRevealCheck(ShellView* self, gp::Ctx* cx, const gp::TickEvent*);
     static void OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
     static void OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnKeyUp(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
@@ -194,18 +195,19 @@ constexpr int kStartupRevealMaxMs = 1000;
 // tile has been painted, or at once when there is no page to wait for (the
 // home page, a document that isn't pages), or when a dialog needs the window
 // (a password prompt), or after kStartupRevealMaxMs at the latest.
-static void MaybeRevealStartupWindow(MainWindow* win) {
+static void MaybeRevealStartupWindow(MainWindow* win, const char* why = nullptr) {
     ShellUI* ui = win->shell;
     if (!ui || !ui->hiddenUntilReady || !win->gpuiWin) {
         return;
     }
-    const char* why = nullptr;
     WindowTab* tab = win->CurrentTab();
     // a document being loaded, or loaded with pages; not one that failed
     bool loading = tab && (tab->loadState == WindowTab::LoadState::Loading ||
                            tab->loadState == WindowTab::LoadState::LoadedPending);
     bool waitsForPage = tab && !win->IsCurrentTabAbout() && (loading || (win->IsDocLoaded() && win->AsFixed()));
-    if ((gp::TimeNow() - ui->hiddenSince) * 1000 >= kStartupRevealMaxMs) {
+    if (why) {
+        // asked for: something has to happen to the window on screen
+    } else if ((gp::TimeNow() - ui->hiddenSince) * 1000 >= kStartupRevealMaxMs) {
         why = "deadline";
     } else if (ToolWindowModalOf(win) || ToolWindowActiveOf(win)) {
         why = "dialog";
@@ -966,6 +968,8 @@ void AppShellActivateWindow(MainWindow* win) {
 
 void AppShellMinimizeWindow(MainWindow* win) {
     if (win && win->gpuiWin) {
+        // a window that isn't on screen yet can't be minimized
+        MaybeRevealStartupWindow(win, "minimize");
         gp::AppMinimize(win->gpuiWin);
     }
 }
@@ -3253,6 +3257,12 @@ static void ShellApplyTickPace(ShellView* self, gp::Window* gw, int ms) {
     self->tickTimer = gp::WindowSetInterval(gw, ms, gp::ListenTo(ShellViewOf(self->win), &ShellView::OnTick));
 }
 
+void ShellView::OnRevealCheck(ShellView* self, gp::Ctx*, const gp::TickEvent*) {
+    if (IsMainWindowValidAndNotClosing(self->win)) {
+        MaybeRevealStartupWindow(self->win);
+    }
+}
+
 void ShellView::OnRearmTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent*) {
     self->tickRearmPosted = false;
     // gp::AppFree() runs a re-arm posted before GpuiMain deleted the windows
@@ -3529,6 +3539,11 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
         if (gStartupShownMs < 0 && !self->win->shell->hiddenUntilReady) {
             gStartupShownMs = AppElapsedMs();
             gStartupShownWhy = "first-frame";
+        }
+        // runs after this frame was painted: shown as soon as page 1 is in
+        // it, not at the next tick (a test acting on the window by then)
+        if (self->win->shell->hiddenUntilReady) {
+            gp::WindowPost(cx->win, gp::ListenTo(ShellViewOf(self->win), &ShellView::OnRevealCheck));
         }
     }
     DlgAccelBeginFrame(cx->win);

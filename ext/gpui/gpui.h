@@ -9976,6 +9976,11 @@ void OpenUrl(Str url);
 
 void OpenPath(Str path);
 
+using OpenExternalHookFn = bool (*)(Str urlOrPath, bool isPath);
+void SetOpenExternalHook(OpenExternalHookFn fn);
+
+bool OpenExternalHooked(Str urlOrPath, bool isPath);
+
 struct PathFilter {
     Str name = {};
     Str patterns = {};

@@ -2755,7 +2755,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             if (str::EqI(name, StrL("SC_MINIMIZE")) || str::EqI(name, StrL("SC_RESTORE"))) {
                 if (win->gpuiWin) {
                     if (str::EqI(name, StrL("SC_MINIMIZE"))) {
-                        gp::AppMinimize(win->gpuiWin);
+                        AppShellMinimizeWindow(win);
                     } else {
                         gp::AppActivate(win->gpuiWin);
                     }
