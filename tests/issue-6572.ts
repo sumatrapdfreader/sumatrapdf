@@ -1,4 +1,4 @@
-// #6572: ProgressBarDy draws a thin reading progress bar along the bottom of
+// #6572: ReadingProgressBarDy draws a thin reading progress bar along the bottom of
 // the document, filled as far as the current page is through it. 0 (the
 // default) means no bar. Works for every document the canvas shows: PDF,
 // image, comic, EPUB.
@@ -126,7 +126,7 @@ export async function testit(): Promise<void> {
     await waitProgress(client, "default", (p) => p.progress === null);
   });
 
-  await withSettings("on", "ProgressBarDy = 3", pdf, async (client, pid) => {
+  await withSettings("on", "ReadingProgressBarDy = 3", pdf, async (client, pid) => {
     let p = await waitProgress(client, "page 1", (p) => p.progress !== null && doneFor(p, 1));
     checkBar(p, "page 1", 0);
     await checkPainted(pid, p);
@@ -139,14 +139,14 @@ export async function testit(): Promise<void> {
   });
 
   // above the page info bar when it is drawn over the canvas
-  await withSettings("overlay", "ProgressBarDy = 3\nPageInfoLocation = bottom-overlay", pdf, async (client) => {
+  await withSettings("overlay", "ReadingProgressBarDy = 3\nPageInfoLocation = bottom-overlay", pdf, async (client) => {
     const p = await waitProgress(client, "overlay", (p) => p.progress !== null && p.bar !== null);
     checkBar(p, "overlay", p.bar!.dy);
   });
 
   // every kind of document the canvas shows
   for (const name of ["issue-6225.jpg", "issue-1201.cbz", "issue-5846.epub"]) {
-    await withSettings("format", "ProgressBarDy = 3", join(import.meta.dir, name), async (client) => {
+    await withSettings("format", "ReadingProgressBarDy = 3", join(import.meta.dir, name), async (client) => {
       const p = await waitProgress(client, name, (p) => p.progress !== null && p.done > 0);
       checkBar(p, name, 0);
     });

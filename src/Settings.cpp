@@ -1125,7 +1125,7 @@ static const FieldInfo gSettingsFields[] = {
      gEnumSettingsToolbarPosition, nullptr},
     {offsetof(Settings, pageInfoLocation), SettingType::String, (intptr_t)"notification", false, false,
      gEnumSettingsPageInfoLocation, nullptr},
-    {offsetof(Settings, progressBarDy), SettingType::Float, (intptr_t)"0"},
+    {offsetof(Settings, readingProgressBarDy), SettingType::Float, (intptr_t)"0"},
     {offsetof(Settings, searchUIFloating), SettingType::Bool, false},
     {offsetof(Settings, showFavorites), SettingType::Bool, false},
     {offsetof(Settings, sidebarBottomView), SettingType::String, 0, false, false, gEnumSettingsSidebarBottomView,
@@ -1300,26 +1300,27 @@ const StructInfo gSettingsInfo = {
     "gnatureStatus\0OfdTrustedCertificates\0TemporaryFileShowNotification\0TemporaryFileDestDir\0DownloadDirectory\0Tem"
     "poraryFileAutoMove\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0KeepMissingSessionTabs\0ReuseIn"
     "stance\0OpenOnOtherDesktop\0ShowMenubar\0ShowMenubarWithTabs\0ShowPageNumberInTabs\0ShowHomePageReadingProgress\0S"
-    "howChaptersInEbooks\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0PageInfoLocation\0ProgressBarD"
-    "y\0SearchUIFloating\0ShowFavorites\0SidebarBottomView\0ShowSidebarMiddle\0SortFavoritesByName\0FavoritesManualOrde"
-    "r\0ShowToc\0AlwaysShowSidebar\0ShowThumbnailsIfNoToc\0SidebarOnRight\0SidebarAutoHide\0SidebarWindowSize\0ShowLink"
-    "s\0ShowDocumentErrors\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0DisableLeftDragPan\0ExplorerQuickLo"
-    "ok\0RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0InvertMouseWheel\0ScrollEdgeTurnsPage\0ShowDocumentFocusInd"
-    "icator\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0TocWr"
-    "apText\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmou"
-    "nt\0SaveMemory\0PaddingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0HighlightLinkDestina"
-    "tion\0FlashFindMatch\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadAloudSentenceColor\0ReadAloudWordC"
-    "olor\0ReadingAutoScrollSpeed\0ReadingAutoScrollMinutes\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepInFullscr"
-    "een\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0"
-    "SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0D"
-    "isableAntiAlias\0EngineeringDrawingEnhance\0ShowLineWeights\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption"
-    "\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0FitWidthPercent\0\0"
-    "FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0Co"
-    "dexBuild\0\0AntiGravity\0\0CustomAI\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateE"
-    "ngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0"
-    "TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSk"
-    "ip\0WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0"
-    "ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
+    "howChaptersInEbooks\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0PageInfoLocation\0ReadingProgr"
+    "essBarDy\0SearchUIFloating\0ShowFavorites\0SidebarBottomView\0ShowSidebarMiddle\0SortFavoritesByName\0FavoritesMan"
+    "ualOrder\0ShowToc\0AlwaysShowSidebar\0ShowThumbnailsIfNoToc\0SidebarOnRight\0SidebarAutoHide\0SidebarWindowSize\0S"
+    "howLinks\0ShowDocumentErrors\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0DisableLeftDragPan\0Explorer"
+    "QuickLook\0RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0InvertMouseWheel\0ScrollEdgeTurnsPage\0ShowDocumentF"
+    "ocusIndicator\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers"
+    "\0TocWrapText\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollL"
+    "ineAmount\0SaveMemory\0PaddingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0HighlightLink"
+    "Destination\0FlashFindMatch\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadAloudSentenceColor\0ReadAlo"
+    "udWordColor\0ReadingAutoScrollSpeed\0ReadingAutoScrollMinutes\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepIn"
+    "Fullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0"
+    "TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFont"
+    "Size\0DisableAntiAlias\0EngineeringDrawingEnhance\0ShowLineWeights\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowC"
+    "aption\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0FitWidthPerce"
+    "nt\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild"
+    "\0\0CodexBuild\0\0AntiGravity\0\0CustomAI\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0Tran"
+    "slateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandle"
+    "rs\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0Versi"
+    "onToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0Session"
+    "Data\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0"
+    "\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file uses page 1 — "
     "taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content, fit visible or percent like "

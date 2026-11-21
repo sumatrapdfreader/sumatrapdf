@@ -550,7 +550,7 @@ bool PageInfoBarShown(MainWindow* win) {
     return win->windowMode != WindowMode::PresentationBlack && win->windowMode != WindowMode::PresentationWhite;
 }
 
-//--- the reading progress bar (ProgressBarDy, #6572)
+//--- the reading progress bar (ReadingProgressBarDy, #6572)
 
 Color ProgressBarDoneColor() {
     return ThemeWindowLinkColor();
@@ -564,7 +564,7 @@ Color ProgressBarRestColor() {
 // the done part as far across as the current page is through the document.
 // dpi converts the setting's points to px.
 bool ProgressBarRects(MainWindow* win, Size canvas, int dpi, int bottomInset, Rect* doneOut, Rect* restOut) {
-    float pt = gSettings->progressBarDy;
+    float pt = gSettings->readingProgressBarDy;
     if (pt <= 0 || !win || !win->IsDocLoaded() || !win->AsFixed() || win->InPresentation()) {
         return false;
     }

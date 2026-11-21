@@ -924,7 +924,7 @@ struct Settings {
     bool showPageNumberInTabs;
     // height in points of a thin bar along the bottom of the document that
     // shows how far into it the current page is; 0 or less means no bar
-    float progressBarDy;
+    float readingProgressBarDy;
     // what the sidebar's bottom panel shows: favorites (the default),
     // bookmarks or thumbnails
     Str sidebarBottomView;

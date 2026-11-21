@@ -1711,7 +1711,7 @@ const globalPrefs: Field[] = [
     .enum(["notification", "legacy", "bottom", "bottom-overlay"])
     .ver("3.7"),
   field(
-    "ProgressBarDy",
+    "ReadingProgressBarDy",
     Float,
     0,
     "height in points of a thin bar along the bottom of the document that shows how far into it the " +
