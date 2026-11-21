@@ -8,6 +8,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   enumChildWindows,
@@ -33,7 +34,8 @@ const kTitle = "Convert to Images";
 const kKeep = "not an image, must survive";
 const kNgWindow = "converttoimages";
 const VK_A = 0x41;
-const kNgCtrl = 1;
+// select all is Cmd + A on macOS (Ctrl + A goes to the line start)
+const kNgSelectAllMods = IS_MAC ? 16 : 1;
 
 type Rc = { x: number; y: number; dx: number; dy: number };
 
@@ -157,7 +159,7 @@ async function ngDialog(client: ControlClient): Promise<Dlg> {
         .map(rcOf)
         .find((r) => node.y >= r.y && node.y <= r.y + r.dy);
       await click(hit ?? node);
-      await input("key", VK_A, kNgCtrl);
+      await input("key", VK_A, kNgSelectAllMods);
       for (const ch of s) {
         await input("char", ch.charCodeAt(0), 0);
       }
