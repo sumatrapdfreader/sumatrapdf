@@ -127,6 +127,12 @@ static bool OptTakesValue(Str name) {
     return false;
 }
 
+// -o or --output
+static Str OutputArg(CliCtx& cx) {
+    Str dest = OptValue(cx, StrL("-o"));
+    return len(dest) > 0 ? dest : OptValue(cx, StrL("--output"));
+}
+
 // a number option: def without it; false after reporting a bad one
 static bool FloatOpt(CliCtx& cx, Str name, float def, float lo, float hi, float* out, int* code) {
     Str v = OptValue(cx, name);
@@ -678,13 +684,102 @@ static int CmdAnnotations(CliCtx& cx) {
     return kCliOk;
 }
 
-//--- render
+//--- images
 
-// -o or --output
-static Str OutputArg(CliCtx& cx) {
-    Str dest = OptValue(cx, StrL("-o"));
-    return len(dest) > 0 ? dest : OptValue(cx, StrL("--output"));
+// the image format of encoded bytes, as a file extension; empty if unknown
+static Str ImageExt(Str d) {
+    const u8* b = (const u8*)d.s;
+    int n = len(d);
+    if (n > 3 && b[0] == 0xff && b[1] == 0xd8 && b[2] == 0xff) {
+        return StrL(".jpg");
+    }
+    if (n > 8 && memcmp(b, "\x89PNG\r\n\x1a\n", 8) == 0) {
+        return StrL(".png");
+    }
+    if (n > 6 && (memcmp(b, "GIF87a", 6) == 0 || memcmp(b, "GIF89a", 6) == 0)) {
+        return StrL(".gif");
+    }
+    if (n > 12 && memcmp(b, "RIFF", 4) == 0 && memcmp(b + 8, "WEBP", 4) == 0) {
+        return StrL(".webp");
+    }
+    if (n > 12 && (memcmp(b, "\x00\x00\x00\x0cjP  ", 8) == 0 || memcmp(b, "\xff\x4f\xff\x51", 4) == 0)) {
+        return StrL(".jp2");
+    }
+    if (n > 4 && (memcmp(b, "II*\x00", 4) == 0 || memcmp(b, "MM\x00*", 4) == 0)) {
+        return StrL(".tif");
+    }
+    if (n > 2 && b[0] == 'B' && b[1] == 'M') {
+        return StrL(".bmp");
+    }
+    return {};
 }
+
+// the pictures in a document's pages, as files in the folder -o: the bytes
+// the document has where they are a format of their own (a PDF's JPEG, a
+// comic's pages), else as PNG
+static int CmdImages(CliCtx& cx) {
+    Str dir = OutputArg(cx);
+    if (len(dir) == 0) {
+        return Fail(cx, kCliUsage, StrL("needs -o <folder> for the images"));
+    }
+    int code = kCliOk;
+    EngineBase* engine = OpenDoc(cx, cx.positional[0], &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    if (!PagesArg(cx, engine, pages, &code)) {
+        SafeEngineRelease(&engine);
+        return code;
+    }
+    TempStr base = path::GetPathNoExtTemp(path::GetBaseNameTemp(cx.positional[0]));
+    str::Builder out;
+    int nImages = 0;
+    for (int pageNo : pages) {
+        // the page's elements are only there once it's fully loaded
+        engine->BenchLoadPage(pageNo);
+        Vec<IPageElement*> els = engine->GetElements(pageNo);
+        int k = 0;
+        for (IPageElement* el : els) {
+            if (el->GetKind() != kindPageElementImage) {
+                continue;
+            }
+            Str data = engine->GetImageDataForPageElement(el);
+            Str ext = ImageExt(data);
+            if (len(ext) == 0) {
+                str::Free(data);
+                data = engine->GetImagePngForPageElement(el);
+                ext = StrL(".png");
+            }
+            if (len(data) == 0) {
+                continue;
+            }
+            k++;
+            TempStr dest = path::JoinTemp(dir, fmt("%s-p%d-%d%s", base, pageNo, k, ext));
+            dir::CreateForFile(dest);
+            bool ok = file::WriteFile(dest, data);
+            int size = len(data);
+            str::Free(data);
+            if (!ok) {
+                SafeEngineRelease(&engine);
+                return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+            }
+            RectF r = el->GetRect();
+            if (cx.json) {
+                out.Append(fmt("%s{\"page\":%d,\"file\":%s,\"bytes\":%d,\"rect\":[%.1f,%.1f,%.1f,%.1f]}",
+                               nImages > 0 ? StrL(",") : StrL(""), pageNo, JStr(dest), size, r.x, r.y, r.dx, r.dy));
+            } else {
+                out.Append(fmt("%s\n", dest));
+            }
+            nImages++;
+        }
+    }
+    Out(cx.json ? fmt("{\"count\":%d,\"images\":[%s]}\n", nImages, ToStr(out)) : ToStrTemp(out));
+    SafeEngineRelease(&engine);
+    return kCliOk;
+}
+
+//--- render
 
 static int CmdRender(CliCtx& cx) {
     Str dest = OutputArg(cx);
@@ -2594,6 +2689,8 @@ need `-o <output>` and refuse to write over an input.
   page number and some context; then read those pages with `text --pages`
 - `toc <file>`: the table of contents with page numbers
 - `annotations <file.pdf>`: highlights (with the text they mark), notes, shapes
+- `images <file> -o folder/`: the pictures in the pages, a PDF's JPEGs as they
+  are, others as PNG
 - `render <file> -o page.png [--pages 2] [--dpi 150]`: pages as images, for
   figures, scans and layout; `<N>` in the name is the page number
 
@@ -2690,6 +2787,10 @@ static const CliCmd gCmds[] = {
      "toc manual.chm\ntoc book.epub --json", CmdToc},
     {"annotations", "<file>", "a PDF's annotations: highlights with the text they mark, notes, shapes",
      "--pages <range>  only these pages", "annotations paper.pdf\nannotations paper.pdf --json", CmdAnnotations},
+    {"images", "<file> -o <folder>",
+     "the pictures in the pages, as the document has them (a PDF's JPEGs, a comic's pages) or as PNG",
+     "-o <folder>      where they go, as <name>-p<page>-<n>.<ext>\n--pages <range>  only these pages",
+     "images report.pdf -o pics/\nimages comic.cbz --pages 1-5 -o pages/ --json", CmdImages},
     {"render", "<file> -o <image>", "pages as images (PNG, JPEG, WebP, ... by the file's extension)",
      "-o <file>        the image; for several pages <N> in it is the page number\n--pages <range>  these pages "
      "(default: the first)\n--dpi <n>        resolution, default 150",
