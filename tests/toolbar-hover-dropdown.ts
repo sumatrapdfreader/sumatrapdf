@@ -671,6 +671,30 @@ function checkCentredOnButton(left: number, right: number, btnCentreX: number): 
   }
 }
 
+// ng lays the drop-down out at a guessed width, then centres it on the next
+// tick; the box it reports can be that first frame's
+async function centredMenuBounds(
+  client: ControlClient,
+  menu: number,
+  btnCentreX: number,
+): Promise<{ left: number; top: number; right: number; bottom: number }> {
+  if (!USE_NG) {
+    const b = await menuBounds(client, menu);
+    checkCentredOnButton(b.left, b.right, btnCentreX);
+    return b;
+  }
+  const kCentreWaitMs = 2000;
+  const deadline = Date.now() + kCentreWaitMs;
+  for (;;) {
+    const b = await menuBounds(client, menu);
+    if (Math.abs(Math.floor((b.left + b.right) / 2) - btnCentreX) <= 4 || Date.now() > deadline) {
+      checkCentredOnButton(b.left, b.right, btnCentreX);
+      return b;
+    }
+    await sleep(50);
+  }
+}
+
 async function menuBounds(
   client: ControlClient,
   menu: number,
@@ -759,8 +783,7 @@ async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
       throw new Error("toolbar-hover-dropdown: the dark theme shades the larger half darker, not lighter");
     }
     checkCurrentBoxed(items, "100%");
-    const openedBox = await menuBounds(client, opened);
-    checkCentredOnButton(openedBox.left, openedBox.right, clientToScreen(toolbar, zx, zy).x);
+    await centredMenuBounds(client, opened, clientToScreen(toolbar, zx, zy).x);
 
     // and they are real commands, not just labels
     const menu = await hoverUntilMenu(client, toolbar, proc.pid!, zx, zy, "the zoom drop-down closed");
@@ -918,7 +941,13 @@ export async function testit(): Promise<void> {
       await clickAt(toolbar, sx, sy, 0);
     }
     await waitMenu(client, pid, false, "clicking the Save icon did not close the drop-down");
-    const stayClosedUntil = Date.now() + 1500;
+    // ng: Windows keeps sending moves at the real cursor; over the frame they
+    // are a leave of Save, which re-arms its hover between our posted moves
+    const cursorOff = !USE_NG || parkCursorAway([getWindowRect(frame)]);
+    if (!cursorOff) {
+      console.log("  can't move the cursor off the window: skipping 'stays closed on Save'");
+    }
+    const stayClosedUntil = cursorOff ? Date.now() + 1500 : 0;
     while (Date.now() < stayClosedUntil) {
       await hoverToolbar(client, toolbar, sx, sy);
       if (await menuShowing(client, pid)) {
@@ -981,14 +1010,13 @@ export async function testit(): Promise<void> {
       throw new Error(`toolbar-hover-dropdown: the zoom levels are [${texts.join()}]`);
     }
     checkPyramid(items, ZOOM_ROWS, ZOOM_LEVELS);
-    const zr = await menuBounds(client, zoomMenu);
+    const zr = await centredMenuBounds(client, zoomMenu, btnCentreX);
     // and the pyramid is what keeps it narrow: all 26 in a row would be wider
     // than the window the toolbar is in
     if (zr.right - zr.left > 600) {
       throw new Error(`toolbar-hover-dropdown: the zoom drop-down is too wide ${JSON.stringify(zr)}`);
     }
     checkCurrentBoxed(items, "100%");
-    checkCentredOnButton(zr.left, zr.right, btnCentreX);
     const zoomMenuRect = JSON.stringify(zr);
 
     const grounds = await shadingOf(client, items, ZOOM_LEVELS, zoomMenu);
@@ -1028,8 +1056,7 @@ export async function testit(): Promise<void> {
       zoomMenu = boxed.menu;
       items = boxed.items;
     }
-    const again = await menuBounds(client, zoomMenu);
-    checkCentredOnButton(again.left, again.right, btnCentreX);
+    const again = await centredMenuBounds(client, zoomMenu, btnCentreX);
     if (JSON.stringify(again) !== zoomMenuRect) {
       throw new Error("toolbar-hover-dropdown: the drop-down opened somewhere else once the zoom had changed");
     }
