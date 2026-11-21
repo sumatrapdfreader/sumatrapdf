@@ -134,7 +134,7 @@ void DuplicateTabInNewTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void StartLazyTabLoad(WindowTab* tab);
 WindowTab* StartLoadDocument(MainWindow* win, Str path, LoadPrefs prefs = LoadPrefs::Save,
-                             LoadReuse reuse = LoadReuse::NewTab);
+                             LoadReuse reuse = LoadReuse::NewTab, const Func1<bool>& onFinished = {});
 void LoadPendingTab(WindowTab* tab);
 void LoadDocumentWithEngine(MainWindow* win, Str path, EngineBase* engine);
 extern AtomicInt gTestLoadDelayMs;

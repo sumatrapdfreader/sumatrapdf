@@ -1769,6 +1769,8 @@ struct LazyTabLoad {
     // an open (StartLoadDocument) rather than a restored session tab
     bool isOpen = false;
     LoadPrefs prefs = LoadPrefs::DontSave;
+    // an open's result: false when it failed or was superseded
+    Func1<bool> onFinished;
     TimeStamp timeStart;
     EngineBase* engine = nullptr;
     ~LazyTabLoad() {
@@ -1797,19 +1799,18 @@ static void StartOrQueueLoadThread(LazyTabLoad* d) {
 // the UI-thread half of an open: the engine goes on screen in the loading tab.
 // Without one (password, CAJ consent, failure) the regular load runs, quickly
 // now that the drive is awake, and asks or shows the error.
-static void FinishOpenLoad(LazyTabLoad* d) {
+static bool FinishOpenLoad(LazyTabLoad* d) {
     WindowTab* tab = d->tab;
     MainWindow* win = tab->win;
     TempStr path = str::DupTemp(tab->filePath);
     if (!d->engine) {
         // a password dialog shows over the error, which stays if it's cancelled
         tab->loadState = WindowTab::LoadState::Error;
-        LoadDocumentNow(win, path, d->prefs, LoadReuse::CurrentTab);
-        return;
+        return LoadDocumentNow(win, path, d->prefs, LoadReuse::CurrentTab) != nullptr;
     }
     DocController* ctrl = new DisplayModel(d->engine, win->cbHandler);
     d->engine = nullptr;
-    LoadDocumentFinish(win, path, ctrl, d->prefs, LoadReuse::CurrentTab, d->timeStart);
+    return LoadDocumentFinish(win, path, ctrl, d->prefs, LoadReuse::CurrentTab, d->timeStart) != nullptr;
 }
 
 static void LazyTabLoadDone(LazyTabLoad* d) {
@@ -1821,18 +1822,22 @@ static void LazyTabLoadDone(LazyTabLoad* d) {
     WindowTab* tab = d->tab;
     MainWindow* win = FindMainWindowByTab(tab);
     if (!win || !IsMainWindowValidAndNotClosing(win)) {
+        d->onFinished.Call(false);
         return;
     }
     if (tab->loadState != WindowTab::LoadState::Loading || !str::Eq(tab->filePath, d->path)) {
+        d->onFinished.Call(false);
         return;
     }
     if (!IsCurrentTab(win, tab)) {
         // loads again when selected, quickly now that the drive is awake
         tab->loadState = d->isOpen ? WindowTab::LoadState::LoadedPending : WindowTab::LoadState::None;
+        d->onFinished.Call(true);
         return;
     }
     if (d->isOpen) {
-        FinishOpenLoad(d);
+        bool ok = FinishOpenLoad(d);
+        d->onFinished.Call(ok);
         return;
     }
     EngineBase* engine = d->engine;
@@ -1885,17 +1890,23 @@ void StartLazyTabLoad(WindowTab* tab) {
 
 // orig's StartLoadDocument: the tab shows "Loading ..." while the engine is
 // created on a thread, so a sleeping drive doesn't freeze the UI. Returns the
-// tab that gets the document. Wasm has no threads and loads right away.
-WindowTab* StartLoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse) {
+// tab that gets the document. onFinished gets whether it loaded. Wasm has no
+// threads and loads right away.
+WindowTab* StartLoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse,
+                             const Func1<bool>& onFinished) {
     if (gCrashOnOpen) {
         log(StrL("StartLoadDocument: about to call CrashMe()\n"));
         CrashMe();
     }
     if (!win || len(path) == 0) {
+        onFinished.Call(false);
         return nullptr;
     }
 #if OS_WASM
-    return LoadDocument(win, path, prefs, reuse) ? win->CurrentTab() : nullptr;
+    bool ok = LoadDocument(win, path, prefs, reuse) != nullptr;
+    WindowTab* res = ok ? win->CurrentTab() : nullptr;
+    onFinished.Call(ok);
+    return res;
 #else
     TempStr fullPath = path::NormalizeTemp(path);
     // TemporaryFileAutoMove: open the copy in TemporaryFileDestDir (#6437)
@@ -1907,6 +1918,7 @@ WindowTab* StartLoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReu
     LazyTabLoad* d = NewTabLoad(tab);
     d->isOpen = true;
     d->prefs = prefs;
+    d->onFinished = onFinished;
     StartOrQueueLoadThread(d);
     return tab;
 #endif
@@ -2800,34 +2812,42 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     MaybeSaveAnnotations(tab, MkFunc1(LoadNextPrevFile, c));
 }
 
+static void OnNextPrevFileLoaded(NextPrevLoadCtx* c, bool ok) {
+    AutoDelete delCtx(c);
+    MainWindow* win = c->win;
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    // superseded: next / prev again, or another open, while loading
+    WindowTab* tab = win->CurrentTab();
+    bool samePath = tab && (str::EqI(tab->filePath, c->path) || path::IsSame(tab->filePath, c->path));
+    if (!samePath) {
+        return;
+    }
+    if (ok) {
+        if (len(c->pathToDelete) > 0) {
+            DeleteFileFromDiskAndHistory(c->pathToDelete);
+        }
+        return;
+    }
+    // skip the file that failed to open and go on in the same direction
+    gFilesFailedToOpen.Append(c->path);
+    OpenNextPrevFileInFolder(win, c->forward, c->pathToDelete);
+}
+
 static void LoadNextPrevFile(NextPrevLoadCtx* c, bool canProceed) {
     MainWindow* win = c->win;
     WindowTab* tab = c->tab;
-    bool forward = c->forward;
-    TempStr chosenCopy = str::DupTemp(c->path);
-    // the load resets the temp arena and may free the pending request
-    Str toDelete = str::Dup(c->pathToDelete);
-    delete c;
     bool stillCurrent = IsMainWindowValidAndNotClosing(win) && win->CurrentTab() == tab;
     if (!canProceed || !stillCurrent) {
-        str::Free(toDelete);
+        delete c;
         return;
     }
     UpdateTabFileDisplayStateForTab(tab);
-    if (!LoadDocument(win, chosenCopy, LoadPrefs::Save, LoadReuse::CurrentTab)) {
-        // orig advances from the load callback. Stay put when this was the last file.
-        gFilesFailedToOpen.Append(chosenCopy);
-        OpenNextPrevFileInFolder(win, forward, toDelete);
-        str::Free(toDelete);
-        return;
-    }
-    // ng: orig deletes from the asynchronous load's callback
-    WindowTab* curr = IsMainWindowValidAndNotClosing(win) ? win->CurrentTab() : nullptr;
-    bool moved = curr && len(curr->filePath) > 0 && !path::IsSame(curr->filePath, toDelete);
-    if (len(toDelete) > 0 && moved) {
-        DeleteFileFromDiskAndHistory(toDelete);
-    }
-    str::Free(toDelete);
+    // loads on a thread; OnNextPrevFileLoaded deletes pathToDelete or skips a
+    // file that fails to open
+    TempStr path = str::DupTemp(c->path);
+    StartLoadDocument(win, path, LoadPrefs::Save, LoadReuse::CurrentTab, MkFunc1(OnNextPrevFileLoaded, c));
 }
 
 // --- annotations (step 13a) -------------------------------------------------
