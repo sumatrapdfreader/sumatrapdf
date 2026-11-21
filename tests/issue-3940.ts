@@ -87,6 +87,8 @@ async function testNgCopy(pdf: string): Promise<void> {
     const keys = [...Array(OBJECT_PROPS_DOWNS).fill(VK_DOWN), VK_RIGHT, VK_RETURN];
     for (const key of keys) {
       await client.request(ControlCommand.TestInput, ["key", key, 0, 0, 0]);
+      // a submenu takes the keyboard before its first frame lays out its rows
+      await client.waitForRenderIdle();
     }
     const got = await getClipboardText(POPUP_MS);
     if (got !== PICKED) {
