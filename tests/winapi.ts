@@ -1902,6 +1902,28 @@ export function captureWindowDCRegionPixels(
   if (w <= 0 || h <= 0) {
     return null;
   }
+  // macOS: that region of the window's capture
+  if (IS_MAC) {
+    const cap = macCaptureClientPixels();
+    if (!cap) {
+      return null;
+    }
+    const out = new Uint8Array(w * h * 4);
+    for (let row = 0; row < h; row++) {
+      const sy = y + row;
+      if (sy < 0 || sy >= cap.h) {
+        continue;
+      }
+      for (let col = 0; col < w; col++) {
+        const sx = x + col;
+        if (sx < 0 || sx >= cap.w) {
+          continue;
+        }
+        out.set(cap.data.subarray((sy * cap.w + sx) * 4, (sy * cap.w + sx) * 4 + 4), (row * w + col) * 4);
+      }
+    }
+    return out;
+  }
   const src = openWindowDC(hwnd);
   const winDC = src.dc;
   const memDC = gdi32.symbols.CreateCompatibleDC(winDC);
