@@ -2228,10 +2228,10 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSaveFileName: {
 #if OS_WIN
             SetTestSaveFileName(StringArg(req, 0));
-            AppendTestResult(req, 0, StrL("OK"));
-#else
-            AppendError(req, StrL("TestSaveFileName: Windows only"));
 #endif
+            // the port's own dialog, where the native one is off or there is none
+            SetTestSavePath(StringArg(req, 0));
+            AppendTestResult(req, 0, StrL("OK"));
             break;
         }
 

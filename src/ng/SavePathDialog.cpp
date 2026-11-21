@@ -187,6 +187,14 @@ void CloseSavePathDialogFor(MainWindow* win) {
     }
 }
 
+// what TestSaveFileName set: every save prompt answers with it, as Windows'
+// GetSaveFileName does for orig's tests
+static Str gTestSavePath;
+
+void SetTestSavePath(Str path) {
+    str::ReplaceWithCopy(&gTestSavePath, path);
+}
+
 void ShowSavePathDialog(SavePathArgs* args) {
     if (!args) {
         return;
@@ -206,6 +214,11 @@ void ShowSavePathDialog(SavePathArgs* args) {
         return;
     }
 #endif
+    if (len(gTestSavePath) > 0 && !args->openExisting) {
+        gSave.args = args;
+        FinishSavePathDialog(str::DupTemp(gTestSavePath));
+        return;
+    }
     // the port's dialog does not report a filter
     args->filterIndex = 0;
     gSave.args = args;
