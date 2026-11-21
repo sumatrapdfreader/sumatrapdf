@@ -5,6 +5,14 @@
 // implementations are in Win.cpp (ShellExecuteEx / CreateProcess), which only
 // builds there; Launch_posix.cpp is fork + exec with xdg-open / open.
 
+// set in test mode (-for-testing): nothing is launched or handed to the
+// desktop, so tests don't open a browser or Finder in front of whoever uses
+// the computer. ExternalLaunchBlocked logs what would have been opened.
+extern bool gBlockExternalLaunch;
+// how many were blocked, for a test to check
+extern int gExternalLaunchesBlocked;
+bool ExternalLaunchBlocked(Str what);
+
 #if !OS_WIN
 // runs `path` with `params` as its command line. A path that isn't an
 // executable is handed to the desktop (xdg-open on Linux, open on mac).

@@ -2165,8 +2165,20 @@ Run:
     SafeCloseHandle(&h);
 }
 
+bool gBlockExternalLaunch = false;
+int gExternalLaunchesBlocked = 0;
+
+bool ExternalLaunchBlocked(Str what) {
+    if (!gBlockExternalLaunch) {
+        return false;
+    }
+    logf("ExternalLaunchBlocked: not opening '%s' in test mode\n", what);
+    gExternalLaunchesBlocked++;
+    return true;
+}
+
 bool LaunchFileShell(Str path, Str params, Str verb, bool hidden) {
-    if (len(path) == 0) {
+    if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return false;
     }
 
@@ -2193,7 +2205,7 @@ bool LaunchBrowser(Str url) {
 }
 
 void OpenPathInDefaultFileManager(Str path) {
-    if (len(path) == 0) {
+    if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return;
     }
 

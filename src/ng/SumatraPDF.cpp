@@ -7593,6 +7593,10 @@ int GpuiMain(int argc, char** argv) {
 #endif
     if (gFlags->forTesting) {
         gForTesting = true;
+        // tests mustn't open a browser or Finder in front of whoever uses the
+        // computer: neither our launches nor gpui's (a link in a tooltip)
+        gBlockExternalLaunch = true;
+        gp::SetOpenExternalHook([](gp::Str urlOrPath, bool) { return ExternalLaunchBlocked(FromGpui(urlOrPath)); });
     }
     if (gFlags->perfLogFile) {
         SetPerfLogPath(gFlags->perfLogFile);

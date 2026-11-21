@@ -98,12 +98,27 @@ ChildProcess* StartChildProcess(Str cmdLine) {
     return p;
 }
 
+bool gBlockExternalLaunch = false;
+int gExternalLaunchesBlocked = 0;
+
+bool ExternalLaunchBlocked(Str what) {
+    if (!gBlockExternalLaunch) {
+        return false;
+    }
+    logf("ExternalLaunchBlocked: not opening '%s' in test mode\n", what);
+    gExternalLaunchesBlocked++;
+    return true;
+}
+
 bool LaunchFileShellArgs(const StrVec& args) {
+    if (len(args) > 0 && ExternalLaunchBlocked(args[0])) {
+        return false;
+    }
     return SpawnDetached(args);
 }
 
 bool LaunchFileShell(Str path, Str params, Str, bool) {
-    if (len(path) == 0) {
+    if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return false;
     }
     StrVec args;
@@ -121,6 +136,9 @@ bool LaunchFileShell(Str path, Str params, Str, bool) {
 }
 
 bool LaunchBrowser(Str url) {
+    if (ExternalLaunchBlocked(url)) {
+        return false;
+    }
     StrVec args;
     args.Append(Str(OpenerProgram()));
     args.Append(url);
@@ -128,7 +146,7 @@ bool LaunchBrowser(Str url) {
 }
 
 void OpenPathInDefaultFileManager(Str path) {
-    if (len(path) == 0) {
+    if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return;
     }
     if (dir::Exists(path)) {

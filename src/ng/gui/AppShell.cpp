@@ -9,6 +9,7 @@
 #include "gui/GpuiBridge.h"
 #include "VirtKeys.h"
 #include "base/UITask.h"
+#include "base/Launch.h"
 #include "base/File.h"
 #if OS_WASM
 #include <emscripten/emscripten.h>
@@ -931,6 +932,8 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
                    paletteWin || (view && view->overlayUp) ? 1 : 0));
     // macOS has no IsIconic for a test to call
     out.Append(fmt(" minimized=%d", gp::AppIsMinimized(gw) ? 1 : 0));
+    // what -for-testing kept from opening in a browser or Finder
+    out.Append(fmt(" launchesBlocked=%d", gExternalLaunchesBlocked));
     // the toast is drawn in the frame, so a test cannot find it as a child window
     int nNotif = 0;
     str::Builder notifs;

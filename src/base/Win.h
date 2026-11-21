@@ -355,6 +355,13 @@ void AddPathToRecentDocs(Str path);
 HANDLE LaunchProcessWithCmdLine(Str exe, Str cmdLine);
 HANDLE LaunchProcessInDir(Str cmdLine, Str currDir = Str(), DWORD flags = 0);
 bool CreateProcessHelper(Str exe, Str args);
+// set in test mode (-for-testing): nothing is launched or handed to the
+// desktop, so tests don't open a browser or Finder in front of whoever uses
+// the computer. ExternalLaunchBlocked logs what would have been opened.
+extern bool gBlockExternalLaunch;
+// how many were blocked, for a test to check
+extern int gExternalLaunchesBlocked;
+bool ExternalLaunchBlocked(Str what);
 bool LaunchFileShell(Str path, Str params = Str(), Str verb = Str(), bool hidden = false);
 bool LaunchBrowser(Str url);
 void OpenPathInDefaultFileManager(Str path);

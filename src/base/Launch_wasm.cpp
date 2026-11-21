@@ -24,7 +24,22 @@ static bool IsWebUrl(Str s) {
            str::StartsWithI(s, StrL("mailto:"));
 }
 
+bool gBlockExternalLaunch = false;
+int gExternalLaunchesBlocked = 0;
+
+bool ExternalLaunchBlocked(Str what) {
+    if (!gBlockExternalLaunch) {
+        return false;
+    }
+    logf("ExternalLaunchBlocked: not opening '%s' in test mode\n", what);
+    gExternalLaunchesBlocked++;
+    return true;
+}
+
 bool LaunchFileShell(Str path, Str, Str, bool) {
+    if (ExternalLaunchBlocked(path)) {
+        return false;
+    }
     if (!IsWebUrl(path)) {
         logf("LaunchFileShell: '%s' cannot be launched in a browser\n", path);
         return false;
@@ -34,7 +49,7 @@ bool LaunchFileShell(Str path, Str, Str, bool) {
 }
 
 bool LaunchBrowser(Str url) {
-    if (len(url) == 0) {
+    if (len(url) == 0 || ExternalLaunchBlocked(url)) {
         return false;
     }
     WasmOpenUrl(url.s, url.len);
