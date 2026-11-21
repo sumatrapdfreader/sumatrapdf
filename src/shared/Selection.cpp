@@ -20,6 +20,10 @@
 #include <uiautomationcore.h>
 #endif
 #include "gui/Dpi.h"
+#if defined(SUMATRA_NG) && OS_WIN
+// the clipboard: gpui's is text only
+#include "base/Win.h"
+#endif
 #if !defined(SUMATRA_NG)
 #include "base/AutoWin.h"
 #include "base/Win.h"
@@ -872,15 +876,13 @@ Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& s
     return combined;
 }
 
-#if defined(SUMATRA_NG)
-// ng: orig also puts the first selection rectangle on the clipboard as a
-// bitmap (CF_BITMAP); gpui's clipboard is text only, so only the text goes.
-void CopySelectionToClipboard(MainWindow* win) {
-#else
+#if !defined(SUMATRA_NG)
 RenderedBitmap* RenderSelectionsAsRenderedBitmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections) {
     return RenderedBitmapFromPixmap(RenderSelectionsAsPixmap(dm, selections));
 }
+#endif
 
+#if OS_WIN
 static bool CopySelectionImageToOpenClipboard(WindowTab* tab, bool appendOnly) {
     DisplayModel* dm = tab->AsFixed();
     if (!dm || !tab->selectionOnPage || len(*tab->selectionOnPage) == 0) {
@@ -913,29 +915,35 @@ static bool CopySelectionImageToOpenClipboard(WindowTab* tab, bool appendOnly) {
     delete rbmp;
     return ok;
 }
+#endif
 
+#if !defined(SUMATRA_NG)
 void CopySelectionAsImageToClipboard(MainWindow* win) {
-#endif
     WindowTab* tab = win->CurrentTab();
-#if defined(SUMATRA_NG)
-    if (!tab || !tab->selectionOnPage) {
-#else
     if (!tab || !HasPermission(Perm::CopySelection)) {
-#endif
         return;
     }
-#if !defined(SUMATRA_NG)
     if (!OpenClipboardForUpdate()) {
         return;
     }
     AutoCall closeClipboard(CloseClipboardAfterUpdate);
     CopySelectionImageToOpenClipboard(tab, false);
 }
+#endif
 
+// the selection's text and, unless it is a text selection, an image of its
+// first rectangle. Off Windows, gpui's clipboard is text only.
 void CopySelectionToClipboard(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
+#if defined(SUMATRA_NG)
+    if (!tab || !tab->selectionOnPage) {
+        return;
+    }
+#else
     ReportIf(len(*tab->selectionOnPage) == 0 && win->mouseAction != MouseAction::SelectingText);
+#endif
 
+#if OS_WIN
     if (!OpenClipboardForUpdate()) {
         return;
     }
@@ -953,29 +961,25 @@ void CopySelectionToClipboard(MainWindow* win) {
         args.hwndParent = win->hwndCanvas;
         args.msg = Tr("Copying text was denied (copying as image only)");
         ShowNotification(args);
+#endif
     } else {
         selText = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelectionOut);
     }
 
+#if OS_WIN
     if (len(selText) > 0) {
         AppendTextToClipboard(selText);
     }
-
     if (isTextOnlySelectionOut) {
         // don't also copy the first line of a text selection as an image
-#endif
         return;
     }
-#if defined(SUMATRA_NG)
-    selText = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelectionOut);
-    logf("CopySelectionToClipboard: %d bytes, text-only selection: %d\n", len(selText), isTextOnlySelectionOut ? 1 : 0);
-    if (len(selText) == 0) {
-        return;
-    }
-    CanvasSetClipboardText(win, selText);
-#else
-
     CopySelectionImageToOpenClipboard(tab, true);
+#else
+    logf("CopySelectionToClipboard: %d bytes, text-only selection: %d\n", len(selText), isTextOnlySelectionOut ? 1 : 0);
+    if (len(selText) > 0) {
+        CanvasSetClipboardText(win, selText);
+    }
 #endif
 }
 

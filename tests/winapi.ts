@@ -135,6 +135,7 @@ const user32 = loadDll("user32.dll", {
   GetMenuStringW: { args: [FFIType.u64, FFIType.u32, FFIType.ptr, FFIType.i32, FFIType.u32], returns: FFIType.i32 },
   GetMenuState: { args: [FFIType.u64, FFIType.u32, FFIType.u32], returns: FFIType.u32 },
   OpenClipboard: { args: [FFIType.ptr], returns: FFIType.bool },
+  IsClipboardFormatAvailable: { args: [FFIType.u32], returns: FFIType.bool },
   CloseClipboard: { args: [], returns: FFIType.bool },
   GetClipboardData: { args: [FFIType.u32], returns: FFIType.u64 },
   EnumClipboardFormats: { args: [FFIType.u32], returns: FFIType.u32 },
@@ -1448,6 +1449,12 @@ export function clipboardSeqNo(): number {
     return Number(r.stdout.toString().trim()) || 0;
   }
   return user32.symbols.GetClipboardSequenceNumber();
+}
+
+// Windows only: an image (CF_BITMAP) is on the clipboard
+export function clipboardHasImage(): boolean {
+  const CF_BITMAP = 2;
+  return user32.symbols.IsClipboardFormatAvailable(CF_BITMAP);
 }
 
 export function emptyClipboard(): boolean {
