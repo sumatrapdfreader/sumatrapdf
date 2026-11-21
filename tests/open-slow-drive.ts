@@ -39,6 +39,8 @@ async function pingMs(client: ControlClient): Promise<number> {
 // then the drive wakes up and the document with name wantName loads
 async function checkLoad(client: ControlClient, what: string, t0: number, name: string, wantName: string) {
   let sawLoading = false;
+  // after a second the message says how long it has been loading: "... 1s"
+  let sawElapsed = false;
   let worstPing = 0;
   while (Date.now() - t0 < LOAD_DELAY_MS / 2) {
     worstPing = Math.max(worstPing, await pingMs(client));
@@ -46,7 +48,13 @@ async function checkLoad(client: ControlClient, what: string, t0: number, name: 
     if (tab.includes(name) && tab.includes("page=0")) {
       sawLoading = true;
     }
+    if (/ msg=.* \d+s$/m.test(tab)) {
+      sawElapsed = true;
+    }
     await sleep(50);
+  }
+  if (!sawElapsed) {
+    throw new Error(`open-slow-drive: ${what}: the loading message has no elapsed time (${await currentTab(client)})`);
   }
   if (worstPing >= LOAD_DELAY_MS / 2) {
     throw new Error(`open-slow-drive: ${what}: the UI didn't answer for ${worstPing} ms while loading`);

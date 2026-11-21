@@ -137,6 +137,8 @@ struct ShellView {
     bool sysMenuDragged = false;
     // when the last tick ran (gp::TimeNow) and the sub-millisecond carry
     double lastTickTime = 0;
+    // the elapsed seconds the loading message shows
+    u64 loadingSecsShown = 0;
     double tickMsRest = 0;
     // 16 ms while something is moving, 100 ms while the window is idle.
     // Rearming happens off the timer callback: cancelling the timer that is
@@ -2081,17 +2083,7 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
         }
         // a lazy tab loading in the background, as orig's canvas says
         if (tab && tab->loadState == WindowTab::LoadState::Loading && len(tab->filePath) > 0) {
-            TempStr basename = path::GetBaseNameTemp(tab->filePath);
-            TempStr msg = fmt(Tr("Loading %s ...").s, basename);
-            // a network-drive comic being copied to the local cache
-            if (tab->loadCopyBytesCopied >= 0) {
-                TempStr copied = str::FormatSizeShortTemp(tab->loadCopyBytesCopied, nullptr);
-                msg = fmt(Tr("Copying %s: %s").s, basename, copied);
-                if (tab->loadCopyBytesTotal > 0) {
-                    TempStr total = str::FormatSizeShortTemp(tab->loadCopyBytesTotal, nullptr);
-                    msg = fmt(Tr("Copying %s: %s / %s").s, basename, copied, total);
-                }
-            }
+            TempStr msg = LoadingMessageTemp(tab);
             canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, msg))->Font(16)->Fg(th.foreground));
             return canvas;
         }
@@ -3370,6 +3362,21 @@ void AppShellRequestFastTick(MainWindow* win) {
     ShellApplyTickPace(self, win->gpuiWin, kShellTickFastMs);
 }
 
+// orig's LoadingMessageTimerProc: repaint as the loading message's seconds change
+static void LoadingMessageTick(ShellView* self) {
+    WindowTab* tab = self->win->CurrentTab();
+    if (!tab || tab->loadState != WindowTab::LoadState::Loading || tab->loadStartedAt == 0) {
+        self->loadingSecsShown = 0;
+        return;
+    }
+    u64 secs = (GetTickCount64() - tab->loadStartedAt) / 1000;
+    if (secs == self->loadingSecsShown) {
+        return;
+    }
+    self->loadingSecsShown = secs;
+    AppShellInvalidate(self->win);
+}
+
 void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     uitask::DrainQueue();
     AppShellReapClosedWindows();
@@ -3428,6 +3435,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
         ReadingAutoScrollOnMinimize(win, minimized);
     }
     ToolbarTick(win, ms);
+    LoadingMessageTick(self);
     AutoReloadTick(win, ms);
     DocCanvasAutoScrollTick(win, ms);
     CanvasTickPresentation(win, ms);

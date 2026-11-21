@@ -4672,38 +4672,8 @@ static void OnPaintDocumentStatus(MainWindow* win) {
     if (filePath) {
         TempStr msg;
         if (tab->loadState == WindowTab::LoadState::Loading || tab->loadState == WindowTab::LoadState::LoadedPending) {
-            TempStr basename = path::GetBaseNameTemp(filePath);
-            // prefer network-drive copy progress when available (set by
-            // OnFileCopyProgress); the 1s loading timer only invalidates and
-            // re-reads these fields so it does not replace the copy message
-            if (tab->loadCopyBytesCopied >= 0) {
-                TempStr copied = str::FormatSizeShortTemp(tab->loadCopyBytesCopied, nullptr);
-                if (tab->loadCopyBytesTotal > 0) {
-                    TempStr total = str::FormatSizeShortTemp(tab->loadCopyBytesTotal, nullptr);
-                    msg = fmt(Tr("Copying %s: %s / %s").s, basename, copied, total);
-                } else {
-                    msg = fmt(Tr("Copying %s: %s").s, basename, copied);
-                }
-            } else {
-                msg = fmt(Tr("Loading %s ...").s, basename);
-            }
-            if (tab->loadStartedAt != 0) {
-                u64 elapsedSecs = (GetTickCount64() - tab->loadStartedAt) / 1000;
-                if (elapsedSecs > 0) {
-                    TempStr elapsed;
-                    u64 hours = elapsedSecs / 3600;
-                    u64 minutes = (elapsedSecs % 3600) / 60;
-                    u64 seconds = elapsedSecs % 60;
-                    if (hours > 0) {
-                        elapsed = fmt("%dh %dm %ds", hours, minutes, seconds);
-                    } else if (minutes > 0) {
-                        elapsed = fmt("%dm %ds", minutes, seconds);
-                    } else {
-                        elapsed = fmt("%ds", seconds);
-                    }
-                    msg = fmt("%s %s", msg, elapsed);
-                }
-            }
+            // the 1s loading timer re-reads the copy progress and elapsed time
+            msg = LoadingMessageTemp(tab);
             u32 flags = gfxTextCenter | gfxTextVCenter | (IsUIRtl() ? gfxTextRtl : 0);
             gfx->DrawText(msg, HwndClientRect(win->hwndCanvas), flags, fontRightTxt, ThemeWindowTextColor());
         } else {

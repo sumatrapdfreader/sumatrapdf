@@ -1831,6 +1831,7 @@ static void LazyTabLoadDone(LazyTabLoad* d) {
     }
     tab->loadCopyBytesCopied = -1;
     tab->loadCopyBytesTotal = 0;
+    tab->loadStartedAt = 0;
     if (!IsCurrentTab(win, tab)) {
         // loads again when selected, quickly now that the drive is awake
         tab->loadState = d->isOpen ? WindowTab::LoadState::LoadedPending : WindowTab::LoadState::None;
@@ -1917,6 +1918,7 @@ static LazyTabLoad* NewTabLoad(WindowTab* tab) {
     d->createEngine = !chmInBrowser && !mdInBrowser;
     d->ebookLayoutAspect = EbookLayoutAspectForLoad(win, d->path);
     d->fileEBookUI = CopyFileEBookUI(GetFileEBookUI(d->path));
+    tab->loadStartedAt = GetTickCount64();
     tab->loadState = WindowTab::LoadState::Loading;
     tab->loadCopyBytesCopied = -1;
     tab->loadCopyBytesTotal = 0;

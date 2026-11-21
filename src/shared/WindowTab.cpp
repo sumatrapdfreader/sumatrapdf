@@ -361,3 +361,38 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
     return file::WriteFile(ToUtf8Temp(dstFileName), data);
 }
 #endif
+
+// the loading tab's message: "Loading foo.pdf ... 3s" or, while a network-drive
+// comic is copied to the local cache, "Copying foo.cbz: 1 MB / 40 MB 3s"
+TempStr LoadingMessageTemp(WindowTab* tab) {
+    TempStr basename = path::GetBaseNameTemp(tab->filePath);
+    TempStr msg;
+    if (tab->loadCopyBytesCopied >= 0) {
+        TempStr copied = str::FormatSizeShortTemp(tab->loadCopyBytesCopied, nullptr);
+        if (tab->loadCopyBytesTotal > 0) {
+            TempStr total = str::FormatSizeShortTemp(tab->loadCopyBytesTotal, nullptr);
+            msg = fmt(Tr("Copying %s: %s / %s").s, basename, copied, total);
+        } else {
+            msg = fmt(Tr("Copying %s: %s").s, basename, copied);
+        }
+    } else {
+        msg = fmt(Tr("Loading %s ...").s, basename);
+    }
+    if (tab->loadStartedAt == 0) {
+        return msg;
+    }
+    u64 elapsedSecs = (GetTickCount64() - tab->loadStartedAt) / 1000;
+    if (elapsedSecs == 0) {
+        return msg;
+    }
+    u64 hours = elapsedSecs / 3600;
+    u64 minutes = (elapsedSecs % 3600) / 60;
+    u64 seconds = elapsedSecs % 60;
+    if (hours > 0) {
+        return fmt("%s %dh %dm %ds", msg, hours, minutes, seconds);
+    }
+    if (minutes > 0) {
+        return fmt("%s %dm %ds", msg, minutes, seconds);
+    }
+    return fmt("%s %ds", msg, seconds);
+}

@@ -3104,6 +3104,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             if (tab->loadCopyBytesCopied >= 0) {
                 res = fmt("%s copied=%d/%d", res, tab->loadCopyBytesCopied, tab->loadCopyBytesTotal);
             }
+            if (tab->loadState == WindowTab::LoadState::Loading) {
+                res = fmt("%s msg=%s", res, LoadingMessageTemp(tab));
+            }
             AppendTestResult(req, 0, res);
             break;
         }
