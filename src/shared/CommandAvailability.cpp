@@ -861,11 +861,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdReplaceImage || cmdId == CmdEditImageExternally) {
-#if defined(SUMATRA_NG) && !OS_WIN
-        // ng: Replace Image is Windows only for now; wasm has no external apps
-        if (cmdId == CmdReplaceImage || OS_WASM) {
-            return CommandVisibility::Hide;
-        }
+#if defined(SUMATRA_NG) && OS_WASM
+        // a browser has no other app to edit in, and no file path to replace from
+        return CommandVisibility::Hide;
 #endif
         if (surface == CommandSurface::Palette || !ctx.isPdf) {
             return CommandVisibility::Hide;
