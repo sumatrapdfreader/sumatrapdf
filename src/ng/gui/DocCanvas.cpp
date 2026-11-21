@@ -4140,12 +4140,55 @@ void DocCanvasView::OnTouchHold(DocCanvasView* self, gp::Ctx* cx, const gp::Tick
     gp::Notify(cx);
 }
 
+// orig's OnPointerMessage: a pen contact is a left-button press, barrel or
+// not, without Windows' mouse promotion (no press-and-hold right click). The
+// eraser end erases ink while the ink tool is on. Hover still comes as mouse.
+static void OnPenTouch(DocCanvasView* self, gp::Ctx* cx, const gp::TouchEvent* ev) {
+    MainWindow* win = self->win;
+    Point pt;
+    bool onCanvas = ToDoc(win, ev->x, ev->y, &pt);
+    if (ev->phase == gp::TouchPhase::Started) {
+        if (!onCanvas) {
+            return;
+        }
+        const_cast<gp::TouchEvent*>(ev)->propagate = false;
+    }
+    SetCanvasModifiers(ev->modifiers);
+
+    if (ev->eraser && IsPlacingInkAnnotation(win)) {
+        bool ended = ev->phase == gp::TouchPhase::Ended || ev->phase == gp::TouchPhase::Cancelled;
+        if (!ended) {
+            AnnotationPlacementEraseAt(win, pt);
+        }
+        return;
+    }
+
+    if (ev->phase == gp::TouchPhase::Started) {
+        gWordSelectedByDblClk = false;
+        OnMouseLeftButtonDown(win, pt.x, pt.y);
+    } else if (ev->phase == gp::TouchPhase::Moved) {
+        gp::MouseMoveEvent move;
+        move.x = ev->x;
+        move.y = ev->y;
+        move.pressed = true;
+        move.modifiers = ev->modifiers;
+        DocCanvasView::OnMove(self, cx, &move);
+    } else {
+        OnMouseLeftButtonUp(win, cx, pt.x, pt.y);
+    }
+    gp::Notify(cx);
+}
+
 // orig's OnTouchPointer: raw finger contacts time a long press and drag the
-// selection handles. Pens go the mouse's way. Gestures still come separately.
+// selection handles. Gestures still come separately.
 void DocCanvasView::OnTouch(DocCanvasView* self, gp::Ctx* cx, const gp::TouchEvent* ev) {
     MainWindow* win = self->win;
     DisplayModel* dm = IsMainWindowValid(win) ? win->AsFixed() : nullptr;
-    if (!dm || ev->pen) {
+    if (!dm) {
+        return;
+    }
+    if (ev->pen) {
+        OnPenTouch(self, cx, ev);
         return;
     }
     TouchHold& h = gTouchHold;
