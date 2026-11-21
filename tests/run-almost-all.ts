@@ -237,6 +237,7 @@ import { testit as cliAnnotationsRender } from "./cli-annotations-render.ts";
 import { testit as cliPdfTools } from "./cli-pdf-tools.ts";
 import { testit as cliMarkdown } from "./cli-markdown.ts";
 import { testit as cliMarkdownCases } from "./cli-markdown-cases.ts";
+import { testit as cliMarkdownDocs } from "./cli-markdown-docs.ts";
 import { testit as issue6487 } from "./issue-6487.ts";
 import { testit as issue6488 } from "./issue-6488.ts";
 import { testit as issue6489 } from "./issue-6489.ts";
@@ -1135,6 +1136,7 @@ export const tests: NamedTest[] = [
   ["cli-pdf-tools", cliPdfTools],
   ["cli-markdown", cliMarkdown],
   ["cli-markdown-cases", cliMarkdownCases],
+  ["cli-markdown-docs", cliMarkdownDocs],
   ["issue-6487", issue6487],
   ["issue-6488", issue6488],
   ["issue-6489", issue6489],
