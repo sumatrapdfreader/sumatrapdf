@@ -325,8 +325,11 @@ export async function testit(): Promise<void> {
     await waitFor("showing Thumbnails didn't focus them", panelFocused);
     const currentIs = (n: number) => async () => (await sidebar(client)).current === n;
     await waitFor("the document isn't on page 1", currentIs(1));
+    // Down goes a row: past every thumbnail beside page 1 in a wide panel
+    const rects = (await sidebar(client)).rects;
+    const below = 1 + [...rects.values()].filter((r) => r.y === rects.get(1)!.y).length;
     postMessage(hwndPanel, WM_KEYDOWN, VK_DOWN, 0);
-    await waitFor("Down didn't go to thumbnail 2", currentIs(2));
+    await waitFor(`Down didn't go to thumbnail ${below}`, currentIs(below));
     postMessage(hwndPanel, WM_KEYDOWN, VK_UP, 0);
     await waitFor("Up didn't go to thumbnail 1", currentIs(1));
     // the canvas turns one page; the thumbnails would jump a screenful
