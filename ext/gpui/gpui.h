@@ -9938,6 +9938,8 @@ void AppFree(App* app);
 
 void ClipboardSetText(Window* win, Str text);
 
+bool ClipboardSetImage(Window* win, const uint8_t* png, int pngLen);
+
 ClipboardItem ClipboardGetItem(Arena* a, Window* win);
 
 Str ClipboardGetText(Arena* a, Window* win);
@@ -39508,6 +39510,7 @@ void PlatWake(App* app);
 #if GPUI_WINDOW_IN_TREE
 
 void PlatClipboardSetText(Window* win, Str text);
+bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen);
 Str PlatClipboardGetText(Arena* a, Window* win);
 ClipboardItem PlatClipboardGetItem(Arena* a, Window* win);
 #endif

@@ -24204,6 +24204,13 @@ void ClipboardSetText(Window* win, Str text) {
     PlatClipboardSetText(win, text);
 }
 
+bool ClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
+    if (!png || pngLen <= 0) {
+        return false;
+    }
+    return PlatClipboardSetImage(win, png, pngLen);
+}
+
 Str ClipboardGetText(Arena* a, Window* win) {
     ClipboardItem simulated;
     if (TestPlatformClipboardRead(a, &simulated)) {
@@ -245742,6 +245749,8 @@ static XWindow gRoot = 0;
 static XIM gXim = nullptr;
 static Str gClipboard = {};
 
+static Str gClipboardPng = {};
+
 static Atom aWmDeleteWindow, aWmProtocols, aNetWmName, aUtf8String;
 static Atom aNetWmState, aNetWmStateMaxVert, aNetWmStateMaxHorz;
 static Atom aNetWmStateFullscreen, aNetWmStateHidden, aWmState;
@@ -247007,9 +247016,30 @@ void PlatClipboardSetText(Window* win, Str text) {
     if (gClipboard.s) {
         StrFree(gClipboard);
     }
+    if (gClipboardPng.s) {
+        StrFree(gClipboardPng);
+        gClipboardPng = {};
+    }
     gClipboard = StrDup(text);
     XSetSelectionOwner(gDpy, aClipboard, win->plat->xwin, CurrentTime);
     XFlush(gDpy);
+}
+
+bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
+    if (!win || !win->plat || !gDpy) {
+        return false;
+    }
+    if (gClipboard.s) {
+        StrFree(gClipboard);
+        gClipboard = {};
+    }
+    if (gClipboardPng.s) {
+        StrFree(gClipboardPng);
+    }
+    gClipboardPng = StrDup(Str((const char*)png, pngLen));
+    XSetSelectionOwner(gDpy, aClipboard, win->plat->xwin, CurrentTime);
+    XFlush(gDpy);
+    return true;
 }
 
 struct ClipboardTargets {
@@ -247185,6 +247215,11 @@ ClipboardItem PlatClipboardGetItem(Arena* a, Window* win) {
     XWindow xwin = win->plat->xwin;
     if (XGetSelectionOwner(gDpy, aClipboard) == xwin) {
         out.text = StrDup(a, gClipboard);
+        if (gClipboardPng.s) {
+            Str image = StrDup(a, gClipboardPng);
+            out.imageBytes = (const uint8_t*)image.s;
+            out.imageBytesLen = len(image);
+        }
         return out;
     }
     ClipboardTargets targets = ReadClipboardTargets(xwin);
@@ -247212,9 +247247,14 @@ static void OnSelectionRequest(XSelectionRequestEvent* req) {
 
     Atom prop = req->property ? req->property : req->target;
     if (req->target == aTargets) {
-        Atom targets[2] = {aTargets, aUtf8String};
+        Atom targets[2] = {aTargets, gClipboardPng.s ? aImagePng : aUtf8String};
         XChangeProperty(gDpy, req->requestor, prop, XA_ATOM, 32,
                         PropModeReplace, (unsigned char*)targets, 2);
+        resp.xselection.property = prop;
+    } else if (req->target == aImagePng && gClipboardPng.s) {
+        XChangeProperty(gDpy, req->requestor, prop, aImagePng, 8,
+                        PropModeReplace, (unsigned char*)gClipboardPng.s,
+                        len(gClipboardPng));
         resp.xselection.property = prop;
     } else if ((req->target == aUtf8String || req->target == XA_STRING) &&
                gClipboard.s) {
@@ -251684,6 +251724,24 @@ void WindowSetTextContentType(Window* win, Str value) {
     [win->plat->view setContentType:content];
 }
 
+bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
+    (void)win;
+    NSData* data = [NSData dataWithBytes:png length:(NSUInteger)pngLen];
+    NSImage* image = [[NSImage alloc] initWithData:data];
+    if (!image) {
+        return false;
+    }
+    NSPasteboard* pb = [NSPasteboard generalPasteboard];
+    [pb clearContents];
+    [pb declareTypes:@[ NSPasteboardTypePNG, NSPasteboardTypeTIFF ] owner:nil];
+    [pb setData:data forType:NSPasteboardTypePNG];
+    NSData* tiff = [image TIFFRepresentation];
+    if (tiff) {
+        [pb setData:tiff forType:NSPasteboardTypeTIFF];
+    }
+    return true;
+}
+
 Str PlatClipboardGetText(Arena* a, Window* win) {
     (void)win;
     NSPasteboard* pb = [NSPasteboard generalPasteboard];
@@ -251705,6 +251763,26 @@ ClipboardItem PlatClipboardGetItem(Arena* a, Window* win) {
             out.imageBytes = bytes;
             out.imageBytesLen = len;
         }
+    }
+
+    NSArray* urls =
+        [pb readObjectsForClasses:@[ [NSURL class] ]
+                          options:@{
+                              NSPasteboardURLReadingFileURLsOnlyKey : @YES
+                          }];
+    if (urls.count > 0) {
+        StrBuilder paths(a);
+        for (NSURL* url in urls) {
+            const char* path = url.fileSystemRepresentation;
+            if (!path || !*path) {
+                continue;
+            }
+            if (len(paths) > 0) {
+                paths.AppendChar('\n');
+            }
+            paths.Append(Str(path));
+        }
+        out.externalPaths = paths.TakeStr();
     }
     return out;
 }
@@ -252970,6 +253048,13 @@ TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts) {
 void PlatClipboardSetText(Window* win, Str text) {
     (void)win;
     GpJsClipboardWrite(text.s, len(text));
+}
+
+bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
+    (void)win;
+    (void)png;
+    (void)pngLen;
+    return false;
 }
 
 Str PlatClipboardGetText(Arena* a, Window* win) {
@@ -256177,6 +256262,13 @@ void PlatClipboardSetText(Window* win, Str text) {
     if (h) {
         GlobalFree(h);
     }
+}
+
+bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
+    (void)win;
+    (void)png;
+    (void)pngLen;
+    return false;
 }
 
 Str PlatClipboardGetText(Arena* a, Window* win) {
