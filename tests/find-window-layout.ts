@@ -190,11 +190,14 @@ async function testNg(client: ControlClient): Promise<void> {
   const initialLayout = await findLayout(client);
   const search = fieldRect(initialLayout, "needle");
   const hits = inputHits(initialLayout);
-  const pages = hits.filter((h) => !search || Math.abs(h.w - search.w) > 8).sort((a, b) => a.w - b.w)[0];
+  // the search field's box holds its text and the history button (on macOS
+  // 18 dips wider than the text)
+  const holdsSearch = (h: { x: number; y: number; w: number; h: number }) =>
+    !!search && h.x <= search.x && search.x + search.w <= h.x + h.w + 1 && h.y <= search.y && search.y < h.y + h.h;
+  const pages = hits.filter((h) => !holdsSearch(h)).sort((a, b) => a.w - b.w)[0];
   if (!search || !pages) {
     throw new Error(`find-window-layout: find controls not found\n${initialLayout}`);
   }
-  const initialWidth = Math.round(search.w);
 
   await clickHit(client, pages);
   for (const ch of "1-9") {
@@ -208,7 +211,7 @@ async function testNg(client: ControlClient): Promise<void> {
   }
   await waitForSelection(client, 0);
 
-  const searchHit = hits.find((h) => search && Math.abs(h.w - search.w) <= 8);
+  const searchHit = hits.find(holdsSearch);
   if (!searchHit) {
     throw new Error(`find-window-layout: search field hit not found\n${initialLayout}`);
   }
@@ -216,6 +219,12 @@ async function testNg(client: ControlClient): Promise<void> {
   await keyFind(client, VK_RETURN);
   await sleep(50);
   await waitForSelection(client, 0);
+  // at 1 / N: before the first search there is no count, and the field is wider
+  const first = fieldRect(await findLayout(client), "needle");
+  if (!first) {
+    throw new Error("find-window-layout: search field missing after the first match");
+  }
+  const initialWidth = Math.round(first.w);
   await keyFind(client, VK_END);
   await keyFind(client, VK_END);
   await waitForSelection(client, hitCount - 1);
