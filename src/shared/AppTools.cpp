@@ -5,6 +5,7 @@
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
+#include "base/DirScan.h"
 #include "base/Win.h"
 #include "base/Launch.h"
 
@@ -473,6 +474,129 @@ TempStr GetWebViewDataDirTemp() {
     }
     dir = path::JoinTemp(dir, Str(id));
     return path::JoinTemp(dir, fmt("webview-%d", (int)GetCurrentProcessId()));
+}
+
+// seconds since ft, from a FILETIME's 100-ns ticks
+static i64 FileTimeAgeSecs(FILETIME ft, const ULARGE_INTEGER& now) {
+    ULARGE_INTEGER t;
+    t.LowPart = ft.dwLowDateTime;
+    t.HighPart = ft.dwHighDateTime;
+    return (i64)((now.QuadPart - t.QuadPart) / 10000000ULL);
+}
+
+// delete locally cached copies of cbx files that haven't been opened in a
+// while. Network-drive cbx archives over 32 MB are copied under
+// <data>/cbx-cache/ to avoid slow re-reads; they're pure cache so evicting
+// cold entries is safe.
+static void DeleteStaleCbxCacheFiles(Str dataDir, const ULARGE_INTEGER& now) {
+    TempStr cacheDir = path::JoinTemp(dataDir, StrL("cbx-cache"));
+    if (path::GetType(cacheDir) != path::Type::Dir) {
+        return;
+    }
+    constexpr i64 kMaxAgeSec = 7LL * 24 * 60 * 60;
+    DirIter di{cacheDir};
+    di.includeFiles = true;
+    di.includeDirs = false;
+    for (DirIterEntry* de : di) {
+        TempStr ext = path::GetExtTemp(de->name);
+        bool isCbx = str::EqI(ext, StrL(".cbx")) || str::EqI(ext, StrL(".cbz")) || str::EqI(ext, StrL(".cbr")) ||
+                     str::EqI(ext, StrL(".cb7")) || str::EqI(ext, StrL(".cbt"));
+        if (!isCbx) {
+            continue;
+        }
+        i64 ageSec = FileTimeAgeSecs(de->accessTime, now);
+        if (ageSec < kMaxAgeSec) {
+            continue;
+        }
+        bool ok = file::Delete(de->filePath);
+        logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath,
+             (long long)(ageSec / (24LL * 60 * 60)), (int)ok);
+    }
+}
+
+// Copies of OneNote/Outlook extracts, a folder each (files directly in
+// open-cache are from older versions). Delete leftovers from a crash; live
+// tabs delete their own copy when the tab closes.
+static void DeleteStaleOpenCacheFiles(Str dataDir, const ULARGE_INTEGER& now) {
+    TempStr cacheDir = path::JoinTemp(dataDir, StrL("open-cache"));
+    if (path::GetType(cacheDir) != path::Type::Dir) {
+        return;
+    }
+    constexpr i64 kMaxAgeSec = 24LL * 60 * 60;
+    DirIter di{cacheDir};
+    di.includeFiles = true;
+    di.includeDirs = true;
+    for (DirIterEntry* de : di) {
+        // listing a folder updates its access time, writing its copy doesn't
+        FILETIME atime = de->isDir ? de->modificationTime : de->accessTime;
+        i64 ageSec = FileTimeAgeSecs(atime, now);
+        if (ageSec < kMaxAgeSec) {
+            continue;
+        }
+        bool ok = de->isDir ? dir::RemoveAll(de->filePath) : file::Delete(de->filePath);
+        logf("DeleteStaleOpenCacheFiles: delete '%s' (age %lld h) -> %d\n", de->filePath, (long long)(ageSec / 3600),
+             (int)ok);
+    }
+}
+
+// WebView2 can keep its browser process alive for several seconds after
+// SumatraPDF exits. Each process therefore gets its own profile directory;
+// remove profiles whose owning process no longer exists. If WebView2 still
+// has a file open, this harmlessly fails and a later startup retries.
+static void DeleteStaleWebViewProfiles() {
+    TempStr webViewRoot = path::GetDirTemp(GetWebViewDataDirTemp());
+    if (len(webViewRoot) == 0) {
+        return;
+    }
+    DirIter webViews{webViewRoot};
+    webViews.includeFiles = false;
+    webViews.includeDirs = true;
+    for (DirIterEntry* de : webViews) {
+        Str pidText = de->name;
+        if (!str::TrimPrefix(pidText, StrL("webview-")) || len(pidText) == 0) {
+            continue;
+        }
+        bool isPid = true;
+        for (int i = 0; i < len(pidText); i++) {
+            if (!str::IsDigit(pidText.s[i])) {
+                isPid = false;
+                break;
+            }
+        }
+        if (!isPid) {
+            continue;
+        }
+        int pid = ParseInt(pidText);
+        if (pid <= 0) {
+            continue;
+        }
+        HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
+        if (process) {
+            bool running = WaitForSingleObject(process, 0) == WAIT_TIMEOUT;
+            CloseHandle(process);
+            if (running) {
+                continue;
+            }
+        } else if (GetLastError() != ERROR_INVALID_PARAMETER) {
+            continue;
+        }
+        bool ok = dir::RemoveAll(de->filePath);
+        logf("DeleteStaleWebViewProfiles: remove '%s' -> %d\n", de->filePath, (int)ok);
+    }
+}
+
+// the caches both apps fill on Windows; dataDir is the app's GetSumatraDataDirTemp()
+void DeleteStaleWinCaches(Str dataDir) {
+    FILETIME nowFt;
+    GetSystemTimeAsFileTime(&nowFt);
+    ULARGE_INTEGER now;
+    now.LowPart = nowFt.dwLowDateTime;
+    now.HighPart = nowFt.dwHighDateTime;
+    if (len(dataDir) > 0) {
+        DeleteStaleCbxCacheFiles(dataDir, now);
+        DeleteStaleOpenCacheFiles(dataDir, now);
+    }
+    DeleteStaleWebViewProfiles();
 }
 
 #endif // OS_WIN

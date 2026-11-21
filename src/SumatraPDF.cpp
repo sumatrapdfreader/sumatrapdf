@@ -16134,52 +16134,6 @@ static void ShowNotValidInstallerError() {
     MsgBox(nullptr, Tr("Not a valid installer"), Tr("Error"), MB_OK | MB_ICONERROR);
 }
 
-// delete locally cached copies of cbx files that haven't been opened in a
-// while. Network-drive cbx archives over 32 MB are copied under
-// <data>/cbx-cache/ to avoid slow re-reads; they're pure cache so evicting
-// cold entries is safe.
-static void DeleteStaleCbxCacheFiles() {
-    TempStr dataDir = GetSumatraDataDirTemp();
-    if (len(dataDir) == 0) {
-        return;
-    }
-    TempStr cacheDir = path::JoinTemp(dataDir, StrL("cbx-cache"));
-    if (path::GetType(cacheDir) != path::Type::Dir) {
-        return;
-    }
-
-    constexpr i64 kMaxAgeSec = 7LL * 24 * 60 * 60;
-    FILETIME nowFt;
-    GetSystemTimeAsFileTime(&nowFt);
-    ULARGE_INTEGER now;
-    now.LowPart = nowFt.dwLowDateTime;
-    now.HighPart = nowFt.dwHighDateTime;
-
-    DirIter di{cacheDir};
-    di.includeFiles = true;
-    di.includeDirs = false;
-    for (DirIterEntry* de : di) {
-        TempStr ext = path::GetExtTemp(de->name);
-        bool isCbx = str::EqI(ext, StrL(".cbx")) || str::EqI(ext, StrL(".cbz")) || str::EqI(ext, StrL(".cbr")) ||
-                     str::EqI(ext, StrL(".cb7")) || str::EqI(ext, StrL(".cbt"));
-        if (!isCbx) {
-            continue;
-        }
-        FILETIME atime = de->accessTime;
-        ULARGE_INTEGER a;
-        a.LowPart = atime.dwLowDateTime;
-        a.HighPart = atime.dwHighDateTime;
-        // FILETIME is 100-ns ticks since 1601; convert delta to seconds.
-        i64 ageSec = (i64)((now.QuadPart - a.QuadPart) / 10000000ULL);
-        if (ageSec < kMaxAgeSec) {
-            continue;
-        }
-        bool ok = file::Delete(de->filePath);
-        logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath,
-             (long long)(ageSec / (24LL * 60 * 60)), (int)ok);
-    }
-}
-
 static i64 FileTimeAgeSec(FILETIME ft, const ULARGE_INTEGER& now) {
     ULARGE_INTEGER t;
     t.LowPart = ft.dwLowDateTime;
@@ -16272,93 +16226,11 @@ static void DeleteOldPdfPreviewLogs(int keep) {
     }
 }
 
-// Copies of OneNote/Outlook extracts, a folder each (files directly in
-// open-cache are from older versions). Delete leftovers from a crash; live
-// tabs delete their own copy when the tab closes.
-static void DeleteStaleOpenCacheFiles() {
-    TempStr dataDir = GetSumatraDataDirTemp();
-    if (len(dataDir) == 0) {
-        return;
-    }
-    TempStr cacheDir = path::JoinTemp(dataDir, StrL("open-cache"));
-    if (path::GetType(cacheDir) != path::Type::Dir) {
-        return;
-    }
-
-    constexpr i64 kMaxAgeSec = 24LL * 60 * 60;
-    FILETIME nowFt;
-    GetSystemTimeAsFileTime(&nowFt);
-    ULARGE_INTEGER now;
-    now.LowPart = nowFt.dwLowDateTime;
-    now.HighPart = nowFt.dwHighDateTime;
-
-    DirIter di{cacheDir};
-    di.includeFiles = true;
-    di.includeDirs = true;
-    for (DirIterEntry* de : di) {
-        // listing a folder updates its access time, writing its copy doesn't
-        FILETIME atime = de->isDir ? de->modificationTime : de->accessTime;
-        ULARGE_INTEGER a;
-        a.LowPart = atime.dwLowDateTime;
-        a.HighPart = atime.dwHighDateTime;
-        i64 ageSec = (i64)((now.QuadPart - a.QuadPart) / 10000000ULL);
-        if (ageSec < kMaxAgeSec) {
-            continue;
-        }
-        bool ok = de->isDir ? dir::RemoveAll(de->filePath) : file::Delete(de->filePath);
-        logf("DeleteStaleOpenCacheFiles: delete '%s' (age %lld h) -> %d\n", de->filePath, (long long)(ageSec / 3600),
-             (int)ok);
-    }
-}
-
 static void DeleteStaleFilesAsync() {
-    DeleteStaleCbxCacheFiles();
+    DeleteStaleWinCaches(GetSumatraDataDirTemp());
     DeleteStaleDviCache();
     DeleteStaleCajCache();
-    DeleteStaleOpenCacheFiles();
     DeleteOldPdfPreviewLogs(32);
-
-    // WebView2 can keep its browser process alive for several seconds after
-    // SumatraPDF exits. Each process therefore gets its own profile directory;
-    // remove profiles whose owning process no longer exists. If WebView2 still
-    // has a file open, this harmlessly fails and a later startup retries.
-    TempStr currentWebViewDir = GetWebViewDataDirTemp();
-    TempStr webViewRoot = path::GetDirTemp(currentWebViewDir);
-    if (webViewRoot) {
-        DirIter webViews{webViewRoot};
-        webViews.includeFiles = false;
-        webViews.includeDirs = true;
-        for (DirIterEntry* de : webViews) {
-            Str pidText = de->name;
-            if (!str::TrimPrefix(pidText, StrL("webview-")) || len(pidText) == 0) {
-                continue;
-            }
-            bool isPid = true;
-            for (int i = 0; i < len(pidText); i++) {
-                if (!str::IsDigit(pidText.s[i])) {
-                    isPid = false;
-                    break;
-                }
-            }
-            if (!isPid) {
-                continue;
-            }
-            int pid = ParseInt(pidText);
-            if (pid <= 0) {
-                continue;
-            }
-            AutoCloseHandle process = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
-            if (process.IsValid()) {
-                if (WaitForSingleObject(process, 0) == WAIT_TIMEOUT) {
-                    continue;
-                }
-            } else if (GetLastError() != ERROR_INVALID_PARAMETER) {
-                continue;
-            }
-            bool ok = dir::RemoveAll(de->filePath);
-            logf("DeleteStaleFilesAsync: remove WebView profile '%s' -> %d\n", de->filePath, (int)ok);
-        }
-    }
 
     if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
         return;

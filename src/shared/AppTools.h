@@ -48,6 +48,9 @@ Rect GetDefaultWindowPos();
 
 Str BuildIdOfAppExe();
 TempStr GetWebViewDataDirTemp();
+#if OS_WIN
+void DeleteStaleWinCaches(Str dataDir);
+#endif
 
 TempStr FormatFileSizeShortTransTemp(i64);
 TempStr FormatFileSizeTransTemp(i64);

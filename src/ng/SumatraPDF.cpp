@@ -7580,6 +7580,12 @@ static void TestExtractPages(const Flags& ci) {
 static bool WasmRenderApiStart();
 #endif
 
+#if OS_WIN
+static void DeleteStaleWinCachesAsync() {
+    DeleteStaleWinCaches(GetSumatraDataDirTemp());
+}
+#endif
+
 // What startup does once the session is restored: open the command line
 // files, apply the view flags and kick off background work.
 static void RunStartupActions(MainWindow* win, bool restoredSession) {
@@ -7928,6 +7934,9 @@ int GpuiMain(int argc, char** argv) {
     FileWatcherInit();
     RunAsync(MkFunc0Void(DeleteStaleDviCache), StrL("DeleteStaleDviCache"));
     RunAsync(MkFunc0Void(DeleteStaleCajCache), StrL("DeleteStaleCajCache"));
+#if OS_WIN
+    RunAsync(MkFunc0Void(DeleteStaleWinCachesAsync), StrL("DeleteStaleWinCaches"));
+#endif
     gRenderCache = new RenderCache();
 
     gp::App* app = gp::AppNew();
