@@ -2864,6 +2864,44 @@ void RerenderTabPage(WindowTab* tab, int pageNo) {
     AppShellInvalidate(win);
 }
 
+#if OS_WIN
+// Value of GetClipboardSequenceNumber() right after the last annotation copy.
+// If it still matches, our annotation is the most recent copy and Ctrl+V should
+// paste it; if something else copied since, that wins instead.
+static DWORD gAnnotClipboardSeqNo = 0;
+#endif
+
+// orig's: snapshot the annotation and put its contents on the OS clipboard.
+// `cut` also marks it as the one to delete once the copy is pasted.
+static bool CopyAnnotationToClipboard(MainWindow* win, Annotation* annot, bool cut) {
+    bool ok = cut ? CutAnnotation(annot) : CopyAnnotation(annot);
+    if (!ok) {
+        return false;
+    }
+    Str contents = Contents(annot);
+    if (!str::IsEmptyOrWhiteSpace(contents)) {
+        CopyTextToClipboard(win, contents);
+    }
+#if OS_WIN
+    gAnnotClipboardSeqNo = GetClipboardSequenceNumber();
+#endif
+    return true;
+}
+
+// true if our copied annotation is newer than whatever is on the OS clipboard.
+// ng off Windows has no clipboard counter: an image on the clipboard wins.
+static bool CopiedAnnotationIsFresh(Pixmap* clipboardImage) {
+    if (!HasCopiedAnnotation()) {
+        return false;
+    }
+#if OS_WIN
+    (void)clipboardImage;
+    return GetClipboardSequenceNumber() == gAnnotClipboardSeqNo;
+#else
+    return !clipboardImage;
+#endif
+}
+
 // A cut removes the original only after its copy has landed, so a failed paste
 // can't lose the annotation (issue #5222).
 static void DeleteCutAnnotationAfterPaste(WindowTab* tab) {
@@ -5916,14 +5954,14 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdCopyAnnotation:
             if (tab && tab->selectedAnnotation && HasPermission(Perm::CopySelection)) {
-                CopyAnnotation(tab->selectedAnnotation);
+                CopyAnnotationToClipboard(win, tab->selectedAnnotation, false);
             }
             break;
 
         case CmdCutAnnotation:
             // The original stays until paste. CutAnnotation only marks it.
             if (tab && tab->selectedAnnotation && HasPermission(Perm::CopySelection)) {
-                if (CutAnnotation(tab->selectedAnnotation)) {
+                if (CopyAnnotationToClipboard(win, tab->selectedAnnotation, true)) {
                     ShowTemporaryNotification(tab->win, Tr("Annotation cut. Paste to move it."));
                 }
             }
@@ -5938,9 +5976,12 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             // focused win32 edit; gpui's text fields consume Ctrl+V
             // themselves, so it never gets here. orig then prefers a copied
             // annotation while ours is the most recent copy
-            // (GetClipboardSequenceNumber); there is no such counter here, so
-            // an image on the clipboard wins
             Pixmap* image = ImageEditGetClipboard(win);
+            if (win->pdfAnnotationsToolbarEnabled && CopiedAnnotationIsFresh(image)) {
+                FreePixmap(image);
+                PasteAnnotationInTab(win, tab);
+                break;
+            }
 #if OS_WASM
             if (!image && ReadClipboardImage(win, ClipboardImageUse::Open)) {
                 break;
@@ -6669,7 +6710,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
                 break;
             }
             if (win->pdfAnnotationsToolbarEnabled && tab->selectedAnnotation) {
-                CopyAnnotation(tab->selectedAnnotation);
+                CopyAnnotationToClipboard(win, tab->selectedAnnotation, false);
             }
             break;
         }
