@@ -64,6 +64,9 @@ export async function testit(): Promise<void> {
   const results = await withControlledSumatra(
     EXE,
     async (client) => {
+      // the first layout comes with the first frame: a dest followed before it
+      // has no page positions to scroll to
+      await client.waitForRenderIdle();
       const out: string[] = [];
       for (let d = 1; d <= 5; d++) {
         out.push(await navigate(client, d));
