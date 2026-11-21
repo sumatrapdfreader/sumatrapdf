@@ -647,6 +647,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["cli-images", cliImages],
   ["issue-1139", issue1139],
   ["issue-6113", issue6113],
   ["auto-scroll-extras", autoScrollExtras],
@@ -1184,7 +1185,6 @@ export const tests: NamedTest[] = [
   ["cli-markdown-cases", cliMarkdownCases],
   ["cli-markdown-docs", cliMarkdownDocs],
   ["cli-stamp", cliStamp],
-  ["cli-images", cliImages],
   ["cli-annotate", cliAnnotate],
   ["cli-sign", cliSign],
   ["startup-window-shown", startupWindowShown],
