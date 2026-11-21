@@ -9,7 +9,16 @@ import { join } from "node:path";
 import { inflateSync } from "node:zlib";
 import { ROOT, USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { captureWindowToPng, enumChildWindows, getClassName, getWindowText, isWindowVisible, sleep } from "./winapi.ts";
+import {
+  captureWindowDCToPng,
+  enumChildWindows,
+  getClassName,
+  getTestWindowLayout,
+  getWindowText,
+  isWindowVisible,
+  setTestWindowLayout,
+  sleep,
+} from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const NOTIF_CLASS = "SumatraWgDefaultWinClass";
@@ -60,7 +69,8 @@ function paeth(a: number, b: number, c: number): number {
   return c;
 }
 
-// PrintWindow into an LTR DIB misses the RTL blit; captureWindowToPng does not.
+// PrintWindow of the RTL toast returns blank or the page behind it; a
+// window-DC capture (captureWindowDCToPng) has what is on screen.
 function loadPng(path: string): Shot {
   const buf = readFileSync(path);
   let off = 8;
@@ -198,7 +208,7 @@ async function grabZoomToast(
   const png = tmpPath(`6113-${label}.png`);
   const deadline = Date.now() + TOAST_PAINT_TIMEOUT_MS;
   for (;;) {
-    if (!captureWindowToPng(hwnd, png)) {
+    if (!captureWindowDCToPng(hwnd, png)) {
       throw new Error(`issue-6113: capture failed (${label})`);
     }
     const shot = loadPng(png);
@@ -261,7 +271,11 @@ async function testNg(client: ControlClient, frame: number): Promise<void> {
 
 export async function testit(): Promise<void> {
   const pdf = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+  // in a right-half window both captures of the RTL toast return the page behind it
+  const prevLayout = getTestWindowLayout();
+  setTestWindowLayout("workArea");
   const { proc, client, frame } = await launchControlled([pdf]);
+  setTestWindowLayout(prevLayout);
   try {
     await client.waitForRenderIdle();
     if (USE_NG) {
