@@ -265,6 +265,9 @@ struct MainWindow {
     // gone, and the settings are written after it closes
     Rect frameRc;
     bool isMaximized = false;
+    // -dbg-control's handle for the window, standing in for the HWND a Windows
+    // test has: the first window is 1, the frame a macOS test starts with
+    int testId = 0;
     // last WM_DPICHANGED, rounded to 4. 0: not seen yet (use the monitor)
     int frameDpi = 0;
 

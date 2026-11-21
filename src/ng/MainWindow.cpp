@@ -312,6 +312,8 @@ void SelectTocItemInTree(MainWindow* win, TocItem* tocItem) {
 }
 
 MainWindow::MainWindow(gpui::Window* w) {
+    static int nextTestId = 1;
+    testId = nextTestId++;
     gpuiWin = w;
     sidebarBottomContent =
         SidebarContentFromStr(gSettings ? gSettings->sidebarBottomView : Str{}, SidebarContent::Favorites);

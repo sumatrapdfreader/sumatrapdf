@@ -188,6 +188,10 @@ export enum ControlCommand {
   TestCaptureWindow = 170,
   // [ms]: every document open waits this long first, like a sleeping drive
   TestLoadDelay = 171,
+  // ng: a line per frame and tool window (hwnd= class= pid= visible= rect=
+  // [owner= name=] title=), or with "target", <hwnd> aims the requests that follow at
+  // that frame (0: the first)
+  TestWindows = 172,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

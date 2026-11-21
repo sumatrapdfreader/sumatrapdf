@@ -50,6 +50,8 @@ struct ToolWindow {
     Str title; // owned; what the caption shows
     // the caption's theme last set: -1 none yet, 0 light, 1 dark
     int darkCaption = -1;
+    // -dbg-control's handle for it, as MainWindow::testId; apart from theirs
+    int testId = 0;
 };
 
 // open or about to be made; a closed one leaves at once and is deleted from
@@ -572,7 +574,9 @@ ToolWindow* ToolWindowOpen(const ToolWindowDesc& desc, MainWindow* owner, Rect o
     if (!ToolWindowsAvailable() || !desc.build || !IsMainWindowValidAndNotClosing(owner)) {
         return nullptr;
     }
+    static int nextTestId = 1000;
     auto* tw = new ToolWindow();
+    tw->testId = nextTestId++;
     tw->desc = desc;
     tw->owner = owner;
     tw->outer = outer;
@@ -788,6 +792,22 @@ void ToolRootView::OnCaptureKey(ToolRootView* self, gp::Ctx* cx, const gp::KeyEv
     }
     const_cast<gp::KeyEvent*>(ev)->propagate = false;
     gp::Notify(cx);
+}
+
+// TestWindows' lines for the tool windows that are made
+TempStr ToolWindowsTestListTemp(int pid) {
+    str::Builder out;
+    for (ToolWindow* tw : gToolWindows) {
+        if (!tw->gw || tw->closing) {
+            continue;
+        }
+        Rect r = ToolWindowRect(tw);
+        int owner = tw->owner ? tw->owner->testId : 0;
+        out.Append(fmt("hwnd=%d class=GpuiSystemMonitor pid=%d visible=%d rect=%d,%d,%d,%d owner=%d name=%s title=%s\n",
+                       tw->testId, pid, ToolWindowIsVisible(tw) ? 1 : 0, r.x, r.y, r.dx, r.dy, owner,
+                       Str(tw->desc.name), tw->title));
+    }
+    return ToStrTemp(out);
 }
 
 TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, int d) {

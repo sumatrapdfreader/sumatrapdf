@@ -759,6 +759,7 @@ enum class ControlCmd : u16 {
     TestCaptureWindow = 170,
     // [ms]: every document open waits this long first, like a sleeping drive
     TestLoadDelay = 171,
+    TestWindows = 172,
     // [action, pageNo, x, y, length, unit]: drives the Measure tool
     TestMeasurement = 159,
 };
@@ -832,8 +833,44 @@ bool ParseArg(PacketReader& r, ControlArg** argOut) {
     return false;
 }
 
+// TestWindows target <id> aims the requests that follow at that frame instead
+// of the first one, until target 0. A macOS test has no HWND to aim with.
+static int gTestTargetId = 0;
+
 static MainWindow* FirstWindow() {
+    if (gTestTargetId != 0) {
+        for (MainWindow* w : gWindows) {
+            if (w && w->testId == gTestTargetId) {
+                return w;
+            }
+        }
+        return nullptr;
+    }
     return len(gWindows) > 0 ? gWindows[0] : nullptr;
+}
+
+// a line a window: what EnumWindows, GetWindowText and the like tell a Windows
+// test. The title is last, as it may have spaces.
+static TempStr TestWindowsListTemp() {
+    str::Builder out;
+#if OS_WIN || OS_WASM
+    int pid = 0;
+#else
+    int pid = (int)getpid();
+#endif
+    for (MainWindow* w : gWindows) {
+        if (!w || w->isBeingClosed) {
+            continue;
+        }
+        Rect r = AppShellWindowScreenRect(w);
+        WindowTab* tab = w->CurrentTab();
+        Str title = tab ? tab->frameTitle : Str{};
+        out.Append(fmt("hwnd=%d class=GpuiSystemMonitor pid=%d visible=1 rect=%d,%d,%d,%d title=%s\n", w->testId, pid,
+                       r.x, r.y, r.dx, r.dy, title));
+    }
+    // and the tool windows, with name= for TestToolWindow
+    out.Append(ToolWindowsTestListTemp(pid));
+    return str::DupTemp(ToStr(out));
 }
 
 static Str MarkupTypeName(AnnotationType tp) {
@@ -2081,6 +2118,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 0, ms);
             AtomicIntSet(&gTestLoadDelayMs, ms);
             AppendTestResult(req, 0, fmt("%d", ms));
+            break;
+        }
+
+        case ControlCmd::TestWindows: {
+            if (str::EqI(StringArg(req, 0), StrL("target"))) {
+                i32 id = 0;
+                IntArg(req, 1, id);
+                gTestTargetId = id;
+                AppendTestResult(req, 0, StrL("OK"));
+                break;
+            }
+            AppendTestResult(req, 0, TestWindowsListTemp());
             break;
         }
 

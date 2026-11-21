@@ -13,6 +13,8 @@ const TestInvokeCommand = 87;
 const TestInput = 121;
 const TestDdeExecute = 129;
 const TestCaptureWindow = 170;
+const TestWindows = 172;
+const TestToolWindow = 125;
 const kCopyDataDdeW = 0x44646557;
 
 const WM_KILLFOCUS = 0x0008;
@@ -474,6 +476,142 @@ export function macClientToScreen(x: number, y: number): { x: number; y: number 
     return { x, y };
   }
   return { x: x + Number(c[1]), y: y + Number(c[2]) };
+}
+
+// What EnumWindows and GetWindowText & co. tell a Windows test, for each frame
+// and tool window. hwnd is the app's id for the window: 1 is the first frame,
+// the one a test starts with. toolName: a tool window's TestToolWindow name.
+// Empty when no app is connected.
+export type MacWindow = {
+  hwnd: number;
+  className: string;
+  pid: number;
+  visible: boolean;
+  rect: { left: number; top: number; right: number; bottom: number };
+  title: string;
+  // a tool window's frame
+  owner: number;
+  toolName?: string;
+};
+
+export function macWindows(): MacWindow[] {
+  let raw = "";
+  try {
+    raw = String(macControlRequest(TestWindows, [])[1] ?? "");
+  } catch {
+    return [];
+  }
+  const out: MacWindow[] = [];
+  for (const line of raw.split("\n")) {
+    const m =
+      /^hwnd=(\d+) class=(\S*) pid=(\d+) visible=(\d) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) (?:owner=(\d+) name=(\S+) )?title=(.*)$/.exec(
+        line,
+      );
+    if (!m) {
+      continue;
+    }
+    const [x, y, dx, dy] = [+m[5]!, +m[6]!, +m[7]!, +m[8]!];
+    out.push({
+      hwnd: +m[1]!,
+      className: m[2]!,
+      pid: +m[3]!,
+      visible: m[4] === "1",
+      rect: { left: x, top: y, right: x + dx, bottom: y + dy },
+      title: m[11]!,
+      owner: m[9] ? +m[9] : 0,
+      toolName: m[10],
+    });
+  }
+  return out;
+}
+
+export function macWindow(hwnd: number): MacWindow | undefined {
+  return macWindows().find((w) => w.hwnd === hwnd);
+}
+
+// Runs fn with the app's requests aimed at frame hwnd. 1 (and 0) is the first
+// frame, which they go to anyway.
+export function macWithTarget<T>(hwnd: number, fn: () => T): T {
+  if (hwnd <= 1) {
+    return fn();
+  }
+  macControlRequest(TestWindows, ["target", hwnd]);
+  try {
+    return fn();
+  } finally {
+    macControlRequest(TestWindows, ["target", 0]);
+  }
+}
+
+// A message to a tool window: TestToolWindow input in its client dips, which
+// are a Windows test's client pixels at 100%. A dialog's IDOK / IDCANCEL is
+// Enter / Esc.
+export function macToolWindowMessage(
+  name: string,
+  msg: number,
+  wParam: number | bigint,
+  lParam: number | bigint,
+): bigint {
+  const wp = BigInt(wParam);
+  const lp = BigInt(lParam);
+  const tool = (args: ControlArg[]): string => {
+    const res = macControlRequest(TestToolWindow, args);
+    const raw = String(res[1] ?? "");
+    if (res[0] !== 0 || raw.startsWith("ERR")) {
+      throw new Error(`TestToolWindow ${args.join(" ")} failed: ${raw}`);
+    }
+    return raw;
+  };
+  const input = (kind: string, a: number, b = 0, c = 0, d = 0) => tool(["input", name, kind, a, b, c, d]);
+  if (msg === WM_CLOSE || (msg === WM_SYSCOMMAND && (wp & 0xfff0n) === BigInt(SC_CLOSE))) {
+    tool(["close", name]);
+    return 0n;
+  }
+  if (msg === WM_COMMAND && (wp & 0xffffn) <= 2n) {
+    input("key", (wp & 0xffffn) === 1n ? 0x0d : 0x1b);
+    return 0n;
+  }
+  if (msg === WM_KEYDOWN) {
+    const vk = Number(wp & 0xffffn);
+    const raw = input("key", vk);
+    // TranslateMessage: the key's character, unless the key was handled
+    const ch = keyChar(vk);
+    if (ch && !raw.includes("eaten=1")) {
+      input("char", ch);
+    }
+    return raw.includes("eaten=1") ? 1n : 0n;
+  }
+  if (msg === WM_KEYUP) {
+    input("keyup", Number(wp & 0xffffn));
+    return 0n;
+  }
+  if (msg === WM_CHAR) {
+    input("char", Number(wp & 0xffffn));
+    return 0n;
+  }
+  if (isMouseDown(msg)) {
+    const x = sign16(lp);
+    const y = sign16(lp >> 16n);
+    const w = Number(wp & 0xffffn);
+    const m = modsOf(w, { hwnd: 0, screenToClient: (a, b) => ({ x: a, y: b }) });
+    if (msg === WM_MOUSEMOVE) {
+      input("move", x, y, w & MK_LBUTTON ? 1 : w & MK_RBUTTON ? 2 : w & MK_MBUTTON ? 3 : 0, m);
+      return 0n;
+    }
+    const down =
+      msg === WM_LBUTTONDOWN ||
+      msg === WM_RBUTTONDOWN ||
+      msg === WM_MBUTTONDOWN ||
+      msg === WM_LBUTTONDBLCLK ||
+      msg === WM_RBUTTONDBLCLK ||
+      msg === WM_MBUTTONDBLCLK;
+    input(down ? "down" : "up", x, y, buttonOf(msg), m);
+    return 0n;
+  }
+  if (msg === WM_NULL) {
+    return 0n;
+  }
+  throw new Error(`macOS: tool window ${name} does not take msg 0x${msg.toString(16)}`);
 }
 
 export function macFrameVisible(): boolean {

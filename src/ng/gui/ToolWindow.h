@@ -198,3 +198,5 @@ MainWindow* ToolWindowOwnerFromHwnd(HWND hwnd);
 // scrolled boxes of the window's last frame; `layout frame`: the same of the
 // first main window
 TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, int d);
+// -dbg-control's TestWindows: a line a made tool window
+TempStr ToolWindowsTestListTemp(int pid);

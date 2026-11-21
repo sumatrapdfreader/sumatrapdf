@@ -28,6 +28,10 @@ import {
   macSendMessage,
   macSendText,
   macShowWindow,
+  macToolWindowMessage,
+  macWindow,
+  macWindows,
+  macWithTarget,
   TestLayout,
   type InputTarget,
 } from "./mac-control.ts";
@@ -553,6 +557,9 @@ export function packCoords(x: number, y: number): number {
 }
 
 export function getClassName(hwnd: number): string {
+  if (IS_MAC) {
+    return macWindow(hwnd)?.className ?? "";
+  }
   if (!IS_WIN) {
     return "";
   }
@@ -566,6 +573,9 @@ export function getClassName(hwnd: number): string {
 }
 
 export function getWindowPid(hwnd: number): number {
+  if (IS_MAC) {
+    return macWindow(hwnd)?.pid ?? 0;
+  }
   const out = new Uint32Array(1);
   user32.symbols.GetWindowThreadProcessId(hwnd, ptr(out));
   return out[0];
@@ -591,6 +601,15 @@ export function getFocusedHwnd(hwndInSameThread: number): number {
 
 // visit returns false to stop enumeration early
 export function enumWindows(visit: (hwnd: number) => boolean): void {
+  // macOS: the frames of the app the test is connected to
+  if (IS_MAC) {
+    for (const w of macWindows()) {
+      if (!visit(w.hwnd)) {
+        return;
+      }
+    }
+    return;
+  }
   if (!IS_WIN) {
     return;
   }
@@ -689,7 +708,7 @@ export async function waitForChildWindow(parent: number, className: string, time
 
 export function getClientRect(hwnd: number): Rect {
   if (IS_MAC) {
-    return macFrameClientRect();
+    return macWithTarget(hwnd, macFrameClientRect);
   }
   const buf = new Int32Array(4);
   user32.symbols.GetClientRect(hwnd, ptr(buf));
@@ -698,7 +717,7 @@ export function getClientRect(hwnd: number): Rect {
 
 export function clientToScreen(hwnd: number, x: number, y: number): { x: number; y: number } {
   if (IS_MAC) {
-    return macClientToScreen(x, y);
+    return macWithTarget(hwnd, () => macClientToScreen(x, y));
   }
   const buf = new Int32Array([x, y]);
   user32.symbols.ClientToScreen(hwnd, ptr(buf));
@@ -830,11 +849,21 @@ export function postMessage(hwnd: number, msg: number, wParam: number, lParam: n
     return true;
   }
   if (IS_MAC) {
-    if (msg === WM_KEYDOWN) {
-      macPostKeyDown(wParam, lParam);
-    } else {
-      macSendMessage(msg, wParam, lParam);
+    // 1000 and up: a tool window. One that is gone drops the message, as Windows does
+    if (hwnd >= 1000) {
+      const tw = macWindow(hwnd)?.toolName;
+      if (tw) {
+        macToolWindowMessage(tw, msg, wParam, lParam);
+      }
+      return !!tw;
     }
+    macWithTarget(hwnd, () => {
+      if (msg === WM_KEYDOWN) {
+        macPostKeyDown(wParam, lParam);
+      } else {
+        macSendMessage(msg, wParam, lParam);
+      }
+    });
     return true;
   }
   return user32.symbols.PostMessageW(hwnd, msg, BigInt(wParam), BigInt(lParam));
@@ -866,7 +895,11 @@ export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, 
     return 0n;
   }
   if (IS_MAC) {
-    return macSendMessage(msg, wParam, lParam);
+    if (hwnd >= 1000) {
+      const tw = macWindow(hwnd)?.toolName;
+      return tw ? macToolWindowMessage(tw, msg, wParam, lParam) : 0n;
+    }
+    return macWithTarget(hwnd, () => macSendMessage(msg, wParam, lParam));
   }
   return user32.symbols.SendMessageW(hwnd, msg, BigInt(wParam), BigInt(lParam)) as bigint;
 }
@@ -1254,6 +1287,9 @@ export function tryDeleteFile(path: string): { ok: boolean; error: number } {
 
 export function getWindowText(hwnd: number): string {
   if (IS_MAC) {
+    if (hwnd > 1) {
+      return macWindow(hwnd)?.title ?? "";
+    }
     const text = String(macControlRequest(TestLayout, [])[1] ?? "");
     return /^windowTitle=(.*)$/m.exec(text)?.[1] ?? "";
   }
@@ -1511,7 +1547,7 @@ export function getWindowTextFull(hwnd: number, maxChars = 16384): string {
 // window rectangle in screen coordinates (vs getClientRect's client-relative one)
 export function getWindowRect(hwnd: number): Rect {
   if (IS_MAC) {
-    const text = String(macControlRequest(TestLayout, [])[1] ?? "");
+    const text = String(macWithTarget(hwnd, () => macControlRequest(TestLayout, []))[1] ?? "");
     const m = /window rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(text);
     if (!m) {
       return { left: 0, top: 0, right: 0, bottom: 0 };
@@ -1539,7 +1575,7 @@ export function getExtendedFrameBounds(hwnd: number): Rect {
 // it rather than resizing it to nothing). Ask the OS instead.
 export function isWindowVisible(hwnd: number): boolean {
   if (IS_MAC) {
-    return macFrameVisible();
+    return hwnd > 1 ? !!macWindow(hwnd)?.visible : macFrameVisible();
   }
   return user32.symbols.IsWindowVisible(hwnd);
 }
@@ -1557,6 +1593,9 @@ export function getWindow(hwnd: number, cmd: number): number {
 }
 
 export function getWindowOwner(hwnd: number): number {
+  if (IS_MAC) {
+    return macWindow(hwnd)?.owner ?? 0;
+  }
   return Number(user32.symbols.GetWindow(hwnd, GW_OWNER));
 }
 
