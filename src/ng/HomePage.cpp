@@ -1475,6 +1475,17 @@ static gpc::PopupMenu* HomePopupFromModel(gp::Ctx* cx, MenuModel* model, Str id)
     return menu;
 }
 
+// The cue names the key that focuses the search box as this platform writes
+// it (⌘F on mac) and as the user bound it; the translations carry "Ctrl + F".
+static TempStr HomeSearchCueTemp(int nFiles) {
+    TempStr cue = fmt(Tr("Search %d files (Ctrl + F)").s, nFiles);
+    TempStr key = ShortcutsForCmdTemp(CmdFindFirst, 1);
+    if (len(key) == 0) {
+        return str::ReplaceTemp(cue, StrL(" (Ctrl + F)"), StrL(""));
+    }
+    return str::ReplaceTemp(cue, StrL("Ctrl + F"), key);
+}
+
 gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     EnsureHomeView(win, cx);
     bool showStartPage = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gSettings &&
@@ -1588,7 +1599,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
         h->focusSearchOnBuild = false;
         HomePageFocusSearch(win);
     }
-    TempStr cue = fmt(Tr("Search %d files (Ctrl + F)").s, CountHomePageFiles());
+    TempStr cue = HomeSearchCueTemp(CountHomePageFiles());
     gp::InputSetPlaceholder(h->search, ToGpui(cue));
     h->search->onChange = gp::ListenTo(Ui(win)->view, &HomeView::OnSearch);
 
