@@ -126,6 +126,7 @@ static DocCanvasUI* Ui(MainWindow* win) {
 }
 
 void DocCanvasDelete(MainWindow* win) {
+    DocCanvasA11yFree(win);
     if (win->docCanvas) {
         DeleteMenuModel(win->docCanvas->ctxMenu);
         delete win->docCanvas->jsMenu;
@@ -4679,6 +4680,7 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
                          ->OnDrop(GStrL("ExternalText"), gp::ListenTo(Ui(win)->view, &DocCanvasView::OnTextDrop));
     canvas->customPaint = &DocCanvasView::OnPaint;
     canvas->customUser = win;
+    DocCanvasA11y(win, cx, canvas);
     // ng: ContextMenu::IntoEl() returns the child it was given with its own
     // click path on it, so the canvas goes inside a wrapper instead of being
     // the child itself (its click path is what the scroll paths hang off)

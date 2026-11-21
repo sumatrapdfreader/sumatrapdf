@@ -514,6 +514,7 @@ import { testit as issue6352 } from "./issue-6352.ts";
 import { testit as issue6354 } from "./issue-6354.ts";
 import { testit as issue6355 } from "./issue-6355.ts";
 import { testit as issue2423 } from "./issue-2423.ts";
+import { testit as uiaDocumentText } from "./uia-document-text.ts";
 import { testit as issue6167 } from "./issue-6167.ts";
 import { testit as issue6168 } from "./issue-6168.ts";
 import { testit as issue5918 } from "./issue-5918.ts";
@@ -721,6 +722,7 @@ export const tests: NamedTest[] = [
   ["issue-4291", issue4291],
   ["issue-6279", issue6279],
   ["issue-2423", issue2423],
+  ["uia-document-text", uiaDocumentText],
   ["jpeg-xl-pdf", jpegXlPdf],
   ["issue-6276", issue6276],
   ["issue-6402", issue6402],

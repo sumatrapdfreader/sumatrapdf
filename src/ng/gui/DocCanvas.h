@@ -65,6 +65,8 @@ float CanvasScale(MainWindow* win);
 // leaves the canvas still arrives (orig captures the mouse for the same reason)
 void DocCanvasHookWindow(MainWindow* win, gpui::Window* gw);
 void DocCanvasDelete(MainWindow* win);
+void DocCanvasA11y(MainWindow* win, gpui::Ctx* cx, gpui::El* canvas);
+void DocCanvasA11yFree(MainWindow* win);
 // the shell's tick: repaint while a page is still rendering
 bool DocCanvasWantsRepaint(MainWindow* win);
 // middle-button auto-scroll moves the document a bit on every tick
