@@ -8,7 +8,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { assemblePdf, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { captureWindowPixels, sleep } from "./winapi.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 
@@ -25,8 +25,27 @@ function makePdf(): string {
   return assemblePdf(objs.slice(1));
 }
 
-// the average x of the dark pixels, in canvas client coordinates
-function darkCenterX(canvas: number): { x: number; y: number; n: number } {
+type Box = { x: number; y: number; w: number; h: number };
+
+// where the page is drawn, in the capture's coordinates: orig's canvas is a
+// window of its own; ng draws the page in the frame, under its tabs and toolbar
+async function canvasBox(client: ControlClient, canvas: number): Promise<Box> {
+  const px = captureWindowPixels(canvas)!;
+  if (!USE_NG) {
+    return { x: 0, y: 0, w: px.w, h: px.h };
+  }
+  const lay = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+  const scale = Number(/scale=([0-9.]+)/.exec(lay)?.[1] ?? "1") || 1;
+  const m = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(lay);
+  if (!m) {
+    throw new Error(`issue-6221: no canvas in the layout:\n${lay}`);
+  }
+  const [x, y, w, h] = m.slice(1).map((v) => Number(v) / scale) as [number, number, number, number];
+  return { x, y, w, h };
+}
+
+// the average x of the dark pixels in the canvas, in canvas client coordinates
+function darkCenterX(canvas: number, box: Box): { x: number; y: number; n: number } {
   const px = captureWindowPixels(canvas);
   if (!px) {
     return { x: 0, y: 0, n: 0 };
@@ -34,8 +53,8 @@ function darkCenterX(canvas: number): { x: number; y: number; n: number } {
   let sx = 0;
   let sy = 0;
   let n = 0;
-  for (let y = 0; y < px.h; y++) {
-    for (let x = 0; x < px.w; x++) {
+  for (let y = Math.max(0, box.y); y < Math.min(px.h, box.y + box.h); y++) {
+    for (let x = Math.max(0, box.x); x < Math.min(px.w, box.x + box.w); x++) {
       const i = (y * px.w + x) * 4;
       if (px.data[i] < 40 && px.data[i + 1] < 40 && px.data[i + 2] < 40) {
         sx += x;
@@ -75,9 +94,10 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     const canvas = findCanvas(frame);
-    const midX = captureWindowPixels(canvas)!.w / 2;
+    const box = await canvasBox(client, canvas);
+    const midX = box.x + box.w / 2;
 
-    const before = darkCenterX(canvas);
+    const before = darkCenterX(canvas, box);
     if (before.n === 0 || before.x >= midX) {
       throw new Error(`issue-6221: the square isn't on the left before mirroring: ${JSON.stringify(before)}`);
     }
@@ -86,7 +106,7 @@ export async function testit(): Promise<void> {
     let after = before;
     for (let i = 0; i < 50 && after.x < midX; i++) {
       await sleep(100);
-      after = darkCenterX(canvas);
+      after = darkCenterX(canvas, box);
     }
     if (after.x <= midX || Math.abs(after.x - midX - (midX - before.x)) > 4) {
       throw new Error(`issue-6221: mirrored square at x=${after.x}, want ${2 * midX - before.x}`);
