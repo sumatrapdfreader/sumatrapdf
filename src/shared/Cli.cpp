@@ -1860,19 +1860,19 @@ static void DropRunning(MdDoc& d, StyledPage& p) {
     for (int i = 0; i < len(p.spans);) {
         int block = p.spans[i].block;
         int end = i;
-        bool margin = true, small = true;
+        bool margin = true, bodySized = true;
         str::Builder text;
         while (end < len(p.spans) && p.spans[end].block == block) {
             const StyledSpan& s = p.spans[end];
             if (!drop[end]) {
                 margin = margin && (InTopMargin(p, s) || InBottomMargin(p, s));
                 // a number in a heading's size is a title ("1"), not a page number
-                small = small && s.size <= d.bodySize + 1;
+                bodySized = bodySized && s.size <= d.bodySize + 1;
                 text.Append(fmt(" %s", s.text));
             }
             end++;
         }
-        if (margin && small && IsPageNumberText(ToStr(text))) {
+        if (margin && bodySized && IsPageNumberText(ToStr(text))) {
             for (int k = i; k < end; k++) {
                 drop[k] = true;
             }
