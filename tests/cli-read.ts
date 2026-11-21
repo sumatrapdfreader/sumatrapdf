@@ -1,11 +1,11 @@
 // `SumatraPDF cli` read commands (src/shared/Cli.cpp): info, text, search and
-// toc, as text and --json, the exit codes, and an encrypted PDF with no, a
-// wrong and the right password.
+// toc, as text and --json, the exit codes, an encrypted PDF with no, a wrong
+// and the right password, and agent-skill.
 //
 // ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-read.ts [--no-build]
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { EXE, makePdf, makeTextPdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
 
 const name = "cli-read";
@@ -88,6 +88,12 @@ export async function testit(): Promise<void> {
   expect("a wrong password is 4", r.code === 4, r);
   r = cli(["text", enc, "--password-env", "CLI_READ_PW"], { CLI_READ_PW: "pw" });
   expect("--password-env", r.code === 0 && r.out.includes("hello cli world"), r);
+  // the agent skill names this executable
+  const skillDir = tmpPath("cli-read-skill");
+  r = cli(["agent-skill", "--install", skillDir, "--json"]);
+  expect("agent-skill --install", r.code === 0, r);
+  const skill = readFileSync(json("agent-skill", r).file, "utf8");
+  expect("the skill names the exe", skill.startsWith("---\nname: sumatrapdf") && skill.includes(`"${EXE}" cli`), r);
   console.log(`${name}: OK`);
 }
 

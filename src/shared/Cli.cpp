@@ -116,7 +116,7 @@ static Str OptValue(CliCtx& cx, Str name) {
 // the options that take a value; any other --name is a flag
 static bool OptTakesValue(Str name) {
     static const char* names[] = {"--pages", "--password", "--password-env", "--new-password", "--new-password-env",
-                                  "-o",      "--output",   "--dpi"};
+                                  "-o",      "--output",   "--dpi",          "--install"};
     for (const char* n : names) {
         if (str::Eq(name, Str(n))) {
             return true;
@@ -1458,6 +1458,114 @@ static int CmdMarkdown(CliCtx& cx) {
     return kCliOk;
 }
 
+//--- agent-skill
+
+// SKILL.md for Claude Code, Codex and other agents: when to use the cli and
+// how. <EXE> is this executable's path.
+static const char* kSkillMd = R"(---
+name: sumatrapdf
+description: Read and convert documents with the SumatraPDF command line - PDF, EPUB, MOBI, FB2, XPS, DjVu, CHM and comic books (CBZ, CBR). Gets the text or Markdown, search hits with page numbers, the table of contents, annotations with the text they mark, metadata and page images; keeps, deletes, reorders and rotates PDF pages, merges, compresses, encrypts and decrypts PDFs. Use it whenever a task needs what is inside such a file.
+---
+
+# SumatraPDF command line
+
+Run: `"<EXE>" cli <command> [options]`
+
+Add `--json` to every command: the output is then one JSON object on stdout.
+On an error that object is `{"error": {"code": <exit code>, "message": "..."}}`.
+`"<EXE>" cli <command> --help` shows a command's options and examples.
+
+The cli never changes the files it is given: the commands that make a file
+need `-o <output>` and refuse to write over an input.
+
+## Reading a document
+
+- `info <file>`: format, page count, page size, title, author, dates
+- `markdown <file> [-o out.md]`: the whole document as Markdown, with
+  `<!-- page N -->` before each page. Far fewer tokens than page images: read
+  this first. With -o, pictures go to `out_images/` next to it
+- `text <file> [--pages 3-5]`: plain text, page by page
+- `search <file> "words" [--whole-word] [--match-case]`: every hit with its
+  page number and some context; then read those pages with `text --pages`
+- `toc <file>`: the table of contents with page numbers
+- `annotations <file.pdf>`: highlights (with the text they mark), notes, shapes
+- `render <file> -o page.png [--pages 2] [--dpi 150]`: pages as images, for
+  figures, scans and layout; `<N>` in the name is the page number
+
+Page ranges: `1-3,7,10-N` (N is the last page). Page numbers are 1-based.
+
+## Changing a PDF (always into a new file)
+
+- `pages keep <file.pdf> 1-3,7 -o out.pdf`
+- `pages delete <file.pdf> 2 -o out.pdf`
+- `pages order <file.pdf> 3,1,2 -o out.pdf`
+- `pages rotate <file.pdf> 2-N 90 -o out.pdf` (clockwise: 90, 180, 270)
+- `merge a.pdf b.pdf -o both.pdf`
+- `compress <file.pdf> -o small.pdf`
+- `encrypt <file.pdf> -o locked.pdf --new-password-env NAME`
+- `decrypt <file.pdf> -o open.pdf --password-env NAME`
+
+An encrypted document needs `--password <pw>`, or better `--password-env NAME`
+so the password isn't on the command line.
+
+## Exit codes
+
+- 0: success
+- 1: the command failed
+- 2: wrong command line
+- 3: the document doesn't exist or can't be opened
+- 4: encrypted: no password or a wrong one
+- 5: the command doesn't apply to this kind of document (a PDF tool on an EPUB)
+)";
+
+static TempStr HomeDirTemp() {
+#if OS_WIN
+    const char* home = getenv("USERPROFILE");
+#else
+    const char* home = getenv("HOME");
+#endif
+    return home ? str::DupTemp(Str(home)) : TempStr{};
+}
+
+static int CmdAgentSkill(CliCtx& cx) {
+    TempStr md = str::ReplaceTemp(Str(kSkillMd), StrL("<EXE>"), GetSelfExePathTemp());
+    Str where = OptValue(cx, StrL("--install"));
+    if (len(where) == 0) {
+        if (cx.json) {
+            Out(fmt("{\"skill\":%s}\n", JStr(md)));
+        } else {
+            Out(md);
+        }
+        return kCliOk;
+    }
+    // where each agent looks for skills
+    TempStr dir;
+    if (str::Eq(where, StrL("claude"))) {
+        dir = path::JoinTemp(HomeDirTemp(), StrL(".claude/skills"));
+    } else if (str::Eq(where, StrL("codex"))) {
+        dir = path::JoinTemp(HomeDirTemp(), StrL(".codex/skills"));
+    } else if (str::Eq(where, StrL("agents"))) {
+        dir = path::JoinTemp(HomeDirTemp(), StrL(".agents/skills"));
+    } else {
+        dir = str::DupTemp(where);
+    }
+    if (len(dir) == 0) {
+        return Fail(cx, kCliFailed, StrL("can't find the home directory"));
+    }
+    TempStr path = path::JoinTemp(path::JoinTemp(dir, StrL("sumatrapdf")), StrL("SKILL.md"));
+    path = path::NormalizeTemp(path);
+    dir::CreateForFile(path);
+    if (!file::WriteFile(path, md)) {
+        return Fail(cx, kCliFailed, fmt("couldn't write '%s'", path));
+    }
+    if (cx.json) {
+        Out(fmt("{\"file\":%s}\n", JStr(path)));
+    } else {
+        Out(fmt("installed %s\n", path));
+    }
+    return kCliOk;
+}
+
 //--- the command table and help
 
 static const CliCmd gCmds[] = {
@@ -1501,6 +1609,11 @@ static const CliCmd gCmds[] = {
      "encrypt a.pdf -o locked.pdf --new-password-env PDF_PW", CmdEncrypt},
     {"decrypt", "<file.pdf> -o <out.pdf> --password <pw>", "a copy of an encrypted PDF without the password",
      "-o <file>        the new PDF", "decrypt locked.pdf -o open.pdf --password-env PDF_PW", CmdDecrypt},
+    {"agent-skill", "[--install claude|codex|agents|<dir>]",
+     "the SKILL.md that tells an AI agent when and how to use these commands",
+     "--install <where>  write it to ~/.claude/skills/sumatrapdf (claude), ~/.codex/skills (codex),\n"
+     "                   ~/.agents/skills (agents) or <dir>/sumatrapdf; without it, print it",
+     "agent-skill --install claude\nagent-skill > SKILL.md", CmdAgentSkill},
 };
 
 static const CliCmd* FindCmd(Str name) {
@@ -1603,7 +1716,8 @@ int CliMain(int argc, char** argv) {
         }
         cx.password = Str(v);
     }
-    if (len(cx.positional) < 1 && *cx.cmd->args) {
+    // "[...]": the arguments are optional
+    if (len(cx.positional) < 1 && *cx.cmd->args && cx.cmd->args[0] != '[') {
         return Fail(cx, kCliUsage, fmt("usage: SumatraPDF cli %s %s", Str(cx.cmd->name), Str(cx.cmd->args)));
     }
     // the engines read a few settings (ebook font, ...): the defaults, without
