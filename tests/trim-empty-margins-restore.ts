@@ -10,7 +10,6 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
-import { IS_MAC } from "./host.ts";
 import { runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import { getScrollInfo } from "./winapi.ts";
@@ -122,7 +121,7 @@ export async function testit(): Promise<void> {
   // the content is a small wide block on a letter page, so trimming has to
   // change the page shape. Fit page then scales that shape to the window, so
   // the scroll extent is not comparable across window sizes.
-  const notShrunk = IS_MAC ? on.aspect > off.aspect / 2 : on.extent > off.extent / 2;
+  const notShrunk = on.aspect > off.aspect / 2;
   if (notShrunk) {
     throw new Error(
       `trim-empty-margins-restore: TrimEmptyMargins had no effect ` +
