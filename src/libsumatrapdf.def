@@ -2038,6 +2038,7 @@ EXPORTS
 	pdf_walk_tree
 
 	pdf_signature_get_widget_signatory
+	pdf_signature_get_signatory
 
 	pdf_signature_drop_distinguished_name
 
