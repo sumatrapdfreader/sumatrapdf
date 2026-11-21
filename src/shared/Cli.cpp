@@ -1211,9 +1211,45 @@ static bool IsBrokenWord(Str before, Str after) {
     return n > 1 && before.s[n - 1] == '-' && isalpha((u8)before.s[n - 2]) && IsLowerStart(after);
 }
 
+// a footnote mark or an exponent ("dnia" + a raised 1) is set smaller and
+// raised, a chemical's subscript (the 2 of H2O) smaller and lowered: 1 for a
+// raised span, -1 for a lowered one, 0 for one on the line's baseline. The
+// line's main text is its largest
+static int SpanShift(const StyledPage& p, int span) {
+    const StyledSpan& s = p.spans[span];
+    if (s.box.IsEmpty()) {
+        return 0;
+    }
+    float mainSize = 0;
+    float mainBottom = 0;
+    for (int k = span; k >= 0 && p.spans[k].line == s.line; k--) {
+        if (p.spans[k].size > mainSize + 0.5f && !p.spans[k].box.IsEmpty()) {
+            mainSize = p.spans[k].size;
+            mainBottom = p.spans[k].box.y + p.spans[k].box.dy;
+        }
+    }
+    for (int k = span + 1; k < len(p.spans) && p.spans[k].line == s.line; k++) {
+        if (p.spans[k].size > mainSize + 0.5f && !p.spans[k].box.IsEmpty()) {
+            mainSize = p.spans[k].size;
+            mainBottom = p.spans[k].box.y + p.spans[k].box.dy;
+        }
+    }
+    if (s.size > mainSize * 0.85f) {
+        return 0;
+    }
+    float bottom = s.box.y + s.box.dy;
+    if (mainBottom - bottom > mainSize * 0.2f) {
+        return 1;
+    }
+    if (bottom - mainBottom > mainSize * 0.1f) {
+        return -1;
+    }
+    return 0;
+}
+
 // the spans of one block as markdown: lines joined into a paragraph, styles as
-// ** and *, monospaced runs as `code`. skipFirst: bytes of the first span to
-// leave out (a list item's bullet)
+// ** and *, monospaced runs as `code`, raised and lowered text as <sup> and
+// <sub>. skipFirst: bytes of the first span to leave out (a list item's bullet)
 static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepLines, int skipFirst = 0) {
     str::Builder out;
     int line = -1;
@@ -1256,6 +1292,11 @@ static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepL
         Str lead(text.s, a);
         Str trimmed(text.s + a, b - a);
         Str trail(text.s + b, len(text) - b);
+        if (int shift = SpanShift(p, i)) {
+            Str tag = shift > 0 ? StrL("sup") : StrL("sub");
+            out.Append(fmt("%s<%s>%s</%s>%s", lead, tag, EscapeInlineTemp(trimmed), tag, trail));
+            continue;
+        }
         const char* mark = s.mono ? "`" : (s.bold && s.italic) ? "***" : s.bold ? "**" : s.italic ? "*" : "";
         if (!s.mono && !HasWordChar(trimmed)) {
             mark = "";

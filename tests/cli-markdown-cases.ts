@@ -339,6 +339,16 @@ function testHeadingLevels(): void {
   }
 }
 
+// not in Kitab: a footnote mark set smaller and raised is <sup>, a subscript
+// set smaller and lowered <sub>, instead of digits glued to the word
+function testSuperscripts(): void {
+  const c =
+    "BT /F1 10 Tf 72 700 Td (A claim) Tj /F1 6 Tf 4 Ts (1) Tj 0 Ts /F1 10 Tf ( and water is H) Tj " +
+    "/F1 6 Tf -2 Ts (2) Tj 0 Ts /F1 10 Tf (O.) Tj ET\n";
+  const md = markdownOf([c]);
+  expect("<sup> and <sub>", lines(md).includes("A claim<sup>1</sup> and water is H<sub>2</sub>O."), md);
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
@@ -356,6 +366,7 @@ export async function testit(): Promise<void> {
   testNotTables();
   testEpubTable();
   testHeadingLevels();
+  testSuperscripts();
   console.log(`${name}: OK`);
 }
 

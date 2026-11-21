@@ -205,7 +205,7 @@ function testPictures(): void {
 // epub_converts_with_needles
 function testEpub(): void {
   const chapters = [1, 2, 3, 4, 5].map(
-    (n) => `<h1>Chapter ${n}</h1><p>The text of chapter ${n}, with sumatra-epub-needle-${n} in it.</p>`,
+    (n) => `<h1>Chapter ${n}</h1><p>The text of chapter ${n}<sup>${n}</sup>, with sumatra-epub-needle-${n} in it.</p>`,
   );
   const path = tmpPath("cli-markdown-docs.epub");
   writeFileSync(path, makeEpub(chapters));
@@ -218,6 +218,8 @@ function testEpub(): void {
     r.out.split("\n").some((l) => l.startsWith("#")),
     r,
   );
+  // not in Kitab: a footnote mark isn't glued to the word
+  expect("<sup>", r.out.includes("chapter 3<sup>3</sup>,"), r);
 }
 
 // password_and_other_formats
