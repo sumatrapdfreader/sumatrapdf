@@ -154,7 +154,10 @@ static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<Selecti
             RectF box = engine->PageMediabox(pageNo);
             bool isLandscape = box.dx > box.dy;
             bool wantLandscape = orientation > 0;
-            if (isLandscape != wantLandscape) {
+            // PrinterDefaults.AutoRotate = false prints a wide page upright on
+            // portrait paper instead of turning it to fill the sheet (#6475)
+            bool keepUpright = isLandscape && !wantLandscape && !gSettings->printerDefaults.autoRotate;
+            if (isLandscape != wantLandscape && !keepUpright) {
                 pageRotation = (pageRotation + 90) % 360;
             }
         }
