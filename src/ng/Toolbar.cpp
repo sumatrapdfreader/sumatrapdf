@@ -113,6 +113,9 @@ struct ToolbarUI {
     Vec<gp::Bounds> btnBounds;
     // the command each slot carries, so a rect can be found by command id
     Vec<int> btnCmds;
+    // the row's items in order, for ToolbarDy to wrap them: a btnBounds slot,
+    // or minus a fixed width (a separator)
+    Vec<int> rowItems;
     // the zoom levels the drop-down that is up lists
     Vec<int> stripCmds;
     // the rows/cells of the drop-down that is up, and the box around them.
@@ -271,6 +274,27 @@ void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
     AppShellInvalidate(win);
 }
 
+// How many rows the buttons wrap onto in a toolbar dx wide. Widths are the
+// last layout's: a narrowed window gets its rows on the next frame, and before
+// the first layout everything is one row.
+static int ToolbarRowsForWidth(MainWindow* win, int dx) {
+    ToolbarUI* ui = Ui(win);
+    int rows = 1;
+    int x = 0;
+    for (int item : ui->rowItems) {
+        int w = item < 0 ? -item : (item < len(ui->btnBounds) ? (int)ui->btnBounds[item].w : 0);
+        if (w <= 0) {
+            return 1;
+        }
+        if (x > 0 && x + w > dx) {
+            rows++;
+            x = 0;
+        }
+        x += w;
+    }
+    return rows;
+}
+
 // ng: the shell asks for this before it builds the frame, so this is also
 // where the mode is re-read (orig reacts to the commands that change it)
 int ToolbarDy(MainWindow* win) {
@@ -282,7 +306,10 @@ int ToolbarDy(MainWindow* win) {
     if (!win->isToolbarVisible || win->isToolbarOverlay) {
         return 0;
     }
-    return AnnotRowVisible(win) ? (2 * tb->rowDy) : tb->rowDy;
+    // orig's ToolbarDyForWidth: the buttons wrap in a narrow window
+    int rowDx = win->frameRc.dx - 2 * AppShellFrameBorder(win) - 2 * DpiScale(4);
+    int rows = ToolbarRowsForWidth(win, rowDx);
+    return (rows + (AnnotRowVisible(win) ? 1 : 0)) * tb->rowDy;
 }
 
 // The row a document tab gets, for sizing a document while Home is current.
@@ -1388,8 +1415,11 @@ gp::El* ToolbarBuild(MainWindow* win, gp::Ctx* cx) {
 
     const gp::Theme& th = gp::ThemeNow(cx->app);
     // RTL packs the buttons to the right. The empty rest still drags the window.
+    // A docked toolbar wraps its buttons onto as many rows as ToolbarDy gave it;
+    // the floating one keeps its one-row width.
+    int rows = floating ? 1 : (ToolbarDy(win) / tb->rowDy) - (AnnotRowVisible(win) ? 1 : 0);
     gp::El* row = gp::Div(cx->a)
-                      ->H((float)tb->rowDy)
+                      ->H((float)(std::max(rows, 1) * tb->rowDy))
                       ->Shrink0()
                       ->ItemsCenter()
                       ->PadX((float)DpiScale(4))
@@ -1402,22 +1432,26 @@ gp::El* ToolbarBuild(MainWindow* win, gp::Ctx* cx) {
         row->FlexRow();
     }
     if (!floating) {
-        row->W(gp::kFill);
+        row->W(gp::kFill)->FlexWrap();
     }
+    VecReset(ui->rowItems);
     for (int i = 0; i < n; i++) {
         const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
         if (hidden[i]) {
             continue;
         }
         if (bi.cmdId == PageInfoId) {
+            VecAppend(ui->rowItems, len(ui->btnCmds));
             AddPageInfo(win, cx, row);
             continue;
         }
         if (bi.cmdId == 0 || !HasToolbarButtonContent(bi)) {
+            VecAppend(ui->rowItems, -DpiScale(12));
             row->Child(ToolbarSeparator(cx, tb->rowDy));
             continue;
         }
         bool enabled = IsCmdEnabled(win, bi.cmdId, ctx);
+        VecAppend(ui->rowItems, len(ui->btnCmds));
         VecAppend(ui->btnCmds, bi.cmdId);
         row->Child(ToolbarButton(win, cx, len(ui->btnCmds) - 1, bi, enabled, IsCmdChecked(win, bi.cmdId)));
     }
