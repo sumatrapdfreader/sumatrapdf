@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import { sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -51,12 +52,17 @@ async function widths(client: ControlClient): Promise<string> {
   return /widths=([\d,]+)/.exec(String(res[1] ?? ""))?.[1] ?? "";
 }
 
-// what Explorer's Copy puts on the clipboard
+// what Explorer's (Finder's) Copy puts on the clipboard
 function copyFileToClipboard(path: string) {
-  const r = spawnSync("powershell", ["-NoProfile", "-Command", `Set-Clipboard -Path '${path}'`], {
-    encoding: "utf8",
-    timeout: 20000,
-  });
+  const r = IS_MAC
+    ? spawnSync("osascript", ["-e", `set the clipboard to (POSIX file ${JSON.stringify(path)})`], {
+        encoding: "utf8",
+        timeout: 20000,
+      })
+    : spawnSync("powershell", ["-NoProfile", "-Command", `Set-Clipboard -Path '${path}'`], {
+        encoding: "utf8",
+        timeout: 20000,
+      });
   if (r.status !== 0) {
     throw new Error(`issue-5890: Set-Clipboard failed: ${r.stderr}`);
   }

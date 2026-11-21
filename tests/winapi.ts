@@ -1342,6 +1342,9 @@ export function getClipboardDibInfo(): { width: number; height: number; bitCount
 
 // Puts `text` on the clipboard as CF_UNICODETEXT, verbatim (no line ending conversion).
 export function setClipboardText(text: string): boolean {
+  if (IS_MAC) {
+    return Bun.spawnSync(["pbcopy"], { stdin: Buffer.from(text, "utf8") }).exitCode === 0;
+  }
   const CF_UNICODETEXT = 13;
   const GMEM_MOVEABLE = 0x2;
   if (!user32.symbols.OpenClipboard(null)) {
@@ -1373,10 +1376,25 @@ export function setClipboardText(text: string): boolean {
 
 // Changes on every clipboard update; reading it doesn't open the clipboard.
 export function clipboardSeqNo(): number {
+  if (IS_MAC) {
+    // NSPasteboard's changeCount
+    const r = Bun.spawnSync(
+      ["osascript", "-l", "JavaScript", "-e", 'ObjC.import("AppKit"); $.NSPasteboard.generalPasteboard.changeCount'],
+      { stdout: "pipe", stderr: "ignore" },
+    );
+    return Number(r.stdout.toString().trim()) || 0;
+  }
   return user32.symbols.GetClipboardSequenceNumber();
 }
 
 export function emptyClipboard(): boolean {
+  if (IS_MAC) {
+    const r = Bun.spawnSync(
+      ["osascript", "-l", "JavaScript", "-e", 'ObjC.import("AppKit"); $.NSPasteboard.generalPasteboard.clearContents'],
+      { stdout: "ignore", stderr: "ignore" },
+    );
+    return r.exitCode === 0;
+  }
   if (!user32.symbols.OpenClipboard(null)) {
     return false;
   }
@@ -1390,6 +1408,11 @@ export function emptyClipboard(): boolean {
 // Keeps the clipboard open for `ms`, as a clipboard listener (rdpclip,
 // clipboard history) does after a change.
 export async function holdClipboard(ms: number): Promise<boolean> {
+  // the macOS pasteboard has no open / close to hold
+  if (IS_MAC) {
+    await sleep(ms);
+    return true;
+  }
   if (!user32.symbols.OpenClipboard(null)) {
     return false;
   }
