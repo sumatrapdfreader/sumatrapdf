@@ -9,12 +9,14 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
+import { macClick } from "./mac-control.ts";
 import { USE_NG, cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
   clientToScreen,
   getFocusedHwnd,
   MK_LBUTTON,
+  ngInputTarget,
   packCoords,
   postMessage,
   sendMessage,
@@ -148,7 +150,19 @@ function mouse(hwnd: number, msg: number, mk: number, pt: { x: number; y: number
   sendMessage(hwnd, msg, mk, packCoords(pt.x, pt.y));
 }
 
+// ng: one click, as clickAt does: a real move landing between down and up cancels it
 function clickPt(hwnd: number, pt: { x: number; y: number }, mk = 0) {
+  if (IS_MAC) {
+    macClick(pt.x, pt.y, mk);
+    return;
+  }
+  const target = ngInputTarget(hwnd);
+  if (target) {
+    const screen = clientToScreen(hwnd, pt.x, pt.y);
+    setCursorPos(screen.x, screen.y);
+    macClick(pt.x, pt.y, mk, target);
+    return;
+  }
   mouse(hwnd, WM_LBUTTONDOWN, MK_LBUTTON | mk, pt);
   mouse(hwnd, WM_LBUTTONUP, mk, pt);
 }
