@@ -12061,6 +12061,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowPdfCompressDialog(win);
             break;
 
+        case CmdPdfWatermark:
+            ShowPdfWatermarkDialog(win);
+            break;
+
+        case CmdPdfAddPageNumbers:
+            ShowPdfPageNumbersDialog(win);
+            break;
+
         case CmdPdfDecompress:
             ShowPdfDecompressDialog(win);
             break;

@@ -1160,6 +1160,14 @@ MenuDef menuDefDocumentOperations[] = {
         CmdPdfBake,
     },
     {
+        TrN("Add Watermark..."),
+        CmdPdfWatermark,
+    },
+    {
+        TrN("Add Page Numbers..."),
+        CmdPdfAddPageNumbers,
+    },
+    {
         TrN("Insert Image..."),
         CmdInsertImage,
     },

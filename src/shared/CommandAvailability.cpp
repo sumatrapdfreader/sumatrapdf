@@ -746,7 +746,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (cmdId == CmdPdfShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
             cmdId == CmdTogglePageBoxes || cmdId == CmdToggleEditPDF || cmdId == CmdMergePDF ||
-            cmdId == CmdRunPDFScript || cmdId == CmdSaveTrimmedPagesAs) {
+            cmdId == CmdRunPDFScript || cmdId == CmdSaveTrimmedPagesAs || cmdId == CmdPdfWatermark ||
+            cmdId == CmdPdfAddPageNumbers) {
             return CommandVisibility::Hide;
         }
         // XPS, EPUB, ... (anything MuPDF opened) extract to a new PDF (#6509)

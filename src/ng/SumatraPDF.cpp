@@ -7051,6 +7051,14 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowPdfCompressDialog(win);
             break;
 
+        case CmdPdfWatermark:
+            ShowPdfWatermarkDialog(win);
+            break;
+
+        case CmdPdfAddPageNumbers:
+            ShowPdfPageNumbersDialog(win);
+            break;
+
         case CmdPdfDecompress:
             ShowPdfDecompressDialog(win);
             break;

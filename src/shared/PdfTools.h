@@ -18,6 +18,8 @@ void ShowMergePdfDialog(MainWindow* win);
 TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut);
 void ShowPdfEncryptDialog(MainWindow* win);
 void ShowPdfDecryptDialog(MainWindow* win);
+void ShowPdfWatermarkDialog(MainWindow* win);
+void ShowPdfPageNumbersDialog(MainWindow* win);
 // comic books / image folders / single images → multi-page PDF (issue #4118)
 void ShowConvertToPdfDialog(MainWindow* win);
 TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* exitCodeOut);

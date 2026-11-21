@@ -399,8 +399,10 @@ enum {
     CmdStripGroupClose = 593,
     CmdToggleLineWeights = 594,
     CmdToggleTextSelecting = 595,
+    CmdPdfWatermark = 596,
+    CmdPdfAddPageNumbers = 597,
 
-    CmdLast = 595,
+    CmdLast = 597,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

@@ -268,6 +268,69 @@ bool ExtractPagesToNewPdf(WindowTab* tab, const Vec<int>& pages, Str destPath) {
 }
 
 // Same conversion as File → Convert to PDF (issue #4118).
+// a stamp like tmpl on each page, its text format with {n} the page's number,
+// counting from start on the first page, and {total} the last number
+void PageStamps(const Vec<int>& pages, const PdfStamp& tmpl, Str format, int start, Vec<PdfStamp>& out) {
+    int total = start + len(pages) - 1;
+    for (int i = 0; i < len(pages); i++) {
+        TempStr text = str::ReplaceTemp(format, StrL("{n}"), fmt("%d", start + i));
+        text = str::ReplaceTemp(text, StrL("{total}"), fmt("%d", total));
+        PdfStamp st = tmpl;
+        st.pageNo = pages[i];
+        st.text = text;
+        VecAppend(out, st);
+    }
+}
+
+// the Position drop-down's choices, in its order
+static const PdfStampPos kPageNumberPositions[] = {
+    PdfStampPos::BottomCenter, PdfStampPos::BottomRight, PdfStampPos::BottomLeft,
+    PdfStampPos::TopCenter,    PdfStampPos::TopRight,    PdfStampPos::TopLeft,
+};
+
+void PageNumberPositionLabels(StrVec& out) {
+    for (Str label : {Tr("Bottom center"), Tr("Bottom right"), Tr("Bottom left"), Tr("Top center"), Tr("Top right"),
+                      Tr("Top left")}) {
+        out.Append(label);
+    }
+}
+
+// what Add Watermark (gray, see-through, across the middle) and Add Page
+// Numbers (at positionIdx, numbered from 1) put on the pages
+void DialogStamps(bool watermark, Str text, const Vec<int>& pages, int positionIdx, Vec<PdfStamp>& out) {
+    PdfStamp tmpl;
+    if (watermark) {
+        tmpl.pos = PdfStampPos::Diagonal;
+        tmpl.r = tmpl.g = tmpl.b = kWatermarkGray;
+        tmpl.opacity = kWatermarkOpacity;
+    } else {
+        tmpl.pos = kPageNumberPositions[std::clamp(positionIdx, 0, (int)dimofi(kPageNumberPositions) - 1)];
+        tmpl.size = kPageNumberSize;
+        tmpl.margin = kPageNumberMargin;
+    }
+    PageStamps(pages, tmpl, text, 1, out);
+}
+
+// a copy of the document (with its unsaved annotations) with the stamps on,
+// saved as destPath; the document shown stays as it is
+bool StampPdfToFile(EngineBase* engine, const Vec<PdfStamp>& stamps, Str destPath, Str* errOut) {
+    EngineBase* copy = engine ? engine->Clone() : nullptr;
+    if (!copy) {
+        *errOut = StrL("couldn't open a copy of the document");
+        return false;
+    }
+    bool ok = EngineMupdfStampText(copy, stamps, errOut);
+    if (ok) {
+        dir::CreateForFile(destPath);
+        ok = EngineMupdfSaveCopy(copy, destPath);
+        if (!ok) {
+            *errOut = fmt("couldn't write '%s'", destPath);
+        }
+    }
+    SafeEngineRelease(&copy);
+    return ok;
+}
+
 bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath) {
     if (!engine || !engine->isImageCollection || len(destPath) == 0) {
         return false;

@@ -2364,11 +2364,11 @@ static int CmdWatermark(CliCtx& cx) {
         return code;
     }
     float opacity = 0, size = 0;
-    if (!FloatOpt(cx, StrL("--opacity"), 0.25f, 0.01f, 1, &opacity, &code) ||
+    if (!FloatOpt(cx, StrL("--opacity"), kWatermarkOpacity, 0.01f, 1, &opacity, &code) ||
         !FloatOpt(cx, StrL("--size"), 0, 1, 1000, &size, &code)) {
         return code;
     }
-    u8 r = 0x80, g = 0x80, b = 0x80;
+    u8 r = kWatermarkGray, g = kWatermarkGray, b = kWatermarkGray;
     Str color = OptValue(cx, StrL("--color"));
     if (len(color) > 0 && !ParseHexColor(color, &r, &g, &b)) {
         return Fail(cx, kCliUsage, fmt("--color %s: use #rrggbb", color));
@@ -2388,19 +2388,15 @@ static int CmdWatermark(CliCtx& cx) {
     if (!havePages) {
         return code;
     }
+    PdfStamp tmpl;
+    tmpl.pos = PdfStampPos::Diagonal;
+    tmpl.size = size;
+    tmpl.r = r;
+    tmpl.g = g;
+    tmpl.b = b;
+    tmpl.opacity = opacity;
     Vec<PdfStamp> stamps;
-    for (int pageNo : pages) {
-        PdfStamp st;
-        st.pageNo = pageNo;
-        st.text = cx.positional[1];
-        st.pos = PdfStampPos::Diagonal;
-        st.size = size;
-        st.r = r;
-        st.g = g;
-        st.b = b;
-        st.opacity = opacity;
-        VecAppend(stamps, st);
-    }
+    PageStamps(pages, tmpl, cx.positional[1], 1, stamps);
     return StampPdf(cx, path, stamps, dest, n);
 }
 
@@ -2414,8 +2410,8 @@ static int CmdNumber(CliCtx& cx) {
         return code;
     }
     float size = 0, margin = 0, start = 0;
-    if (!FloatOpt(cx, StrL("--size"), 10, 1, 200, &size, &code) ||
-        !FloatOpt(cx, StrL("--margin"), 30, 0, 500, &margin, &code) ||
+    if (!FloatOpt(cx, StrL("--size"), kPageNumberSize, 1, 200, &size, &code) ||
+        !FloatOpt(cx, StrL("--margin"), kPageNumberMargin, 0, 500, &margin, &code) ||
         !FloatOpt(cx, StrL("--start"), 1, -100000, 100000, &start, &code)) {
         return code;
     }
@@ -2469,23 +2465,15 @@ static int CmdNumber(CliCtx& cx) {
         return code;
     }
     // the pages numbered count from --start; {total} is the last number
-    int first = (int)start;
-    int total = first + len(pages) - 1;
+    PdfStamp tmpl;
+    tmpl.pos = pos;
+    tmpl.size = size;
+    tmpl.margin = margin;
+    tmpl.r = r;
+    tmpl.g = g;
+    tmpl.b = b;
     Vec<PdfStamp> stamps;
-    for (int i = 0; i < len(pages); i++) {
-        TempStr text = str::ReplaceTemp(format, StrL("{n}"), fmt("%d", first + i));
-        text = str::ReplaceTemp(text, StrL("{total}"), fmt("%d", total));
-        PdfStamp st;
-        st.pageNo = pages[i];
-        st.text = text;
-        st.pos = pos;
-        st.size = size;
-        st.margin = margin;
-        st.r = r;
-        st.g = g;
-        st.b = b;
-        VecAppend(stamps, st);
-    }
+    PageStamps(pages, tmpl, format, (int)start, stamps);
     return StampPdf(cx, path, stamps, dest, n);
 }
 

@@ -32,6 +32,18 @@ bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages);
 TempStr DefaultPdfDestPathTemp(Str srcPath);
 bool ExtractPagesToNewPdf(WindowTab* tab, const Vec<int>& pages, Str destPath);
 bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath);
+
+// Add Watermark / Add Page Numbers (and `cli watermark`, `cli number`)
+struct PdfStamp;
+constexpr float kWatermarkOpacity = 0.25f;
+constexpr u8 kWatermarkGray = 0x80;
+constexpr float kPageNumberSize = 10;
+constexpr float kPageNumberMargin = 30;
+void PageStamps(const Vec<int>& pages, const PdfStamp& tmpl, Str format, int start, Vec<PdfStamp>& out);
+// the Position drop-down of Add Page Numbers, and the stamps the dialogs make
+void PageNumberPositionLabels(StrVec& out);
+void DialogStamps(bool watermark, Str text, const Vec<int>& pages, int positionIdx, Vec<PdfStamp>& out);
+bool StampPdfToFile(EngineBase* engine, const Vec<PdfStamp>& stamps, Str destPath, Str* errOut);
 constexpr int kConvertPdfToImagesDpi = 150;
 constexpr int kSaveSelectionDefaultDpi = 300;
 float SaveSelectionZoom(EngineBase* engine, float dpi);
