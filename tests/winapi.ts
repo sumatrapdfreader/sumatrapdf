@@ -922,6 +922,22 @@ export function sendCopyDataW(hwnd: number, dataId: number, text: string): bigin
   return sendMessage(hwnd, WM_COPYDATA, 0, BigInt(ptr(cds)));
 }
 
+// The reuse-instance open request (kCopyDataOpen): u32 newWindow, then the
+// UTF-8 path, NUL-terminated. The receiver loads it after replying.
+export function sendOpenCopyData(hwnd: number, path: string, newWindow = 0): bigint {
+  const kCopyDataOpen = 0x4f70656e;
+  const utf8 = new TextEncoder().encode(path + "\0");
+  const payload = new Uint8Array(4 + utf8.byteLength);
+  new DataView(payload.buffer).setUint32(0, newWindow, true);
+  payload.set(utf8, 4);
+  const cds = new Uint8Array(24);
+  const view = new DataView(cds.buffer);
+  view.setBigUint64(0, BigInt(kCopyDataOpen), true);
+  view.setUint32(8, payload.byteLength, true);
+  view.setBigUint64(16, BigInt(ptr(payload)), true);
+  return sendMessage(hwnd, WM_COPYDATA, 0, BigInt(ptr(cds)));
+}
+
 // --- TreeView (SysTreeView32) helpers; item handles are opaque bigints ---
 
 export function treeGetNextItem(tree: number, flag: number, item: bigint = 0n): bigint {

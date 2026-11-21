@@ -611,7 +611,7 @@ static void OpenManyCopyDataAsyncRun(OpenManyCopyDataAsync* d) {
     if (win) {
         win->Focus();
         for (Str path : d->paths) {
-            LoadDocument(win, path);
+            StartLoadDocument(win, path);
         }
     }
     delete d;
@@ -641,7 +641,7 @@ static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
     // bring that window to the foreground.
     if (win) {
         win->Focus();
-        LoadDocument(win, d->path);
+        StartLoadDocument(win, d->path);
     }
 
     str::Free(d->path);

@@ -816,7 +816,7 @@ static void ExecuteCurrentSelection() {
     if (data->filePath) {
         TempStr path = str::DupTemp(data->filePath);
         ScheduleDeleteAndExecCommand();
-        LoadDocument(win, path);
+        StartLoadDocument(win, path);
         return;
     }
     logf("CommandPalette: no match for selection '%s'\n", wnd->items[idx]);

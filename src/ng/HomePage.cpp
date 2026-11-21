@@ -490,7 +490,7 @@ static void OpenHomeEntry(MainWindow* win, int idx, bool ctrl) {
         AppShellInvalidate(win);
         return;
     }
-    LoadDocument(win, path);
+    StartLoadDocument(win, path);
 }
 
 void HomeView::OnEntryClick(HomeView* self, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t idx) {

@@ -1278,6 +1278,10 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
         return;
     }
+    // already loading (StartLoadDocument): that load finishes it
+    if (tab->loadState == WindowTab::LoadState::Loading) {
+        return;
+    }
     if (!tab->IsDocLoaded() && !autoRefresh) {
         LoadDocument(win, path, LoadPrefs::DontSave, LoadReuse::CurrentTab);
         return;
@@ -1635,9 +1639,9 @@ bool ScrollBrowserDocKey(MainWindow* win, int vk) {
     return true;
 }
 
-// A failed open still gets a tab: the canvas shows the error, and the file
-// stays available to "show in folder" (issue #3595). Page number stays 0.
-static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {
+// A tab for fullPath without a document: the canvas shows the load error
+// (Error) or "Loading ..." (Loading). Page number stays 0.
+static WindowTab* ShowDocumentlessTab(MainWindow* win, Str fullPath, LoadReuse reuse, WindowTab::LoadState state) {
     WindowTab* tab = nullptr;
     if (reuse == LoadReuse::CurrentTab) {
         tab = win->CurrentTab();
@@ -1666,13 +1670,13 @@ static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {
         DeleteControllerAsync(prev);
         tab->SetFilePath(fullPath);
         tab->everPaintedPage = false;
-        tab->loadState = WindowTab::LoadState::Error;
+        tab->loadState = state;
         win->currentTabTemp = tab;
     } else {
         SaveCurrentWindowTab(win);
         tab = new WindowTab(win);
         tab->SetFilePath(fullPath);
-        tab->loadState = WindowTab::LoadState::Error;
+        tab->loadState = state;
         AddTabToWindow(win, tab);
         win->currentTabTemp = tab;
     }
@@ -1684,13 +1688,20 @@ static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {
     RebuildMenuBar(win);
     TabsUIOnTabsChanged(win);
     AppShellInvalidate(win);
+    return tab;
+}
+
+// A failed open still gets a tab: the canvas shows the error, and the file
+// stays available to "show in folder" (issue #3595).
+static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {
+    ShowDocumentlessTab(win, fullPath, reuse, WindowTab::LoadState::Error);
 }
 
 // ng: orig's LoadDocumentFinish, the half that puts the remembered FileState
 // back on screen. What it drops is the window placement (gpui cannot move a
 // window), the UIA notification and the browser-hosted (chm / markdown)
 // branch, which has no scroll position to restore yet (step 11).
-MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse) {
+static MainWindow* LoadDocumentNow(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse) {
     if (gCrashOnOpen) {
         log(StrL("LoadDocument: about to call CrashMe()\n"));
         CrashMe();
@@ -1731,8 +1742,20 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
 // -dbg-control TestLoadDelay: makes opening a document as slow as a sleeping drive
 AtomicInt gTestLoadDelayMs = 0;
 
-// orig's StartLoadDocument for a lazy tab: the slow part (waking the drive,
-// parsing the file) runs on a thread so the UI stays usable meanwhile
+static void MaybeTestLoadDelay() {
+    int delayMs = AtomicIntGet(&gTestLoadDelayMs);
+    if (delayMs > 0) {
+        SleepInMs(delayMs);
+    }
+}
+
+MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse) {
+    MaybeTestLoadDelay();
+    return LoadDocumentNow(win, path, prefs, reuse);
+}
+
+// orig's StartLoadDocument for a lazy tab or an open: the slow part (waking
+// the drive, parsing the file) runs on a thread so the UI stays usable
 struct LazyTabLoad {
     WindowTab* tab = nullptr;
     Str path;
@@ -1741,6 +1764,10 @@ struct LazyTabLoad {
     bool chmInFixedUI = false;
     // browser-view and chm documents only get the drive woken up here
     bool createEngine = false;
+    // an open (StartLoadDocument) rather than a restored session tab
+    bool isOpen = false;
+    LoadPrefs prefs = LoadPrefs::DontSave;
+    TimeStamp timeStart;
     EngineBase* engine = nullptr;
     ~LazyTabLoad() {
         str::Free(path);
@@ -1749,8 +1776,46 @@ struct LazyTabLoad {
     }
 };
 
+// at most this many documents load at once (e.g. many files dropped together)
+constexpr int kMaxLoadThreads = 4;
+static int gLoadThreadsActive = 0;
+static Vec<LazyTabLoad*> gLoadQueue;
+
+static void LazyTabLoadThread(LazyTabLoad* d);
+
+static void StartOrQueueLoadThread(LazyTabLoad* d) {
+    if (gLoadThreadsActive >= kMaxLoadThreads) {
+        VecAppend(gLoadQueue, d);
+        return;
+    }
+    gLoadThreadsActive++;
+    RunAsync(MkFunc0<LazyTabLoad>(LazyTabLoadThread, d), StrL("LazyTabLoad"));
+}
+
+// the UI-thread half of an open: the engine goes on screen in the loading tab.
+// Without one (password, CAJ consent, failure) the regular load runs, quickly
+// now that the drive is awake, and asks or shows the error.
+static void FinishOpenLoad(LazyTabLoad* d) {
+    WindowTab* tab = d->tab;
+    MainWindow* win = tab->win;
+    TempStr path = str::DupTemp(tab->filePath);
+    if (!d->engine) {
+        // a password dialog shows over the error, which stays if it's cancelled
+        tab->loadState = WindowTab::LoadState::Error;
+        LoadDocumentNow(win, path, d->prefs, LoadReuse::CurrentTab);
+        return;
+    }
+    DocController* ctrl = new DisplayModel(d->engine, win->cbHandler);
+    d->engine = nullptr;
+    LoadDocumentFinish(win, path, ctrl, d->prefs, LoadReuse::CurrentTab, d->timeStart);
+}
+
 static void LazyTabLoadDone(LazyTabLoad* d) {
     AutoDelete delData(d);
+    gLoadThreadsActive--;
+    if (len(gLoadQueue) > 0) {
+        StartOrQueueLoadThread(VecPopAt(gLoadQueue, 0));
+    }
     WindowTab* tab = d->tab;
     MainWindow* win = FindMainWindowByTab(tab);
     if (!win || !IsMainWindowValidAndNotClosing(win)) {
@@ -1761,19 +1826,22 @@ static void LazyTabLoadDone(LazyTabLoad* d) {
     }
     if (!IsCurrentTab(win, tab)) {
         // loads again when selected, quickly now that the drive is awake
-        tab->loadState = WindowTab::LoadState::None;
+        tab->loadState = d->isOpen ? WindowTab::LoadState::LoadedPending : WindowTab::LoadState::None;
+        return;
+    }
+    if (d->isOpen) {
+        FinishOpenLoad(d);
         return;
     }
     EngineBase* engine = d->engine;
     d->engine = nullptr;
+    // done loading: ReloadDocument skips a tab that is still loading
+    tab->loadState = WindowTab::LoadState::None;
     FinishLazyTabLoad(tab, engine);
 }
 
 static void LazyTabLoadThread(LazyTabLoad* d) {
-    int delayMs = AtomicIntGet(&gTestLoadDelayMs);
-    if (delayMs > 0) {
-        SleepInMs(delayMs);
-    }
+    MaybeTestLoadDelay();
     if (d->createEngine && DocumentPathExists(d->path)) {
         SetLoadThreadFileEBookUI(d->fileEBookUI);
         float prevAspect = EngineMupdfSetEbookLayoutAspect(d->ebookLayoutAspect);
@@ -1791,11 +1859,12 @@ static void LazyTabLoadThread(LazyTabLoad* d) {
     uitask::Post(MkFunc0<LazyTabLoad>(LazyTabLoadDone, d), "LazyTabLoadDone");
 }
 
-void StartLazyTabLoad(WindowTab* tab) {
+static LazyTabLoad* NewTabLoad(WindowTab* tab) {
     MainWindow* win = tab->win;
     auto* d = new LazyTabLoad;
     d->tab = tab;
     d->path = str::Dup(tab->filePath);
+    d->timeStart = TimeGet();
     FileType kind = GuessFileTypeFromName(d->path);
     d->chmInFixedUI = gSettings->chmUI.useFixedPageUI || !BrowserViewAvailable();
     bool chmInBrowser = !d->chmInFixedUI && ChmModel::IsSupportedFileType(kind);
@@ -1805,7 +1874,53 @@ void StartLazyTabLoad(WindowTab* tab) {
     d->fileEBookUI = CopyFileEBookUI(GetFileEBookUI(d->path));
     tab->loadState = WindowTab::LoadState::Loading;
     AppShellInvalidate(win);
-    RunAsync(MkFunc0<LazyTabLoad>(LazyTabLoadThread, d), StrL("LazyTabLoad"));
+    return d;
+}
+
+void StartLazyTabLoad(WindowTab* tab) {
+    StartOrQueueLoadThread(NewTabLoad(tab));
+}
+
+// orig's StartLoadDocument: the tab shows "Loading ..." while the engine is
+// created on a thread, so a sleeping drive doesn't freeze the UI. Returns the
+// tab that gets the document. Wasm has no threads and loads right away.
+WindowTab* StartLoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse) {
+    if (gCrashOnOpen) {
+        log(StrL("StartLoadDocument: about to call CrashMe()\n"));
+        CrashMe();
+    }
+    if (!win || len(path) == 0) {
+        return nullptr;
+    }
+#if OS_WASM
+    return LoadDocument(win, path, prefs, reuse) ? win->CurrentTab() : nullptr;
+#else
+    TempStr fullPath = path::NormalizeTemp(path);
+    // TemporaryFileAutoMove: open the copy in TemporaryFileDestDir (#6437)
+    TempStr permanent = MaybeAutoCopyTemporaryFile(fullPath);
+    if (len(permanent) > 0) {
+        fullPath = permanent;
+    }
+    WindowTab* tab = ShowDocumentlessTab(win, fullPath, reuse, WindowTab::LoadState::Loading);
+    LazyTabLoad* d = NewTabLoad(tab);
+    d->isOpen = true;
+    d->prefs = prefs;
+    StartOrQueueLoadThread(d);
+    return tab;
+#endif
+}
+
+// an open that finished while another tab was current loads again when its
+// tab is selected
+void LoadPendingTab(WindowTab* tab) {
+    if (!tab || tab->ctrl || tab->loadState != WindowTab::LoadState::LoadedPending) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab)) {
+        return;
+    }
+    StartLoadDocument(win, str::DupTemp(tab->filePath), LoadPrefs::Save, LoadReuse::CurrentTab);
 }
 
 // LoadDocument into the current tab with an engine a lazy tab's background
@@ -2143,7 +2258,7 @@ static void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory)
     SortNatural(&pathsToLoad);
     for (Str path : pathsToLoad) {
         logf("StartLoadDocuments: '%s'\n", path);
-        WindowTab* tab = LoadDocument(win, path) ? win->CurrentTab() : nullptr;
+        WindowTab* tab = StartLoadDocument(win, path);
         if (tab && skipHistory) {
             tab->skipHistory = true;
         }
@@ -5475,7 +5590,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
     if (cmdId == CmdFileHistory && CanAccessDisk()) {
         Str filePath = GetCommandStringArg(cmd, kCmdArgFilePath, {});
         if (len(filePath) > 0) {
-            LoadDocument(win, filePath);
+            StartLoadDocument(win, filePath);
         }
         return;
     }

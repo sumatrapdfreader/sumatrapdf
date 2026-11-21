@@ -206,6 +206,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     ShowPageInfoIfWanted(win);
     win->RedrawAll();
     LoadLazyTabIfNeeded(tab);
+    LoadPendingTab(tab);
     // its file changed while in the background: AutoReloadTick runs only for
     // the current tab, so arm it now
     if (tab->reloadOnFocus) {

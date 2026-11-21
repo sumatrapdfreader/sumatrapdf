@@ -129,7 +129,7 @@ void OpenDownloadedPath(Str* path) {
         win = gWindows[0];
     }
     if (IsMainWindowValidAndNotClosing(win)) {
-        LoadDocument(win, *path);
+        StartLoadDocument(win, *path);
     }
     str::Free(*path);
     delete path;

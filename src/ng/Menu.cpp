@@ -1347,7 +1347,7 @@ void HomeContextMenuCommand(MainWindow* win, Str filePathIn, int cmdId) {
     FileState* fs = FileHistoryFindByPath(path);
     switch (cmdId) {
         case CmdOpenSelectedDocument:
-            LoadDocument(win, path);
+            StartLoadDocument(win, path);
             return;
         case CmdShowInFolder:
             ShowFileInFolder(win, path);

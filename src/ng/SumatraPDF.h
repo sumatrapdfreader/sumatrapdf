@@ -133,6 +133,9 @@ void DuplicateTabInNewWindow(WindowTab* tab);
 void DuplicateTabInNewTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 void StartLazyTabLoad(WindowTab* tab);
+WindowTab* StartLoadDocument(MainWindow* win, Str path, LoadPrefs prefs = LoadPrefs::Save,
+                             LoadReuse reuse = LoadReuse::NewTab);
+void LoadPendingTab(WindowTab* tab);
 void LoadDocumentWithEngine(MainWindow* win, Str path, EngineBase* engine);
 extern AtomicInt gTestLoadDelayMs;
 bool ForwardBrowserMsg(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp);

@@ -765,7 +765,7 @@ static void NavOpenInCurrentTab(NavOpenCtx* c, bool ok) {
     }
     DismissNextFileScrollHint(win);
     // replace the document in the current tab; keep this window open
-    LoadDocument(win, c->path, LoadPrefs::Save, LoadReuse::CurrentTab);
+    StartLoadDocument(win, c->path, LoadPrefs::Save, LoadReuse::CurrentTab);
     NavMarkSkipHistory(win, c->skipHistory);
     // Hand keyboard control back to the document, the way Ctrl + Enter does
     // when it switches to a tab that already has the file (issue #5903).
@@ -807,7 +807,7 @@ static void ExecuteCurrentSelection(bool inNewTab = false) {
         }
         DismissNextFileScrollHint(mainWin);
         // no forceReuse: opens in a new tab, leaving the current document alone
-        LoadDocument(mainWin, path);
+        StartLoadDocument(mainWin, path);
         NavMarkSkipHistory(mainWin, gNav.skipHistory);
         return;
     }
