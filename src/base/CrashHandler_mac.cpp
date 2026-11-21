@@ -10,6 +10,10 @@
 
 #include "base/CrashHandler.h"
 
+#include "base/MacTypesHide.h"
+#include <CoreFoundation/CoreFoundation.h>
+#include "base/MacTypesShow.h"
+
 #include <dlfcn.h>
 #include <mach/mach.h>
 #include <mach-o/loader.h>
@@ -310,4 +314,23 @@ TempStr MacSysInfoTemp() {
         b.Append(fmt("Memory: %d MB\n", (int)(memSize / (1024 * 1024))));
     }
     return ToStr(b);
+}
+
+static CFStringRef ToCFString(Str s) {
+    return CFStringCreateWithBytes(nullptr, (const UInt8*)s.s, len(s), kCFStringEncodingUTF8, false);
+}
+
+// A system alert: unlike a gpui dialog it needs no window or frame loop, which
+// a crashed process doesn't have. Returns true if otherButton was pressed.
+bool MacCrashAlert(Str title, Str msg, Str otherButton, int timeoutSecs) {
+    CFStringRef cfTitle = ToCFString(title);
+    CFStringRef cfMsg = ToCFString(msg);
+    CFStringRef cfOther = ToCFString(otherButton);
+    CFOptionFlags rsp = 0;
+    SInt32 err = CFUserNotificationDisplayAlert(timeoutSecs, kCFUserNotificationStopAlertLevel, nullptr, nullptr,
+                                                nullptr, cfTitle, cfMsg, nullptr, cfOther, nullptr, &rsp);
+    CFRelease(cfTitle);
+    CFRelease(cfMsg);
+    CFRelease(cfOther);
+    return err == 0 && (rsp & 3) == kCFUserNotificationAlternateResponse;
 }

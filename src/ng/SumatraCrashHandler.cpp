@@ -16,6 +16,8 @@
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
 #include "base/Win.h"
+#else
+#include "base/Launch.h"
 #endif
 
 #include "Settings.h"
@@ -111,9 +113,22 @@ static void GetProgramInfo(str::Builder& b) {
     }
 }
 
+#define kSubmitCrashReportUrl "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html"
+
+#if OS_DARWIN
+bool MacCrashAlert(Str title, Str msg, Str otherButton, int timeoutSecs);
+// shorter than kCrashMessageTimeoutSecs in CrashHandler_posix.cpp
+constexpr int kCrashAlertTimeoutSecs = 60;
+#endif
+
+// static, so the crash path doesn't call realpath, stat or the signer check
+static Str gProgramInfo;
+static bool gWillUploadCrash = false;
+
 // ng: orig shows a win32 MsgBox and, on Cancel, the crash-report page. The
 // port's MsgBox is a gpui dialog that needs a live window and a running frame
 // loop, neither of which a crashed process has, so this is the raw win32 one
+// (a CFUserNotification alert on macOS)
 static void ShowCrashHandlerMessage() {
     log(StrL("ShowCrashHandlerMessage\n"));
     if (!CanAccessDisk()) {
@@ -127,7 +142,13 @@ static void ShowCrashHandlerMessage() {
     if (IDCANCEL != res) {
         return;
     }
-    LaunchFileShell(StrL("https://www.sumatrapdfreader.org/docs/Submit-crash-report.html"), {}, StrL("open"));
+    LaunchFileShell(StrL(kSubmitCrashReportUrl), {}, StrL("open"));
+#elif OS_DARWIN
+    Str msg = gWillUploadCrash ? StrL("A crash report will be sent the next time you start SumatraPDF.")
+                               : StrL("See how to report the crash.");
+    if (MacCrashAlert(StrL("SumatraPDF crashed"), msg, StrL("How to Report"), kCrashAlertTimeoutSecs)) {
+        LaunchFileShell(StrL(kSubmitCrashReportUrl), {}, StrL("open"));
+    }
 #endif
 }
 
@@ -162,7 +183,11 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
         b.Append(StrL("\n"));
     }
 #endif
-    GetProgramInfo(b);
+    if (len(gProgramInfo) > 0) {
+        b.Append(gProgramInfo);
+    } else {
+        GetProgramInfo(b);
+    }
     AppendUncaughtMupdfError(a, b);
     Str sysInfo = CrashHandlerSystemInfo();
     if (sysInfo) {
@@ -252,6 +277,13 @@ void InstallSumatraCrashHandler(bool localOnly) {
     cfg.canEndCrashedThread = TtsOnEngineCrash;
 
     InstallCrashHandler(cfg);
+    gWillUploadCrash = !localOnly && cfg.uploadCrashes && len(cfg.submitUrl) > 0;
+    Arena* a = CrashHandlerArena();
+    if (a) {
+        str::Builder info(a);
+        GetProgramInfo(info);
+        gProgramInfo = ToStr(info);
+    }
     logf("InstallSumatraCrashHandler: dump '%s', localOnly=%d\n", cfg.crashDumpPath, (int)localOnly);
     CaptureSettings();
 }

@@ -11,10 +11,13 @@
 #include "base/Base.h"
 
 #include "base/File.h"
+#include "base/DirScan.h"
 #include "base/Http.h"
 #include "base/CrashHandler.h"
 
 #include <csignal>
+#include <ctime>
+#include <pthread.h>
 #include <unistd.h>
 #if OS_WASM
 #include <emscripten/emscripten.h>
@@ -52,8 +55,15 @@ constexpr int kMaxFrames = 64;
 constexpr int kAltStackSize = 128 * 1024;
 // a handler stuck on a lock the faulting code held must still end the process
 constexpr int kHandlerTimeoutSecs = 20;
+// showCrashMessage waits for the user; its own timeout must be shorter
+constexpr int kCrashMessageTimeoutSecs = 90;
+// pending reports are <dump name>-<unix time>-pending.txt
 #define kPendingSuffix "-pending.txt"
 constexpr int kPendingMaxAgeSecs = 7 * 24 * 60 * 60;
+constexpr int kMaxPendingReports = 5;
+// the server keeps at most 1 MB (crashReportMaxBytes in crash_report.go)
+constexpr int kMaxUploadBytes = 1000 * 1000;
+constexpr int kUploadHeadBytes = 64 * 1024;
 constexpr int kHttpClientErrorMin = 400;
 constexpr int kHttpClientErrorMax = 499;
 
@@ -111,6 +121,61 @@ static TempStr ReportPathTemp(Str suffix) {
     return str::JoinTemp(path, suffix);
 }
 
+// pthread_self() of the thread writing a report, 0 if none
+static uintptr_t gReportingThread = 0;
+
+enum class ReportSlot {
+    Taken,
+    Nested, // this thread faulted while writing a report
+};
+
+// One report at a time. A thread that finds another one reporting waits: a
+// crash report ends the process, a debug report frees the slot.
+static ReportSlot TakeReportSlot() {
+    uintptr_t self = (uintptr_t)pthread_self();
+    timespec wait{0, 10 * 1000 * 1000};
+    for (;;) {
+        uintptr_t prev = __sync_val_compare_and_swap(&gReportingThread, (uintptr_t)0, self);
+        if (prev == 0) {
+            return ReportSlot::Taken;
+        }
+        if (prev == self) {
+            return ReportSlot::Nested;
+        }
+        nanosleep(&wait, nullptr);
+    }
+}
+
+static void FreeReportSlot() {
+    __sync_lock_release(&gReportingThread);
+}
+
+// index just past the '\n' at or after i, so a cut never splits a UTF-8 sequence
+static int NextLineStart(Str s, int i) {
+    while (i < len(s) && s.s[i - 1] != '\n') {
+        i++;
+    }
+    return i;
+}
+
+// Fit a report in what the server keeps. Drop the middle, the start of the
+// log, and keep the head (build info) and the tail (end of
+// the log, settings, stacks, modules).
+#define kCutMarker "\n... (truncated) ...\n\n"
+static Str TruncateForUpload(Arena* a, Str report) {
+    if (len(report) <= kMaxUploadBytes) {
+        return report;
+    }
+    int headEnd = NextLineStart(report, kUploadHeadBytes);
+    int tailLen = kMaxUploadBytes - headEnd - (int)sizeof(kCutMarker) + 1;
+    int tailStart = NextLineStart(report, len(report) - tailLen);
+    str::Builder b(a);
+    b.Append(Str(report.s, headEnd));
+    b.Append(StrL(kCutMarker));
+    b.Append(Str(report.s + tailStart, len(report) - tailStart));
+    return ToStr(b);
+}
+
 static bool ShouldUpload(bool isCrash) {
     if (gCfg.localOnly || len(gCfg.submitUrl) == 0) {
         return false;
@@ -147,13 +212,28 @@ static void WriteCrashReport(Str condStr, Str fileLine, bool isCrash, int sig, v
         dir::CreateForFile(path);
         file::WriteFile(path, report);
         if (ShouldUpload(isCrash)) {
-            file::WriteFile(ReportPathTemp(StrL(kPendingSuffix)), report);
+            TempStr suffix = fmt("-%d%s", (i64)time(nullptr), StrL(kPendingSuffix));
+            file::WriteFile(ReportPathTemp(suffix), TruncateForUpload(gCrashHandlerArena, report));
         }
     }
-    logf("crash report written to '%s'\n%s\n", path, report);
+    if (!isCrash) {
+        logf("crash report written to '%s'\n%s\n", path, report);
+        return;
+    }
+    // log() takes a lock the faulting code may hold
+    TempStr msg = fmt("crash report written to '%s'\n", path);
+    write(STDERR_FILENO, msg.s, (size_t)len(msg));
+    write(STDERR_FILENO, report.s, (size_t)len(report));
 }
 
+static void RestoreDefaultSignals();
+
 static void SignalHandler(int sig, siginfo_t* info, void* uctx) {
+    if (TakeReportSlot() == ReportSlot::Nested) {
+        RestoreDefaultSignals();
+        raise(sig);
+        return;
+    }
     // restore the default so a fault while reporting terminates us
     signal(sig, SIG_DFL);
     alarm(kHandlerTimeoutSecs);
@@ -162,6 +242,7 @@ static void SignalHandler(int sig, siginfo_t* info, void* uctx) {
     }
     WriteCrashReport(fmt("signal %d", sig), {}, true, sig, info, uctx);
     if (gCfg.showCrashMessage && !gCfg.localOnly) {
+        alarm(kCrashMessageTimeoutSecs);
         gCfg.showCrashMessage();
     }
     raise(sig);
@@ -171,7 +252,11 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     if (!gCrashHandlerArena) {
         return;
     }
+    if (TakeReportSlot() == ReportSlot::Nested) {
+        return;
+    }
     WriteCrashReport(condStr, fileLine, isCrash, 0, nullptr, nullptr);
+    FreeReportSlot();
     if (gCfg.forTesting && !isCrash) {
         // a ReportIf() under -for-testing must fail the test run
         _exit(105);
@@ -217,6 +302,12 @@ static bool DebuggerAttached() {
 
 static const int kSignals[] = {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGABRT, SIGTRAP};
 
+static void RestoreDefaultSignals() {
+    for (int sig : kSignals) {
+        signal(sig, SIG_DFL);
+    }
+}
+
 static void SetSignalHandlers() {
     struct sigaction sa{};
     sa.sa_sigaction = SignalHandler;
@@ -239,7 +330,7 @@ static void SetSignalHandlers() {
 
 #if !OS_WASM
 struct PendingUpload {
-    Str path;
+    StrVec paths;
     Str url;
 };
 
@@ -247,36 +338,58 @@ static bool IsHttpClientError(int status) {
     return status >= kHttpClientErrorMin && status <= kHttpClientErrorMax;
 }
 
-static void UploadPendingThread(PendingUpload* d) {
-    Str report = file::ReadFile(d->path);
+static void UploadPending(Str path, Str url) {
+    Str report = file::ReadFile(path);
     HttpRsp rsp;
-    bool ok = len(report) > 0 && HttpPostUrl(d->url, StrL("text/plain"), {}, report, &rsp);
+    bool ok = len(report) > 0 && HttpPostUrl(url, StrL("text/plain"), {}, report, &rsp);
     int status = (int)rsp.httpStatusCode;
-    logf("UploadPendingThread: ok=%d status=%d bytes=%d url=%s\n", (int)ok, status, len(report), d->url);
+    logf("UploadPending: ok=%d status=%d bytes=%d url=%s\n", (int)ok, status, len(report), url);
     // a report the server refused stays refused; an unreachable server gets another try
     FILETIME now;
     GetSystemTimeAsFileTime(&now);
-    bool isOld = FileTimeDiffInSecs(now, file::GetModificationTime(d->path)) > kPendingMaxAgeSecs;
+    bool isOld = FileTimeDiffInSecs(now, file::GetModificationTime(path)) > kPendingMaxAgeSecs;
     if (ok || IsHttpClientError(status) || isOld || len(report) == 0) {
-        file::Delete(d->path);
+        file::Delete(path);
     }
     str::Free(report);
-    str::Free(d->path);
+}
+
+static void UploadPendingThread(PendingUpload* d) {
+    for (Str path : d->paths) {
+        UploadPending(path, d->url);
+    }
     str::Free(d->url);
     delete d;
 }
 
-// sends the report the previous run left behind
-static void UploadPendingReport() {
+// Sends the reports earlier runs left behind, newest kMaxPendingReports;
+// older ones are deleted.
+static void UploadPendingReports() {
     if (gCfg.localOnly || len(gCfg.submitUrl) == 0) {
         return;
     }
-    TempStr path = ReportPathTemp(StrL(kPendingSuffix));
-    if (!file::Exists(path)) {
+    TempStr dir = path::GetDirTemp(gCfg.crashDumpPath);
+    TempStr prefix = path::GetBaseNameTemp(ReportPathTemp({}));
+    StrVec paths;
+    DirIter di{dir};
+    for (DirIterEntry* de : di) {
+        if (str::StartsWith(de->name, prefix) && str::EndsWith(de->name, StrL(kPendingSuffix))) {
+            paths.Append(de->filePath);
+        }
+    }
+    if (len(paths) == 0) {
         return;
     }
+    // names differ only in the unix time
+    Sort(&paths);
     auto d = new PendingUpload();
-    d->path = str::Dup(path);
+    for (int i = 0; i < len(paths); i++) {
+        if (i < len(paths) - kMaxPendingReports) {
+            file::Delete(paths[i]);
+            continue;
+        }
+        d->paths.Append(paths[i]);
+    }
     d->url = str::Dup(gCfg.submitUrl);
     RunAsync(MkFunc0<PendingUpload>(UploadPendingThread, d), StrL("UploadCrashReport"));
 }
@@ -299,7 +412,7 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
 
     SetSignalHandlers();
 #if !OS_WASM
-    UploadPendingReport();
+    UploadPendingReports();
 #endif
 }
 
@@ -307,9 +420,7 @@ void UninstallCrashHandler() {
     if (!gCrashHandlerArena) {
         return;
     }
-    for (int sig : kSignals) {
-        signal(sig, SIG_DFL);
-    }
+    RestoreDefaultSignals();
     ArenaDelete(gCrashHandlerArena);
     gCrashHandlerArena = nullptr;
 }
