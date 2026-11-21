@@ -11,6 +11,7 @@ import { type ControlClient, ControlCommand } from "./control.ts";
 import { ROOT, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import {
+  ensureModifierKeysUp,
   postMessage,
   showWindow,
   sleep,
@@ -105,6 +106,8 @@ export async function testit(): Promise<void> {
     st = await waitBar(client, (s) => s.paused === 1 && /Time is up/.test(s.status), "the timer did not pause", 12000);
     console.log(`  timer: ${st.status}`);
 
+    // an RDP client can leave Ctrl down during the 6 s wait, making this Ctrl+Down
+    await ensureModifierKeysUp();
     postMessage(frame, WM_KEYDOWN, VK_DOWN, 1);
     postMessage(frame, WM_KEYUP, VK_DOWN, 1);
     st = await waitBar(client, (s) => s.speed > 40, "Down did not change the speed");
