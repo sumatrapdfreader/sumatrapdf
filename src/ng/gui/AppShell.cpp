@@ -1458,7 +1458,9 @@ extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_wasm_has_unsaved() {
 // the browser's file input answers on a later event-loop turn, so the document
 // is loaded from the callback and the prompt itself has nothing to return
 static void OnWasmFilePicked(MainWindow* win, Str path) {
-    LoadDocument(win, path);
+    if (IsMainWindowValidAndNotClosing(win)) {
+        LoadDocument(win, path);
+    }
 }
 #endif
 

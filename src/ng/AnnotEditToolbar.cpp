@@ -580,7 +580,8 @@ void EndFreeTextInPlaceEdit(bool accept) {
         return;
     }
     MainWindow* win = gInPlace.win;
-    WindowTab* tab = gInPlace.tab;
+    // the tab may have closed without ending the edit
+    WindowTab* tab = IsWindowTabValid(gInPlace.tab) ? gInPlace.tab : nullptr;
     Annotation* annot = gInPlace.annot;
     TempStr text = str::DupTemp(FromGpui(gp::InputValue(gInPlace.edit)));
     gInPlace.win = nullptr;
@@ -592,7 +593,7 @@ void EndFreeTextInPlaceEdit(bool accept) {
     EngineMupdfSetEditedAnnot(tab ? tab->GetEngine() : nullptr, nullptr);
 
     bool winOk = win && IsMainWindowValidAndNotClosing(win);
-    if (accept && AnnotationIsLive(annot)) {
+    if (accept && tab && AnnotationIsLive(annot)) {
         // the box may be enlarged and the text set: one undo step
         EngineBase* engine = tab ? tab->GetEngine() : nullptr;
         EngineMupdfBeginOperation(engine, "Edit text");
