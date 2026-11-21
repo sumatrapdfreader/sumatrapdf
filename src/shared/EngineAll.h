@@ -156,6 +156,32 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
 
 bool EngineMupdfIsPdf(EngineBase* engine);
 
+// text drawn on a page of a PDF over its content: a watermark (Diagonal: across
+// the middle, rising from the bottom left) or a page number (the others)
+enum class PdfStampPos : u8 {
+    Diagonal,
+    TopLeft,
+    TopCenter,
+    TopRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+};
+struct PdfStamp {
+    int pageNo = 0;
+    Str text; // Latin (WinAnsi) only
+    PdfStampPos pos = PdfStampPos::Diagonal;
+    // points; 0: Diagonal across 60% of the page's diagonal, else 10
+    float size = 0;
+    u8 r = 0, g = 0, b = 0;
+    float opacity = 1;
+    // from the page's edges, points
+    float margin = 36;
+};
+// stamps the engine's document in memory (save it with EngineMupdfSaveCopy);
+// false with *errOut set if one can't be made
+bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* errOut);
+
 // a page's text with its styles and its pictures, in mupdf's reading order,
 // for an export (cli markdown). The text is a span per run of one style;
 // spans of one line have the same `line`, lines of one block the same `block`.

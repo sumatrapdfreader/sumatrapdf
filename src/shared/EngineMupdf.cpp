@@ -10736,6 +10736,202 @@ bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
     return ok;
 }
 
+// PDF bytes of a string in the stamp font's WinAnsi encoding, (escaped) for a
+// PDF string; false if it has a character WinAnsi lacks
+static bool StampTextToWinAnsi(Str text, str::Builder& out, Vec<int>& codepoints) {
+    const u8* p = (const u8*)text.s;
+    const u8* end = p + len(text);
+    while (p < end) {
+        int n = utf8RuneLen(p);
+        if (n < 1 || p + n > end) {
+            return false;
+        }
+        int cp = p[0];
+        if (n == 2) {
+            cp = ((p[0] & 0x1f) << 6) | (p[1] & 0x3f);
+        } else if (n == 3) {
+            cp = ((p[0] & 0x0f) << 12) | ((p[1] & 0x3f) << 6) | (p[2] & 0x3f);
+        } else if (n == 4) {
+            cp = ((p[0] & 0x07) << 18) | ((p[1] & 0x3f) << 12) | ((p[2] & 0x3f) << 6) | (p[3] & 0x3f);
+        }
+        p += n;
+        int b = cp < 0x80 ? cp : fz_windows_1252_from_unicode(cp);
+        if (b <= 0) {
+            return false;
+        }
+        VecAppend(codepoints, cp);
+        if (b == '(' || b == ')' || b == '\\') {
+            out.AppendChar('\\');
+            out.AppendChar((char)b);
+        } else if (b < 0x20 || b >= 0x80) {
+            out.Append(fmt("\\%03o", b));
+        } else {
+            out.AppendChar((char)b);
+        }
+    }
+    return len(codepoints) > 0;
+}
+
+// pdf_page_obj's resource dictionary of `type` (Font, ExtGState), made a
+// dictionary of the page itself if it was inherited or missing
+static pdf_obj* PageResourceDict(fz_context* ctx, pdf_document* doc, pdf_obj* pageObj, pdf_obj* type) {
+    pdf_obj* res = pdf_dict_get(ctx, pageObj, PDF_NAME(Resources));
+    if (!res) {
+        pdf_obj* inherited = pdf_dict_get_inheritable(ctx, pageObj, PDF_NAME(Resources));
+        res = inherited ? pdf_copy_dict(ctx, inherited) : pdf_new_dict(ctx, doc, 2);
+        pdf_dict_put_drop(ctx, pageObj, PDF_NAME(Resources), res);
+    }
+    pdf_obj* dict = pdf_dict_get(ctx, res, type);
+    if (!dict) {
+        dict = pdf_dict_put_dict(ctx, res, type, 2);
+    }
+    return dict;
+}
+
+bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* errOut) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        *errOut = StrL("not a PDF");
+        return false;
+    }
+    auto* ctx = e->Ctx();
+    pdf_document* doc = e->pdfdoc;
+    ScopedRecursiveMutex pagesScope(&e->pagesLock);
+    ScopedRecursiveMutex docScope(&e->docLock);
+    fz_font* font = nullptr;
+    pdf_obj* fontRef = nullptr;
+    bool ok = true;
+    bool inOperation = false;
+    fz_var(font);
+    fz_var(fontRef);
+    fz_var(ok);
+    fz_var(inOperation);
+    fz_try(ctx) {
+        // one step of the undo journal the document keeps
+        pdf_begin_operation(ctx, doc, "Stamp text");
+        inOperation = true;
+        font = fz_new_base14_font(ctx, "Helvetica");
+        fontRef = pdf_add_simple_font(ctx, doc, font, PDF_SIMPLE_ENCODING_LATIN);
+        for (int i = 0; i < len(stamps) && ok; i++) {
+            const PdfStamp& st = stamps[i];
+            str::Builder encoded;
+            Vec<int> cps;
+            if (!StampTextToWinAnsi(st.text, encoded, cps)) {
+                *errOut = str::DupTemp(fmt("'%s' has a character the stamp's font (Latin) lacks", st.text));
+                ok = false;
+                break;
+            }
+            pdf_page* page = pdf_load_page(ctx, doc, st.pageNo - 1);
+            fz_try(ctx) {
+                // the page as it shows: rotated, from its top left, y down
+                fz_rect mediabox;
+                fz_matrix ctm;
+                pdf_page_transform(ctx, page, &mediabox, &ctm);
+                fz_rect vis = fz_transform_rect(mediabox, ctm);
+                float W = vis.x1 - vis.x0;
+                float H = vis.y1 - vis.y0;
+                float em = 0;
+                for (int cp : cps) {
+                    em += fz_advance_glyph(ctx, font, fz_encode_character(ctx, font, cp), 0);
+                }
+                float size = st.size;
+                bool diagonal = st.pos == PdfStampPos::Diagonal;
+                float angle = diagonal ? atan2f(H, W) : 0;
+                if (size <= 0) {
+                    // a watermark across 60% of the diagonal
+                    size = diagonal && em > 0 ? 0.6f * hypotf(W, H) / em : 10;
+                }
+                float w = em * size;
+                // glyph space (y up) into the page as shown (y down), turned
+                // counter-clockwise by angle
+                float c = cosf(angle), s = sinf(angle);
+                fz_point dir = {c, -s};
+                fz_point down = {s, c};
+                fz_point at;
+                if (diagonal) {
+                    // centered, the baseline a third of the size below the middle
+                    at.x = vis.x0 + W / 2 - dir.x * w / 2 + down.x * size * 0.35f;
+                    at.y = vis.y0 + H / 2 - dir.y * w / 2 + down.y * size * 0.35f;
+                } else {
+                    float m = st.margin;
+                    bool top = st.pos == PdfStampPos::TopLeft || st.pos == PdfStampPos::TopCenter ||
+                               st.pos == PdfStampPos::TopRight;
+                    bool left = st.pos == PdfStampPos::TopLeft || st.pos == PdfStampPos::BottomLeft;
+                    bool right = st.pos == PdfStampPos::TopRight || st.pos == PdfStampPos::BottomRight;
+                    at.x = vis.x0 + (left ? m : right ? W - m - w : (W - w) / 2);
+                    at.y = vis.y0 + (top ? m + size * 0.75f : H - m);
+                }
+                fz_matrix text = {c, -s, -s, -c, at.x, at.y};
+                fz_matrix tm = fz_concat(text, fz_invert_matrix(ctm));
+                pdf_obj* pageObj = page->obj;
+                TempStr fontName = fmt("SumatraStampF%d", i);
+                TempStr gsName = fmt("SumatraStampGS%d", i);
+                pdf_dict_puts(ctx, PageResourceDict(ctx, doc, pageObj, PDF_NAME(Font)), CStrTemp(fontName), fontRef);
+                pdf_obj* gs = pdf_new_dict(ctx, doc, 3);
+                pdf_dict_put(ctx, gs, PDF_NAME(Type), PDF_NAME(ExtGState));
+                pdf_dict_put_real(ctx, gs, PDF_NAME(ca), st.opacity);
+                pdf_dict_put_real(ctx, gs, PDF_NAME(CA), st.opacity);
+                pdf_dict_puts_drop(ctx, PageResourceDict(ctx, doc, pageObj, PDF_NAME(ExtGState)), CStrTemp(gsName),
+                                   pdf_add_object_drop(ctx, doc, gs));
+                // the page's own content in q / Q, so what it leaves set
+                // doesn't move or color the stamp
+                TempStr content = fmt(
+                    "\nQ\nq /%s gs %.3f %.3f %.3f rg BT /%s %.2f Tf %.4f %.4f %.4f %.4f %.2f %.2f Tm (%s) Tj ET Q\n",
+                    gsName, st.r / 255.f, st.g / 255.f, st.b / 255.f, fontName, size, tm.a, tm.b, tm.c, tm.d, tm.e,
+                    tm.f, ToStr(encoded));
+                fz_buffer* pre = fz_new_buffer_from_copied_data(ctx, (const unsigned char*)"q\n", 2);
+                fz_buffer* post = fz_new_buffer_from_copied_data(ctx, (const unsigned char*)content.s, len(content));
+                pdf_obj* preRef = pdf_add_stream(ctx, doc, pre, nullptr, 0);
+                pdf_obj* postRef = pdf_add_stream(ctx, doc, post, nullptr, 0);
+                fz_drop_buffer(ctx, pre);
+                fz_drop_buffer(ctx, post);
+                pdf_obj* old = pdf_dict_get(ctx, pageObj, PDF_NAME(Contents));
+                pdf_obj* arr = pdf_new_array(ctx, doc, 3);
+                pdf_array_push_drop(ctx, arr, preRef);
+                if (pdf_is_array(ctx, old)) {
+                    for (int k = 0; k < pdf_array_len(ctx, old); k++) {
+                        pdf_array_push(ctx, arr, pdf_array_get(ctx, old, k));
+                    }
+                } else if (old) {
+                    pdf_array_push(ctx, arr, old);
+                }
+                pdf_array_push_drop(ctx, arr, postRef);
+                pdf_dict_put_drop(ctx, pageObj, PDF_NAME(Contents), arr);
+            }
+            fz_always(ctx) {
+                fz_drop_page(ctx, (fz_page*)page);
+            }
+            fz_catch(ctx) {
+                fz_rethrow(ctx);
+            }
+        }
+        if (ok) {
+            pdf_end_operation(ctx, doc);
+        } else {
+            pdf_abandon_operation(ctx, doc);
+        }
+        inOperation = false;
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(ctx, fontRef);
+        fz_drop_font(ctx, font);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        *errOut = str::DupTemp(Str(fz_caught_message(ctx)));
+        ok = false;
+        if (inOperation) {
+            fz_try(ctx) {
+                pdf_abandon_operation(ctx, doc);
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+            }
+        }
+    }
+    return ok;
+}
+
 // Write a copy of the live PDF (with unsaved annotations) whose page i+1 shows
 // only cropBoxes[i], set as its CropBox; an empty box keeps the page as is.
 // Boxes are in PageMediabox() space. The open document is not changed.

@@ -116,7 +116,9 @@ static Str OptValue(CliCtx& cx, Str name) {
 // the options that take a value; any other --name is a flag
 static bool OptTakesValue(Str name) {
     static const char* names[] = {"--pages", "--password", "--password-env", "--new-password", "--new-password-env",
-                                  "-o",      "--output",   "--dpi",          "--install"};
+                                  "-o",      "--output",   "--dpi",          "--install",      "--opacity",
+                                  "--color", "--size",     "--format",       "--position",     "--start",
+                                  "--margin"};
     for (const char* n : names) {
         if (str::Eq(name, Str(n))) {
             return true;
@@ -2290,6 +2292,118 @@ static int CmdMarkdown(CliCtx& cx) {
     return kCliOk;
 }
 
+//--- watermark, number
+
+// "#rrggbb" or "rrggbb"
+static bool ParseHexColor(Str s, u8* r, u8* g, u8* b) {
+    str::TrimPrefix(s, StrL("#"));
+    if (len(s) != 6) {
+        return false;
+    }
+    int v[3];
+    for (int k = 0; k < 3; k++) {
+        int hi = 0, lo = 0;
+        char ch = s.s[2 * k], cl = s.s[2 * k + 1];
+        if (!isxdigit((u8)ch) || !isxdigit((u8)cl)) {
+            return false;
+        }
+        hi = isdigit((u8)ch) ? ch - '0' : (ch | 0x20) - 'a' + 10;
+        lo = isdigit((u8)cl) ? cl - '0' : (cl | 0x20) - 'a' + 10;
+        v[k] = hi * 16 + lo;
+    }
+    *r = (u8)v[0];
+    *g = (u8)v[1];
+    *b = (u8)v[2];
+    return true;
+}
+
+// a number option: def without it; false after reporting a bad one
+static bool FloatOpt(CliCtx& cx, Str name, float def, float lo, float hi, float* out, int* code) {
+    Str v = OptValue(cx, name);
+    *out = def;
+    if (len(v) == 0) {
+        return true;
+    }
+    char* end = nullptr;
+    double d = strtod(CStrTemp(v), &end);
+    if (!end || *end != 0 || d < lo || d > hi) {
+        *code = Fail(cx, kCliUsage, fmt("%s %s: use a number from %g to %g", name, v, (double)lo, (double)hi));
+        return false;
+    }
+    *out = (float)d;
+    return true;
+}
+
+// the stamps on the PDF given, saved as -o
+static int StampPdf(CliCtx& cx, Str path, Vec<PdfStamp>& stamps, Str dest, int nPages) {
+    int code = kCliOk;
+    EngineBase* engine = OpenDoc(cx, path, &code);
+    if (!engine) {
+        return code;
+    }
+    Str err;
+    bool ok =
+        EngineMupdfStampText(engine, stamps, &err) && (dir::CreateForFile(dest), EngineMupdfSaveCopy(engine, dest));
+    SafeEngineRelease(&engine);
+    if (!ok) {
+        return Fail(cx, len(err) > 0 ? kCliUsage : kCliFailed, len(err) > 0 ? err : fmt("couldn't write '%s'", dest));
+    }
+    return ReportPdfWritten(cx, dest, nPages);
+}
+
+static int CmdWatermark(CliCtx& cx) {
+    if (len(cx.positional) < 2) {
+        return Fail(cx, kCliUsage, StrL("usage: watermark <file.pdf> <text> -o <out.pdf>"));
+    }
+    Str path = cx.positional[0];
+    StrVec inputs;
+    inputs.Append(path);
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, inputs, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    float opacity = 0, size = 0;
+    if (!FloatOpt(cx, StrL("--opacity"), 0.25f, 0.01f, 1, &opacity, &code) ||
+        !FloatOpt(cx, StrL("--size"), 0, 1, 1000, &size, &code)) {
+        return code;
+    }
+    u8 r = 0x80, g = 0x80, b = 0x80;
+    Str color = OptValue(cx, StrL("--color"));
+    if (len(color) > 0 && !ParseHexColor(color, &r, &g, &b)) {
+        return Fail(cx, kCliUsage, fmt("--color %s: use #rrggbb", color));
+    }
+    int n = CheckPdf(cx, path, &code);
+    if (n == 0) {
+        return code;
+    }
+    // the page range needs the document: CheckPdf opened it once already
+    EngineBase* engine = OpenDoc(cx, path, &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    bool havePages = PagesArg(cx, engine, pages, &code);
+    SafeEngineRelease(&engine);
+    if (!havePages) {
+        return code;
+    }
+    Vec<PdfStamp> stamps;
+    for (int pageNo : pages) {
+        PdfStamp st;
+        st.pageNo = pageNo;
+        st.text = cx.positional[1];
+        st.pos = PdfStampPos::Diagonal;
+        st.size = size;
+        st.r = r;
+        st.g = g;
+        st.b = b;
+        st.opacity = opacity;
+        VecAppend(stamps, st);
+    }
+    return StampPdf(cx, path, stamps, dest, n);
+}
+
 //--- agent-skill
 
 // SKILL.md for Claude Code, Codex and other agents: when to use the cli and
@@ -2441,6 +2555,11 @@ static const CliCmd gCmds[] = {
      "encrypt a.pdf -o locked.pdf --new-password-env PDF_PW", CmdEncrypt},
     {"decrypt", "<file.pdf> -o <out.pdf> --password <pw>", "a copy of an encrypted PDF without the password",
      "-o <file>        the new PDF", "decrypt locked.pdf -o open.pdf --password-env PDF_PW", CmdDecrypt},
+    {"watermark", "<file.pdf> <text> -o <out.pdf>", "a copy of a PDF with text across its pages (Latin text)",
+     "-o <file>        the new PDF\n--pages <range>  only these pages\n--opacity <0-1>  default 0.25\n"
+     "--color <#rgb>   default #808080\n--size <pt>      default: across 60% of the page's diagonal",
+     "watermark report.pdf DRAFT -o draft.pdf\nwatermark a.pdf \"Do not copy\" --color #cc0000 --opacity 0.15 -o b.pdf",
+     CmdWatermark},
     {"agent-skill", "[--install claude|codex|agents|<dir>]",
      "the SKILL.md that tells an AI agent when and how to use these commands",
      "--install <where>  write it to ~/.claude/skills/sumatrapdf (claude), ~/.codex/skills (codex),\n"

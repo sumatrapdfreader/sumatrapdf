@@ -279,6 +279,12 @@ EXPORTS
 	fz_font_is_italic
 	fz_font_is_monospaced
 	fz_font_flags
+	pdf_add_simple_font
+	fz_new_base14_font
+	pdf_add_stream
+	pdf_dict_put_real
+	pdf_add_object_drop
+	fz_windows_1252_from_unicode
 
 	fz_new_stext_page
 
