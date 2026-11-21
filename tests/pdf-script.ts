@@ -395,7 +395,12 @@ export async function testit(): Promise<void> {
         await ui.setArg(value);
       }
     }
-    const args = await ui.args();
+    // ng reads the fields off the last frame, which may not have the last char yet
+    const args = await pollUntil(
+      () => ui.args(),
+      (got) => got.length === 2 && got[0] === input && got[1] === stem + ".3.pdf",
+      { timeoutMs: 3000, error: (got) => `bad default arguments: ${JSON.stringify(got)}` },
+    );
     const initialHeight = await ui.argumentHeight();
     const gap = await ui.argumentGap();
     const maxGapRows = 2;
