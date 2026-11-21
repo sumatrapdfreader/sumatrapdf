@@ -14,7 +14,7 @@
 
 import { IS_MAC } from "./host.ts";
 import { macClick } from "./mac-control.ts";
-import { cmdId, drainProcStderr, EXE, SLOW_BUILD_FACTOR, setFailureContext, USE_NG } from "./util.ts";
+import { cmdId, drainProcStderr, EXE, pollUntil, SLOW_BUILD_FACTOR, setFailureContext, USE_NG } from "./util.ts";
 import {
   testWindowPos,
   injectTouch,
@@ -583,6 +583,41 @@ export async function readContextMenuTree(hwnd: number): Promise<MenuItem[]> {
   postMessage(popup, WM_KEYDOWN, VK_ESCAPE, 0);
   await sleep(150);
   return items;
+}
+
+// Orig only: each top-level menu of the menu bar, read from its popup (the bar is
+// a toolbar, not an HMENU). Turns the menu bar on first; it is off with tabs.
+export async function readMenuBarTree(frame: number): Promise<MenuItem[][]> {
+  const kMenuBarCmdFirst = 50000; // Menu.cpp: the bar posts this + top-level index
+  const kMenuReopenMs = 550; // the bar ignores a re-open this soon after a close
+  sendMessage(frame, WM_COMMAND, cmdId("CmdToggleMenuBar"), 0);
+  await sleep(300);
+  const out: MenuItem[][] = [];
+  for (let i = 0; i < 20; i++) {
+    postMessage(frame, WM_COMMAND, kMenuBarCmdFirst + i, 0);
+    const popup = await waitForContextMenu(1500);
+    if (!popup) {
+      break;
+    }
+    const hmenu = getPopupMenuHandle(popup);
+    out.push(hmenu ? readMenuTree(hmenu) : []);
+    postMessage(popup, WM_KEYDOWN, VK_ESCAPE, 0);
+    await pollUntil(findVisiblePopupMenu, (h) => !h, { timeoutMs: 2000, error: "menu bar popup did not close" });
+    await sleep(kMenuReopenMs);
+  }
+  return out;
+}
+
+function findVisiblePopupMenu(): number {
+  let menu = 0;
+  enumWindows((h) => {
+    if (getClassName(h) === "#32768" && isWindowVisible(h)) {
+      menu = h;
+      return false;
+    }
+    return true;
+  });
+  return menu;
 }
 
 // Depth-first search for a submenu by its label (exact, & already stripped).

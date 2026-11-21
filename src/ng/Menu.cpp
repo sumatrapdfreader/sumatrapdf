@@ -605,6 +605,9 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
         }
         removeMenu |= !isSubMenu && cmdId == CmdSignWithImage && len(gSettings->annotations.signatureImage) == 0;
         removeMenu |= ((subMenuDef == menuDefDebug) && !ShowDebugMenu());
+        // orig builds the home page's menu bar without a tab, which hides all of
+        // Read Aloud; with a window its disabled Stop row would keep the menu
+        removeMenu |= ctx && !ctx->isDocLoaded && (subMenuDef == menuDefReadAloud);
         if (removeMenu) {
             continue;
         }
@@ -665,6 +668,36 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
     return menu;
 }
 
+// true if `it` is one of the page-layout toggles orig's MenuUpdateDisplayMode updates
+static bool SetFixedLayoutState(MenuItemModel& it, DisplayModel* dm) {
+    bool hasCrop = !dm->GetUserCrop().IsEmpty();
+    switch (it.cmdId) {
+        case CmdToggleMangaMode:
+            it.checked = dm->GetDisplayR2L();
+            return true;
+        case CmdToggleUniformPageWidth:
+            it.checked = dm->GetUniformPageWidth();
+            return true;
+        case CmdToggleTrimEmptyMargins:
+            it.checked = dm->GetTrimEmptyMargins();
+            return true;
+        case CmdShowWholePages:
+            it.disabled = !hasCrop;
+            return true;
+        case CmdSaveTrimmedPagesAs:
+            it.disabled = !hasCrop && !dm->GetTrimEmptyMargins();
+            return true;
+        case CmdToggleReadColumns:
+            it.checked = dm->GetReadColumns();
+            return true;
+        case CmdToggleColumnsWholePage:
+            it.disabled = !dm->GetReadColumns();
+            it.checked = dm->ShowsColumnsWholePage();
+            return true;
+    }
+    return false;
+}
+
 // ng: orig checks the radio items through MENUITEMINFO; here the model carries
 // the flag and the shell draws the tick
 static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
@@ -722,6 +755,11 @@ static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
         if (it.cmdId == CmdToggleMirror) {
             DisplayModel* dmMirror = win->AsFixed();
             it.checked = dmMirror && dmMirror->GetMirror();
+            continue;
+        }
+        // orig's MenuUpdateDisplayMode: the page-layout toggles of a fixed document
+        DisplayModel* dm = win->CurrentTab() ? win->AsFixed() : nullptr;
+        if (dm && SetFixedLayoutState(it, dm)) {
             continue;
         }
         if (it.cmdId == CmdTogglePageGrid) {
