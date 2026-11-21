@@ -1024,16 +1024,45 @@ static bool IsBulletStart(Str s, int* skip) {
     return false;
 }
 
-// "12. " or "3) ": the length of the number and its mark
+// a list item's number at the start of a line: "12. ", "3) ", "a) ", "(iv) ",
+// "(3) ". Returns the length of the number and its mark, 0 if there's none.
+// "2024. was a year" isn't one: a list doesn't go past 3 digits
 static int NumberedStart(Str s) {
+    int n = len(s);
     int i = 0;
-    while (i < len(s) && i < 4 && s.s[i] >= '0' && s.s[i] <= '9') {
+    bool paren = n > 0 && s.s[0] == '(';
+    if (paren) {
         i++;
     }
-    if (i == 0 || i + 1 >= len(s) || (s.s[i] != '.' && s.s[i] != ')') || s.s[i + 1] != ' ') {
+    int start = i;
+    while (i < n && i - start < 4 && s.s[i] >= '0' && s.s[i] <= '9') {
+        i++;
+    }
+    if (i == start) {
+        // a letter (a, b, ...) or a roman number (iv, xii) in lower case
+        while (i < n && i - start < 5 && s.s[i] >= 'a' && s.s[i] <= 'z') {
+            i++;
+        }
+        int nLetters = i - start;
+        bool roman = nLetters > 0;
+        for (int k = start; k < i; k++) {
+            roman = roman && strchr("ivxlc", s.s[k]) != nullptr;
+        }
+        if (nLetters == 0 || (nLetters > 1 && !roman)) {
+            return 0;
+        }
+    } else if (i - start > 3) {
         return 0;
     }
-    return i;
+    if (i >= n) {
+        return 0;
+    }
+    char mark = s.s[i];
+    bool ok = paren ? mark == ')' : (mark == '.' || mark == ')');
+    if (!ok || i + 1 >= n || s.s[i + 1] != ' ') {
+        return 0;
+    }
+    return i + 1;
 }
 
 // what markdown would take as markup at the start of a paragraph
@@ -1042,6 +1071,36 @@ static TempStr EscapeLineStartTemp(Str s) {
         return fmt("\\%s", s);
     }
     return str::DupTemp(s);
+}
+
+// where each line of spans [from, to) starts, and to at the end
+static void LineStarts(const StyledPage& p, int from, int to, Vec<int>& starts) {
+    for (int i = from; i < to; i++) {
+        if (i == from || p.spans[i].line != p.spans[i - 1].line) {
+            VecAppend(starts, i);
+        }
+    }
+    VecAppend(starts, to);
+}
+
+// whether the line starting with span i is a list item: a bullet (whose bytes,
+// spaces before it included, go in *skip) or a number (which stays)
+static bool LineListMarker(const StyledPage& p, int i, bool* bullet, int* skip) {
+    Str t = p.spans[i].text;
+    int lead = 0;
+    while (lead < len(t) && t.s[lead] == ' ') {
+        lead++;
+    }
+    Str rest(t.s + lead, len(t) - lead);
+    int n = 0;
+    if (IsBulletStart(rest, &n)) {
+        *bullet = true;
+        *skip = lead + n;
+        return true;
+    }
+    *bullet = false;
+    *skip = lead;
+    return NumberedStart(rest) > 0;
 }
 
 struct MdDoc {
@@ -1064,8 +1123,9 @@ static int HeadingLevelForSize(MdDoc& d, float size) {
 }
 
 // the spans of one block as markdown: lines joined into a paragraph, styles as
-// ** and *, monospaced runs as `code`
-static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepLines) {
+// ** and *, monospaced runs as `code`. skipFirst: bytes of the first span to
+// leave out (a list item's bullet)
+static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepLines, int skipFirst = 0) {
     str::Builder out;
     int line = -1;
     bool joined = false;
@@ -1089,6 +1149,9 @@ static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepL
             joined = s.lineJoined;
         }
         Str text = s.text;
+        if (i == from && skipFirst > 0) {
+            text = Str(text.s + std::min(skipFirst, len(text)), std::max(0, len(text) - skipFirst));
+        }
         if (keepLines) {
             out.Append(text);
             continue;
@@ -1224,21 +1287,30 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
         } else if (nMono * 10 >= nChars * 9) {
             out.Append(fmt("```\n%s\n```\n\n", BlockInlineTemp(p, i, end, true)));
         } else {
-            // a list: each line that starts with a bullet or a number is an item
+            bool bullet = false;
             int skip = 0;
-            TempStr first = str::DupTemp(p.spans[i].text);
-            str::TrimWSInPlace(first, str::TrimOpt::Left);
-            bool bullet = IsBulletStart(first, &skip);
-            int num = bullet ? 0 : NumberedStart(first);
-            TempStr text = BlockInlineTemp(p, i, end, false);
-            str::TrimWSInPlace(text, str::TrimOpt::Both);
-            if (bullet) {
-                Str rest = text;
-                IsBulletStart(rest, &skip);
-                out.Append(fmt("- %s\n\n", Str(rest.s + skip, len(rest) - skip)));
-            } else if (num > 0) {
-                out.Append(fmt("%s\n\n", text));
+            if (LineListMarker(p, i, &bullet, &skip)) {
+                // a list: each line that starts with a bullet or a number is an
+                // item, the lines after it until the next one carry it on
+                Vec<int> starts;
+                LineStarts(p, i, end, starts);
+                for (int k = 0; k + 1 < len(starts);) {
+                    LineListMarker(p, starts[k], &bullet, &skip);
+                    int e = k + 1;
+                    bool b2;
+                    int s2;
+                    while (e + 1 < len(starts) && !LineListMarker(p, starts[e], &b2, &s2)) {
+                        e++;
+                    }
+                    TempStr item = BlockInlineTemp(p, starts[k], starts[e], false, skip);
+                    str::TrimWSInPlace(item, str::TrimOpt::Both);
+                    out.Append(fmt("%s%s\n", bullet ? StrL("- ") : StrL(""), item));
+                    k = e;
+                }
+                out.AppendChar('\n');
             } else {
+                TempStr text = BlockInlineTemp(p, i, end, false);
+                str::TrimWSInPlace(text, str::TrimOpt::Both);
                 out.Append(fmt("%s\n\n", EscapeLineStartTemp(text)));
             }
         }
