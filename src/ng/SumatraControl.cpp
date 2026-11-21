@@ -2941,10 +2941,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             CanvasBmpWrapStats(wrapMs, wrapCount);
             int nEntries = 0;
             i64 cacheBytes = gRenderCache ? gRenderCache->CacheBytes(nEntries) : 0;
-            AppendTestResult(
-                req, 0,
-                fmt("%s bmpWrapMs=%.0f bmpWrapCount=%d cacheEntries=%d/%d cacheKB=%d firstPaintMs=%.0f", frames, wrapMs,
-                    wrapCount, nEntries, kMaxBitmapsCached, (int)(cacheBytes / 1024), CanvasFirstPaintMs()));
+            const char* shownWhy = "";
+            AppendTestResult(req, 0,
+                             fmt("%s bmpWrapMs=%.0f bmpWrapCount=%d cacheEntries=%d/%d cacheKB=%d firstPaintMs=%.0f "
+                                 "windowShownMs=%.0f "
+                                 "windowShownWhy=%s",
+                                 frames, wrapMs, wrapCount, nEntries, kMaxBitmapsCached, (int)(cacheBytes / 1024),
+                                 CanvasFirstPaintMs(), AppShellStartupShownMs(&shownWhy), Str(shownWhy)));
             break;
         }
 

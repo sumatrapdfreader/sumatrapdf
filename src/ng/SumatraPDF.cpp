@@ -7825,7 +7825,11 @@ int GpuiMain(int argc, char** argv) {
     SumatraUpdateTheme();
 
     Size size = NewWindowSize(nullptr);
-    MainWindow* win = AppShellCreateWindow(app, size.dx, size.dy);
+    // macOS paints a window that isn't on screen yet, so the startup window
+    // comes on screen with page 1 drawn in it instead of a blank page. A
+    // Windows window gets no WM_PAINT while hidden.
+    bool hiddenUntilReady = OS_DARWIN && !gFlags->quickLook;
+    MainWindow* win = AppShellCreateWindow(app, size.dx, size.dy, hiddenUntilReady);
     win->pageInfoWanted = GetPageInfoBarMode() != PageInfoBarMode::Notification;
     if (!gFlags->quickLook) {
         PlaceMainWindow(win, nullptr, PlaceWindowWhen::Now);

@@ -13,7 +13,10 @@ struct MouseMoveEvent;
 struct MainWindow;
 
 // creates the gpui window, its root view and the MainWindow that owns them
-MainWindow* AppShellCreateWindow(gpui::App* app, int dipW, int dipH);
+// hiddenUntilReady: the startup window, shown once it can show page 1
+MainWindow* AppShellCreateWindow(gpui::App* app, int dipW, int dipH, bool hiddenUntilReady = false);
+// when the startup window came on screen, ms from process start (-1: not yet)
+double AppShellStartupShownMs(const char** whyOut);
 // the app the first window was created with, so a second one needs no plumbing
 gpui::App* AppShellGetApp();
 // ng: the theme is installed before the first window opens, so the app has to

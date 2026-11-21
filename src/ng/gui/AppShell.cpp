@@ -168,7 +168,61 @@ struct ShellView {
 struct ShellUI {
     gp::Entity<ShellView> view;
     gp::FocusHandle frameFocus;
+    // the startup window stays hidden until it can show page 1 (see
+    // MaybeRevealStartupWindow), not a blank page while it renders
+    bool hiddenUntilReady = false;
+    double hiddenSince = 0;
+    int framesBuilt = 0;
 };
+
+// when the startup window came on screen (ms from process start) and why;
+// -1 before. For -dbg-control's TestPerfStats
+static double gStartupShownMs = -1;
+static const char* gStartupShownWhy = "";
+
+double AppShellStartupShownMs(const char** whyOut) {
+    if (whyOut) {
+        *whyOut = gStartupShownWhy;
+    }
+    return gStartupShownMs;
+}
+
+// a page that may take this long to render gets the window shown without it
+constexpr int kStartupRevealMaxMs = 1000;
+
+// The startup window comes on screen with page 1 drawn in it: once a page
+// tile has been painted, or at once when there is no page to wait for (the
+// home page, a document that isn't pages), or when a dialog needs the window
+// (a password prompt), or after kStartupRevealMaxMs at the latest.
+static void MaybeRevealStartupWindow(MainWindow* win) {
+    ShellUI* ui = win->shell;
+    if (!ui || !ui->hiddenUntilReady || !win->gpuiWin) {
+        return;
+    }
+    const char* why = nullptr;
+    WindowTab* tab = win->CurrentTab();
+    // a document being loaded, or loaded with pages; not one that failed
+    bool loading = tab && (tab->loadState == WindowTab::LoadState::Loading ||
+                           tab->loadState == WindowTab::LoadState::LoadedPending);
+    bool waitsForPage = tab && !win->IsCurrentTabAbout() && (loading || (win->IsDocLoaded() && win->AsFixed()));
+    if ((gp::TimeNow() - ui->hiddenSince) * 1000 >= kStartupRevealMaxMs) {
+        why = "deadline";
+    } else if (ToolWindowModalOf(win) || ToolWindowActiveOf(win)) {
+        why = "dialog";
+    } else if (ui->framesBuilt > 0 && !waitsForPage) {
+        why = "no-page";
+    } else if (ui->framesBuilt > 0 && win->IsDocLoaded() && CanvasFirstPaintMs() >= 0) {
+        why = "page";
+    }
+    if (!why) {
+        return;
+    }
+    ui->hiddenUntilReady = false;
+    gStartupShownMs = AppElapsedMs();
+    gStartupShownWhy = why;
+    logf("MaybeRevealStartupWindow: shown after %.0f ms (%s)\n", gStartupShownMs, Str(why));
+    gp::WindowSetVisible(win->gpuiWin, true, true);
+}
 
 static gp::Entity<ShellView> ShellViewOf(MainWindow* win) {
     return win->shell ? win->shell->view : gp::Entity<ShellView>{};
@@ -3223,6 +3277,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
+    MaybeRevealStartupWindow(win);
 #if OS_DARWIN || OS_WASM
     ApplyRenderScale(win);
 #endif
@@ -3463,6 +3518,14 @@ Rect AppShellPredictCanvasRc(MainWindow* win, CanvasPredict predict) {
 gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     // everything drawn this frame is allocated after this point
     ResetTempArena();
+    if (self->win && self->win->shell) {
+        self->win->shell->framesBuilt++;
+        // a window shown at once is on screen with its first frame
+        if (gStartupShownMs < 0 && !self->win->shell->hiddenUntilReady) {
+            gStartupShownMs = AppElapsedMs();
+            gStartupShownWhy = "first-frame";
+        }
+    }
     DlgAccelBeginFrame(cx->win);
 
     MainWindow* win = self->win;
@@ -3672,7 +3735,7 @@ static bool OnWindowShouldClose(void* data, gp::Window*) {
     return false;
 }
 
-MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH) {
+MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH, bool hiddenUntilReady) {
     bool isFirst = (len(gWindows) == 0);
     gApp = app;
     auto* ui = new ShellUI();
@@ -3683,6 +3746,10 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH) {
     // orig sets tabsInTitlebar from UseTabs when it creates the frame
     gp::WinOpts opts;
     opts.clientTitleBar = CanHaveTabsInTitlebar() && (SettingsUseTabs() || !gSettings->showCaption);
+    // drawn while hidden; MaybeRevealStartupWindow shows it
+    opts.show = !hiddenUntilReady;
+    ui->hiddenUntilReady = hiddenUntilReady;
+    ui->hiddenSince = gp::TimeNow();
     gp::Window* gw = gp::WindowOpenView(app, GStrL("SumatraPDF"), dipW, dipH, ui->view.id, opts);
     // wasm has one window: a browser tab has one canvas
     if (!gw) {
