@@ -711,7 +711,6 @@ void SidebarToggleLayers(MainWindow* win) {
 
 static float ScrollToRow(float scrollY, float viewH, int idx, int nRows);
 static bool LayersOnKeyDown(MainWindow* win, SidebarUI* ui, int vkey);
-static TempStr LayersTestTemp(MainWindow* win, Str op, int arg);
 static int TopPaneDy(MainWindow* win);
 
 // orig's TocTreeKeyDown / FavTreeKeyDown: Esc clears the search and focuses
@@ -1202,11 +1201,6 @@ TempStr SidebarTestToc(MainWindow* win, Str op, int arg) {
     if (str::Eq(op, StrL("focus"))) {
         SidebarFocusPanel(win, SidebarSlot::Top);
         return SidebarPanelHasFocus(win, SidebarSlot::Top) ? StrL("ok") : StrL("ERR no-focus");
-    }
-    // the Layers pane: "layers-show" toggles it, "layer-toggle" <row> clicks a
-    // row; each answers with the pane's visibility, the saved state and the rows
-    if (win && str::StartsWith(op, StrL("layer"))) {
-        return LayersTestTemp(win, op, arg);
     }
     TocTree* tree = win ? CurrentTocTree(win) : nullptr;
     TocItem* root = tree && tree->root ? tree->root->child : nullptr;
@@ -2780,19 +2774,57 @@ static gp::El* BuildLayersPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     return pane;
 }
 
-static TempStr LayersTestTemp(MainWindow* win, Str op, int arg) {
+// for tests: how many red and blue pixels page 1 has, rendered at 100% the way
+// the window renders it (the cached display list)
+static TempStr PageRedBlueTemp(EngineBase* engine) {
+    if (!engine) {
+        return {};
+    }
+    RenderPageArgs args(1, 1.f, 0, nullptr, RenderTarget::View);
+    // takes bmp
+    Pixmap* rgb = PixmapToBgra(engine->RenderPage(args));
+    int red = 0;
+    int blue = 0;
+    for (int y = 0; rgb && rgb->data && y < rgb->height; y++) {
+        const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+        for (int x = 0; x < rgb->width; x++) {
+            const u8* px = row + ((size_t)x * 4);
+            int b = px[0];
+            int g = px[1];
+            int r = px[2];
+            red += (r > 180 && g < 80 && b < 80) ? 1 : 0;
+            blue += (b > 180 && r < 80 && g < 80) ? 1 : 0;
+        }
+    }
+    FreePixmap(rgb);
+    return fmt("red=%d blue=%d\n", red, blue);
+}
+
+// -dbg-control's TestLayers, as orig's LayersStateTemp: "toggle <row>", "show"
+// or "colors", then one "<depth> <kind> <on> <text>" line per row, kind being
+// label, checkbox or radio
+TempStr SidebarTestLayers(MainWindow* win, Str action) {
     SidebarUI* ui = Ui(win);
-    if (str::Eq(op, StrL("layers-show"))) {
+    if (str::StartsWith(action, StrL("toggle "))) {
+        ToggleLayer(win, ParseInt(Str(action.s + 7, len(action) - 7)));
+    } else if (str::Eq(action, StrL("show")) && !SidebarContentVisible(win, SidebarContent::Layers)) {
         SidebarToggleLayers(win);
-    } else if (str::Eq(op, StrL("layer-toggle"))) {
-        ToggleLayer(win, arg);
     }
     ReloadLayerRows(win, ui);
     str::Builder out;
+    if (str::Eq(action, StrL("colors"))) {
+        out.Append(PageRedBlueTemp(LayersEngine(win)));
+    }
     out.Append(fmt("panel=%d\n", SidebarContentVisible(win, SidebarContent::Layers) ? 1 : 0));
     out.Append(fmt("states=%s\n", EngineMupdfChangedLayerStatesTemp(LayersEngine(win))));
     for (PdfLayerRow* row : ui->layerRows) {
-        out.Append(fmt("%d %d %d %s\n", row->depth, (int)row->kind, row->on ? 1 : 0, row->text));
+        Str kind = StrL("checkbox");
+        if (row->kind == PdfLayerKind::Label) {
+            kind = StrL("label");
+        } else if (row->kind == PdfLayerKind::Radio) {
+            kind = StrL("radio");
+        }
+        out.Append(fmt("%d %s %d %s\n", row->depth, kind, row->on ? 1 : 0, row->text));
     }
     return ToStrTemp(out);
 }

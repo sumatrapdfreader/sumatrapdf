@@ -61,6 +61,7 @@ bool SidebarContextMenuFromKey(MainWindow*, gpui::Ctx* cx);
 // for -dbg-control's TestUiState
 TempStr SidebarStateTemp(MainWindow*);
 TempStr SidebarTestToc(MainWindow*, Str op, int arg);
+TempStr SidebarTestLayers(MainWindow*, Str action);
 // orig's sidebarTop / sidebarMiddle / sidebarBottom panels: where the keyboard
 // goes in one (its tree, or the panel for thumbnails) and whether it is there
 enum class SidebarSlot;

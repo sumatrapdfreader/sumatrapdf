@@ -730,6 +730,8 @@ enum class ControlCmd : u16 {
     // [srcWin, tabIdx, dstWin]: move a tab as a drag does (-1 = new window);
     // tabIdx < 0 only lists every window's tabs
     TestMigrateTab = 151,
+    // [toggle <row> | show | colors]: the Layers pane's rows (see SidebarTestLayers)
+    TestLayers = 152,
     // the word count notification's text
     TestWordCount = 154,
     // the page info tip's text
@@ -1960,6 +1962,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = DestZoomNavResultTemp(destNo, startZoomPerc, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestLayers: {
+            MainWindow* win = FirstWindow();
+            AppendTestResult(req, 0, win ? SidebarTestLayers(win, StringArg(req, 0)) : TempStr{});
             break;
         }
 
