@@ -512,12 +512,20 @@ static void DestroyNow(ToolWindow* tw) {
     if (!IsLive(tw)) {
         return;
     }
+    MainWindow* owner = tw->owner;
+    bool wasActive = tw->gw && gp::WindowIsActive(tw->gw);
     if (tw->gw) {
         // OnGpuiWindowClosed forgets it
         gp::AppQuit(tw->gw);
     }
     if (IsLive(tw)) {
         Forget(tw);
+    }
+    // Windows activates the owner of a closed active window; macOS could
+    // leave no window with the keys (after the ⌃Tab switcher)
+    gp::Window* ownerGw = OwnerGpui(owner);
+    if (wasActive && ownerGw && IsMainWindowValidAndNotClosing(owner)) {
+        gp::WindowActivateInApp(ownerGw);
     }
 }
 
