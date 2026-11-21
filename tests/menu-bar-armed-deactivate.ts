@@ -2,11 +2,13 @@
 // open). Win32 lets go of it when the window is deactivated; ng kept it, so
 // the keys typed after switching back went to the menu bar.
 //
-// ng only: orig's menu bar is win32's.
+// ng only: orig's menu bar is win32's. Not on macOS, where ng's menu bar is
+// the system's.
 // Run: bun tests/menu-bar-armed-deactivate.ts [--no-build] -ng
 
 import { join } from "node:path";
 import { type ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { pollUntil, ROOT, runStandalone, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import { sendMessage } from "./winapi.ts";
@@ -31,6 +33,10 @@ async function input(client: ControlClient, args: (string | number)[]): Promise<
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log("SKIP menu-bar-armed-deactivate: ng only (run with -ng)");
+    return;
+  }
+  if (IS_MAC) {
+    console.log("SKIP menu-bar-armed-deactivate: the menu bar is the system's on macOS (AppShellNativeMenu)");
     return;
   }
   const { proc, client, frame } = await launchControlled([PDF]);
