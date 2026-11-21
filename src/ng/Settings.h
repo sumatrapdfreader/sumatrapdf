@@ -922,6 +922,9 @@ struct HtmlUI {
 struct Settings {
     // if true, show the current page as n/N after the file name on tabs
     bool showPageNumberInTabs;
+    // height in points of a thin bar along the bottom of the document that
+    // shows how far into it the current page is; 0 or less means no bar
+    float progressBarDy;
     // what the sidebar's bottom panel shows: favorites (the default),
     // bookmarks or thumbnails
     Str sidebarBottomView;

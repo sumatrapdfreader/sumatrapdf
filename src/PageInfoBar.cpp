@@ -164,6 +164,25 @@ void PageInfoBarUpdate(MainWindow* win) {
     host->Invalidate();
 }
 
+// the reading progress bar (#6572) sits above the page info bar when that is over the canvas
+bool ProgressBarCanvasRects(MainWindow* win, Rect* doneOut, Rect* restOut) {
+    if (!win || !win->hwndCanvas) {
+        return false;
+    }
+    Size canvas = HwndClientRect(win->hwndCanvas).Size();
+    int inset = PageInfoBarOverlays(win) ? std::min(PageInfoBarDy(win), canvas.dy) : 0;
+    return ProgressBarRects(win, canvas, DpiGetForHwnd(win->hwndCanvas), inset, doneOut, restOut);
+}
+
+void ProgressBarPaint(MainWindow* win, Gfx* gfx) {
+    Rect done, rest;
+    if (!ProgressBarCanvasRects(win, &done, &rest)) {
+        return;
+    }
+    gfx->FillRects(&done, 1, ProgressBarDoneColor(), 255);
+    gfx->FillRects(&rest, 1, ProgressBarRestColor(), 255);
+}
+
 TempStr PageInfoBarGeometryTemp(MainWindow* win) {
     Rect c = ChildPosWithinParent(win->hwndCanvas);
     Rect cr = HwndClientRect(win->hwndCanvas);

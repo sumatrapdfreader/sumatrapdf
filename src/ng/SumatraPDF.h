@@ -150,6 +150,10 @@ void ShowPageInfoIfWanted(MainWindow* win);
 bool PageInfoBarTakesRow(MainWindow* win);
 bool PageInfoBarOverlays(MainWindow* win);
 void PageInfoBarTextTemp(MainWindow* win, TempStr* leftOut, TempStr* rightOut);
+Color ProgressBarDoneColor();
+Color ProgressBarRestColor();
+bool ProgressBarRects(MainWindow* win, Size canvas, int dpi, int bottomInset, Rect* doneOut, Rect* restOut);
+bool ProgressBarCanvasRects(MainWindow* win, Rect* doneOut, Rect* restOut);
 #if OS_WIN
 void ShowDefaultAppNotification(MainWindow* win, const StrVec& missing);
 // orig's window picker. hwndRestore gets focus back when the picker closes.

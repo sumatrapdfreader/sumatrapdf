@@ -3437,6 +3437,19 @@ TempStr PageInfoBarGeometryTemp(MainWindow* win) {
     return fmt("%s bar=%d,%d,%d,%d", canvas, b.x, b.y, b.dx, b.dy);
 }
 
+// the reading progress bar (#6572), in viewport px; above the page info bar
+// when that is over the canvas
+bool ProgressBarCanvasRects(MainWindow* win, Rect* doneOut, Rect* restOut) {
+    if (!IsMainWindowValid(win) || !win->AsFixed()) {
+        return false;
+    }
+    Size vp = win->AsFixed()->GetViewPort().Size();
+    float k = CanvasScale(win);
+    int dpi = (int)lroundf(96.f / k);
+    int inset = PageInfoBarOverlays(win) ? (int)lroundf((float)kPageInfoBarDy / k) : 0;
+    return ProgressBarRects(win, vp, dpi, inset, doneOut, restOut);
+}
+
 static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool menuBarShown, bool tabsVisible) {
     int chromeDy;
     if (ShowCaption(win)) {

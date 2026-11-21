@@ -826,7 +826,16 @@ TempStr PageInfoBarResultTemp(int* exitCodeOut) {
     TempStr left;
     TempStr right;
     PageInfoBarTextTemp(win, &left, &right);
-    return fmt("OK place=%s %s\nleft=%s\nright=%s\n", place, PageInfoBarGeometryTemp(win), left, right);
+    TempStr res = fmt("OK place=%s %s\nleft=%s\nright=%s\n", place, PageInfoBarGeometryTemp(win), left, right);
+
+    // the reading progress bar (#6572), in canvas coordinates
+    Rect done, rest;
+    if (!ProgressBarCanvasRects(win, &done, &rest)) {
+        return str::JoinTemp(res, StrL("progress=none\n"));
+    }
+    auto hex = [](Color c) { return fmt("%02x%02x%02x", (int)GetRed(c), (int)GetGreen(c), (int)GetBlue(c)); };
+    return fmt("%sprogress=%d,%d,%d,%d done=%d doneCol=%s restCol=%s\n", res, done.x, done.y, done.dx + rest.dx,
+               done.dy, done.dx, hex(ProgressBarDoneColor()), hex(ProgressBarRestColor()));
 }
 
 // action: "get" | "r2l" | "presentation" | "fullscreen"

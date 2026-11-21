@@ -550,6 +550,38 @@ bool PageInfoBarShown(MainWindow* win) {
     return win->windowMode != WindowMode::PresentationBlack && win->windowMode != WindowMode::PresentationWhite;
 }
 
+//--- the reading progress bar (ProgressBarDy, #6572)
+
+Color ProgressBarDoneColor() {
+    return ThemeWindowLinkColor();
+}
+
+Color ProgressBarRestColor() {
+    return ThemeControlBackgroundColor();
+}
+
+// A thin bar along the bottom of the canvas, ending bottomInset px above it, with
+// the done part as far across as the current page is through the document.
+// dpi converts the setting's points to px.
+bool ProgressBarRects(MainWindow* win, Size canvas, int dpi, int bottomInset, Rect* doneOut, Rect* restOut) {
+    float pt = gSettings->progressBarDy;
+    if (pt <= 0 || !win || !win->IsDocLoaded() || !win->AsFixed() || win->InPresentation()) {
+        return false;
+    }
+    int dy = std::max((int)lroundf(pt * (float)dpi / 72.f), 1);
+    int y = canvas.dy - bottomInset - dy;
+    if (canvas.dx <= 0 || y < 0) {
+        return false;
+    }
+    DocController* ctrl = win->ctrl;
+    int nPages = std::max(ctrl->PageCount(), 1);
+    int pageNo = limitValue(ctrl->CurrentPageNo(), 1, nPages);
+    int doneDx = (int)(((i64)canvas.dx * pageNo) / nPages);
+    *doneOut = Rect{0, y, doneDx, dy};
+    *restOut = Rect{doneDx, y, canvas.dx - doneDx, dy};
+    return true;
+}
+
 // the left half only changes with the document, and reads the disk and the
 // document's properties: built once per document
 struct PageInfoBarFileCache {

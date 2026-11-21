@@ -68,6 +68,7 @@
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
+#include "PageInfoBar.h"
 #include "HomePage.h"
 #include "Commands.h"
 #include "Toolbar.h"
@@ -3220,6 +3221,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
 
     PaintKeyboardLinkTargets(win, &gfx);
     PaintKeyboardTextCaret(win, &gfx);
+    ProgressBarPaint(win, &gfx);
 
     if (!rendering) {
         DebugShowLinks(dm, hdc);

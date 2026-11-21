@@ -3766,6 +3766,11 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     PaintFindFlash(win, ctx);
     PaintKeyboardTextCaret(win, ctx);
     PaintKeyboardLinkTargets(win, ctx);
+    Rect done, rest;
+    if (ProgressBarCanvasRects(win, &done, &rest)) {
+        CanvasFillRects(ctx, &done, 1, ProgressBarDoneColor(), 255, 0);
+        CanvasFillRects(ctx, &rest, 1, ProgressBarRestColor(), 255, 0);
+    }
     UpdateSelectionToolbarPosition(win);
     // The flip swapchain keeps three buffers, and an identical scene does not
     // present. A fresh prim each paint fills every buffer with this frame.

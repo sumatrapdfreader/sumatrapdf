@@ -5,11 +5,13 @@
 // when PageInfoLocation is bottom or bottom-overlay (#6494).
 
 struct PageInfoBar;
+struct Gfx;
 struct MainWindow;
 
 bool PageInfoBarTakesRow(MainWindow*);
 bool PageInfoBarOverlays(MainWindow*);
 int PageInfoBarDy(MainWindow*);
+void ProgressBarPaint(MainWindow*, Gfx*);
 HWND PageInfoBarEnsure(MainWindow*);
 void PageInfoBarSetVisible(MainWindow*, bool visible);
 void PageInfoBarUpdate(MainWindow*);

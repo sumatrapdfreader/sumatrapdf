@@ -35,6 +35,12 @@ void PageInfoBarTextTemp(MainWindow* win, TempStr* leftOut, TempStr* rightOut);
 void PageInfoBarChanged(MainWindow* win);
 // implemented by each app: "canvas=x,y,dx,dy bar=x,y,dx,dy" (or bar=none), for tests
 TempStr PageInfoBarGeometryTemp(MainWindow* win);
+// ProgressBarDy
+Color ProgressBarDoneColor();
+Color ProgressBarRestColor();
+bool ProgressBarRects(MainWindow* win, Size canvas, int dpi, int bottomInset, Rect* doneOut, Rect* restOut);
+// implemented by each app: the bar in canvas coordinates; false when there is none
+bool ProgressBarCanvasRects(MainWindow* win, Rect* doneOut, Rect* restOut);
 bool ShouldUseBrowserView(FileType kind);
 struct CustomCommand;
 void ToggleCaption(CustomCommand* cmd);

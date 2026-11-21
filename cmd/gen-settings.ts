@@ -1749,6 +1749,13 @@ const globalPrefs: Field[] = [
     .enum(["notification", "legacy", "bottom", "bottom-overlay"])
     .ver("3.7"),
   field(
+    "ProgressBarDy",
+    Float,
+    0,
+    "height in points of a thin bar along the bottom of the document that shows how far into it the " +
+      "current page is; 0 or less means no bar",
+  ).ver("3.7"),
+  field(
     "SearchUIFloating",
     Bool,
     false,
