@@ -8,8 +8,8 @@
 import { writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { cmdId, tmpPath, assemblePdf, runStandalone } from "./util";
-import { findCanvas, launchControlled, killAndWait } from "./win-automation";
+import { cmdId, tmpPath, assemblePdf, pollUntil, runStandalone } from "./util";
+import { canvasBox, findCanvas, launchControlled, killAndWait, type CanvasBox } from "./win-automation";
 import { captureWindowPixels, sendMessage, WM_COMMAND } from "./winapi";
 
 const PAGE_DX = 612;
@@ -44,23 +44,31 @@ async function pageAspect(client: ControlClient): Promise<number> {
   return Number(page[3]) / Number(page[4]);
 }
 
-// number of canvas pixels of the quadrants other than red
-function nonRedQuadrantPixels(canvas: number): { red: number; other: number } {
+// number of document pixels of the quadrants other than red (ng's canvas
+// window is the frame: only its canvas box is the document)
+function nonRedQuadrantPixels(canvas: number, box: CanvasBox): { red: number; other: number } {
   const cap = captureWindowPixels(canvas);
   if (!cap) {
     throw new Error("could not capture the canvas");
   }
-  const { data } = cap;
+  const { data, w, h } = cap;
   let red = 0;
   let other = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    const b = data[i]!;
-    const g = data[i + 1]!;
-    const r = data[i + 2]!;
-    if (r > 150 && g < 100 && b < 100) {
-      red++;
-    } else if ((g > 100 && r < 100 && b < 100) || (b > 150 && r < 100 && g < 100) || (r > 150 && g > 150 && b < 100)) {
-      other++;
+  for (let y = box.y; y < Math.min(h, box.y + box.h); y++) {
+    for (let x = box.x; x < Math.min(w, box.x + box.w); x++) {
+      const i = (y * w + x) * 4;
+      const b = data[i]!;
+      const g = data[i + 1]!;
+      const r = data[i + 2]!;
+      if (r > 150 && g < 100 && b < 100) {
+        red++;
+      } else if (
+        (g > 100 && r < 100 && b < 100) ||
+        (b > 150 && r < 100 && g < 100) ||
+        (r > 150 && g > 150 && b < 100)
+      ) {
+        other++;
+      }
     }
   }
   return { red, other };
@@ -103,7 +111,13 @@ export async function testit(): Promise<void> {
       if (!canvas) {
         throw new Error("could not find the canvas window");
       }
-      const px = nonRedQuadrantPixels(canvas);
+      const box = await canvasBox(client, canvas);
+      // the trimmed page may still be painting
+      const px = await pollUntil(
+        () => nonRedQuadrantPixels(canvas, box),
+        (p) => p.red >= 1000,
+        { timeoutMs: 3000, error: (p) => `trimmed page didn't paint: ${JSON.stringify(p)}` },
+      );
       if (px.red < 1000 || px.other > 0) {
         throw new Error(`trimmed page should show only the red quadrant, got ${JSON.stringify(px)}`);
       }
