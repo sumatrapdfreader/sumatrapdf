@@ -1066,7 +1066,7 @@ constexpr int kHomeHeaderTopY = 24;
 constexpr int kHomeSearchMaxDx = 340;
 
 static PlatformFont* HomePageFont(int size) {
-    return GetUserGuiFont(StrL("Segoe UI"), DpiScale(size));
+    return GetUserGuiFont(StrL("auto"), DpiScale(size));
 }
 
 static void HomeSelectFromSearchReturnCol(MainWindow* win);

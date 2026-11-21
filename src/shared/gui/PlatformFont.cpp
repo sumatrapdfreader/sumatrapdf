@@ -60,6 +60,13 @@ PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style) {
     return GetPlatformFontInternal(name, sizePt, style, 0);
 }
 
+// the UI language: picks the "auto" font for CJK, see CjkGuiFont()
+static Str gGuiFontLang;
+
+void SetGuiFontLang(Str langCode) {
+    str::ReplaceWithCopy(&gGuiFontLang, langCode);
+}
+
 #if OS_WIN
 using Gdiplus::Font;
 using Gdiplus::Ok;
@@ -146,9 +153,39 @@ PlatformFont* GetUserGuiFont(Str fontName, int size) {
     return GetUserGuiFontEx(fontName, size, false, false);
 }
 
+static bool SystemGuiFontIsSegoeUI() {
+    static int isSegoe = -1;
+    if (isSegoe < 0) {
+        NONCLIENTMETRICS ncm{};
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        isSegoe = str::EqI(ToUtf8Temp(WStr(ncm.lfMessageFont.lfFaceName)), StrL("Segoe UI")) ? 1 : 0;
+    }
+    return isSegoe == 1;
+}
+
+// Segoe UI has no CJK glyphs; on a non-CJK Windows GDI falls back to a serif
+// font (SimSun, MS Mincho), so a CJK UI language gets its script's UI font
+static Str CjkGuiFont() {
+    Str font;
+    if (str::Eq(gGuiFontLang, StrL("cn"))) {
+        font = StrL("Microsoft YaHei UI");
+    } else if (str::Eq(gGuiFontLang, StrL("tw"))) {
+        font = StrL("Microsoft JhengHei UI");
+    } else if (str::Eq(gGuiFontLang, StrL("ja"))) {
+        font = StrL("Yu Gothic UI");
+    } else if (str::Eq(gGuiFontLang, StrL("kr"))) {
+        font = StrL("Malgun Gothic");
+    }
+    if (len(font) == 0 || !SystemGuiFontIsSegoeUI()) {
+        return {};
+    }
+    return font;
+}
+
 PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
     if (str::EqI(fontName, StrL("automatic")) || str::EqI(fontName, StrL("auto"))) {
-        fontName = Str();
+        fontName = CjkGuiFont();
     }
     u16 flags = (bold ? kFontFlagBold : 0) | (italic ? kFontFlagItalic : 0);
     auto* font = FindCreatedFont(fontName, size, flags);

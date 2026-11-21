@@ -22,6 +22,7 @@
 #include "base/CmdLineArgs.h"
 #include "gui/UIModels.h"
 #include "gui/BrowserView.h"
+#include "gui/PlatformFont.h"
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocProperties.h"
@@ -163,6 +164,7 @@ void SetCurrentLang(Str langCode) {
     }
     str::ReplaceWithCopy(&gSettings->uiLanguage, langCode);
     trans::SetCurrentLangByCode(gSettings->uiLanguage);
+    SetGuiFontLang(gSettings->uiLanguage);
 }
 
 void InitializePolicies(bool restrict) {

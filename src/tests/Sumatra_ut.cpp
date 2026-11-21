@@ -393,7 +393,34 @@ static void StripGroupOrderTest() {
     utassert(OrderIs(order, {0, 2, 1, 3}));
 }
 
+// a CJK UI language on a Windows whose UI font is Segoe UI gets that script's UI font
+static void GuiFontLangTest() {
+    NONCLIENTMETRICS ncm{};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    if (!str::EqI(ToUtf8Temp(WStr(ncm.lfMessageFont.lfFaceName)), StrL("Segoe UI"))) {
+        return;
+    }
+    struct {
+        Str lang;
+        Str face;
+    } cases[] = {
+        {StrL("cn"), StrL("Microsoft YaHei UI")}, {StrL("tw"), StrL("Microsoft JhengHei UI")},
+        {StrL("ja"), StrL("Yu Gothic UI")},       {StrL("kr"), StrL("Malgun Gothic")},
+        {StrL("en"), StrL("Segoe UI")},
+    };
+    for (auto& c : cases) {
+        SetGuiFontLang(c.lang);
+        PlatformFont* font = GetUserGuiFont(StrL("auto"), 17);
+        LOGFONTW lf{};
+        GetObjectW(font->GetHFont(), sizeof(lf), &lf);
+        utassert(str::EqI(ToUtf8Temp(WStr(lf.lfFaceName)), c.face));
+    }
+    SetGuiFontLang({});
+}
+
 static void SumatraPDF_UnitTests() {
+    GuiFontLangTest();
     StripGroupOrderTest();
     OnlineURLAllowedTest();
     RestrictedUseConfigTest();

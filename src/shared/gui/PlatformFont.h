@@ -67,6 +67,7 @@ Size PlatformFontMeasureText(PlatformFont*, Str s, int maxDx = -1);
 int PlatformFontLineHeight(PlatformFont*);
 
 PlatformFont* GetDefaultGuiFont(bool bold = false, bool italic = false);
+void SetGuiFontLang(Str langCode);
 PlatformFont* GetUserGuiFont(Str fontName, int size);
 PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic);
 PlatformFont* GetScaledPlatformFont(PlatformFont*, int percent);
