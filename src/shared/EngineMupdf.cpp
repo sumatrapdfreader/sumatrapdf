@@ -11999,17 +11999,23 @@ bool EngineMupdfGetStyledPage(EngineBase* engine, int pageNo, StyledPage& out) {
             for (fz_stext_char* ch = l->first_char; ch; ch = ch->next) {
                 // a word gap the PDF has no space for (each word placed on its
                 // own): the space goes with the text before it
-                float gap = ch->quad.ul.x - prevRight;
+                float gap = ch->quad.ll.x - prevRight;
                 if (have && prevC != ' ' && ch->c != ' ' && gap > ch->size * 0.2f) {
                     run.AppendChar(' ');
                 }
-                prevRight = ch->quad.ur.x;
+                // a gap wider than a few spaces starts a new span, so the
+                // cells of a table row each have their box
+                bool wideGap = have && gap > ch->size;
+                prevRight = ch->quad.lr.x;
                 prevC = ch->c;
-                bool bold = (ch->flags & FZ_STEXT_BOLD) != 0 || (ch->font && fz_font_is_bold(ctx, ch->font));
-                bool italic = ch->font && fz_font_is_italic(ctx, ch->font);
+                // an EPUB's bold without a bold face is drawn as fake bold
+                fz_font_flags_t* ff = ch->font ? fz_font_flags(ch->font) : nullptr;
+                bool bold = (ch->flags & FZ_STEXT_BOLD) != 0 || (ch->font && fz_font_is_bold(ctx, ch->font)) ||
+                            (ff && ff->fake_bold);
+                bool italic = (ch->font && fz_font_is_italic(ctx, ch->font)) || (ff && ff->fake_italic);
                 bool mono = ch->font && fz_font_is_monospaced(ctx, ch->font);
                 // one span per style; sizes within half a point are one style
-                bool same = have && cur.bold == bold && cur.italic == italic && cur.mono == mono &&
+                bool same = have && !wideGap && cur.bold == bold && cur.italic == italic && cur.mono == mono &&
                             fabsf(cur.size - ch->size) < 0.5f;
                 if (!same) {
                     flush();
@@ -12021,7 +12027,12 @@ bool EngineMupdfGetStyledPage(EngineBase* engine, int pageNo, StyledPage& out) {
                     cur.block = blockNo;
                     cur.line = lineNo;
                     cur.lineBox = ToRectF(l->bbox);
+                    cur.box = RectF();
                     have = true;
+                }
+                if (ch->c != ' ') {
+                    RectF cb = ToRectF(fz_rect_from_quad(ch->quad));
+                    cur.box = cur.box.IsEmpty() ? cb : cur.box.Union(cb);
                 }
                 char buf[8];
                 int n = fz_runetochar(buf, ch->c);

@@ -1304,6 +1304,7 @@ enum class MdKind {
     Code,
     Image,
     Marker,
+    Table,
 };
 
 struct MdChunks {
@@ -1373,8 +1374,26 @@ static void AppendImage(MdImages& imgs, const StyledImage& im, int pageNo, MdChu
 }
 
 // one page of a mupdf document as markdown
+struct MdTable;
+static void FindTables(const StyledPage& p, Vec<MdTable*>& tables);
+static TempStr TableMarkdownTemp(const StyledPage& p, const MdTable& t);
+static int TableFirstSpan(const MdTable* t);
+static bool TableHasSpan(const MdTable* t, int span);
+static void FreeTables(Vec<MdTable*>& tables);
+
 static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& imgs, MdChunks& out) {
     int nSpans = len(p.spans);
+    // tables first: their lines are neither headings nor paragraphs
+    Vec<MdTable*> tables;
+    FindTables(p, tables);
+    Vec<int> inTable;
+    for (int k = 0; k < nSpans; k++) {
+        int t = -1;
+        for (int ti = 0; ti < len(tables) && t < 0; ti++) {
+            t = TableHasSpan(tables[ti], k) ? ti : -1;
+        }
+        VecAppend(inTable, t);
+    }
     int img = 0;
     int i = 0;
     while (i < nSpans || img < len(p.images)) {
@@ -1385,10 +1404,19 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
             img++;
             continue;
         }
+        if (inTable[i] >= 0) {
+            // the table where its first span is, its other spans skipped
+            MdTable* t = tables[inTable[i]];
+            if (TableFirstSpan(t) == i) {
+                out.Add(MdKind::Table, TableMarkdownTemp(p, *t));
+            }
+            i++;
+            continue;
+        }
         int end = i;
         float maxSize = 0;
         int nChars = 0, nMono = 0, nBold = 0;
-        while (end < nSpans && p.spans[end].block == block) {
+        while (end < nSpans && p.spans[end].block == block && inTable[end] < 0) {
             const StyledSpan& s = p.spans[end];
             maxSize = std::max(maxSize, s.size);
             nChars += len(s.text);
@@ -1463,6 +1491,7 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
         }
         i = end;
     }
+    FreeTables(tables);
 }
 
 // a page of a document without styles (DjVu, comics, ...): its text, a
@@ -1792,6 +1821,315 @@ static void DropRunning(MdDoc& d, StyledPage& p) {
         }
     }
     p.spans = std::move(kept);
+}
+
+// --- tables
+
+// inside a row, a gap this many times the text size parts two cells (a word
+// space is about a quarter of it)
+constexpr float kCellGap = 1.5f;
+// a cell longer than this is prose, not a table cell
+constexpr int kMaxCellChars = 80;
+// rows of a table: at least a header and two more
+constexpr int kMinTableRows = 3;
+
+// a cell: spans [from, to) of one line; from < 0 for an empty one
+struct MdCell {
+    int from = -1;
+    int to = -1;
+    float x0 = 0;
+    float x1 = 0;
+};
+
+// a row: the lines that share a baseline, as cells [cellFrom, cellTo) of the
+// page's cells, left to right
+struct MdRow {
+    int cellFrom = 0;
+    int cellTo = 0;
+    float y0 = 0;
+    float y1 = 0;
+    float size = 0;
+    // pictures before it: a table doesn't go on past one
+    int group = 0;
+};
+
+struct MdRows {
+    Vec<MdRow> rows;
+    Vec<MdCell> cells;
+};
+
+static TempStr CellPlainTemp(const StyledPage& p, const MdCell& c) {
+    TempStr t = BlockPlainTemp(p, c.from, c.to);
+    str::TrimWSInPlace(t, str::TrimOpt::Both);
+    return t;
+}
+
+static int WordCount(Str s) {
+    StrVec words;
+    Split(&words, s, StrL(" "), true);
+    return len(words);
+}
+
+// the rows of a page, top to bottom
+static void PageRows(const StyledPage& p, MdRows& out) {
+    struct RowCell {
+        int row;
+        MdCell c;
+    };
+    Vec<MdRow> rows;
+    Vec<RowCell> rowCells;
+    Vec<MdLine> lines;
+    PageLines(p, lines);
+    for (MdLine& l : lines) {
+        const StyledSpan& first = p.spans[l.from];
+        float y0 = first.lineBox.y;
+        float y1 = first.lineBox.y + first.lineBox.dy;
+        int group = 0;
+        for (const StyledImage& im : p.images) {
+            group += im.block < first.block ? 1 : 0;
+        }
+        // the row it is in: one whose height its middle is in
+        float mid = (y0 + y1) / 2;
+        int row = -1;
+        for (int r = 0; r < len(rows); r++) {
+            if (rows[r].group == group && mid >= rows[r].y0 && mid <= rows[r].y1) {
+                row = r;
+            }
+        }
+        if (row < 0) {
+            MdRow r;
+            r.y0 = y0;
+            r.y1 = y1;
+            r.group = group;
+            VecAppend(rows, r);
+            row = len(rows) - 1;
+        }
+        rows[row].size = std::max(rows[row].size, l.size);
+        // the line's cells: split at wide gaps between its spans
+        int firstCell = len(rowCells);
+        for (int i = l.from; i < l.to; i++) {
+            const StyledSpan& s = p.spans[i];
+            if (s.box.IsEmpty()) {
+                continue;
+            }
+            float x0 = s.box.x;
+            float x1 = s.box.x + s.box.dx;
+            RowCell* last = len(rowCells) > firstCell ? &rowCells[len(rowCells) - 1] : nullptr;
+            if (last && x0 - last->c.x1 < s.size * kCellGap) {
+                last->c.to = i + 1;
+                last->c.x1 = std::max(last->c.x1, x1);
+                continue;
+            }
+            VecAppend(rowCells, RowCell{row, MdCell{i, i + 1, x0, x1}});
+        }
+    }
+    Vec<int> order;
+    for (int r = 0; r < len(rows); r++) {
+        VecAppend(order, r);
+    }
+    std::sort(order.begin(), order.end(), [&](int a, int b) { return rows[a].y0 < rows[b].y0; });
+    std::sort(rowCells.begin(), rowCells.end(),
+              [](const RowCell& a, const RowCell& b) { return a.row != b.row ? a.row < b.row : a.c.x0 < b.c.x0; });
+    for (int r : order) {
+        MdRow row = rows[r];
+        row.cellFrom = len(out.cells);
+        for (RowCell& rc : rowCells) {
+            if (rc.row == r) {
+                VecAppend(out.cells, rc.c);
+            }
+        }
+        row.cellTo = len(out.cells);
+        VecAppend(out.rows, row);
+    }
+}
+
+// a row that could be in a table: two cells or more, all short
+static bool IsTableRow(const StyledPage& p, const MdRows& rs, const MdRow& r) {
+    if (r.cellTo - r.cellFrom < 2) {
+        return false;
+    }
+    for (int c = r.cellFrom; c < r.cellTo; c++) {
+        if (len(CellPlainTemp(p, rs.cells[c])) > kMaxCellChars) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// a table found on a page: nRows * nCols cells, in their columns
+struct MdTable {
+    int nRows = 0;
+    int nCols = 0;
+    Vec<MdCell> grid;
+    // the first span of the table in reading order, where it goes
+    int firstSpan = INT_MAX;
+};
+
+// rows [from, to) placed in the columns of the row with the most cells.
+// False if a row has two cells in one column or a column is mostly empty
+static bool PlaceInColumns(const MdRows& rs, int from, int to, MdTable& t) {
+    int widest = from;
+    for (int i = from; i < to; i++) {
+        const MdRow& r = rs.rows[i];
+        if (r.cellTo - r.cellFrom > rs.rows[widest].cellTo - rs.rows[widest].cellFrom) {
+            widest = i;
+        }
+    }
+    const MdRow& w = rs.rows[widest];
+    t.nCols = w.cellTo - w.cellFrom;
+    t.nRows = to - from;
+    Vec<int> filled;
+    for (int c = 0; c < t.nCols; c++) {
+        VecAppend(filled, 0);
+    }
+    for (int i = from; i < to; i++) {
+        const MdRow& r = rs.rows[i];
+        int base = len(t.grid);
+        for (int c = 0; c < t.nCols; c++) {
+            VecAppend(t.grid, MdCell());
+        }
+        for (int k = r.cellFrom; k < r.cellTo; k++) {
+            const MdCell& cell = rs.cells[k];
+            // the column whose cell in the widest row overlaps it most, else
+            // whose middle is nearest
+            float mid = (cell.x0 + cell.x1) / 2;
+            int best = 0;
+            float bestScore = -1e9f;
+            for (int c = 0; c < t.nCols; c++) {
+                const MdCell& col = rs.cells[w.cellFrom + c];
+                float overlap = std::min(cell.x1, col.x1) - std::max(cell.x0, col.x0);
+                float score = overlap > 0 ? 1000 + overlap : -fabsf(mid - (col.x0 + col.x1) / 2);
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = c;
+                }
+            }
+            if (t.grid[base + best].from >= 0) {
+                return false;
+            }
+            t.grid[base + best] = cell;
+            filled[best]++;
+        }
+    }
+    for (int c = 0; c < t.nCols; c++) {
+        if (filled[c] * 2 < t.nRows) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// prose in two columns lines up like a table: its cells are sentences
+static bool LooksLikeProse(const StyledPage& p, const MdTable& t) {
+    int n = 0, wordy = 0;
+    for (const MdCell& c : t.grid) {
+        if (c.from >= 0) {
+            n++;
+            wordy += WordCount(CellPlainTemp(p, c)) >= 5 ? 1 : 0;
+        }
+    }
+    return wordy * 2 > n;
+}
+
+// a list with a hanging indent lines up like a table: its first column is
+// the bullets or numbers
+static bool LooksLikeList(const StyledPage& p, const MdTable& t) {
+    for (int i = 0; i < t.nRows; i++) {
+        const MdCell& c = t.grid[i * t.nCols];
+        if (c.from < 0) {
+            return false;
+        }
+        TempStr text = fmt("%s ", CellPlainTemp(p, c));
+        int skip = 0;
+        if (!IsBulletStart(text, &skip) && NumberedStart(text) == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static void FindTables(const StyledPage& p, Vec<MdTable*>& tables) {
+    MdRows rs;
+    PageRows(p, rs);
+    int n = len(rs.rows);
+    for (int i = 0; i < n;) {
+        // a run of table rows close to each other, with no picture between
+        int end = i;
+        while (end < n && IsTableRow(p, rs, rs.rows[end])) {
+            if (end > i) {
+                const MdRow& a = rs.rows[end - 1];
+                const MdRow& b = rs.rows[end];
+                if (b.group != a.group || b.y0 - a.y1 > 2.5f * std::max(b.size, 1.f)) {
+                    break;
+                }
+            }
+            end++;
+        }
+        if (end - i < kMinTableRows) {
+            i = std::max(end, i + 1);
+            continue;
+        }
+        auto* t = new MdTable();
+        if (PlaceInColumns(rs, i, end, *t) && !LooksLikeProse(p, *t) && !LooksLikeList(p, *t)) {
+            for (const MdCell& c : t->grid) {
+                if (c.from >= 0) {
+                    t->firstSpan = std::min(t->firstSpan, c.from);
+                }
+            }
+            VecAppend(tables, t);
+        } else {
+            delete t;
+        }
+        i = end;
+    }
+}
+
+static void FreeTables(Vec<MdTable*>& tables) {
+    for (MdTable* t : tables) {
+        delete t;
+    }
+    VecClear(tables);
+}
+
+static int TableFirstSpan(const MdTable* t) {
+    return t->firstSpan;
+}
+
+static bool TableHasSpan(const MdTable* t, int span) {
+    for (const MdCell& c : t->grid) {
+        if (c.from >= 0 && span >= c.from && span < c.to) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// a table as markdown: the first row is its header, | in a cell is escaped
+static TempStr TableMarkdownTemp(const StyledPage& p, const MdTable& t) {
+    str::Builder out;
+    for (int i = 0; i < t.nRows; i++) {
+        out.AppendChar('|');
+        for (int c = 0; c < t.nCols; c++) {
+            const MdCell& mc = t.grid[i * t.nCols + c];
+            TempStr cell;
+            if (mc.from >= 0) {
+                cell = BlockInlineTemp(p, mc.from, mc.to, false);
+                str::TrimWSInPlace(cell, str::TrimOpt::Both);
+                cell = str::ReplaceTemp(cell, StrL("|"), StrL("\\|"));
+            }
+            out.Append(len(cell) > 0 ? fmt(" %s |", cell) : StrL(" |"));
+        }
+        if (i == 0) {
+            out.Append(StrL("\n|"));
+            for (int c = 0; c < t.nCols; c++) {
+                out.Append(StrL(" --- |"));
+            }
+        }
+        if (i + 1 < t.nRows) {
+            out.AppendChar('\n');
+        }
+    }
+    return ToStrTemp(out);
 }
 
 static int CmdMarkdown(CliCtx& cx) {

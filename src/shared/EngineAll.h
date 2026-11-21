@@ -168,6 +168,8 @@ struct StyledSpan {
     int block = 0;
     int line = 0;
     RectF lineBox;
+    // the span's characters, spaces aside
+    RectF box;
 };
 struct StyledImage {
     int block = 0;

@@ -278,6 +278,7 @@ EXPORTS
 	fz_font_is_bold
 	fz_font_is_italic
 	fz_font_is_monospaced
+	fz_font_flags
 
 	fz_new_stext_page
 

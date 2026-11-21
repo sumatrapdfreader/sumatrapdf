@@ -8,7 +8,7 @@
 // Run: bun tests/cli-markdown-cases.ts [--no-build]
 
 import { writeFileSync } from "node:fs";
-import { assemblePdf, EXE, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, EXE, makeZip, runStandalone, tmpPath, USE_NG } from "./util.ts";
 
 const name = "cli-markdown-cases";
 
@@ -206,6 +206,116 @@ function testEscaping(): void {
   expect("heading 'C\\#'", lines(hmd).includes("# C\\#"), hmd);
 }
 
+// grid_becomes_a_table: a header in bold, prices flush right, an empty cell
+// and a | in a cell
+function testGridTable(): void {
+  // Helvetica digits are 0.556 em and the point 0.278 em, so prices can be
+  // set flush right at x = 300 like a real price column
+  const right = (s: string) => 300 - [...s].reduce((w, ch) => w + (ch === "." ? 0.278 : 0.556), 0) * 10;
+  let c = textAt("F1", 72, 740, "Fruit and what each one costs this week.");
+  c += textAt("F2", 72, 700, "Name");
+  c += textAt("F2", 180, 700, "Qty");
+  c += textAt("F2", 300 - 24.46, 700, "Price");
+  const rows = [
+    ["Apple", "3", "1.50"],
+    ["Kiwi|Gold", "12", "12.00"],
+    ["Pear", "", "3.25"],
+  ];
+  rows.forEach(([nm, qty, price], i) => {
+    const y = 680 - 20 * i;
+    c += textAt("F1", 72, y, nm!);
+    if (qty) {
+      c += textAt("F1", 180, y, qty);
+    }
+    c += textAt("F1", right(price!), y, price!);
+  });
+  c += textAt("F1", 72, 600, "Prices are per kilo and change often.");
+  const md = markdownOf([c]);
+  const table =
+    "| **Name** | **Qty** | **Price** |\n| --- | --- | --- |\n| Apple | 3 | 1.50 |\n" +
+    "| Kiwi\\|Gold | 12 | 12.00 |\n| Pear | | 3.25 |";
+  expect("the table", md.includes(table), md);
+  expect("the paragraph before it", md.startsWith("Fruit and what each one costs this week.\n\n|"), md);
+  expect("the paragraph after it", md.endsWith("|\n\nPrices are per kilo and change often.\n"), md);
+}
+
+// two_column_prose_is_not_a_table: two columns of prose, each line of the
+// left one written just before the line beside it, so the rows line up
+function testTwoColumnProse(): void {
+  const left = [
+    "the reader opens the book and finds that",
+    "every page is set in two narrow columns",
+    "which run down the sheet side by side and",
+    "carry on from the foot of the left one to",
+    "the head of the right one without a break.",
+  ];
+  const right = [
+    "so a careless program that reads straight",
+    "across the page would mix the two halves",
+    "into nonsense and call the result a table",
+    "of cells when it is really just running",
+    "text that happens to share its baselines.",
+  ];
+  let c = "";
+  left.forEach((l, i) => {
+    c += textAt("F1", 72, 700 - 14 * i, l);
+    c += textAt("F1", 330, 700 - 14 * i, right[i]!);
+  });
+  const md = markdownOf([c]);
+  expect("no table", !lines(md).some((l) => l.startsWith("|")), md);
+  expect("the text is all there", md.includes("finds that") && md.includes("baselines."), md);
+}
+
+// label_value_and_hanging_lists_are_not_tables
+function testNotTables(): void {
+  let c = textAt("F1", 72, 740, "Thank you for your order.");
+  c += textAt("F1", 72, 720, "Total due:");
+  c += textAt("F1", 400, 720, "42.00");
+  c += textAt("F1", 72, 700, "Please pay within thirty days.");
+  // bullets with a wide hanging indent line up like a two-column grid
+  ["Bread", "Milk", "Eggs"].forEach((item, i) => {
+    c += textAt("F1", 72, 660 - 14 * i, "\\267");
+    c += textAt("F1", 100, 660 - 14 * i, item);
+  });
+  const md = markdownOf([c]);
+  expect("no table", !lines(md).some((l) => l.startsWith("|")), md);
+  expect("the text is all there", md.includes("Total due:") && md.includes("42.00") && md.includes("Eggs"), md);
+}
+
+// epub_table_becomes_a_table: an EPUB's <table>, its <th> row bold, not a heading
+function testEpubTable(): void {
+  const enc = new TextEncoder();
+  const chapter =
+    '<?xml version="1.0" encoding="utf-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml"><head><title>t</title><style>td, th { padding: 0 1em; }</style></head>' +
+    "<body><p>The formats and how <b>long</b> the samples are.</p><table>" +
+    "<tr><th>Format</th><th>Pages</th></tr><tr><td>PDF</td><td>40</td></tr><tr><td>EPUB</td><td>5</td></tr>" +
+    "</table><p>That is all of them.</p></body></html>";
+  const opf =
+    '<?xml version="1.0" encoding="utf-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" version="3.0" ' +
+    'unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">t</dc:identifier>' +
+    "<dc:title>t</dc:title><dc:language>en</dc:language></metadata>" +
+    '<manifest><item id="c1" href="c1.xhtml" media-type="application/xhtml+xml"/></manifest>' +
+    '<spine><itemref idref="c1"/></spine></package>';
+  const container =
+    '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">' +
+    '<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>';
+  const path = tmpPath("cli-md-case-table.epub");
+  writeFileSync(
+    path,
+    makeZip([
+      { name: "mimetype", data: enc.encode("application/epub+zip"), store: true },
+      { name: "META-INF/container.xml", data: enc.encode(container) },
+      { name: "OEBPS/c1.xhtml", data: enc.encode(chapter) },
+      { name: "OEBPS/content.opf", data: enc.encode(opf) },
+    ]),
+  );
+  const p = Bun.spawnSync([EXE, "cli", "markdown", path, "--no-page-markers"], { stdout: "pipe", stderr: "pipe" });
+  const md = p.stdout.toString();
+  const table = "| **Format** | **Pages** |\n| --- | --- |\n| PDF | 40 |\n| EPUB | 5 |";
+  expect("the EPUB's table", md.includes(table), md);
+  expect("the header row isn't a heading", !md.includes("# Format"), md);
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
@@ -218,6 +328,10 @@ export async function testit(): Promise<void> {
   testParagraphAcrossPages();
   testInlineStyles();
   testEscaping();
+  testGridTable();
+  testTwoColumnProse();
+  testNotTables();
+  testEpubTable();
   console.log(`${name}: OK`);
 }
 
