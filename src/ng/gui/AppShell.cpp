@@ -873,6 +873,8 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
     bool dialogUp = dlgWin || DialogsAccelTable(win) != DialogAccels::All;
     out.Append(fmt(" popup=%d dialog=%d overlay=%d", IsTrackedPopupOpenInApp(gw->app) ? 1 : 0, dialogUp ? 1 : 0,
                    paletteWin || (view && view->overlayUp) ? 1 : 0));
+    // macOS has no IsIconic for a test to call
+    out.Append(fmt(" minimized=%d", gp::AppIsMinimized(gw) ? 1 : 0));
     // the toast is drawn in the frame, so a test cannot find it as a child window
     int nNotif = 0;
     str::Builder notifs;

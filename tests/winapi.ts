@@ -23,8 +23,10 @@ import {
   macFrameClientRect,
   macFrameVisible,
   macPostKeyDown,
+  macPostKeyWithModifier,
   macSendMessage,
   macSendText,
+  macShowWindow,
   TestLayout,
   type InputTarget,
 } from "./mac-control.ts";
@@ -375,6 +377,8 @@ export const SRCCOPY = 0x00cc0020;
 export const COLORONCOLOR = 3; // StretchBlt mode: no smoothing
 // ShowWindow commands
 export const SW_SHOWMINNOACTIVE = 7;
+export const SW_MINIMIZE = 6;
+export const SW_SHOWMINIMIZED = 2;
 export const SW_SHOWNOACTIVATE = 4;
 export const SW_RESTORE = 9;
 export const SW_MAXIMIZE = 3;
@@ -1008,6 +1012,13 @@ export function setWindowPos(
 
 export function showWindow(hwnd: number, cmd: number): boolean {
   if (IS_MAC) {
+    if (cmd === SW_SHOWMINNOACTIVE || cmd === SW_MINIMIZE || cmd === SW_SHOWMINIMIZED) {
+      macShowWindow(true);
+      return true;
+    }
+    if (isIconic(hwnd)) {
+      macShowWindow(false);
+    }
     if (cmd === SW_RESTORE && isZoomed(hwnd)) {
       return moveWindow(hwnd, 80, 80, 1200, 900);
     }
@@ -1058,7 +1069,13 @@ export function isKeyDownAsync(vk: number): boolean {
 
 const KEYEVENTF_KEYUP = 0x0002;
 
+// ControlCommand.TestUiState (control.ts imports this file)
+const TestUiState = 122;
+
 export function isIconic(hwnd: number): boolean {
+  if (IS_MAC) {
+    return / minimized=1/.test(String(macControlRequest(TestUiState, [])[1] ?? ""));
+  }
   return user32.symbols.IsIconic(hwnd);
 }
 
@@ -1075,6 +1092,10 @@ export function postKeyWithShift(hwnd: number, vk: number): () => void {
 
 // postKeyWithShift for any modifier (VK_CONTROL for a Ctrl shortcut)
 export function postKeyWithModifier(hwnd: number, vk: number, modVk: number): () => void {
+  if (IS_MAC) {
+    macPostKeyWithModifier(vk, modVk);
+    return () => {};
+  }
   const appThread = user32.symbols.GetWindowThreadProcessId(hwnd, null);
   const ourThread = kernel32.symbols.GetCurrentThreadId();
   if (!user32.symbols.AttachThreadInput(ourThread, appThread, true)) {

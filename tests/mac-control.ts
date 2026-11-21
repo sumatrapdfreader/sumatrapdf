@@ -36,6 +36,8 @@ const WM_XBUTTONUP = 0x020c;
 const WM_NULL = 0x0000;
 const WM_SYSCOMMAND = 0x0112;
 const SC_CLOSE = 0xf060;
+const SC_MINIMIZE = 0xf020;
+const SC_RESTORE = 0xf120;
 const WM_HSCROLL = 0x0114;
 const WM_VSCROLL = 0x0115;
 const WM_MOUSEWHEEL = 0x020a;
@@ -706,6 +708,18 @@ export function macPostKeyDown(wParam: number | bigint, lParam: number | bigint)
   }
 }
 
+// a key with Shift (VK_SHIFT), Ctrl (VK_CONTROL) or Alt (VK_MENU) held: TestInput
+// takes the modifiers with the key, where Windows reads them from the key state
+export function macPostKeyWithModifier(vk: number, modVk: number): void {
+  const mods = modVk === 0x10 ? 2 : modVk === 0x11 ? 1 : modVk === 0x12 ? 4 : 0;
+  input("key", vk, mods, 0, 0);
+}
+
+// ShowWindow on macOS: minimize, or bring the minimized frame back
+export function macShowWindow(minimize: boolean): void {
+  invoke(minimize ? "SC_MINIMIZE" : "SC_RESTORE");
+}
+
 function invoke(name: string, x?: number, y?: number): void {
   const args: ControlArg[] = x === undefined ? [name] : [name, x, y];
   const res = macControlRequest(TestInvokeCommand, args);
@@ -757,8 +771,13 @@ export function macSendMessage(
   }
   // The caption close button. DefWindowProc turns it into WM_CLOSE.
   if (msg === WM_SYSCOMMAND) {
-    if ((wp & 0xfff0n) === BigInt(SC_CLOSE)) {
+    const sc = wp & 0xfff0n;
+    if (sc === BigInt(SC_CLOSE)) {
       invoke("WM_CLOSE");
+    } else if (sc === BigInt(SC_MINIMIZE)) {
+      invoke("SC_MINIMIZE");
+    } else if (sc === BigInt(SC_RESTORE)) {
+      invoke("SC_RESTORE");
     }
     return 0n;
   }

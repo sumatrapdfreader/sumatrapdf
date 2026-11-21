@@ -2616,6 +2616,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
+            // macOS: what a test's WM_SYSCOMMAND or ShowWindow does to the frame
+            if (str::EqI(name, StrL("SC_MINIMIZE")) || str::EqI(name, StrL("SC_RESTORE"))) {
+                if (win->gpuiWin) {
+                    if (str::EqI(name, StrL("SC_MINIMIZE"))) {
+                        gp::AppMinimize(win->gpuiWin);
+                    } else {
+                        gp::AppActivate(win->gpuiWin);
+                    }
+                }
+                AppendTestResult(req, 0, StrL("OK"));
+                break;
+            }
             // A favorite or another custom command has no name in Commands.h.
             // Tests send its id as "#123".
             int cmdId = 0;
