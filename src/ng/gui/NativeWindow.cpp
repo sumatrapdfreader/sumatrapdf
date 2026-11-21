@@ -716,6 +716,15 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_DISPLAYCHANGE:
             RefitFullScreen(WinOf(hwnd));
             break;
+        case WM_MOUSEACTIVATE:
+            // orig: the click that activates a presentation only activates it,
+            // it doesn't also turn the page
+            if (MainWindow* win = WinOf(hwnd)) {
+                if (win->InPresentation() && hwnd != GetForegroundWindow()) {
+                    return MA_ACTIVATEANDEAT;
+                }
+            }
+            break;
         case WM_DPICHANGED:
             // gpui only moves the window to the suggested rect. The font sizes
             // follow frameDpi, which AppShellOnDpiChanged stores first.

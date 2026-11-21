@@ -271,6 +271,7 @@ import { testit as sessionRestoreBrokenFile } from "./session-restore-broken-fil
 import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
 import { testit as reloadKeepsFullscreenLayout } from "./reload-keeps-fullscreen-layout.ts";
 import { testit as fullscreenDisplayChange } from "./fullscreen-display-change.ts";
+import { testit as presentationActivatingClick } from "./presentation-activating-click.ts";
 import { testit as closeWindowWithDialog } from "./close-window-with-dialog.ts";
 import { testit as captionCaptureLoss } from "./caption-capture-loss.ts";
 import { testit as menuBarArmedDeactivate } from "./menu-bar-armed-deactivate.ts";
@@ -1216,6 +1217,7 @@ export const tests: NamedTest[] = [
   ["tab-switch-presentation", tabSwitchPresentation],
   ["reload-keeps-fullscreen-layout", reloadKeepsFullscreenLayout],
   ["fullscreen-display-change", fullscreenDisplayChange],
+  ["presentation-activating-click", presentationActivatingClick],
   ["close-window-with-dialog", closeWindowWithDialog],
   ["caption-capture-loss", captionCaptureLoss],
   ["menu-bar-armed-deactivate", menuBarArmedDeactivate],
