@@ -145,6 +145,7 @@
 #include "OpenFromUrlCommon.h"
 #include "AppHelpersCommon.h"
 #include "SumatraTest.h"
+#include "Cli.h"
 
 RenderCache* gRenderCache = nullptr;
 static Flags* gFlags = nullptr;
@@ -7500,6 +7501,12 @@ static int MaybeRunCliTool(int argc, char** argv) {
         return kNoCliTool;
     }
     Str name(argv[1]);
+    // `SumatraPDF cli <command>`: src/shared/Cli.cpp
+    if (str::Eq(name, StrL("cli"))) {
+        fz_redirect_io_to_existing_console();
+        InstallEmbeddedFontLoader();
+        return CliMain(argc - 2, argv + 2);
+    }
     int (*fn)(int, char**) = nullptr;
     for (const CliTool& t : gCliTools) {
         if (str::EqI(name, Str(t.name))) {
