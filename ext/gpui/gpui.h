@@ -10379,6 +10379,9 @@ void AppSetOsFullScreenMenuItem(bool shown);
 
 void AppSetMenuBarVisible(bool visible);
 
+void AppSetActivates(bool activates);
+bool AppActivates();
+
 bool AppMenuRowForId(int id, uint32_t* action, int64_t* arg);
 bool AppMenuRowForId(const App* app, int id, uint32_t* action, int64_t* arg);
 

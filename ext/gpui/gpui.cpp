@@ -28698,6 +28698,16 @@ bool AppHasMenuBar() {
     return PlatHasAppMenu();
 }
 
+static bool gAppActivates = true;
+
+void AppSetActivates(bool activates) {
+    gAppActivates = activates;
+}
+
+bool AppActivates() {
+    return gAppActivates;
+}
+
 void AppSetOsFullScreenMenuItem(bool shown) {
     PlatSetOsFullScreenMenuItem(shown);
 }
@@ -251164,7 +251174,7 @@ static void OrderFrontOnce(Window* win) {
     }
     pw->ordered = true;
     OrderFront(win, pw->activateOnShow);
-    if (pw->activateOnShow && win->opts.activatable) {
+    if (pw->activateOnShow && win->opts.activatable && AppActivates()) {
         [NSApp activateIgnoringOtherApps:YES];
     }
 }
@@ -251410,7 +251420,9 @@ void AppActivate(Window* win) {
         Redraw(win);
         return;
     }
-    [NSApp activateIgnoringOtherApps:YES];
+    if (AppActivates()) {
+        [NSApp activateIgnoringOtherApps:YES];
+    }
     [win->plat->window makeKeyAndOrderFront:nil];
 }
 
@@ -253042,7 +253054,9 @@ bool PlatInit(App* app) {
         [NSApp finishLaunching];
 
         InstallDefaultAppMenu();
-        [NSApp activateIgnoringOtherApps:YES];
+        if (AppActivates()) {
+            [NSApp activateIgnoringOtherApps:YES];
+        }
     }
     return true;
 }

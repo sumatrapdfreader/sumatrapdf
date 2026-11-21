@@ -8050,6 +8050,8 @@ int GpuiMain(int argc, char** argv) {
         // computer: neither our launches nor gpui's (a link in a tooltip)
         gBlockExternalLaunch = true;
         gp::SetOpenExternalHook([](gp::Str urlOrPath, bool) { return ExternalLaunchBlocked(FromGpui(urlOrPath)); });
+        // nor take the keyboard: what they type would go into the test's window
+        gp::AppSetActivates(false);
     }
     if (gFlags->perfLogFile) {
         SetPerfLogPath(gFlags->perfLogFile);
