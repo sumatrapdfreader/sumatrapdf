@@ -322,7 +322,8 @@ void FinishLazyTabLoad(WindowTab* tab, EngineBase* engine) {
     // The file still has to load; there is just no remembered view.
     TabState* state = tab->tabState;
     if (engine) {
-        LoadDocumentWithEngine(win, tab->filePath, engine);
+        // a copy: loading replaces tab->filePath, then uses the path again
+        LoadDocumentWithEngine(win, str::DupTemp(tab->filePath), engine);
     } else {
         ReloadDocument(win, false);
     }
