@@ -95,12 +95,17 @@ function processWindowTitles(pid: number): string[] {
 
 // ng draws its tabs: the attachment's is the frame layout node labelled with it
 async function dragOutNg(client: ControlClient): Promise<void> {
-  const layout = String((await client.request(ControlCommand.TestToolWindow, ["layout", "frame"]))[1] ?? "");
   const re = new RegExp(`node rect=(-?\\d+),(-?\\d+),(\\d+),(\\d+) role=\\d+ label='[^']*${ATTACHMENT}`);
-  const m = re.exec(layout);
-  if (!m) {
-    throw new Error(`drag-out-attachment-tab: no tab labelled ${ATTACHMENT}:\n${layout.slice(0, 2000)}`);
-  }
+  // the layout is the last frame's, which can be from before the tab was added
+  const layout = await pollUntil(
+    async () => String((await client.request(ControlCommand.TestToolWindow, ["layout", "frame"]))[1] ?? ""),
+    (l) => re.test(l),
+    {
+      timeoutMs: 4000 * SLOW_BUILD_FACTOR,
+      error: (l) => `drag-out-attachment-tab: no tab labelled ${ATTACHMENT}:\n${l.slice(0, 2000)}`,
+    },
+  );
+  const m = re.exec(layout)!;
   const x = Number(m[1]) + Math.floor(Number(m[3]) / 3);
   const y = Number(m[2]) + Math.floor(Number(m[4]) / 2);
   const input = async (...args: (string | number)[]) => client.request(ControlCommand.TestInput, args);
