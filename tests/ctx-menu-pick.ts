@@ -40,6 +40,12 @@ async function addFavoriteOpen(client: ControlClient): Promise<boolean> {
   return / dialog=1/.test(await uiState(client));
 }
 
+// frames painted since the last call
+async function framesPainted(client: ControlClient): Promise<number> {
+  const raw = String((await client.request(ControlCommand.TestPerfStats, []))[1] ?? "");
+  return Number(/frames=(\d+)/.exec(raw)?.[1] ?? 0);
+}
+
 async function openPageMenu(client: ControlClient): Promise<{ x: number; y: number }> {
   const m = /canvas=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(await uiState(client));
   if (!m) {
@@ -47,6 +53,7 @@ async function openPageMenu(client: ControlClient): Promise<{ x: number; y: numb
   }
   const x = +m[1]! + Math.floor(+m[3]! / 2);
   const y = +m[2]! + Math.floor(+m[4]! / 2);
+  await framesPainted(client);
   await client.request(ControlCommand.TestInput, ["click", x, y, 1, 0]);
   const deadline = Date.now() + 3000;
   while (!/ popup=1/.test(await uiState(client))) {
@@ -54,6 +61,13 @@ async function openPageMenu(client: ControlClient): Promise<{ x: number; y: numb
       throw new Error("ctx-menu-pick: the context menu did not open");
     }
     await sleep(40);
+  }
+  // the menu is open before it is painted, and its rows take clicks once it is
+  while ((await framesPainted(client)) === 0) {
+    if (Date.now() > deadline) {
+      throw new Error("ctx-menu-pick: the context menu was never painted");
+    }
+    await sleep(20);
   }
   return { x, y };
 }

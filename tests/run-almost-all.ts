@@ -647,6 +647,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["ctx-menu-pick", ctxMenuPick],
   ["cli-images", cliImages],
   ["issue-1139", issue1139],
   ["issue-6113", issue6113],
@@ -751,7 +752,6 @@ export const tests: NamedTest[] = [
   ["issue-6167", issue6167],
   ["issue-6168", issue6168],
   ["ctx-menu-reload", ctxMenuReload],
-  ["ctx-menu-pick", ctxMenuPick],
   ["home-two-windows", homeTwoWindows],
   ["issue-5870", issue5870],
   ["issue-6199", issue6199],
