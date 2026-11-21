@@ -142,6 +142,15 @@ async function convert(doc: string): Promise<string> {
     if (!/vis=show/.test(vis)) {
       throw new Error(`issue-6505: Convert to Images not offered for ${doc}: ${vis}`);
     }
+    // OFD is also converted to PDF, like an image collection
+    if (doc.endsWith(".ofd")) {
+      const toPdf = String(
+        (await client.request(ControlCommand.TestCommandVisibility, ["CmdConvertToPDF", "palette"]))[1] ?? "",
+      );
+      if (!/vis=show/.test(toPdf)) {
+        throw new Error(`issue-6505: Convert to PDF not offered for ${doc}: ${toPdf}`);
+      }
+    }
     if (USE_NG) {
       await client.request(ControlCommand.TestInvokeCommand, ["CmdConvertPdfToImages"]);
     } else {

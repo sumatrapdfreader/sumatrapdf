@@ -462,6 +462,8 @@ void FillAppCommandCtx(AppCommandCtx& ctx, MainWindow* win) {
     ctx.clipboardHasImage = ImageEditHasClipboard(win);
     ctx.clipboardReadAsync = OS_WASM;
     ctx.hasLayers = SidebarHasLayers(win);
+    EngineBase* engine = ctx.tab ? ctx.tab->GetEngine() : nullptr;
+    ctx.isOfd = engine && EngineMupdfIsOfd(engine);
 }
 
 // (0, 0) is "no point": keep the hover. A real point is hit-tested

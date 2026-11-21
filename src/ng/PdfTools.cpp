@@ -1023,13 +1023,15 @@ static void ConvertToPdfDoIt() {
     }
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine || !engine->isImageCollection) {
+    bool isOfd = engine && EngineMupdfIsOfd(engine);
+    if (!engine || !(engine->isImageCollection || isOfd)) {
         MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Convert to PDF"));
         return;
     }
 
     logf("ConvertToPdf: converting '%s' to '%s'\n", gTool.srcPath, destPath);
-    bool ok = ConvertImageCollectionToPdf(engine, destPath);
+    // OFD keeps its text and vector paths; image collections become one image per page
+    bool ok = isOfd ? EngineMupdfSaveAsPdf(engine, destPath) : ConvertImageCollectionToPdf(engine, destPath);
     if (ok) {
         logf("ConvertToPdf: converted successfully\n");
         CloseAndLoad(destPath);
@@ -3171,7 +3173,7 @@ void ShowConvertToPdfDialog(MainWindow* win) {
     }
     WindowTab* tab = win->CurrentTab();
     EngineBase* engine = tab->GetEngine();
-    if (!engine || !engine->isImageCollection) {
+    if (!engine || !(engine->isImageCollection || EngineMupdfIsOfd(engine))) {
         return;
     }
     if (!engine->AllowsPrinting()) {
