@@ -6880,7 +6880,9 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdSetDocumentColorsFollowTheme:
-            ShowSetDocumentColorsFollowThemeDialog(win);
+            if (!RunDocColorsFollowThemeCmd(cmd)) {
+                ShowSetDocumentColorsFollowThemeDialog(win);
+            }
             break;
 
         case CmdChangeBackgroundColor:

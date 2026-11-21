@@ -461,6 +461,7 @@ import { testit as issue6483 } from "./issue-6483.ts";
 import { testit as issue6485 } from "./issue-6485.ts";
 import { testit as issue6576 } from "./issue-6576.ts";
 import { testit as issue6572 } from "./issue-6572.ts";
+import { testit as issue6575 } from "./issue-6575.ts";
 import { testit as issue6500 } from "./issue-6500.ts";
 import { testit as fontDownload } from "./font-download.ts";
 import { testit as fontSystemSubstitutes } from "./font-system-substitutes.ts";
@@ -1041,6 +1042,7 @@ export const tests: NamedTest[] = [
   ["issue-6485", issue6485],
   ["issue-6576", issue6576],
   ["issue-6572", issue6572],
+  ["issue-6575", issue6575],
   ["issue-6500", issue6500],
   ["font-download", fontDownload],
   ["font-system-substitutes", fontSystemSubstitutes],

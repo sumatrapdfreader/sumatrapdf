@@ -463,6 +463,9 @@ static const ArgSpec argSpecs[] = {
 
     {CmdCommandPalette, kCmdArgMode, CommandArg::Type::String}, // default
 
+    // off, smart, legacy or toggle; without it the dialog opens
+    {CmdSetDocumentColorsFollowTheme, kCmdArgMode, CommandArg::Type::String}, // default
+
     {CmdSignDocument, kCmdArgCertify, CommandArg::Type::Bool},
 
     // toggle commands accept an optional bool to force a state (issue #5067),

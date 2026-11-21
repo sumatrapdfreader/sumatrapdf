@@ -43,6 +43,7 @@ bool ProgressBarRects(MainWindow* win, Size canvas, int dpi, int bottomInset, Re
 bool ProgressBarCanvasRects(MainWindow* win, Rect* doneOut, Rect* restOut);
 bool ShouldUseBrowserView(FileType kind);
 struct CustomCommand;
+bool RunDocColorsFollowThemeCmd(CustomCommand* cmd);
 void ToggleCaption(CustomCommand* cmd);
 void ToggleSidebarAutoHide(CustomCommand* cmd);
 bool showTocByDefault(Str path, EngineBase* engine);

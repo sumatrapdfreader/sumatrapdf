@@ -1820,6 +1820,29 @@ bool ToggleCmdState(MainWindow* win, CustomCommand* cmd, int cmdId, bool& on) {
     return false;
 }
 
+// [CmdSetDocumentColorsFollowTheme smart] sets the mode without the dialog
+// (#6575); toggle goes off <-> smart. False when no mode is given.
+bool RunDocColorsFollowThemeCmd(CustomCommand* cmd) {
+    Str mode = GetCommandStringArg(cmd, kCmdArgMode, {});
+    if (len(mode) == 0) {
+        return false;
+    }
+    DocumentColorsFollowTheme want = DocumentColorsFollowThemeFromString(mode);
+    if (str::EqI(mode, StrL("toggle"))) {
+        bool isOff = GetDocumentColorsFollowTheme() == DocumentColorsFollowTheme::Off;
+        want = isOff ? DocumentColorsFollowTheme::Smart : DocumentColorsFollowTheme::Off;
+    } else if (want == DocumentColorsFollowTheme::Off && !str::EqI(mode, StrL("off"))) {
+        // the parser takes anything unknown as off
+        MaybeDelayedWarningNotification(
+            fmt("CmdSetDocumentColorsFollowTheme: unknown mode '%s', use off, smart, legacy or toggle", mode));
+        return true;
+    }
+    SetDocumentColorsFollowTheme(want);
+    UpdateDocumentColors();
+    ScheduleSaveSettings();
+    return true;
+}
+
 // A toggle command given the state it is already in, e.g. [CmdToggleToolbar off]
 // with the toolbar hidden, does nothing (#5067).
 bool ToggleCmdIsNoOp(MainWindow* win, CustomCommand* cmd, int cmdId) {

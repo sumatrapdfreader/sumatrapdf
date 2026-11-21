@@ -12261,7 +12261,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdSetDocumentColorsFollowTheme:
-            ShowSetDocumentColorsFollowThemeDialog(win);
+            if (!RunDocColorsFollowThemeCmd(cmd)) {
+                ShowSetDocumentColorsFollowThemeDialog(win);
+            }
             break;
 
         case CmdNavigateBack:
