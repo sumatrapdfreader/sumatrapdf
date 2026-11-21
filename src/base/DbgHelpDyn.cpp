@@ -162,17 +162,18 @@ bool Initialize(WStr symPathW, bool force) {
         DynSymCleanup(GetCurrentProcess());
     }
 
+    // before SymInitialize: it reads every loaded module's symbols unless loads are deferred
+    DWORD symOptions = DynSymGetOptions();
+    symOptions |= (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
+    symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
+    DynSymSetOptions(symOptions);
+
     gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW.s, TRUE);
 
     if (!gSymInitializeOk) {
         log(StrL("dbghelp::Initialize(): DynSymInitializeW() failed"));
         return false;
     }
-
-    DWORD symOptions = DynSymGetOptions();
-    symOptions |= (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
-    symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
-    DynSymSetOptions(symOptions);
 
     return true;
 }

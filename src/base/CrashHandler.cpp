@@ -212,24 +212,6 @@ static void HandleCrashWithMinidump() {
     WriteAndUploadMinidump(logText, &gMei, shouldUpload);
 }
 
-// Symbols are only ever the .pdb sitting next to the .exe (a local build); we
-// no longer download them, released crashes are symbolized from the minidump.
-static bool InitializeDbgHelp() {
-    TempStr symPath = GetSelfExeDirTemp();
-    TempWStr ws = ToWStrTemp(symPath);
-    if (!dbghelp::Initialize(ws, false)) {
-        logf("InitializeDbgHelp: dbghelp::Initialize('%s') failed\n", symPath);
-        return false;
-    }
-
-    if (!dbghelp::HasSymbols()) {
-        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' failed\n", symPath);
-        return false;
-    }
-    logf("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath);
-    return true;
-}
-
 /* A thread cannot dump itself usefully. MiniDumpWriteDump() records a context
    for the calling thread that it captured from inside dbgcore, and it's partial
    enough that the walk off it dies right there: such a dump reads as
@@ -409,9 +391,6 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID /*data*/) {
-    // off the UI thread: SymInitialize walks every loaded module (~45 ms).
-    // A crash signaled meanwhile waits for it, dbghelp::Initialize serializes
-    InitializeDbgHelp();
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed) {
         return 0;
