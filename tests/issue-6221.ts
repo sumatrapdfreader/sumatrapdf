@@ -8,9 +8,9 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { assemblePdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, sleep } from "./winapi.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
+import { canvasBox, clickAt, findCanvas, killAndWait, launchControlled, type CanvasBox } from "./win-automation.ts";
 
 // page 1: the square at x 40..140 of a 400 pt wide page, a link over it
 function makePdf(): string {
@@ -25,27 +25,8 @@ function makePdf(): string {
   return assemblePdf(objs.slice(1));
 }
 
-type Box = { x: number; y: number; w: number; h: number };
-
-// where the page is drawn, in the capture's coordinates: orig's canvas is a
-// window of its own; ng draws the page in the frame, under its tabs and toolbar
-async function canvasBox(client: ControlClient, canvas: number): Promise<Box> {
-  const px = captureWindowPixels(canvas)!;
-  if (!USE_NG) {
-    return { x: 0, y: 0, w: px.w, h: px.h };
-  }
-  const lay = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
-  const scale = Number(/scale=([0-9.]+)/.exec(lay)?.[1] ?? "1") || 1;
-  const m = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(lay);
-  if (!m) {
-    throw new Error(`issue-6221: no canvas in the layout:\n${lay}`);
-  }
-  const [x, y, w, h] = m.slice(1).map((v) => Number(v) / scale) as [number, number, number, number];
-  return { x, y, w, h };
-}
-
 // the average x of the dark pixels in the canvas, in canvas client coordinates
-function darkCenterX(canvas: number, box: Box): { x: number; y: number; n: number } {
+function darkCenterX(canvas: number, box: CanvasBox): { x: number; y: number; n: number } {
   const px = captureWindowPixels(canvas);
   if (!px) {
     return { x: 0, y: 0, n: 0 };

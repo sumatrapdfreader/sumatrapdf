@@ -303,6 +303,26 @@ export function waitForFrame(pid: number, timeoutMs = 12000): Promise<number> {
 }
 
 // the document canvas (child of the frame)
+export type CanvasBox = { x: number; y: number; w: number; h: number };
+
+// Where the document is drawn in captureWindowPixels(canvas), in its client
+// coordinates: all of orig's canvas window; ng draws the document in the frame,
+// under its tabs and toolbar, at the canvas rect of the layout.
+export async function canvasBox(client: ControlClient, canvas: number): Promise<CanvasBox> {
+  if (!USE_NG) {
+    const rc = getClientRect(canvas);
+    return { x: 0, y: 0, w: rc.right - rc.left, h: rc.bottom - rc.top };
+  }
+  const lay = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+  const scale = Number(/scale=([0-9.]+)/.exec(lay)?.[1] ?? "1") || 1;
+  const m = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(lay);
+  if (!m) {
+    throw new Error(`canvasBox: no canvas in the layout:\n${lay}`);
+  }
+  const [x, y, w, h] = m.slice(1).map((v) => Math.round(Number(v) / scale)) as [number, number, number, number];
+  return { x, y, w, h };
+}
+
 export function findCanvas(frame: number): number {
   if (IS_MAC) {
     return frame;
