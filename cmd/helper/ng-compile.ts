@@ -388,7 +388,7 @@ function pkgConfig(kind: "--cflags" | "--libs", names: string[]): string[] {
   if (r.exitCode !== 0) {
     console.error(r.stderr.toString().trim());
     console.error(
-      `pkg-config ${kind} ${names.join(" ")} failed. sudo apt install libx11-dev libxcursor-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev`,
+      `pkg-config ${kind} ${names.join(" ")} failed. sudo apt install libx11-dev libxcursor-dev libxi-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev`,
     );
     process.exit(1);
   }
@@ -411,6 +411,13 @@ function linuxDeps(): { cflags: string[]; libs: string[] } {
   if (xcursor.exitCode === 0) {
     cflags.push(...pkgConfig("--cflags", ["xcursor"]), "-DGPUI_HAVE_XCURSOR=1");
     libs.push(...pkgConfig("--libs", ["xcursor"]));
+  }
+  // gpui's touch-screen and pen contacts (XInput2); without libxi-dev they
+  // are only mouse input
+  const xi = Bun.spawnSync(["pkg-config", "--exists", "xi"], { stdout: "pipe", stderr: "pipe" });
+  if (xi.exitCode === 0) {
+    cflags.push(...pkgConfig("--cflags", ["xi"]), "-DGPUI_HAVE_XI=1");
+    libs.push(...pkgConfig("--libs", ["xi"]));
   }
   linuxDepsMemo = { cflags, libs };
   return linuxDepsMemo;

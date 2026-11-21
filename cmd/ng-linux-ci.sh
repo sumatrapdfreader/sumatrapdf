@@ -22,17 +22,17 @@ if command -v apt-get >/dev/null; then
   run apt-get update
   run apt-get install -y --no-install-recommends \
     build-essential pkg-config git unzip curl ca-certificates xz-utils binutils dpkg-dev \
-    libx11-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev \
+    libx11-dev libxi-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev \
     libfontconfig1-dev libssl-dev libcurl4-openssl-dev
 elif command -v dnf >/dev/null; then
   run dnf install -y \
     gcc gcc-c++ pkgconf-pkg-config libstdc++-static git unzip curl xz binutils rpm-build \
-    libX11-devel cairo-devel pango-devel gdk-pixbuf2-devel glib2-devel \
+    libX11-devel libXi-devel cairo-devel pango-devel gdk-pixbuf2-devel glib2-devel \
     fontconfig-devel openssl-devel libcurl-devel
 elif command -v pacman >/dev/null; then
   run pacman -Syu --noconfirm --needed \
     base-devel git unzip curl xz binutils \
-    libx11 cairo pango gdk-pixbuf2 glib2 fontconfig openssl
+    libx11 libxi cairo pango gdk-pixbuf2 glib2 fontconfig openssl
 else
   echo "no apt-get, dnf or pacman on $PRETTY_NAME" >&2
   exit 1

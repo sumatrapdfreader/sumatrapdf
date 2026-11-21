@@ -8,7 +8,7 @@ const distro = "Ubuntu";
 const bunHint = [
   "bun was not found in WSL (looked in $HOME/.bun/bin/bun).",
   "Install it with: curl -fsSL https://bun.sh/install | bash",
-  "The build also needs: sudo apt install build-essential pkg-config libx11-dev libxcursor-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev",
+  "The build also needs: sudo apt install build-essential pkg-config libx11-dev libxcursor-dev libxi-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev",
 ].join("\\n");
 
 export function shellQuote(s: string): string {

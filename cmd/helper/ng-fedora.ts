@@ -32,6 +32,7 @@ const packages = [
   // GPUI and the app link these
   "libX11-devel",
   "libXcursor-devel",
+  "libXi-devel",
   "cairo-devel",
   "pango-devel",
   "gdk-pixbuf2-devel",
