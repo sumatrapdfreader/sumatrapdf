@@ -268,6 +268,23 @@ bool EngineMupdfSaveAsPdf(EngineBase*, Str destPath);
 bool EngineMupdfExtractPagesToPdf(EngineBase*, const Vec<int>& pages, Str destPath);
 bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
+// a signature field's check, for `cli verify`
+struct PdfSigCheck {
+    int pageNo = 0; // 0: not on a page
+    bool isSigned = false;
+    bool isTimestamp = false;
+    Str signer; // owned
+    // the signed bytes are as they were signed
+    bool digestOk = false;
+    // the signer's certificate chains to a trusted root
+    bool certOk = false;
+    Str certError; // owned, why not
+    // the file was changed (an incremental update) after this signature
+    bool changedAfter = false;
+    ~PdfSigCheck();
+};
+// false if the signatures can't be checked (not a PDF, no verifier)
+bool EngineMupdfVerifySignatures(EngineBase*, Vec<PdfSigCheck*>& out);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
 
 enum class SigVerdict {

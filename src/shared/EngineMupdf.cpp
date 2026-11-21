@@ -8921,11 +8921,30 @@ static RectF SigFieldRect(fz_context* ctx, pdf_obj* field) {
 
 static int PageNoForSigField(fz_context* ctx, pdf_document* pdfdoc, pdf_obj* field) {
     pdf_obj* page = pdf_dict_get(ctx, field, PDF_NAME(P));
-    if (!page) {
-        return 0;
+    if (page) {
+        int pageNo = pdf_lookup_page_number(ctx, pdfdoc, page);
+        return pageNo >= 0 ? pageNo + 1 : 0;
     }
-    int pageNo = pdf_lookup_page_number(ctx, pdfdoc, page);
-    return pageNo >= 0 ? pageNo + 1 : 0;
+    // /P is optional (mupdf doesn't write it for a field it makes): the page
+    // whose /Annots has the field, or one of its widgets
+    pdf_obj* kids = pdf_dict_get(ctx, field, PDF_NAME(Kids));
+    int nPages = pdf_count_pages(ctx, pdfdoc);
+    for (int i = 0; i < nPages; i++) {
+        pdf_obj* annots = pdf_dict_get(ctx, pdf_lookup_page_obj(ctx, pdfdoc, i), PDF_NAME(Annots));
+        int n = pdf_array_len(ctx, annots);
+        for (int k = 0; k < n; k++) {
+            pdf_obj* a = pdf_array_get(ctx, annots, k);
+            if (pdf_objcmp(ctx, a, field) == 0) {
+                return i + 1;
+            }
+            for (int j = 0; j < pdf_array_len(ctx, kids); j++) {
+                if (pdf_objcmp(ctx, a, pdf_array_get(ctx, kids, j)) == 0) {
+                    return i + 1;
+                }
+            }
+        }
+    }
+    return 0;
 }
 
 static void AppendSigDictText(fz_context* ctx, str::Builder& out, pdf_obj* sigDict, Str label, pdf_obj* key) {
@@ -10163,6 +10182,90 @@ static TempStr GetSignatures(EngineMupdf* e, PdfSigResult* res) {
 #else
     (void)e;
     return {};
+#endif
+}
+
+PdfSigCheck::~PdfSigCheck() {
+    str::Free(signer);
+    str::Free(certError);
+}
+
+// each signature field: signed?, by whom, are the signed bytes intact, is the
+// signer's certificate trusted, was the file changed after. With the
+// platform's verifier, so on every platform that has one
+bool EngineMupdfVerifySignatures(EngineBase* engine, Vec<PdfSigCheck*>& out) {
+#if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return false;
+    }
+    fz_context* ctx = e->Ctx();
+    pdf_document* doc = e->pdfdoc;
+    ScopedRecursiveMutex scope(&e->docLock);
+    pdf_pkcs7_verifier* verifier = nullptr;
+    Vec<pdf_obj*> fields;
+    bool ok = true;
+    fz_var(verifier);
+    fz_var(ok);
+    fz_try(ctx) {
+#if OS_WIN
+        verifier = pkcs7_windows_new_verifier(ctx);
+#elif OS_DARWIN
+        verifier = pkcs7_mac_new_verifier(ctx);
+#else
+        verifier = pkcs7_openssl_new_verifier(ctx);
+#endif
+        CollectSignatureFields(ctx, doc, fields);
+        for (pdf_obj* field : fields) {
+            auto* c = new PdfSigCheck();
+            VecAppend(out, c);
+            c->pageNo = PageNoForSigField(ctx, doc, field);
+            c->isSigned = pdf_signature_is_signed(ctx, doc, field);
+            if (!c->isSigned) {
+                continue;
+            }
+            pdf_obj* value = pdf_dict_get(ctx, field, PDF_NAME(V));
+            c->isTimestamp = SubFilterIsDocTimeStamp(SigSubFilter(ctx, value ? value : field));
+            pdf_pkcs7_distinguished_name* name = pdf_signature_get_signatory(ctx, verifier, doc, field);
+            if (name) {
+                char* formatted = pdf_signature_format_distinguished_name(ctx, name);
+                // without the parts the certificate leaves empty ("o=, ou=")
+                StrVec parts;
+                Split(&parts, Str(formatted ? formatted : ""), StrL(", "), true);
+                str::Builder signer;
+                for (Str part : parts) {
+                    if (!str::EndsWith(part, StrL("="))) {
+                        signer.Append(fmt("%s%s", len(signer) > 0 ? StrL(", ") : StrL(""), part));
+                    }
+                }
+                c->signer = str::Dup(ToStr(signer));
+                fz_free(ctx, formatted);
+                pdf_signature_drop_distinguished_name(ctx, name);
+            }
+            pdf_signature_error certErr = pdf_check_certificate(ctx, verifier, doc, field);
+            c->digestOk = pdf_check_digest(ctx, verifier, doc, field) == PDF_SIGNATURE_ERROR_OKAY;
+            c->certOk = certErr == PDF_SIGNATURE_ERROR_OKAY;
+            if (!c->certOk) {
+                c->certError = str::Dup(Str(pdf_signature_error_description(certErr)));
+            }
+            c->changedAfter = pdf_signature_incremental_change_since_signing(ctx, doc, field) != 0;
+        }
+    }
+    fz_always(ctx) {
+        for (pdf_obj* field : fields) {
+            pdf_drop_obj(ctx, field);
+        }
+        pdf_drop_verifier(ctx, verifier);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        ok = false;
+    }
+    return ok;
+#else
+    (void)engine;
+    (void)out;
+    return false;
 #endif
 }
 

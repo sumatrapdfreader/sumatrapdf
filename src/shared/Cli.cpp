@@ -122,7 +122,8 @@ static bool OptTakesValue(Str name) {
                                   "-o",       "--output",   "--dpi",          "--install",      "--opacity",
                                   "--color",  "--size",     "--format",       "--position",     "--start",
                                   "--margin", "--every",    "--ranges",       "--text",         "--contents",
-                                  "--at",     "--rect"};
+                                  "--at",     "--rect",     "--key",          "--key-password", "--key-password-env",
+                                  "--field",  "--reason",   "--location"};
     for (const char* n : names) {
         if (str::Eq(name, Str(n))) {
             return true;
@@ -2900,6 +2901,135 @@ static int CmdAnnotate(CliCtx& cx) {
     return kCliOk;
 }
 
+//--- sign, verify
+
+// a copy of the PDF signed with the certificate and key in a .pfx / .p12
+static int CmdSign(CliCtx& cx) {
+    Str path = cx.positional[0];
+    Str key = OptValue(cx, StrL("--key"));
+    if (len(key) == 0) {
+        return Fail(cx, kCliUsage, StrL("needs --key <file.pfx>: the certificate and private key to sign with"));
+    }
+    if (!file::Exists(key)) {
+        return Fail(cx, kCliCantOpen, fmt("'%s' doesn't exist", key));
+    }
+    Str keyPassword = OptValue(cx, StrL("--key-password"));
+    Str keyPasswordEnv = OptValue(cx, StrL("--key-password-env"));
+    if (len(keyPasswordEnv) > 0) {
+        const char* v = getenv(CStrTemp(keyPasswordEnv));
+        if (!v) {
+            return Fail(cx, kCliUsage, fmt("--key-password-env: %s isn't set", keyPasswordEnv));
+        }
+        keyPassword = Str(v);
+    }
+    float rect[4] = {};
+    Str rectStr = OptValue(cx, StrL("--rect"));
+    if (len(rectStr) > 0 && !ParseFloats(rectStr, rect, 4)) {
+        return Fail(cx, kCliUsage, fmt("--rect %s: use x,y,w,h in points from the page's top left", rectStr));
+    }
+    StrVec inputs;
+    inputs.Append(path);
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, inputs, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    if (CheckPdf(cx, path, &code) == 0) {
+        return code;
+    }
+    EngineBase* engine = OpenDoc(cx, path, &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    if (!PagesArg(cx, engine, pages, &code)) {
+        SafeEngineRelease(&engine);
+        return code;
+    }
+    PdfSignArgs args;
+    args.certPath = key;
+    args.certPassword = keyPassword;
+    args.fieldName = OptValue(cx, StrL("--field"));
+    args.reason = OptValue(cx, StrL("--reason"));
+    args.location = OptValue(cx, StrL("--location"));
+    args.pageNo = pages[0];
+    if (len(rectStr) > 0) {
+        args.rect = RectF(rect[0], rect[1], rect[2], rect[3]);
+    }
+    Str err;
+    // the signature is made while saving
+    bool ok =
+        EngineMupdfSignDocument(engine, args, &err) && (dir::CreateForFile(dest), EngineMupdfSaveCopy(engine, dest));
+    int nPages = engine->PageCount();
+    SafeEngineRelease(&engine);
+    if (!ok) {
+        return Fail(cx, kCliFailed, len(err) > 0 ? fmt("couldn't sign: %s", err) : fmt("couldn't write '%s'", dest));
+    }
+    return ReportPdfWritten(cx, dest, nPages);
+}
+
+// the signatures and whether each holds: valid (the bytes as signed, by a
+// trusted certificate), untrusted (the bytes as signed, by a certificate not
+// trusted here) or invalid (changed since signing); exit 0 only when there is
+// a signature and every one is valid
+static int CmdVerify(CliCtx& cx) {
+    int code = kCliOk;
+    EngineBase* engine = OpenDoc(cx, cx.positional[0], &code);
+    if (!engine) {
+        return code;
+    }
+    if (!EngineMupdfIsPdf(engine)) {
+        SafeEngineRelease(&engine);
+        return Fail(cx, kCliNotSupported, StrL("only a PDF is checked for signatures"));
+    }
+    Vec<PdfSigCheck*> checks;
+    bool checked = EngineMupdfVerifySignatures(engine, checks);
+    SafeEngineRelease(&engine);
+    if (!checked) {
+        DeleteVecMembers(checks);
+        return Fail(cx, kCliNotSupported, StrL("signatures can't be checked on this platform"));
+    }
+    str::Builder out;
+    int n = 0;
+    bool allValid = true;
+    for (PdfSigCheck* c : checks) {
+        if (!c->isSigned) {
+            continue;
+        }
+        Str verdict = !c->digestOk ? StrL("invalid") : c->certOk ? StrL("valid") : StrL("untrusted");
+        allValid = allValid && c->digestOk && c->certOk;
+        if (cx.json) {
+            out.Append(fmt("%s{\"page\":%d,\"signer\":%s,\"verdict\":%s,\"digestOk\":%s,\"certOk\":%s",
+                           n > 0 ? StrL(",") : StrL(""), c->pageNo, JStr(c->signer), JStr(verdict),
+                           c->digestOk ? StrL("true") : StrL("false"), c->certOk ? StrL("true") : StrL("false")));
+            if (len(c->certError) > 0) {
+                out.Append(fmt(",\"certError\":%s", JStr(c->certError)));
+            }
+            out.Append(fmt(",\"changedAfter\":%s,\"timestamp\":%s}", c->changedAfter ? StrL("true") : StrL("false"),
+                           c->isTimestamp ? StrL("true") : StrL("false")));
+        } else {
+            TempStr where = c->pageNo > 0 ? fmt("page %d", c->pageNo) : str::DupTemp(StrL("not on a page"));
+            out.Append(fmt("%s (%s): %s", len(c->signer) > 0 ? c->signer : StrL("unknown signer"), where, verdict));
+            if (len(c->certError) > 0) {
+                out.Append(fmt(", %s", c->certError));
+            }
+            if (c->changedAfter) {
+                out.Append(StrL(", the file was changed after it"));
+            }
+            out.AppendChar('\n');
+        }
+        n++;
+    }
+    DeleteVecMembers(checks);
+    bool ok = n > 0 && allValid;
+    if (cx.json) {
+        Out(fmt("{\"count\":%d,\"valid\":%s,\"signatures\":[%s]}\n", n, ok ? StrL("true") : StrL("false"), ToStr(out)));
+    } else {
+        Out(n > 0 ? ToStrTemp(out) : str::DupTemp(StrL("no signatures\n")));
+    }
+    return ok ? kCliOk : kCliFailed;
+}
+
 //--- agent-skill
 
 // SKILL.md for Claude Code, Codex and other agents: when to use the cli and
@@ -2949,6 +3079,9 @@ Page ranges: `1-3,7,10-N` (N is the last page). Page numbers are 1-based.
 - `split <file.pdf> -o folder/ [--every 10 | --ranges "1-3;4-N"]`
 - `compress <file.pdf> -o small.pdf`
 - `encrypt <file.pdf> -o locked.pdf --new-password-env NAME`
+- `sign <file.pdf> --key me.pfx --key-password-env NAME [--pages 2 --rect x,y,w,h] -o signed.pdf`
+- `verify <file.pdf>`: each signature valid, untrusted (intact, signer not
+  trusted here) or invalid; exit 0 only if all are valid
 - `decrypt <file.pdf> -o open.pdf --password-env NAME`
 - `watermark <file.pdf> DRAFT -o out.pdf [--opacity 0.25] [--color #808080]`
 - `number <file.pdf> -o out.pdf [--format "Page {n} of {total}"] [--position bottom-center]`
@@ -3094,6 +3227,19 @@ static const CliCmd gCmds[] = {
      "annotate paper.pdf highlight --text \"main result\" -o marked.pdf\n"
      "annotate paper.pdf note --pages 3 --at 72,100 --contents \"check this\" -o noted.pdf",
      CmdAnnotate},
+    {"sign", "<file.pdf> --key <file.pfx> -o <out.pdf>",
+     "a copy of a PDF signed with the certificate and private key in a .pfx / .p12 file",
+     "-o <file>                  the signed PDF\n--key <file.pfx>           the certificate and key\n"
+     "--key-password <pw>        or --key-password-env <NAME>\n--pages <n>                the page the "
+     "signature goes on (default 1)\n--rect x,y,w,h             where on it (default: mupdf's box)\n"
+     "--field <name>             an unsigned signature field to fill in instead\n--reason, --location <text>  "
+     "shown in the signature",
+     "sign contract.pdf --key me.pfx --key-password-env PFX_PASS --pages 2 --rect 72,700,200,60 -o signed.pdf",
+     CmdSign},
+    {"verify", "<file.pdf>",
+     "the signatures and whether each holds: valid, untrusted (intact, signer not trusted) or invalid; exit 0 "
+     "only if all are valid",
+     "", "verify signed.pdf\nverify contract.pdf --json", CmdVerify},
     {"agent-skill", "[--install claude|codex|agents|<dir>]",
      "the SKILL.md that tells an AI agent when and how to use these commands",
      "--install <where>  write it to ~/.claude/skills/sumatrapdf (claude), ~/.codex/skills (codex),\n"
