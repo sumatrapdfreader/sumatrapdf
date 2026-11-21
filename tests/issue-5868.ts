@@ -11,9 +11,8 @@
 //
 // Run:  bun tests/issue-5868.ts [--no-build]   (or via tests/run-almost-all.ts)
 
-import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { extractPageText, ROOT, runStandalone } from "./util.ts";
+import { copyFromOneDrive, extractPageText, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 export async function testit(): Promise<void> {
   const pdf = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
@@ -28,9 +27,8 @@ export async function testit(): Promise<void> {
   }
 
   // the #5627 repro isn't in the repo (see agents.md); check it when present
-  const repro = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-5627.pdf";
-  if (!existsSync(repro)) {
-    console.log(`issue-5868: SKIP tracking-space half (no ${repro})`);
+  const repro = tmpPath("bug-5627.pdf");
+  if (!copyFromOneDrive("!sumatra/bugs/bug-5627.pdf", repro)) {
     return;
   }
   const trk = extractPageText(repro, 1).replaceAll("\n", " ");

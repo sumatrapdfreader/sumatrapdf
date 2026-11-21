@@ -7,12 +7,12 @@
 import { Glob } from "bun";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
-import { EXE, ROOT } from "./util.ts";
+import { EXE, ROOT, oneDrivePath } from "./util.ts";
 
 const BASELINE = path.join(ROOT, "tests/chm-dump-all-baseline.txt");
 const OUT = path.join(ROOT, "tests/tmp/chm-dump-all-output.txt");
 
-const roots = ["C:/Users/kjk/OneDrive/!sumatra", ROOT];
+const roots = [oneDrivePath("!sumatra"), ROOT];
 
 function collectChmFiles(): string[] {
   const seen = new Set<string>();

@@ -15,10 +15,10 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, copyFromOneDrive, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled, sendCommandSync } from "./win-automation.ts";
 
-const MOBI = String.raw`C:\Users\kjk\OneDrive\!sumatra\1000.mobi`;
+const MOBI = tmpPath("1000.mobi");
 
 const APPDATA = tmpPath("ad-hoc-chapters-settings-appdata");
 const SETTINGS_PATH = join(APPDATA, "SumatraPDF-settings.txt");
@@ -141,8 +141,7 @@ FileStates [
 }
 
 async function testMobi(): Promise<void> {
-  if (!existsSync(MOBI)) {
-    console.log(`ad-hoc-chapters-settings: skip MOBI section, missing ${MOBI}`);
+  if (!copyFromOneDrive("!sumatra/1000.mobi", MOBI)) {
     return;
   }
 

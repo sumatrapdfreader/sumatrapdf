@@ -16,15 +16,15 @@
 // multi-level outline; uses one from the local bugs folder and skips cleanly if
 // it isn't present (so tests/run-almost-all.ts keeps going).
 
-import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control";
-import { cmdId, tmpPath, USE_NG } from "./util";
+import { cmdId, copyFromOneDrive, tmpPath, USE_NG } from "./util";
 import { launchControlled, sendCommandSync, killAndWait } from "./win-automation";
 import { collapseTreeRoots, countVisibleTreeRows, findChildWindow, sleep, treeGetSelection } from "./winapi";
 
 // a PDF with a nested (multi-level) table of contents
-const TOC_PDF = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-1352-merged_manuals-1.4.2.pdf";
+const TOC_PDF = "!sumatra/bugs/bug-1352-merged_manuals-1.4.2.pdf";
 
 // command ids, looked up by name from src/Commands.h (the numeric values shift
 // whenever commands are added/removed, so never hardcode them)
@@ -71,15 +71,10 @@ function checkExpanded(collapsed: number, after: number, hasSelection: boolean) 
 }
 
 export async function testit(): Promise<void> {
-  if (!existsSync(TOC_PDF)) {
-    console.log(`  SKIP: TOC test PDF not found: ${TOC_PDF}`);
+  const pdf = tmpPath("issue-1998.pdf");
+  if (!copyFromOneDrive(TOC_PDF, pdf)) {
     return;
   }
-
-  // copy the PDF out of OneDrive to a local path -- opening a cloud-backed file
-  // can block/delay window creation (hydration), which breaks the automation
-  const pdf = tmpPath("issue-1998.pdf");
-  copyFileSync(TOC_PDF, pdf);
 
   const appdata = tmpPath("issue-1998-appdata");
   rmSync(appdata, { recursive: true, force: true });

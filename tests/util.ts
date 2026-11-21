@@ -507,6 +507,36 @@ export function tmpPath(name: string): string {
   return join(TMP_DIR, name);
 }
 
+// Test files too big or too private for the repo (see agents.md) live in OneDrive.
+export const ONEDRIVE_DIR = IS_WIN
+  ? join(process.env.USERPROFILE || "C:\\Users\\kjk", "OneDrive")
+  : "/Users/kjk/OneDrive";
+
+// <OneDrive>/<relPath> with this platform's separators; relPath uses "/"
+export function oneDrivePath(relPath: string): string {
+  return join(ONEDRIVE_DIR, ...relPath.split("/"));
+}
+
+// Copies <OneDrive>/<relPath> to dst, which the test then opens: a OneDrive file
+// can be a cloud placeholder, and opening one blocks until it downloads. False,
+// after a warning, when it couldn't: the caller stops the test (or the part of
+// it that needs the file).
+export function copyFromOneDrive(relPath: string, dst: string): boolean {
+  const src = oneDrivePath(relPath);
+  if (!existsSync(src)) {
+    console.log(`  warning: ${src} isn't there (a test file from OneDrive)`);
+    return false;
+  }
+  try {
+    mkdirSync(dirname(dst), { recursive: true });
+    copyFileSync(src, dst);
+  } catch (e) {
+    console.log(`  warning: couldn't copy ${src}: ${(e as Error).message}`);
+    return false;
+  }
+  return true;
+}
+
 export function crc32(buf: Uint8Array): number {
   let c = 0xffffffff;
   for (const b of buf) {
@@ -896,8 +926,23 @@ function checkInteractiveDesktop(): void {
   process.exit(1);
 }
 
+// the test scripts are type checked with tsc
+function checkTsc(): void {
+  if (Bun.which("tsc")) {
+    return;
+  }
+  const install = IS_MAC
+    ? "brew install typescript"
+    : IS_WIN
+      ? "npm install -g typescript   (needs Node.js: winget install OpenJS.NodeJS)"
+      : "npm install -g typescript";
+  console.error(`\n❌ tsc (the TypeScript compiler) isn't on PATH. Install it with:\n     ${install}`);
+  process.exit(1);
+}
+
 export async function runSuiteMain(testit: (opts: SuiteOptions) => Promise<void>): Promise<void> {
   const silent = isSilentArg();
+  checkTsc();
   checkInteractiveDesktop();
   // an exe named with -exe is the one to test, so don't build over it
   if (!process.argv.includes("--no-build") && !EXE_FROM_ARGV) {
@@ -943,6 +988,7 @@ export function buildApp(opts?: { silent?: boolean }): void {
 // builds (unless --no-build), runs testit(), exits 0 on pass / 1 on failure.
 export async function runStandalone(testit: () => void | Promise<void>, name?: string): Promise<void> {
   const label = name ?? (process.argv[1] ?? "test").replace(/\\/g, "/").split("/").pop()!.replace(/\.ts$/, "");
+  checkTsc();
   // a single test is worth running locked (most don't touch the cursor), but
   // say so, or a cursor-driven failure reads as a bug in the code
   if (!hasInteractiveDesktop()) {

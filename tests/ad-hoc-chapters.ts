@@ -9,13 +9,13 @@
 //
 // Run: bun tests/ad-hoc-chapters.ts [--no-build]
 
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, copyFromOneDrive, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled, sendCommandSync } from "./win-automation.ts";
 
-const MOBI = String.raw`C:\Users\kjk\OneDrive\!sumatra\1000.mobi`;
-const EPUB = String.raw`C:\Users\kjk\OneDrive\!sumatra\Dune - Frank Herbert.epub`;
+const MOBI = tmpPath("1000.mobi");
+const EPUB = tmpPath("Dune - Frank Herbert.epub");
 
 // whole-section hard timeout: kill the running SumatraPDF and fail loudly
 // rather than hang the session (see project memory gui-test-scripts-need-watchdog)
@@ -91,8 +91,7 @@ function assertEq(label: string, got: unknown, want: unknown): void {
 }
 
 async function testMobi(): Promise<void> {
-  if (!existsSync(MOBI)) {
-    console.log(`ad-hoc-chapters: skip MOBI section, missing ${MOBI}`);
+  if (!copyFromOneDrive("!sumatra/1000.mobi", MOBI)) {
     return;
   }
 
@@ -246,8 +245,7 @@ async function testMobi(): Promise<void> {
 }
 
 async function testEpub(): Promise<void> {
-  if (!existsSync(EPUB)) {
-    console.log(`ad-hoc-chapters: skip EPUB section, missing ${EPUB}`);
+  if (!copyFromOneDrive("!sumatra/Dune - Frank Herbert.epub", EPUB)) {
     return;
   }
 

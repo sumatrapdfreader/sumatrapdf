@@ -4,9 +4,9 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, oneDrivePath, runStandalone, tmpPath } from "./util.ts";
 
-const samplesDir = "C:/Users/kjk/OneDrive/!sumatra/!test files/ofd";
+const samplesDir = oneDrivePath("!sumatra/!test files/ofd");
 
 // lines mupdf logs when it skips or substitutes OFD content
 const ofdWarning = /OFD|ofd/;

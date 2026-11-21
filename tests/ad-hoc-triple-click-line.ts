@@ -7,16 +7,13 @@
 // NOT registered in tests/run-almost-all.ts — run directly:
 //   bun tests/ad-hoc-triple-click-line.ts [--no-build]
 
-import { existsSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { homedir } from "node:os";
+import { writeFileSync } from "node:fs";
 import { ControlCommand, runControlCommand } from "./control.ts";
-import { EXE, runStandalone, tmpPath, makeOneLinePdf } from "./util.ts";
+import { EXE, copyFromOneDrive, runStandalone, tmpPath, makeOneLinePdf } from "./util.ts";
 
 const LINE = "To our shareholders";
 const CLICK_WORD = "shareholders";
 
-const AMAZON_LETTERS_PDF = join(homedir(), "OneDrive", "!sumatra", "All Amazon Shareholder Letters.pdf");
 const AMAZON_LINE = "To our shareholders:";
 
 async function runTripleClickCase(pdfPath: string, expectedLine: string, label: string): Promise<void> {
@@ -45,14 +42,13 @@ export async function testit(): Promise<void> {
   writeFileSync(pdfPath, makeOneLinePdf(LINE));
   await runTripleClickCase(pdfPath, LINE, `triple-click line select on "${LINE}"`);
 
-  if (existsSync(AMAZON_LETTERS_PDF)) {
+  const amazonPdf = tmpPath("All Amazon Shareholder Letters.pdf");
+  if (copyFromOneDrive("!sumatra/All Amazon Shareholder Letters.pdf", amazonPdf)) {
     await runTripleClickCase(
-      AMAZON_LETTERS_PDF,
+      amazonPdf,
       AMAZON_LINE,
       `triple-click line select on Amazon letters page 1 ("${AMAZON_LINE}")`,
     );
-  } else {
-    console.log(`• skip Amazon letters PDF: not found at ${AMAZON_LETTERS_PDF}`);
   }
 }
 

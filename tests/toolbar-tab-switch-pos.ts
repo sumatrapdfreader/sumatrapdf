@@ -3,9 +3,9 @@
 //
 // Run: bun tests/toolbar-tab-switch-pos.ts [--no-build]
 
-import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { cmdId, EXE, runStandalone } from "./util.ts";
+import { cmdId, copyFromOneDrive, EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 import { sleep } from "./winapi.ts";
 
 function parseToolbarX(layoutOutput: string): number {
@@ -52,8 +52,9 @@ async function waitHiddenTabGoToPage(client: { hiddenTabGoToPage: () => Promise<
 }
 
 export async function testit(): Promise<void> {
-  const mobi = "C:\\Users\\kjk\\OneDrive\\!sumatra\\1000.mobi";
-  const docPath = existsSync(mobi) ? mobi : "tests/issue-5846.epub";
+  // a big book when there is one, else the small EPUB in the repo
+  const mobi = tmpPath("1000.mobi");
+  const docPath = copyFromOneDrive("!sumatra/1000.mobi", mobi) ? mobi : join(ROOT, "tests", "issue-5846.epub");
   const cmdOpen = cmdId("CmdOpenFile");
   const cmdPrint = cmdId("CmdPrint");
   await withControlledSumatra(

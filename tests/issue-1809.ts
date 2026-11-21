@@ -13,8 +13,7 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { IS_WIN } from "./host.ts";
-import { EXE, ROOT, runStandalone, assemblePdf } from "./util.ts";
+import { EXE, ROOT, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 
 const PDF = join(ROOT, "tests", "issue-1809.pdf");
 
@@ -66,15 +65,9 @@ export async function testit(): Promise<void> {
 
 if (import.meta.main) {
   writeFileSync(PDF, makeTransparentPdf());
-  // a copy for the bug folder; elsewhere the Windows path is a file name in the cwd
-  const bugs = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-1809.pdf";
-  let wroteBugs = false;
-  if (IS_WIN) {
-    try {
-      writeFileSync(bugs, makeTransparentPdf());
-      wroteBugs = true;
-    } catch {}
-  }
-  console.log(wroteBugs ? `wrote ${PDF} and ${bugs}` : `wrote ${PDF}`);
+  // a copy to open by hand, named like the files of the bug folder
+  const bugs = tmpPath("bug-1809.pdf");
+  writeFileSync(bugs, makeTransparentPdf());
+  console.log(`wrote ${PDF} and ${bugs}`);
   await runStandalone(testit);
 }
