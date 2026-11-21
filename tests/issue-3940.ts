@@ -63,6 +63,21 @@ async function uiState(client: ControlClient): Promise<string> {
   return String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
 }
 
+// the main window has drawn text
+async function waitDrawn(client: ControlClient, text: string): Promise<void> {
+  const deadline = Date.now() + POPUP_MS;
+  for (;;) {
+    const layout = String((await client.request(ControlCommand.TestToolWindow, ["layout", "frame"]))[1] ?? "");
+    if (layout.includes(`'${text}'`)) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`issue-3940: '${text}' was never drawn`);
+    }
+    await sleep(40);
+  }
+}
+
 // ng shows the menu in a gpui popup; orig's TrackPopupMenu can't be driven from here
 async function testNgCopy(pdf: string): Promise<void> {
   setClipboardText("");
@@ -83,13 +98,15 @@ async function testNgCopy(pdf: string): Promise<void> {
       }
       await sleep(40);
     }
-    await client.waitForRenderIdle();
-    const keys = [...Array(OBJECT_PROPS_DOWNS).fill(VK_DOWN), VK_RIGHT, VK_RETURN];
-    for (const key of keys) {
-      await client.request(ControlCommand.TestInput, ["key", key, 0, 0, 0]);
-      // a submenu takes the keyboard before its first frame lays out its rows
-      await client.waitForRenderIdle();
+    // a menu takes the keyboard before its first frame lays out its rows, and
+    // a key that arrives before them does nothing
+    await waitDrawn(client, "Object Properties");
+    for (let i = 0; i < OBJECT_PROPS_DOWNS; i++) {
+      await client.request(ControlCommand.TestInput, ["key", VK_DOWN, 0, 0, 0]);
     }
+    await client.request(ControlCommand.TestInput, ["key", VK_RIGHT, 0, 0, 0]);
+    await waitDrawn(client, PICKED);
+    await client.request(ControlCommand.TestInput, ["key", VK_RETURN, 0, 0, 0]);
     const got = await getClipboardText(POPUP_MS);
     if (got !== PICKED) {
       throw new Error(`issue-3940: clipboard ${JSON.stringify(got)}, expected ${JSON.stringify(PICKED)}`);
