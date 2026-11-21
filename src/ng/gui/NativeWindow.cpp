@@ -41,6 +41,7 @@
 #include "Settings.h"
 #include "Theme.h"
 #include "AppSettings.h"
+#include "Translations.h"
 
 #if OS_WIN
 
@@ -513,6 +514,14 @@ static void PresentScroll(MainWindow* win, HWND hwnd) {
     }
 }
 
+// a print job is running and was not asked to stop
+static bool IsPrintInProgress(MainWindow* win) {
+    if (!win || !win->printThread || AtomicBoolGet(&win->printCanceled)) {
+        return false;
+    }
+    return WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT;
+}
+
 static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
     switch (msg) {
         case WM_NCCALCSIZE:
@@ -735,6 +744,26 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             // high contrast can be toggled at any time (Alt+Shift+PrtScr)
             UpdateThemeAfterHighContrastChange();
             break;
+        case WM_QUERYENDSESSION:
+            // block logoff/shutdown while a print job runs. The reason shows
+            // in the shutdown UI, where the user can wait or force it.
+            // ENDSESSION_CRITICAL: the system goes down regardless
+            if ((lp & ENDSESSION_CRITICAL) || !IsPrintInProgress(WinOf(hwnd))) {
+                ShutdownBlockReasonDestroy(hwnd);
+                return TRUE;
+            }
+            ShutdownBlockReasonCreate(hwnd, ToWStrTemp(Tr("Printing in progress.")).s);
+            return FALSE;
+        case WM_ENDSESSION:
+            // the forced CloseWindow below aborts any print job still running
+            ScheduleSaveSettings();
+            FlushScheduledSaveSettings();
+            // wp is FALSE when the session end was cancelled: we keep running
+            if (wp == TRUE) {
+                gDontSaveSettings = true;
+                CloseWindow(WinOf(hwnd), true, true);
+            }
+            return 0;
         case WM_SYSCOLORCHANGE:
             // the default theme and high contrast mode draw in the system colors
             SumatraUpdateTheme();

@@ -472,6 +472,7 @@ import { testit as paletteCommandAvailability } from "./palette-command-availabi
 import { testit as recentFilesMenu } from "./recent-files-menu.ts";
 import { testit as contextMenuParity } from "./context-menu-parity.ts";
 import { testit as mainMenuParity } from "./main-menu-parity.ts";
+import { testit as endSessionSaves } from "./end-session-saves.ts";
 import { testit as commandPaletteSettings } from "./command-palette-settings.ts";
 import { testit as settingsRestoreDefault } from "./settings-restore-default.ts";
 import { testit as palettePrefixKeys } from "./palette-prefix-keys.ts";
@@ -1041,6 +1042,7 @@ export const tests: NamedTest[] = [
   ["recent-files-menu", recentFilesMenu],
   ["context-menu-parity", contextMenuParity],
   ["main-menu-parity", mainMenuParity],
+  ["end-session-saves", endSessionSaves],
   ["command-palette-settings", commandPaletteSettings],
   ["settings-restore-default", settingsRestoreDefault],
   ["issue-6287", issue6287],
