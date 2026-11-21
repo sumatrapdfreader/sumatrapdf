@@ -4368,6 +4368,8 @@ struct TouchEvent {
     float y = 0;
     bool pen = false;
 
+    bool eraser = false;
+
     bool primary = true;
     Modifiers modifiers = {};
     bool propagate = true;
@@ -5949,6 +5951,14 @@ struct AccessibilityDocumentSource {
     void* data = nullptr;
     uint64_t textRevision = 0;
     uint64_t selectionRevision = 0;
+
+    int (*partCount)(void* data) = nullptr;
+    Str (*partName)(void* data, int part) = nullptr;
+    Str (*partText)(void* data, int part) = nullptr;
+
+    bool (*partBounds)(void* data, int part, Bounds* out) = nullptr;
+
+    bool (*partRange)(void* data, int part, int* start, int* end) = nullptr;
 };
 
 struct ElLifecycle {
@@ -10184,6 +10194,14 @@ int WindowAccessibilityNodeIndex(const Window* win, uint32_t nodeId);
 Str WindowAccessibilityTextValue(const AccessibilityNode& node);
 
 bool WindowAccessibilityHasText(const AccessibilityNode& node);
+
+int WindowAccessibilityPartCount(const AccessibilityNode& node);
+Str WindowAccessibilityPartName(const AccessibilityNode& node, int part);
+Str WindowAccessibilityPartText(const AccessibilityNode& node, int part);
+bool WindowAccessibilityPartBounds(const AccessibilityNode& node, int part,
+                                   Bounds* out);
+bool WindowAccessibilityPartRange(const AccessibilityNode& node, int part,
+                                  Selection* out);
 bool WindowAccessibilityTextSelection(const AccessibilityNode& node,
                                       Selection* out);
 int WindowAccessibilityTextCaret(const AccessibilityNode& node);
@@ -39488,6 +39506,8 @@ PlatformInput InputPinch(float x, float y, float delta, Modifiers modifiers,
                          TouchPhase phase);
 PlatformInput InputGesture(const GestureEvent& ev);
 PlatformInput InputTouch(const TouchEvent& ev);
+
+bool WindowTouchKept(Window* win, uint32_t pointerId);
 
 void WindowGestureBegin(Window* win, float x, float y);
 void WindowGestureEnd(Window* win);

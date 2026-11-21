@@ -24924,6 +24924,49 @@ bool WindowAccessibilityHasText(const AccessibilityNode& node) {
     return node.document.text || WindowAccessibilityTextValue(node).s;
 }
 
+int WindowAccessibilityPartCount(const AccessibilityNode& node) {
+    const AccessibilityDocumentSource& d = node.document;
+    return d.partCount ? std::max(0, d.partCount(d.data)) : 0;
+}
+
+static bool AccessibilityPartValid(const AccessibilityNode& node, int part) {
+    return part >= 0 && part < WindowAccessibilityPartCount(node);
+}
+
+Str WindowAccessibilityPartName(const AccessibilityNode& node, int part) {
+    const AccessibilityDocumentSource& d = node.document;
+    if (!d.partName || !AccessibilityPartValid(node, part)) return {};
+    return d.partName(d.data, part);
+}
+
+Str WindowAccessibilityPartText(const AccessibilityNode& node, int part) {
+    const AccessibilityDocumentSource& d = node.document;
+    if (!d.partText || !AccessibilityPartValid(node, part)) return {};
+    Str text = d.partText(d.data, part);
+    return text.s ? text : StrL("");
+}
+
+bool WindowAccessibilityPartBounds(const AccessibilityNode& node, int part,
+                                   Bounds* out) {
+    const AccessibilityDocumentSource& d = node.document;
+    if (!out || !d.partBounds || !AccessibilityPartValid(node, part)) {
+        return false;
+    }
+    return d.partBounds(d.data, part, out);
+}
+
+bool WindowAccessibilityPartRange(const AccessibilityNode& node, int part,
+                                  Selection* out) {
+    const AccessibilityDocumentSource& d = node.document;
+    if (!out || !d.partRange || !AccessibilityPartValid(node, part)) {
+        return false;
+    }
+    int start = 0, end = 0;
+    if (!d.partRange(d.data, part, &start, &end)) return false;
+    *out = {start, end};
+    return true;
+}
+
 bool WindowAccessibilityTextSelection(const AccessibilityNode& node,
                                       Selection* out) {
     if (!out) return false;
@@ -26705,6 +26748,10 @@ static TouchCapture* TouchCaptureFind(Window* win, uint32_t pointerId) {
         }
     }
     return nullptr;
+}
+
+bool WindowTouchKept(Window* win, uint32_t pointerId) {
+    return win && TouchCaptureFind(win, pointerId);
 }
 
 static void DispatchTouch(Window* win, const TouchEvent& in) {
@@ -238100,6 +238147,8 @@ struct WinAccessibility
         return -1;
     }
     IRawElementProviderFragment* NewNode(int index);
+
+    IRawElementProviderFragment* NewPart(int index, int part);
 };
 
 struct WinAccessibilityNode
@@ -238290,12 +238339,62 @@ struct WinTextRange : ComObject<ITextRangeProvider> {
     HRESULT STDMETHODCALLTYPE GetChildren(SAFEARRAY** out) override;
 };
 
+struct WinAccessibilityPart
+    : ComObject<IRawElementProviderSimple, IRawElementProviderFragment,
+                IValueProvider> {
+    WinAccessibility* root = nullptr;
+    uint32_t id = 0;
+    int part = 0;
+
+    WinAccessibilityPart(WinAccessibility* owner, uint32_t nodeId, int at)
+        : root(owner), id(nodeId), part(at) {
+        root->AddRef();
+    }
+    ~WinAccessibilityPart() override { root->Release(); }
+
+    const AccessibilityNode* Node() const {
+        const AccessibilityNode* node = root->Node(id);
+        if (!node || part >= WindowAccessibilityPartCount(*node)) {
+            return nullptr;
+        }
+        return node;
+    }
+
+    WIN_UIA_FRAGMENT_METHODS
+    HRESULT STDMETHODCALLTYPE SetValue(LPCWSTR value) override;
+    HRESULT STDMETHODCALLTYPE get_Value(BSTR* out) override;
+    HRESULT STDMETHODCALLTYPE get_IsReadOnly(BOOL* out) override;
+};
+
 IRawElementProviderFragment* WinAccessibility::NewNode(int index) {
     if (!win || index < 0 || index >= win->accessibility.len) {
         return nullptr;
     }
     return static_cast<IRawElementProviderFragment*>(
         new WinAccessibilityNode(this, win->accessibility[index].id));
+}
+
+IRawElementProviderFragment* WinAccessibility::NewPart(int index, int part) {
+    if (!win || index < 0 || index >= win->accessibility.len) {
+        return nullptr;
+    }
+    const AccessibilityNode& node = win->accessibility[index];
+    if (part < 0 || part >= WindowAccessibilityPartCount(node)) {
+        return nullptr;
+    }
+    return static_cast<IRawElementProviderFragment*>(
+        new WinAccessibilityPart(this, node.id, part));
+}
+
+static void AccessibilityScreenRect(const WinAccessibility* root,
+                                    const Bounds& b, UiaRect* out) {
+    POINT origin = {};
+    ClientToScreen(root->hwnd, &origin);
+    float scale = DipScale(root->win);
+    out->left = (float)origin.x + b.x * scale;
+    out->top = (float)origin.y + b.y * scale;
+    out->width = b.w * scale;
+    out->height = b.h * scale;
 }
 
 static int AccessibilityAncestor(const WinAccessibility* root, int index,
@@ -238610,6 +238709,21 @@ HRESULT WinAccessibility::ElementProviderFromPoint(
             found = i;
         }
     }
+
+    int parts = found >= 0
+                    ? WindowAccessibilityPartCount(win->accessibility[found])
+                    : 0;
+    for (int part = 0; part < parts; part++) {
+        Bounds b;
+        if (!WindowAccessibilityPartBounds(win->accessibility[found], part,
+                                           &b)) {
+            continue;
+        }
+        if (px >= b.x && px <= b.Right() && py >= b.y && py <= b.Bottom()) {
+            *out = NewPart(found, part);
+            return S_OK;
+        }
+    }
     *out = NewNode(found);
     return S_OK;
 }
@@ -238833,6 +238947,14 @@ HRESULT WinAccessibilityNode::Navigate(NavigateDirection direction,
                 break;
             }
         }
+
+        int parts = WindowAccessibilityPartCount(node);
+        if (parts > 0 &&
+            (direction == NavigateDirection_LastChild || child < 0)) {
+            int part = direction == NavigateDirection_LastChild ? parts - 1 : 0;
+            *out = root->NewPart(index, part);
+            return S_OK;
+        }
         *out = root->NewNode(child);
         return S_OK;
     }
@@ -238843,6 +238965,13 @@ HRESULT WinAccessibilityNode::Navigate(NavigateDirection direction,
                 sibling = i;
                 break;
             }
+        }
+
+        if (sibling < 0 && node.parent >= 0 &&
+            WindowAccessibilityPartCount(
+                root->win->accessibility[node.parent]) > 0) {
+            *out = root->NewPart(node.parent, 0);
+            return S_OK;
         }
     } else if (direction == NavigateDirection_PreviousSibling) {
         for (int i = index - 1; i >= 0; i--) {
@@ -238856,11 +238985,12 @@ HRESULT WinAccessibilityNode::Navigate(NavigateDirection direction,
     return S_OK;
 }
 
-HRESULT WinAccessibilityNode::GetRuntimeId(SAFEARRAY** out) {
+static HRESULT AccessibilityRuntimeId(uint32_t id, int part, SAFEARRAY** out) {
     if (!out) {
         return E_INVALIDARG;
     }
-    *out = SafeArrayCreateVector(VT_I4, 0, 2);
+    int n = part < 0 ? 2 : 3;
+    *out = SafeArrayCreateVector(VT_I4, 0, n);
     if (!*out) {
         return E_OUTOFMEMORY;
     }
@@ -238873,8 +239003,15 @@ HRESULT WinAccessibilityNode::GetRuntimeId(SAFEARRAY** out) {
     }
     values[0] = UiaAppendRuntimeId;
     values[1] = (LONG)id;
+    if (part >= 0) {
+        values[2] = (LONG)part + 1;
+    }
     SafeArrayUnaccessData(*out);
     return S_OK;
+}
+
+HRESULT WinAccessibilityNode::GetRuntimeId(SAFEARRAY** out) {
+    return AccessibilityRuntimeId(id, -1, out);
 }
 
 HRESULT WinAccessibilityNode::get_BoundingRectangle(UiaRect* out) {
@@ -238886,13 +239023,7 @@ HRESULT WinAccessibilityNode::get_BoundingRectangle(UiaRect* out) {
     if (!node || !root->hwnd) {
         return UIA_E_ELEMENTNOTAVAILABLE;
     }
-    POINT origin = {};
-    ClientToScreen(root->hwnd, &origin);
-    float scale = DipScale(root->win);
-    out->left = (float)origin.x + node->bounds.x * scale;
-    out->top = (float)origin.y + node->bounds.y * scale;
-    out->width = node->bounds.w * scale;
-    out->height = node->bounds.h * scale;
+    AccessibilityScreenRect(root, node->bounds, out);
     return S_OK;
 }
 
@@ -239288,6 +239419,33 @@ HRESULT WinAccessibilityNode::GetVisibleRanges(SAFEARRAY** out) {
     return AccessibilityRangeArray(new WinTextRange(root, id, 0, n), out);
 }
 
+static int AccessibilityPartOf(IRawElementProviderSimple* child, uint32_t id) {
+    IRawElementProviderFragment* fragment = nullptr;
+    if (!child ||
+        FAILED(child->QueryInterface(__uuidof(IRawElementProviderFragment),
+                                     (void**)&fragment)) ||
+        !fragment) {
+        return -1;
+    }
+    SAFEARRAY* rid = nullptr;
+    HRESULT hr = fragment->GetRuntimeId(&rid);
+    fragment->Release();
+    if (FAILED(hr) || !rid) {
+        return -1;
+    }
+    int part = -1;
+    LONG* values = nullptr;
+    if (rid->rgsabound[0].cElements == 3 &&
+        SUCCEEDED(SafeArrayAccessData(rid, (void**)&values))) {
+        if (values[0] == UiaAppendRuntimeId && values[1] == (LONG)id) {
+            part = (int)values[2] - 1;
+        }
+        SafeArrayUnaccessData(rid);
+    }
+    SafeArrayDestroy(rid);
+    return part;
+}
+
 HRESULT WinAccessibilityNode::RangeFromChild(IRawElementProviderSimple* child,
                                              ITextRangeProvider** out) {
     const AccessibilityNode* node = nullptr;
@@ -239295,8 +239453,18 @@ HRESULT WinAccessibilityNode::RangeFromChild(IRawElementProviderSimple* child,
         return hr;
     }
 
-    (void)child;
-    return E_INVALIDARG;
+    int part = AccessibilityPartOf(child, id);
+    Selection range;
+    if (!WindowAccessibilityPartRange(*node, part, &range)) {
+        return E_INVALIDARG;
+    }
+    Str text = WindowAccessibilityTextValue(*node);
+    int n = len(text);
+    int lo =
+        RopeOffsetToOffsetUtf16(text, std::max(0, std::min(range.start, n)));
+    int hi = RopeOffsetToOffsetUtf16(text, std::max(0, std::min(range.end, n)));
+    *out = new WinTextRange(root, id, lo, std::max(lo, hi));
+    return S_OK;
 }
 
 HRESULT WinAccessibilityNode::RangeFromPoint(UiaPoint point,
@@ -239874,6 +240042,182 @@ HRESULT WinTextRange::GetChildren(SAFEARRAY** out) {
     return AccessibilityEmptyProviderArray(out);
 }
 
+HRESULT WinAccessibilityPart::get_ProviderOptions(ProviderOptions* out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    *out = ProviderOptions_ServerSideProvider;
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::GetPatternProvider(PATTERNID pattern,
+                                                 IUnknown** out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    *out = nullptr;
+    if (!Node()) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    if (pattern == UIA_ValuePatternId) {
+        return QueryInterface(__uuidof(IValueProvider), (void**)out);
+    }
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::GetPropertyValue(PROPERTYID property,
+                                               VARIANT* out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    VariantInit(out);
+    const AccessibilityNode* node = Node();
+    if (!node) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    if (property == UIA_ControlTypePropertyId) {
+        VariantInt(out, UIA_CustomControlTypeId);
+    } else if (property == UIA_NamePropertyId) {
+        VariantString(out, WindowAccessibilityPartName(*node, part));
+    } else if (property == UIA_IsControlElementPropertyId ||
+               property == UIA_IsContentElementPropertyId ||
+               property == UIA_IsEnabledPropertyId ||
+               property == UIA_IsValuePatternAvailablePropertyId ||
+               property == UIA_ValueIsReadOnlyPropertyId) {
+        VariantBool(out, true);
+    } else if (property == UIA_IsKeyboardFocusablePropertyId ||
+               property == UIA_HasKeyboardFocusPropertyId) {
+        VariantBool(out, false);
+    } else if (property == UIA_ValueValuePropertyId) {
+        VariantString(out, WindowAccessibilityPartText(*node, part));
+    } else if (property == UIA_IsOffscreenPropertyId && root->hwnd) {
+        Bounds b;
+        RECT client = {};
+        GetClientRect(root->hwnd, &client);
+        float scale = DipScale(root->win);
+        bool off = !WindowAccessibilityPartBounds(*node, part, &b) ||
+                   b.Right() <= 0 || b.Bottom() <= 0 ||
+                   b.x * scale >= (float)client.right ||
+                   b.y * scale >= (float)client.bottom;
+        VariantBool(out, off);
+    }
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::get_HostRawElementProvider(
+    IRawElementProviderSimple** out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    *out = nullptr;
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::Navigate(NavigateDirection direction,
+                                       IRawElementProviderFragment** out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    *out = nullptr;
+    int index = root->NodeIndex(id);
+    if (index < 0 || !Node()) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    if (direction == NavigateDirection_Parent) {
+        *out = root->NewNode(index);
+    } else if (direction == NavigateDirection_NextSibling) {
+        *out = root->NewPart(index, part + 1);
+    } else if (direction == NavigateDirection_PreviousSibling) {
+        if (part > 0) {
+            *out = root->NewPart(index, part - 1);
+            return S_OK;
+        }
+
+        int child = -1;
+        for (int i = index + 1; i < root->win->accessibility.len; i++) {
+            if (root->win->accessibility[i].parent == index) {
+                child = i;
+            }
+        }
+        *out = root->NewNode(child);
+    }
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::GetRuntimeId(SAFEARRAY** out) {
+    return AccessibilityRuntimeId(id, part, out);
+}
+
+HRESULT WinAccessibilityPart::get_BoundingRectangle(UiaRect* out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    *out = {};
+    const AccessibilityNode* node = Node();
+    if (!node || !root->hwnd) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    Bounds b;
+    if (WindowAccessibilityPartBounds(*node, part, &b)) {
+        AccessibilityScreenRect(root, b, out);
+    }
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::GetEmbeddedFragmentRoots(SAFEARRAY** out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    *out = nullptr;
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::SetFocus() {
+    return Node() ? S_OK : UIA_E_ELEMENTNOTAVAILABLE;
+}
+
+HRESULT WinAccessibilityPart::get_FragmentRoot(
+    IRawElementProviderFragmentRoot** out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    if (!root->win) {
+        *out = nullptr;
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    *out = static_cast<IRawElementProviderFragmentRoot*>(root);
+    root->AddRef();
+    return S_OK;
+}
+
+HRESULT WinAccessibilityPart::SetValue(LPCWSTR) {
+    return Node() ? UIA_E_INVALIDOPERATION : UIA_E_ELEMENTNOTAVAILABLE;
+}
+
+HRESULT WinAccessibilityPart::get_Value(BSTR* out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    *out = nullptr;
+    const AccessibilityNode* node = Node();
+    if (!node) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    *out = AccessibilityBstr(WindowAccessibilityPartText(*node, part));
+    return *out ? S_OK : E_OUTOFMEMORY;
+}
+
+HRESULT WinAccessibilityPart::get_IsReadOnly(BOOL* out) {
+    if (!out) {
+        return E_INVALIDARG;
+    }
+    if (!Node()) {
+        return UIA_E_ELEMENTNOTAVAILABLE;
+    }
+    *out = TRUE;
+    return S_OK;
+}
+
 static void AccessibilityDocumentsChanged(WinAccessibility* root,
                                           bool listening);
 
@@ -240222,6 +240566,156 @@ bool AccessibilityWinSmokeTest(Window* win, uint32_t nodeId) {
     if (fragment) {
         fragment->Release();
     }
+    return ok;
+}
+
+static bool AccessibilityPropertyIs(IRawElementProviderFragment* fragment,
+                                    PROPERTYID property, Str want) {
+    IRawElementProviderSimple* simple = nullptr;
+    if (!fragment ||
+        FAILED(fragment->QueryInterface(__uuidof(IRawElementProviderSimple),
+                                        (void**)&simple)) ||
+        !simple) {
+        return false;
+    }
+    VARIANT value = {};
+    BSTR wanted = AccessibilityBstr(want);
+    bool ok = SUCCEEDED(simple->GetPropertyValue(property, &value)) &&
+              value.vt == VT_BSTR && wanted && value.bstrVal &&
+              wcscmp(wanted, value.bstrVal) == 0;
+    SysFreeString(wanted);
+    VariantClear(&value);
+    simple->Release();
+    return ok;
+}
+
+static int AccessibilityFragmentPart(IRawElementProviderFragment* fragment,
+                                     uint32_t id) {
+    IRawElementProviderSimple* simple = nullptr;
+    if (!fragment ||
+        FAILED(fragment->QueryInterface(__uuidof(IRawElementProviderSimple),
+                                        (void**)&simple))) {
+        return -1;
+    }
+    int part = AccessibilityPartOf(simple, id);
+    simple->Release();
+    return part;
+}
+
+bool AccessibilityWinPartsSmokeTest(Window* win, uint32_t nodeId) {
+    const AccessibilityNode* node = WindowAccessibilityNode(win, nodeId);
+    if (!node) {
+        return false;
+    }
+    int parts = WindowAccessibilityPartCount(*node);
+    WinAccessibility* root =
+        AccessibilityWinNew(win, (void*)GetDesktopWindow());
+    int index = root->NodeIndex(nodeId);
+    IRawElementProviderFragment* doc = root->NewNode(index);
+    ITextProvider* text = nullptr;
+    bool ok = doc &&
+              SUCCEEDED(doc->QueryInterface(__uuidof(ITextProvider),
+                                            (void**)&text)) &&
+              text;
+    IRawElementProviderFragment* at = nullptr;
+    ok = ok && SUCCEEDED(doc->Navigate(NavigateDirection_FirstChild, &at));
+    int seen = 0;
+    while (ok && at) {
+        int part = AccessibilityFragmentPart(at, nodeId);
+        if (part >= 0) {
+            ok = part == seen;
+            ok = ok && AccessibilityPropertyIs(
+                           at, UIA_NamePropertyId,
+                           WindowAccessibilityPartName(*node, part));
+            ok = ok && AccessibilityPropertyIs(
+                           at, UIA_ValueValuePropertyId,
+                           WindowAccessibilityPartText(*node, part));
+            IRawElementProviderFragment* parent = nullptr;
+            ok = ok &&
+                 SUCCEEDED(at->Navigate(NavigateDirection_Parent, &parent)) &&
+                 parent && AccessibilityFragmentPart(parent, nodeId) < 0;
+            if (parent) {
+                parent->Release();
+            }
+
+            IRawElementProviderSimple* simple = nullptr;
+            ITextRangeProvider* range = nullptr;
+            BSTR got = nullptr;
+            at->QueryInterface(__uuidof(IRawElementProviderSimple),
+                               (void**)&simple);
+            ok = ok && simple &&
+                 SUCCEEDED(text->RangeFromChild(simple, &range)) && range &&
+                 SUCCEEDED(range->GetText(-1, &got));
+            BSTR wanted =
+                AccessibilityBstr(WindowAccessibilityPartText(*node, part));
+            ok = ok && got && wanted && wcscmp(got, wanted) == 0;
+            SysFreeString(wanted);
+            SysFreeString(got);
+            if (range) {
+                range->Release();
+            }
+            if (simple) {
+                simple->Release();
+            }
+
+            Bounds b;
+            if (ok && WindowAccessibilityPartBounds(*node, part, &b)) {
+                float scale = DipScale(win);
+                IRawElementProviderFragment* hit = nullptr;
+                ok = SUCCEEDED(root->ElementProviderFromPoint(
+                         (b.x + b.w / 2) * scale, (b.y + b.h / 2) * scale,
+                         &hit)) &&
+                     AccessibilityFragmentPart(hit, nodeId) == part;
+                if (hit) {
+                    hit->Release();
+                }
+            }
+            seen++;
+        } else {
+            ok = seen == 0;
+        }
+        IRawElementProviderFragment* next = nullptr;
+        ok =
+            ok && SUCCEEDED(at->Navigate(NavigateDirection_NextSibling, &next));
+        at->Release();
+        at = next;
+    }
+    if (at) {
+        at->Release();
+    }
+    ok = ok && seen == parts;
+    IRawElementProviderFragment* last = nullptr;
+    ok = ok && SUCCEEDED(doc->Navigate(NavigateDirection_LastChild, &last));
+    ok = ok &&
+         (parts == 0 || AccessibilityFragmentPart(last, nodeId) == parts - 1);
+    IRawElementProviderFragment* before = nullptr;
+    if (ok && last && parts > 0) {
+
+        IRawElementProviderFragment* first = root->NewPart(index, 0);
+        ok = first && SUCCEEDED(first->Navigate(
+                          NavigateDirection_PreviousSibling, &before));
+        bool hasChild = false;
+        for (int i = 0; i < win->accessibility.len; i++) {
+            hasChild = hasChild || win->accessibility[i].parent == index;
+        }
+        ok = ok && (before != nullptr) == hasChild;
+        if (first) {
+            first->Release();
+        }
+    }
+    if (before) {
+        before->Release();
+    }
+    if (last) {
+        last->Release();
+    }
+    if (text) {
+        text->Release();
+    }
+    if (doc) {
+        doc->Release();
+    }
+    AccessibilityWinClose(root);
     return ok;
 }
 
@@ -254366,12 +254860,20 @@ static void TouchPointer(Window* win, UINT msg, WPARAM wParam, LPARAM lParam) {
     p->touchLastY = y;
 }
 
-static void PointerTouchEvent(Window* win, UINT msg, WPARAM wParam,
+static bool PenIsEraser(UINT32 id) {
+    POINTER_PEN_INFO info = {};
+    if (!GetPointerPenInfo(id, &info)) {
+        return false;
+    }
+    return (info.penFlags & (PEN_FLAG_INVERTED | PEN_FLAG_ERASER)) != 0;
+}
+
+static bool PointerTouchEvent(Window* win, UINT msg, WPARAM wParam,
                               LPARAM lParam) {
     UINT32 id = GET_POINTERID_WPARAM(wParam);
     POINTER_INPUT_TYPE type = PT_POINTER;
     if (!GetPointerType(id, &type) || (type != PT_TOUCH && type != PT_PEN)) {
-        return;
+        return false;
     }
     TouchEvent ev = {};
     ev.phase = TouchPhase::Moved;
@@ -254383,7 +254885,7 @@ static void PointerTouchEvent(Window* win, UINT msg, WPARAM wParam,
     } else if (msg == WM_POINTERCAPTURECHANGED) {
         ev.phase = TouchPhase::Cancelled;
     } else if (!IS_POINTER_INCONTACT_WPARAM(wParam)) {
-        return;
+        return false;
     }
     if (msg != WM_POINTERCAPTURECHANGED) {
         Point at =
@@ -254393,10 +254895,17 @@ static void PointerTouchEvent(Window* win, UINT msg, WPARAM wParam,
     }
     ev.pointerId = id;
     ev.pen = type == PT_PEN;
+    ev.eraser = ev.pen && PenIsEraser(id);
     ev.primary = IS_POINTER_PRIMARY_WPARAM(wParam);
     ev.modifiers = ModsNow();
+
+    bool kept = WindowTouchKept(win, id);
     PlatformInput in = InputTouch(ev);
     WindowDispatchInput(win, &in);
+    if (ev.phase == TouchPhase::Started) {
+        kept = WindowTouchKept(win, id);
+    }
+    return ev.pen && kept;
 }
 
 static bool IsTouchScrollMouse(Window* win) {
@@ -255598,7 +256107,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
         case WM_POINTERDOWN:
         case WM_POINTERUPDATE:
         case WM_POINTERUP:
-            PointerTouchEvent(win, msg, wParam, lParam);
+            if (PointerTouchEvent(win, msg, wParam, lParam)) {
+                return 0;
+            }
             if (IsTouchPointer(wParam)) {
                 TouchPointer(win, msg, wParam, lParam);
             }
