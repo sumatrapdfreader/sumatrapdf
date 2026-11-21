@@ -241,7 +241,12 @@ void AppShellInvalidate(MainWindow* win) {
     if (BrowserViewCreateInProgress()) {
         return;
     }
-    if (win && win->gpuiWin) {
+    // A dialog repaints the window it was opened for when it closes, and on
+    // quit it closes after that window was deleted (CloseCustomZoomDialog)
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+    if (win->gpuiWin) {
         gp::AppInvalidate(win->gpuiWin);
     }
     // what a tool window shows is this window's state
