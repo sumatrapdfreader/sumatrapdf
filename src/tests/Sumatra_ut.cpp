@@ -60,6 +60,7 @@ void RestrictedUseConfigTest();
 void ControlFrameActionTest();
 void HexViewTest();
 void SumatraPDFWebTest();
+void HttpTransferTest();
 void OpenDdeCmdTest();
 void UpdateCheckDecisionTest();
 
@@ -428,6 +429,7 @@ static void SumatraPDF_UnitTests() {
     ControlFrameActionTest();
     HexViewTest();
     SumatraPDFWebTest();
+    HttpTransferTest();
     OpenDdeCmdTest();
     UpdateCheckDecisionTest();
     CachedObjects_UnitTests();

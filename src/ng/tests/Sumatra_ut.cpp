@@ -57,6 +57,7 @@ void ParseFileArgsTest();
 void ParseCommandLineTest();
 void HexViewTest();
 void SumatraPDFWebTest();
+void HttpTransferTest();
 void RestrictedUseConfigTest();
 void ControlFrameActionTest();
 void OpenDdeCmdTest();
@@ -294,6 +295,7 @@ void SumatraPDF_UnitTests() {
     BenchRangeTest();
     HexViewTest();
     SumatraPDFWebTest();
+    HttpTransferTest();
 #if OS_WIN
     ParseCommandLineTest();
     ParseFileArgsTest();

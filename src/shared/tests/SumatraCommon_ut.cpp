@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
+#include "base/Http.h"
 
 #include "gui/UIModels.h"
 
@@ -663,4 +664,82 @@ void SumatraPDFWebTest() {
 
     utassert(!ParseOnlineFiles(StrL("{\"files\":[{\"name\":"), files));
     utassert(len(files) == 0);
+}
+
+// Run by tests/ad-hoc-http-transfer.ts, which serves 127.0.0.1:9332 and sets
+// SUMATRA_TEST_HTTP_SERVER; otherwise there is nothing to talk to.
+void HttpTransferTest() {
+    if (!getenv("SUMATRA_TEST_HTTP_SERVER")) {
+        return;
+    }
+    constexpr Str kBase = StrL("http://127.0.0.1:9332");
+    constexpr Str kAuth = StrL("Authorization: Bearer tk-123");
+    constexpr Str kBlob = StrL("application/octet-stream");
+    constexpr DWORD kErrTooLarge = 223;
+
+    utassert(OnlineURLAllowed(StrL("http://127.0.0.1:9332/x")));
+    utassert(!OnlineURLAllowed(StrL("http://127.0.0.1:9333/x")));
+    utassert(!OnlineURLAllowed(StrL("http://127.0.0.1:9332@evil.example/x")));
+
+    HttpRsp rsp;
+    utassert(!HttpGetWithHeaders(StrL("http://127.0.0.1:9333/api/files"), kAuth, &rsp));
+    utassert(rsp.error != 0 && rsp.httpStatusCode == (DWORD)-1);
+
+    HttpRsp noAuth;
+    utassert(!HttpGetWithHeaders(fmt("%s/api/files", kBase), Str(), &noAuth));
+    utassert(noAuth.httpStatusCode == 401 && noAuth.error == 0);
+
+    HttpRsp list;
+    utassert(HttpGetWithHeaders(fmt("%s/api/files", kBase), kAuth, &list));
+    utassert(list.httpStatusCode == 200 && list.error == 0);
+    utassert(str::IndexOf(ToStr(list.data), StrL("\"files\"")) >= 0);
+
+    HttpRsp redir;
+    utassert(!HttpGetWithHeaders(fmt("%s/redirect", kBase), kAuth, &redir));
+    utassert(redir.httpStatusCode == 302);
+
+    Str payload = StrL("0123456789abcdef");
+    HttpRsp up;
+    utassert(HttpPostUrlNoRedirect(fmt("%s/upload?name=a", kBase), kBlob, kAuth, payload, &up));
+    utassert(up.httpStatusCode == 200);
+    Str echo = ToStr(up.data);
+    utassert(str::IndexOf(echo, StrL("\"len\":16")) >= 0);
+    utassert(str::IndexOf(echo, StrL("\"ct\":\"application/octet-stream\"")) >= 0);
+    utassert(str::IndexOf(echo, StrL("\"auth\":\"Bearer tk-123\"")) >= 0);
+
+    HttpRsp up401;
+    utassert(!HttpPostUrlNoRedirect(fmt("%s/upload?name=a", kBase), kBlob, Str(), payload, &up401));
+    utassert(up401.httpStatusCode == 401);
+
+    HttpRsp upRedir;
+    utassert(!HttpPostUrlNoRedirect(fmt("%s/redirect", kBase), kBlob, kAuth, Str(), &upRedir));
+    utassert(upRedir.httpStatusCode == 302);
+
+    TempStr dest = GetTempFilePathTemp(StrL("sumatra-dl-"));
+    utassert(len(dest) > 0);
+    TempStr part = str::JoinTemp(dest, StrL(".part"));
+    HttpRsp dl;
+    utassert(HttpDownloadWithHeaders(fmt("%s/file", kBase), kAuth, dest, &dl));
+    utassert(dl.httpStatusCode == 200 && dl.error == 0);
+    utassert(file::GetSize(dest) == 100000);
+    utassert(file::GetSize(part) < 0);
+
+    // a failed download keeps the last good copy
+    HttpRsp dl404;
+    utassert(!HttpDownloadWithHeaders(fmt("%s/missing", kBase), kAuth, dest, &dl404));
+    utassert(dl404.httpStatusCode == 404);
+    utassert(file::GetSize(dest) == 100000);
+
+    HttpRsp dlRedir;
+    utassert(!HttpDownloadWithHeaders(fmt("%s/redirect", kBase), kAuth, dest, &dlRedir));
+    utassert(dlRedir.httpStatusCode == 302);
+    utassert(file::GetSize(dest) == 100000);
+
+    HttpRsp dlBig;
+    utassert(!HttpDownloadWithHeaders(fmt("%s/big", kBase), kAuth, dest, &dlBig));
+    utassert(dlBig.error == kErrTooLarge);
+    utassert(file::GetSize(dest) == 100000);
+    utassert(file::GetSize(part) < 0);
+
+    file::Delete(dest);
 }

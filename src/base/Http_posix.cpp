@@ -172,7 +172,230 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
     return PostUrl(url, ToStr(headers), body ? body : Str(), rspOut);
 }
 
+// Capped at 1 MiB like the Windows version; the rest of the body is dropped.
+constexpr i64 kHttpMemBodyCap = 1024 * 1024;
+// Desktop cap. The website still stores up to 200 MiB.
+constexpr i64 kHttpDownloadMaxBytes = (i64)50 << 20;
+// Win32 ERROR_INVALID_PARAMETER / ERROR_FILE_TOO_LARGE / ERROR_GEN_FAILURE
+constexpr DWORD kHttpErrInvalidParam = 87;
+constexpr DWORD kHttpErrFileTooLarge = 223;
+constexpr DWORD kHttpErrGenFailure = 31;
+constexpr DWORD kHttpNoStatus = (DWORD)-1;
+constexpr DWORD kHttpOk200 = 200;
+
+TempStr HttpErrorMsgTemp(DWORD err) {
+    if (err == kHttpErrFileTooLarge) {
+        return str::DupTemp(StrL("The file is too large."));
+    }
+    if (err == kHttpErrGenFailure) {
+        return str::DupTemp(StrL("Could not write the file."));
+    }
+    return str::DupTemp(Str(curl_easy_strerror((CURLcode)err)));
+}
+
+struct CappedBody {
+    str::Builder* out;
+    i64 cap;
+};
+
+static size_t AppendCapped(char* data, size_t size, size_t count, void* userData) {
+    size_t n = size * count;
+    auto* body = (CappedBody*)userData;
+    i64 room = body->cap - (i64)len(*body->out);
+    if (room > 0) {
+        i64 take = (i64)n < room ? (i64)n : room;
+        body->out->Append(Str(data, (int)take));
+    }
+    return n;
+}
+
+struct PartFile {
+    FILE* file = nullptr;
+    i64 got = 0;
+    bool tooBig = false;
+};
+
+static size_t WritePart(char* data, size_t size, size_t count, void* userData) {
+    size_t n = size * count;
+    auto* pf = (PartFile*)userData;
+    if (pf->got + (i64)n > kHttpDownloadMaxBytes) {
+        pf->tooBig = true;
+        return 0;
+    }
+    size_t written = fwrite(data, 1, n, pf->file);
+    pf->got += (i64)written;
+    return written;
+}
+
+// Shared by the "WithHeaders" calls: no redirects, extra headers in *listOut.
+static CURL* NewNoRedirectCurl(Str url, Str extraHeaders, curl_slist** listOut, HttpRsp* rspOut) {
+    CURL* curl = curl_easy_init();
+    if (!curl) {
+        rspOut->error = kHttpErrorFailure;
+        return nullptr;
+    }
+    SetCurlDefaults(curl, url);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, kHttpTimeoutSecs);
+    // no total limit: a transfer lives while data flows
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 0L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_LIMIT, 1L);
+    curl_easy_setopt(curl, CURLOPT_LOW_SPEED_TIME, kHttpTimeoutSecs);
+    *listOut = AppendHeaders(nullptr, HttpNormalizeHeadersTemp(extraHeaders));
+    return curl;
+}
+
+static void NoteStatus(CURL* curl, HttpRsp* rspOut) {
+    long status = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    rspOut->httpStatusCode = status > 0 ? (DWORD)status : kHttpNoStatus;
+}
+
+enum class HttpMethod {
+    Get,
+    Post
+};
+
+// Body into rspOut->data, capped. Ok: 200 for a GET, any 2xx for a POST.
+static bool InMemoryRequest(const char* what, HttpMethod method, Str url, Str contentType, Str extraHeaders, Str body,
+                            HttpRsp* rspOut) {
+    rspOut->data.Reset();
+    rspOut->error = kHttpErrorSuccess;
+    rspOut->httpStatusCode = kHttpNoStatus;
+    if (!OnlineURLAllowed(url)) {
+        rspOut->error = kHttpErrInvalidParam;
+        logf("%s: url: '%s' status: %d\n", Str(what), url, -1);
+        return false;
+    }
+
+    curl_slist* list = nullptr;
+    CURL* curl = NewNoRedirectCurl(url, extraHeaders, &list, rspOut);
+    if (!curl) {
+        return false;
+    }
+    bool isPost = method == HttpMethod::Post;
+    if (isPost) {
+        if (!str::IsEmptyOrWhiteSpace(contentType)) {
+            list = curl_slist_append(list, CStrTemp(fmt("Content-Type: %s", contentType)));
+        }
+        // no 100-continue round trip
+        list = curl_slist_append(list, "Expect:");
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.s ? body.s : "");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len(body));
+    }
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+    CappedBody cb{&rspOut->data, kHttpMemBodyCap};
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, AppendCapped);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &cb);
+
+    CURLcode code = curl_easy_perform(curl);
+    NoteStatus(curl, rspOut);
+    DWORD sc = rspOut->httpStatusCode;
+    // a received response is not a transport error
+    rspOut->error = sc != kHttpNoStatus ? kHttpErrorSuccess : (DWORD)code;
+    bool ok = isPost ? (sc >= 200 && sc < 300) : sc == kHttpOk200;
+    logf("%s: url: '%s' status: %d\n", Str(what), url, (int)sc);
+    curl_slist_free_all(list);
+    curl_easy_cleanup(curl);
+    return ok;
+}
+
+bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
+    return InMemoryRequest("HttpGetWithHeaders", HttpMethod::Get, url, Str(), extraHeaders, Str(), rspOut);
+}
+
+// A 3xx is an error; redirects are not followed.
+bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut) {
+    return InMemoryRequest("HttpPostUrlNoRedirect", HttpMethod::Post, url, contentType, extraHeaders, body, rspOut);
+}
+
+// Does not follow redirects. A body over 50 MiB deletes the partial file.
+// Writes destPath.part and renames it, so a failure keeps the last good copy.
+bool HttpDownloadWithHeaders(Str url, Str extraHeaders, Str destPath, HttpRsp* rspOut) {
+    rspOut->data.Reset();
+    rspOut->error = kHttpErrorSuccess;
+    rspOut->httpStatusCode = kHttpNoStatus;
+    if (!OnlineURLAllowed(url)) {
+        rspOut->error = kHttpErrInvalidParam;
+        logf("HttpDownloadWithHeaders: url: '%s' status: %d\n", url, -1);
+        return false;
+    }
+
+    curl_slist* list = nullptr;
+    CURL* curl = NewNoRedirectCurl(url, extraHeaders, &list, rspOut);
+    if (!curl) {
+        return false;
+    }
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+    curl_easy_setopt(curl, CURLOPT_MAXFILESIZE_LARGE, (curl_off_t)kHttpDownloadMaxBytes);
+
+    // a non-200 body lands in the part file too and is deleted below
+    TempStr partPath = str::JoinTemp(destPath, StrL(".part"));
+    PartFile pf;
+    pf.file = fopen(CStrTemp(partPath), "wb");
+    if (!pf.file) {
+        rspOut->error = kHttpErrGenFailure;
+        logf("HttpDownloadWithHeaders: url: '%s' status: %d\n", url, -1);
+        curl_slist_free_all(list);
+        curl_easy_cleanup(curl);
+        return false;
+    }
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &pf);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WritePart);
+
+    CURLcode code = curl_easy_perform(curl);
+    NoteStatus(curl, rspOut);
+    DWORD sc = rspOut->httpStatusCode;
+    bool ok = code == CURLE_OK && sc == kHttpOk200;
+    if (code != CURLE_OK && sc == kHttpNoStatus) {
+        rspOut->error = (DWORD)code;
+    }
+    if (pf.tooBig || code == CURLE_FILESIZE_EXCEEDED) {
+        rspOut->error = kHttpErrFileTooLarge;
+        ok = false;
+    }
+    if (fclose(pf.file) != 0 && ok) {
+        rspOut->error = kHttpErrGenFailure;
+        ok = false;
+    }
+    if (ok && !file::RenameReplace(destPath, partPath)) {
+        rspOut->error = kHttpErrGenFailure;
+        ok = false;
+    }
+    if (!ok) {
+        file::Delete(partPath);
+    }
+    logf("HttpDownloadWithHeaders: url: '%s' status: %d\n", url, (int)sc);
+    curl_slist_free_all(list);
+    curl_easy_cleanup(curl);
+    return ok;
+}
+
 #else
+
+// No libcurl (wasm): the web transfer calls are not supported.
+TempStr HttpErrorMsgTemp(DWORD) {
+    return str::DupTemp(StrL("HTTP transfers are not supported on this platform."));
+}
+
+static bool NotSupported(HttpRsp* rspOut) {
+    rspOut->error = kHttpErrorFailure;
+    rspOut->httpStatusCode = (DWORD)-1;
+    return false;
+}
+
+bool HttpGetWithHeaders(Str, Str, HttpRsp* rspOut) {
+    return NotSupported(rspOut);
+}
+
+bool HttpPostUrlNoRedirect(Str, Str, Str, Str, HttpRsp* rspOut) {
+    return NotSupported(rspOut);
+}
+
+bool HttpDownloadWithHeaders(Str, Str, Str, HttpRsp* rspOut) {
+    return NotSupported(rspOut);
+}
 
 static void AppendShellQuoted(str::Builder* cmd, Str s) {
     cmd->AppendChar('\'');
@@ -363,6 +586,38 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
 }
 
 #endif
+
+// Scheme, host, and port. A prefix of the production host is a different host.
+bool OnlineURLAllowed(Str url) {
+    struct Origin {
+        Str prefix;
+        Str host;
+    };
+    constexpr Origin kOrigins[] = {
+        {StrL("https://"), StrL("web.sumatrapdfreader.org")},
+        {StrL("https://"), StrL("web.sumatrapdfreader.org:443")},
+        {StrL("http://"), StrL("localhost:9332")},
+        {StrL("http://"), StrL("127.0.0.1:9332")},
+    };
+    for (const Origin& o : kOrigins) {
+        if (!str::StartsWithI(url, o.prefix)) {
+            continue;
+        }
+        Str rest = Str(url.s + len(o.prefix), len(url) - len(o.prefix));
+        if (len(rest) < len(o.host) || !str::EqI(Str(rest.s, len(o.host)), o.host)) {
+            continue;
+        }
+        // the authority ends here: nothing, a path, a query or a fragment
+        if (len(rest) == len(o.host)) {
+            return true;
+        }
+        char c = rest.s[len(o.host)];
+        if (c == '/' || c == '?' || c == '#') {
+            return true;
+        }
+    }
+    return false;
+}
 
 #if defined(GPUI_HAVE_CURL) && GPUI_HAVE_CURL
 struct HttpStreamState {
