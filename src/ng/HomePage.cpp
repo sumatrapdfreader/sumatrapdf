@@ -2028,6 +2028,10 @@ bool HomePageOnKeyDown(MainWindow* win, int vk, bool ctrl) {
         case VK_RETURN:
             OpenHomeEntry(win, Ui(win)->selIdx, ctrl);
             return true;
+#if OS_DARWIN
+        // a Mac's Delete key
+        case VK_BACK:
+#endif
         case VK_DELETE: {
             // remove the keyboard-selected entry from file history (not from disk)
             Str path = HomePageSelectedFilePathTemp(win);
