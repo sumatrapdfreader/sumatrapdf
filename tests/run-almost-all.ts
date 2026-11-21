@@ -240,6 +240,7 @@ import { testit as cliMarkdownCases } from "./cli-markdown-cases.ts";
 import { testit as cliMarkdownDocs } from "./cli-markdown-docs.ts";
 import { testit as cliStamp } from "./cli-stamp.ts";
 import { testit as cliImages } from "./cli-images.ts";
+import { testit as cliAnnotate } from "./cli-annotate.ts";
 import { testit as pdfStampDialog } from "./pdf-stamp-dialog.ts";
 import { testit as issue6487 } from "./issue-6487.ts";
 import { testit as issue6488 } from "./issue-6488.ts";
@@ -1142,6 +1143,7 @@ export const tests: NamedTest[] = [
   ["cli-markdown-docs", cliMarkdownDocs],
   ["cli-stamp", cliStamp],
   ["cli-images", cliImages],
+  ["cli-annotate", cliAnnotate],
   ["pdf-stamp-dialog", pdfStampDialog],
   ["issue-6487", issue6487],
   ["issue-6488", issue6488],

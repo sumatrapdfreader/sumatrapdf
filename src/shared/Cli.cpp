@@ -121,7 +121,8 @@ static bool OptTakesValue(Str name) {
     static const char* names[] = {"--pages",  "--password", "--password-env", "--new-password", "--new-password-env",
                                   "-o",       "--output",   "--dpi",          "--install",      "--opacity",
                                   "--color",  "--size",     "--format",       "--position",     "--start",
-                                  "--margin", "--every",    "--ranges"};
+                                  "--margin", "--every",    "--ranges",       "--text",         "--contents",
+                                  "--at",     "--rect"};
     for (const char* n : names) {
         if (str::Eq(name, Str(n))) {
             return true;
@@ -2700,6 +2701,205 @@ static int CmdNumber(CliCtx& cx) {
     return StampPdf(cx, path, stamps, dest, n);
 }
 
+//--- annotate
+
+// "x,y" or "x,y,w,h": numbers separated by commas; false if not n of them
+static bool ParseFloats(Str s, float* out, int n) {
+    StrVec parts;
+    Split(&parts, s, StrL(","), true);
+    if (len(parts) != n) {
+        return false;
+    }
+    for (int i = 0; i < n; i++) {
+        char* end = nullptr;
+        TempStr part = str::DupTemp(parts[i]);
+        str::TrimWSInPlace(part, str::TrimOpt::Both);
+        out[i] = strtof(CStrTemp(part), &end);
+        if (!end || *end != 0 || len(part) == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// the boxes of every place `text` is on a page, a box per line it is on
+static void FindTextBoxes(EngineBase* engine, int pageNo, Str text, bool matchCase, Vec<Vec<RectF>*>& out) {
+    PageText pt = engine->ExtractPageText(pageNo);
+    Codepoints t, q;
+    DecodeText(pt.text, t);
+    DecodeText(text, q);
+    int n = len(t.cps), nq = len(q.cps);
+    for (int i = 0; nq > 0 && i + nq <= n && pt.coords; i++) {
+        bool match = true;
+        for (int j = 0; j < nq && match; j++) {
+            match = FoldCase(t.cps[i + j], matchCase) == FoldCase(q.cps[j], matchCase);
+        }
+        if (!match) {
+            continue;
+        }
+        auto* rects = new Vec<RectF>();
+        for (int j = i; j < i + nq && j < pt.nCodepoints; j++) {
+            Rect c = pt.coords[j];
+            if (c.IsEmpty()) {
+                continue;
+            }
+            RectF r((float)c.x, (float)c.y, (float)c.dx, (float)c.dy);
+            // a character on the line of the last box (its middle within it) widens it
+            RectF* last = len(*rects) > 0 ? &(*rects)[len(*rects) - 1] : nullptr;
+            float mid = r.y + r.dy / 2;
+            if (last && mid >= last->y && mid <= last->y + last->dy) {
+                *last = last->Union(r);
+            } else {
+                VecAppend(*rects, r);
+            }
+        }
+        VecAppend(out, rects);
+        i += nq - 1;
+    }
+    FreePageText(&pt);
+}
+
+static int CmdAnnotate(CliCtx& cx) {
+    if (len(cx.positional) < 2) {
+        return Fail(cx, kCliUsage, StrL("usage: annotate <file.pdf> <type> ... -o <out.pdf>"));
+    }
+    Str path = cx.positional[0];
+    Str type = cx.positional[1];
+    struct NamedType {
+        const char* name;
+        AnnotationType type;
+    };
+    static const NamedType types[] = {
+        {"highlight", AnnotationType::Highlight}, {"underline", AnnotationType::Underline},
+        {"strikeout", AnnotationType::StrikeOut}, {"squiggly", AnnotationType::Squiggly},
+        {"note", AnnotationType::Text},           {"freetext", AnnotationType::FreeText},
+        {"square", AnnotationType::Square},       {"circle", AnnotationType::Circle},
+    };
+    AnnotationType at = AnnotationType::Unknown;
+    for (const NamedType& nt : types) {
+        if (str::EqI(type, Str(nt.name))) {
+            at = nt.type;
+        }
+    }
+    if (at == AnnotationType::Unknown) {
+        return Fail(cx, kCliUsage,
+                    fmt("'%s': use highlight, underline, strikeout, squiggly, note, freetext, square or circle", type));
+    }
+    bool markup = IsTextMarkup(at);
+    bool shape = at == AnnotationType::Square || at == AnnotationType::Circle;
+    Str text = OptValue(cx, StrL("--text"));
+    Str contents = OptValue(cx, StrL("--contents"));
+    float at4[4] = {};
+    if (markup && len(text) == 0) {
+        return Fail(cx, kCliUsage, fmt("%s needs --text <the words to mark>", type));
+    }
+    if (!markup && !shape && !ParseFloats(OptValue(cx, StrL("--at")), at4, 2)) {
+        return Fail(cx, kCliUsage, fmt("%s needs --at x,y (points from the page's top left)", type));
+    }
+    if (shape && !ParseFloats(OptValue(cx, StrL("--rect")), at4, 4)) {
+        return Fail(cx, kCliUsage, fmt("%s needs --rect x,y,w,h (points from the page's top left)", type));
+    }
+    if ((at == AnnotationType::Text || at == AnnotationType::FreeText) && len(contents) == 0) {
+        return Fail(cx, kCliUsage, fmt("%s needs --contents <its text>", type));
+    }
+    Str color = OptValue(cx, StrL("--color"));
+    u8 r = 0, g = 0, b = 0;
+    if (len(color) > 0 && !ParseHexColor(color, &r, &g, &b)) {
+        return Fail(cx, kCliUsage, fmt("--color %s: use #rrggbb", color));
+    }
+    StrVec inputs;
+    inputs.Append(path);
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, inputs, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    if (CheckPdf(cx, path, &code) == 0) {
+        return code;
+    }
+    EngineBase* engine = OpenDoc(cx, path, &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    // a note or a shape goes on one page: --pages or the first
+    if (!PagesArg(cx, engine, pages, &code)) {
+        SafeEngineRelease(&engine);
+        return code;
+    }
+    if (!markup) {
+        int first = pages[0];
+        VecReset(pages);
+        VecAppend(pages, first);
+    }
+    AnnotCreateArgs args;
+    args.annotType = at;
+    args.content = contents;
+    if (len(color) > 0) {
+        ParseColor(args.col, fmt("#%02x%02x%02x", r, g, b));
+    }
+    if (shape) {
+        args.hasRect = true;
+        args.rect = RectF(at4[0], at4[1], at4[2], at4[3]);
+    }
+    int n = 0;
+    str::Builder out;
+    bool failed = false;
+    EngineMupdfBeginOperation(engine, "cli annotate");
+    for (int pageNo : pages) {
+        // a markup goes on every place the text is; a note or a shape once
+        Vec<Vec<RectF>*> places;
+        if (markup) {
+            FindTextBoxes(engine, pageNo, text, HasOpt(cx, StrL("--match-case")), places);
+        }
+        int nPlaces = markup ? len(places) : 1;
+        for (int k = 0; k < nPlaces && !failed; k++) {
+            Annotation* annot = EngineMupdfCreateAnnotation(engine, pageNo, PointF(at4[0], at4[1]), &args);
+            if (!annot) {
+                failed = true;
+                break;
+            }
+            if (markup) {
+                SetQuadPointsAsRect(annot, *places[k]);
+            }
+            // creating a note doesn't set its text (free text's it does)
+            if (at == AnnotationType::Text) {
+                SetContents(annot, contents);
+            }
+            RectF rect = GetRect(annot);
+            if (cx.json) {
+                out.Append(fmt("%s{\"page\":%d,\"type\":%s,\"rect\":[%.1f,%.1f,%.1f,%.1f]}",
+                               n > 0 ? StrL(",") : StrL(""), pageNo, JStr(AnnotationTypeName(at)), rect.x, rect.y,
+                               rect.dx, rect.dy));
+            } else {
+                out.Append(fmt("page %d: %s\n", pageNo, AnnotationTypeName(at)));
+            }
+            n++;
+        }
+        for (Vec<RectF>* v : places) {
+            delete v;
+        }
+    }
+    EngineMupdfEndOperation(engine);
+    if (failed || (markup && n == 0)) {
+        SafeEngineRelease(&engine);
+        return Fail(cx, failed ? kCliFailed : kCliUsage,
+                    failed ? StrL("couldn't make the annotation") : fmt("'%s' isn't on the pages", text));
+    }
+    dir::CreateForFile(dest);
+    bool ok = EngineMupdfSaveCopy(engine, dest);
+    SafeEngineRelease(&engine);
+    if (!ok) {
+        return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+    }
+    if (cx.json) {
+        Out(fmt("{\"file\":%s,\"count\":%d,\"annotations\":[%s]}\n", JStr(dest), n, ToStr(out)));
+    } else {
+        Out(fmt("%s%s: %d annotations\n", ToStr(out), dest, n));
+    }
+    return kCliOk;
+}
+
 //--- agent-skill
 
 // SKILL.md for Claude Code, Codex and other agents: when to use the cli and
@@ -2752,6 +2952,8 @@ Page ranges: `1-3,7,10-N` (N is the last page). Page numbers are 1-based.
 - `decrypt <file.pdf> -o open.pdf --password-env NAME`
 - `watermark <file.pdf> DRAFT -o out.pdf [--opacity 0.25] [--color #808080]`
 - `number <file.pdf> -o out.pdf [--format "Page {n} of {total}"] [--position bottom-center]`
+- `annotate <file.pdf> highlight --text "words" -o out.pdf` (also underline,
+  strikeout, squiggly; `note --at x,y --contents ...`; `square --rect x,y,w,h`)
 
 An encrypted document needs `--password <pw>`, or better `--password-env NAME`
 so the password isn't on the command line.
@@ -2881,6 +3083,17 @@ static const CliCmd gCmds[] = {
      "--color <#rgb>     default #000000",
      "number report.pdf -o numbered.pdf\nnumber book.pdf --pages 5-N --format \"Page {n} of {total}\" -o out.pdf",
      CmdNumber},
+    {"annotate", "<file.pdf> <type> ... -o <out.pdf>",
+     "a copy of a PDF with annotations: words highlighted (underlined, ...), a note, a text box or a shape",
+     "-o <file>          the new PDF\n"
+     "highlight, underline, strikeout, squiggly: --text <words>  every place they are on --pages (default all)\n"
+     "note, freetext:     --at x,y --contents <text>  on the first of --pages\n"
+     "square, circle:     --rect x,y,w,h  on the first of --pages\n"
+     "--color <#rgb>     the annotation's color\n--match-case       for --text\n"
+     "x, y, w, h are points from the page's top left, as `search` gives them",
+     "annotate paper.pdf highlight --text \"main result\" -o marked.pdf\n"
+     "annotate paper.pdf note --pages 3 --at 72,100 --contents \"check this\" -o noted.pdf",
+     CmdAnnotate},
     {"agent-skill", "[--install claude|codex|agents|<dir>]",
      "the SKILL.md that tells an AI agent when and how to use these commands",
      "--install <where>  write it to ~/.claude/skills/sumatrapdf (claude), ~/.codex/skills (codex),\n"
