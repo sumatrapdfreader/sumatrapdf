@@ -9128,12 +9128,20 @@ bool AppGlobalRemove(App* app) {
     return AppGlobalRemoveRaw(app, AppGlobalKey<T>());
 }
 
+enum class WindowAppearance : uint8_t {
+    Light,
+    Dark
+};
+
 struct App {
     PaintApp* paint = nullptr;
     Vec<Window*> windows;
 
     void (*hostThemeHandler)(App*, bool dark) = nullptr;
     void (*onOpenUrls)(App*, const Str* urls, int n) = nullptr;
+
+    void (*onWindowAppearance)(App*, WindowAppearance) = nullptr;
+    WindowAppearance lastWindowAppearance = WindowAppearance::Light;
 
     void (*onWindowClosed)(void* data, Window* win) = nullptr;
     void* onWindowClosedData = nullptr;
@@ -10205,6 +10213,11 @@ void AppHostSetTheme(App* app, bool dark);
 
 using OpenUrlsFn = void (*)(App* app, const Str* urls, int n);
 void AppOnOpenUrls(App* app, OpenUrlsFn fn);
+
+WindowAppearance AppWindowAppearance(App* app);
+
+using WindowAppearanceFn = void (*)(App* app, WindowAppearance appearance);
+void AppOnWindowAppearanceChanged(App* app, WindowAppearanceFn fn);
 void AppOpenUrls(App* app, const Str* urls, int n);
 
 void AppOnShutdown(void (*fn)());
@@ -39511,6 +39524,11 @@ void PlatWake(App* app);
 
 void PlatClipboardSetText(Window* win, Str text);
 bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen);
+
+WindowAppearance PlatWindowAppearance();
+void PlatWatchWindowAppearance();
+
+void AppWindowAppearanceChanged(App* app);
 Str PlatClipboardGetText(Arena* a, Window* win);
 ClipboardItem PlatClipboardGetItem(Arena* a, Window* win);
 #endif

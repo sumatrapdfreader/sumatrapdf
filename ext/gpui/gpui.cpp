@@ -24204,6 +24204,35 @@ void ClipboardSetText(Window* win, Str text) {
     PlatClipboardSetText(win, text);
 }
 
+WindowAppearance AppWindowAppearance(App* app) {
+    (void)app;
+    return PlatWindowAppearance();
+}
+
+void AppOnWindowAppearanceChanged(App* app, WindowAppearanceFn fn) {
+    if (!app) {
+        return;
+    }
+    bool first = !app->onWindowAppearance;
+    app->onWindowAppearance = fn;
+    app->lastWindowAppearance = PlatWindowAppearance();
+    if (first && fn) {
+        PlatWatchWindowAppearance();
+    }
+}
+
+void AppWindowAppearanceChanged(App* app) {
+    if (!app || !app->onWindowAppearance) {
+        return;
+    }
+    WindowAppearance now = PlatWindowAppearance();
+    if (now == app->lastWindowAppearance) {
+        return;
+    }
+    app->lastWindowAppearance = now;
+    app->onWindowAppearance(app, now);
+}
+
 bool ClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
     if (!png || pngLen <= 0) {
         return false;
@@ -247025,6 +247054,12 @@ void PlatClipboardSetText(Window* win, Str text) {
     XFlush(gDpy);
 }
 
+WindowAppearance PlatWindowAppearance() {
+    return WindowAppearance::Light;
+}
+
+void PlatWatchWindowAppearance() {}
+
 bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
     if (!win || !win->plat || !gDpy) {
         return false;
@@ -251197,6 +251232,24 @@ static GpuiAppMenuTarget* gAppMenuTarget = nil;
 
 static GpuiAppDelegate* gAppDelegate = nil;
 
+@interface GpuiAppearanceObserver : NSObject
+@end
+
+@implementation GpuiAppearanceObserver
+- (void)observeValueForKeyPath:(NSString*)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary*)change
+                       context:(void*)context {
+    (void)keyPath;
+    (void)object;
+    (void)change;
+    (void)context;
+    gpui::AppWindowAppearanceChanged(gpui::gPlatApp);
+}
+@end
+
+static GpuiAppearanceObserver* gAppearanceObserver = nil;
+
 namespace gpui {
 
 static void InstallDefaultAppMenu() {
@@ -251722,6 +251775,27 @@ void WindowSetTextContentType(Window* win, Str value) {
                                          encoding:NSUTF8StringEncoding];
     }
     [win->plat->view setContentType:content];
+}
+
+WindowAppearance PlatWindowAppearance() {
+    NSAppearance* a = [NSApp effectiveAppearance];
+    NSAppearanceName best = [a bestMatchFromAppearancesWithNames:@[
+        NSAppearanceNameAqua, NSAppearanceNameDarkAqua
+    ]];
+    return [best isEqualToString:NSAppearanceNameDarkAqua]
+               ? WindowAppearance::Dark
+               : WindowAppearance::Light;
+}
+
+void PlatWatchWindowAppearance() {
+    if (gAppearanceObserver) {
+        return;
+    }
+    gAppearanceObserver = [[GpuiAppearanceObserver alloc] init];
+    [NSApp addObserver:gAppearanceObserver
+            forKeyPath:@"effectiveAppearance"
+               options:0
+               context:nullptr];
 }
 
 bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
@@ -253049,6 +253123,12 @@ void PlatClipboardSetText(Window* win, Str text) {
     (void)win;
     GpJsClipboardWrite(text.s, len(text));
 }
+
+WindowAppearance PlatWindowAppearance() {
+    return WindowAppearance::Light;
+}
+
+void PlatWatchWindowAppearance() {}
 
 bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
     (void)win;
@@ -254841,6 +254921,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             if (wParam == 0 && lParam &&
                 wcscmp((const wchar_t*)lParam, L"ImmersiveColorSet") == 0) {
                 ConfigureDwmDarkMode(hwnd);
+                AppWindowAppearanceChanged(win ? win->app : nullptr);
             }
             return 0;
         case WM_SIZE:
@@ -256263,6 +256344,13 @@ void PlatClipboardSetText(Window* win, Str text) {
         GlobalFree(h);
     }
 }
+
+WindowAppearance PlatWindowAppearance() {
+    return SystemIsDarkMode() ? WindowAppearance::Dark
+                              : WindowAppearance::Light;
+}
+
+void PlatWatchWindowAppearance() {}
 
 bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
     (void)win;
