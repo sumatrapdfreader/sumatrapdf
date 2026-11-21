@@ -8455,6 +8455,52 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
 #endif
 }
 
+// the image as GetImageForPageElement draws it (oriented as on the page), as
+// a PNG. PNG takes only gray and RGB, so CMYK and the rest become RGB.
+Str EngineMupdf::GetImagePngForPageElement(IPageElement* ipel) {
+    if (!ipel || ipel->GetKind() != kindPageElementImage) {
+        return {};
+    }
+    auto* pel = (PageElementImage*)ipel;
+    int pageNo = pel->loc.IsValid() ? PageNoFromLocation(pel->loc) : pel->pageNo;
+    auto* ctx = Ctx();
+    fz_pixmap* pix = FzLoadOrientedImage(this, pageNo, pel->rect, pel->imageID);
+    if (!pix) {
+        return {};
+    }
+    fz_pixmap* rgb = nullptr;
+    fz_buffer* buf = nullptr;
+    Str res;
+    fz_var(rgb);
+    fz_var(buf);
+    fz_var(res);
+    fz_try(ctx) {
+        fz_pixmap* src = pix;
+        fz_colorspace* cs = fz_pixmap_colorspace(ctx, pix);
+        if (!cs || !(fz_colorspace_is_gray(ctx, cs) || fz_colorspace_is_rgb(ctx, cs))) {
+            rgb = fz_convert_pixmap(ctx, pix, fz_device_rgb(ctx), nullptr, nullptr, fz_default_color_params, 1);
+            src = rgb;
+        }
+        buf = fz_new_buffer_from_pixmap_as_png(ctx, src, fz_default_color_params);
+        unsigned char* data = nullptr;
+        size_t n = fz_buffer_storage(ctx, buf, &data);
+        if (data && n > 0 && n <= (size_t)INT_MAX) {
+            res = str::Dup(Str((char*)data, (int)n));
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+        fz_drop_pixmap(ctx, rgb);
+        fz_drop_pixmap(ctx, pix);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        str::Free(res);
+        res = {};
+    }
+    return res;
+}
+
 static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
     auto* ctx = e->Ctx();
     // callers hold pagesLock + renderLock; docLock is needed too because this

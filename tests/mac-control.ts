@@ -486,7 +486,8 @@ export function macFrameVisible(): boolean {
   }
 }
 
-// RGBA rows of an 8-bit RGB or RGBA, non-interlaced PNG (what AppKit writes)
+// RGBA rows of an 8-bit gray, RGB or RGBA (with or without alpha),
+// non-interlaced PNG (what AppKit and mupdf write)
 function decodePng(png: Buffer): { w: number; h: number; rgba: Uint8Array } {
   let pos = 8;
   let w = 0;
@@ -502,7 +503,7 @@ function decodePng(png: Buffer): { w: number; h: number; rgba: Uint8Array } {
       h = data.readUInt32BE(4);
       const depth = data[8];
       const colorType = data[9];
-      channels = colorType === 6 ? 4 : colorType === 2 ? 3 : 0;
+      channels = ({ 0: 1, 2: 3, 4: 2, 6: 4 } as Record<number, number>)[colorType!] ?? 0;
       if (depth !== 8 || !channels || data[12] !== 0) {
         throw new Error(`decodePng: unsupported PNG (depth ${depth}, color type ${colorType}, interlace ${data[12]})`);
       }
@@ -541,14 +542,45 @@ function decodePng(png: Buffer): { w: number; h: number; rgba: Uint8Array } {
     }
     for (let x = 0; x < w; x++) {
       const o = (y * w + x) * 4;
+      const gray = channels < 3;
       out[o] = cur[x * channels]!;
-      out[o + 1] = cur[x * channels + 1]!;
-      out[o + 2] = cur[x * channels + 2]!;
-      out[o + 3] = channels === 4 ? cur[x * channels + 3]! : 255;
+      out[o + 1] = cur[x * channels + (gray ? 0 : 1)]!;
+      out[o + 2] = cur[x * channels + (gray ? 0 : 2)]!;
+      out[o + 3] = channels === 4 || channels === 2 ? cur[x * channels + channels - 1]! : 255;
     }
     prev = cur;
   }
   return { w, h, rgba: out };
+}
+
+// getClipboardDibInfo on macOS: the pasteboard's image as a pasting app gets
+// it, PNG or else TIFF (re-encoded as PNG by AppKit). null when it has none.
+export function macClipboardImageInfo(): { width: number; height: number; bitCount: number; nonBlack: number } | null {
+  const dir = join(import.meta.dir, "..", ".work", "tests-tmp", "tmp");
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, `clipboard-${process.pid}.png`);
+  rmSync(path, { force: true });
+  const script = `ObjC.import("AppKit");
+const pb = $.NSPasteboard.generalPasteboard;
+let d = pb.dataForType($.NSPasteboardTypePNG);
+if (d.isNil()) {
+  const t = pb.dataForType($.NSPasteboardTypeTIFF);
+  if (!t.isNil()) d = $.NSBitmapImageRep.imageRepWithData(t).representationUsingTypeProperties($.NSBitmapImageFileTypePNG, $());
+}
+d.isNil() ? "none" : d.writeToFileAtomically(${JSON.stringify(path)}, true) ? "ok" : "fail";`;
+  const r = Bun.spawnSync(["osascript", "-l", "JavaScript", "-e", script], { stdout: "pipe", stderr: "pipe" });
+  if (r.stdout.toString().trim() !== "ok") {
+    return null;
+  }
+  const png = decodePng(readFileSync(path));
+  rmSync(path, { force: true });
+  let nonBlack = 0;
+  for (let i = 0; i < png.w * png.h; i++) {
+    if ((png.rgba[i * 4]! | png.rgba[i * 4 + 1]! | png.rgba[i * 4 + 2]!) !== 0) {
+      nonBlack++;
+    }
+  }
+  return { width: png.w, height: png.h, bitCount: 32, nonBlack };
 }
 
 // captureWindowPixels on macOS: the first window as drawn, as BGRA (4 bytes a

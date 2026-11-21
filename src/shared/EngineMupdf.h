@@ -107,6 +107,7 @@ class EngineMupdf : public EngineBase {
 
     RenderedBitmap* GetImageForPageElement(IPageElement*) override;
     Str GetImageDataForPageElement(IPageElement*) override;
+    Str GetImagePngForPageElement(IPageElement*) override;
 
     IPageDestination* GetNamedDest(Str name) override;
     int GetOpenActionPageNo() override;

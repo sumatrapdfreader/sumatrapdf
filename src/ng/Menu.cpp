@@ -1201,10 +1201,17 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
         }
         case CmdCopyImage: {
             if (pageEl) {
+#if OS_WIN
                 RenderedBitmap* bmp = engine->GetImageForPageElement(pageEl);
                 if (bmp) {
                     CopyRenderedBitmapToClipboard(win, bmp);
                 }
+#else
+                // ng: off Windows the clipboard takes the image as a PNG
+                Str png = engine->GetImagePngForPageElement(pageEl);
+                CopyPngToClipboard(win, png);
+                str::Free(png);
+#endif
             }
             return;
         }

@@ -626,6 +626,7 @@ class EngineBase {
 
     virtual RenderedBitmap* GetImageForPageElement(IPageElement*);
     virtual Str GetImageDataForPageElement(IPageElement*);
+    virtual Str GetImagePngForPageElement(IPageElement*);
 
     virtual bool HandleLink(IPageDestination*, ILinkHandler*);
 
@@ -681,6 +682,7 @@ class EnginePdfProxy : public EngineBase {
     Vec<IPageElement*> GetElements(int pageNo) override;
     RenderedBitmap* GetImageForPageElement(IPageElement* ipel) override;
     Str GetImageDataForPageElement(IPageElement* ipel) override;
+    Str GetImagePngForPageElement(IPageElement* ipel) override;
     bool TryGetElements(int pageNo, Vec<IPageElement*>* out) override;
     bool TryExtractPageText(int pageNo, PageText* out) override;
     void ReleaseTextExtractionThreadContext() override;

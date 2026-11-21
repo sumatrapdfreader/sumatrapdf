@@ -19,6 +19,7 @@ import {
   macClientToScreen,
   macControlRequest,
   macCaptureClientPixels,
+  macClipboardImageInfo,
   macDdeExecute,
   macFrameClientRect,
   macFrameVisible,
@@ -1317,6 +1318,9 @@ export function getClipboardFormats(): number[] | null {
 // pixels are not black, read from the header and pixel bytes. null when there
 // is no CF_DIB (or the clipboard can't be opened).
 export function getClipboardDibInfo(): { width: number; height: number; bitCount: number; nonBlack: number } | null {
+  if (IS_MAC) {
+    return macClipboardImageInfo();
+  }
   if (!user32.symbols.OpenClipboard(null)) {
     return null;
   }

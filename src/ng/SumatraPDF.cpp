@@ -3894,6 +3894,15 @@ void CopyTextToClipboard(MainWindow* win, Str s) {
     gp::ClipboardSetText(win->gpuiWin, ToGpui(s));
 }
 
+void CopyPngToClipboard(MainWindow* win, Str png) {
+    if (!win || !win->gpuiWin || len(png) == 0) {
+        return;
+    }
+    if (!gp::ClipboardSetImage(win->gpuiWin, (const u8*)png.s, len(png))) {
+        logf("CopyPngToClipboard: ClipboardSetImage() failed\n");
+    }
+}
+
 // takes ownership of bmp, as orig's PixmapFromRenderedBitmap does
 void CopyRenderedBitmapToClipboard(MainWindow*, RenderedBitmap* bmp) {
     if (!bmp) {

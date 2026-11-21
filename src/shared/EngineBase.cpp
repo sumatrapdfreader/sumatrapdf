@@ -1557,6 +1557,18 @@ Str EngineBase::GetImageDataForPageElement(IPageElement*) {
     return {};
 }
 
+// A page-element image as PNG bytes, for the clipboard where it takes PNG
+// (ng off Windows). Here: the encoded bytes when they already are a PNG.
+// Caller must str::Free.
+Str EngineBase::GetImagePngForPageElement(IPageElement* ipel) {
+    Str data = GetImageDataForPageElement(ipel);
+    if (len(data) > 8 && memcmp(data.s, "\x89PNG\r\n\x1a\n", 8) == 0) {
+        return data;
+    }
+    str::Free(data);
+    return {};
+}
+
 // protected:
 void EngineBase::SetFilePath(Str s) {
     fileNameBase = s ? str::Dup(arena, s) : Str();
@@ -1669,6 +1681,10 @@ RenderedBitmap* EnginePdfProxy::GetImageForPageElement(IPageElement* ipel) {
 
 Str EnginePdfProxy::GetImageDataForPageElement(IPageElement* ipel) {
     return pdfEngine->GetImageDataForPageElement(ipel);
+}
+
+Str EnginePdfProxy::GetImagePngForPageElement(IPageElement* ipel) {
+    return pdfEngine->GetImagePngForPageElement(ipel);
 }
 
 bool EnginePdfProxy::TryGetElements(int pageNo, Vec<IPageElement*>* out) {

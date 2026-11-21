@@ -66,6 +66,7 @@ struct RenderedBitmap;
 void CopyTextToClipboard(MainWindow* win, Str s);
 // takes ownership of bmp
 void CopyRenderedBitmapToClipboard(MainWindow* win, RenderedBitmap* bmp);
+void CopyPngToClipboard(MainWindow* win, Str png);
 // orig's SaveDataToFile: asks where, then writes (the prompt does not block)
 void SaveDataToFile(MainWindow* win, Str fileName, Str data);
 void DeleteFileFromDiskAndHistory(Str path);
