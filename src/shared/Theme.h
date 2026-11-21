@@ -11,6 +11,10 @@ void ToggleLightDarkTheme();
 Str ToggleLightDarkThemeTargetName();
 void SumatraUpdateTheme();
 void UpdateThemeAfterSystemColorChange();
+#if !OS_WIN
+// ng: how the System theme learns whether the system is in dark mode
+void ThemeSetSystemDarkModeQuery(bool (*fn)());
+#endif
 void UpdateThemeAfterHighContrastChange();
 bool ThemeUsesHighContrastColors();
 void CreateThemeCommands();

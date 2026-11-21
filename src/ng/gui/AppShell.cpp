@@ -1092,8 +1092,26 @@ gp::App* AppShellGetApp() {
     return gApp;
 }
 
+#if !OS_WIN
+static bool SystemUsesDarkMode() {
+    return gApp && gp::AppWindowAppearance(gApp) == gp::WindowAppearance::Dark;
+}
+
+static void OnWindowAppearanceChanged(gp::App*, gp::WindowAppearance) {
+    UpdateThemeAfterSystemColorChange();
+}
+#endif
+
 void AppShellSetApp(gp::App* app) {
     gApp = app;
+#if !OS_WIN
+    // orig's WM_SETTINGCHANGE "ImmersiveColorSet": Theme = System follows the
+    // system's light / dark mode. LoadSettings() resolved it before there was
+    // an app to ask.
+    ThemeSetSystemDarkModeQuery(SystemUsesDarkMode);
+    gp::AppOnWindowAppearanceChanged(app, OnWindowAppearanceChanged);
+    UpdateThemeAfterSystemColorChange();
+#endif
 }
 
 void AppShellCloseWindow(MainWindow* win) {

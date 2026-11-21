@@ -713,6 +713,15 @@ static bool IsDefaultMainWinColor(ParsedColor* col) {
     return col->parsedOk && col->col == kMainWinBgColDefault;
 }
 
+#if !OS_WIN
+static bool (*gSystemUsesDarkMode)() = nullptr;
+
+// ng: the port asks gpui, which Theme.cpp doesn't include
+void ThemeSetSystemDarkModeQuery(bool (*fn)()) {
+    gSystemUsesDarkMode = fn;
+}
+#endif
+
 // true if Windows "choose your default app mode" is set to dark
 static bool OsAppsUseDarkMode() {
 #if OS_WIN
@@ -722,8 +731,7 @@ static bool OsAppsUseDarkMode() {
                  L"AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &val, &cb);
     return val == 0;
 #else
-    // ng: gpui reports the system appearance; step 12 asks it here
-    return false;
+    return gSystemUsesDarkMode && gSystemUsesDarkMode();
 #endif
 }
 
@@ -797,8 +805,9 @@ void SumatraUpdateTheme() {
     UpdateAfterThemeChange();
 }
 
-// call on WM_SETTINGCHANGE "ImmersiveColorSet": re-resolves the System theme
-// when the user switches Windows between light and dark mode
+// call on WM_SETTINGCHANGE "ImmersiveColorSet" (ng off Windows: when gpui says
+// the system appearance changed): re-resolves the System theme when the user
+// switches between light and dark mode
 void UpdateThemeAfterSystemColorChange() {
     if (!gThemeFollowsSystem) {
         return;
