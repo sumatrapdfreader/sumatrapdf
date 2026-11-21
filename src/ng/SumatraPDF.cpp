@@ -7566,6 +7566,101 @@ static void TestExtractPages(const Flags& ci) {
 static bool WasmRenderApiStart();
 #endif
 
+// What startup does once the session is restored: open the command line
+// files, apply the view flags and kick off background work.
+static void RunStartupActions(MainWindow* win, bool restoredSession) {
+    // Command-line order is the tab order. The last file stays current, as orig.
+    // -new-window: each file in its own window. -new-window-tabs keeps them
+    // as tabs of the first window.
+    bool newWindowEach = gFlags->inNewWindow && !gFlags->inNewWindowTabs;
+    MainWindow* docWin = win;
+    gApplyCliViewToEbookLayout = true;
+    for (Str path : gFlags->fileNames) {
+        // same path twice on the command line, or already restored: select it
+        TempStr fullPath = path::NormalizeTemp(path);
+        if (MainWindow* existing = FindMainWindowByFile(fullPath, true)) {
+            docWin = existing;
+            continue;
+        }
+        if (newWindowEach && docWin->IsDocLoaded()) {
+            MainWindow* next = CreateAndShowMainWindow(nullptr);
+            if (next) {
+                docWin = next;
+            }
+        }
+        LoadDocument(docWin, fullPath);
+        if (gFlags->printDialog) {
+            // one dialog per file, one after another: only the classic one is modal
+            PrintUI ui = len(gFlags->fileNames) > 1 ? PrintUI::Classic : PrintUI::Auto;
+            PrintCurrentFile(docWin, gFlags->exitWhenDone, false, ui);
+        }
+    }
+    gApplyCliViewToEbookLayout = false;
+#if OS_WASM
+    AddStartupHomeTab(win);
+    if (TempStr err = WasmStorageLoadErrorTemp(); len(err) > 0) {
+        TempStr msg =
+            fmt("%s (%s)", Tr("Stored documents and settings didn't load, changes in this tab won't be saved"), err);
+        ShowPlainWarningNotification(win, msg, kNotifNoTimeout);
+    }
+    PrefetchCommonFonts();
+#endif
+#if OS_DARWIN
+    AppShellOpenDocsReady();
+#endif
+#if OS_WIN
+    LoadDdeOpenOnStartup(win);
+    gIsStartup = false;
+#endif
+    // orig's LoadOnStartup: WindowState = 3 in the settings, then the command
+    // line flags, which win over it
+    if (!restoredSession && gSettings->windowState == WIN_STATE_FULLSCREEN) {
+        EnterFullScreen(win);
+    }
+    EnterFullScreenFromFlags(*gFlags, win);
+    ApplyStartupViewFlags(*gFlags, win);
+    if (gFlags->configureRestrictedUse) {
+        ShowConfigureRestrictedUseDialog(win);
+    }
+#if OS_WIN
+    if (gFlags->hwndPluginParent && !MaybeMakePluginWindow(win, gFlags->hwndPluginParent)) {
+        logf("MaybeMakePluginWindow() failed, quitting\n");
+        AppShellQuit();
+    }
+#endif
+    if (len(gFlags->stressTestPath) > 0) {
+        // don't save file history and preference changes
+        RestrictPolicies(Perm::SavePreferences);
+        RebuildMenuBar(win);
+        StartStressTest(gFlags, win);
+    }
+    // call this once it's clear whether Perm::SavePreferences has been granted
+    RegisterSettingsForFileChanges();
+    RegenerateMissingThumbnails();
+    // -forward-search <source file> <line>: jump to the matching place in the
+    // PDF and flash the mark there (orig does this in LoadOnStartup)
+    if (gFlags->forwardSearchOrigin && gFlags->forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
+        int page;
+        Vec<Rect> rects;
+        TempStr srcPath = path::NormalizeTemp(gFlags->forwardSearchOrigin);
+        int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, gFlags->forwardSearchLine, 0, &page, rects);
+        ShowForwardSearchResult(win, srcPath, gFlags->forwardSearchLine, 0, ret, page, rects);
+    }
+    if (len(gFlags->search) > 0) {
+        StartSearchFromCommandLine(win, gFlags->search);
+    }
+#if !OS_WASM
+    // a web app is always the latest version
+    StartAsyncUpdateCheck(win, UpdateCheck::Automatic);
+#endif
+#if OS_WIN
+    // home-page bottom bar if we lost default-app status for registered extensions
+    if (win->IsCurrentTabAbout()) {
+        PostForWindow(win, MaybeShowDefaultAppNotification, "MaybeShowDefaultAppNotification");
+    }
+#endif
+}
+
 int GpuiMain(int argc, char** argv) {
     int toolRes = MaybeRunCliTool(argc, argv);
     if (toolRes != kNoCliTool) {
@@ -7869,96 +7964,15 @@ int GpuiMain(int argc, char** argv) {
         // the first one, as orig does
         win = len(gWindows) > 0 ? gWindows[0] : win;
     }
-    // Command-line order is the tab order. The last file stays current, as orig.
-    // -new-window: each file in its own window. -new-window-tabs keeps them
-    // as tabs of the first window.
-    bool newWindowEach = gFlags->inNewWindow && !gFlags->inNewWindowTabs;
-    MainWindow* docWin = win;
-    gApplyCliViewToEbookLayout = true;
-    for (Str path : gFlags->fileNames) {
-        // same path twice on the command line, or already restored: select it
-        TempStr fullPath = path::NormalizeTemp(path);
-        if (MainWindow* existing = FindMainWindowByFile(fullPath, true)) {
-            docWin = existing;
-            continue;
-        }
-        if (newWindowEach && docWin->IsDocLoaded()) {
-            MainWindow* next = CreateAndShowMainWindow(nullptr);
-            if (next) {
-                docWin = next;
-            }
-        }
-        LoadDocument(docWin, fullPath);
-        if (gFlags->printDialog) {
-            // one dialog per file, one after another: only the classic one is modal
-            PrintUI ui = len(gFlags->fileNames) > 1 ? PrintUI::Classic : PrintUI::Auto;
-            PrintCurrentFile(docWin, gFlags->exitWhenDone, false, ui);
-        }
-    }
-    gApplyCliViewToEbookLayout = false;
-#if OS_WASM
-    AddStartupHomeTab(win);
-    if (TempStr err = WasmStorageLoadErrorTemp(); len(err) > 0) {
-        TempStr msg =
-            fmt("%s (%s)", Tr("Stored documents and settings didn't load, changes in this tab won't be saved"), err);
-        ShowPlainWarningNotification(win, msg, kNotifNoTimeout);
-    }
-    PrefetchCommonFonts();
-#endif
-#if OS_DARWIN
-    AppShellOpenDocsReady();
-#endif
+    // a DDE [CmdExit] can close every window while the session is restored
+    if (len(gWindows) > 0) {
+        RunStartupActions(win, restoredSession);
+    } else {
+        logf("GpuiMain: every window closed while restoring the session\n");
 #if OS_WIN
-    LoadDdeOpenOnStartup(win);
-    gIsStartup = false;
+        gIsStartup = false;
 #endif
-    // orig's LoadOnStartup: WindowState = 3 in the settings, then the command
-    // line flags, which win over it
-    if (!restoredSession && gSettings->windowState == WIN_STATE_FULLSCREEN) {
-        EnterFullScreen(win);
     }
-    EnterFullScreenFromFlags(*gFlags, win);
-    ApplyStartupViewFlags(*gFlags, win);
-    if (gFlags->configureRestrictedUse) {
-        ShowConfigureRestrictedUseDialog(win);
-    }
-#if OS_WIN
-    if (gFlags->hwndPluginParent && !MaybeMakePluginWindow(win, gFlags->hwndPluginParent)) {
-        logf("MaybeMakePluginWindow() failed, quitting\n");
-        AppShellQuit();
-    }
-#endif
-    if (len(gFlags->stressTestPath) > 0) {
-        // don't save file history and preference changes
-        RestrictPolicies(Perm::SavePreferences);
-        RebuildMenuBar(win);
-        StartStressTest(gFlags, win);
-    }
-    // call this once it's clear whether Perm::SavePreferences has been granted
-    RegisterSettingsForFileChanges();
-    RegenerateMissingThumbnails();
-    // -forward-search <source file> <line>: jump to the matching place in the
-    // PDF and flash the mark there (orig does this in LoadOnStartup)
-    if (gFlags->forwardSearchOrigin && gFlags->forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
-        int page;
-        Vec<Rect> rects;
-        TempStr srcPath = path::NormalizeTemp(gFlags->forwardSearchOrigin);
-        int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, gFlags->forwardSearchLine, 0, &page, rects);
-        ShowForwardSearchResult(win, srcPath, gFlags->forwardSearchLine, 0, ret, page, rects);
-    }
-    if (len(gFlags->search) > 0) {
-        StartSearchFromCommandLine(win, gFlags->search);
-    }
-#if !OS_WASM
-    // a web app is always the latest version
-    StartAsyncUpdateCheck(win, UpdateCheck::Automatic);
-#endif
-#if OS_WIN
-    // home-page bottom bar if we lost default-app status for registered extensions
-    if (win->IsCurrentTabAbout()) {
-        PostForWindow(win, MaybeShowDefaultAppNotification, "MaybeShowDefaultAppNotification");
-    }
-#endif
     StartSumatraControl(gFlags->controlPipeName);
 
     // on by default in debug builds; release builds can opt in by calling

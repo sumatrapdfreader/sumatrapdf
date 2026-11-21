@@ -75,6 +75,7 @@ static void SyncInitialSessionData() {
         return;
     }
     FreeSessionDataVec(gInitialSessionData);
+    gInitialSessionDataGen++;
     for (SessionData* sd : *gSettings->sessionData) {
         VecAppend(*gInitialSessionData, CloneSessionData(sd));
     }
@@ -415,6 +416,7 @@ bool RestoreSession(MainWindow* firstWin) {
 #if OS_WIN
     // each window goes back to the virtual desktop it was on (#6271)
     ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+    int sessionGen = gInitialSessionDataGen;
 #endif
     for (SessionData* data : *gInitialSessionData) {
         MainWindow* win = nWindows == 0 ? firstWin : CreateAndShowMainWindow(data);
@@ -462,11 +464,18 @@ bool RestoreSession(MainWindow* firstWin) {
         if (data->windowState == WIN_STATE_FULLSCREEN) {
             EnterFullScreen(win);
         }
-#if OS_WIN
-        MoveWindowToVirtualDesktop(vdm, MainWindowHwnd(win), data->virtualDesktopId);
-#endif
         nRestored += nInWindow;
         nWindows++;
+#if OS_WIN
+        // COM calls to the shell dispatch incoming sent messages: a DDE
+        // [CmdExit] can close win and re-save (free) the session data
+        TempStr desktopId = str::DupTemp(data->virtualDesktopId);
+        MoveWindowToVirtualDesktop(vdm, MainWindowHwnd(win), desktopId);
+        if (!IsMainWindowValid(win) || sessionGen != gInitialSessionDataGen) {
+            logf("RestoreSession: window closed or session re-saved while restoring, stopping\n");
+            break;
+        }
+#endif
     }
 #if OS_WIN
     if (vdm) {
