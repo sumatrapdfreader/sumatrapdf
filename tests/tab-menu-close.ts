@@ -38,18 +38,17 @@ async function closeAndWaitForExit(proc: Bun.Subprocess, frame: number): Promise
   console.log("tab-menu-close: OK");
 }
 
-// right-clicks the first document tab, after Home: tabs sit side by side from
-// the left of the bar, which is at the top of the frame
+// right-clicks the first document tab, after Home
 async function openNgTabMenu(client: ControlClient): Promise<void> {
-  const widths = String((await client.request(ControlCommand.TestTabWidths, []))[1] ?? "")
-    .split("\n")
-    .map((l) => Number(/dx=(\d+)/.exec(l)?.[1] ?? 0))
-    .filter((w) => w > 0);
-  if (widths.length < 2) {
-    throw new Error(`tab-menu-close: no document tab: ${JSON.stringify(widths)}`);
+  const raw = String((await client.request(ControlCommand.TestTabWidths, []))[1] ?? "");
+  const tabs = [...raw.matchAll(/^dx=(\d+) .*\n {2}at x=(-?\d+) y=(-?\d+) dy=(\d+)$/gm)].map((m) => ({
+    x: +m[2]! + Math.floor(+m[1]! / 2),
+    y: +m[3]! + Math.floor(+m[4]! / 2),
+  }));
+  if (tabs.length < 2) {
+    throw new Error(`tab-menu-close: no document tab:\n${raw}`);
   }
-  const x = widths[0]! + Math.floor(widths[1]! / 2);
-  await client.request(ControlCommand.TestInput, ["click", x, 12, 1, 0]);
+  await client.request(ControlCommand.TestInput, ["click", tabs[1]!.x, tabs[1]!.y, 1, 0]);
   const deadline = Date.now() + 3000;
   while (!/ popup=1/.test(String((await client.request(ControlCommand.TestUiState, []))[1] ?? ""))) {
     if (Date.now() > deadline) {

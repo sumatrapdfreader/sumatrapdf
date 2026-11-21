@@ -201,7 +201,10 @@ TempStr TabsUIWidthsTemp(MainWindow* win) {
     TabsUI* ui = Ui(win);
     str::Builder out;
     for (int i = 0; i < win->TabCount() && i < len(ui->tabBounds); i++) {
-        out.Append(fmt("dx=%d text=%s\n", (int)ui->tabBounds[i].w, win->GetTab(i)->GetTabTitle()));
+        const gpui::Bounds& b = ui->tabBounds[i];
+        out.Append(fmt("dx=%d text=%s\n", (int)b.w, win->GetTab(i)->GetTabTitle()));
+        // where to click it, in frame coordinates
+        out.Append(fmt("  at x=%d y=%d dy=%d\n", (int)b.x, (int)b.y, (int)b.h));
     }
     return ToStrTemp(out);
 }
