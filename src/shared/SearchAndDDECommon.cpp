@@ -1668,13 +1668,17 @@ static void CountEndTask(CountEndTaskData* d) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
     CountThreadData* ctd = d->ctd;
-    if (!IsMainWindowValidAndNotClosing(win)) {
+    if (!IsMainWindowValid(win)) {
         return;
     }
     if (win->findCountThread != ctd->thread) {
         return; // superseded (or already joined by AbortCount)
     }
+    // the handle goes away with ctd: a closing window's AbortCount would wait on it
     win->findCountThread = nullptr;
+    if (win->isBeingClosed) {
+        return;
+    }
     if (win->findCountEpoch == ctd->epoch) {
         // not canceled: install the freshly built cache (steal text from ctd)
         str::FreePtr(&win->findCountText);
