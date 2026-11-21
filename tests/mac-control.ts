@@ -31,6 +31,9 @@ const WM_RBUTTONDBLCLK = 0x0206;
 const WM_MBUTTONDOWN = 0x0207;
 const WM_MBUTTONUP = 0x0208;
 const WM_MBUTTONDBLCLK = 0x0209;
+const WM_XBUTTONDOWN = 0x020b;
+const WM_XBUTTONUP = 0x020c;
+const WM_NULL = 0x0000;
 const WM_SYSCOMMAND = 0x0112;
 const SC_CLOSE = 0xf060;
 const WM_HSCROLL = 0x0114;
@@ -819,6 +822,19 @@ export function macSendMessage(
       msg === WM_RBUTTONDBLCLK ||
       msg === WM_MBUTTONDBLCLK;
     input(down ? "down" : "up", at.x, at.y, buttonOf(msg), m, target);
+    return 0n;
+  }
+  // a side button: XBUTTON1 / XBUTTON2 in the high word, TestInput's buttons 3 / 4
+  if (msg === WM_XBUTTONDOWN || msg === WM_XBUTTONUP) {
+    const px = sign16(lp);
+    const py = sign16(lp >> 16n);
+    const at = target ? { x: px, y: py } : dips(px, py, geom());
+    const button = Number((wp >> 16n) & 0xffffn) === 2 ? 4 : 3;
+    input(msg === WM_XBUTTONDOWN ? "down" : "up", at.x, at.y, button, modsOf(Number(wp & 0xffffn), target), target);
+    return 0n;
+  }
+  // Windows answers it once the window has handled what it was sent before
+  if (msg === WM_NULL) {
     return 0n;
   }
   throw new Error(`macOS sendMessage does not handle msg 0x${msg.toString(16)}`);

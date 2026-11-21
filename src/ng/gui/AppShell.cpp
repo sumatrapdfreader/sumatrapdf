@@ -547,6 +547,11 @@ static gp::MouseButton TestButton(int b) {
             return gp::MouseButton::Right;
         case 2:
             return gp::MouseButton::Middle;
+        // the side buttons, Windows' XBUTTON1 / XBUTTON2
+        case 3:
+            return gp::MouseButton::NavigateBack;
+        case 4:
+            return gp::MouseButton::NavigateForward;
     }
     return gp::MouseButton::Left;
 }
