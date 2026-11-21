@@ -63,7 +63,13 @@ export async function testit(): Promise<void> {
     "CheckForUpdates = false\nRestoreSession = false\nShowStartPage = false\nShowToc = false\nShowFavorites = false\nUseTabs = true\nSidebarWindowSize = grow\n",
   );
 
-  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdfA]);
+  // half the work area wide, so the frame has room to grow by the toc (CI's
+  // test layout fills the work area)
+  const wa0 = getWorkArea();
+  const winDx = Math.floor((wa0.right - wa0.left) / 2);
+  const winDy = Math.floor((wa0.bottom - wa0.top) / 2);
+  const winPos = `${winDx}x${winDy}@${wa0.left}x${wa0.top}`;
+  const { proc, client, frame } = await launchControlled(["-window-pos", winPos, "-appdata", appdata, pdfA]);
   try {
     await client.waitForRenderIdle();
 
