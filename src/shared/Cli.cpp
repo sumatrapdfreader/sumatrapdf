@@ -14,6 +14,8 @@
 struct MainWindow;
 struct WindowTab;
 #include "PdfToolsCommon.h"
+#include "Annotation.h"
+#include "base/Pixmap.h"
 #include "Cli.h"
 
 #include <stdio.h>
@@ -507,6 +509,231 @@ static int CmdToc(CliCtx& cx) {
     return kCliOk;
 }
 
+//--- annotations
+
+static TempStr HexColorTemp(PdfColor c) {
+    if (c == 0 || c == (PdfColor)kColorUnset) {
+        return {};
+    }
+    u8 r, g, b, a;
+    UnpackPdfColor(c, r, g, b, a);
+    return fmt("#%02x%02x%02x", r, g, b);
+}
+
+static TempStr IsoTimeTemp(time_t t) {
+    if (t <= 0) {
+        return {};
+    }
+    struct tm tmv;
+#if OS_WIN
+    gmtime_s(&tmv, &t);
+#else
+    gmtime_r(&t, &tmv);
+#endif
+    return fmt("%04d-%02d-%02dT%02d:%02d:%02dZ", tmv.tm_year + 1900, tmv.tm_mon + 1, tmv.tm_mday, tmv.tm_hour,
+               tmv.tm_min, tmv.tm_sec);
+}
+
+static bool IsTextMarkup(AnnotationType tp) {
+    return tp == AnnotationType::Highlight || tp == AnnotationType::Underline || tp == AnnotationType::Squiggly ||
+           tp == AnnotationType::StrikeOut;
+}
+
+// the page text a highlight (underline, ...) is over: the characters whose
+// box's center is in one of its quads
+static TempStr MarkedTextTemp(const PageText& pt, const Vec<RectF>& quads) {
+    str::Builder out;
+    const u8* p = (const u8*)pt.text.s;
+    const u8* end = p + len(pt.text);
+    for (int i = 0; i < pt.nCodepoints && p < end; i++) {
+        int n = utf8RuneLen(p);
+        if (n < 1 || p + n > end) {
+            n = 1;
+        }
+        Rect c = pt.coords ? pt.coords[i] : Rect();
+        PointF center((float)c.x + (float)c.dx / 2, (float)c.y + (float)c.dy / 2);
+        for (const RectF& q : quads) {
+            if (q.Contains(center)) {
+                out.Append(Str((const char*)p, n));
+                break;
+            }
+        }
+        p += n;
+    }
+    TempStr res = ToStrTemp(out);
+    return str::ReplaceTemp(res, StrL("\n"), StrL(" "));
+}
+
+static int CmdAnnotations(CliCtx& cx) {
+    int code = kCliOk;
+    EngineBase* engine = OpenDoc(cx, cx.positional[0], &code);
+    if (!engine) {
+        return code;
+    }
+    if (!EngineMupdfIsPdf(engine)) {
+        SafeEngineRelease(&engine);
+        return Fail(cx, kCliNotSupported, StrL("only a PDF has annotations"));
+    }
+    Vec<int> pages;
+    if (!PagesArg(cx, engine, pages, &code)) {
+        SafeEngineRelease(&engine);
+        return code;
+    }
+    for (int pageNo : pages) {
+        EngineMupdfLoadAnnotsForPage(engine, pageNo);
+    }
+    Vec<Annotation*> annots;
+    EngineMupdfGetLoadedAnnotations(engine, annots);
+    str::Builder out;
+    int n = 0;
+    for (int pageNo : pages) {
+        PageText pt{};
+        bool haveText = false;
+        for (Annotation* a : annots) {
+            if (PageNo(a) != pageNo) {
+                continue;
+            }
+            AnnotationType tp = Type(a);
+            // a popup is the note window of another annotation, a widget a form field
+            if (tp == AnnotationType::Popup || tp == AnnotationType::Widget) {
+                continue;
+            }
+            RectF r = GetRect(a);
+            TempStr marked;
+            if (IsTextMarkup(tp)) {
+                if (!haveText) {
+                    pt = engine->ExtractPageText(pageNo);
+                    haveText = true;
+                }
+                marked = MarkedTextTemp(pt, GetQuadPointsAsRect(a));
+            }
+            Str contents = Contents(a);
+            Str author = Author(a);
+            TempStr color = HexColorTemp(GetColor(a));
+            TempStr modified = IsoTimeTemp(ModificationDate(a));
+            if (cx.json) {
+                out.Append(fmt("%s{%s,\"type\":%s,\"rect\":[%.1f,%.1f,%.1f,%.1f]", n > 0 ? StrL(",") : StrL(""),
+                               JPage(engine, pageNo), JStr(AnnotationTypeName(tp)), r.x, r.y, r.dx, r.dy));
+                if (len(marked) > 0) {
+                    out.Append(fmt(",\"text\":%s", JStr(marked)));
+                }
+                if (len(contents) > 0) {
+                    out.Append(fmt(",\"contents\":%s", JStr(contents)));
+                }
+                if (len(author) > 0) {
+                    out.Append(fmt(",\"author\":%s", JStr(author)));
+                }
+                if (len(color) > 0) {
+                    out.Append(fmt(",\"color\":%s", JStr(color)));
+                }
+                if (len(modified) > 0) {
+                    out.Append(fmt(",\"modified\":%s", JStr(modified)));
+                }
+                out.Append(StrL("}"));
+            } else {
+                out.Append(fmt("page %d: %s", pageNo, AnnotationTypeName(tp)));
+                if (len(marked) > 0) {
+                    out.Append(fmt(" \"%s\"", marked));
+                }
+                if (len(contents) > 0) {
+                    out.Append(fmt(": %s", str::ReplaceTemp(contents, StrL("\n"), StrL(" "))));
+                }
+                if (len(author) > 0) {
+                    out.Append(fmt(" (%s)", author));
+                }
+                out.Append(StrL("\n"));
+            }
+            n++;
+        }
+        if (haveText) {
+            FreePageText(&pt);
+        }
+    }
+    if (cx.json) {
+        Out(fmt("{\"count\":%d,\"annotations\":[%s]}\n", n, ToStr(out)));
+    } else {
+        Out(ToStr(out));
+    }
+    SafeEngineRelease(&engine);
+    return kCliOk;
+}
+
+//--- render
+
+// -o or --output
+static Str OutputArg(CliCtx& cx) {
+    Str dest = OptValue(cx, StrL("-o"));
+    return len(dest) > 0 ? dest : OptValue(cx, StrL("--output"));
+}
+
+static int CmdRender(CliCtx& cx) {
+    Str dest = OutputArg(cx);
+    if (len(dest) == 0) {
+        return Fail(cx, kCliUsage, StrL("needs -o <file.png> (.png, .jpg, .webp ...)"));
+    }
+    Str dpiStr = OptValue(cx, StrL("--dpi"));
+    int dpi = len(dpiStr) > 0 ? ParseInt(dpiStr) : 150;
+    if (dpi < 10 || dpi > 2400) {
+        return Fail(cx, kCliUsage, fmt("--dpi %s: use 10 to 2400", dpiStr));
+    }
+    TempStr withExt = WithDefaultImageExtTemp(dest);
+    if (len(withExt) == 0) {
+        return Fail(cx, kCliUsage, fmt("can't write images as '%s'", path::GetExtTemp(dest)));
+    }
+    int code = kCliOk;
+    EngineBase* engine = OpenDoc(cx, cx.positional[0], &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    if (len(OptValue(cx, StrL("--pages"))) == 0) {
+        // one image unless asked for more: the first page
+        VecAppend(pages, 1);
+    } else if (!PagesArg(cx, engine, pages, &code)) {
+        SafeEngineRelease(&engine);
+        return code;
+    }
+    // several pages: <N> in the name is the page number, else -<N> is added
+    TempStr templ = EnsurePagePlaceholderTemp(withExt, len(pages) > 1);
+    float zoom = SaveSelectionZoom(engine, (float)dpi);
+    str::Builder out;
+    int nOk = 0;
+    for (int pageNo : pages) {
+        TempStr path = str::ReplaceTemp(templ, StrL("<N>"), fmt("%d", pageNo));
+        RenderPageArgs args(pageNo, zoom, 0, nullptr, RenderTarget::Export);
+        Pixmap* px = engine->RenderPage(args);
+        bool ok = false;
+        int w = 0, h = 0;
+        if (px) {
+            px->xres = (float)dpi;
+            px->yres = (float)dpi;
+            w = px->width;
+            h = px->height;
+            dir::CreateForFile(path);
+            ok = SavePixmapAsImageFile(px, path);
+            FreePixmap(px);
+        }
+        if (!ok) {
+            SafeEngineRelease(&engine);
+            return Fail(cx, kCliFailed, fmt("couldn't render page %d to '%s'", pageNo, path));
+        }
+        if (cx.json) {
+            out.Append(fmt("%s{\"page\":%d,\"file\":%s,\"width\":%d,\"height\":%d}", nOk > 0 ? StrL(",") : StrL(""),
+                           pageNo, JStr(path), w, h));
+        } else {
+            out.Append(fmt("%s\n", path));
+        }
+        nOk++;
+    }
+    if (cx.json) {
+        Out(fmt("{\"dpi\":%d,\"images\":[%s]}\n", dpi, ToStr(out)));
+    } else {
+        Out(ToStr(out));
+    }
+    SafeEngineRelease(&engine);
+    return kCliOk;
+}
+
 //--- the command table and help
 
 static const CliCmd gCmds[] = {
@@ -521,6 +748,12 @@ static const CliCmd gCmds[] = {
      "search thesis.pdf \"error rate\"\nsearch book.epub Darcy --whole-word --json", CmdSearch},
     {"toc", "<file>", "the table of contents (bookmarks), with page numbers", "",
      "toc manual.chm\ntoc book.epub --json", CmdToc},
+    {"annotations", "<file>", "a PDF's annotations: highlights with the text they mark, notes, shapes",
+     "--pages <range>  only these pages", "annotations paper.pdf\nannotations paper.pdf --json", CmdAnnotations},
+    {"render", "<file> -o <image>", "pages as images (PNG, JPEG, WebP, ... by the file's extension)",
+     "-o <file>        the image; for several pages <N> in it is the page number\n--pages <range>  these pages "
+     "(default: the first)\n--dpi <n>        resolution, default 150",
+     "render paper.pdf -o page.png\nrender comic.cbz --pages 1-3 -o pages/<N>.jpg --dpi 96", CmdRender},
 };
 
 static const CliCmd* FindCmd(Str name) {
@@ -559,7 +792,7 @@ static void PrintHelp() {
              "an AI agent.\nWorks on every format SumatraPDF opens: PDF, EPUB, MOBI, FB2, XPS, DjVu, CHM, "
              "comic books and more.\nNever changes the files it is given.\n\ncommands:\n"));
     for (const CliCmd& c : gCmds) {
-        out.Append(fmt("  %-10s %s\n", Str(c.name), Str(c.summary)));
+        out.Append(fmt("  %-12s %s\n", Str(c.name), Str(c.summary)));
     }
     out.Append(
         StrL("\nEvery command takes --json and --help.\n\nexit codes:\n"

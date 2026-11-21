@@ -60,6 +60,7 @@ extern "C" struct pdf_annot;
 SeqStrings AnnotationTextIcons();
 
 AnnotationType AnnotationTypeFromName(Str);
+Str AnnotationTypeName(AnnotationType);
 
 // The annotation a cut is waiting to delete once its copy is pasted (see
 // CutAnnotation). ~Annotation clears it, so it can never dangle. Both are

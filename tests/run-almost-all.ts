@@ -233,6 +233,7 @@ import { testit as replaceImage } from "./replace-image.ts";
 import { testit as readColumns } from "./read-columns.ts";
 import { testit as issue6486 } from "./issue-6486.ts";
 import { testit as cliRead } from "./cli-read.ts";
+import { testit as cliAnnotationsRender } from "./cli-annotations-render.ts";
 import { testit as issue6487 } from "./issue-6487.ts";
 import { testit as issue6488 } from "./issue-6488.ts";
 import { testit as issue6489 } from "./issue-6489.ts";
@@ -1127,6 +1128,7 @@ export const tests: NamedTest[] = [
   ["read-columns", readColumns],
   ["issue-6486", issue6486],
   ["cli-read", cliRead],
+  ["cli-annotations-render", cliAnnotationsRender],
   ["issue-6487", issue6487],
   ["issue-6488", issue6488],
   ["issue-6489", issue6489],

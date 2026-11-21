@@ -67,6 +67,14 @@ AnnotationType AnnotationTypeFromName(Str name) {
     return AnnotationType::Unknown;
 }
 
+// the untranslated name ("Highlight", "FreeText"), empty for Unknown
+Str AnnotationTypeName(AnnotationType tp) {
+    if ((int)tp < 0 || (int)tp > (int)AnnotationType::Last) {
+        return {};
+    }
+    return SeqStrByIndex(gAnnotationTypeNames, (int)tp);
+}
+
 // Translate an English annotation type label for the UI.
 // When menuKey is set (e.g. "&Highlight"), use that key — those strings are
 // already translated for context menus. Otherwise use english (already in
