@@ -179,7 +179,9 @@ void DeletePropertiesWindow(MainWindow* win) {
         return;
     }
     gProps.visible = false;
-    gp::Window* host = gProps.tw ? ToolWindowGpui(gProps.tw) : (gProps.win ? gProps.win->gpuiWin : nullptr);
+    // the tool window's close can arrive after its owner was deleted
+    MainWindow* owner = IsMainWindowValid(gProps.win) ? gProps.win : nullptr;
+    gp::Window* host = gProps.tw ? ToolWindowGpui(gProps.tw) : (owner ? owner->gpuiWin : nullptr);
     if (gProps.textEdit && host) {
         gp::InputBlur(gProps.textEdit, host->app, host);
     }
@@ -196,7 +198,7 @@ void DeletePropertiesWindow(MainWindow* win) {
     FreePdfSigCerts(gProps.certs);
     gProps.certs = nullptr;
 #endif
-    AppShellInvalidate(gProps.win);
+    AppShellInvalidate(owner);
 }
 
 void PropertiesView::OnCopy(PropertiesView*, gp::Ctx* cx, const gp::ClickEvent*) {
