@@ -80,12 +80,49 @@ function testLists(): void {
   expect("'Hello world' isn't an item", ls.includes("Hello world"), md);
 }
 
+// page_numbers_and_romans: a page number alone in the bottom margin goes,
+// words that only look like one stay
+function testPageNumbers(): void {
+  const yes = ["12", "xii", "XIV", "Page 3", "3 of 10", "- 4 -", "5 / 9", "page iv"];
+  const no = ["mix", "Did", "Chapter 3", "In 1999 we", "Page"];
+  for (const n of [...yes, ...no]) {
+    const md = markdownOf([textAt("F1", 72, 400, "Some body text.", 11) + textAt("F1", 300, 30, n)]);
+    const kept = lines(md).includes(n);
+    expect(
+      `'${n}' in the bottom margin ${yes.includes(n) ? "is" : "isn't"} a page number`,
+      kept !== yes.includes(n),
+      md,
+    );
+  }
+}
+
+// running_headers_and_page_numbers_are_dropped: a title in the top margin of
+// every page and the page numbers go, the body stays
+function testRunningHeaders(): void {
+  const pages: string[] = [];
+  for (let i = 0; i < 5; i++) {
+    let c = textAt("F1", 72, 760, "The Book of Things");
+    c += textAt("F1", 72, 400, `Body text on page ${i}.`, 11);
+    c += textAt("F1", 300, 30, `${i + 1}`);
+    pages.push(c);
+  }
+  const md = markdownOf(pages);
+  expect("the running header goes", !md.includes("Book of Things"), md);
+  expect("the body stays", md.includes("Body text on page 3."), md);
+  expect("the page numbers go", !lines(md).some((l) => l.trim() === "3"), md);
+  // a short document keeps its title
+  const short = markdownOf(pages.slice(0, 2));
+  expect("2 pages keep the title", short.includes("Book of Things"), short);
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
     return;
   }
   testLists();
+  testPageNumbers();
+  testRunningHeaders();
   console.log(`${name}: OK`);
 }
 

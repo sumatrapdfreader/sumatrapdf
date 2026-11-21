@@ -1109,7 +1109,7 @@ struct MdDoc {
     Vec<float> headingSizes;
     StrVec tocTitles;
     Vec<int> tocDepths;
-    // the normalized text of blocks that open or close most pages
+    // the running headers' HeaderKeyTemp()
     StrVec running;
 };
 
@@ -1251,11 +1251,7 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
         }
         TempStr plain = BlockPlainTemp(p, i, end);
         TempStr norm = NormalizeForMatchTemp(plain);
-        bool isRunning = false;
-        for (Str r : d.running) {
-            isRunning = isRunning || str::Eq(r, norm);
-        }
-        if (isRunning || len(norm) == 0) {
+        if (len(norm) == 0) {
             i = end;
             continue;
         }
@@ -1389,55 +1385,262 @@ static void FindSizes(MdDoc& d, Vec<StyledPage*>& pages) {
     }
 }
 
-// blocks that open or close most pages with the same text (digits aside):
-// running headers, footers, page numbers
-static void FindRunning(MdDoc& d, Vec<StyledPage*>& pages) {
-    if (len(pages) < 3) {
-        return;
+// running headers and footers, and page numbers, sit in the top or bottom
+// 12% of a page
+constexpr float kMarginBand = 0.12f;
+
+// a roman number as a page prints it: all one case, in the standard form and
+// under 400 (no front matter is longer), so words like "mix" (1009) and "did"
+// aren't one
+static bool IsRomanWord(Str w) {
+    if (len(w) == 0 || len(w) > 9) {
+        return false;
     }
-    StrVec texts;
-    Vec<int> counts;
-    for (StyledPage* p : pages) {
-        int n = len(p->spans);
-        if (n == 0) {
+    bool lower = false, upper = false;
+    int total = 0;
+    int prev = 0;
+    for (int i = len(w) - 1; i >= 0; i--) {
+        char c = w.s[i];
+        lower = lower || (c >= 'a' && c <= 'z');
+        upper = upper || (c >= 'A' && c <= 'Z');
+        int v = 0;
+        switch (c | 0x20) {
+            case 'i':
+                v = 1;
+                break;
+            case 'v':
+                v = 5;
+                break;
+            case 'x':
+                v = 10;
+                break;
+            case 'l':
+                v = 50;
+                break;
+            case 'c':
+                v = 100;
+                break;
+            case 'd':
+                v = 500;
+                break;
+            case 'm':
+                v = 1000;
+                break;
+            default:
+                return false;
+        }
+        total += v < prev ? -v : v;
+        prev = std::max(prev, v);
+    }
+    if ((lower && upper) || total <= 0 || total >= 400) {
+        return false;
+    }
+    // written the standard way: the value written back is the same word
+    static const int values[] = {100, 90, 50, 40, 10, 9, 5, 4, 1};
+    static const char* romans[] = {"c", "xc", "l", "xl", "x", "ix", "v", "iv", "i"};
+    str::Builder back;
+    int n = total;
+    for (int i = 0; i < (int)dimofi(values); i++) {
+        while (n >= values[i]) {
+            back.Append(Str(romans[i]));
+            n -= values[i];
+        }
+    }
+    return str::EqI(ToStr(back), w);
+}
+
+// digits (up to 4) or a roman number
+static bool IsNumberWord(Str w) {
+    if (len(w) == 0) {
+        return false;
+    }
+    bool digits = len(w) <= 4;
+    for (int i = 0; i < len(w) && digits; i++) {
+        digits = w.s[i] >= '0' && w.s[i] <= '9';
+    }
+    return digits || IsRomanWord(w);
+}
+
+// "12", "xii", "Page 3", "3 of 10", "- 4 -", "5 / 9"
+static bool IsPageNumberText(Str s) {
+    TempStr t = str::DupTemp(s);
+    for (int i = 0; i < len(t); i++) {
+        if (strchr("/|\t", t.s[i])) {
+            t.s[i] = ' ';
+        }
+    }
+    StrVec words;
+    Split(&words, t, StrL(" "), true);
+    int numbers = 0;
+    for (Str w : words) {
+        // dashes and brackets around a number: "- 4 -", "[5]"
+        int a = 0, b = len(w);
+        auto isTrim = [](Str x, int i) {
+            u8 c = (u8)x.s[i];
+            return strchr("-.()[]", (char)c) != nullptr || c == 0xe2 || c == 0x80 || c == 0x93 || c == 0x94;
+        };
+        while (a < b && isTrim(w, a)) {
+            a++;
+        }
+        while (b > a && isTrim(w, b - 1)) {
+            b--;
+        }
+        Str core(w.s + a, b - a);
+        if (len(core) == 0 || str::EqI(core, StrL("page")) || str::EqI(core, StrL("pg")) || str::EqI(core, StrL("p")) ||
+            str::EqI(core, StrL("of"))) {
             continue;
         }
-        int blocks[2] = {p->spans[0].block, p->spans[n - 1].block};
-        for (int k = 0; k < 2; k++) {
-            if (k == 1 && blocks[1] == blocks[0]) {
+        if (!IsNumberWord(core)) {
+            return false;
+        }
+        numbers++;
+    }
+    return numbers >= 1 && numbers <= 2;
+}
+
+// a line of a page: its spans [from, to)
+struct MdLine {
+    int from = 0;
+    int to = 0;
+    float size = 0;
+};
+
+static void PageLines(const StyledPage& p, Vec<MdLine>& out) {
+    for (int i = 0; i < len(p.spans);) {
+        MdLine l;
+        l.from = i;
+        while (i < len(p.spans) && p.spans[i].line == p.spans[l.from].line) {
+            l.size = std::max(l.size, p.spans[i].size);
+            i++;
+        }
+        l.to = i;
+        VecAppend(out, l);
+    }
+}
+
+static bool InTopMargin(const StyledPage& p, const StyledSpan& s) {
+    float h = p.mediabox.dy;
+    return h > 0 && s.lineBox.y + s.lineBox.dy <= p.mediabox.y + h * kMarginBand;
+}
+
+static bool InBottomMargin(const StyledPage& p, const StyledSpan& s) {
+    float h = p.mediabox.dy;
+    return h > 0 && s.lineBox.y >= p.mediabox.y + h * (1 - kMarginBand);
+}
+
+// what makes a line in a margin the same running header on another page: top
+// or bottom, its height and its text without the page numbers at either end.
+// Empty for a line outside the margins or with nothing but numbers.
+static TempStr HeaderKeyTemp(const StyledPage& p, const MdLine& l) {
+    const StyledSpan& s = p.spans[l.from];
+    bool top = InTopMargin(p, s);
+    if (!top && !InBottomMargin(p, s)) {
+        return {};
+    }
+    StrVec words;
+    Split(&words, BlockPlainTemp(p, l.from, l.to), StrL(" "), true);
+    int a = 0, b = len(words);
+    while (a < b && IsNumberWord(words[a])) {
+        a++;
+    }
+    while (b > a && IsNumberWord(words[b - 1])) {
+        b--;
+    }
+    if (a == b) {
+        return {};
+    }
+    str::Builder core;
+    for (int i = a; i < b; i++) {
+        core.Append(fmt("%s%s", i > a ? StrL(" ") : StrL(""), words[i]));
+    }
+    return fmt("%s %d %s", top ? StrL("top") : StrL("bottom"), (int)roundf(s.lineBox.y / 4), ToStr(core));
+}
+
+// lines no larger than body text at the same place in a margin on more than
+// half the pages (of 4 at least, so a short document keeps its title)
+static void FindRunning(MdDoc& d, Vec<StyledPage*>& pages) {
+    if (len(pages) < 4) {
+        return;
+    }
+    StrVec keys;
+    Vec<int> counts;
+    for (StyledPage* p : pages) {
+        Vec<MdLine> lines;
+        PageLines(*p, lines);
+        StrVec here;
+        for (MdLine& l : lines) {
+            if (l.size > d.bodySize + 1) {
                 continue;
             }
-            int from = 0;
-            while (from < n && p->spans[from].block != blocks[k]) {
-                from++;
-            }
-            int to = from;
-            while (to < n && p->spans[to].block == blocks[k]) {
-                to++;
-            }
-            TempStr norm = NormalizeForMatchTemp(BlockPlainTemp(*p, from, to));
-            if (len(norm) == 0 || len(norm) > 120) {
+            TempStr key = HeaderKeyTemp(*p, l);
+            if (len(key) == 0 || here.Contains(key)) {
                 continue;
             }
-            int idx = -1;
-            for (int t = 0; t < len(texts); t++) {
-                if (str::Eq(texts[t], norm)) {
-                    idx = t;
-                }
-            }
+            here.Append(key);
+            int idx = keys.Find(key);
             if (idx < 0) {
-                texts.Append(norm);
+                keys.Append(key);
                 VecAppend(counts, 1);
             } else {
                 counts[idx]++;
             }
         }
     }
-    for (int t = 0; t < len(texts); t++) {
-        if (counts[t] * 2 > len(pages)) {
-            d.running.Append(texts[t]);
+    for (int i = 0; i < len(keys); i++) {
+        if (counts[i] * 2 > len(pages)) {
+            d.running.Append(keys[i]);
         }
     }
+}
+
+// takes the running headers out of a page, and a block that is only a page
+// number in a margin
+static void DropRunning(MdDoc& d, StyledPage& p) {
+    Vec<MdLine> lines;
+    PageLines(p, lines);
+    Vec<bool> drop;
+    for (int i = 0; i < len(p.spans); i++) {
+        VecAppend(drop, false);
+    }
+    for (MdLine& l : lines) {
+        TempStr key = HeaderKeyTemp(p, l);
+        if (len(key) > 0 && l.size <= d.bodySize + 1 && d.running.Contains(key)) {
+            for (int i = l.from; i < l.to; i++) {
+                drop[i] = true;
+            }
+        }
+    }
+    for (int i = 0; i < len(p.spans);) {
+        int block = p.spans[i].block;
+        int end = i;
+        bool margin = true, small = true;
+        str::Builder text;
+        while (end < len(p.spans) && p.spans[end].block == block) {
+            const StyledSpan& s = p.spans[end];
+            if (!drop[end]) {
+                margin = margin && (InTopMargin(p, s) || InBottomMargin(p, s));
+                // a number in a heading's size is a title ("1"), not a page number
+                small = small && s.size <= d.bodySize + 1;
+                text.Append(fmt(" %s", s.text));
+            }
+            end++;
+        }
+        if (margin && small && IsPageNumberText(ToStr(text))) {
+            for (int k = i; k < end; k++) {
+                drop[k] = true;
+            }
+        }
+        i = end;
+    }
+    Vec<StyledSpan> kept;
+    for (int i = 0; i < len(p.spans); i++) {
+        if (drop[i]) {
+            str::Free(p.spans[i].text);
+        } else {
+            VecAppend(kept, p.spans[i]);
+        }
+    }
+    p.spans = std::move(kept);
 }
 
 static int CmdMarkdown(CliCtx& cx) {
@@ -1477,6 +1680,9 @@ static int CmdMarkdown(CliCtx& cx) {
     if (haveStyles) {
         FindSizes(d, styled);
         FindRunning(d, styled);
+        for (StyledPage* p : styled) {
+            DropRunning(d, *p);
+        }
         TocTree* toc = engine->HasToc() ? engine->GetToc() : nullptr;
         if (toc && toc->root) {
             CollectTocTitles(toc->root->child ? toc->root->child : toc->root, 0, d.tocTitles, d.tocDepths);

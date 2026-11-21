@@ -11948,6 +11948,7 @@ bool EngineMupdfGetStyledPage(EngineBase* engine, int pageNo, StyledPage& out) {
     if (!stext) {
         return false;
     }
+    out.mediabox = ToRectF(stext->mediabox);
     int blockNo = 0;
     int lineNo = 0;
     str::Builder run;

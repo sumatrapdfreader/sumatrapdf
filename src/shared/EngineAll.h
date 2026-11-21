@@ -177,6 +177,7 @@ struct StyledImage {
     Str png; // owned
 };
 struct StyledPage {
+    RectF mediabox;
     Vec<StyledSpan> spans;
     Vec<StyledImage> images;
     ~StyledPage();
