@@ -10,6 +10,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import {
@@ -81,7 +82,15 @@ async function readAdjust(client: ControlClient): Promise<string> {
   return String(res[1] ?? "").trim();
 }
 
-function findDialog(pid: number): number {
+// macOS has no HWNDs: the app lists its tool windows, and 1 stands in for the
+// dialog's handle, as for launchControlled's frame (input goes to the active dialog)
+const DIALOG_NAME = "brightnesscontrast";
+
+async function findDialog(client: ControlClient, pid: number): Promise<number> {
+  if (IS_MAC) {
+    const res = await client.request(ControlCommand.TestToolWindow, ["list"]);
+    return new RegExp(`^${DIALOG_NAME} made=1`, "m").test(String(res[1] ?? "")) ? 1 : 0;
+  }
   let found = 0;
   enumWindows((hwnd) => {
     if (getWindowPid(hwnd) === pid && isWindowVisible(hwnd) && getWindowText(hwnd) === DIALOG_TITLE) {
@@ -95,15 +104,34 @@ function findDialog(pid: number): number {
 
 // a key press is a key-down and a char: orig's dialog takes the access key from
 // the char, ng's from the key-down
-function pressLetter(hwnd: number, letter: string): void {
-  postMessage(hwnd, WM_KEYDOWN, letter.toUpperCase().charCodeAt(0), 0);
-  postMessage(hwnd, WM_CHAR, letter.charCodeAt(0), 0);
+async function pressLetter(client: ControlClient, hwnd: number, letter: string): Promise<void> {
+  await dlgInput(client, hwnd, WM_KEYDOWN, letter.toUpperCase().charCodeAt(0));
+  await dlgInput(client, hwnd, WM_CHAR, letter.charCodeAt(0));
 }
 
-async function waitForDialog(pid: number, timeoutMs = 5000): Promise<number> {
+// a key-down or a char for the dialog; macOS sends it to the tool window by name
+async function dlgInput(client: ControlClient, hwnd: number, msg: number, code: number): Promise<void> {
+  if (IS_MAC) {
+    const kind = msg === WM_CHAR ? "char" : "key";
+    await client.request(ControlCommand.TestToolWindow, ["input", DIALOG_NAME, kind, code, 0, 0, 0]);
+    return;
+  }
+  postMessage(hwnd, msg, code, 0);
+}
+
+async function closeDialog(client: ControlClient, hwnd: number): Promise<void> {
+  if (IS_MAC) {
+    await client.request(ControlCommand.TestToolWindow, ["close", DIALOG_NAME]);
+  } else {
+    postMessage(hwnd, WM_CLOSE, 0, 0);
+  }
+  await sleep(300);
+}
+
+async function waitForDialog(client: ControlClient, pid: number, timeoutMs = 5000): Promise<number> {
   const end = Date.now() + timeoutMs;
   while (Date.now() < end) {
-    const hwnd = findDialog(pid);
+    const hwnd = await findDialog(client, pid);
     if (hwnd) {
       return hwnd;
     }
@@ -166,38 +194,36 @@ export async function testit(): Promise<void> {
 
     // keyboard: &Brightness / &Contrast mnemonics focus the sliders, arrows / End change them
     postMessage(frame, WM_COMMAND, cmdId("CmdAdjustBrightness"), 0);
-    const kbdDlg = await waitForDialog(proc.pid!);
+    const kbdDlg = await waitForDialog(client, proc.pid!);
     if (!kbdDlg) {
       throw new Error(`issue-4788: CmdAdjustBrightness did not open the "${DIALOG_TITLE}" dialog`);
     }
     // the slider reads the live key state: a Ctrl stuck down mid-run (RDP) makes an arrow a big step
     await ensureModifierKeysUp();
-    pressLetter(kbdDlg, "b");
+    await pressLetter(client, kbdDlg, "b");
     for (let i = 0; i < 3; i++) {
-      postMessage(kbdDlg, WM_KEYDOWN, VK_RIGHT, 0);
+      await dlgInput(client, kbdDlg, WM_KEYDOWN, VK_RIGHT);
     }
-    pressLetter(kbdDlg, "c");
-    postMessage(kbdDlg, WM_KEYDOWN, VK_END, 0);
+    await pressLetter(client, kbdDlg, "c");
+    await dlgInput(client, kbdDlg, WM_KEYDOWN, VK_END);
     await sleep(300);
     const kbd = await readAdjust(client);
     console.log(`issue-4788: keyboard ${kbd}`);
     if (!kbd.includes("brightness=3 contrast=100")) {
       throw new Error(`issue-4788: keyboard did not change the sliders: ${kbd}`);
     }
-    postMessage(kbdDlg, WM_CLOSE, 0, 0);
-    await sleep(300);
+    await closeDialog(client, kbdDlg);
 
     // both commands open the one dialog
     for (const name of ["CmdAdjustBrightness", "CmdAdjustContrast"]) {
       postMessage(frame, WM_COMMAND, cmdId(name), 0);
-      const dlg = await waitForDialog(proc.pid!);
+      const dlg = await waitForDialog(client, proc.pid!);
       if (!dlg) {
         throw new Error(`issue-4788: ${name} did not open the "${DIALOG_TITLE}" dialog`);
       }
-      console.log(`issue-4788: ${name} opened ${getClassName(dlg)}`);
-      postMessage(dlg, WM_CLOSE, 0, 0);
-      await sleep(300);
-      if (findDialog(proc.pid!)) {
+      console.log(`issue-4788: ${name} opened ${IS_MAC ? DIALOG_NAME : getClassName(dlg)}`);
+      await closeDialog(client, dlg);
+      if (await findDialog(client, proc.pid!)) {
         throw new Error(`issue-4788: the dialog did not close`);
       }
     }
