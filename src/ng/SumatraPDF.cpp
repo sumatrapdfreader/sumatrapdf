@@ -284,12 +284,14 @@ void UpdateDocumentColors() {
     gRenderCache->linkColor = link;
     gRenderCache->BumpDarkModeEpoch();
 
-    // ng: orig also regenerates the chm / markdown previews here; their browser
-    // host is step 11b
+    // also regenerate chm / markdown previews (their colors are baked into the html)
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             DisplayModel* dm = tab->AsFixed();
             if (!dm) {
+                if (BrowserDocController* browser = tab->AsBrowser()) {
+                    browser->UpdateTheme();
+                }
                 continue;
             }
             gRenderCache->AbortRendering(dm);

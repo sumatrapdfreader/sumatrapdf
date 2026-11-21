@@ -433,6 +433,7 @@ void BrowserDocController::UpdateTheme() {
     if (!docView || len(currentPageUrl) == 0) {
         return;
     }
+    logf("BrowserDocController::UpdateTheme: reloading '%s'\n", currentPageUrl);
     SaveHtmlScrollPos();
     restoreHtmlScrollPos = true;
     DisplayPage(currentPageUrl);
