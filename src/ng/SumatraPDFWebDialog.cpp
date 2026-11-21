@@ -81,11 +81,17 @@ static Str WebDlgTitle() {
     return Tr("Link SumatraPDF Web");
 }
 
+// The window the dialog was opened for, or nullptr once it's gone: on quit
+// the dialog's own window closes after the main window was deleted.
+static MainWindow* WebOwner() {
+    return IsMainWindowValid(gWeb.win) ? gWeb.win : nullptr;
+}
+
 static void WebInvalidate() {
     if (gWebTw) {
         ToolWindowInvalidate(gWebTw);
     }
-    AppShellInvalidate(gWeb.win);
+    AppShellInvalidate(WebOwner());
 }
 
 static void SetStatus(Str s) {
@@ -105,7 +111,8 @@ static void ClearFileList() {
 }
 
 static bool CanUploadDoc() {
-    WindowTab* tab = gWeb.win ? gWeb.win->CurrentTab() : nullptr;
+    MainWindow* win = WebOwner();
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
     // Home and Favorites leave filePath empty. Do not invent a path.
     return tab && len(tab->filePath) > 0 && file::Exists(tab->filePath);
 }
@@ -117,7 +124,7 @@ void CloseSumatraPDFWebDialog() {
     gWeb.visible = false;
     gWeb.reqId = 0;
     gWeb.inFlight = false;
-    MainWindow* win = gWeb.win;
+    MainWindow* win = WebOwner();
     // Blur the window that holds the field before freeing it. The tool
     // window's close otherwise blurs the freed input.
     gp::Window* host = gWebTw ? ToolWindowGpui(gWebTw) : (win ? win->gpuiWin : nullptr);
