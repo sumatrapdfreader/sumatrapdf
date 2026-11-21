@@ -96,7 +96,7 @@ struct PropertiesView {
 static gp::Entity<PropertiesView> gPropertiesView;
 
 #if OS_WIN
-static void ViewCertDer(HWND parent, Str der) {
+void ViewCertDer(HWND parent, Str der) {
     if (len(der) == 0) {
         return;
     }

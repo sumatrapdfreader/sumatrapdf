@@ -207,6 +207,8 @@ export const sharedFiles = [
   "src/shared/SidebarMetrics.h",
   "src/shared/SignDocumentDialogCommon.cpp",
   "src/shared/SignDocumentDialogCommon.h",
+  "src/shared/SignatureUICommon.cpp",
+  "src/shared/SignatureUICommon.h",
   "src/shared/SumatraControlCommon.cpp",
   "src/shared/SumatraControlCommon.h",
   "src/shared/SumatraCrashCommon.cpp",

@@ -113,6 +113,7 @@ void CanvasDrawRect(gpui::PaintCtx* ctx, Rect r, Color col, float width);
 // width <= 0 fills the ellipse
 void CanvasDrawEllipse(gpui::PaintCtx* ctx, Rect r, Color col, float width);
 void CanvasFillRoundRect(gpui::PaintCtx* ctx, Rect r, int radius, Color fill, Color border);
+void CanvasDrawSvg(gpui::PaintCtx* ctx, Str svg, Rect r, Color col);
 void CanvasClipPush(gpui::PaintCtx* ctx, Rect r);
 void CanvasClipPop(gpui::PaintCtx* ctx);
 Size CanvasMeasureText(gpui::PaintCtx* ctx, Str s, float fontSize);

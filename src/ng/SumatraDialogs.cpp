@@ -43,6 +43,7 @@
 #include "resource.h"
 #include "SumatraDialogs.h"
 #include "shared/PdfToolsCommon.h"
+#include "SignatureUI.h"
 
 #include "SumatraLog.h"
 
@@ -774,6 +775,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     if (gp::El* e = BrightnessContrastDialogBuild(win, cx)) {
         return e;
     }
+    if (gp::El* e = SignatureDialogBuild(win, cx)) {
+        return e;
+    }
     if (gp::El* e = PDFScriptDialogBuild(win, cx)) {
         return e;
     }
@@ -858,10 +862,10 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
                IsOpenFromUrlDialogVisible() || IsSumatraPDFWebDialogVisible() || IsGoToPageDialogVisible() ||
                IsTabGroupsDialogVisible() || IsGetPasswordDialogVisible() || IsCustomZoomDialogVisible() ||
                IsChangeScrollbarDialogVisible() || IsChangeLanguageDialogVisible() || IsChangeThemeDialogVisible() ||
-               IsChangeColorDialogVisible() || IsBrightnessContrastDialogVisible() || IsPDFScriptDialogVisible() ||
-               IsInverseSearchDialogVisible() || IsSignDocumentDialogVisible() || IsPdfToolDialogVisible() ||
-               IsImageEditWindowVisible() || IsSetScreenshotHotkeyDialogVisible() || IsEbookSettingsDialogVisible() ||
-               IsSettingsDialogVisible() || IsAdvancedSettingsDialogVisible() ||
+               IsChangeColorDialogVisible() || IsBrightnessContrastDialogVisible() || IsSignatureDialogVisible() ||
+               IsPDFScriptDialogVisible() || IsInverseSearchDialogVisible() || IsSignDocumentDialogVisible() ||
+               IsPdfToolDialogVisible() || IsImageEditWindowVisible() || IsSetScreenshotHotkeyDialogVisible() ||
+               IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() || IsAdvancedSettingsDialogVisible() ||
                IsConfigureRestrictedUseDialogVisible() || IsPageGridDialogVisible() || IsKeyboardHelpVisible() ||
                IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible() || IsRenameStripGroupDialogVisible();
     (void)win;
@@ -1281,6 +1285,10 @@ bool DialogsOnEscape(MainWindow* win) {
     }
     if (IsBrightnessContrastDialogVisible()) {
         CloseBrightnessContrastDialog();
+        return true;
+    }
+    if (IsSignatureDialogVisible()) {
+        CloseSignatureDialog();
         return true;
     }
     if (IsPDFScriptDialogVisible()) {

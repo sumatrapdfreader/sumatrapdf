@@ -66,6 +66,7 @@
 #include "Menu.h"
 #include "EngineAll.h"
 #include "EutlTrust.h"
+#include "SignatureUICommon.h"
 #include "SignatureUI.h"
 #include "LayersUI.h"
 #include "CommandPalette.h"

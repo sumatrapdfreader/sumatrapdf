@@ -70,6 +70,7 @@
 #include "ReadAloud.h"
 #include "SelectTextKeyboard.h"
 #include "SumatraDialogs.h"
+#include "SignatureUI.h"
 #include "PdfTools.h"
 #include "gui/Sidebar.h"
 #include "gui/NavFilesUI.h"
@@ -3449,6 +3450,8 @@ static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool men
     if (!tbAtBottom) {
         chromeDy += toolbarDy;
     }
+    // orig's sigBarSlot: under the top toolbar, over the sidebar and the canvas
+    chromeDy += SigBarDy(win);
     int sidebarDx = 0;
     if ((win->uiState.tocVisible || win->uiState.favVisible) && !AppShellSidebarFloats(win)) {
         sidebarDx = win->sidebarDx + kSplitterDx;
@@ -3677,6 +3680,9 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     // frame, where a dialog window's goes
     if (dialogWasUp && !self->overlayUp && win->shell && IsDialogTrapFocused(cx->win)) {
         gp::FocusHandleFocus(cx->win, win->shell->frameFocus);
+    }
+    if (gp::El* sigBar = SigBarBuild(win, cx)) {
+        root->Child(sigBar);
     }
     root->Child(BuildBody(self, cx, self->overlayUp));
     // ng: orig's frame always has a focused window. A gpui window starts with

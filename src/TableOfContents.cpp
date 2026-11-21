@@ -38,6 +38,7 @@
 #include "FilterHighlightDraw.h"
 #include "PageThumbnails.h"
 #include "SidebarPanel.h"
+#include "SignatureUICommon.h"
 #include "SignatureUI.h"
 #include "LayersUI.h"
 #include "TableOfContents.h"

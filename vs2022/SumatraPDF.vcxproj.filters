@@ -627,6 +627,9 @@
     <ClInclude Include="..\src\shared\SignDocumentDialogCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\SignatureUICommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\StressTesting.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1572,6 +1575,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SignDocumentDialogCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SignatureUICommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\StressTesting.cpp">

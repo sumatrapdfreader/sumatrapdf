@@ -45,6 +45,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "EutlTrust.h"
+#include "SignatureUICommon.h"
 #include "SignatureUI.h"
 #include "LayersUI.h"
 #include "PageInfoBar.h"
@@ -1924,7 +1925,6 @@ static void FinishPendingDocumentRelayout(MainWindow* win) {
 static void SetTabLoadError(WindowTab* tab, Str path);
 
 static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab);
-static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab);
 
 // ShowThumbnailsIfNoToc: a document without bookmarks opens with page
 // thumbnails in the sidebar's top panel instead of no sidebar (#6407).
@@ -2325,7 +2325,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
     SetTocVisibility(win, showToc);
     MaybeShowTemporaryFileNotification(win, tab);
-    MaybeShowSignatureStatus(win, tab);
+    CheckTabSignatures(tab);
     if (dm) {
         if (dm->pendingRelayout) {
             // canvas not yet sized; RelayoutFrame / ShowWindow WM_SIZE will
@@ -6054,86 +6054,6 @@ static void DeleteCurrentFile(MainWindow* win) {
 static bool RenameCurrentFileTo(MainWindow* win, Str dstFilePath);
 
 Kind kNotifTemporaryFile = "notifTemporaryFile";
-
-struct SigStatusJob {
-    WindowTab* tab = nullptr;
-    EngineBase* engine = nullptr;
-    // only PDF signatures are checked against the EU trusted list
-    bool needsEutl = false;
-    // OfdTrustedCertificates, copied: the check runs on a thread
-    StrVec trustedCerts;
-    PdfSigResult* res = nullptr;
-};
-
-static void OnSigStatusDone(SigStatusJob* job) {
-    WindowTab* tab = job->tab;
-    EngineBase* engine = job->engine;
-    PdfSigResult* res = job->res;
-    delete job;
-    defer {
-        engine->Release();
-    };
-    if (!IsWindowTabValid(tab) || !tab->AsFixed() || tab->AsFixed()->GetEngine() != engine) {
-        delete res;
-        return;
-    }
-    // a reload: the bar stays closed if it was
-    if (tab->signatures) {
-        res->barDismissed = tab->signatures->barDismissed;
-    }
-    delete tab->signatures;
-    tab->signatures = res;
-
-    MainWindow* win = tab->win;
-    if (!IsCurrentTab(win, tab)) {
-        return;
-    }
-    UpdateSignaturesCtrl(win);
-    ApplySidebarPanels(win);
-    SigBarUpdate(win);
-    ScheduleUiUpdate(win, kUiForceRelayout | kUiRelayout);
-    ScheduleRepaint(win, 0);
-}
-
-static void SigStatusThread(SigStatusJob* job) {
-    if (job->needsEutl && EutlNeedsUpdate()) {
-        EutlUpdate(nullptr);
-    }
-    Vec<Str> trusted;
-    for (int i = 0; i < len(job->trustedCerts); i++) {
-        VecAppend(trusted, job->trustedCerts.At(i));
-    }
-    job->res = EngineMupdfCheckSignatures(job->engine, &trusted);
-    uitask::Post(MkFunc0<SigStatusJob>(OnSigStatusDone, job), "SigStatusDone");
-}
-
-// checks a signed document's signatures, for the bar, the sidebar view and the
-// marks. On a thread: it hashes the file and may update the EU list.
-static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab) {
-    if (gPluginMode || !tab || !tab->AsFixed()) {
-        return;
-    }
-    EngineBase* engine = tab->AsFixed()->GetEngine();
-    bool isPdf = EngineMupdfIsPdf(engine);
-    bool hasSignatures = isPdf ? EngineMupdfCountSignedSignatures(engine) > 0 : EngineMupdfHasOfdSignatures(engine);
-    if (!hasSignatures) {
-        delete tab->signatures;
-        tab->signatures = nullptr;
-        return;
-    }
-    EutlRegisterLookup();
-    auto* job = new SigStatusJob;
-    job->tab = tab;
-    job->engine = engine;
-    job->needsEutl = isPdf;
-    if (gSettings->ofdTrustedCertificates) {
-        for (Str path : *gSettings->ofdTrustedCertificates) {
-            job->trustedCerts.Append(path);
-        }
-    }
-    engine->AddRef();
-    RunAsync(MkFunc0<SigStatusJob>(SigStatusThread, job), StrL("SigStatus"));
-}
 
 // TemporaryFileShowNotification: say the document is from a temporary folder
 // and offer to copy it to a permanent one, once per file (#6437)

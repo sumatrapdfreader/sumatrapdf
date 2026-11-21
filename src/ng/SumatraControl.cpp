@@ -86,6 +86,7 @@
 #include "gui/DocCanvas.h"
 #include "gui/TabsUI.h"
 #include "gui/Sidebar.h"
+#include "SignatureUI.h"
 #if OS_WIN
 #include "gui/Dpi.h"
 #include "gui/PlatformFont.h"
@@ -725,6 +726,9 @@ enum class ControlCmd : u16 {
     TestScrollState = 144,
     TestDrawRectSelection = 145,
     // the first window's tab widths, one "dx=<n> text=<title>" line per tab
+    // [panel | close | row <n> | open <n>]: the signature bar, the sidebar
+    // view, the mark and the dialog (SignatureUiStateTemp)
+    TestSignatureStatus = 148,
     TestTabWidths = 149,
     // [url, dir]: Open from URL as the dialog's Download starts it
     TestOpenFromUrl = 150,
@@ -1967,6 +1971,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = DestZoomNavResultTemp(destNo, startZoomPerc, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSignatureStatus: {
+            MainWindow* win = FirstWindow();
+            AppendTestResult(req, 0, win ? SignatureUiStateTemp(win, StringArg(req, 0)) : TempStr{});
             break;
         }
 

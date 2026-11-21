@@ -41,6 +41,9 @@
 #include "FilterHighlightDraw.h"
 #include "gui/DialogWidgets.h"
 #include "gui/Sidebar.h"
+#include "SvgIcons.h"
+#include "SignatureUICommon.h"
+#include "SignatureUI.h"
 
 #include "SumatraLog.h"
 
@@ -115,8 +118,8 @@ struct SidebarUI {
     int thumbRevealPage = 0;
     int thumbSelectedPage = 0;
     bool thumbSelectionPinned = false;
-    // view icons, Bookmarks / Thumbnails / Favorites / Layers, for each panel
-    gpui::Bounds viewIconBounds[3][4]{};
+    // view icons, Bookmarks / Thumbnails / Favorites / Signatures / Layers, for each panel
+    gpui::Bounds viewIconBounds[3][5]{};
     // pixel sizes at the current frame DPI (96 DPI keeps the constants above)
     int viewIconPx = kSidebarIconPx;
     int filterFontPx = kSidebarFilterFontPx;
@@ -157,6 +160,13 @@ struct SidebarUI {
     bool layersStale = true;
     int layerSel = -1;
     float layersScrollY = 0;
+
+    // the Signatures pane: the selected row of the current tab's signatures
+    WindowTab* sigFor = nullptr;
+    int sigSel = -1;
+    float sigScrollY = 0;
+    // the pane isn't in the tree until the next frame: focus it then
+    bool sigWantFocus = false;
 };
 
 struct SidebarView {
@@ -190,6 +200,9 @@ struct SidebarView {
     static void OnLayerClick(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t row);
     static void OnLayersScroll(SidebarView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
     static void OnLayersClose(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*);
+    static void OnSigRowClick(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t row);
+    static void OnSigScroll(SidebarView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
+    static void OnSigClose(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*);
 };
 
 // one action per pane, carrying the context-menu command id
@@ -499,6 +512,9 @@ SidebarContent SidebarContentFromStr(Str s, SidebarContent fallback) {
     if (str::EqI(s, StrL("favorites"))) {
         return SidebarContent::Favorites;
     }
+    if (str::EqI(s, StrL("signatures"))) {
+        return SidebarContent::Signatures;
+    }
     if (str::EqI(s, StrL("layers"))) {
         return SidebarContent::Layers;
     }
@@ -511,6 +527,9 @@ Str SidebarContentToStr(SidebarContent content) {
     }
     if (content == SidebarContent::Favorites) {
         return StrL("favorites");
+    }
+    if (content == SidebarContent::Signatures) {
+        return StrL("signatures");
     }
     if (content == SidebarContent::Layers) {
         return StrL("layers");
@@ -530,6 +549,9 @@ bool SidebarHasLayers(MainWindow* win) {
 static bool ContentAvailable(MainWindow* win, SidebarContent content) {
     if (content == SidebarContent::Layers) {
         return SidebarHasLayers(win);
+    }
+    if (content == SidebarContent::Signatures) {
+        return win && TabHasSignatures(win->CurrentTab());
     }
     if (content == SidebarContent::Thumbnails) {
         return win && win->AsFixed();
@@ -709,8 +731,22 @@ void SidebarToggleLayers(MainWindow* win) {
     ScheduleSaveSettings();
 }
 
+// orig's ShowSidebarView for a document-only view: the top panel, which
+// belongs to the document, shows the signatures and gets the keyboard
+void SidebarShowSignatures(MainWindow* win) {
+    if (!win || !win->CurrentTab() || !TabHasSignatures(win->CurrentTab())) {
+        return;
+    }
+    SetPanelContent(win, SidebarSlot::Top, SidebarContent::Signatures);
+    SetSidebarVisibility(win, true, win->uiState.favVisible, SidebarResizeFrame::Adjust);
+    SidebarFocusPanel(win, SidebarSlot::Top);
+    Ui(win)->sigWantFocus = true;
+    ScheduleSaveSettings();
+}
+
 static float ScrollToRow(float scrollY, float viewH, int idx, int nRows);
 static bool LayersOnKeyDown(MainWindow* win, SidebarUI* ui, int vkey);
+static bool SigOnKeyDown(MainWindow* win, SidebarUI* ui, int vkey);
 static int TopPaneDy(MainWindow* win);
 
 // orig's TocTreeKeyDown / FavTreeKeyDown: Esc clears the search and focuses
@@ -864,6 +900,9 @@ bool SidebarOnKeyDown(MainWindow* win, int vkey, bool ctrl, bool shift, bool alt
     SidebarContent content = SlotContent(win, focused);
     if (content == SidebarContent::Layers) {
         return LayersOnKeyDown(win, ui, vkey);
+    }
+    if (content == SidebarContent::Signatures) {
+        return SigOnKeyDown(win, ui, vkey);
     }
     if (content == SidebarContent::Bookmarks) {
         int n = len(ui->tocRows);
@@ -1799,8 +1838,8 @@ void SidebarView::OnThumbClose(SidebarView* self, gp::Ctx* cx, const gp::ClickEv
 }
 
 void SidebarView::OnPanelView(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t arg) {
-    SidebarSlot slot = (SidebarSlot)(arg >> 2);
-    SidebarContent content = (SidebarContent)(arg & 3);
+    SidebarSlot slot = (SidebarSlot)(arg >> 3);
+    SidebarContent content = (SidebarContent)(arg & 7);
     if (!ContentAvailable(self->win, content)) {
         return;
     }
@@ -1847,19 +1886,28 @@ static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, SidebarS
         SidebarContent selected = SlotContent(win, slot);
         int slotIdx = (int)slot;
         SidebarContent contents[] = {SidebarContent::Bookmarks, SidebarContent::Thumbnails, SidebarContent::Favorites,
-                                     SidebarContent::Layers};
+                                     SidebarContent::Signatures, SidebarContent::Layers};
         gp::IconName icons[] = {gp::IconName::BookOpen, gp::IconName::GalleryVerticalEnd, gp::IconName::Star,
-                                gp::IconName::Eye};
-        Str tips[] = {Tr("Bookmarks"), Tr("Thumbnails"), Tr("Favorites"), Tr("Layers")};
+                                gp::IconName::None, gp::IconName::Eye};
+        Str tips[] = {Tr("Bookmarks"), Tr("Thumbnails"), Tr("Favorites"), Tr("Signatures"), Tr("Layers")};
         for (int i = 0; i < dimofi(contents); i++) {
-            // Layers is about the document: only in its panel, only when it has them
-            bool docOnly = contents[i] == SidebarContent::Layers;
+            // Signatures and Layers are about the document: only in its panel,
+            // only when it has them
+            bool docOnly = contents[i] == SidebarContent::Signatures || contents[i] == SidebarContent::Layers;
             if (docOnly && (slot != SidebarSlot::Top || !ContentAvailable(win, contents[i]))) {
                 continue;
             }
-            int64_t arg = (slotIdx << 2) | (int)contents[i];
+            int64_t arg = (slotIdx << 3) | (int)contents[i];
+            // gpui has no signature icon: orig's
+            gpc::ButtonIcon* icon = nullptr;
+            if (contents[i] == SidebarContent::Signatures) {
+                icon = gpc::ButtonIcon::New(
+                    cx, gpc::Icon::New(cx, gp::IconName::None)->Data(ToGpui(Str(gIconSidebarSignatures))));
+            } else {
+                icon = gpc::ButtonIcon::New(cx, icons[i]);
+            }
             auto* button = gpc::Button::New(cx, GpuiDup(cx->a, fmt("sidebar-view-%d-%d", slotIdx, i)))
-                               ->Icon(icons[i])
+                               ->Icon(icon)
                                ->Ghost()
                                ->Compact()
                                ->WithSize(gp::UiSize::XSmall)
@@ -2848,6 +2896,155 @@ static bool LayersOnKeyDown(MainWindow* win, SidebarUI* ui, int vkey) {
     return false;
 }
 
+// --- signatures -------------------------------------------------------------
+
+// the rows follow the current tab: another tab's selection doesn't carry over
+static PdfSigResult* SigRows(MainWindow* win, SidebarUI* ui) {
+    WindowTab* tab = win->CurrentTab();
+    if (ui->sigFor != tab) {
+        ui->sigFor = tab;
+        ui->sigSel = -1;
+        ui->sigScrollY = 0;
+    }
+    return TabSignatures(tab);
+}
+
+// orig's SignaturesCtrl::OnSelected: a row goes to its signature's page
+void SidebarSelectSignature(MainWindow* win, int row) {
+    SidebarUI* ui = Ui(win);
+    PdfSigResult* res = SigRows(win, ui);
+    if (!res || row < 0 || row >= len(res->entries)) {
+        return;
+    }
+    ui->sigSel = row;
+    GoToSignature(win, res->entries[row]);
+    AppShellInvalidate(win);
+}
+
+bool SidebarSignaturesFocused(MainWindow* win) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!tab || tab->sidebarContent != SidebarContent::Signatures) {
+        return false;
+    }
+    return SidebarPanelHasFocus(win, SidebarSlot::Top);
+}
+
+// a double click opens the signature's dialog, as orig's onDoubleClick
+void SidebarView::OnSigRowClick(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t row) {
+    SidebarSelectSignature(self->win, (int)row);
+    if (ev->clickCount >= 2) {
+        ShowSignatureDialog(self->win, (int)row);
+    }
+    gp::Notify(cx);
+}
+
+void SidebarView::OnSigScroll(SidebarView* self, gp::Ctx* cx, const gp::ScrollEvent* ev) {
+    Ui(self->win)->sigScrollY = ev->offsetY;
+    gp::Notify(cx);
+}
+
+void SidebarView::OnSigClose(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*) {
+    HidePanel(self->win, SidebarSlot::Top);
+    ScheduleSaveSettings();
+    gp::Notify(cx);
+}
+
+//  [icon] signer             orig's SignaturesCtrl::DrawRow: the verdict's icon,
+//         status             the signer over the status in a dimmer color
+static gp::El* BuildSignaturesPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
+    SidebarUI* ui = Ui(win);
+    const gp::Theme& th = gp::ThemeNow(cx->app);
+    PdfSigResult* res = SigRows(win, ui);
+
+    gp::El* pane = gp::Div(cx->a)->FlexCol()->SizeFull()->Bg(th.tokens.sidebar);
+    pane->Child(PaneHeader(win, cx, true, slot, Tr("Signatures"), StrL("signatures-close"),
+                           gp::ListenTo(ui->view, &SidebarView::OnSigClose)));
+
+    gp::FocusHandle focus = SlotFocus(ui, slot);
+    if (ui->sigWantFocus && focus.IsValid()) {
+        ui->sigWantFocus = false;
+        gp::FocusHandleFocus(cx->win, focus);
+    }
+    bool hasFocus = focus.IsValid() && gp::FocusHandleIsFocused(cx->win, focus);
+    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    int n = res ? len(res->entries) : 0;
+    for (int i = 0; i < n; i++) {
+        const PdfSigEntry* e = res->entries[i];
+        Color bgCol, txtCol;
+        TreeRowColors(i == ui->sigSel, hasFocus, &bgCol, &txtCol);
+        gp::El* row = gp::Div(cx->a)
+                          ->PathClick(GpuiDup(cx->a, fmt("signature-%d", i)))
+                          ->FlexRow()
+                          ->W(gp::kFill)
+                          ->H((float)kSigRowDy)
+                          ->Shrink0()
+                          ->ItemsCenter()
+                          ->PadX((float)kSigRowPadDx)
+                          ->Gap((float)kSigRowPadDx)
+                          ->OnClick(gp::ListenTo(ui->view, &SidebarView::OnSigRowClick, (int64_t)i));
+        if (bgCol != kColorUnset) {
+            row->Bg(ToGpui(bgCol));
+        } else {
+            row->HoverBg(ToGpui(TreeRowHotColor()));
+        }
+        row->Child(gpc::Icon::New(cx, gp::IconName::None)
+                       ->Data(ToGpui(Str(SigVerdictIcon(e->verdict))))
+                       ->Size((float)kSigRowIconDx)
+                       ->Color(ToGpui(SigVerdictColor(e->verdict)))
+                       ->IntoEl());
+        Str signer = len(e->signer) > 0 ? e->signer : Tr("Unknown signer");
+        gp::El* text = gp::Div(cx->a)->FlexCol()->Flex1()->MinW(0)->Gap(2);
+        text->Child(gp::TextEl(cx->a, GpuiDup(cx->a, signer))
+                        ->Font(kTreeFontSize)
+                        ->Fg(ToGpui(txtCol))
+                        ->W(gp::kFill)
+                        ->Truncate());
+        text->Child(gp::TextEl(cx->a, GpuiDup(cx->a, e->status))
+                        ->Font(kTreeFontSize)
+                        ->Fg(ToGpui(AccentColor(txtCol, 40)))
+                        ->W(gp::kFill)
+                        ->Truncate());
+        row->Child(text);
+        list->Child(row);
+    }
+    gp::El* scroll = gp::Div(cx->a)
+                         ->Id(GStrL("signatures-list"))
+                         ->TrackFocus(focus)
+                         ->FocusOnPress()
+                         ->TabStop(false)
+                         ->FocusRing()
+                         ->FlexCol()
+                         ->Flex1()
+                         ->W(gp::kFill)
+                         ->MinH(0)
+                         ->ScrollY(ui->sigScrollY)
+                         ->ScrollFromPath()
+                         ->OnScroll(gp::ListenTo(ui->view, &SidebarView::OnSigScroll))
+                         ->Child(list);
+    pane->Child(scroll);
+    return pane;
+}
+
+// orig's list box keys: Up / Down move the selection (and go to the page),
+// Enter opens the dialog
+static bool SigOnKeyDown(MainWindow* win, SidebarUI* ui, int vkey) {
+    PdfSigResult* res = SigRows(win, ui);
+    int n = res ? len(res->entries) : 0;
+    if (n == 0) {
+        return false;
+    }
+    if (vkey == VK_RETURN && ui->sigSel >= 0) {
+        ShowSignatureDialog(win, ui->sigSel);
+        return true;
+    }
+    if (vkey == VK_UP || vkey == VK_DOWN) {
+        int sel = ui->sigSel + (vkey == VK_DOWN ? 1 : -1);
+        SidebarSelectSignature(win, limitValue(sel, 0, n - 1));
+        return true;
+    }
+    return false;
+}
+
 // the top pane's height with the bottom one showing (TocDy), and the middle
 // one's (SidebarMiddleDy); the bottom pane takes the rest
 static int TopPaneDy(MainWindow* win) {
@@ -2881,6 +3078,9 @@ gp::El* SidebarBuild(MainWindow* win, gp::Ctx* cx) {
         }
         if (content == SidebarContent::Layers) {
             return BuildLayersPane(win, cx, slot);
+        }
+        if (content == SidebarContent::Signatures) {
+            return BuildSignaturesPane(win, cx, slot);
         }
         return BuildTocPane(win, cx, slot);
     };

@@ -53,6 +53,7 @@
 #include "Menu.h"
 #include "uia/Provider.h"
 #include "SearchAndDDE.h"
+#include "SignatureUICommon.h"
 #include "SignatureUI.h"
 #include "Selection.h"
 #include "LinkFollow.h"

@@ -67,6 +67,7 @@
 #include "Tabs.h"
 #include "StripGroups.h"
 #include "MainWindowCommon.h"
+#include "SignatureUICommon.h"
 #include "SignatureUI.h"
 #include "LayersUI.h"
 #include "PageInfoBar.h"

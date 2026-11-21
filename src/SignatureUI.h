@@ -10,14 +10,12 @@ struct MainWindow;
 struct Gfx;
 struct VirtCtrl;
 
-bool TabHasSignatures(WindowTab*);
 void CreateSignaturesCtrl(MainWindow*);
 VirtCtrl* SignaturesView(MainWindow*);
 void DeleteSignaturesCtrl(MainWindow*);
 void UpdateSignaturesCtrl(MainWindow*);
 void SignaturesCtrlColorsAndDpi(MainWindow*, int dpi);
 
-bool SigBarWanted(MainWindow*);
 int SigBarDy(MainWindow*);
 HWND SigBarEnsure(MainWindow*);
 void SigBarSetVisible(MainWindow*, bool);

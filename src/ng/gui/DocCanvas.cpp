@@ -67,6 +67,7 @@
 #include "gui/DocCanvas.h"
 #include "CanvasCommon.h"
 #include "MainWindowCommon.h"
+#include "SignatureUI.h"
 
 #include "SumatraLog.h"
 
@@ -404,6 +405,15 @@ void CanvasFillRoundRect(gp::PaintCtx* ctx, Rect r, int radius, Color fill, Colo
     float k = gFrame.k > 0 ? gFrame.k : 1;
     gp::CanvasFillRound(ctx, b.x, b.y, b.w, b.h, (float)radius * k, ToGpui(fill));
     gp::CanvasStrokeRound(ctx, b.x, b.y, b.w, b.h, (float)radius * k, k, ToGpui(border));
+}
+
+// orig's Gfx::DrawPixmap of an SVG icon (GetCachedPixmapForSvg) in `col`
+void CanvasDrawSvg(gp::PaintCtx* ctx, Str svg, Rect r, Color col) {
+    if (!ctx || r.dx <= 0) {
+        return;
+    }
+    gp::Bounds b = ToCanvas(r);
+    gp::SvgDrawXml(ctx, ToGpui(svg), b.x, b.y, b.w, ToGpui(col));
 }
 
 // orig's Gfx::PushClip / PopClip, in document coordinates
@@ -2147,6 +2157,11 @@ static void OnSetCursor(MainWindow* win, Point pt) {
         DeleteLinkTooltip(win);
         return;
     }
+    if (SigMarksOnSetCursor(win, pt)) {
+        CanvasSetCursor(win, kCurHand);
+        DeleteLinkTooltip(win);
+        return;
+    }
     // the laser dot replaces every other cursor, and while pointing at the page
     // during a talk a link tooltip popping up is just in the way
     if (SetLaserPointerCursor(win)) {
@@ -2675,6 +2690,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     win->pressOnlyDeselected = false;
     RefHoverOnCanvasLeftButtonDown(win->refHover);
     if (ReadingBarOnLeftDown(win, x, y)) {
+        return;
+    }
+    if (SigMarksOnLeftDown(win, x, y)) {
         return;
     }
     // placing a new signature: the next drag draws the box, a click puts a
@@ -3737,6 +3755,7 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     PaintAnnotationMove(win, ctx);
     ReadingBarPaint(win, ctx);
     PaintReadAloudHighlight(win, ctx);
+    PaintSignatureMarks(win, ctx);
     if (win->measurementToolbar) {
         PaintMeasurement(win, ctx);
     }

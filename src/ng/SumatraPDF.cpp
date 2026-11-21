@@ -106,6 +106,8 @@
 #include "TableOfContents.h"
 #include "Favorites.h"
 #include "gui/Sidebar.h"
+#include "SignatureUICommon.h"
+#include "SignatureUI.h"
 #include "FileThumbnails.h"
 #include "HomePage.h"
 #include "DocumentProperties.h"
@@ -2219,6 +2221,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
     }
     SetTocVisibility(win, showToc);
     MaybeShowTemporaryFileNotification(win, tab);
+    CheckTabSignatures(tab);
 
     UpdateWindowTitle(win);
     RebuildMenuBar(win);
@@ -4548,6 +4551,9 @@ static bool PanelContentAvailable(MainWindow* win, SidebarContent content) {
     if (content == SidebarContent::Layers) {
         return SidebarHasLayers(win);
     }
+    if (content == SidebarContent::Signatures) {
+        return TabHasSignatures(win->CurrentTab());
+    }
     if (content == SidebarContent::Thumbnails) {
         return win->AsFixed() != nullptr;
     }
@@ -6516,6 +6522,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleLayers:
             SidebarToggleLayers(win);
+            break;
+
+        case CmdShowSignatures:
+            SidebarShowSignatures(win);
             break;
 
         // swaps the page colors for this session, whatever they are and

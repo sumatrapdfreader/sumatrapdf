@@ -62,6 +62,7 @@
 #include "Toolbar.h"
 #include "TableOfContents.h"
 #include "gui/Sidebar.h"
+#include "SignatureUICommon.h"
 #include "gui/TabsUI.h"
 #include "gui/TabSwitcher.h"
 #include "HomePage.h"
@@ -462,6 +463,7 @@ void FillAppCommandCtx(AppCommandCtx& ctx, MainWindow* win) {
     ctx.clipboardHasImage = ImageEditHasClipboard(win);
     ctx.clipboardReadAsync = OS_WASM;
     ctx.hasLayers = SidebarHasLayers(win);
+    ctx.hasSignatures = TabHasSignatures(ctx.tab);
     EngineBase* engine = ctx.tab ? ctx.tab->GetEngine() : nullptr;
     ctx.isOfd = engine && EngineMupdfIsOfd(engine);
 }

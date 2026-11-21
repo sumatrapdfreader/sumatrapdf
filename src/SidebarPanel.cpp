@@ -29,6 +29,7 @@
 #include "Favorites.h"
 #include "PageThumbnails.h"
 #include "TableOfContents.h"
+#include "SignatureUICommon.h"
 #include "SignatureUI.h"
 #include "LayersUI.h"
 #include "SidebarPanel.h"

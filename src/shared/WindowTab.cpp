@@ -138,7 +138,7 @@ void WindowTab::DropPendingLoad() {
 
 WindowTab::~WindowTab() {
     logf("~WindowTab: 0x%p, dm: 0x%p\n", this, AsFixed());
-#if !defined(SUMATRA_NG)
+#if OS_WIN
     delete signatures;
 #endif
     // Nothing may point at a tab that is going away.

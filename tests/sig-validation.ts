@@ -19,9 +19,9 @@ import {
   type PdfSignSpec,
 } from "./pki-chain.ts";
 import { join } from "node:path";
-import { cmdId, EXE, ROOT, runStandalone, tmpPath, writeAppdata } from "./util.ts";
+import { cmdId, EXE, ROOT, runStandalone, tmpPath, USE_NG, writeAppdata } from "./util.ts";
 import { clickAt, findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
-import { postMessage, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi.ts";
+import { getClientRect, postMessage, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi.ts";
 
 const SIGNATURES_READY_MS = 20_000;
 const NOT_READY = 2;
@@ -352,6 +352,12 @@ async function uiState(client: ControlClient, action = ""): Promise<SigUiState> 
   };
 }
 
+// whether the command palette offers Show Signatures
+async function paletteOffersSignatures(client: ControlClient): Promise<boolean> {
+  const res = await client.request(ControlCommand.TestCommandVisibility, ["CmdShowSignatures", "palette"]);
+  return /vis=show/.test(String(res[1] ?? ""));
+}
+
 async function waitForState(client: ControlClient, ok: (s: SigUiState) => boolean, what: string): Promise<SigUiState> {
   const deadline = Date.now() + BAR_READY_MS;
   for (;;) {
@@ -456,10 +462,16 @@ async function testUi(): Promise<void> {
       if (s.rows !== 1) {
         throw new Error(`sig-validation: ${s.rows} rows\n${s.text}`);
       }
+      if (!(await paletteOffersSignatures(client))) {
+        throw new Error("sig-validation: the palette doesn't offer Show Signatures for a signed document");
+      }
 
       sendCommand(await waitForFrame(proc.pid!), cmdId("CmdShowSignatures"));
       await waitForState(client, (st) => st.panel && st.listFocused, "the command doesn't focus the list");
-      await clickAt(findCanvas(await waitForFrame(proc.pid!)), 5, 5);
+      // ng draws the page in the frame: its top left is the caption
+      const docCanvas = findCanvas(await waitForFrame(proc.pid!));
+      const rc = getClientRect(docCanvas);
+      await clickAt(docCanvas, USE_NG ? Math.floor((rc.right * 3) / 4) : 5, USE_NG ? rc.bottom - 40 : 5);
       await waitForState(client, (st) => !st.listFocused, "a click on the document leaves the list focused");
       s = await uiState(client, "panel");
       if (!s.panel) {
@@ -492,6 +504,9 @@ async function testUi(): Promise<void> {
     async (client, proc) => {
       const frame = await waitForFrame(proc.pid!);
       await waitForState(client, (st) => st.bar === "" && st.rows === 0, "an unsigned tab shows a bar");
+      if (await paletteOffersSignatures(client)) {
+        throw new Error("sig-validation: the palette offers Show Signatures for an unsigned document");
+      }
       sendCommand(frame, cmdId("CmdShowSignatures"));
       await Bun.sleep(300);
       if ((await uiState(client)).panel) {

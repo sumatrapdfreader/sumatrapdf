@@ -36,92 +36,20 @@
 #include "SidebarPanel.h"
 #include "AppHelpersCommon.h"
 #include "shared/PdfToolsCommon.h"
+#include "SignatureUICommon.h"
 #include "SignatureUI.h"
 
-constexpr int kSigBarDy = 32;
-constexpr int kSigBarIconDx = 18;
-constexpr int kSigBarPadDx = 10;
-constexpr int kSigRowDy = 46;
-constexpr int kSigRowIconDx = 18;
-constexpr int kSigRowPadDx = 8;
-constexpr int kSigMarkDx = 20;
-constexpr int kSigDialogDx = 620;
-constexpr int kSigDialogDy = 460;
-constexpr int kSigStatusFontPx = 16;
-
-static const Color kColValid = MkRgb(0x1a, 0x7f, 0x37);
-static const Color kColProblem = MkRgb(0xb5, 0x80, 0x00);
-static const Color kColInvalid = MkRgb(0xc6, 0x28, 0x28);
-static const Color kColBarProblemBg = MkRgb(0xff, 0xf3, 0xb0);
-static const Color kColBarInvalidBg = MkRgb(0xff, 0xd6, 0xd6);
-static const Color kColBarWarnText = MkRgb(0x20, 0x20, 0x20);
-
-static const char* VerdictIcon(SigVerdict v) {
-    switch (v) {
-        case SigVerdict::Invalid:
-            return gIconSigInvalid;
-        case SigVerdict::Unknown:
-            return gIconSigProblem;
-        default:
-            return gIconSigValid;
-    }
-}
-
-static Color VerdictColor(SigVerdict v) {
-    switch (v) {
-        case SigVerdict::Invalid:
-            return kColInvalid;
-        case SigVerdict::Unknown:
-            return kColProblem;
-        default:
-            return kColValid;
-    }
-}
-
 static Pixmap* VerdictPixmap(SigVerdict v, int dx) {
-    return GetCachedPixmapForSvg(Str(VerdictIcon(v)), dx, dx, VerdictColor(v));
+    return GetCachedPixmapForSvg(Str(SigVerdictIcon(v)), dx, dx, SigVerdictColor(v));
 }
 
-static PdfSigResult* TabSignatures(WindowTab* tab) {
-    return tab ? tab->signatures : nullptr;
-}
-
-static PdfSigResult* CurrentSignatures(MainWindow* win) {
-    return win ? TabSignatures(win->CurrentTab()) : nullptr;
-}
-
-bool TabHasSignatures(WindowTab* tab) {
-    PdfSigResult* res = TabSignatures(tab);
-    return res && len(res->entries) > 0;
-}
-
-static SigVerdict OverallVerdict(const PdfSigSummary& sum) {
-    if (sum.anyInvalid) {
-        return SigVerdict::Invalid;
-    }
-    if (sum.anyUnknown) {
-        return SigVerdict::Unknown;
-    }
-    return sum.nQualified > 0 ? SigVerdict::ValidQualified : SigVerdict::Valid;
-}
-
-static Str OverallMessage(const PdfSigSummary& sum) {
-    if (sum.anyInvalid) {
-        return Tr("At least one signature is invalid.");
-    }
-    if (sum.anyUnknown) {
-        return Tr("At least one signature has problems.");
-    }
-    if (sum.nQualified > 0) {
-        return Tr("Signed with a qualified signature. All signatures are valid.");
-    }
-    return Tr("Signed and all signatures are valid.");
-}
-
-static void GoToSignature(MainWindow* win, const PdfSigEntry* e) {
-    if (win->ctrl && e->pageNo > 0 && e->pageNo <= win->ctrl->PageCount()) {
-        win->ctrl->GoToPage(e->pageNo, true);
-    }
+// the current tab's signatures were checked: the list, the panel and the bar follow
+void OnTabSignaturesChecked(MainWindow* win) {
+    UpdateSignaturesCtrl(win);
+    ApplySidebarPanels(win);
+    SigBarUpdate(win);
+    ScheduleUiUpdate(win, kUiForceRelayout | kUiRelayout);
+    ScheduleRepaint(win, 0);
 }
 
 //--- the sidebar view
@@ -278,14 +206,6 @@ static void OnSigBarPanelClick(MainWindow* win, VirtMouseEvent*) {
     PostForWindow(win, OnSigBarPanel, "SigBarPanel");
 }
 
-bool SigBarWanted(MainWindow* win) {
-    PdfSigResult* res = CurrentSignatures(win);
-    if (!res || res->sum.nSigned == 0 || res->barDismissed || !gSettings->showSignatureStatus) {
-        return false;
-    }
-    return !win->IsFullScreenOrPresentation();
-}
-
 int SigBarDy(MainWindow* win) {
     return DpiScaleByDpi(DpiGetForHwnd(win->hwndFrame), kSigBarDy);
 }
@@ -336,14 +256,10 @@ void SigBarUpdate(MainWindow* win) {
     VirtHost* host = win->sigBar->host;
     HWND hwnd = host->native;
     int dpi = DpiGetForHwnd(win->hwndFrame);
-    SigVerdict verdict = OverallVerdict(res->sum);
-    Color bg = ThemeControlBackgroundColor();
-    Color txt = ThemeWindowTextColor();
-    if (verdict == SigVerdict::Unknown || verdict == SigVerdict::Invalid) {
-        bg = verdict == SigVerdict::Invalid ? kColBarInvalidBg : kColBarProblemBg;
-        txt = kColBarWarnText;
-    }
-    Str msg = OverallMessage(res->sum);
+    SigVerdict verdict = OverallSigVerdict(res->sum);
+    Color bg, txt;
+    SigBarColors(verdict, &bg, &txt);
+    Str msg = OverallSigMessage(res->sum);
     SigBar* bar = win->sigBar;
     if (bar->builtMsg == msg.s && bar->builtDpi == dpi && bar->builtBg == bg && bar->builtText == txt) {
         return;
@@ -419,34 +335,6 @@ void SignatureWnd::OnCloseClick(VirtMouseEvent*) {
     ScheduleDelete();
 }
 
-// the lines of `all` that aren't in `validity`, without the signature's header
-static void AppendSignerInfo(str::Builder& out, Str all, Str validity) {
-    StrVec lines;
-    Split(&lines, all, StrL("\n"), true);
-    for (int i = 1; i < len(lines); i++) {
-        Str line = lines[i];
-        if (str::StartsWith(line, StrL("  Status:")) || str::Contains(validity, line)) {
-            continue;
-        }
-        str::TrimWsBoth(line);
-        if (str::EndsWith(line, StrL(":"))) {
-            continue;
-        }
-        out.Append(line);
-        out.Append(StrL("\r\n"));
-    }
-}
-
-static void AppendCrLf(str::Builder& out, Str text) {
-    StrVec lines;
-    Split(&lines, text, StrL("\n"), true);
-    for (Str line : lines) {
-        str::TrimWsBoth(line);
-        out.Append(line);
-        out.Append(StrL("\r\n"));
-    }
-}
-
 bool SignatureWnd::Create(MainWindow* w, const PdfSigEntry* e) {
     win = w;
     certDer = str::Dup(e->certDer);
@@ -470,17 +358,8 @@ bool SignatureWnd::Create(MainWindow* w, const PdfSigEntry* e) {
     auto* icon = new VirtIconButton();
     icon->pixmap = VerdictPixmap(e->verdict, DpiScale(kSigBarIconDx + 6));
     head->AddChild(icon);
-    head->AddChild(NewSigCaption(e->status, DlgUiFont(kSigStatusFontPx), VerdictColor(e->verdict)), 1);
+    head->AddChild(NewSigCaption(e->status, DlgUiFont(kSigStatusFontPx), SigVerdictColor(e->verdict)), 1);
     vbox->AddChild(new Padding(head, DpiScaledInsets(12, kToolDlgPadDx, 0, kToolDlgPadDx)));
-
-    str::Builder text;
-    text.Append(Tr("Validity Summary"));
-    text.Append(StrL("\r\n"));
-    AppendCrLf(text, e->validity);
-    text.Append(StrL("\r\n"));
-    text.Append(Tr("Signer Info"));
-    text.Append(StrL("\r\n"));
-    AppendSignerInfo(text, e->details, e->validity);
 
     Edit::CreateArgs editArgs;
     editArgs.parent = hwnd;
@@ -491,7 +370,7 @@ bool SignatureWnd::Create(MainWindow* w, const PdfSigEntry* e) {
     edit->SetColors(colTxt, colBg);
     edit->Create(editArgs);
     SendMessageW(edit->hwnd, EM_SETREADONLY, TRUE, 0);
-    edit->SetText(ToStr(text));
+    edit->SetText(SignatureDialogTextTemp(e, StrL("\r\n")));
     vbox->AddChild(new Padding(edit, DpiScaledInsets(6, kToolDlgPadDx, 6, kToolDlgPadDx)), 1);
 
     VirtButton* cert = nullptr;
@@ -626,7 +505,7 @@ TempStr SignatureUiStateTemp(MainWindow* win, Str action) {
     str::Builder out;
     PdfSigResult* res = CurrentSignatures(win);
     bool barVisible = win->sigBar && win->sigBar->host->IsVisible();
-    Str msg = res ? OverallMessage(res->sum) : Str();
+    Str msg = res ? OverallSigMessage(res->sum) : Str();
     out.Append(fmt("bar=%d %s\n", barVisible ? 1 : 0, msg));
     out.Append(fmt("rows=%d\n", win->signaturesCtrl ? win->signaturesCtrl->ItemsCount() : 0));
     bool panelShown = SidebarPanelShowing(win, SidebarView::Signatures) != nullptr;

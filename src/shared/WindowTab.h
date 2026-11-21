@@ -20,15 +20,17 @@ struct LoadArgs;
 #endif
 struct ReadAloudHighlightMap;
 
+struct PdfSigResult;
+
 #if defined(SUMATRA_NG)
 enum class SidebarContent {
     Bookmarks,
     Thumbnails,
     Favorites,
+    Signatures,
     Layers,
 };
 #else
-struct PdfSigResult;
 
 // what a sidebar panel shows
 enum class SidebarView {
@@ -191,9 +193,9 @@ struct WindowTab {
 #else
     // what the sidebar's top panel shows (showToc: whether it does)
     SidebarView sidebarView = SidebarView::Bookmarks;
+#endif
     // what checking the signatures found; set by a background job. Owned
     PdfSigResult* signatures = nullptr;
-#endif
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus = false;
     // opened via CmdOpenFileNoHistory: do not write File History / Windows Recent

@@ -1590,6 +1590,8 @@ export const targets: Target[] = [
       "src/ng/KeyboardHelpCommon.cpp",
       "src/ng/SignDocumentDialog.cpp",
       "src/ng/SignDocumentDialogCommon.cpp",
+      "src/ng/SignatureUI.cpp",
+      "src/ng/SignatureUICommon.cpp",
       "src/ng/ImageSaveCropResize.cpp",
       "src/ng/ImageSaveCropResizeCommon.cpp",
       "src/ng/ImageEditHostSumatra.cpp",
