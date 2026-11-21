@@ -862,13 +862,14 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (cmdId == CmdReplaceImage || cmdId == CmdEditImageExternally) {
 #if defined(SUMATRA_NG) && !OS_WIN
-        // ng: the external editor and its file watch are Windows only for now
-        return CommandVisibility::Hide;
-#else
-        if (surface == CommandSurface::Palette || !ctx.isPdf) {
+        // ng: Replace Image is Windows only for now; wasm has no external apps
+        if (cmdId == CmdReplaceImage || OS_WASM) {
             return CommandVisibility::Hide;
         }
 #endif
+        if (surface == CommandSurface::Palette || !ctx.isPdf) {
+            return CommandVisibility::Hide;
+        }
     }
 
     if (surface == CommandSurface::Palette && ctx.engineKind != kindEngineImage) {

@@ -13,10 +13,13 @@
 #include "base/UITask.h"
 #if OS_WIN
 #include "base/Win.h"
+#else
+#include "base/Launch.h"
 #endif
 #include "gui/UIModels.h"
 
 #include "Settings.h"
+#include "AppTools.h"
 #include "AppSettings.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -76,7 +79,6 @@ void ReplaceImageFromPath(MainWindow* win, WindowTab* tab, int pageNo, int image
     str::Free(data);
 }
 
-#if OS_WIN
 // An image opened in another app by Edit Image in Another App. Every time the
 // app saves the file, the PDF's image is replaced with it.
 struct ImageEditWatch {
@@ -149,8 +151,8 @@ static ImageEditWatch* StartImageEditWatch(MainWindow* win, int pageNo, int imag
     if (len(png) == 0) {
         return nullptr;
     }
-    TempStr name = fmt("SumatraPDF-image-%d-%d.png", (int)GetCurrentProcessId(), ++gImageEditCounter);
-    TempStr path = path::JoinTemp(GetTempDirTemp(), name);
+    TempStr name = fmt("SumatraPDF-image-%d-%d.png", CurrentProcessId(), ++gImageEditCounter);
+    TempStr path = path::JoinTemp(GetTempDirPathTemp(), name);
     bool written = file::WriteFile(path, png);
     str::Free(png);
     if (!written) {
@@ -168,8 +170,8 @@ static ImageEditWatch* StartImageEditWatch(MainWindow* win, int pageNo, int imag
 }
 
 // Edit Image in Another App: saves the image to a temporary PNG, opens it in
-// the app Windows edits PNGs with (Paint unless changed) and replaces the
-// image whenever that app saves it.
+// the app the system edits PNGs with (Paint on Windows unless changed, else
+// the desktop's default PNG app) and replaces the image whenever it saves it.
 void EditImageExternally(MainWindow* win, IPageElement* imageEl) {
     int pageNo = 0;
     int imageIdx = 0;
@@ -184,11 +186,14 @@ void EditImageExternally(MainWindow* win, IPageElement* imageEl) {
     if (gForTesting) {
         return;
     }
+#if OS_WIN
     if (!LaunchFileShell(w->path, {}, StrL("edit"))) {
         LaunchFileShell(StrL("mspaint.exe"), fmt("\"%s\"", w->path));
     }
-}
+#else
+    LaunchFileShell(w->path);
 #endif
+}
 
 // replace <path> | edit: "path=<the temporary file>"
 TempStr TestImageReplace(MainWindow* win, Str action, int pageNo, int imageIdx, Str path) {
@@ -201,11 +206,9 @@ TempStr TestImageReplace(MainWindow* win, Str action, int pageNo, int imageIdx, 
         str::Free(data);
         return fmt("ok=%d dirty=%d", (int)ok, (int)EngineHasUnsavedAnnotations(win->AsFixed()->GetEngine()));
     }
-#if OS_WIN
     if (str::Eq(action, StrL("edit"))) {
         ImageEditWatch* w = StartImageEditWatch(win, pageNo, imageIdx);
         return w ? fmt("path=%s", w->path) : TempStr(StrL("error=no-image"));
     }
-#endif
     return fmt("dirty=%d", (int)EngineHasUnsavedAnnotations(win->AsFixed()->GetEngine()));
 }

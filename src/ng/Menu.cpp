@@ -1215,11 +1215,9 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
         case CmdReplaceImage:
             ReplaceImageFromFile(win, pageEl);
             return;
-#if OS_WIN
         case CmdEditImageExternally:
             EditImageExternally(win, pageEl);
             return;
-#endif
 
         case CmdSaveImage:
         case CmdCropImage:
