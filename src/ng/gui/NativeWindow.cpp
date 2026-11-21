@@ -38,6 +38,9 @@
 #include "RefHover.h"
 #include "gui/DocCanvas.h"
 #include "AnnotEditToolbar.h"
+#include "Settings.h"
+#include "Theme.h"
+#include "AppSettings.h"
 
 #if OS_WIN
 
@@ -722,6 +725,22 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             break;
         case WM_DESTROY:
             GlobalHotkeysOnDestroy(hwnd);
+            break;
+        case WM_SETTINGCHANGE:
+            // Windows switched between light and dark mode: re-resolve the
+            // System theme (no-op unless Theme = System)
+            if (lp && str::EqI(ToUtf8Temp(WStr((const WCHAR*)lp)), StrL("ImmersiveColorSet"))) {
+                UpdateThemeAfterSystemColorChange();
+            }
+            // high contrast can be toggled at any time (Alt+Shift+PrtScr)
+            UpdateThemeAfterHighContrastChange();
+            break;
+        case WM_SYSCOLORCHANGE:
+            // the default theme and high contrast mode draw in the system colors
+            SumatraUpdateTheme();
+            if (gSettings->useSysColors) {
+                UpdateDocumentColors();
+            }
             break;
         case WM_CONTEXTMENU:
             if (AppShellOnWmContextMenu(WinOf(hwnd), GET_X_LPARAM(lp), GET_Y_LPARAM(lp))) {
