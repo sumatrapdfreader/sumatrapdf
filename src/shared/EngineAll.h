@@ -155,6 +155,34 @@ struct PdfMergePage {
 bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePage>& pages, Str destPath);
 
 bool EngineMupdfIsPdf(EngineBase* engine);
+
+// a page's text with its styles and its pictures, in mupdf's reading order,
+// for an export (cli markdown). The text is a span per run of one style;
+// spans of one line have the same `line`, lines of one block the same `block`.
+struct StyledSpan {
+    Str text; // owned
+    float size = 0;
+    bool bold = false;
+    bool italic = false;
+    bool mono = false;
+    int block = 0;
+    int line = 0;
+    // the line ends in a hyphen mupdf took as a word broken across lines
+    bool lineJoined = false;
+    RectF lineBox;
+};
+struct StyledImage {
+    int block = 0;
+    RectF box;
+    Str png; // owned
+};
+struct StyledPage {
+    Vec<StyledSpan> spans;
+    Vec<StyledImage> images;
+    ~StyledPage();
+};
+// false if the page has no structured text (not a mupdf document, an error)
+bool EngineMupdfGetStyledPage(EngineBase* engine, int pageNo, StyledPage& out);
 bool EngineMupdfIsEncrypted(EngineBase* engine);
 bool EngineMupdfHeadingTocPending(EngineBase* engine);
 // IfEnabled: only when the AutoGenerateTOC setting is on; Always: on demand

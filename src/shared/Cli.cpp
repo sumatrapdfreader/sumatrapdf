@@ -975,6 +975,489 @@ static int CmdDecrypt(CliCtx& cx) {
     return RunClean(cx, args, dimofi(args));
 }
 
+//--- markdown
+
+// for matching a block's text against the table of contents and the running
+// headers: lower case, digits as '#', runs of spaces as one
+static TempStr NormalizeForMatchTemp(Str s) {
+    str::Builder out;
+    bool space = false;
+    for (int i = 0; i < len(s); i++) {
+        char c = s.s[i];
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            space = len(out) > 0;
+            continue;
+        }
+        if (space) {
+            out.AppendChar(' ');
+            space = false;
+        }
+        if (c >= '0' && c <= '9') {
+            c = '#';
+        } else if (c >= 'A' && c <= 'Z') {
+            c = (char)(c - 'A' + 'a');
+        }
+        out.AppendChar(c);
+    }
+    return ToStrTemp(out);
+}
+
+static void CollectTocTitles(TocItem* item, int depth, StrVec& titles, Vec<int>& depths) {
+    for (TocItem* it = item; it; it = it->next) {
+        if (len(it->title) > 0) {
+            titles.Append(NormalizeForMatchTemp(it->title));
+            VecAppend(depths, depth);
+        }
+        CollectTocTitles(it->child, depth + 1, titles, depths);
+    }
+}
+
+static bool IsBulletStart(Str s, int* skip) {
+    static const char* bullets[] = {"\xe2\x80\xa2 ", "\xe2\x97\xa6 ", "\xe2\x96\xaa ", "\xe2\x80\x93 ", "- ", "* ",
+                                    "\xc2\xb7 "};
+    for (const char* b : bullets) {
+        if (str::StartsWith(s, Str(b))) {
+            *skip = (int)strlen(b);
+            return true;
+        }
+    }
+    return false;
+}
+
+// "12. " or "3) ": the length of the number and its mark
+static int NumberedStart(Str s) {
+    int i = 0;
+    while (i < len(s) && i < 4 && s.s[i] >= '0' && s.s[i] <= '9') {
+        i++;
+    }
+    if (i == 0 || i + 1 >= len(s) || (s.s[i] != '.' && s.s[i] != ')') || s.s[i + 1] != ' ') {
+        return 0;
+    }
+    return i;
+}
+
+// what markdown would take as markup at the start of a paragraph
+static TempStr EscapeLineStartTemp(Str s) {
+    if (len(s) > 0 && (s.s[0] == '#' || s.s[0] == '>' || s.s[0] == '|' || s.s[0] == '=')) {
+        return fmt("\\%s", s);
+    }
+    return str::DupTemp(s);
+}
+
+struct MdDoc {
+    float bodySize = 0;
+    // font sizes that are headings, largest first: index + 1 is the level
+    Vec<float> headingSizes;
+    StrVec tocTitles;
+    Vec<int> tocDepths;
+    // the normalized text of blocks that open or close most pages
+    StrVec running;
+};
+
+static int HeadingLevelForSize(MdDoc& d, float size) {
+    for (int i = 0; i < len(d.headingSizes); i++) {
+        if (fabsf(d.headingSizes[i] - size) < 0.5f) {
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+// the spans of one block as markdown: lines joined into a paragraph, styles as
+// ** and *, monospaced runs as `code`
+static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepLines) {
+    str::Builder out;
+    int line = -1;
+    bool joined = false;
+    for (int i = from; i < to; i++) {
+        const StyledSpan& s = p.spans[i];
+        if (s.line != line) {
+            if (line >= 0) {
+                if (keepLines) {
+                    out.AppendChar('\n');
+                } else if (joined) {
+                    // "hyph-" + "enated": the hyphen goes
+                    Str t = ToStr(out);
+                    if (len(t) > 0 && t.s[len(t) - 1] == '-') {
+                        out.RemoveLast();
+                    }
+                } else {
+                    out.AppendChar(' ');
+                }
+            }
+            line = s.line;
+            joined = s.lineJoined;
+        }
+        Str text = s.text;
+        if (keepLines) {
+            out.Append(text);
+            continue;
+        }
+        // markers around the words, not around the spaces next to them.
+        // (not TrimWSInPlace: it would cut the span's own text)
+        int a = 0;
+        int b = len(text);
+        while (a < b && text.s[a] == ' ') {
+            a++;
+        }
+        while (b > a && text.s[b - 1] == ' ') {
+            b--;
+        }
+        if (a == b) {
+            out.Append(text);
+            continue;
+        }
+        Str lead(text.s, a);
+        Str trimmed(text.s + a, b - a);
+        Str trail(text.s + b, len(text) - b);
+        const char* mark = s.mono ? "`" : (s.bold && s.italic) ? "***" : s.bold ? "**" : s.italic ? "*" : "";
+        out.Append(lead);
+        out.Append(Str(mark));
+        out.Append(trimmed);
+        out.Append(Str(mark));
+        out.Append(trail);
+    }
+    TempStr res = ToStrTemp(out);
+    // two styled runs next to each other: "**a****b**" is "**ab**"
+    res = str::ReplaceTemp(res, StrL("****"), StrL(""));
+    res = str::ReplaceTemp(res, StrL("``"), StrL(""));
+    while (!keepLines && str::Contains(res, StrL("  "))) {
+        res = str::ReplaceTemp(res, StrL("  "), StrL(" "));
+    }
+    return res;
+}
+
+// the plain text of spans [from, to), for matching
+static TempStr BlockPlainTemp(const StyledPage& p, int from, int to) {
+    str::Builder out;
+    for (int i = from; i < to; i++) {
+        if (i > from && p.spans[i].line != p.spans[i - 1].line) {
+            out.AppendChar(' ');
+        }
+        out.Append(p.spans[i].text);
+    }
+    return ToStrTemp(out);
+}
+
+struct MdImages {
+    // where images go, relative to the markdown file; empty: no images
+    Str dir;
+    Str dirRel;
+    int n = 0;
+    StrVec written;
+};
+
+static void AppendImage(MdImages& imgs, const StyledImage& im, int pageNo, str::Builder& out) {
+    if (len(imgs.dir) == 0) {
+        return;
+    }
+    imgs.n++;
+    TempStr name = fmt("page-%d-%d.png", pageNo, imgs.n);
+    TempStr path = path::JoinTemp(imgs.dir, name);
+    dir::CreateForFile(path);
+    if (!file::WriteFile(path, im.png)) {
+        return;
+    }
+    imgs.written.Append(path);
+    out.Append(fmt("![](%s/%s)\n\n", imgs.dirRel, name));
+}
+
+// one page of a mupdf document as markdown
+static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& imgs, str::Builder& out) {
+    int nSpans = len(p.spans);
+    int img = 0;
+    int i = 0;
+    while (i < nSpans || img < len(p.images)) {
+        int block = i < nSpans ? p.spans[i].block : INT_MAX;
+        // pictures come where they are in the reading order
+        if (img < len(p.images) && p.images[img].block < block) {
+            AppendImage(imgs, p.images[img], pageNo, out);
+            img++;
+            continue;
+        }
+        int end = i;
+        float maxSize = 0;
+        int nChars = 0, nMono = 0, nBold = 0;
+        while (end < nSpans && p.spans[end].block == block) {
+            const StyledSpan& s = p.spans[end];
+            maxSize = std::max(maxSize, s.size);
+            nChars += len(s.text);
+            nMono += s.mono ? len(s.text) : 0;
+            nBold += s.bold ? len(s.text) : 0;
+            end++;
+        }
+        TempStr plain = BlockPlainTemp(p, i, end);
+        TempStr norm = NormalizeForMatchTemp(plain);
+        bool isRunning = false;
+        for (Str r : d.running) {
+            isRunning = isRunning || str::Eq(r, norm);
+        }
+        if (isRunning || len(norm) == 0) {
+            i = end;
+            continue;
+        }
+        int nLines = p.spans[end - 1].line - p.spans[i].line + 1;
+        // a heading: a title from the table of contents, or a short block in a
+        // heading's size
+        int level = 0;
+        for (int t = 0; t < len(d.tocTitles); t++) {
+            if (str::Eq(d.tocTitles[t], norm)) {
+                level = std::min(d.tocDepths[t] + 1, 6);
+                break;
+            }
+        }
+        if (level == 0 && nLines <= 3 && len(plain) < 200) {
+            level = HeadingLevelForSize(d, maxSize);
+        }
+        // a line of bold on its own in the body's size: the smallest heading
+        // (a man page's NAME, a report's section titles)
+        if (level == 0 && nLines == 1 && nBold == nChars && len(plain) < 80) {
+            level = std::min(len(d.headingSizes) + 1, 4);
+        }
+        if (level > 0) {
+            Str text = plain;
+            str::TrimWSInPlace(text, str::TrimOpt::Both);
+            for (int k = 0; k < level; k++) {
+                out.AppendChar('#');
+            }
+            out.Append(fmt(" %s\n\n", text));
+        } else if (nMono * 10 >= nChars * 9) {
+            out.Append(fmt("```\n%s\n```\n\n", BlockInlineTemp(p, i, end, true)));
+        } else {
+            // a list: each line that starts with a bullet or a number is an item
+            int skip = 0;
+            TempStr first = str::DupTemp(p.spans[i].text);
+            str::TrimWSInPlace(first, str::TrimOpt::Left);
+            bool bullet = IsBulletStart(first, &skip);
+            int num = bullet ? 0 : NumberedStart(first);
+            TempStr text = BlockInlineTemp(p, i, end, false);
+            str::TrimWSInPlace(text, str::TrimOpt::Both);
+            if (bullet) {
+                Str rest = text;
+                IsBulletStart(rest, &skip);
+                out.Append(fmt("- %s\n\n", Str(rest.s + skip, len(rest) - skip)));
+            } else if (num > 0) {
+                out.Append(fmt("%s\n\n", text));
+            } else {
+                out.Append(fmt("%s\n\n", EscapeLineStartTemp(text)));
+            }
+        }
+        i = end;
+    }
+}
+
+// a page of a document without styles (DjVu, comics, ...): its text, a
+// paragraph per run of lines
+static void PlainPageToMarkdown(EngineBase* engine, int pageNo, str::Builder& out) {
+    PageText pt = engine->ExtractPageText(pageNo);
+    StrVec lines;
+    Split(&lines, pt.text, StrL("\n"), false);
+    str::Builder para;
+    auto flush = [&]() {
+        if (len(para) > 0) {
+            out.Append(fmt("%s\n\n", EscapeLineStartTemp(ToStr(para))));
+            para.Reset();
+        }
+    };
+    for (Str l : lines) {
+        str::TrimWSInPlace(l, str::TrimOpt::Both);
+        if (len(l) == 0) {
+            flush();
+            continue;
+        }
+        if (len(para) > 0) {
+            para.AppendChar(' ');
+        }
+        para.Append(l);
+    }
+    flush();
+    FreePageText(&pt);
+}
+
+// the font size most text is in, and the larger ones that are rare enough to
+// be headings (at most 3 levels)
+static void FindSizes(MdDoc& d, Vec<StyledPage*>& pages) {
+    struct Count {
+        float size;
+        int n;
+    };
+    Vec<Count> counts;
+    for (StyledPage* p : pages) {
+        for (StyledSpan& s : p->spans) {
+            float sz = roundf(s.size * 2) / 2;
+            bool found = false;
+            for (Count& c : counts) {
+                if (c.size == sz) {
+                    c.n += len(s.text);
+                    found = true;
+                }
+            }
+            if (!found) {
+                VecAppend(counts, Count{sz, len(s.text)});
+            }
+        }
+    }
+    int best = 0;
+    for (Count& c : counts) {
+        if (c.n > best) {
+            best = c.n;
+            d.bodySize = c.size;
+        }
+    }
+    Vec<float> bigger;
+    for (Count& c : counts) {
+        // a heading is clearly larger and much rarer than the body text
+        if (c.size >= d.bodySize * 1.15f && c.n * 4 < best) {
+            VecAppend(bigger, c.size);
+        }
+    }
+    std::sort(bigger.begin(), bigger.end(), [](float a, float b) { return a > b; });
+    for (int i = 0; i < len(bigger) && i < 3; i++) {
+        VecAppend(d.headingSizes, bigger[i]);
+    }
+}
+
+// blocks that open or close most pages with the same text (digits aside):
+// running headers, footers, page numbers
+static void FindRunning(MdDoc& d, Vec<StyledPage*>& pages) {
+    if (len(pages) < 3) {
+        return;
+    }
+    StrVec texts;
+    Vec<int> counts;
+    for (StyledPage* p : pages) {
+        int n = len(p->spans);
+        if (n == 0) {
+            continue;
+        }
+        int blocks[2] = {p->spans[0].block, p->spans[n - 1].block};
+        for (int k = 0; k < 2; k++) {
+            if (k == 1 && blocks[1] == blocks[0]) {
+                continue;
+            }
+            int from = 0;
+            while (from < n && p->spans[from].block != blocks[k]) {
+                from++;
+            }
+            int to = from;
+            while (to < n && p->spans[to].block == blocks[k]) {
+                to++;
+            }
+            TempStr norm = NormalizeForMatchTemp(BlockPlainTemp(*p, from, to));
+            if (len(norm) == 0 || len(norm) > 120) {
+                continue;
+            }
+            int idx = -1;
+            for (int t = 0; t < len(texts); t++) {
+                if (str::Eq(texts[t], norm)) {
+                    idx = t;
+                }
+            }
+            if (idx < 0) {
+                texts.Append(norm);
+                VecAppend(counts, 1);
+            } else {
+                counts[idx]++;
+            }
+        }
+    }
+    for (int t = 0; t < len(texts); t++) {
+        if (counts[t] * 2 > len(pages)) {
+            d.running.Append(texts[t]);
+        }
+    }
+}
+
+static int CmdMarkdown(CliCtx& cx) {
+    Str dest = OutputArg(cx);
+    Str src = cx.positional[0];
+    if (len(dest) > 0 && SamePath(src, dest)) {
+        return Fail(cx, kCliUsage, StrL("won't write over the input: give another -o"));
+    }
+    int code = kCliOk;
+    EngineBase* engine = OpenDoc(cx, src, &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    if (!PagesArg(cx, engine, pages, &code)) {
+        SafeEngineRelease(&engine);
+        return code;
+    }
+    bool pageMarkers = !HasOpt(cx, StrL("--no-page-markers"));
+    MdImages imgs;
+    // pictures go next to the markdown file, in <name>_images
+    if (len(dest) > 0 && !HasOpt(cx, StrL("--no-images"))) {
+        TempStr base = path::GetPathNoExtTemp(path::GetBaseNameTemp(dest));
+        imgs.dirRel = fmt("%s_images", base);
+        imgs.dir = path::JoinTemp(path::GetDirTemp(dest), imgs.dirRel);
+    }
+    MdDoc d;
+    Vec<StyledPage*> styled;
+    bool haveStyles = true;
+    for (int pageNo : pages) {
+        auto* p = new StyledPage();
+        if (!EngineMupdfGetStyledPage(engine, pageNo, *p)) {
+            haveStyles = false;
+        }
+        VecAppend(styled, p);
+    }
+    if (haveStyles) {
+        FindSizes(d, styled);
+        FindRunning(d, styled);
+        TocTree* toc = engine->HasToc() ? engine->GetToc() : nullptr;
+        if (toc && toc->root) {
+            CollectTocTitles(toc->root->child ? toc->root->child : toc->root, 0, d.tocTitles, d.tocDepths);
+        }
+    }
+    str::Builder out;
+    TempStr title = engine->GetPropertyTemp(DocProp::Title);
+    for (int k = 0; k < len(pages); k++) {
+        if (pageMarkers) {
+            out.Append(fmt("<!-- page %d -->\n\n", pages[k]));
+        }
+        if (haveStyles) {
+            StyledPageToMarkdown(d, *styled[k], pages[k], imgs, out);
+        } else {
+            PlainPageToMarkdown(engine, pages[k], out);
+        }
+    }
+    for (StyledPage* p : styled) {
+        delete p;
+    }
+    Str md = ToStr(out);
+    if (len(dest) > 0) {
+        dir::CreateForFile(dest);
+        if (!file::WriteFile(dest, md)) {
+            SafeEngineRelease(&engine);
+            return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+        }
+    }
+    if (cx.json) {
+        str::Builder j;
+        j.Append(fmt("{\"pages\":%d", len(pages)));
+        if (len(title) > 0) {
+            j.Append(fmt(",\"title\":%s", JStr(title)));
+        }
+        if (len(dest) > 0) {
+            j.Append(fmt(",\"file\":%s,\"images\":[", JStr(dest)));
+            for (int k = 0; k < len(imgs.written); k++) {
+                j.Append(fmt("%s%s", k > 0 ? StrL(",") : StrL(""), JStr(imgs.written[k])));
+            }
+            j.Append(StrL("]}\n"));
+        } else {
+            j.Append(fmt(",\"markdown\":%s}\n", JStr(md)));
+        }
+        Out(ToStr(j));
+    } else if (len(dest) > 0) {
+        Out(fmt("%s: %d pages, %d images\n", dest, len(pages), len(imgs.written)));
+    } else {
+        Out(md);
+    }
+    SafeEngineRelease(&engine);
+    return kCliOk;
+}
+
 //--- the command table and help
 
 static const CliCmd gCmds[] = {
@@ -995,6 +1478,13 @@ static const CliCmd gCmds[] = {
      "-o <file>        the image; for several pages <N> in it is the page number\n--pages <range>  these pages "
      "(default: the first)\n--dpi <n>        resolution, default 150",
      "render paper.pdf -o page.png\nrender comic.cbz --pages 1-3 -o pages/<N>.jpg --dpi 96", CmdRender},
+    {"markdown", "<file> [-o <file.md>]",
+     "the document as Markdown, for reading or for an LLM: headings, lists, emphasis, code and pictures",
+     "-o <file>          write it there, pictures in <name>_images next to it (else to stdout, without pictures)\n"
+     "--pages <range>    only these pages\n--no-page-markers  without the <!-- page N --> before each page\n"
+     "--no-images        without the pictures",
+     "markdown report.pdf -o report.md\nmarkdown book.epub --pages 1-20 | head\nmarkdown thesis.pdf --json",
+     CmdMarkdown},
     {"pages", "keep|delete|order|rotate <file.pdf> <range> [degrees] -o <out.pdf>",
      "a PDF with some of its pages: kept, deleted, put in another order or turned", "-o <file>        the new PDF",
      "pages keep scan.pdf 1-3,7 -o short.pdf\npages delete scan.pdf 2 -o out.pdf\n"

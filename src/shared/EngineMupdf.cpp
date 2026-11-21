@@ -11909,6 +11909,131 @@ void EngineMupdfRefreshModifiedState(EngineBase* engine) {
     e->modifiedAnnotations = (pos != e->savedUndoPos);
 }
 
+StyledPage::~StyledPage() {
+    for (StyledSpan& s : spans) {
+        str::Free(s.text);
+    }
+    for (StyledImage& i : images) {
+        str::Free(i.png);
+    }
+}
+
+// the pictures mupdf keeps in the structured text; a smaller one is an
+// ornament or a rule, not worth a file
+constexpr int kStyledImageMinPx = 24;
+
+bool EngineMupdfGetStyledPage(EngineBase* engine, int pageNo, StyledPage& out) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e) {
+        return false;
+    }
+    ScopedRecursiveMutex pagesScope(&e->pagesLock);
+    ScopedMutex renderScope(&e->renderLock);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(e, e->LocationFromPageNo(pageNo), true, nullptr);
+    if (!pageInfo || !pageInfo->page) {
+        return false;
+    }
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex docScope(&e->docLock);
+    fz_stext_page* stext = nullptr;
+    fz_var(stext);
+    // contents only: annotations and form fields aren't the document's text
+    fz_stext_options opts = NewTextPageOptions(FZ_STEXT_PRESERVE_IMAGES);
+    fz_try(ctx) {
+        stext = NewStextPage(ctx, pageInfo->page, &opts, nullptr, StextRun::Contents);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    if (!stext) {
+        return false;
+    }
+    int blockNo = 0;
+    int lineNo = 0;
+    str::Builder run;
+    for (fz_stext_block* b = stext->first_block; b; b = b->next, blockNo++) {
+        if (b->type == FZ_STEXT_BLOCK_IMAGE) {
+            fz_image* img = b->u.i.image;
+            if (!img || img->w < kStyledImageMinPx || img->h < kStyledImageMinPx) {
+                continue;
+            }
+            fz_buffer* buf = nullptr;
+            fz_var(buf);
+            fz_try(ctx) {
+                buf = fz_new_buffer_from_image_as_png(ctx, img, fz_default_color_params);
+                unsigned char* data = nullptr;
+                size_t n = fz_buffer_storage(ctx, buf, &data);
+                if (data && n > 0 && n <= (size_t)INT_MAX) {
+                    StyledImage si;
+                    si.block = blockNo;
+                    si.box = ToRectF(b->bbox);
+                    si.png = str::Dup(Str((char*)data, (int)n));
+                    VecAppend(out.images, si);
+                }
+            }
+            fz_always(ctx) {
+                fz_drop_buffer(ctx, buf);
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+            }
+            continue;
+        }
+        if (b->type != FZ_STEXT_BLOCK_TEXT) {
+            continue;
+        }
+        for (fz_stext_line* l = b->u.t.first_line; l; l = l->next, lineNo++) {
+            StyledSpan cur;
+            bool have = false;
+            auto flush = [&]() {
+                if (have && len(run) > 0) {
+                    cur.text = str::Dup(ToStr(run));
+                    VecAppend(out.spans, cur);
+                }
+                run.Reset();
+                have = false;
+            };
+            float prevRight = 0;
+            int prevC = ' ';
+            for (fz_stext_char* ch = l->first_char; ch; ch = ch->next) {
+                // a word gap the PDF has no space for (each word placed on its
+                // own): the space goes with the text before it
+                float gap = ch->quad.ul.x - prevRight;
+                if (have && prevC != ' ' && ch->c != ' ' && gap > ch->size * 0.2f) {
+                    run.AppendChar(' ');
+                }
+                prevRight = ch->quad.ur.x;
+                prevC = ch->c;
+                bool bold = (ch->flags & FZ_STEXT_BOLD) != 0 || (ch->font && fz_font_is_bold(ctx, ch->font));
+                bool italic = ch->font && fz_font_is_italic(ctx, ch->font);
+                bool mono = ch->font && fz_font_is_monospaced(ctx, ch->font);
+                // one span per style; sizes within half a point are one style
+                bool same = have && cur.bold == bold && cur.italic == italic && cur.mono == mono &&
+                            fabsf(cur.size - ch->size) < 0.5f;
+                if (!same) {
+                    flush();
+                    cur = StyledSpan();
+                    cur.size = ch->size;
+                    cur.bold = bold;
+                    cur.italic = italic;
+                    cur.mono = mono;
+                    cur.block = blockNo;
+                    cur.line = lineNo;
+                    cur.lineJoined = (l->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0;
+                    cur.lineBox = ToRectF(l->bbox);
+                    have = true;
+                }
+                char buf[8];
+                int n = fz_runetochar(buf, ch->c);
+                run.Append(Str(buf, n));
+            }
+            flush();
+        }
+    }
+    fz_drop_stext_page(ctx, stext);
+    return true;
+}
+
 // the mupdf engine also renders epub, mobi, fb2, xps, svg and more; only a real
 // PDF has a pdf_document behind it
 bool EngineMupdfIsPdf(EngineBase* engine) {

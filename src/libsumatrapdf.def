@@ -275,6 +275,9 @@ EXPORTS
 	fz_new_buffer_from_pixmap_as_png
 
 	fz_new_buffer_from_image_as_png
+	fz_font_is_bold
+	fz_font_is_italic
+	fz_font_is_monospaced
 
 	fz_new_stext_page
 
