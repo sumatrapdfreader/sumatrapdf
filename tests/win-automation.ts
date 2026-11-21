@@ -608,9 +608,21 @@ export async function waitForPalette(
 ): Promise<{ palette: number; edit: number }> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
+    // macOS has no HWNDs to find: the control channel says when the palette is
+    // up, and 1 stands in for the handles, as for launchControlled's frame
+    if (IS_MAC) {
+      if ((await client.request(ControlCommand.TestCommandPalette, []))[0] === 0) {
+        return { palette: 1, edit: 1 };
+      }
+      if (Date.now() > deadline) {
+        return { palette: 0, edit: 0 };
+      }
+      await sleep(50);
+      continue;
+    }
     const handles = findPalette(frame);
     let ready = handles.palette !== 0 && handles.edit !== 0;
-    if (ready && USE_NG && !IS_MAC) {
+    if (ready && USE_NG) {
       ready = (await client.request(ControlCommand.TestCommandPalette, []))[0] === 0;
     }
     if (ready) {
