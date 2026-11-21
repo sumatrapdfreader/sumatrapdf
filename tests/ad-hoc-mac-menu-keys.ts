@@ -66,7 +66,8 @@ function menuLayout(app: App): void {
   };
   shortcut(appMenu, `Hide ${appMenu}`, "H");
   expect("the application menu has Services", !!findItem(items, appMenu, "Services"), appMenu);
-  shortcut(appMenu, "Quit", "Q");
+  shortcut(appMenu, "Quit SumatraPDF", "Q");
+  expect("the application menu has About SumatraPDF", !!findItem(items, appMenu, "About SumatraPDF"), appMenu);
   shortcut("Edit", "Undo", "Z");
   shortcut("Edit", "Copy", "C");
   shortcut("Edit", "Paste", "V");

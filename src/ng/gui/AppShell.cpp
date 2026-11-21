@@ -1617,7 +1617,8 @@ static void InstallNativeMenu(MainWindow* win) {
     };
     constexpr int kAppRows = 11;
     gp::MenuRow* appRows = AllocArrayTemp<gp::MenuRow>(kAppRows);
-    cmdRow(appRows[0], Tr("&About"), CmdHelpAbout);
+    // the application menu names the application: About SumatraPDF, Quit SumatraPDF
+    cmdRow(appRows[0], Tr("About SumatraPDF"), CmdHelpAbout);
     appRows[1].separator = true;
     cmdRow(appRows[2], Tr("&Settings..."), CmdOptions);
     appRows[3].separator = true;
@@ -1627,7 +1628,7 @@ static void InstallNativeMenu(MainWindow* win) {
     appRows[7].role = gp::MenuRole::HideOthers;
     appRows[8].role = gp::MenuRole::ShowAll;
     appRows[9].separator = true;
-    cmdRow(appRows[10], Tr("Quit"), CmdExit);
+    cmdRow(appRows[10], Tr("Quit SumatraPDF"), CmdExit);
     appRows[10].stroke = "cmd-q";
     defs[n].name = GStrL("SumatraPDF");
     defs[n].items = appRows;
