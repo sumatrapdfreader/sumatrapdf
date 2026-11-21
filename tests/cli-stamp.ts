@@ -1,6 +1,7 @@
-// `SumatraPDF cli watermark` (src/shared/Cli.cpp, EngineMupdfStampText):
-// text across the middle of the pages, rising from the bottom left as the page
-// shows (a rotated page too), only on the pages asked for; refusals.
+// `SumatraPDF cli watermark` and `cli number` (src/shared/Cli.cpp,
+// EngineMupdfStampText): a watermark across the middle of the pages, rising
+// from the bottom left as the page shows (a rotated page too); page numbers
+// where asked, as the page shows; only on the pages asked for; refusals.
 //
 // ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-stamp.ts [--no-build]
@@ -57,6 +58,42 @@ function expectRising(what: string, q: { tl: number; tr: number; bl: number; br:
   expect(`${what}: rising diagonal ${JSON.stringify(q)}`, on > 50 && off * 3 < on, "");
 }
 
+// where `text` is on a page, in points from the top left as it shows
+function boxOf(pdf: string, page: number, text: string): number[] {
+  const r = cli(["search", pdf, text, "--pages", `${page}`, "--json"]);
+  const hits = JSON.parse(r.out).hits;
+  expect(`'${text}' on page ${page}`, hits.length === 1, r);
+  return hits[0].rect;
+}
+
+function near(what: string, got: number, want: number, tolerance: number): void {
+  expect(`${what}: ${got}, want ${want}`, Math.abs(got - want) <= tolerance, "");
+}
+
+function testNumber(src: string, out: (f: string) => string): void {
+  // Letter: 612 x 792; the baseline 30pt above the bottom by default
+  let r = cli(["number", src, "--format", "Page {n} of {total}", "-o", out("n.pdf"), "--json"]);
+  expect("number", r.code === 0 && JSON.parse(r.out).pages === 2, r);
+  const [x, y, dx, dy] = boxOf(out("n.pdf"), 2, "Page 2 of 2");
+  near("bottom-center: the middle", x! + dx! / 2, 306, 3);
+  near("bottom-center: the bottom", y! + dy!, 792 - 30, 6);
+
+  // a page turned 90 degrees shows as 792 x 612: top-right is its top right
+  r = cli(["number", out("rot.pdf"), "--format", "Page {n}", "--position", "top-right", "-o", out("nr.pdf")]);
+  expect("number a rotated page", r.code === 0, r);
+  const [rx, ry, rdx] = boxOf(out("nr.pdf"), 1, "Page 1");
+  near("top-right: the right", rx! + rdx!, 792 - 30, 3);
+  near("top-right: the top", ry!, 30, 5);
+
+  // --pages and --start: page 2 is numbered 5, of 5; page 1 not at all
+  r = cli(["number", src, "--pages", "2", "--start", "5", "--format", "Page {n} of {total}", "-o", out("n5.pdf")]);
+  expect("--pages --start", r.code === 0, r);
+  boxOf(out("n5.pdf"), 2, "Page 5 of 5");
+  expect("page 1 has no number", !cli(["text", out("n5.pdf"), "--pages", "1"]).out.includes("Page "), "");
+
+  expect("a bad position is 2", cli(["number", src, "--position", "middle", "-o", out("x.pdf")]).code === 2, "");
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
@@ -92,6 +129,7 @@ export async function testit(): Promise<void> {
   expect("over the input is 2", cli(["watermark", src, "A", "-o", src]).code === 2, "");
   const epub = join(ROOT, "tests", "issue-6007.epub");
   expect("an EPUB is 5", cli(["watermark", epub, "A", "-o", out("x.pdf")]).code === 5, "");
+  testNumber(src, out);
   console.log(`${name}: OK`);
 }
 

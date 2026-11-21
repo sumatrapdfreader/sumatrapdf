@@ -2404,6 +2404,91 @@ static int CmdWatermark(CliCtx& cx) {
     return StampPdf(cx, path, stamps, dest, n);
 }
 
+static int CmdNumber(CliCtx& cx) {
+    Str path = cx.positional[0];
+    StrVec inputs;
+    inputs.Append(path);
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, inputs, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    float size = 0, margin = 0, start = 0;
+    if (!FloatOpt(cx, StrL("--size"), 10, 1, 200, &size, &code) ||
+        !FloatOpt(cx, StrL("--margin"), 30, 0, 500, &margin, &code) ||
+        !FloatOpt(cx, StrL("--start"), 1, -100000, 100000, &start, &code)) {
+        return code;
+    }
+    u8 r = 0, g = 0, b = 0;
+    Str color = OptValue(cx, StrL("--color"));
+    if (len(color) > 0 && !ParseHexColor(color, &r, &g, &b)) {
+        return Fail(cx, kCliUsage, fmt("--color %s: use #rrggbb", color));
+    }
+    struct NamedPos {
+        const char* name;
+        PdfStampPos pos;
+    };
+    static const NamedPos positions[] = {
+        {"top-left", PdfStampPos::TopLeft},           {"top-center", PdfStampPos::TopCenter},
+        {"top-right", PdfStampPos::TopRight},         {"bottom-left", PdfStampPos::BottomLeft},
+        {"bottom-center", PdfStampPos::BottomCenter}, {"bottom-right", PdfStampPos::BottomRight},
+    };
+    Str posName = OptValue(cx, StrL("--position"));
+    PdfStampPos pos = PdfStampPos::BottomCenter;
+    if (len(posName) > 0) {
+        bool found = false;
+        for (const NamedPos& np : positions) {
+            if (str::EqI(posName, Str(np.name))) {
+                pos = np.pos;
+                found = true;
+            }
+        }
+        if (!found) {
+            return Fail(cx, kCliUsage,
+                        fmt("--position %s: use top-left, top-center, top-right, bottom-left, bottom-center or "
+                            "bottom-right",
+                            posName));
+        }
+    }
+    Str format = OptValue(cx, StrL("--format"));
+    if (len(format) == 0) {
+        format = StrL("{n}");
+    }
+    int n = CheckPdf(cx, path, &code);
+    if (n == 0) {
+        return code;
+    }
+    EngineBase* engine = OpenDoc(cx, path, &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    bool havePages = PagesArg(cx, engine, pages, &code);
+    SafeEngineRelease(&engine);
+    if (!havePages) {
+        return code;
+    }
+    // the pages numbered count from --start; {total} is the last number
+    int first = (int)start;
+    int total = first + len(pages) - 1;
+    Vec<PdfStamp> stamps;
+    for (int i = 0; i < len(pages); i++) {
+        TempStr text = str::ReplaceTemp(format, StrL("{n}"), fmt("%d", first + i));
+        text = str::ReplaceTemp(text, StrL("{total}"), fmt("%d", total));
+        PdfStamp st;
+        st.pageNo = pages[i];
+        st.text = text;
+        st.pos = pos;
+        st.size = size;
+        st.margin = margin;
+        st.r = r;
+        st.g = g;
+        st.b = b;
+        VecAppend(stamps, st);
+    }
+    return StampPdf(cx, path, stamps, dest, n);
+}
+
 //--- agent-skill
 
 // SKILL.md for Claude Code, Codex and other agents: when to use the cli and
@@ -2450,6 +2535,8 @@ Page ranges: `1-3,7,10-N` (N is the last page). Page numbers are 1-based.
 - `compress <file.pdf> -o small.pdf`
 - `encrypt <file.pdf> -o locked.pdf --new-password-env NAME`
 - `decrypt <file.pdf> -o open.pdf --password-env NAME`
+- `watermark <file.pdf> DRAFT -o out.pdf [--opacity 0.25] [--color #808080]`
+- `number <file.pdf> -o out.pdf [--format "Page {n} of {total}"] [--position bottom-center]`
 
 An encrypted document needs `--password <pw>`, or better `--password-env NAME`
 so the password isn't on the command line.
@@ -2560,6 +2647,14 @@ static const CliCmd gCmds[] = {
      "--color <#rgb>   default #808080\n--size <pt>      default: across 60% of the page's diagonal",
      "watermark report.pdf DRAFT -o draft.pdf\nwatermark a.pdf \"Do not copy\" --color #cc0000 --opacity 0.15 -o b.pdf",
      CmdWatermark},
+    {"number", "<file.pdf> -o <out.pdf>", "a copy of a PDF with page numbers on its pages (Latin text)",
+     "-o <file>          the new PDF\n--format <text>    {n} is the number, {total} the last one; default {n}\n"
+     "--position <where> top-left, top-center, top-right, bottom-left, bottom-center (default), bottom-right\n"
+     "--start <n>        the first page's number, default 1\n--pages <range>    only these pages, numbered from "
+     "the first of them\n--size <pt>        default 10\n--margin <pt>      from the page's edge, default 30\n"
+     "--color <#rgb>     default #000000",
+     "number report.pdf -o numbered.pdf\nnumber book.pdf --pages 5-N --format \"Page {n} of {total}\" -o out.pdf",
+     CmdNumber},
     {"agent-skill", "[--install claude|codex|agents|<dir>]",
      "the SKILL.md that tells an AI agent when and how to use these commands",
      "--install <where>  write it to ~/.claude/skills/sumatrapdf (claude), ~/.codex/skills (codex),\n"
