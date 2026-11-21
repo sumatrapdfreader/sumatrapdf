@@ -187,7 +187,7 @@ DEALINGS IN THE SOFTWARE.
 
 ## This copy
 
-Amalgamated from gpui-kit-cpp [`0d12ae6f2f6156e3a3af288a1059ce5e84b5d1ec`](https://github.com/kjk/gpui-kit-cpp/commit/0d12ae6f2f6156e3a3af288a1059ce5e84b5d1ec).
+Amalgamated from gpui-kit-cpp [`d00ea2400a88025d89d57f28972359bbddf44f4e`](https://github.com/kjk/gpui-kit-cpp/commit/d00ea2400a88025d89d57f28972359bbddf44f4e).
 
-[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/0d12ae6f2f6156e3a3af288a1059ce5e84b5d1ec...main)
+[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/d00ea2400a88025d89d57f28972359bbddf44f4e...main)
 shows every commit this copy is behind by; if that page is empty, it is current.

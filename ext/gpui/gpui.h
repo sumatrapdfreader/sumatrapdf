@@ -4359,6 +4359,20 @@ struct GestureEvent {
     bool propagate = true;
 };
 
+struct TouchEvent {
+    TouchPhase phase = TouchPhase::Started;
+
+    uint32_t pointerId = 0;
+
+    float x = 0;
+    float y = 0;
+    bool pen = false;
+
+    bool primary = true;
+    Modifiers modifiers = {};
+    bool propagate = true;
+};
+
 enum class FileDropPhase : uint8_t {
     Entered,
     Pending,
@@ -4423,7 +4437,8 @@ enum class PlatformInputKind : uint8_t {
     LongPress,
     FileDrop,
     Pinch,
-    Gesture
+    Gesture,
+    Touch
 };
 
 struct PlatformInput {
@@ -4439,6 +4454,7 @@ struct PlatformInput {
         FileDropEvent fileDrop;
         PinchEvent pinch;
         GestureEvent gesture;
+        TouchEvent touch;
     };
 };
 
@@ -5926,6 +5942,15 @@ struct AccessibilityDocumentText {
     bool selectAll = false;
 };
 
+struct AccessibilityDocumentSource {
+    Str (*text)(void* data) = nullptr;
+
+    bool (*selection)(void* data, int* start, int* end) = nullptr;
+    void* data = nullptr;
+    uint64_t textRevision = 0;
+    uint64_t selectionRevision = 0;
+};
+
 struct ElLifecycle {
     void (*prepareStyle)(PaintCtx* ctx, El* e, Rgba inherited,
                          void* user) = nullptr;
@@ -5937,12 +5962,15 @@ struct ElLifecycle {
 
     Listener onGesture;
 
+    Listener onTouch;
+
     CursorImage* cursorImage = nullptr;
     const TextHighlight* highlights = nullptr;
     int highlightCount = 0;
     TextFontRanges fontRanges;
     AccessibilityDocumentText (*accessibilityDocument)(void*) = nullptr;
     void* accessibilityDocumentData = nullptr;
+    const AccessibilityDocumentSource* documentSource = nullptr;
     bool auxiliaryClick = false;
     bool auxiliaryRightClick = false;
 };
@@ -6344,6 +6372,8 @@ struct El {
     El* AccessibilityId(Str authorId);
     El* AriaLabel(Str label);
 
+    El* AccessibilityDocument(const AccessibilityDocumentSource& source);
+
     El* AriaDescription(Str description);
     El* AriaValue(Str value);
     El* AriaPlaceholder(Str placeholder);
@@ -6538,6 +6568,8 @@ struct El {
     El* OnPinch(Listener fn);
 
     El* OnGesture(Listener fn);
+
+    El* OnTouch(Listener fn);
     El* TabIndex(int v);
     El* TabStop(bool v);
 
@@ -6655,6 +6687,7 @@ struct HitRect {
 
     Listener onPinch;
     Listener onGesture;
+    Listener onTouch;
     Str dropKind = {};
     Listener onDrop;
     CursorKind cursor = CursorKind::Arrow;
@@ -6712,6 +6745,7 @@ struct AccessibilityNode {
 
     int textSelectionStart = -1;
     int textSelectionEnd = -1;
+    AccessibilityDocumentSource document = {};
 };
 
 struct ScrollRect {
@@ -9173,6 +9207,13 @@ struct DragOutRequest;
 
 struct WindowSelection;
 
+struct TouchCapture {
+    uint32_t pointerId = 0;
+    Listener listener = {};
+};
+
+static constexpr int kTouchCaptureMax = 10;
+
 struct WindowBlurSub {
     int id = 0;
     int focusId = 0;
@@ -9386,6 +9427,8 @@ struct Window {
 
     bool gestureAnchored = false;
     Point gestureAnchor = {};
+
+    TouchCapture touchCaptures[kTouchCaptureMax] = {};
 
     TouchHostKind touchHost = TouchHostKind::None;
 
@@ -10139,6 +10182,8 @@ const AccessibilityNode* WindowAccessibilityNode(const Window* win,
 int WindowAccessibilityNodeIndex(const Window* win, uint32_t nodeId);
 
 Str WindowAccessibilityTextValue(const AccessibilityNode& node);
+
+bool WindowAccessibilityHasText(const AccessibilityNode& node);
 bool WindowAccessibilityTextSelection(const AccessibilityNode& node,
                                       Selection* out);
 int WindowAccessibilityTextCaret(const AccessibilityNode& node);
@@ -10320,6 +10365,8 @@ ScreenBounds WindowFrameForContent(Window* nearby, const WinOpts& opts,
 
 ScreenBounds WindowDisplayBounds(Window* win);
 ScreenBounds WindowDisplayVisibleBounds(Window* win);
+
+Window* WindowAtPoint(Window* win, Point pt, Point* out);
 
 void WindowSetVisible(Window* win, bool visible, bool activate);
 bool WindowIsVisible(Window* win);
@@ -39440,6 +39487,7 @@ PlatformInput InputTextDrop(FileDropPhase phase, float x, float y, Str text,
 PlatformInput InputPinch(float x, float y, float delta, Modifiers modifiers,
                          TouchPhase phase);
 PlatformInput InputGesture(const GestureEvent& ev);
+PlatformInput InputTouch(const TouchEvent& ev);
 
 void WindowGestureBegin(Window* win, float x, float y);
 void WindowGestureEnd(Window* win);
@@ -39853,6 +39901,8 @@ void TestSimulatePinch(Window* win, Point position, float delta,
                        Modifiers modifiers = {});
 
 void TestSimulateGesture(Window* win, const GestureEvent& ev);
+
+void TestSimulateTouch(Window* win, const TouchEvent& ev);
 
 bool TestDispatchAction(Window* win, uint32_t action, int64_t arg = 0);
 

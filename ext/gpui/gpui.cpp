@@ -8199,6 +8199,14 @@ El* El::AriaLabel(Str label) {
     accessibility.label = label;
     return this;
 }
+El* El::AccessibilityDocument(const AccessibilityDocumentSource& source) {
+    if (!lifecycle) lifecycle = ArenaNew<ElLifecycle>(arena);
+    auto* copy = ArenaNew<AccessibilityDocumentSource>(arena);
+    *copy = source;
+    lifecycle->documentSource = copy;
+    accessibility.role = AccessibilityRole::Document;
+    return this;
+}
 El* El::AriaValue(Str value) {
     accessibility.value = value;
     return this;
@@ -9040,6 +9048,11 @@ El* El::OnPinch(Listener fn) {
 El* El::OnGesture(Listener fn) {
     if (!lifecycle) lifecycle = ArenaNew<ElLifecycle>(arena);
     lifecycle->onGesture = fn;
+    return this;
+}
+El* El::OnTouch(Listener fn) {
+    if (!lifecycle) lifecycle = ArenaNew<ElLifecycle>(arena);
+    lifecycle->onTouch = fn;
     return this;
 }
 
@@ -14245,7 +14258,8 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         e->onScrollWheel.IsValid() ||
         (e->lifecycle &&
          (e->lifecycle->onPinch.IsValid() ||
-          e->lifecycle->onGesture.IsValid() || e->lifecycle->cursorImage)) ||
+          e->lifecycle->onGesture.IsValid() ||
+          e->lifecycle->onTouch.IsValid() || e->lifecycle->cursorImage)) ||
         e->drag.IsValid() || e->onDrop.IsValid() ||
         e->cursor != CursorKind::Arrow || e->slider || e->stopMouseDown ||
         e->suppressTextSelection || e->keepTextSelection ||
@@ -14284,6 +14298,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         hr.onScrollWheel = e->onScrollWheel;
         hr.onPinch = e->lifecycle ? e->lifecycle->onPinch : Listener{};
         hr.onGesture = e->lifecycle ? e->lifecycle->onGesture : Listener{};
+        hr.onTouch = e->lifecycle ? e->lifecycle->onTouch : Listener{};
         hr.dropKind = e->dropKind;
         hr.onDrop = e->onDrop;
         hr.cursor = e->cursor;
@@ -16420,6 +16435,9 @@ static void AccessibilityCollectNode(El* e, Vec<AccessibilityNode>* out,
                     node.textSelectionEnd = len(document.text);
                 }
             }
+        }
+        if (e->lifecycle && e->lifecycle->documentSource) {
+            node.document = *e->lifecycle->documentSource;
         }
         if (!node.info.label.s &&
             AccessibilityNameFromContents(node.info.role)) {
@@ -23462,6 +23480,10 @@ void TestSimulateGesture(Window* win, const GestureEvent& ev) {
     Simulate(win, InputGesture(ev));
 }
 
+void TestSimulateTouch(Window* win, const TouchEvent& ev) {
+    Simulate(win, InputTouch(ev));
+}
+
 void TestSimulateClick(Window* win, Point position, Modifiers modifiers) {
     TestSimulateMouseDown(win, position, MouseButton::Left, modifiers);
     TestSimulateMouseUp(win, position, MouseButton::Left, modifiers);
@@ -23799,6 +23821,8 @@ static uint64_t AccessibilityTreeHash(const Vec<AccessibilityNode>& nodes) {
         GPUI_A11Y_HASH(node.focusId);
         GPUI_A11Y_HASH(node.textSelectionStart);
         GPUI_A11Y_HASH(node.textSelectionEnd);
+        GPUI_A11Y_HASH(node.document.textRevision);
+        GPUI_A11Y_HASH(node.document.selectionRevision);
         GPUI_A11Y_HASH(info.role);
         hash = AccessibilityHashStr(hash, info.authorId);
         hash = AccessibilityHashStr(hash, info.label);
@@ -24881,6 +24905,10 @@ int WindowAccessibilityNodeIndex(const Window* win, uint32_t nodeId) {
 }
 
 Str WindowAccessibilityTextValue(const AccessibilityNode& node) {
+    if (node.document.text) {
+        Str text = node.document.text(node.document.data);
+        return text.s ? text : StrL("");
+    }
     if (node.info.role == AccessibilityRole::Document) return node.info.value;
     if (!node.input || !node.info.value.s ||
         !AccessibilityRoleTakesText(node.info.role) ||
@@ -24892,9 +24920,23 @@ Str WindowAccessibilityTextValue(const AccessibilityNode& node) {
     return text.s ? text : StrL("");
 }
 
+bool WindowAccessibilityHasText(const AccessibilityNode& node) {
+    return node.document.text || WindowAccessibilityTextValue(node).s;
+}
+
 bool WindowAccessibilityTextSelection(const AccessibilityNode& node,
                                       Selection* out) {
-    if (!out || !WindowAccessibilityTextValue(node).s) return false;
+    if (!out) return false;
+    if (node.document.text) {
+        int start = 0, end = 0;
+        if (!node.document.selection ||
+            !node.document.selection(node.document.data, &start, &end)) {
+            return false;
+        }
+        *out = {start, end};
+        return true;
+    }
+    if (!WindowAccessibilityTextValue(node).s) return false;
     if (node.input) {
         *out = node.input->selectedRange;
         return true;
@@ -24906,6 +24948,12 @@ bool WindowAccessibilityTextSelection(const AccessibilityNode& node,
 
 int WindowAccessibilityTextCaret(const AccessibilityNode& node) {
     if (node.input) return InputCursor(node.input);
+    Selection selection;
+    if (node.document.text) {
+        return WindowAccessibilityTextSelection(node, &selection)
+                   ? selection.end
+                   : 0;
+    }
     return std::max(0, node.textSelectionEnd);
 }
 
@@ -26650,6 +26698,63 @@ static void DispatchGesture(Window* win, const GestureEvent& in) {
     AppInvalidate(win);
 }
 
+static TouchCapture* TouchCaptureFind(Window* win, uint32_t pointerId) {
+    for (TouchCapture& c : win->touchCaptures) {
+        if (c.listener.IsValid() && c.pointerId == pointerId) {
+            return &c;
+        }
+    }
+    return nullptr;
+}
+
+static void DispatchTouch(Window* win, const TouchEvent& in) {
+    TouchCapture* held = TouchCaptureFind(win, in.pointerId);
+    if (in.phase != TouchPhase::Started) {
+        if (!held) {
+            return;
+        }
+        Listener l = held->listener;
+        if (in.phase == TouchPhase::Ended ||
+            in.phase == TouchPhase::Cancelled) {
+            *held = {};
+        }
+        TouchEvent ev = in;
+        ListenerCall(win->app, win, l, &ev);
+        AppInvalidate(win);
+        return;
+    }
+
+    if (held) {
+        *held = {};
+    }
+    Vec<int> chain;
+    HitChain(win, in.x, in.y, &chain);
+    for (int k = 0; k < len(chain); k++) {
+        Listener l = win->paint.hits[chain[k]].onTouch;
+        if (!l.IsValid()) {
+            continue;
+        }
+        TouchEvent ev = in;
+        ev.propagate = true;
+        ListenerCall(win->app, win, l, &ev);
+        if (ev.propagate) {
+            continue;
+        }
+        TouchCapture* slot = TouchCaptureFind(win, in.pointerId);
+        for (TouchCapture& c : win->touchCaptures) {
+            if (!slot && !c.listener.IsValid()) {
+                slot = &c;
+            }
+        }
+        if (slot) {
+            *slot = {in.pointerId, l};
+        }
+        break;
+    }
+    VecReset(chain);
+    AppInvalidate(win);
+}
+
 void WindowGestureBegin(Window* win, float x, float y) {
     if (!win) {
         return;
@@ -26913,6 +27018,9 @@ void WindowDispatchInput(Window* win, const PlatformInput* input) {
         case PlatformInputKind::Gesture:
             DispatchGesture(win, input->gesture);
             break;
+        case PlatformInputKind::Touch:
+            DispatchTouch(win, input->touch);
+            break;
     }
 }
 
@@ -26982,6 +27090,13 @@ PlatformInput InputGesture(const GestureEvent& ev) {
     PlatformInput in = {};
     in.kind = PlatformInputKind::Gesture;
     in.gesture = ev;
+    return in;
+}
+
+PlatformInput InputTouch(const TouchEvent& ev) {
+    PlatformInput in = {};
+    in.kind = PlatformInputKind::Touch;
+    in.touch = ev;
     return in;
 }
 
@@ -29131,6 +29246,20 @@ ScreenBounds WindowDisplayBounds(Window*) {
 
 ScreenBounds WindowDisplayVisibleBounds(Window*) {
     return {};
+}
+
+Window* WindowAtPoint(Window* win, Point pt, Point* out) {
+    if (!win || !win->plat) {
+        return nullptr;
+    }
+    WinSize ws = WindowSize(win);
+    if (pt.x < 0 || pt.y < 0 || pt.x >= ws.dipW || pt.y >= ws.dipH) {
+        return nullptr;
+    }
+    if (out) {
+        *out = pt;
+    }
+    return win;
 }
 
 bool WindowIsVisible(Window* win) {
@@ -236383,7 +236512,7 @@ static void PutInterfaces(DbusWriter* body, const LinuxAccessible& object) {
         if (ActionCount(node)) PutString(body, kAction);
         if (node.info.hasNumericValue) PutString(body, kValue);
         if (IsSelectionRole(node.info.role)) PutString(body, kSelection);
-        if (WindowAccessibilityTextValue(node).s) PutString(body, gpui_accessibility_linux_kText);
+        if (WindowAccessibilityHasText(node)) PutString(body, gpui_accessibility_linux_kText);
         if (node.input && (node.actions & AccessibilityActionSetValue)) {
             PutString(body, kEditableText);
         }
@@ -237892,7 +238021,7 @@ static bool AccessibilitySelectionContainerRole(AccessibilityRole role) {
 }
 
 static bool AccessibilityTextPattern(const AccessibilityNode& node) {
-    return WindowAccessibilityTextValue(node).s != nullptr;
+    return WindowAccessibilityHasText(node);
 }
 
 static bool AccessibilityInvokePattern(const AccessibilityNode& node) {
@@ -237935,11 +238064,18 @@ static float DipScale(const Window* win) {
     HRESULT STDMETHODCALLTYPE get_FragmentRoot(                                \
         IRawElementProviderFragmentRoot** out) override;
 
+struct WinDocumentRevision {
+    uint32_t id = 0;
+    uint64_t text = 0;
+    uint64_t selection = 0;
+};
+
 struct WinAccessibility
     : ComObject<IRawElementProviderSimple, IRawElementProviderFragment,
                 IRawElementProviderFragmentRoot> {
     Window* win = nullptr;
     HWND hwnd = nullptr;
+    Vec<WinDocumentRevision> documents;
 
     WinAccessibility(Window* window, HWND handle) : win(window), hwnd(handle) {}
 
@@ -239738,11 +239874,17 @@ HRESULT WinTextRange::GetChildren(SAFEARRAY** out) {
     return AccessibilityEmptyProviderArray(out);
 }
 
+static void AccessibilityDocumentsChanged(WinAccessibility* root,
+                                          bool listening);
+
 WinAccessibility* AccessibilityWinNew(Window* win, void* hwnd) {
     if (!win || !hwnd) {
         return nullptr;
     }
-    return new WinAccessibility(win, (HWND)hwnd);
+    auto* accessibility = new WinAccessibility(win, (HWND)hwnd);
+
+    AccessibilityDocumentsChanged(accessibility, false);
+    return accessibility;
 }
 
 void AccessibilityWinClose(WinAccessibility* accessibility) {
@@ -239764,13 +239906,59 @@ intptr_t AccessibilityWinGetObject(WinAccessibility* accessibility,
         static_cast<IRawElementProviderSimple*>(accessibility));
 }
 
+static void AccessibilityRaiseNodeEvent(WinAccessibility* root, int index,
+                                        EVENTID event) {
+    IRawElementProviderFragment* fragment = root->NewNode(index);
+    IRawElementProviderSimple* provider = nullptr;
+    if (fragment) {
+        fragment->QueryInterface(__uuidof(IRawElementProviderSimple),
+                                 (void**)&provider);
+        fragment->Release();
+    }
+    if (provider) {
+        UiaRaiseAutomationEvent(provider, event);
+        provider->Release();
+    }
+}
+
+static void AccessibilityDocumentsChanged(WinAccessibility* root,
+                                          bool listening) {
+    Vec<WinDocumentRevision> now;
+    const Vec<AccessibilityNode>& nodes = root->win->accessibility;
+    for (int i = 0; i < len(nodes); i++) {
+        const AccessibilityNode& node = nodes[i];
+        if (!node.document.text) continue;
+        WinDocumentRevision seen = {node.id, node.document.textRevision,
+                                    node.document.selectionRevision};
+        VecAppend(now, seen);
+        for (const WinDocumentRevision& before : root->documents) {
+            if (!listening) break;
+            if (before.id != seen.id) continue;
+            if (before.text != seen.text) {
+                AccessibilityRaiseNodeEvent(root, i,
+                                            UIA_Text_TextChangedEventId);
+            }
+            if (before.selection != seen.selection) {
+                AccessibilityRaiseNodeEvent(
+                    root, i, UIA_Text_TextSelectionChangedEventId);
+            }
+            break;
+        }
+    }
+    root->documents = now;
+}
+
 void AccessibilityWinTreeChanged(WinAccessibility* accessibility) {
-    if (!accessibility || !accessibility->win || !UiaClientsAreListening()) {
+    if (!accessibility || !accessibility->win) {
         return;
     }
-    UiaRaiseStructureChangedEvent(
-        static_cast<IRawElementProviderSimple*>(accessibility),
-        StructureChangeType_ChildrenInvalidated, nullptr, 0);
+    bool listening = UiaClientsAreListening();
+    if (listening) {
+        UiaRaiseStructureChangedEvent(
+            static_cast<IRawElementProviderSimple*>(accessibility),
+            StructureChangeType_ChildrenInvalidated, nullptr, 0);
+    }
+    AccessibilityDocumentsChanged(accessibility, listening);
 }
 
 void AccessibilityWinFocusChanged(WinAccessibility* accessibility,
@@ -239783,18 +239971,8 @@ void AccessibilityWinFocusChanged(WinAccessibility* accessibility,
         if (accessibility->win->accessibility[i].focusId != focusId) {
             continue;
         }
-        IRawElementProviderFragment* fragment = accessibility->NewNode(i);
-        IRawElementProviderSimple* provider = nullptr;
-        if (fragment) {
-            fragment->QueryInterface(__uuidof(IRawElementProviderSimple),
-                                     (void**)&provider);
-            fragment->Release();
-        }
-        if (provider) {
-            UiaRaiseAutomationEvent(provider,
+        AccessibilityRaiseNodeEvent(accessibility, i,
                                     UIA_AutomationFocusChangedEventId);
-            provider->Release();
-        }
         break;
     }
 }
@@ -248259,6 +248437,58 @@ ScreenBounds WindowDisplayVisibleBounds(Window* win) {
     return r;
 }
 
+static XWindow TopLevelOf(XWindow xwin) {
+    while (xwin) {
+        XWindow root = 0, parent = 0;
+        XWindow* kids = nullptr;
+        unsigned n = 0;
+        if (!XQueryTree(gDpy, xwin, &root, &parent, &kids, &n)) {
+            return 0;
+        }
+        if (kids) {
+            XFree(kids);
+        }
+        if (parent == root) {
+            return xwin;
+        }
+        xwin = parent;
+    }
+    return 0;
+}
+
+Window* WindowAtPoint(Window* win, Point pt, Point* out) {
+    XWindow xwin = XwinOf(win);
+    if (!xwin) {
+        return nullptr;
+    }
+    int ox = 0, oy = 0;
+    XWindow child = 0;
+    XTranslateCoordinates(gDpy, xwin, gRoot, 0, 0, &ox, &oy, &child);
+    float sx = (float)ox + pt.x;
+    float sy = (float)oy + pt.y;
+    int rx = 0, ry = 0;
+    child = 0;
+    XTranslateCoordinates(gDpy, gRoot, gRoot, (int)floorf(sx), (int)floorf(sy),
+                          &rx, &ry, &child);
+    if (!child) {
+        return nullptr;
+    }
+    for (Window* other : win->app->windows) {
+        XWindow oxwin = XwinOf(other);
+        if (!oxwin || TopLevelOf(oxwin) != child) {
+            continue;
+        }
+        if (out) {
+            int cx = 0, cy = 0;
+            XWindow unused = 0;
+            XTranslateCoordinates(gDpy, oxwin, gRoot, 0, 0, &cx, &cy, &unused);
+            *out = {sx - (float)cx, sy - (float)cy};
+        }
+        return other;
+    }
+    return nullptr;
+}
+
 static bool XwinViewable(XWindow xwin);
 
 void PlatWindowShow(Window* win, bool visible, bool activate) {
@@ -250724,6 +250954,41 @@ ScreenBounds WindowDisplayBounds(Window* win) {
 ScreenBounds WindowDisplayVisibleBounds(Window* win) {
     NSScreen* screen = ScreenOf(win);
     return screen ? FromMac(screen.visibleFrame) : ScreenBounds{};
+}
+
+static NSPoint ViewToScreen(NSWindow* w, Point pt) {
+    NSView* v = w.contentView;
+    CGFloat y = v.isFlipped ? pt.y : v.bounds.size.height - pt.y;
+    NSPoint inWin = [v convertPoint:NSMakePoint(pt.x, y) toView:nil];
+    return [w convertPointToScreen:inWin];
+}
+
+static Point ScreenToView(NSWindow* w, NSPoint sp) {
+    NSView* v = w.contentView;
+    NSPoint p = [v convertPoint:[w convertPointFromScreen:sp] fromView:nil];
+    CGFloat y = v.isFlipped ? p.y : v.bounds.size.height - p.y;
+    return {(float)p.x, (float)y};
+}
+
+Window* WindowAtPoint(Window* win, Point pt, Point* out) {
+    NSWindow* w = NsWindowOf(win);
+    if (!w) {
+        return nullptr;
+    }
+    NSPoint sp = ViewToScreen(w, pt);
+    NSInteger num =
+        [NSWindow windowNumberAtPoint:sp belowWindowWithWindowNumber:0];
+    for (Window* other : win->app->windows) {
+        NSWindow* ow = NsWindowOf(other);
+        if (!ow || ow.windowNumber != num) {
+            continue;
+        }
+        if (out) {
+            *out = ScreenToView(ow, sp);
+        }
+        return other;
+    }
+    return nullptr;
 }
 
 void PlatWindowShow(Window* win, bool visible, bool activate) {
@@ -254101,6 +254366,39 @@ static void TouchPointer(Window* win, UINT msg, WPARAM wParam, LPARAM lParam) {
     p->touchLastY = y;
 }
 
+static void PointerTouchEvent(Window* win, UINT msg, WPARAM wParam,
+                              LPARAM lParam) {
+    UINT32 id = GET_POINTERID_WPARAM(wParam);
+    POINTER_INPUT_TYPE type = PT_POINTER;
+    if (!GetPointerType(id, &type) || (type != PT_TOUCH && type != PT_PEN)) {
+        return;
+    }
+    TouchEvent ev = {};
+    ev.phase = TouchPhase::Moved;
+    if (msg == WM_POINTERDOWN) {
+        ev.phase = TouchPhase::Started;
+    } else if (msg == WM_POINTERUP) {
+        bool canceled = IS_POINTER_CANCELED_WPARAM(wParam);
+        ev.phase = canceled ? TouchPhase::Cancelled : TouchPhase::Ended;
+    } else if (msg == WM_POINTERCAPTURECHANGED) {
+        ev.phase = TouchPhase::Cancelled;
+    } else if (!IS_POINTER_INCONTACT_WPARAM(wParam)) {
+        return;
+    }
+    if (msg != WM_POINTERCAPTURECHANGED) {
+        Point at =
+            ScreenToDips(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        ev.x = at.x;
+        ev.y = at.y;
+    }
+    ev.pointerId = id;
+    ev.pen = type == PT_PEN;
+    ev.primary = IS_POINTER_PRIMARY_WPARAM(wParam);
+    ev.modifiers = ModsNow();
+    PlatformInput in = InputTouch(ev);
+    WindowDispatchInput(win, &in);
+}
+
 static bool IsTouchScrollMouse(Window* win) {
     return win->plat->touchScroll && IsMouseFromTouch();
 }
@@ -255300,9 +255598,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
         case WM_POINTERDOWN:
         case WM_POINTERUPDATE:
         case WM_POINTERUP:
+            PointerTouchEvent(win, msg, wParam, lParam);
             if (IsTouchPointer(wParam)) {
                 TouchPointer(win, msg, wParam, lParam);
             }
+            break;
+        case WM_POINTERCAPTURECHANGED:
+            PointerTouchEvent(win, msg, wParam, lParam);
             break;
         case WM_GESTURENOTIFY:
             GestureNotify(win, lParam);
@@ -255725,6 +256027,34 @@ ScreenBounds WindowDisplayVisibleBounds(Window* win) {
         SystemParametersInfoW(SPI_GETWORKAREA, 0, &work, 0);
     }
     return FromRECT(work);
+}
+
+Window* WindowAtPoint(Window* win, Point pt, Point* out) {
+    HWND hwnd = Hwnd(win);
+    if (!hwnd) {
+        return nullptr;
+    }
+    float scale = WindowScaleFactor(win);
+    POINT sp = {(LONG)lroundf(pt.x * scale), (LONG)lroundf(pt.y * scale)};
+    ClientToScreen(hwnd, &sp);
+    HWND hit = WindowFromPoint(sp);
+    HWND root = hit ? GetAncestor(hit, GA_ROOT) : nullptr;
+    if (!root) {
+        return nullptr;
+    }
+    for (Window* w : win->app->windows) {
+        if (Hwnd(w) != root) {
+            continue;
+        }
+        POINT cp = sp;
+        ScreenToClient(root, &cp);
+        float s = WindowScaleFactor(w);
+        if (out) {
+            *out = {(float)cp.x / s, (float)cp.y / s};
+        }
+        return w;
+    }
+    return nullptr;
 }
 
 void PlatWindowShow(Window* win, bool visible, bool activate) {
