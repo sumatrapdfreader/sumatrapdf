@@ -55,10 +55,6 @@
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
     {
-        TrN("Select &All"),
-        CmdSelectAll,
-    },
-    {
         TrN("&Copy To Clipboard"),
         CmdCopySelection,
     },
@@ -81,6 +77,10 @@ static MenuDef menuDefSelection[] = {
     {
         TrN("&Zoom To Selection"),
         CmdZoomToSelection,
+    },
+    {
+        TrN("&Trim Pages To Selection"),
+        CmdTrimPagesToSelection,
     },
     {
         TrN("Count &Words"),
@@ -163,6 +163,10 @@ static MenuDef menuDefContext[] = {
     {
         TrN("Show &Bookmarks"),
         CmdToggleBookmarks,
+    },
+    {
+        TrN("Show &Thumbnails"),
+        CmdToggleThumbnails,
     },
     {
         TrN("Sh&ow Toolbar"),
@@ -573,11 +577,31 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
         }
         if (ctx) {
             removeMenu |= (menuDef == menuDefMainSelection) && !ctx->hasTextSelection && cmdIdInList(selectionTextCmds);
+            removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
+            // these annotations need text to mark up, except Highlight, which can
+            // fill a drawn rectangle
+            bool canMarkUp = ctx->hasTextSelection || ctx->hasDrawnRectSelection;
+            removeMenu |= (!canMarkUp || !ctx->supportsAnnots) && (subMenuDef == menuDefCreateAnnotFromSelection);
             // in the context menu only show translate / search items for a text
             // selection (the menubar variant is live-updated via
             // SetMenuStateForSelection instead)
             bool isTextSelSubMenu = (subMenuDef == menuDefTranslateWith) || (subMenuDef == menuDefSearchWith);
             removeMenu |= (menuDef == menuDefSelection) && !ctx->hasTextSelection && isTextSelSubMenu;
+            bool isRectSel = ctx->hasSelection && !ctx->hasTextSelection;
+            if (menuDef == menuDefSelection) {
+                removeMenu |= !ctx->hasSelection && cmdId == CmdCopySelection;
+                if (!isRectSel) {
+                    removeMenu |= cmdId == CmdCopySelectionAsImage || cmdId == CmdSaveSelectionAsImage ||
+                                  cmdId == CmdPrintSelection || cmdId == CmdSearchGoogleLens ||
+                                  cmdId == CmdZoomToSelection;
+                }
+            }
+            if (menuDef == menuDefGoogleLens) {
+                removeMenu |= cmdId == CmdSearchGoogleLens && !ctx->hasSelection;
+                removeMenu |= cmdId == CmdSearchGoogleLensPage && !ctx->isCursorOnPage;
+                bool onImage = ctx->cursorOnImage || ctx->engineKind == kindEngineImage;
+                removeMenu |= cmdId == CmdSearchGoogleLensImage && !onImage;
+            }
         }
         removeMenu |= !isSubMenu && cmdId == CmdSignWithImage && len(gSettings->annotations.signatureImage) == 0;
         removeMenu |= ((subMenuDef == menuDefDebug) && !ShowDebugMenu());
