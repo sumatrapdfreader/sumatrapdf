@@ -550,6 +550,15 @@ export function testWindowPos(): WindowPos {
   return { x: wa.left + dx, y: wa.top, dx, dy };
 }
 
+// -window-pos for the "rightHalf" layout whatever the runner asks for: for a
+// test whose Fit Page / Fit Visible zoom must stay in the range it was written for
+export function localWindowPosArg(): string {
+  const wa = getWorkArea();
+  const dx = Math.floor((wa.right - wa.left) / 2);
+  const dy = Math.floor(((wa.bottom - wa.top) * 3) / 4);
+  return `${dx}x${dy}@${wa.left + dx}x${wa.top}`;
+}
+
 export function sleep(ms: number): Promise<void> {
   return Bun.sleep(ms);
 }

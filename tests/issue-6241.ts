@@ -8,6 +8,7 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, assemblePdf, runStandalone, tmpPath } from "./util.ts";
+import { localWindowPosArg } from "./winapi.ts";
 
 const PAGE_W = 612;
 const CONTENT_W = 153; // a quarter of the page
@@ -70,7 +71,8 @@ export async function testit(): Promise<void> {
       }
       console.log(`issue-6241: fit visible is ${got.toFixed(2)}x fit width ✓`);
     },
-    ["-zoom", "fit visible", pdf],
+    // Fit Visible reaches the zoom cap in a big window
+    ["-window-pos", localWindowPosArg(), "-zoom", "fit visible", pdf],
   );
 }
 
