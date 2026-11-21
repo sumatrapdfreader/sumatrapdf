@@ -31,6 +31,7 @@
 #include "SumatraDialogs.h"
 #include "PdfToolsCommon.h"
 #include "SumatraPDFWebCommon.h"
+#include "ServerFiles.h"
 
 constexpr float kWebDlgDx = 520;
 constexpr float kWebBtnGap = 8;
@@ -157,6 +158,7 @@ static void FinishVerify(OnlineVerifyResult* res) {
     if (!same) {
         ClearFileList();
     }
+    ServerFilesReset();
     gWeb.lastHttpStatus = kHttpStatusOk;
     if (gWeb.editKey) {
         gp::InputSetValue(gWeb.editKey, ToGpui(res->token));
@@ -225,6 +227,7 @@ static void FinishUpload(OnlineJobResult* res) {
         return;
     }
     SetStatus(Tr("Uploaded."));
+    ServerFilesReset();
     StartList();
 }
 
@@ -322,6 +325,7 @@ void WebView::OnForget(WebView*, gp::Ctx* cx, const gp::ClickEvent*) {
         gWeb.lastHttpStatus = 0;
         gWeb.clearListStatus = false;
         ClearFileList();
+        ServerFilesReset();
         if (gWeb.editKey) {
             gp::InputSetValue(gWeb.editKey, GStrL(""));
         }

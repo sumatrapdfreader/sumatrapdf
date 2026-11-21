@@ -402,8 +402,10 @@ enum {
     CmdPdfWatermark = 596,
     CmdPdfAddPageNumbers = 597,
     CmdCloseWindow = 598,
+    CmdUploadToServer = 599,
+    CmdDeleteFromServer = 600,
 
-    CmdLast = 598,
+    CmdLast = 600,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

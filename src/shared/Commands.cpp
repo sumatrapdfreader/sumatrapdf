@@ -408,6 +408,8 @@ const CommandInfo gCommands[] = {
     {CmdPdfWatermark, "CmdPdfWatermark\0", StrL("Add Watermark To PDF...")},
     {CmdPdfAddPageNumbers, "CmdPdfAddPageNumbers\0", StrL("Add Page Numbers To PDF...")},
     {CmdCloseWindow, "CmdCloseWindow\0", StrL("Close Window")},
+    {CmdUploadToServer, "CmdUploadToServer\0", StrL("Upload to Server")},
+    {CmdDeleteFromServer, "CmdDeleteFromServer\0", StrL("Delete from Server")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

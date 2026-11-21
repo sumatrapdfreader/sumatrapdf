@@ -139,7 +139,11 @@ bool IsOnlineApiKey(Str s) {
 
 // Empty onlineServer is production. Anything that is not one of the three
 // origins is not used, even when it would pass a prefix check.
+// wasm: the site hosting the app, so URLs are relative.
 static Str OnlineOrigin() {
+    if (OS_WASM) {
+        return {};
+    }
     Str server = (gSettings && len(gSettings->onlineServer) > 0) ? gSettings->onlineServer : Str{};
     bool known = str::Eq(server, kOnlineProdOrigin) || str::Eq(server, kOnlineLocalOrigin) ||
                  str::Eq(server, kOnlineLoopbackOrigin);
@@ -275,6 +279,11 @@ static void VerifyDone(OnlineVerifyResult* res) {
     res->onDone.Call(res);
 }
 
+// no key (wasm): the site's session cookie authenticates
+static TempStr AuthHeaderTemp(Str token) {
+    return len(token) > 0 ? fmt("Authorization: Bearer %s", token) : TempStr{};
+}
+
 static void VerifyThread(OnlineVerifyReq* req) {
     AutoDelete del(req);
     auto* res = new OnlineVerifyResult();
@@ -283,8 +292,7 @@ static void VerifyThread(OnlineVerifyReq* req) {
     res->onDone = req->onDone;
     res->urlRejected = !UrlAllowed(req->url);
     HttpRsp rsp;
-    TempStr hdr = fmt("Authorization: Bearer %s", req->token);
-    HttpGetWithHeaders(req->url, hdr, &rsp);
+    HttpGetWithHeaders(req->url, AuthHeaderTemp(req->token), &rsp);
     res->status = rsp.httpStatusCode;
     res->error = rsp.error;
     // ERROR_INVALID_PARAMETER is also a WinHTTP failure after the session opens
@@ -379,9 +387,13 @@ static void JobThread(OnlineJobReq* req) {
         res->cachePath = str::Dup(req->destPath);
         res->displayName = str::Dup(req->displayName);
     }
-    TempStr hdr = fmt("Authorization: Bearer %s", req->token);
+    TempStr hdr = AuthHeaderTemp(req->token);
     if (req->job == OnlineJob::Upload) {
         UploadJob(req, res, hdr);
+    } else if (req->job == OnlineJob::Delete) {
+        HttpRsp rsp;
+        HttpDeleteWithHeaders(req->url, hdr, &rsp);
+        NoteHttp(res, rsp);
     } else if (req->job == OnlineJob::Download) {
         HttpRsp rsp;
         HttpDownloadWithHeaders(req->url, hdr, req->destPath, &rsp);
@@ -461,6 +473,20 @@ bool StartOnlineDownload(Str token, Str name, i64 size, u32* idOut, Func1<Online
     req->token = str::Dup(token);
     req->destPath = str::Dup(cachePath);
     req->displayName = str::Dup(name);
+    StartJob(req, idOut, onDone);
+    return true;
+}
+
+bool StartOnlineDelete(Str token, Str name, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err) {
+    TempStr url = OnlineUrlTemp(fmt("/api/file?name=%s", url::EncodeTemp(name)));
+    if (len(url) == 0) {
+        *err = str::DupTemp(NotAllowedMsg());
+        return false;
+    }
+    auto* req = new OnlineJobReq();
+    req->job = OnlineJob::Delete;
+    req->url = str::Dup(url);
+    req->token = str::Dup(token);
     StartJob(req, idOut, onDone);
     return true;
 }

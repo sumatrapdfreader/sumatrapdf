@@ -51,6 +51,7 @@
 #include "SvgIcons.h"
 #include "gui/DialogWidgets.h"
 #include "OverlayScrollbar.h"
+#include "ServerFiles.h"
 #include "HomePage.h"
 #include "HomePageCommon.h"
 
@@ -1210,6 +1211,27 @@ static gp::El* HomeViewModeBtn(MainWindow* win, gp::Ctx* cx, bool listView) {
     return btn;
 }
 
+// the website's Server badge: amber pill, teal on a dark theme
+constexpr Color kServerBadgeBg = MkRgb(0x8a, 0x5a, 0x00);
+constexpr Color kServerBadgeBgDark = MkRgb(0x11, 0x5e, 0x59);
+constexpr Color kServerBadgeFgDark = MkRgb(0xcc, 0xfb, 0xf1);
+constexpr float kServerBadgeFontPx = 11;
+
+static gp::El* ServerBadgeEl(gp::Ctx* cx) {
+    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
+    Color bg = light ? kServerBadgeBg : kServerBadgeBgDark;
+    Color fg = light ? MkRgb(0xff, 0xff, 0xff) : kServerBadgeFgDark;
+    return gp::Div(cx->a)
+        ->Shrink0()
+        ->Radius(999)
+        ->PadX(6)
+        ->Bg(ToGpui(bg))
+        ->Child(gp::TextEl(cx->a, ToGpui(Tr("Server")))
+                    ->Font(kServerBadgeFontPx)
+                    ->Weight(gp::FontWeight::Semibold)
+                    ->Fg(ToGpui(fg)));
+}
+
 // one thumbnail: the page image with a hairline and a shadow, the reading
 // progress along its bottom edge, the file name and page count under it and
 // the ✕ that forgets the file (shown on hover, as orig does)
@@ -1283,6 +1305,10 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
     // orig's UpdateCloseBtnVisibility
     if (CanAccessDisk()) {
         page->Child(close);
+    }
+    // ng: the website puts it top-right, where orig's ✕ is
+    if (IsFileOnServer(fs->filePath)) {
+        page->Child(ServerBadgeEl(cx)->Absolute()->Left(4)->Top(4));
     }
     float progress = 0;
     TempStr meta = HomeThumbnailMetaTemp(fs, &progress);
@@ -1363,6 +1389,9 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
     row->Child(
         FilterHighlightText(cx, path::GetBaseNameTemp(fs->filePath), filterWords, ToGpui(colText), kHomeTextFontPx)
             ->Shrink0());
+    if (IsFileOnServer(fs->filePath)) {
+        row->Child(ServerBadgeEl(cx));
+    }
     // the wasm build's directories are the page's own (/uploads)
     TempStr dir = OS_WASM ? TempStr{} : path::GetDirTemp(fs->filePath);
     row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, dir))
@@ -1501,6 +1530,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     }
     EnsureTipsParsed();
 
+    ServerFilesEnsureListed();
     HomePageUI* h = Ui(win);
     VecReset(h->files);
     StrVec filterWords;
@@ -1934,6 +1964,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
                        r.dy, progress, fs->filePath));
         Rect pathRc = BoundsRect(h->listPathBounds[i]);
         out.Append(fmt("pathRect=%d,%d,%d,%d\n", pathRc.x, pathRc.y, pathRc.dx, pathRc.dy));
+        out.Append(fmt("server=%d\n", IsFileOnServer(fs->filePath) ? 1 : 0));
     }
     return finish(0);
 }

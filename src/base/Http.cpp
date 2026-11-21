@@ -499,7 +499,8 @@ bool OnlineURLAllowed(Str url) {
 // the URL must not contain the key. A rejected URL never reaches WinHttpOpen.
 constexpr int kHttpMemBodyCap = 1024 * 1024;
 
-bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
+// verb: "GET" or "DELETE"; what: the name logged
+static bool InMemoryRequest(const WCHAR* verb, const char* what, Str url, Str extraHeaders, HttpRsp* rspOut) {
     bool ok = false;
     HINTERNET hSession = nullptr;
     HINTERNET hConnect = nullptr;
@@ -509,7 +510,7 @@ bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
 
     if (!OnlineURLAllowed(url)) {
         rspOut->error = ERROR_INVALID_PARAMETER;
-        logf("HttpGetWithHeaders: url: '%s' status: %d\n", url, -1);
+        logf("%s: url: '%s' status: %d\n", Str(what), url, -1);
         return false;
     }
 
@@ -521,7 +522,7 @@ bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
     uc.dwExtraInfoLength = (DWORD)-1;
     if (!InternetCrackUrlW(CWStrTemp(url), 0, 0, &uc)) {
         rspOut->error = GetLastError();
-        logf("HttpGetWithHeaders: url: '%s' status: %d\n", url, -1);
+        logf("%s: url: '%s' status: %d\n", Str(what), url, -1);
         return false;
     }
 
@@ -546,7 +547,7 @@ bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
             goto ExitGet;
         }
         DWORD flags = (uc.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
-        hRequest = WinHttpOpenRequest(hConnect, L"GET", pathAndQuery.s, nullptr, WINHTTP_NO_REFERER,
+        hRequest = WinHttpOpenRequest(hConnect, verb, pathAndQuery.s, nullptr, WINHTTP_NO_REFERER,
                                       WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
         if (!hRequest) {
             rspOut->error = GetLastError();
@@ -605,7 +606,7 @@ bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
     }
 
 ExitGet:
-    logf("HttpGetWithHeaders: url: '%s' status: %d\n", url, (int)rspOut->httpStatusCode);
+    logf("%s: url: '%s' status: %d\n", Str(what), url, (int)rspOut->httpStatusCode);
     if (hRequest) {
         WinHttpCloseHandle(hRequest);
     }
@@ -633,6 +634,15 @@ static bool WriteAllBytes(HANDLE h, const void* data, DWORD n) {
         n -= wrote;
     }
     return true;
+}
+
+bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
+    return InMemoryRequest(L"GET", "HttpGetWithHeaders", url, extraHeaders, rspOut);
+}
+
+// Ok: 200
+bool HttpDeleteWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
+    return InMemoryRequest(L"DELETE", "HttpDeleteWithHeaders", url, extraHeaders, rspOut);
 }
 
 // Does not follow redirects. A body over 50 MiB deletes the partial file.

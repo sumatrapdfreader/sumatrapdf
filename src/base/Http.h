@@ -25,6 +25,7 @@ TempStr HttpNormalizeHeadersTemp(Str headers);
 
 bool OnlineURLAllowed(Str url);
 bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut);
+bool HttpDeleteWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut);
 bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut);
 bool HttpDownloadWithHeaders(Str url, Str extraHeaders, Str destPath, HttpRsp* rspOut);
 #if !OS_WIN

@@ -1625,6 +1625,7 @@ export const targets: Target[] = [
       "src/ng/OpenFromUrlDialog.cpp",
       "src/ng/SumatraPDFWebCommon.cpp",
       "src/ng/SumatraPDFWebDialog.cpp",
+      "src/ng/ServerFiles.cpp",
       "src/ng/AppHelpersCommon.cpp",
       "src/ng/AddFavoriteDialog.cpp",
       "src/ng/Favorites.cpp",

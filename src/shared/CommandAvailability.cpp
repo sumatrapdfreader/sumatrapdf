@@ -92,6 +92,8 @@ static const i32 gNoDocWhitelist[] = {
     CmdSetScreenshotHotkey,
     CmdStopReadAloud,
     CmdSumatraPDFWeb,
+    CmdUploadToServer,
+    CmdDeleteFromServer,
     0,
 };
 
@@ -213,6 +215,8 @@ static const i32 removeIfNoInternetPerms[] = {
     CmdSumatraPDFWeb,
     CmdOpenFromURL,
     CmdDebugShowDownloadedFonts,
+    CmdUploadToServer,
+    CmdDeleteFromServer,
     0,
 };
 
@@ -402,6 +406,8 @@ static const i32 gBlacklistCommandsFromPalette[] = {
     CmdSetDocumentColorsFollowTheme,
     CmdFileHistory,
     CmdFavorite,
+    CmdUploadToServer,
+    CmdDeleteFromServer,
     0,
 };
 

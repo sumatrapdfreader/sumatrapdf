@@ -253,7 +253,8 @@ static void NoteStatus(CURL* curl, HttpRsp* rspOut) {
 
 enum class HttpMethod {
     Get,
-    Post
+    Post,
+    Delete,
 };
 
 // Body into rspOut->data, capped. Ok: 200 for a GET, any 2xx for a POST.
@@ -284,6 +285,9 @@ static bool InMemoryRequest(const char* what, HttpMethod method, Str url, Str co
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.s ? body.s : "");
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len(body));
     }
+    if (method == HttpMethod::Delete) {
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    }
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
     CappedBody cb{&rspOut->data, kHttpMemBodyCap};
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, AppendCapped);
@@ -303,6 +307,10 @@ static bool InMemoryRequest(const char* what, HttpMethod method, Str url, Str co
 
 bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
     return InMemoryRequest("HttpGetWithHeaders", HttpMethod::Get, url, Str(), extraHeaders, Str(), rspOut);
+}
+
+bool HttpDeleteWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
+    return InMemoryRequest("HttpDeleteWithHeaders", HttpMethod::Delete, url, Str(), extraHeaders, Str(), rspOut);
 }
 
 // A 3xx is an error; redirects are not followed.
@@ -385,13 +393,96 @@ static bool NotSupported(HttpRsp* rspOut) {
     return false;
 }
 
+#if OS_WASM
+#include <emscripten/emscripten.h>
+
+// Sync XHR to the page's own origin (the site's session cookie authenticates).
+// Returns the status (0: no response); the response text waits in
+// Module.sumatraXhrText for WasmXhrTake.
+// NOLINTNEXTLINE
+EM_JS(int, WasmXhr,
+      (const char* method, int methodLen, const char* url, int urlLen, const char* ctype, int ctypeLen,
+       const char* body, int bodyLen),
+      {
+          Module.sumatraXhrText = "";
+          if (typeof XMLHttpRequest == "undefined") return 0;
+          try {
+              var xhr = new XMLHttpRequest();
+              xhr.open(UTF8ToString(method, methodLen), UTF8ToString(url, urlLen), false);
+              if (ctypeLen > 0) xhr.setRequestHeader("Content-Type", UTF8ToString(ctype, ctypeLen));
+              xhr.send(bodyLen > 0 ? HEAPU8.slice(body, body + bodyLen) : null);
+              Module.sumatraXhrText = xhr.responseText || "";
+              return xhr.status;
+          } catch (e) {
+              console.warn("XHR failed", e);
+              return 0;
+          }
+      });
+
+// NOLINTNEXTLINE
+EM_JS(int, WasmXhrTextLen, (), { return lengthBytesUTF8(Module.sumatraXhrText || ""); });
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmXhrTake, (char* out, int cap), {
+    stringToUTF8(Module.sumatraXhrText || "", out, cap);
+    Module.sumatraXhrText = "";
+});
+
+constexpr int kHttpMemBodyCap = 1024 * 1024;
+// ERROR_INVALID_PARAMETER, as Http.cpp reports a rejected URL
+constexpr DWORD kWasmErrInvalidParam = 87;
+
+// extraHeaders is ignored: no bearer key in the browser, the cookie is sent
+static bool WasmRequest(const char* what, Str method, Str url, Str contentType, Str body, HttpRsp* rspOut) {
+    rspOut->data.Reset();
+    rspOut->error = kHttpErrorSuccess;
+    rspOut->httpStatusCode = (DWORD)-1;
+    if (!OnlineURLAllowed(url)) {
+        rspOut->error = kWasmErrInvalidParam;
+        logf("%s: url: '%s' status: %d\n", Str(what), url, -1);
+        return false;
+    }
+    int sc = WasmXhr(method.s, len(method), url.s, len(url), contentType.s, len(contentType), body.s, len(body));
+    int n = WasmXhrTextLen();
+    if (n > 0 && n <= kHttpMemBodyCap) {
+        char* buf = AllocArrayTemp<char>(n + 1);
+        WasmXhrTake(buf, n + 1);
+        rspOut->data.Append(Str(buf, n));
+    }
+    logf("%s: url: '%s' status: %d\n", Str(what), url, sc);
+    if (sc <= 0) {
+        rspOut->error = kHttpErrorFailure;
+        return false;
+    }
+    rspOut->httpStatusCode = (DWORD)sc;
+    bool isPost = str::Eq(method, StrL("POST"));
+    return isPost ? (sc >= 200 && sc < 300) : sc == 200;
+}
+
+bool HttpGetWithHeaders(Str url, Str, HttpRsp* rspOut) {
+    return WasmRequest("HttpGetWithHeaders", StrL("GET"), url, Str(), Str(), rspOut);
+}
+
+bool HttpDeleteWithHeaders(Str url, Str, HttpRsp* rspOut) {
+    return WasmRequest("HttpDeleteWithHeaders", StrL("DELETE"), url, Str(), Str(), rspOut);
+}
+
+bool HttpPostUrlNoRedirect(Str url, Str contentType, Str, Str body, HttpRsp* rspOut) {
+    return WasmRequest("HttpPostUrlNoRedirect", StrL("POST"), url, contentType, body, rspOut);
+}
+#else
 bool HttpGetWithHeaders(Str, Str, HttpRsp* rspOut) {
+    return NotSupported(rspOut);
+}
+
+bool HttpDeleteWithHeaders(Str, Str, HttpRsp* rspOut) {
     return NotSupported(rspOut);
 }
 
 bool HttpPostUrlNoRedirect(Str, Str, Str, Str, HttpRsp* rspOut) {
     return NotSupported(rspOut);
 }
+#endif
 
 bool HttpDownloadWithHeaders(Str, Str, Str, HttpRsp* rspOut) {
     return NotSupported(rspOut);
@@ -588,7 +679,11 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
 #endif
 
 // Scheme, host, and port. A prefix of the production host is a different host.
+// wasm: only the page's own /api/ (the site hosting the app).
 bool OnlineURLAllowed(Str url) {
+#if OS_WASM
+    return str::StartsWith(url, StrL("/api/"));
+#endif
     struct Origin {
         Str prefix;
         Str host;

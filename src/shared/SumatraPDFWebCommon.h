@@ -15,6 +15,7 @@ enum class OnlineJob : int {
     List = 1,
     Upload,
     Download,
+    Delete,
 };
 
 struct OnlineListedFile {
@@ -86,3 +87,4 @@ bool StartOnlineVerify(Str token, u32* idOut, Func1<OnlineVerifyResult*> onDone,
 bool StartOnlineList(Str token, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);
 bool StartOnlineUpload(Str token, Str path, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);
 bool StartOnlineDownload(Str token, Str name, i64 size, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);
+bool StartOnlineDelete(Str token, Str name, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);

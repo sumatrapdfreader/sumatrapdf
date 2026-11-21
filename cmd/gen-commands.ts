@@ -409,6 +409,8 @@ const commandsRaw = [
     "CmdPdfWatermark", "Add Watermark To PDF...",
     "CmdPdfAddPageNumbers", "Add Page Numbers To PDF...",
     "CmdCloseWindow", "Close Window",
+    "CmdUploadToServer", "Upload to Server",
+    "CmdDeleteFromServer", "Delete from Server",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

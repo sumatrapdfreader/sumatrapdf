@@ -110,6 +110,7 @@
 #include "SignatureUI.h"
 #include "FileThumbnails.h"
 #include "HomePage.h"
+#include "ServerFiles.h"
 #include "DocumentProperties.h"
 #include "PdfDarkMode.h"
 #include "PagePosition.h"
@@ -7491,6 +7492,21 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         case CmdSumatraPDFWeb:
             ShowSumatraPDFWebDialog(win);
             break;
+
+        // the home page's selected entry
+        case CmdUploadToServer:
+        case CmdDeleteFromServer: {
+            Str path = win->IsCurrentTabAbout() ? HomePageSelectedFilePathTemp(win) : Str{};
+            if (len(path) == 0) {
+                break;
+            }
+            if (cmdId == CmdUploadToServer) {
+                UploadFileToServer(win, path);
+            } else {
+                DeleteFileFromServer(win, path);
+            }
+            break;
+        }
 
         default:
             // ng: cmd/port-commands.ts reads this through the automation

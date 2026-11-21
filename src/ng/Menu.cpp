@@ -50,6 +50,8 @@
 #include "Menu.h"
 #include "MenuCommon.h"
 #include "MenuDefs.h"
+#include "HomePage.h"
+#include "ServerFiles.h"
 
 #include "SumatraLog.h"
 
@@ -1009,7 +1011,18 @@ TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y) {
     if (!win) {
         return StrL("NOTREADY no-window\n");
     }
-    MenuModel* menu = BuildWindowContextMenu(win, Point{x, y});
+    MenuModel* menu = nullptr;
+    if (win->IsCurrentTabAbout()) {
+        // the home page: the menu of the selected entry, else the first
+        Str path = HomePageSelectedFilePathTemp(win);
+        if (len(path) == 0) {
+            HomePageSelectFirst(win);
+            path = HomePageSelectedFilePathTemp(win);
+        }
+        menu = BuildHomeContextMenu(win, path);
+    } else {
+        menu = BuildWindowContextMenu(win, Point{x, y});
+    }
     if (!menu) {
         return Str{};
     }
@@ -1383,6 +1396,21 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
 
 // --- the home page's context menu (orig's OnAboutContextMenu) ---------------
 
+// ng: the website's Upload to server / Delete from server. While linked,
+// Delete File reads Delete local.
+static void AppendServerItems(MenuModel* popup, Str filePath) {
+    if (!ServerFilesListed()) {
+        return;
+    }
+    MenuSetText(popup, CmdDeleteFile, Tr("Delete local"));
+    MenuAppendSeparator(popup);
+    if (IsFileOnServer(filePath)) {
+        MenuAppendString(popup, Tr("Delete from server"), CmdDeleteFromServer);
+    } else {
+        MenuAppendString(popup, Tr("Upload to server"), CmdUploadToServer);
+    }
+}
+
 MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
     if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !SettingsRememberOpenedFiles() ||
         !gSettings->showStartPage) {
@@ -1408,6 +1436,7 @@ MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
         str::Free(it->accel);
         it->accel = str::Dup(StrL("Del"));
     }
+    AppendServerItems(popup, filePath);
     logf("BuildHomeContextMenu: '%s': %s\n", path::GetBaseNameTemp(filePath), MenuRowsTemp(popup));
     return popup;
 }
@@ -1439,6 +1468,12 @@ void HomeContextMenuCommand(MainWindow* win, Str filePathIn, int cmdId) {
             return;
         case CmdDeleteFile:
             DeleteFileFromHomePage(win, path);
+            return;
+        case CmdUploadToServer:
+            UploadFileToServer(win, path);
+            return;
+        case CmdDeleteFromServer:
+            DeleteFileFromServer(win, path);
             return;
     }
     ExecuteCmd(win, cmdId);
