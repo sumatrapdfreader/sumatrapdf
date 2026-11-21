@@ -22929,6 +22929,9 @@ struct TestPlatform {
     bool on = false;
     double now = 0;
     Str clipboard = {};
+
+    Str clipboardPaths = {};
+    bool clipboardCut = false;
 };
 
 static TestPlatform gTestPlatform;
@@ -22953,7 +22956,22 @@ bool TestPlatformClipboardWrite(Str text) {
         return false;
     }
     StrFree(gTestPlatform.clipboard);
+    StrFree(gTestPlatform.clipboardPaths);
+    gTestPlatform.clipboardPaths = {};
+    gTestPlatform.clipboardCut = false;
     gTestPlatform.clipboard = len(text) > 0 ? StrDup(text) : Str{};
+    return true;
+}
+
+bool TestPlatformClipboardWritePaths(Str paths, bool cut) {
+    if (!gTestPlatform.on) {
+        return false;
+    }
+    StrFree(gTestPlatform.clipboard);
+    StrFree(gTestPlatform.clipboardPaths);
+    gTestPlatform.clipboard = {};
+    gTestPlatform.clipboardPaths = len(paths) > 0 ? StrDup(paths) : Str{};
+    gTestPlatform.clipboardCut = cut && len(paths) > 0;
     return true;
 }
 
@@ -22965,6 +22983,10 @@ bool TestPlatformClipboardRead(Arena* a, ClipboardItem* out) {
         *out = ClipboardItem{};
         if (len(gTestPlatform.clipboard) > 0) {
             out->text = StrDup(a, gTestPlatform.clipboard);
+        }
+        if (len(gTestPlatform.clipboardPaths) > 0) {
+            out->externalPaths = StrDup(a, gTestPlatform.clipboardPaths);
+            out->externalPathsCut = gTestPlatform.clipboardCut;
         }
     }
     return true;
@@ -23107,6 +23129,7 @@ App* TestAppNew() {
         return nullptr;
     }
     StrFree(gTestPlatform.clipboard);
+    StrFree(gTestPlatform.clipboardPaths);
     TestPromptsDrop();
     TestDragOutDrop();
     gTestPlatform = TestPlatform{};
@@ -23120,6 +23143,7 @@ void TestAppFree(App* app) {
     TestDragOutDrop();
     AppFreeHeadless(app);
     StrFree(gTestPlatform.clipboard);
+    StrFree(gTestPlatform.clipboardPaths);
     gTestPlatform = TestPlatform{};
     if (gTestExecWasRunning) {
         ExecInit();
@@ -24238,6 +24262,31 @@ bool ClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
         return false;
     }
     return PlatClipboardSetImage(win, png, pngLen);
+}
+
+bool ClipboardSetPaths(Window* win, Str paths, bool cut) {
+    if (TestPlatformClipboardWritePaths(paths, cut)) {
+        return len(paths) > 0;
+    }
+    if (len(paths) <= 0) {
+        return false;
+    }
+    return PlatClipboardSetPaths(win, paths, cut);
+}
+
+bool ClipboardHasPaths(Window* win) {
+    ClipboardItem simulated;
+    if (TestPlatformClipboardRead(GetTempArena(), &simulated)) {
+        return simulated.HasExternalPaths();
+    }
+    return PlatClipboardHasPaths(win);
+}
+
+void ClipboardClear(Window* win) {
+    if (TestPlatformClipboardWrite(Str{})) {
+        return;
+    }
+    PlatClipboardClear(win);
 }
 
 Str ClipboardGetText(Arena* a, Window* win) {
@@ -245780,6 +245829,9 @@ static Str gClipboard = {};
 
 static Str gClipboardPng = {};
 
+static Str gClipboardPaths = {};
+static bool gClipboardCut = false;
+
 static Atom aWmDeleteWindow, aWmProtocols, aNetWmName, aUtf8String;
 static Atom aNetWmState, aNetWmStateMaxVert, aNetWmStateMaxHorz;
 static Atom aNetWmStateFullscreen, aNetWmStateHidden, aWmState;
@@ -245790,6 +245842,7 @@ static Atom aNetWmMoveResize, aMotifWmHints, aGtkShowWindowMenu;
 static Atom aGtkEdgeConstraints;
 static Atom aClipboard, aTargets, aClipTarget, aIncr;
 static Atom aImagePng, aImageJpeg, aImageBmp, aImageTiff;
+static Atom aGnomeCopiedFiles;
 static Atom aXdndAware, aXdndEnter, aXdndPosition, aXdndStatus, aXdndLeave;
 static Atom aXdndDrop, aXdndFinished, aXdndSelection, aXdndTypeList;
 static Atom aXdndActionCopy, aTextUriList, aXdndProp;
@@ -247038,17 +247091,21 @@ TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts) {
     return PathWithDefaultExtTemp(path, opts.defaultExt);
 }
 
+static void ClipboardDrop() {
+    StrFree(gClipboard);
+    StrFree(gClipboardPng);
+    StrFree(gClipboardPaths);
+    gClipboard = {};
+    gClipboardPng = {};
+    gClipboardPaths = {};
+    gClipboardCut = false;
+}
+
 void PlatClipboardSetText(Window* win, Str text) {
     if (!win || !win->plat) {
         return;
     }
-    if (gClipboard.s) {
-        StrFree(gClipboard);
-    }
-    if (gClipboardPng.s) {
-        StrFree(gClipboardPng);
-        gClipboardPng = {};
-    }
+    ClipboardDrop();
     gClipboard = StrDup(text);
     XSetSelectionOwner(gDpy, aClipboard, win->plat->xwin, CurrentTime);
     XFlush(gDpy);
@@ -247064,23 +247121,74 @@ bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
     if (!win || !win->plat || !gDpy) {
         return false;
     }
-    if (gClipboard.s) {
-        StrFree(gClipboard);
-        gClipboard = {};
-    }
-    if (gClipboardPng.s) {
-        StrFree(gClipboardPng);
-    }
+    ClipboardDrop();
     gClipboardPng = StrDup(Str((const char*)png, pngLen));
     XSetSelectionOwner(gDpy, aClipboard, win->plat->xwin, CurrentTime);
     XFlush(gDpy);
     return true;
 }
 
+static Str FileUrisTemp(Str paths, Str first, Str eol) {
+    StrBuilder out(GetTempArena());
+    out.Append(first);
+    for (Str rest = paths; len(rest) > 0;) {
+        int k = 0;
+        while (k < len(rest) && rest.s[k] != '\n') {
+            k++;
+        }
+        Str line(rest.s, k);
+        int skip = k < len(rest) ? k + 1 : k;
+        rest = Str(rest.s + skip, len(rest) - skip);
+        if (len(line) == 0) {
+            continue;
+        }
+        if (len(out) > 0 && out.els[len(out) - 1] != '\n') {
+            out.Append(eol);
+        }
+        out.Append(StrL("file://"));
+        for (int i = 0; i < len(line); i++) {
+            auto c = (unsigned char)line.s[i];
+            bool plain = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                         (c >= '0' && c <= '9') || c == '/' || c == '-' ||
+                         c == '.' || c == '_' || c == '~';
+            if (plain) {
+                out.AppendChar((char)c);
+            } else {
+                out.Append(fmt("%%%02X", c));
+            }
+        }
+    }
+    return out.TakeStr();
+}
+
+bool PlatClipboardSetPaths(Window* win, Str paths, bool cut) {
+    if (!win || !win->plat || !gDpy) {
+        return false;
+    }
+    ClipboardDrop();
+    gClipboardPaths = StrDup(paths);
+    gClipboardCut = cut;
+    XSetSelectionOwner(gDpy, aClipboard, win->plat->xwin, CurrentTime);
+    XFlush(gDpy);
+    return true;
+}
+
+void PlatClipboardClear(Window* win) {
+    (void)win;
+    if (!gDpy) {
+        return;
+    }
+    ClipboardDrop();
+    XSetSelectionOwner(gDpy, aClipboard, None, CurrentTime);
+    XFlush(gDpy);
+}
+
 struct ClipboardTargets {
     bool valid = false;
     bool utf8 = false;
     bool text = false;
+    bool uriList = false;
+    bool gnomeFiles = false;
     Atom image = None;
 };
 
@@ -247216,6 +247324,8 @@ static ClipboardTargets ReadClipboardTargets(XWindow xwin) {
             Atom atom = targets[i];
             out.utf8 |= atom == aUtf8String;
             out.text |= atom == XA_STRING;
+            out.uriList |= atom == aTextUriList;
+            out.gnomeFiles |= atom == aGnomeCopiedFiles;
             if (atom == aImagePng ||
                 (atom == aImageJpeg && out.image != aImagePng) ||
                 (atom == aImageBmp && out.image != aImagePng &&
@@ -247237,7 +247347,7 @@ Str PlatClipboardGetText(Arena* a, Window* win) {
     }
     XWindow xwin = win->plat->xwin;
     if (XGetSelectionOwner(gDpy, aClipboard) == xwin) {
-        return StrDup(a, gClipboard);
+        return StrDup(a, gClipboardPaths.s ? gClipboardPaths : gClipboard);
     }
     return ReadClipboardTarget(a, xwin, aUtf8String);
 }
@@ -247249,7 +247359,11 @@ ClipboardItem PlatClipboardGetItem(Arena* a, Window* win) {
     }
     XWindow xwin = win->plat->xwin;
     if (XGetSelectionOwner(gDpy, aClipboard) == xwin) {
-        out.text = StrDup(a, gClipboard);
+        out.text = StrDup(a, gClipboardPaths.s ? gClipboardPaths : gClipboard);
+        if (gClipboardPaths.s) {
+            out.externalPaths = StrDup(a, gClipboardPaths);
+            out.externalPathsCut = gClipboardCut;
+        }
         if (gClipboardPng.s) {
             Str image = StrDup(a, gClipboardPng);
             out.imageBytes = (const uint8_t*)image.s;
@@ -247268,7 +247382,35 @@ ClipboardItem PlatClipboardGetItem(Arena* a, Window* win) {
         out.imageBytes = (const uint8_t*)image.s;
         out.imageBytesLen = len(image);
     }
+
+    if (targets.gnomeFiles) {
+        Str list = ReadClipboardTarget(a, xwin, aGnomeCopiedFiles);
+        int k = 0;
+        while (k < len(list) && list.s[k] != '\n') {
+            k++;
+        }
+        Str verb(list.s, k);
+        int skip = k < len(list) ? k + 1 : k;
+        out.externalPaths =
+            FileUriListToPaths(a, Str(list.s + skip, len(list) - skip));
+        out.externalPathsCut = len(out.externalPaths) > 0 && StrEq(verb, "cut");
+    } else if (targets.uriList) {
+        out.externalPaths =
+            FileUriListToPaths(a, ReadClipboardTarget(a, xwin, aTextUriList));
+    }
     return out;
+}
+
+bool PlatClipboardHasPaths(Window* win) {
+    if (!win || !win->plat || !gDpy) {
+        return false;
+    }
+    XWindow xwin = win->plat->xwin;
+    if (XGetSelectionOwner(gDpy, aClipboard) == xwin) {
+        return gClipboardPaths.s != nullptr;
+    }
+    ClipboardTargets targets = ReadClipboardTargets(xwin);
+    return targets.gnomeFiles || targets.uriList;
 }
 
 static void OnSelectionRequest(XSelectionRequestEvent* req) {
@@ -247281,10 +247423,25 @@ static void OnSelectionRequest(XSelectionRequestEvent* req) {
     resp.xselection.property = None;
 
     Atom prop = req->property ? req->property : req->target;
+    Str text = gClipboardPaths.s ? gClipboardPaths : gClipboard;
     if (req->target == aTargets) {
-        Atom targets[2] = {aTargets, gClipboardPng.s ? aImagePng : aUtf8String};
+        Atom targets[4] = {aTargets, gClipboardPng.s ? aImagePng : aUtf8String,
+                           aTextUriList, aGnomeCopiedFiles};
+        int n = gClipboardPaths.s ? 4 : 2;
         XChangeProperty(gDpy, req->requestor, prop, XA_ATOM, 32,
-                        PropModeReplace, (unsigned char*)targets, 2);
+                        PropModeReplace, (unsigned char*)targets, n);
+        resp.xselection.property = prop;
+    } else if ((req->target == aTextUriList ||
+                req->target == aGnomeCopiedFiles) &&
+               gClipboardPaths.s) {
+        bool gnome = req->target == aGnomeCopiedFiles;
+        Str first = !gnome          ? Str{}
+                    : gClipboardCut ? StrL("cut\n")
+                                    : StrL("copy\n");
+        Str uris = FileUrisTemp(gClipboardPaths, first,
+                                gnome ? StrL("\n") : StrL("\r\n"));
+        XChangeProperty(gDpy, req->requestor, prop, req->target, 8,
+                        PropModeReplace, (unsigned char*)uris.s, len(uris));
         resp.xselection.property = prop;
     } else if (req->target == aImagePng && gClipboardPng.s) {
         XChangeProperty(gDpy, req->requestor, prop, aImagePng, 8,
@@ -247292,10 +247449,9 @@ static void OnSelectionRequest(XSelectionRequestEvent* req) {
                         len(gClipboardPng));
         resp.xselection.property = prop;
     } else if ((req->target == aUtf8String || req->target == XA_STRING) &&
-               gClipboard.s) {
+               text.s) {
         XChangeProperty(gDpy, req->requestor, prop, req->target, 8,
-                        PropModeReplace, (unsigned char*)gClipboard.s,
-                        len(gClipboard));
+                        PropModeReplace, (unsigned char*)text.s, len(text));
         resp.xselection.property = prop;
     }
     XSendEvent(gDpy, req->requestor, False, 0, &resp);
@@ -247866,8 +248022,9 @@ static void HandleEvent(App* app, XEvent* ev) {
             }
             break;
         case SelectionNotify:
-            if (ev->xselection.target == aTextUriList ||
-                ev->xselection.property == aXdndProp) {
+            if (ev->xselection.selection == aXdndSelection &&
+                (ev->xselection.target == aTextUriList ||
+                 ev->xselection.property == aXdndProp)) {
                 OnXdndSelection(win, &ev->xselection);
             }
             break;
@@ -248480,6 +248637,8 @@ bool PlatInit(App* app) {
     aImageJpeg = XInternAtom(gDpy, "image/jpeg", False);
     aImageBmp = XInternAtom(gDpy, "image/bmp", False);
     aImageTiff = XInternAtom(gDpy, "image/tiff", False);
+    aGnomeCopiedFiles =
+        XInternAtom(gDpy, "x-special/gnome-copied-files", False);
     const char* accessibilityBus = getenv("AT_SPI_BUS_ADDRESS");
     if (accessibilityBus && *accessibilityBus) {
         AccessibilityLinuxInit(app, Str(accessibilityBus));
@@ -251470,14 +251629,24 @@ bool PlatWindowPrompt(Window* win, PromptRequest* req) {
 - (NSDragOperation)draggingSession:(NSDraggingSession*)session
     sourceOperationMaskForDraggingContext:(NSDraggingContext)context {
     (void)session, (void)context;
-    return NSDragOperationCopy;
+    NSDragOperation ops = NSDragOperationCopy;
+    if (req && req->data.allowMove) {
+        ops |= NSDragOperationMove | NSDragOperationGeneric;
+    }
+    if (req && req->data.allowLink) {
+        ops |= NSDragOperationLink;
+    }
+    return ops;
 }
 - (void)draggingSession:(NSDraggingSession*)session
            endedAtPoint:(NSPoint)point
               operation:(NSDragOperation)op {
     (void)session, (void)point;
     gpui::DragOutResult result = gpui::DragOutResult::Canceled;
-    if (op & NSDragOperationMove) {
+
+    bool moved = req && req->data.allowMove &&
+                 (op & (NSDragOperationMove | NSDragOperationGeneric));
+    if (moved) {
         result = gpui::DragOutResult::Moved;
     } else if (op & NSDragOperationCopy) {
         result = gpui::DragOutResult::Copied;
@@ -251816,6 +251985,51 @@ bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
     return true;
 }
 
+static NSString* const kCutPathsType = @"org.gpui.cut-paths";
+
+bool PlatClipboardSetPaths(Window* win, Str paths, bool cut) {
+    (void)win;
+    NSMutableArray<NSURL*>* urls = [NSMutableArray array];
+    for (Str rest = paths; len(rest) > 0;) {
+        int k = 0;
+        while (k < len(rest) && rest.s[k] != '\n') {
+            k++;
+        }
+        Str line(rest.s, k);
+        int skip = k < len(rest) ? k + 1 : k;
+        rest = Str(rest.s + skip, len(rest) - skip);
+        if (len(line) > 0) {
+            [urls addObject:[NSURL fileURLWithPath:PromptNSString(line)]];
+        }
+    }
+    if (urls.count == 0) {
+        return false;
+    }
+    NSPasteboard* pb = [NSPasteboard generalPasteboard];
+    [pb clearContents];
+    if (![pb writeObjects:urls]) {
+        return false;
+    }
+    if (cut) {
+        [pb.pasteboardItems.firstObject setString:@"cut" forType:kCutPathsType];
+    }
+    return true;
+}
+
+bool PlatClipboardHasPaths(Window* win) {
+    (void)win;
+    return [[NSPasteboard generalPasteboard]
+        canReadObjectForClasses:@[ [NSURL class] ]
+                        options:@{
+                            NSPasteboardURLReadingFileURLsOnlyKey : @YES
+                        }];
+}
+
+void PlatClipboardClear(Window* win) {
+    (void)win;
+    [[NSPasteboard generalPasteboard] clearContents];
+}
+
 Str PlatClipboardGetText(Arena* a, Window* win) {
     (void)win;
     NSPasteboard* pb = [NSPasteboard generalPasteboard];
@@ -251857,6 +252071,8 @@ ClipboardItem PlatClipboardGetItem(Arena* a, Window* win) {
             paths.Append(Str(path));
         }
         out.externalPaths = paths.TakeStr();
+        out.externalPathsCut =
+            [pb.pasteboardItems.firstObject stringForType:kCutPathsType] != nil;
     }
     return out;
 }
@@ -253137,6 +253353,20 @@ bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen) {
     return false;
 }
 
+bool PlatClipboardSetPaths(Window* win, Str paths, bool cut) {
+    (void)win, (void)paths, (void)cut;
+    return false;
+}
+
+bool PlatClipboardHasPaths(Window* win) {
+    (void)win;
+    return false;
+}
+
+void PlatClipboardClear(Window* win) {
+    (void)win;
+}
+
 Str PlatClipboardGetText(Arena* a, Window* win) {
     (void)win;
     if (!gInPasteEvent) {
@@ -253327,6 +253557,8 @@ struct PlatWindow {
     HCURSOR cursor = nullptr;
 
     bool firstMouse = false;
+
+    bool osPress = false;
 
     bool touchDown = false;
     bool touchScroll = false;
@@ -253729,12 +253961,14 @@ static void MouseDown(Window* win, MouseButton button, LPARAM lParam) {
     float y = PxToDip(&win->paint, GET_Y_LPARAM(lParam));
     bool first = win->plat->firstMouse;
     win->plat->firstMouse = false;
+    win->plat->osPress = true;
     PlatformInput in = InputMouseDown(
         button, x, y, ModsNow(), WindowClickCount(win, x, y, button), first);
     WindowDispatchInput(win, &in);
 }
 
 static void MouseUp(Window* win, MouseButton button, LPARAM lParam) {
+    win->plat->osPress = false;
     float x = PxToDip(&win->paint, GET_X_LPARAM(lParam));
     float y = PxToDip(&win->paint, GET_Y_LPARAM(lParam));
     PlatformInput in =
@@ -253743,6 +253977,10 @@ static void MouseUp(Window* win, MouseButton button, LPARAM lParam) {
 }
 
 static void MouseMove(Window* win, float x, float y) {
+
+    if (win->mouseDown && !win->plat->osPress) {
+        return;
+    }
     MouseButton pressed = MouseButton::Left;
     bool any = PressedButton(&pressed);
     PlatformInput in = InputMouseMove(x, y, any, pressed, ModsNow());
@@ -254637,12 +254875,96 @@ static DragOutResult DragOutResultOf(HRESULT hr, DWORD effect) {
     return DragOutResult::Canceled;
 }
 
+static DWORD DragOutEffects(const DragOutData& d) {
+    DWORD effects = DROPEFFECT_COPY;
+    if (d.allowMove) {
+        effects |= DROPEFFECT_MOVE;
+    }
+    if (d.allowLink) {
+        effects |= DROPEFFECT_LINK;
+    }
+    return effects;
+}
+
+static IDataObject* ShellPathsDataObject(Str paths) {
+    Vec<PIDLIST_ABSOLUTE> pidls;
+    bool ok = true;
+    for (Str rest = paths; ok && len(rest) > 0;) {
+        Str line = NextLine(&rest);
+        if (len(line) == 0) {
+            continue;
+        }
+        PIDLIST_ABSOLUTE pidl = ILCreateFromPathW(ToCWstrTemp(line));
+        ok = pidl != nullptr;
+        if (ok) {
+            VecAppend(pidls, pidl);
+        }
+    }
+    IDataObject* obj = nullptr;
+    if (ok && len(pidls) > 0) {
+        HRESULT hr = SHCreateDataObject(nullptr, (UINT)len(pidls),
+                                        (PCUITEMID_CHILD_ARRAY)pidls.els,
+                                        nullptr, IID_IDataObject, (void**)&obj);
+        if (FAILED(hr)) {
+            obj = nullptr;
+        }
+    }
+    for (int i = 0; i < len(pidls); i++) {
+        ILFree(pidls[i]);
+    }
+    if (!obj) {
+        return nullptr;
+    }
+    FORMATETC fmt = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    STGMEDIUM medium = {};
+    medium.tymed = TYMED_HGLOBAL;
+    medium.hGlobal = GlobalFromPaths(paths);
+    if (!medium.hGlobal || FAILED(obj->SetData(&fmt, &medium, TRUE))) {
+        if (medium.hGlobal) {
+            GlobalFree(medium.hGlobal);
+        }
+        obj->Release();
+        return nullptr;
+    }
+    return obj;
+}
+
+static bool DragOutShellPaths(DragOutRequest* req, HWND hwnd) {
+    const DragOutData& d = req->data;
+    if (len(d.paths) == 0 || len(d.text) > 0 || d.imageBytesLen > 0) {
+        return false;
+    }
+    IDataObject* data = ShellPathsDataObject(d.paths);
+    if (!data) {
+        return false;
+    }
+    IDragSourceHelper2* helper = nullptr;
+    if (SUCCEEDED(CoCreateInstance(CLSID_DragDropHelper, nullptr,
+                                   CLSCTX_INPROC_SERVER,
+                                   IID_PPV_ARGS(&helper)))) {
+        helper->SetFlags(DSH_ALLOWDROPDESCRIPTIONTEXT);
+        POINT pt = {};
+        GetCursorPos(&pt);
+        ScreenToClient(hwnd, &pt);
+        helper->InitializeFromWindow(hwnd, &pt, data);
+        helper->Release();
+    }
+    DWORD effect = DROPEFFECT_NONE;
+    HRESULT hr = SHDoDragDrop(hwnd, data, nullptr, DragOutEffects(d), &effect);
+    data->Release();
+    DragOutFinish(req, DragOutResultOf(hr, effect));
+    return true;
+}
+
 static void DragOutRun(DragOutRequest* req) {
     Window* win = req->win;
     HWND hwnd = win && win->plat ? win->plat->hwnd : nullptr;
 
     if (!hwnd || !PrimaryButtonDown()) {
         DragOutFinish(req, DragOutResult::Canceled);
+        return;
+    }
+    if (DragOutShellPaths(req, hwnd)) {
         return;
     }
     IDataObject* data = DragOutDataObjectNew(req->data);
@@ -254663,7 +254985,7 @@ static void DragOutRun(DragOutRequest* req) {
         }
     }
     DWORD effect = DROPEFFECT_NONE;
-    HRESULT hr = DoDragDrop(data, src, DROPEFFECT_COPY, &effect);
+    HRESULT hr = DoDragDrop(data, src, DragOutEffects(req->data), &effect);
     if (src->imageDrag) {
         ImageList_DragLeave(GetDesktopWindow());
         ImageList_EndDrag();
@@ -256307,41 +256629,68 @@ TempStr PromptForNewPathTemp(Window* win, const NewPathPrompt& opts) {
     return result;
 }
 
-void PlatClipboardSetText(Window* win, Str text) {
-    WCHAR* w = ToCWstrTemp(text);
-    int wn = (int)wcslen(w);
-    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE, (SIZE_T)(wn + 1) * sizeof(WCHAR));
-    if (!h) {
-        return;
-    }
-    auto* dst = (WCHAR*)GlobalLock(h);
-    if (!dst) {
-        GlobalFree(h);
-        return;
-    }
-    memcpy(dst, w, (size_t)(wn + 1) * sizeof(WCHAR));
-    GlobalUnlock(h);
-
-    HWND hwnd = Hwnd(win);
-    bool ok = false;
-    for (int i = 0; i < 16 && !ok; i++) {
+static bool ClipboardPut(HWND hwnd, const UINT* formats, HGLOBAL* hs, int n) {
+    for (int i = 0; i < 16; i++) {
         HWND owner = (i < 8 && hwnd) ? hwnd : nullptr;
         if (!OpenClipboard(owner)) {
             Sleep(8);
             continue;
         }
         EmptyClipboard();
-        if (SetClipboardData(CF_UNICODETEXT, h)) {
-            ok = true;
-            h = nullptr;
+        bool ok = true;
+        for (int k = 0; k < n; k++) {
+            if (hs[k] && SetClipboardData(formats[k], hs[k])) {
+                hs[k] = nullptr;
+            } else if (k == 0) {
+                ok = false;
+                break;
+            }
         }
         CloseClipboard();
-        if (!ok) {
-            Sleep(8);
+        if (ok) {
+            return true;
+        }
+        Sleep(8);
+    }
+    return false;
+}
+
+static void GlobalsFree(HGLOBAL* hs, int n) {
+    for (int k = 0; k < n; k++) {
+        if (hs[k]) {
+            GlobalFree(hs[k]);
         }
     }
-    if (h) {
-        GlobalFree(h);
+}
+
+void PlatClipboardSetText(Window* win, Str text) {
+    UINT formats[1] = {CF_UNICODETEXT};
+    HGLOBAL hs[1] = {GlobalFromText(text)};
+    if (hs[0]) {
+        ClipboardPut(Hwnd(win), formats, hs, 1);
+    }
+    GlobalsFree(hs, 1);
+}
+
+bool PlatClipboardSetPaths(Window* win, Str paths, bool cut) {
+    DWORD effect = cut ? DROPEFFECT_MOVE : DROPEFFECT_COPY;
+    UINT formats[2] = {CF_HDROP, ClipFormat(CFSTR_PREFERREDDROPEFFECT)};
+    HGLOBAL hs[2] = {GlobalFromPaths(paths),
+                     GlobalFromBytes(&effect, sizeof(effect))};
+    bool ok = hs[0] && ClipboardPut(Hwnd(win), formats, hs, 2);
+    GlobalsFree(hs, 2);
+    return ok;
+}
+
+bool PlatClipboardHasPaths(Window* win) {
+    (void)win;
+    return IsClipboardFormatAvailable(CF_HDROP) != FALSE;
+}
+
+void PlatClipboardClear(Window* win) {
+    if (OpenClipboard(Hwnd(win))) {
+        EmptyClipboard();
+        CloseClipboard();
     }
 }
 
@@ -256459,6 +256808,13 @@ ClipboardItem PlatClipboardGetItem(Arena* a, Window* win) {
     if (!dib) dib = GetClipboardData(CF_DIB);
     ClipboardReadDib(a, dib, &out);
     out.externalPaths = ClipboardReadPaths(a, GetClipboardData(CF_HDROP));
+    HANDLE effect = GetClipboardData(ClipFormat(CFSTR_PREFERREDDROPEFFECT));
+    auto* preferred = effect ? (const DWORD*)GlobalLock(effect) : nullptr;
+    if (preferred) {
+        out.externalPathsCut =
+            len(out.externalPaths) > 0 && (*preferred & DROPEFFECT_MOVE) != 0;
+        GlobalUnlock(effect);
+    }
     CloseClipboard();
     return out;
 }

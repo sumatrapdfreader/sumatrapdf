@@ -3964,6 +3964,7 @@ struct ClipboardItem {
     const uint8_t* imageBytes = nullptr;
     int imageBytesLen = 0;
     Str externalPaths = {};
+    bool externalPathsCut = false;
 
     bool HasImage() const { return imageBytes && imageBytesLen > 0; }
     bool HasExternalPaths() const { return len(externalPaths) > 0; }
@@ -9939,6 +9940,7 @@ double TimeNow();
 
 bool TestPlatformNow(double* out);
 bool TestPlatformClipboardWrite(Str text);
+bool TestPlatformClipboardWritePaths(Str paths, bool cut);
 bool TestPlatformClipboardRead(Arena* a, ClipboardItem* out);
 
 App* AppNew();
@@ -9951,6 +9953,12 @@ bool ClipboardSetImage(Window* win, const uint8_t* png, int pngLen);
 ClipboardItem ClipboardGetItem(Arena* a, Window* win);
 
 Str ClipboardGetText(Arena* a, Window* win);
+
+bool ClipboardSetPaths(Window* win, Str paths, bool cut);
+
+bool ClipboardHasPaths(Window* win);
+
+void ClipboardClear(Window* win);
 
 using ClipboardReadFn = void (*)(void* data, App* app, Window* win,
                                  const ClipboardItem& item);
@@ -10064,6 +10072,9 @@ struct DragOutData {
 
     float previewHotX = 0.5f;
     float previewHotY = 0.5f;
+
+    bool allowMove = false;
+    bool allowLink = false;
 };
 
 enum class DragOutResult : uint8_t {
@@ -39524,6 +39535,9 @@ void PlatWake(App* app);
 
 void PlatClipboardSetText(Window* win, Str text);
 bool PlatClipboardSetImage(Window* win, const uint8_t* png, int pngLen);
+bool PlatClipboardSetPaths(Window* win, Str paths, bool cut);
+bool PlatClipboardHasPaths(Window* win);
+void PlatClipboardClear(Window* win);
 
 WindowAppearance PlatWindowAppearance();
 void PlatWatchWindowAppearance();
