@@ -3,7 +3,7 @@
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/6502
 
 import { writeFileSync } from "node:fs";
-import { cmdId, makeTextPdf, runStandalone, tmpPath, writeAppdata } from "./util.ts";
+import { cmdId, makeTextPdf, runStandalone, tmpPath, USE_NG, writeAppdata } from "./util.ts";
 import { getClientRect, sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -11,6 +11,10 @@ const TOOLBAR_CLASS = "SUMATRA_VIRT_TOOLBAR";
 const READY_MS = 10_000;
 
 export async function testit(): Promise<void> {
+  if (USE_NG) {
+    console.log("issue-6502: orig only (ng's toolbar is drawn by GPUI, not a VirtCtrl)");
+    return;
+  }
   const pdf = tmpPath("issue-6502.pdf");
   writeFileSync(pdf, makeTextPdf("overlay toolbar margins"));
   const settings = "Toolbar = overlay\nRestoreSession = false\nCheckForUpdates = false\n";

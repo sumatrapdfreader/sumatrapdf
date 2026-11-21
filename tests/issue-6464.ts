@@ -6,7 +6,7 @@
 
 import { copyFileSync, writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient, type VirtCtrlInfo } from "./control.ts";
-import { cmdId, makeTextPdf, runStandalone, tmpPath, writeAppdata } from "./util.ts";
+import { cmdId, makeTextPdf, runStandalone, tmpPath, USE_NG, writeAppdata } from "./util.ts";
 import {
   packCoords,
   postKeyWithModifier,
@@ -301,6 +301,10 @@ async function testCtrlT(pdf: string, appdata: string): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
+  if (USE_NG) {
+    console.log("issue-6464: orig only (ng's tab bar is drawn by GPUI, not a VirtCtrl)");
+    return;
+  }
   const pdf = tmpPath("issue-6464.pdf");
   writeFileSync(pdf, makeTextPdf("home tab width"));
   const paths = [pdf];
