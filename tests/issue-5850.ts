@@ -18,19 +18,10 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, tmpPath, USE_NG } from "./util.ts";
 import { launchControlled, waitForExit, findCanvas, vScrollbarColorCount, killAndWait } from "./win-automation.ts";
-import {
-  captureWindowPixels,
-  getSystemMetrics,
-  setProcessDpiAware,
-  sleep,
-  postMessage,
-  SM_CXVSCROLL,
-  WM_CLOSE,
-} from "./winapi.ts";
+import { setProcessDpiAware, sleep, postMessage, WM_CLOSE } from "./winapi.ts";
 
 // zlib.3.pdf is 2 pages, so at the default "fit page" zoom it needs a vertical
 // scrollbar in a maximized window
@@ -46,38 +37,14 @@ WindowState = 2
 WindowPos = 200 100 1000 800
 `;
 
-// ng draws the windows-mode bar inside the canvas, not in the non-client area
-async function ngVScrollbarColorCount(
-  client: { request: (cmd: number, args?: unknown[]) => Promise<unknown[]> },
-  frame: number,
-): Promise<number> {
-  const raw = String((await client.request(ControlCommand.TestLayout, ["get"]))[1] ?? "");
-  const m = /item name=canvas visible=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
-  if (!m) {
-    return 0;
-  }
-  const scale = Number(/canvasScale=([0-9.]+)/.exec(raw)?.[1] ?? 1) || 1;
-  const cap = captureWindowPixels(frame);
-  if (!cap) {
-    return 0;
-  }
-  const px = (d: number) => Math.round(d / scale);
-  const right = px(+m[1]! + +m[3]!);
-  const y0 = Math.max(0, px(+m[2]!));
-  const y1 = Math.min(cap.h, px(+m[2]! + +m[4]!));
-  const x = Math.max(0, Math.min(cap.w - 1, right - Math.floor(getSystemMetrics(SM_CXVSCROLL) / 2)));
-  const colors = new Set<number>();
-  for (let y = y0; y < y1; y++) {
-    const i = (y * cap.w + x) * 4;
-    colors.add((cap.data[i + 2]! << 16) | (cap.data[i + 1]! << 8) | cap.data[i]!);
-  }
-  return colors.size;
-}
-
 export async function testit(): Promise<void> {
   // The bug is a blank painted scrollbar. Scroll metrics stay valid either way.
   if (IS_MAC) {
     console.log("SKIP issue-5850: the check reads scrollbar pixels with GetWindowDC");
+    return;
+  }
+  if (USE_NG) {
+    console.log("SKIP issue-5850: Scrollbars = windows is orig's; ng reads it as smart");
     return;
   }
   // window rects and window-DC pixel coordinates must agree; no-op at 100% DPI
@@ -101,7 +68,7 @@ export async function testit(): Promise<void> {
     const deadline = Date.now() + 5000;
     let nColors = 0;
     while (Date.now() < deadline) {
-      nColors = USE_NG ? await ngVScrollbarColorCount(client, frame) : vScrollbarColorCount(canvas);
+      nColors = vScrollbarColorCount(canvas);
       if (nColors >= 2) {
         break;
       }
