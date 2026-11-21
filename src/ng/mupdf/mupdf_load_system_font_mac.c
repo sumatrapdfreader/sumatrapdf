@@ -285,8 +285,22 @@ static CTFontRef create_fallback_font(int serif, int bold, int italic, unsigned 
     return font;
 }
 
+// Chinese text: Songti SC and PingFang SC, CoreText's picks, have half-width
+// curly quotes, which set Chinese text too tight (#6500); Hiragino Sans GB's
+// are full width, like Microsoft YaHei's on Windows
+static CTFontRef create_han_font(int serif, int bold, int italic) {
+    CTFontRef font = create_named_font("Hiragino Sans GB", bold, italic, 1);
+    if (font && ct_font_has_rune(font, 0x4e00)) {
+        return font;
+    }
+    if (font) {
+        CFRelease(font);
+    }
+    return create_fallback_font(serif, bold, italic, 0x4e00);
+}
+
 static fz_font* load_mac_font(fz_context* ctx, const char* name, int bold, int italic, int exact) {
-    CTFontRef font = is_cjk_body_font_alias(name, &bold) ? create_fallback_font(0, bold, italic, 0x4e00)
+    CTFontRef font = is_cjk_body_font_alias(name, &bold) ? create_han_font(0, bold, italic)
                                                          : create_named_font(name, bold, italic, exact);
     if (!font) {
         return NULL;
@@ -309,7 +323,7 @@ static fz_font* load_mac_cjk_font(fz_context* ctx, const char* name, int orderin
         font = NULL;
     }
     if (!font) {
-        font = create_fallback_font(serif, 0, 0, rune);
+        font = rune == 0x4e00 ? create_han_font(serif, 0, 0) : create_fallback_font(serif, 0, 0, rune);
     }
     if (!font) {
         return NULL;
@@ -325,7 +339,8 @@ static fz_font* load_mac_fallback_font(fz_context* ctx, int script, int language
     if (!rune) {
         return NULL;
     }
-    CTFontRef font = create_fallback_font(serif, bold, italic, rune);
+    CTFontRef font = script == UCDN_SCRIPT_HAN ? create_han_font(serif, bold, italic)
+                                               : create_fallback_font(serif, bold, italic, rune);
     if (!font) {
         return NULL;
     }
