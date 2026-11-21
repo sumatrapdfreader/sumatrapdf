@@ -10337,6 +10337,17 @@ inline WindowButtonSupport WindowGetButtonSupport(Window*) {
 }
 #endif
 
+enum class MenuRole : uint8_t {
+    None,
+    Services,
+    Hide,
+    HideOthers,
+    ShowAll,
+    Minimize,
+    Zoom,
+    BringAllToFront,
+};
+
 struct MenuRow {
     Str label = {};
 
@@ -10349,6 +10360,7 @@ struct MenuRow {
     int submenuN = 0;
 
     const char* stroke = nullptr;
+    MenuRole role = MenuRole::None;
 };
 
 struct MenuDef {
@@ -10362,6 +10374,8 @@ struct MenuDef {
 bool AppHasMenuBar();
 
 void AppSetMenus(App* app, const MenuDef* menus, int n);
+
+void AppSetOsFullScreenMenuItem(bool shown);
 
 void AppSetMenuBarVisible(bool visible);
 
@@ -39691,6 +39705,7 @@ struct PlatMenuItem {
 
     const char* key = nullptr;
     Modifiers keyMods = {};
+    MenuRole role = MenuRole::None;
 };
 
 #if GPUI_OS_WINDOWS || GPUI_OS_MAC
@@ -39714,6 +39729,8 @@ void PlatSetAppMenu(App* app, const PlatMenuItem* items, int n);
 
 void PlatSetMenuBarVisible(bool visible);
 
+void PlatSetOsFullScreenMenuItem(bool shown);
+
 #if GPUI_OS_WINDOWS || GPUI_OS_LINUX || GPUI_OS_WASM
 inline bool PlatHasAppMenu() {
     return false;
@@ -39723,6 +39740,9 @@ inline void PlatSetAppMenu(App* app, const PlatMenuItem* items, int n) {
 }
 inline void PlatSetMenuBarVisible(bool visible) {
     (void)visible;
+}
+inline void PlatSetOsFullScreenMenuItem(bool shown) {
+    (void)shown;
 }
 #endif
 
