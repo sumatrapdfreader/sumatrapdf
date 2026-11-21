@@ -1124,6 +1124,11 @@ static void ShowTtsVoiceMenu(MainWindow* win, gp::Ctx* cx) {
 static gp::El* ToolbarReadAloudGroup(MainWindow* win, gp::Ctx* cx, gp::El* b, gp::El* icon, Color fg, bool enabled) {
     Toolbar* tb = Tb(win);
     ToolbarUI* ui = Ui(win);
+    // the voices are listed once the menu is open
+    gp::PopupMenuState* ttsSt = ui->ttsPopup.Get(cx);
+    if (ttsSt && ttsSt->open) {
+        ReadAloudLoadVoices();
+    }
     DeleteMenuModel(ui->ttsMenu);
     ui->ttsMenu = new MenuModel();
     RebuildReadAloudMenu(win, ui->ttsMenu);

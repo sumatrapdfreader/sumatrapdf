@@ -58,6 +58,16 @@ static const Vec<TtsVoiceInfo>& ReadAloudVoices() {
     return gReadAloudVoices;
 }
 
+// Lists the voices when a Read Aloud menu opens, not at startup: that starts the
+// speech engine (SAPI, audio, ~6 MB and 2 threads). True if it loaded them now.
+bool ReadAloudLoadVoices() {
+    if (gReadAloudVoicesValid) {
+        return false;
+    }
+    ReadAloudVoices();
+    return true;
+}
+
 void ReadAloudFreeVoiceCache() {
     TtsFreeVoices(gReadAloudVoices);
     gReadAloudVoicesValid = false;
@@ -730,7 +740,11 @@ static void BuildReadAloudVoiceMenuItems(MenuModel* voiceMenu) {
     MenuAppendItem(voiceMenu, StrL("System default"), CmdTtsVoiceDefault, true, len(currentVoiceId) == 0);
     MenuAppendSeparator(voiceMenu);
 
-    const Vec<TtsVoiceInfo>& voices = ReadAloudVoices();
+    // a native menu bar (macOS) must hold the voices before it opens
+    if (AppShellNativeMenu()) {
+        ReadAloudLoadVoices();
+    }
+    const Vec<TtsVoiceInfo>& voices = gReadAloudVoices;
 
     Str lastLang = {};
 

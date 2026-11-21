@@ -608,6 +608,8 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
                 if (subMenuDef == menuDefReadAloud) {
                     RebuildReadAloudMenu(ctx->win, subMenu);
                 } else if (subMenuDef == menuDefContextReadAloud) {
+                    // a context menu is built as it opens
+                    ReadAloudLoadVoices();
                     RebuildReadAloudMenu(ctx->win, subMenu, true, ctx->win->contextMenuPtValid);
                 }
             }

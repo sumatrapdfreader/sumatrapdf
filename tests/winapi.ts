@@ -236,6 +236,8 @@ const kernel32 = loadDll("kernel32.dll", {
   CreateToolhelp32Snapshot: { args: [FFIType.u32, FFIType.u32], returns: FFIType.u64 },
   Process32FirstW: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
   Process32NextW: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
+  Module32FirstW: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
+  Module32NextW: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
   OpenProcess: { args: [FFIType.u32, FFIType.bool, FFIType.u32], returns: FFIType.u64 },
   TerminateProcess: { args: [FFIType.u64, FFIType.u32], returns: FFIType.bool },
   WaitForSingleObject: { args: [FFIType.u64, FFIType.u32], returns: FFIType.u32 },
@@ -2422,6 +2424,34 @@ export function listPidsByExeName(exeName: string): number[] {
       }
     }
     return pids;
+  } finally {
+    kernel32.symbols.CloseHandle(snap);
+  }
+}
+
+const TH32CS_SNAPMODULE = 0x00000008;
+// x64 MODULEENTRY32W: szModule (WCHAR[256]) at 48, szExePath (WCHAR[260]) after it
+const MODULEENTRY32W_SIZE = 1080;
+const MODULEENTRY32W_NAME = 48;
+
+// lower-case names of the DLLs loaded in pid, e.g. "sapi.dll"
+export function listProcessModules(pid: number): string[] {
+  const snap = kernel32.symbols.CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
+  if (!snap || snap === INVALID_HANDLE_VALUE) {
+    return [];
+  }
+  try {
+    const buf = new Uint8Array(MODULEENTRY32W_SIZE);
+    new DataView(buf.buffer).setUint32(0, MODULEENTRY32W_SIZE, true);
+    const names: string[] = [];
+    for (
+      let ok = kernel32.symbols.Module32FirstW(snap, ptr(buf));
+      ok;
+      ok = kernel32.symbols.Module32NextW(snap, ptr(buf))
+    ) {
+      names.push(readWideZ(buf, MODULEENTRY32W_NAME).toLowerCase());
+    }
+    return names;
   } finally {
     kernel32.symbols.CloseHandle(snap);
   }

@@ -210,6 +210,7 @@ void ReadAloudSetSpeedIdx(int idx);
 #if defined(SUMATRA_NG)
 void RebuildReadAloudMenu(MainWindow* win, MenuModel* menu, bool includeCursorItem = false,
                           bool canReadFromCursor = false);
+bool ReadAloudLoadVoices();
 #else
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem = false, bool canReadFromCursor = false);
 #endif

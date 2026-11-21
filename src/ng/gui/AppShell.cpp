@@ -1955,6 +1955,11 @@ static gp::El* BuildMenuBar(ShellView* self, gp::Ctx* cx) {
         MenuAccelText at = ParseMenuAccelTextTemp(it.title);
         gp::Str label = GpuiDup(cx->a, at.display);
         titles[nTitles++] = {label, at};
+        // the Read Aloud menu lists the voices once it is open
+        bool isOpen = state && state->selected == barIdx;
+        if (isOpen && MenuContainsCmd(it.submenu, CmdTtsMenuReadCurrentPage) && ReadAloudLoadVoices()) {
+            RebuildReadAloudMenu(win, it.submenu);
+        }
         gpc::PopupMenu* popup = BuildPopup(cx, it.submenu, id, cues);
         if (state && state->selected == barIdx && self->menuPopupIdx < 0) {
             gp::PopupMenuState* popupState = popup->state.Get(cx);
