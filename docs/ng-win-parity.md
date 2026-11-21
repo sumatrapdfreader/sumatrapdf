@@ -46,6 +46,7 @@ What was compared:
 | No elapsed time on the Loading message ("Loading x ... 3s")                                          | `a593313927`              | `open-slow-drive`                 |
 | Fullscreen / presentation kept the old size after a display change                                   | `e40f947d91`              | `fullscreen-display-change`       |
 | The click activating a presentation also turned the page                                             | `4b964859e4`              | `presentation-activating-click`   |
+| An RDP connect changing the DPI without WM_DPICHANGED (#4581) kept the old scale                     | (this commit)             | `dpi-display-change`              |
 | Edit Image in Another App, Replace Image Windows only                                                | `c7b93dcfea` `e09072172a` | `replace-image` (Windows)         |
 | SumatraPDF Web couldn't transfer files off Windows (now libcurl on posix)                            | `7e3b6bcad2` `dacf000946` | `ad-hoc-http-transfer`            |
 | ng-only `cli markdown` missed slightly lowered subscripts                                            | `a8542f1a25`              | `cli-markdown-cases`              |
@@ -93,8 +94,6 @@ Failures that were the test, not ng (fixed in the tests): `issue-3585`
 - Not compiled on macOS yet: gpui's `WindowAtPoint` (Cocoa) and ng's new code,
   including the libcurl transfers and Edit Image's `open` launch. Linux builds
   under WSL; its transfers are tested in `test_util`, not through the dialog.
-- Display changes: the fullscreen re-fit is ported; orig's extra DPI re-check
-  after an RDP connect (#4581) is not.
 
 ## Smaller default differences
 
