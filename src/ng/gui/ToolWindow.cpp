@@ -831,6 +831,14 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
             out.Append(fmt("\n%s made=%d rect=%d,%d,%d,%d", Str(tw->desc.name), tw->gw ? 1 : 0, r.x, r.y, r.dx, r.dy));
 #if !OS_WIN
             out.Append(fmt(" title='%s'", tw->title));
+            // the ids TestWindows gives windows here, for tests that wait for a dialog
+            if (tw->gw) {
+                int owner = tw->owner ? tw->owner->testId : 0;
+                gp::Window* mainGw = OwnerGpui(tw->owner);
+                out.Append(fmt(" hwnd=%d owner=%d visible=%d active=%d", tw->testId, owner,
+                               ToolWindowIsVisible(tw) ? 1 : 0, ToolWindowIsActive(tw) ? 1 : 0));
+                out.Append(fmt(" mainEnabled=%d", mainGw && gp::WindowIsEnabled(mainGw) ? 1 : 0));
+            }
 #else
             if (tw->gw) {
                 gp::Window* gw = tw->gw;
