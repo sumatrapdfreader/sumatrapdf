@@ -13,6 +13,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_WIN } from "./host.ts";
 import { EXE, ROOT, runStandalone, tmpPath, assemblePdf } from "./util.ts";
 
 const PDF = join(ROOT, "tests", "issue-4398.pdf");
@@ -75,12 +76,15 @@ export async function testit(): Promise<void> {
 
 if (import.meta.main) {
   writeFileSync(PDF, makePageGridPdf());
+  // a copy for the bug folder; elsewhere the Windows path is a file name in the cwd
   const bugs = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-4398.pdf";
-  try {
-    writeFileSync(bugs, makePageGridPdf());
-    console.log(`wrote ${PDF} and ${bugs}`);
-  } catch {
-    console.log(`wrote ${PDF}`);
+  let wroteBugs = false;
+  if (IS_WIN) {
+    try {
+      writeFileSync(bugs, makePageGridPdf());
+      wroteBugs = true;
+    } catch {}
   }
+  console.log(wroteBugs ? `wrote ${PDF} and ${bugs}` : `wrote ${PDF}`);
   await runStandalone(testit);
 }
