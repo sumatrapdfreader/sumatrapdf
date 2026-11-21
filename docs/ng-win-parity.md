@@ -73,8 +73,9 @@ Failures that were the test, not ng (fixed in the tests): `issue-3585`
 - `-html-backend` / IE fallback: ng renders CHM / markdown with WebView2 only.
 - Debug-only flags `-unit-tests`, `-test-render-page`, `-test-plugin` (ng has
   `test_util`).
-- Screen readers: the document is one text element; orig also has a child
-  element per page.
+- Screen readers: the per-page elements are Windows only. They need gpui's
+  document parts (gpui-kit-cpp `2b509eab`, branch `a11y-pages`, not yet
+  vendored), which only the UIA bridge exposes.
 - Touch long-press is Windows only: gpui emits `TouchEvent` only there. Pen
   input still takes the mouse path in ng.
 - Off Windows, SumatraPDF Web can't transfer files: the HTTP helpers it uses

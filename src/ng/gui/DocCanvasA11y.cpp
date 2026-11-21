@@ -1,9 +1,10 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: orig's src/uia/DocumentProvider.cpp. The canvas is an accessibility
-// document (UI Automation, AT-SPI, NSAccessibility) whose text is the text of
-// all pages. It is extracted when a screen reader first asks, not per frame.
+// ng: orig's src/uia/DocumentProvider.cpp and PageProvider.cpp. The canvas is
+// an accessibility document (UI Automation, AT-SPI, NSAccessibility) whose text
+// is the text of all pages, with a part per page. Both are read when a screen
+// reader asks, not per frame.
 
 #include "gui/GpuiBridge.h"
 #include "base/File.h"
@@ -27,6 +28,8 @@ struct DocA11y {
     int layoutGen = 0;
     int pageCount = 0;
     u64 textRevision = 0;
+    // the canvas in window coordinates, written by layout
+    gp::Bounds canvasBounds;
 
     bool built = false;
     // pages joined by '\n'
@@ -132,6 +135,51 @@ static u64 SelectionRevision(DisplayModel* dm) {
     return MurmurHash2(v, (int)sizeof(v)) | 1;
 }
 
+static int DocA11yPageCount(void* data) {
+    DocA11y* a = LiveDocA11y(data);
+    return a ? a->pageCount : 0;
+}
+
+// orig's PageProvider: "Page N"
+static gp::Str DocA11yPageName(void* data, int part) {
+    if (!LiveDocA11y(data)) {
+        return {};
+    }
+    return ToGpui(fmt("Page %d", part + 1));
+}
+
+static gp::Str DocA11yPageText(void* data, int part) {
+    DocA11y* a = LiveDocA11y(data);
+    if (!a) {
+        return {};
+    }
+    return ToGpui(a->engine->GetTextForPage(part + 1));
+}
+
+// the page's pageOnScreen, from canvas pixels to window dips
+static bool DocA11yPageBounds(void* data, int part, gp::Bounds* out) {
+    DocA11y* a = LiveDocA11y(data);
+    const PageInfo* page = a ? a->dm->GetPageInfo(part + 1) : nullptr;
+    if (!page) {
+        return false;
+    }
+    float k = CanvasScale(a->win);
+    Rect r = page->pageOnScreen;
+    *out = {a->canvasBounds.x + (float)r.x * k, a->canvasBounds.y + (float)r.y * k, (float)r.dx * k, (float)r.dy * k};
+    return true;
+}
+
+static bool DocA11yPageRange(void* data, int part, int* start, int* end) {
+    DocA11y* a = LiveDocA11y(data);
+    if (!a) {
+        return false;
+    }
+    BuildText(a);
+    *start = a->pageStart[part];
+    *end = *start + a->pageLen[part];
+    return true;
+}
+
 // per frame: cheap, the text is only built by DocA11yText
 void DocCanvasA11y(MainWindow* win, gp::Ctx* cx, gp::El* canvas) {
     DisplayModel* dm = win->AsFixed();
@@ -164,6 +212,12 @@ void DocCanvasA11y(MainWindow* win, gp::Ctx* cx, gp::El* canvas) {
     src.data = a;
     src.textRevision = a->textRevision;
     src.selectionRevision = SelectionRevision(dm);
+    src.partCount = &DocA11yPageCount;
+    src.partName = &DocA11yPageName;
+    src.partText = &DocA11yPageText;
+    src.partBounds = &DocA11yPageBounds;
+    src.partRange = &DocA11yPageRange;
+    canvas->BoundsOut(&a->canvasBounds);
     // orig: the file name, AutomationId "Document"
     Str name = path::GetBaseNameTemp(engine->FilePath());
     canvas->AccessibilityId(GStrL("Document"))->AriaLabel(GpuiDup(cx->a, name))->AccessibilityDocument(src);

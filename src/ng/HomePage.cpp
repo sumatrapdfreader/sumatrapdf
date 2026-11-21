@@ -1486,13 +1486,18 @@ static TempStr HomeSearchCueTemp(int nFiles) {
     return str::ReplaceTemp(cue, StrL("Ctrl + F"), key);
 }
 
+// orig's StartPageProvider: what screen readers see when no document is shown
+static gp::El* StartPageA11y(gp::El* page) {
+    return page->Role(gp::AccessibilityRole::Pane)->AriaLabel(GStrL("Start Page"));
+}
+
 gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     EnsureHomeView(win, cx);
     bool showStartPage = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gSettings &&
                          SettingsRememberOpenedFiles() && gSettings->showStartPage;
     if (!showStartPage) {
         Ui(win)->filesLaidOut = true;
-        return AboutPageBuild(win, cx);
+        return StartPageA11y(AboutPageBuild(win, cx));
     }
     EnsureTipsParsed();
 
@@ -1755,6 +1760,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                        ->OnMouseDown(gp::ListenTo(Ui(win)->view, &HomeView::OnPageDown))
                        ->OnMouseUp(gp::ListenTo(Ui(win)->view, &HomeView::OnPageUp))
                        ->Child(root);
+    StartPageA11y(wrap);
     // orig's UpdateHomeOverlayScrollbar: the canvas' overlay bar, only in the
     // smart / overlay modes, along the whole right edge of the canvas
     int totalContentDy = HomeTotalContentDy(h);

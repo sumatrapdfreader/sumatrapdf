@@ -365,6 +365,23 @@ export function makeTopBottomPdf(pageCount: number): Buffer {
   return Buffer.from(assemblePdf(objs, { header: "%PDF-1.5\n" }), "latin1");
 }
 
+// A page per line, each in 18pt Helvetica at (72, 700).
+export function makeLinesPdf(lines: string[]): Buffer {
+  const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "", HELVETICA];
+  const kids: string[] = [];
+  for (const line of lines) {
+    const pageNum = objs.length + 1;
+    kids.push(`${pageNum} 0 R`);
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
+        `/Resources << /Font << /F1 3 0 R >> >> /Contents ${pageNum + 1} 0 R >>`,
+    );
+    objs.push(contentStream(`BT /F1 18 Tf 72 700 Td (${line}) Tj ET`));
+  }
+  objs[1] = `<< /Type /Pages /Kids [${kids.join(" ")}] /Count ${lines.length} >>`;
+  return Buffer.from(assemblePdf(objs, { header: "%PDF-1.5\n" }), "latin1");
+}
+
 // One page with `line` in 18pt Helvetica at (72, 700). Objects 4, 5, 7-9, 11
 // and 12 are null: tests that add annotations rely on the object numbering.
 export function makeTextPdf(line: string): Buffer {
