@@ -933,6 +933,27 @@ export async function testit(): Promise<void> {
     );
     const sx = save3.x + Math.floor(save3.dx / 2);
     const sy = save3.y + Math.floor(save3.dy / 2);
+    // ng: a real cursor over the frame (where the previous test left it) gets
+    // moved off, and the leave that sends is a leave of Save, which re-arms its
+    // hover. Move it off first, keeping a margin from a full-screen frame, and
+    // let the moves queued at the old spot arrive before ours.
+    const kParkMargin = 16;
+    const kQueuedMovesMs = 300;
+    let cursorOff = true;
+    if (USE_NG) {
+      const fr = getWindowRect(frame);
+      const avoid = {
+        left: fr.left - kParkMargin,
+        top: fr.top - kParkMargin,
+        right: fr.right + kParkMargin,
+        bottom: fr.bottom + kParkMargin,
+      };
+      cursorOff = parkCursorAway([avoid]);
+      if (!cursorOff) {
+        console.log("  can't move the cursor off the window: skipping 'stays closed on Save'");
+      }
+      await sleep(kQueuedMovesMs);
+    }
     await rightClickToolbar(client, toolbar, sx, sy);
     await waitMenu(client, pid, true, "right-clicking Save did not open the drop-down before the icon click");
     if (USE_NG) {
@@ -941,12 +962,6 @@ export async function testit(): Promise<void> {
       await clickAt(toolbar, sx, sy, 0);
     }
     await waitMenu(client, pid, false, "clicking the Save icon did not close the drop-down");
-    // ng: Windows keeps sending moves at the real cursor; over the frame they
-    // are a leave of Save, which re-arms its hover between our posted moves
-    const cursorOff = !USE_NG || parkCursorAway([getWindowRect(frame)]);
-    if (!cursorOff) {
-      console.log("  can't move the cursor off the window: skipping 'stays closed on Save'");
-    }
     const stayClosedUntil = cursorOff ? Date.now() + 1500 : 0;
     while (Date.now() < stayClosedUntil) {
       await hoverToolbar(client, toolbar, sx, sy);
