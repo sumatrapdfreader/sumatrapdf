@@ -627,6 +627,7 @@ import { testit as fileLinkNoDest } from "./file-link-no-dest.ts";
 import { testit as annotTextPopupReload } from "./annot-text-popup-reload.ts";
 import { testit as controlPipeBusy } from "./control-pipe-busy.ts";
 import { testit as touchLongPressSelect } from "./touch-long-press-select.ts";
+import { testit as penInput } from "./pen-input.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -1250,6 +1251,7 @@ export const tests: NamedTest[] = [
   ["trackpad-pinch-zoom", trackpadPinchZoom],
   ["page-links-fresh-engine", pageLinksFreshEngine],
   ["touch-long-press-select", touchLongPressSelect],
+  ["pen-input", penInput],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

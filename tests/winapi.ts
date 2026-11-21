@@ -111,6 +111,8 @@ const user32 = loadDll("user32.dll", {
   GetDpiForWindow: { args: [FFIType.ptr], returns: FFIType.u32 },
   InitializeTouchInjection: { args: [FFIType.u32, FFIType.u32], returns: FFIType.bool },
   InjectTouchInput: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
+  CreateSyntheticPointerDevice: { args: [FFIType.u32, FFIType.u32, FFIType.u32], returns: FFIType.u64 },
+  InjectSyntheticPointerInput: { args: [FFIType.u64, FFIType.ptr, FFIType.u32], returns: FFIType.bool },
   GetCursorPos: { args: [FFIType.ptr], returns: FFIType.bool },
   GetGUIThreadInfo: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
   GetCursorInfo: { args: [FFIType.ptr], returns: FFIType.bool },
@@ -1741,6 +1743,59 @@ export function injectTouch(x: number, y: number, flag: number): boolean {
   v.setInt32(32, x, true);
   v.setInt32(36, y, true);
   return user32.symbols.InjectTouchInput(1, ptr(buf));
+}
+
+// Pen injection through a synthetic pointer device (Windows 10 1809+).
+// flag is POINTER_FLAG_DOWN / UPDATE / UP; an UPDATE with contact false is
+// the pen hovering in range, with inRange false too it leaves. A pen flips
+// to its eraser end only out of range.
+export const PEN_FLAG_BARREL = 0x1;
+// the eraser end; Windows adds PEN_FLAG_ERASER while it touches
+export const PEN_FLAG_INVERTED = 0x2;
+export type PenOpts = { contact?: boolean; inRange?: boolean; penFlags?: number };
+const PT_PEN = 3;
+const POINTER_FLAG_FIRSTBUTTON = 0x10;
+const POINTER_FLAG_SECONDBUTTON = 0x20;
+const POINTER_FEEDBACK_NONE = 3;
+// sizeof(POINTER_TYPE_INFO) on x64: type, padding, then the POINTER_PEN_INFO
+// union member (POINTER_INFO is 96 bytes, penFlags follows it)
+const kPointerTypeInfoSize = 152;
+const kPenInfoOffset = 8;
+let penDevice = 0n;
+
+export function injectPen(x: number, y: number, flag: number, opts: PenOpts = {}): boolean {
+  if (!IS_WIN) {
+    return false;
+  }
+  if (!penDevice) {
+    penDevice = BigInt(user32.symbols.CreateSyntheticPointerDevice(PT_PEN, 1, POINTER_FEEDBACK_NONE));
+    if (!penDevice) {
+      return false;
+    }
+  }
+  const penFlags = opts.penFlags ?? 0;
+  const contact = flag !== POINTER_FLAG_UP && (opts.contact ?? true);
+  let flags = flag;
+  if (opts.inRange ?? true) {
+    flags |= POINTER_FLAG_INRANGE;
+  }
+  if (contact) {
+    flags |= POINTER_FLAG_INCONTACT;
+    flags |= penFlags & PEN_FLAG_BARREL ? POINTER_FLAG_SECONDBUTTON : POINTER_FLAG_FIRSTBUTTON;
+  }
+  const buf = new Uint8Array(kPointerTypeInfoSize);
+  const v = new DataView(buf.buffer);
+  v.setUint32(0, PT_PEN, true);
+  const o = kPenInfoOffset;
+  v.setUint32(o, PT_PEN, true);
+  v.setUint32(o + 12, flags, true);
+  v.setInt32(o + 32, x, true);
+  v.setInt32(o + 36, y, true);
+  v.setUint32(o + 96, penFlags, true);
+  // PEN_MASK_PRESSURE, half way
+  v.setUint32(o + 100, 1, true);
+  v.setUint32(o + 104, contact ? 512 : 0, true);
+  return user32.symbols.InjectSyntheticPointerInput(penDevice as unknown as number, ptr(buf), 1);
 }
 
 // The real cursor position, in screen (physical, when this process is DPI
