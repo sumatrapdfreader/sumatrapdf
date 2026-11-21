@@ -158,6 +158,34 @@ static void RefitFullScreen(MainWindow* win) {
     SetWindowPos(hwnd, nullptr, fsRect.x, fsRect.y, fsRect.dx, fsRect.dy, flags);
 }
 
+// orig's MaybeRefreshAllWindowsDpi: an RDP connect can change the DPI with no
+// WM_DPICHANGED, only a WM_DISPLAYCHANGE (#4581)
+static void RefreshDpi(MainWindow* win) {
+    NativeWin* nw = NativeWinOf(win);
+    if (!win || !nw) {
+        return;
+    }
+    int dpi = RoundUp(DpiGetForHwnd(nw->hwnd), 4);
+    if (dpi <= 0 || dpi == win->frameDpi) {
+        return;
+    }
+    logf("RefreshDpi: hwnd=0x%p old=%d new=%d\n", (void*)nw->hwnd, win->frameDpi, dpi);
+    AppShellOnDpiChanged(win, dpi);
+}
+
+static void RefreshDpiLater(MainWindow* win) {
+    if (IsMainWindowValidAndNotClosing(win)) {
+        RefreshDpi(win);
+    }
+}
+
+// a check now and one queued: GetDpiForWindow can still report the pre-RDP
+// value when WM_DISPLAYCHANGE first arrives
+static void RefreshDpiAfterDisplayChange(MainWindow* win) {
+    RefreshDpi(win);
+    uitask::Post(MkFunc0<MainWindow>(RefreshDpiLater, win), "DpiAfterDisplayChange");
+}
+
 Rect AppShellWindowScreenRect(MainWindow* win) {
     HWND hwnd = AppShellNativeHwnd(win);
     return hwnd ? HwndWindowRect(hwnd) : Rect{};
@@ -715,6 +743,7 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             break;
         case WM_DISPLAYCHANGE:
             RefitFullScreen(WinOf(hwnd));
+            RefreshDpiAfterDisplayChange(WinOf(hwnd));
             break;
         case WM_MOUSEACTIVATE:
             // orig: the click that activates a presentation only activates it,
@@ -773,6 +802,7 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             UpdateThemeAfterHighContrastChange();
             // a work area change can come without WM_DISPLAYCHANGE
             RefitFullScreen(WinOf(hwnd));
+            RefreshDpiAfterDisplayChange(WinOf(hwnd));
             break;
         case WM_QUERYENDSESSION:
             // block logoff/shutdown while a print job runs. The reason shows
@@ -921,6 +951,10 @@ void AppShellEnableFileDrop(MainWindow* win) {
     // WM_DROPFILES, for when gpui's OLE drop target could not be registered
     DragAcceptFiles(hwnd, TRUE);
     SetWindowSubclass(hwnd, ShellSubclass, 1, 0);
+    // what RefreshDpiAfterDisplayChange compares against (orig sets it on create)
+    if (win->frameDpi <= 0) {
+        win->frameDpi = RoundUp(DpiGetForHwnd(hwnd), 4);
+    }
     RegisterGlobalHotkeys(hwnd);
     // SAPI posts its word-boundary / end-of-stream events to a window
     TtsSetNotifyWindow(hwnd, kWmTtsEvent, 0, 0);

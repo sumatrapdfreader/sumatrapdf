@@ -119,6 +119,16 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
         return finish(layoutDpi == 240 && windowDpi == 240 && fontDy >= 24 ? 0 : 1);
     }
 
+    // "override 125": DpiGetForHwnd reports 125% with no WM_DPICHANGED, as
+    // after an RDP connect; "override 0" goes back to the real DPI
+    if (str::StartsWith(action, StrL("override "))) {
+        int pct = 0;
+        str::Parse(Str(action.s + 9, len(action) - 9), "%d", &pct);
+        gDpiOverride = pct;
+        out.Append(fmt("override=%d\n", pct));
+        return finish(0);
+    }
+
     if (!str::Eq(action, StrL("state")) || len(gWindows) == 0) {
         out.Append(StrL("ERROR TestDpi expects hidden or state\n"));
         return finish(1);
