@@ -192,6 +192,8 @@ export enum ControlCommand {
   // [owner= name=] title=), or with "target", <hwnd> aims the requests that follow at
   // that frame (0: the first)
   TestWindows = 172,
+  // [path, value]: sets a setting the way the palette's "= settings" rows do
+  TestSetSetting = 173,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

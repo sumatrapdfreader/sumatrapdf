@@ -478,6 +478,7 @@ import { testit as ddeGetMousePos } from "./dde-get-mouse-pos.ts";
 import { testit as copyRectSelectionImage } from "./copy-rect-selection-image.ts";
 import { testit as staleCacheCleanup } from "./stale-cache-cleanup.ts";
 import { testit as browserDocTheme } from "./browser-doc-theme.ts";
+import { testit as useTabsTransition } from "./use-tabs-transition.ts";
 import { testit as commandPaletteSettings } from "./command-palette-settings.ts";
 import { testit as settingsRestoreDefault } from "./settings-restore-default.ts";
 import { testit as palettePrefixKeys } from "./palette-prefix-keys.ts";
@@ -1053,6 +1054,7 @@ export const tests: NamedTest[] = [
   ["copy-rect-selection-image", copyRectSelectionImage],
   ["stale-cache-cleanup", staleCacheCleanup],
   ["browser-doc-theme", browserDocTheme],
+  ["use-tabs-transition", useTabsTransition],
   ["command-palette-settings", commandPaletteSettings],
   ["settings-restore-default", settingsRestoreDefault],
   ["issue-6287", issue6287],

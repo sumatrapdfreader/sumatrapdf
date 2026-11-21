@@ -763,6 +763,8 @@ enum class ControlCmd : u16 {
     // [ms]: every document open waits this long first, like a sleeping drive
     TestLoadDelay = 171,
     TestWindows = 172,
+    // [path, value]: sets a setting the way the palette's "= settings" rows do
+    TestSetSetting = 173,
     // [action, pageNo, x, y, length, unit]: drives the Measure tool
     TestMeasurement = 159,
     // [replace <path> | edit, pageNo, imageIdx]: an image embedded in a PDF
@@ -2121,6 +2123,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 TabsSelect(win, a);
             }
             AppendTestResult(req, 0, StripGroupsStateTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestSetSetting: {
+            bool ok = SetSettingsValueFromStr(StringArg(req, 0), StringArg(req, 1));
+            AppendTestResult(req, ok ? 0 : 1, ok ? StrL("OK") : StrL("ERROR unknown setting"));
             break;
         }
 

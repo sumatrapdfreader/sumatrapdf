@@ -359,8 +359,62 @@ void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
     }
 }
 
+// orig's: the paths of every document tab, then every window but one closes.
+// A window that is printing is left alone.
+static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* tab : w->Tabs()) {
+            if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+                continue;
+            }
+            paths.Append(tab->filePath);
+        }
+    }
+    // closing the windows below must not overwrite this session snapshot
+    ScheduleSaveSettings();
+    FlushScheduledSaveSettings();
+
+    // quitIfLast=false keeps the last one alive, as an empty window
+    Vec<MainWindow*> toClose(gWindows);
+    for (MainWindow* w : toClose) {
+        if (w->printThread) {
+            continue;
+        }
+        CloseWindow(w, false, false);
+    }
+    return len(gWindows) > 0 ? gWindows[0] : nullptr;
+}
+
+// UseTabs turned off: each document in a window of its own
+static void TransitionToNoTabs() {
+    StrVec paths;
+    MainWindow* surviving = CollectPathsAndCloseWindows(paths);
+    for (int i = 0; i < len(paths); i++) {
+        MainWindow* win = (i == 0 && surviving) ? surviving : CreateAndShowMainWindow(nullptr);
+        if (win) {
+            LoadDocument(win, paths[i]);
+            win->RedrawAll(true);
+        }
+    }
+}
+
+// UseTabs turned on: every document a tab of one window
+static void TransitionToTabs() {
+    StrVec paths;
+    MainWindow* win = CollectPathsAndCloseWindows(paths);
+    if (!win && len(paths) > 0) {
+        win = CreateAndShowMainWindow(nullptr);
+    }
+    if (!win) {
+        return;
+    }
+    for (Str path : paths) {
+        LoadDocument(win, path);
+    }
+    win->RedrawAll(true);
+}
+
 // orig's, minus what this port has no service for: ExplorerQuickLook (step 14)
-// and the UseTabs <-> windows transition (it closes and reopens every window)
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
     Settings* p = gSettings;
 
@@ -429,6 +483,16 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
         RebuildMenuBar(w);
         w->lastViewPortSize = Size{};
         w->RedrawAll(true);
+    }
+
+    // UseTabs converts existing windows <-> tabs (closes and reopens windows);
+    // post it so it runs after the settings dialog has been torn down
+    if (before.useTabs != p->useTabs) {
+        if (p->useTabs) {
+            uitask::Post(MkFunc0Void(TransitionToTabs), "TransitionToTabs");
+        } else {
+            uitask::Post(MkFunc0Void(TransitionToNoTabs), "TransitionToNoTabs");
+        }
     }
 }
 

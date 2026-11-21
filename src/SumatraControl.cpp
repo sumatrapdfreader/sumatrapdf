@@ -726,6 +726,8 @@ enum class ControlCmd : u16 {
     // 170 is ng's TestCaptureWindow
     // [ms]: every document open waits this long first, like a sleeping drive
     TestLoadDelay = 171,
+    // [path, value]: sets a setting the way the palette's "= settings" rows do
+    TestSetSetting = 173,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1432,6 +1434,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSetSetting: {
+            bool ok = SetSettingsValueFromStr(StringArg(req, 0), StringArg(req, 1));
+            AppendTestResult(req, ok ? 0 : 1, ok ? StrL("OK") : StrL("ERROR unknown setting"));
             break;
         }
 
