@@ -2430,9 +2430,11 @@ void ShowPageInfoIfWanted(MainWindow* win) {
         RemoveNotificationsForGroup(win, kNotifPageInfo);
         return;
     }
+    // orig's PageNoChanged / ZoomChanged pass the page they report: at the end
+    // of a document that is the last page, not the most visible one
     NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (wnd) {
-        UpdatePageInfoHelper(win, wnd, -1);
+        UpdatePageInfoHelper(win, wnd, win->currPageNo);
         return;
     }
     NotificationCreateArgs args;
@@ -2443,7 +2445,7 @@ void ShowPageInfoIfWanted(MainWindow* win) {
     // the message carries page labels and image entry names from the document
     args.plainText = true;
     wnd = ShowNotification(args);
-    UpdatePageInfoHelper(win, wnd, -1);
+    UpdatePageInfoHelper(win, wnd, win->currPageNo);
 }
 
 // --- the page info bar, PageInfoLocation = bottom / bottom-overlay (#6494) --
