@@ -1829,6 +1829,8 @@ static void LazyTabLoadDone(LazyTabLoad* d) {
         d->onFinished.Call(false);
         return;
     }
+    tab->loadCopyBytesCopied = -1;
+    tab->loadCopyBytesTotal = 0;
     if (!IsCurrentTab(win, tab)) {
         // loads again when selected, quickly now that the drive is awake
         tab->loadState = d->isOpen ? WindowTab::LoadState::LoadedPending : WindowTab::LoadState::None;
@@ -1847,14 +1849,50 @@ static void LazyTabLoadDone(LazyTabLoad* d) {
     FinishLazyTabLoad(tab, engine);
 }
 
+// network-drive cbx cache copy progress, painted on the loading tab
+struct LoadCopyProgress {
+    WindowTab* tab = nullptr;
+    i64 bytesCopied = 0;
+    i64 bytesTotal = 0;
+};
+
+static void UpdateLoadCopyProgress(LoadCopyProgress* p) {
+    AutoDelete delProgress(p);
+    WindowTab* tab = p->tab;
+    MainWindow* win = FindMainWindowByTab(tab);
+    if (!win || tab->loadState != WindowTab::LoadState::Loading) {
+        return;
+    }
+    tab->loadCopyBytesCopied = p->bytesCopied;
+    tab->loadCopyBytesTotal = p->bytesTotal;
+    if (IsCurrentTab(win, tab)) {
+        AppShellInvalidate(win);
+    }
+}
+
+// on the load thread: d->tab is only handed to the UI thread, which checks it
+static void OnLoadCopyProgress(LazyTabLoad* d, file::CopyProgress* cp) {
+    auto* p = new LoadCopyProgress;
+    p->tab = d->tab;
+    p->bytesCopied = cp->bytesCopied;
+    p->bytesTotal = cp->bytesTotal;
+    uitask::Post(MkFunc0<LoadCopyProgress>(UpdateLoadCopyProgress, p), "LoadCopyProgress");
+    // TestLoadDelay holds the copy while set, so a test sees its progress
+    while (AtomicIntGet(&gTestLoadDelayMs) > 0) {
+        SleepInMs(20);
+    }
+}
+
 static void LazyTabLoadThread(LazyTabLoad* d) {
     MaybeTestLoadDelay();
     if (d->createEngine && DocumentPathExists(d->path)) {
         SetLoadThreadFileEBookUI(d->fileEBookUI);
         float prevAspect = EngineMupdfSetEbookLayoutAspect(d->ebookLayoutAspect);
+        file::gFileCopyProgressCb = MkFunc1<LazyTabLoad, file::CopyProgress*>(OnLoadCopyProgress, d);
         // no password prompt off the UI thread: FinishLazyTabLoad's regular
         // load asks for it
         d->engine = CreateEngineFromFile(d->path, nullptr, d->chmInFixedUI);
+        file::gFileCopyProgressCb = {};
         EngineMupdfSetEbookLayoutAspect(prevAspect);
         SetLoadThreadFileEBookUI(nullptr);
         if (d->engine && d->engine->pageCount <= 0) {
@@ -1880,6 +1918,8 @@ static LazyTabLoad* NewTabLoad(WindowTab* tab) {
     d->ebookLayoutAspect = EbookLayoutAspectForLoad(win, d->path);
     d->fileEBookUI = CopyFileEBookUI(GetFileEBookUI(d->path));
     tab->loadState = WindowTab::LoadState::Loading;
+    tab->loadCopyBytesCopied = -1;
+    tab->loadCopyBytesTotal = 0;
     AppShellInvalidate(win);
     return d;
 }

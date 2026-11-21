@@ -109,10 +109,10 @@ struct WindowTab {
     DocController* ctrl = nullptr;
     HexView* hex = nullptr;
     u64 loadStartedAt = 0;
-#if !defined(SUMATRA_NG)
     // network-drive copy progress while loading (-1 = not in copy phase)
     i64 loadCopyBytesCopied = -1;
     i64 loadCopyBytesTotal = 0;
+#if !defined(SUMATRA_NG)
     LoadArgs* pendingLoadArgs = nullptr;
 #endif
     // FileWatcher token for unsubscribing

@@ -3937,6 +3937,10 @@ static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
     task->bytesTotal = p->bytesTotal;
     auto fn = MkFunc0<CopyProgressUITask>(UpdateCopyProgressUI, task);
     uitask::Post(fn, "CopyProgress");
+    // TestLoadDelay holds the copy while set, so a test sees its progress
+    while (AtomicIntGet(&gTestLoadDelayMs) > 0) {
+        ::Sleep(20);
+    }
 }
 
 // Background load thread: create the engine only. Never touch MainWindow* /

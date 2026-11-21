@@ -1909,7 +1909,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int page = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
-            AppendTestResult(req, 0, fmt("path=%s page=%d", tab->filePath, page));
+            TempStr res = fmt("path=%s page=%d", tab->filePath, page);
+            if (tab->loadCopyBytesCopied >= 0) {
+                res = fmt("%s copied=%d/%d", res, tab->loadCopyBytesCopied, tab->loadCopyBytesTotal);
+            }
+            AppendTestResult(req, 0, res);
             break;
         }
 

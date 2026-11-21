@@ -2,20 +2,26 @@
 // engine is created on a thread while a "Loading" tab is shown, then the
 // document goes on screen. -dbg-control TestLoadDelay simulates the drive.
 // Covered opens: the way a reuse-instance launch sends it (kCopyDataOpen) and
-// next file in folder, which also skips a file that fails to open.
+// next file in folder, which also skips a file that fails to open, and the
+// copy of a network-drive comic, whose progress the loading tab shows.
 //
 // Run: bun tests/open-slow-drive.ts [--no-build] [-ng]
 
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { ROOT, runStandalone, tmpPath } from "./util.ts";
+import { ROOT, runStandalone, tmpPath, writeStoredZip } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import { sendOpenCopyData, sleep } from "./winapi.ts";
 
 const PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
 const LOAD_DELAY_MS = 3000;
+// 1x1 transparent PNG
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
 
 async function currentTab(client: ControlClient): Promise<string> {
   const res = await client.request(ControlCommand.TestCurrentTab);
@@ -106,9 +112,85 @@ async function testNextFile() {
   }
 }
 
+// a comic on a network drive is copied to the local cache first; the loading
+// tab shows the copy's progress. \\localhost\C$ is a network path.
+async function testNetworkCopy() {
+  if (IS_MAC) {
+    console.log("SKIP open-slow-drive network copy: needs a Windows UNC path");
+    return;
+  }
+  const dir = tmpPath("open-slow-drive-copy");
+  const appData = tmpPath("open-slow-drive-appdata");
+  rmSync(dir, { recursive: true, force: true });
+  rmSync(appData, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  // over the 32 MB a network comic is read into memory instead
+  const filler = Buffer.alloc(40 * 1024 * 1024);
+  writeStoredZip(join(dir, "big.cbz"), [
+    { name: "001.png", data: PNG },
+    { name: "filler.bin", data: filler },
+  ]);
+  const unc = join(dir, "big.cbz").replace(/^([A-Za-z]):/, "\\\\localhost\\$1$");
+  if (!existsSync(unc)) {
+    console.log(`SKIP open-slow-drive network copy: ${unc} isn't reachable (admin share disabled?)`);
+    rmSync(dir, { recursive: true, force: true });
+    return;
+  }
+
+  const { proc, client, frame } = await launchControlled(["-appdata", appData]);
+  try {
+    await client.request(ControlCommand.Ping);
+    await client.request(ControlCommand.TestLoadDelay, [LOAD_DELAY_MS / 3]);
+    const t0 = Date.now();
+    if (!sendOpenCopyData(frame, unc)) {
+      throw new Error("open-slow-drive: the network open request wasn't handled");
+    }
+    // TestLoadDelay holds the copy after its first progress report
+    let worstPing = 0;
+    let tab = "";
+    const deadline = Date.now() + LOAD_DELAY_MS + 10000;
+    while (Date.now() < deadline) {
+      worstPing = Math.max(worstPing, await pingMs(client));
+      tab = await currentTab(client);
+      if (tab.includes("big.cbz") && tab.includes("copied=")) {
+        break;
+      }
+      await sleep(50);
+    }
+    if (!tab.includes("copied=")) {
+      throw new Error(`open-slow-drive: network copy: no copy progress (current tab: ${tab})`);
+    }
+    if (worstPing >= LOAD_DELAY_MS / 2) {
+      throw new Error(`open-slow-drive: network copy: the UI didn't answer for ${worstPing} ms while copying`);
+    }
+
+    await client.request(ControlCommand.TestLoadDelay, [0]);
+    while (Date.now() < deadline) {
+      tab = await currentTab(client);
+      if (tab.includes("big.cbz") && tab.includes("page=1")) {
+        if (tab.includes("copied=")) {
+          throw new Error(`open-slow-drive: network copy: progress outlived the load (${tab})`);
+        }
+        console.log(
+          `open-slow-drive: network copy: OK, loaded after ${Date.now() - t0} ms, worst ping ${worstPing} ms`,
+        );
+        return;
+      }
+      await sleep(100);
+    }
+    throw new Error(`open-slow-drive: network copy: the comic didn't finish loading (current tab: ${tab})`);
+  } finally {
+    client.close();
+    await killAndWait(proc);
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(appData, { recursive: true, force: true });
+  }
+}
+
 export async function testit(): Promise<void> {
   await testCopyDataOpen();
   await testNextFile();
+  await testNetworkCopy();
 }
 
 if (import.meta.main) {

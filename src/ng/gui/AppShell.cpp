@@ -2074,7 +2074,17 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
         }
         // a lazy tab loading in the background, as orig's canvas says
         if (tab && tab->loadState == WindowTab::LoadState::Loading && len(tab->filePath) > 0) {
-            TempStr msg = fmt(Tr("Loading %s ...").s, path::GetBaseNameTemp(tab->filePath));
+            TempStr basename = path::GetBaseNameTemp(tab->filePath);
+            TempStr msg = fmt(Tr("Loading %s ...").s, basename);
+            // a network-drive comic being copied to the local cache
+            if (tab->loadCopyBytesCopied >= 0) {
+                TempStr copied = str::FormatSizeShortTemp(tab->loadCopyBytesCopied, nullptr);
+                msg = fmt(Tr("Copying %s: %s").s, basename, copied);
+                if (tab->loadCopyBytesTotal > 0) {
+                    TempStr total = str::FormatSizeShortTemp(tab->loadCopyBytesTotal, nullptr);
+                    msg = fmt(Tr("Copying %s: %s / %s").s, basename, copied, total);
+                }
+            }
             canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, msg))->Font(16)->Fg(th.foreground));
             return canvas;
         }
