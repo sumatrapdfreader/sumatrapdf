@@ -632,7 +632,15 @@ void ToolWindowsCloseFor(MainWindow* win) {
         }
         MainWindow* other = tw->desc.onOwnerClosed && !tw->closing ? OtherMainWindow(win) : nullptr;
         if (!other) {
+            // onClosed now, while the owner exists: FinishClosed is posted and
+            // runs after the owner is deleted, and dialogs repaint their owner
+            // when they close. closing stops FinishClosed calling it again
+            void (*onClosed)(MainWindow*) = tw->closing ? nullptr : tw->desc.onClosed;
             DestroyNow(tw);
+            if (onClosed) {
+                tw->closing = true;
+                onClosed(win);
+            }
             continue;
         }
         ToolWindowSetOwner(tw, other);
