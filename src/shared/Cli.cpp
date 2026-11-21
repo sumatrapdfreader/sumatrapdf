@@ -1485,7 +1485,9 @@ static int SpanShift(const StyledPage& p, int span) {
     if (mainBottom - bottom > mainSize * 0.2f) {
         return 1;
     }
-    if (bottom - mainBottom > mainSize * 0.1f) {
+    // smaller text on the baseline ends above the main text's bottom (its
+    // descent is smaller), so ending below it at all is lowered text
+    if (bottom - mainBottom > mainSize * 0.02f) {
         return -1;
     }
     return 0;
