@@ -646,6 +646,9 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-1139", issue1139],
+  ["issue-6113", issue6113],
+  ["auto-scroll-extras", autoScrollExtras],
   ["open-slow-drive", openSlowDrive],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-6412", issue6412],
@@ -732,7 +735,6 @@ export const tests: NamedTest[] = [
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["session-restore-tab-state", sessionRestoreTabState],
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
-  ["issue-6113", issue6113],
   ["issue-5933", issue5933],
   ["issue-6117", issue6117],
   ["custom-zoom-dialog", customZoomDialog],
@@ -1167,7 +1169,6 @@ export const tests: NamedTest[] = [
   ["issue-6480", issue6480],
   ["issue-6481", issue6481],
   ["issue-6482", issue6482],
-  ["auto-scroll-extras", autoScrollExtras],
   ["toolbar-wrap", toolbarWrap],
   ["reopen-closed-window", reopenClosedWindow],
   ["tab-group-autosync", tabGroupAutoSync],
@@ -1199,7 +1200,6 @@ export const tests: NamedTest[] = [
   ["issue-6494", issue6494],
   ["issue-6495", issue6495],
   ["issue-6496", issue6496],
-  ["issue-1139", issue1139],
   ["issue-6497", issue6497],
   ["issue-6221", issue6221],
   ["issue-6505", issue6505],
