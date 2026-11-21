@@ -35,7 +35,8 @@ export async function testit(): Promise<void> {
   expect("markdown", r.code === 0, r);
   expect("page markers", r.out.startsWith("<!-- page 1 -->") && r.out.includes("<!-- page 2 -->"), r);
   expect("a bold line is a heading", /^# NAME$/m.test(r.out) && /^# DESCRIPTION$/m.test(r.out), r);
-  expect("emphasis keeps its spaces", r.out.includes("[see *zlib.h* for full description]"), r);
+  // the brackets are escaped: [see ...] could be a link
+  expect("emphasis keeps its spaces", r.out.includes("\\[see *zlib.h* for full description\\]"), r);
   expect("no NUL bytes", !r.out.includes("\0"), r);
 
   r = cli(["markdown", man, "--pages", "2", "--no-page-markers", "--json"]);
