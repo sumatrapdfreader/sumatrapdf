@@ -167,8 +167,6 @@ struct StyledSpan {
     bool mono = false;
     int block = 0;
     int line = 0;
-    // the line ends in a hyphen mupdf took as a word broken across lines
-    bool lineJoined = false;
     RectF lineBox;
 };
 struct StyledImage {

@@ -12020,7 +12020,6 @@ bool EngineMupdfGetStyledPage(EngineBase* engine, int pageNo, StyledPage& out) {
                     cur.mono = mono;
                     cur.block = blockNo;
                     cur.line = lineNo;
-                    cur.lineJoined = (l->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0;
                     cur.lineBox = ToRectF(l->bbox);
                     have = true;
                 }

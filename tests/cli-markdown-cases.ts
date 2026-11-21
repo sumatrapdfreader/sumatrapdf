@@ -115,6 +115,29 @@ function testRunningHeaders(): void {
   expect("2 pages keep the title", short.includes("Book of Things"), short);
 }
 
+// hyphenation_is_joined: a word broken across lines is put back; a hyphen
+// before a capital is a real one
+function testHyphenation(): void {
+  let c = textAt("F1", 72, 700, "an exam-");
+  c += textAt("F1", 72, 688, "ple of well-");
+  c += textAt("F1", 72, 676, "Known");
+  const md = markdownOf([c]);
+  expect("hyphenation", lines(md).includes("an example of well- Known"), md);
+}
+
+// running_headers_and_page_numbers_are_dropped, its second half: a paragraph
+// a page break split is joined back (without page markers between)
+function testParagraphAcrossPages(): void {
+  const pages = [textAt("F1", 72, 100, "a sentence that goes"), textAt("F1", 72, 700, "on and on.")];
+  let md = markdownOf(pages);
+  expect("joined across the page break", md === "a sentence that goes on and on.\n", md);
+  pages[1] = textAt("F1", 72, 700, "On a new sentence.");
+  md = markdownOf(pages);
+  expect("a capital starts a new paragraph", md.includes("goes\n\nOn a new"), md);
+  md = markdownOf([textAt("F1", 72, 100, "an unfin-"), textAt("F1", 72, 700, "ished word")]);
+  expect("a word broken across the page break", md.includes("an unfinished word"), md);
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
@@ -123,6 +146,8 @@ export async function testit(): Promise<void> {
   testLists();
   testPageNumbers();
   testRunningHeaders();
+  testHyphenation();
+  testParagraphAcrossPages();
   console.log(`${name}: OK`);
 }
 

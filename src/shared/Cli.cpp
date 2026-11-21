@@ -1122,31 +1122,41 @@ static int HeadingLevelForSize(MdDoc& d, float size) {
     return 0;
 }
 
+static bool IsLowerStart(Str s) {
+    if (len(s) == 0) {
+        return false;
+    }
+    Codepoints cp;
+    DecodeText(Str(s.s, std::min(len(s), 4)), cp);
+    return len(cp.cps) > 0 && iswlower((wint_t)cp.cps[0]);
+}
+
+// "exam-" + "ple": a word broken across lines, which loses its hyphen. Before
+// a capital it's a real hyphen ("well- Known")
+static bool IsBrokenWord(Str before, Str after) {
+    int n = len(before);
+    return n > 1 && before.s[n - 1] == '-' && isalpha((u8)before.s[n - 2]) && IsLowerStart(after);
+}
+
 // the spans of one block as markdown: lines joined into a paragraph, styles as
 // ** and *, monospaced runs as `code`. skipFirst: bytes of the first span to
 // leave out (a list item's bullet)
 static TempStr BlockInlineTemp(const StyledPage& p, int from, int to, bool keepLines, int skipFirst = 0) {
     str::Builder out;
     int line = -1;
-    bool joined = false;
     for (int i = from; i < to; i++) {
         const StyledSpan& s = p.spans[i];
         if (s.line != line) {
             if (line >= 0) {
                 if (keepLines) {
                     out.AppendChar('\n');
-                } else if (joined) {
-                    // "hyph-" + "enated": the hyphen goes
-                    Str t = ToStr(out);
-                    if (len(t) > 0 && t.s[len(t) - 1] == '-') {
-                        out.RemoveLast();
-                    }
+                } else if (IsBrokenWord(ToStr(out), s.text)) {
+                    out.RemoveLast();
                 } else {
                     out.AppendChar(' ');
                 }
             }
             line = s.line;
-            joined = s.lineJoined;
         }
         Str text = s.text;
         if (i == from && skipFirst > 0) {
@@ -1210,7 +1220,70 @@ struct MdImages {
     StrVec written;
 };
 
-static void AppendImage(MdImages& imgs, const StyledImage& im, int pageNo, str::Builder& out) {
+// the markdown of a document as it's made: paragraphs, headings, ... and the
+// page markers, put together at the end, when a paragraph a page break or a
+// picture split can be joined back
+enum class MdKind {
+    Para,
+    List,
+    Heading,
+    Code,
+    Image,
+    Marker,
+};
+
+struct MdChunks {
+    StrVec texts;
+    Vec<MdKind> kinds;
+    void Add(MdKind kind, Str text) {
+        texts.Append(text);
+        VecAppend(kinds, kind);
+    }
+};
+
+// paragraph next carries on paragraph prev: it starts in lower case and prev
+// doesn't end a sentence
+static bool ParaContinues(Str prev, Str next) {
+    if (!IsLowerStart(next) || len(prev) == 0) {
+        return false;
+    }
+    char last = prev.s[len(prev) - 1];
+    if (strchr(".!?:;\")", last) || str::EndsWith(prev, StrL("\xe2\x80\x9d"))) {
+        return false;
+    }
+    return true;
+}
+
+static TempStr JoinChunksTemp(MdChunks& c) {
+    str::Builder out;
+    for (int i = 0; i < len(c.texts); i++) {
+        Str t = c.texts[i];
+        if (i > 0) {
+            MdKind prev = c.kinds[i - 1];
+            MdKind kind = c.kinds[i];
+            if (prev == MdKind::Para && kind == MdKind::Para && ParaContinues(c.texts[i - 1], t)) {
+                // a word broken across the page break
+                if (IsBrokenWord(ToStr(out), t)) {
+                    out.RemoveLast();
+                } else {
+                    out.AppendChar(' ');
+                }
+            } else if (prev == MdKind::List && kind == MdKind::List) {
+                // one list, though its items came in several blocks
+                out.AppendChar('\n');
+            } else {
+                out.Append(StrL("\n\n"));
+            }
+        }
+        out.Append(t);
+    }
+    if (len(out) > 0) {
+        out.AppendChar('\n');
+    }
+    return ToStrTemp(out);
+}
+
+static void AppendImage(MdImages& imgs, const StyledImage& im, int pageNo, MdChunks& out) {
     if (len(imgs.dir) == 0) {
         return;
     }
@@ -1222,11 +1295,11 @@ static void AppendImage(MdImages& imgs, const StyledImage& im, int pageNo, str::
         return;
     }
     imgs.written.Append(path);
-    out.Append(fmt("![](%s/%s)\n\n", imgs.dirRel, name));
+    out.Add(MdKind::Image, fmt("![](%s/%s)", imgs.dirRel, name));
 }
 
 // one page of a mupdf document as markdown
-static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& imgs, str::Builder& out) {
+static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& imgs, MdChunks& out) {
     int nSpans = len(p.spans);
     int img = 0;
     int i = 0;
@@ -1276,12 +1349,14 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
         if (level > 0) {
             Str text = plain;
             str::TrimWSInPlace(text, str::TrimOpt::Both);
+            str::Builder h;
             for (int k = 0; k < level; k++) {
-                out.AppendChar('#');
+                h.AppendChar('#');
             }
-            out.Append(fmt(" %s\n\n", text));
+            h.Append(fmt(" %s", text));
+            out.Add(MdKind::Heading, ToStr(h));
         } else if (nMono * 10 >= nChars * 9) {
-            out.Append(fmt("```\n%s\n```\n\n", BlockInlineTemp(p, i, end, true)));
+            out.Add(MdKind::Code, fmt("```\n%s\n```", BlockInlineTemp(p, i, end, true)));
         } else {
             bool bullet = false;
             int skip = 0;
@@ -1290,6 +1365,7 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
                 // item, the lines after it until the next one carry it on
                 Vec<int> starts;
                 LineStarts(p, i, end, starts);
+                str::Builder items;
                 for (int k = 0; k + 1 < len(starts);) {
                     LineListMarker(p, starts[k], &bullet, &skip);
                     int e = k + 1;
@@ -1300,14 +1376,15 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
                     }
                     TempStr item = BlockInlineTemp(p, starts[k], starts[e], false, skip);
                     str::TrimWSInPlace(item, str::TrimOpt::Both);
-                    out.Append(fmt("%s%s\n", bullet ? StrL("- ") : StrL(""), item));
+                    items.Append(
+                        fmt("%s%s%s", len(items) > 0 ? StrL("\n") : StrL(""), bullet ? StrL("- ") : StrL(""), item));
                     k = e;
                 }
-                out.AppendChar('\n');
+                out.Add(MdKind::List, ToStr(items));
             } else {
                 TempStr text = BlockInlineTemp(p, i, end, false);
                 str::TrimWSInPlace(text, str::TrimOpt::Both);
-                out.Append(fmt("%s\n\n", EscapeLineStartTemp(text)));
+                out.Add(MdKind::Para, EscapeLineStartTemp(text));
             }
         }
         i = end;
@@ -1316,14 +1393,14 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
 
 // a page of a document without styles (DjVu, comics, ...): its text, a
 // paragraph per run of lines
-static void PlainPageToMarkdown(EngineBase* engine, int pageNo, str::Builder& out) {
+static void PlainPageToMarkdown(EngineBase* engine, int pageNo, MdChunks& out) {
     PageText pt = engine->ExtractPageText(pageNo);
     StrVec lines;
     Split(&lines, pt.text, StrL("\n"), false);
     str::Builder para;
     auto flush = [&]() {
         if (len(para) > 0) {
-            out.Append(fmt("%s\n\n", EscapeLineStartTemp(ToStr(para))));
+            out.Add(MdKind::Para, EscapeLineStartTemp(ToStr(para)));
             para.Reset();
         }
     };
@@ -1688,11 +1765,11 @@ static int CmdMarkdown(CliCtx& cx) {
             CollectTocTitles(toc->root->child ? toc->root->child : toc->root, 0, d.tocTitles, d.tocDepths);
         }
     }
-    str::Builder out;
+    MdChunks out;
     TempStr title = engine->GetPropertyTemp(DocProp::Title);
     for (int k = 0; k < len(pages); k++) {
         if (pageMarkers) {
-            out.Append(fmt("<!-- page %d -->\n\n", pages[k]));
+            out.Add(MdKind::Marker, fmt("<!-- page %d -->", pages[k]));
         }
         if (haveStyles) {
             StyledPageToMarkdown(d, *styled[k], pages[k], imgs, out);
@@ -1703,7 +1780,7 @@ static int CmdMarkdown(CliCtx& cx) {
     for (StyledPage* p : styled) {
         delete p;
     }
-    Str md = ToStr(out);
+    Str md = JoinChunksTemp(out);
     if (len(dest) > 0) {
         dir::CreateForFile(dest);
         if (!file::WriteFile(dest, md)) {
