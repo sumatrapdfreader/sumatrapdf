@@ -10,8 +10,8 @@ What was compared:
   DjVu, CHM, PNG, MD): orig read from its live popups, ng via `TestMainMenu`
 - `GetCommandVisibility` for every command × menu/palette/toolbar, same 8 docs
 - page context menu at canvas center (PDF, EPUB, CBZ, PNG, CHM)
-- full test suite with `-ng` (`run-github-ci.ts -ng`): 20 of 603 failed;
-  re-run against orig and twice more against ng to drop env/flaky ones
+- full test suite with `-ng` (`run-github-ci.ts -ng`): 20 of 603 failed at
+  first, 9 of 615 after the fixes below, 0 after the test fixes
 - code audit of ng for stubbed or never-ported orig behavior
 
 ## Fixed
@@ -32,30 +32,40 @@ What was compared:
 | Markdown / CHM pages not reloaded for new page colors                                              | `34cbb05d6e` | `browser-doc-theme`               |
 | Replace Image, Edit Image in Another App hidden (now `src/shared/ImageReplace.cpp`)                | `7ea015fa66` | `replace-image`                   |
 | Changing `UseTabs` didn't convert open windows                                                     | `1c53df475a` | `use-tabs-transition`             |
-| SumatraPDF Web dialog was a stub (logic now `src/shared/SumatraPDFWebCommon.cpp`)                  | `527e941f5f` | `sumatrapdf-web-dialog`           |
-| Documents loaded on the UI thread (now a Loading tab, like orig)                                   | `8ab33131ab` | `open-slow-drive`                 |
-| No signatures sidebar, status bar, dialog, field marks (now `src/shared/SignatureUICommon.cpp`)    | `c6785b376a` | `sig-validation`                  |
+| SumatraPDF Web dialog was a stub (logic now `src/shared/SumatraPDFWebCommon.cpp`)                  | `38b527d8a8` | `sumatrapdf-web-dialog`           |
+| Documents loaded on the UI thread (now a Loading tab, like orig)                                   | `e76b587c3f` | `open-slow-drive`                 |
+| No signatures sidebar, status bar, dialog, field marks (now `src/shared/SignatureUICommon.cpp`)    | `8a84338b44` | `sig-validation`                  |
+| Copy then Paste of an annotation pasted an older clipboard image                                   | `71101165c8` | `annotation clipboard tests`      |
+| Dropping a dragged tab on another window tore it off into a new one                                | `f3b3ef9486` | `tab-drag-to-window`              |
+| No touch long-press text selection or drag handles                                                 | `0bbff21d97` | `touch-long-press-select`         |
+| No UI Automation text for screen readers                                                           | `67b91fa2ba` | `uia-document-text`               |
 | ng-only `cli markdown` missed slightly lowered subscripts                                          | `a8542f1a25` | `cli-markdown-cases`              |
+
+The last four ng fixes needed gpui changes, vendored in `a6d7e51e2a`
+(gpui-kit-cpp `d00ea240`): `WindowAtPoint`, `TouchEvent` / `El::OnTouch`
+(raw touch and pen contacts on Windows) and `El::AccessibilityDocument`
+(document text and selection read on demand).
 
 Failures that were the test, not ng (fixed in the tests): `issue-3585`
 `69a7b6f519`, `tab-menu-close` `21fcb9d5a9`, `pdf-script` `fa12c508fc`,
-`cli-pdf-tools` `f5b40637d2`, `cli-markdown-*` `fda5c311a2`.
+`cli-pdf-tools` `f5b40637d2`, `cli-markdown-*` `fda5c311a2`, `issue-6080`
+`4b37137a85`, `trim-empty-margins-restore` `efba7ef431`, `issue-6346`
+`a1a7e8a213` (its probe, in shared code), `free-text-edit-matches-render`
+`cdf403f737`, `issue-6241` `f01009c3c8`, `issue-5850` / `issue-6028` skip on ng
+`153c7202d1`, `toolbar-hover-dropdown` `0fea76adb6` `84b387eeaa`.
 
 ## Not differences after investigation
 
 - Favorites menu enabled state: orig's `MenuUpdateStateForWindow` re-enables
   what the shared `RebuildFavMenu` disabled. ng's state is the intended one.
-- `issue-6241`: both apps cap Fit Visible at 800% in a large window; the small
-  Fit Width gap is the overlay scrollbar taking no width.
-- `issue-6561`: failed only right after a failing `sig-validation`; passes now.
+- `issue-6561`: failed only right after a failing `sig-validation`.
 - `home-tip-double-click`, `sidebar-thumbnails` repaint: in a locked session
   new GPUI frames don't reach PrintWindow captures. The log shows ng renders
   the new tip.
 
-## Remaining, by design or blocked
+## Remaining, by design or not ported
 
-- `Scrollbars = windows` maps to smart (`issue-5850`, `issue-6028`): ng uses
-  no native toolkit UI.
+- `Scrollbars = windows` reads as smart: ng dropped the mode (`6e9de392d8`).
 - Explorer preview / thumbnail handlers and search filter: not ported (out of
   scope for now); `-with-filter/-with-preview/-with-thumbnails` ignored.
 - Installer `-help` text, store-installer and installer-by-exe-name modes: ng's
@@ -63,17 +73,19 @@ Failures that were the test, not ng (fixed in the tests): `issue-3585`
 - `-html-backend` / IE fallback: ng renders CHM / markdown with WebView2 only.
 - Debug-only flags `-unit-tests`, `-test-render-page`, `-test-plugin` (ng has
   `test_util`).
-- GPUI gaps (need `../gpui-kit-cpp` changes):
-  - touch long-press selection and drag handles: gpui's Windows layer never
-    emits `LongPressEvent` and exposes no `WM_POINTER*`
-  - UI Automation provider for document text (screen readers)
+- Screen readers: the document is one text element; orig also has a child
+  element per page.
+- Touch long-press is Windows only: gpui emits `TouchEvent` only there. Pen
+  input still takes the mouse path in ng.
 - Off Windows, SumatraPDF Web can't transfer files: the HTTP helpers it uses
-  are WinHTTP only (`Http_posix.cpp` needs curl versions).
+  are WinHTTP only (`Http_posix.cpp` needs curl versions). Edit Image in
+  Another App is Windows only.
 - Async loading: command-line files, next / prev file in folder, reload and
   DDE `[Open]` still load synchronously; no network-drive copy progress on the
   Loading tab.
+- Not compiled on macOS yet: gpui's `WindowAtPoint` (Cocoa) and ng's new code.
 - Unverified: `WM_DISPLAYCHANGE` fullscreen re-fit, `WM_MOUSEACTIVATE` in
-  presentation, pen `WM_POINTER` (depend on what GPUI handles).
+  presentation (depend on what GPUI handles).
 
 ## Smaller default differences
 
