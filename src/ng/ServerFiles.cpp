@@ -3,7 +3,8 @@
 
 // The account's files on SumatraPDF Web, for the home page's Server badge and
 // its Upload to server / Delete from server. A file is on the server when a
-// server file has its name, as on the website. Listed when the home page is
+// server file has its name, as on the website; a different size marks it
+// changed (no hashing of local files). Listed when the home page is
 // first shown, again after a change or a new key.
 //
 //   home page --> ServerFilesEnsureListed() --> StartOnlineList --> names --> redraw
@@ -28,6 +29,7 @@
 
 struct ServerFilesState {
     StrVec names;
+    Vec<i64> sizes;
     // names are the account's files
     bool listed = false;
     // a list was started for the current key
@@ -71,6 +73,7 @@ static void Notify(MainWindow* win, Str msg) {
 static void FinishList(OnlineJobResult* res) {
     gSrv.listId = 0;
     gSrv.names.Reset();
+    VecReset(gSrv.sizes);
     gSrv.listed = false;
     DWORD lastStatus = 0;
     TempStr msg;
@@ -86,6 +89,7 @@ static void FinishList(OnlineJobResult* res) {
     }
     for (OnlineListedFile& f : parsed) {
         gSrv.names.Append(f.name);
+        VecAppend(gSrv.sizes, f.size);
     }
     FreeOnlineFiles(parsed);
     gSrv.listed = true;
@@ -149,6 +153,7 @@ void ServerFilesEnsureListed() {
 // The key changed: forget the names, list again on the next home page.
 void ServerFilesReset() {
     gSrv.names.Reset();
+    VecReset(gSrv.sizes);
     gSrv.listed = false;
     gSrv.tried = false;
     gSrv.listId = 0;
@@ -159,11 +164,17 @@ bool ServerFilesListed() {
     return gSrv.listed && CanUseServer();
 }
 
-bool IsFileOnServer(Str path) {
+// localSize < 0: unknown, taken as the same
+ServerFileState GetServerFileState(Str path, i64 localSize) {
     if (!ServerFilesListed() || len(path) == 0) {
-        return false;
+        return ServerFileState::None;
     }
-    return gSrv.names.Contains(path::GetBaseNameTemp(path));
+    int idx = gSrv.names.Find(path::GetBaseNameTemp(path));
+    if (idx < 0 || idx >= len(gSrv.sizes)) {
+        return ServerFileState::None;
+    }
+    bool differs = localSize >= 0 && localSize != gSrv.sizes[idx];
+    return differs ? ServerFileState::Differs : ServerFileState::Same;
 }
 
 static bool CanStartTransfer(MainWindow* win) {

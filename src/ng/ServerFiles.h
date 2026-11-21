@@ -6,6 +6,14 @@ struct MainWindow;
 void ServerFilesEnsureListed();
 void ServerFilesReset();
 bool ServerFilesListed();
-bool IsFileOnServer(Str path);
+// a server file with the same name: same size, or a different size (edited
+// locally or elsewhere)
+enum class ServerFileState {
+    None,
+    Same,
+    Differs,
+};
+
+ServerFileState GetServerFileState(Str path, i64 localSize);
 void UploadFileToServer(MainWindow* win, Str path);
 void DeleteFileFromServer(MainWindow* win, Str path);

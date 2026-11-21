@@ -1397,17 +1397,19 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
 // --- the home page's context menu (orig's OnAboutContextMenu) ---------------
 
 // ng: the website's Upload to server / Delete from server. While linked,
-// Delete File reads Delete local.
+// Delete File reads Delete local. A changed server copy can be replaced.
 static void AppendServerItems(MenuModel* popup, Str filePath) {
     if (!ServerFilesListed()) {
         return;
     }
     MenuSetText(popup, CmdDeleteFile, Tr("Delete local"));
     MenuAppendSeparator(popup);
-    if (IsFileOnServer(filePath)) {
-        MenuAppendString(popup, Tr("Delete from server"), CmdDeleteFromServer);
-    } else {
+    ServerFileState st = GetServerFileState(filePath, file::GetSize(filePath));
+    if (st != ServerFileState::Same) {
         MenuAppendString(popup, Tr("Upload to server"), CmdUploadToServer);
+    }
+    if (st != ServerFileState::None) {
+        MenuAppendString(popup, Tr("Delete from server"), CmdDeleteFromServer);
     }
 }
 

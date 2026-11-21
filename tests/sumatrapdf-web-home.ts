@@ -1,10 +1,11 @@
 // ng's home page marks documents that are on SumatraPDF Web with a Server
-// badge and offers Upload to server / Delete from server, and Delete local for
-// Delete File. A local server stands in for the website.
+// badge ("Server ≠" when the sizes differ) and offers Upload to server /
+// Delete from server, and Delete local for Delete File. A local server stands
+// in for the website.
 //
 // Run: bun tests/sumatrapdf-web-home.ts -ng [--no-build]   (or via tests/run-almost-all.ts)
 
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, mkdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { EXE, ROOT, USE_NG, cmdId, pollUntil, runStandalone, tmpPath, writeAppdata } from "./util.ts";
@@ -15,7 +16,14 @@ const kKey = "so_abcdefghij_0123456789abcdef0123456789abcdef";
 const kOnServer = "web-home-on-server.pdf";
 const kLocalOnly = "web-home-local-only.pdf";
 
-type Row = { path: string; server: boolean };
+// the home list probe's server=: none, same size, different size
+enum ServerState {
+  None = 0,
+  Same = 1,
+  Differs = 2,
+}
+
+type Row = { path: string; server: ServerState };
 
 async function homeRows(client: ControlClient): Promise<Row[] | null> {
   const res = await client.request(ControlCommand.TestHomeListRows, []);
@@ -27,18 +35,18 @@ async function homeRows(client: ControlClient): Promise<Row[] | null> {
   for (const line of out.split("\n")) {
     const row = /^row=\d+ .* path=(.*)$/.exec(line);
     if (row) {
-      rows.push({ path: row[1]!, server: false });
+      rows.push({ path: row[1]!, server: ServerState.None });
       continue;
     }
     const srv = /^server=(\d)$/.exec(line);
     if (srv && rows.length > 0) {
-      rows[rows.length - 1]!.server = srv[1] === "1";
+      rows[rows.length - 1]!.server = Number(srv[1]) as ServerState;
     }
   }
   return rows;
 }
 
-function serverFlag(rows: Row[] | null, name: string): boolean | undefined {
+function serverState(rows: Row[] | null, name: string): ServerState | undefined {
   return rows?.find((r) => r.path.endsWith(name))?.server;
 }
 
@@ -65,7 +73,16 @@ export async function testit(): Promise<void> {
     console.log("sumatrapdf-web-home: ng only, skipped");
     return;
   }
-  const names = new Set<string>([kOnServer]);
+  const dir = tmpPath("sumatrapdf-web-home-docs");
+  mkdirSync(dir, { recursive: true });
+  const src = join(ROOT, "tests", "issue-5871.pdf");
+  const onServer = join(dir, kOnServer);
+  const localOnly = join(dir, kLocalOnly);
+  copyFileSync(src, onServer);
+  copyFileSync(src, localOnly);
+
+  // name -> size; the server copy starts out with a different size
+  const files = new Map<string, number>([[kOnServer, statSync(onServer).size - 1]]);
   const server = Bun.serve({
     port: kPort,
     hostname: "127.0.0.1",
@@ -73,18 +90,18 @@ export async function testit(): Promise<void> {
       const url = new URL(req.url);
       const name = url.searchParams.get("name") ?? "";
       if (url.pathname === "/api/files" && req.method === "GET") {
-        return Response.json({ files: [...names].map((n) => ({ name: n, size: 1 })) });
+        return Response.json({ files: [...files].map(([n, size]) => ({ name: n, size })) });
       }
       if (url.pathname === "/api/files" && req.method === "POST") {
         const body = await req.arrayBuffer();
         if (body.byteLength === 0) {
           return new Response("unknown content", { status: 404 });
         }
-        names.add(name);
+        files.set(name, body.byteLength);
         return Response.json({ ok: true });
       }
       if (url.pathname === "/api/file" && req.method === "DELETE") {
-        if (!names.delete(name)) {
+        if (!files.delete(name)) {
           return new Response("not found", { status: 404 });
         }
         return Response.json({ ok: true });
@@ -94,13 +111,6 @@ export async function testit(): Promise<void> {
   });
 
   try {
-    const dir = tmpPath("sumatrapdf-web-home-docs");
-    mkdirSync(dir, { recursive: true });
-    const src = join(ROOT, "tests", "issue-5871.pdf");
-    const onServer = join(dir, kOnServer);
-    const localOnly = join(dir, kLocalOnly);
-    copyFileSync(src, onServer);
-    copyFileSync(src, localOnly);
     const state = (p: string, n: number) => `\t[\n\t\tFilePath = ${p}\n\t\tOpenCount = ${n}\n\t]`;
     const appdata = writeAppdata(
       "sumatrapdf-web-home",
@@ -122,42 +132,38 @@ export async function testit(): Promise<void> {
         const frame = await waitForFrame(proc.pid!);
         await client.setNotificationsEnabled(false);
 
-        let rows = await pollUntil(
-          () => homeRows(client),
-          (r) => serverFlag(r, kOnServer) === true && serverFlag(r, kLocalOnly) === false,
-          { error: (r) => `sumatrapdf-web-home: badges ${JSON.stringify(r)}` },
-        );
+        const waitState = (want: ServerState, what: string) =>
+          pollUntil(
+            () => homeRows(client),
+            (r) => serverState(r, kOnServer) === want && serverState(r, kLocalOnly) === ServerState.None,
+            { error: (r) => `sumatrapdf-web-home: ${what} ${JSON.stringify(r)}` },
+          );
+        const menuIs = async (upload: boolean, del: boolean) => {
+          const menu = await homeMenu(client);
+          requireRow(menu, "CmdDeleteFile\tDelete local", true);
+          requireRow(menu, "CmdUploadToServer\tUpload to server", upload);
+          requireRow(menu, "CmdDeleteFromServer\tDelete from server", del);
+        };
 
-        // the first entry is on the server
-        let menu = await homeMenu(client);
-        requireRow(menu, "CmdDeleteFile\tDelete local", true);
-        requireRow(menu, "CmdDeleteFromServer\tDelete from server", true);
-        requireRow(menu, "CmdUploadToServer\tUpload to server", false);
+        // a different size: Server ≠, the server copy can be replaced or deleted
+        await waitState(ServerState.Differs, "no Server ≠ badge");
+        await menuIs(true, true);
 
-        // Delete from server drops the badge and offers Upload to server
-        sendCommand(frame, cmdId("CmdDeleteFromServer"));
-        rows = await pollUntil(
-          () => homeRows(client),
-          (r) => serverFlag(r, kOnServer) === false,
-          { error: (r) => `sumatrapdf-web-home: badge stayed after delete ${JSON.stringify(r)}` },
-        );
-        if (names.has(kOnServer)) {
-          throw new Error("sumatrapdf-web-home: server still has the file");
-        }
-        menu = await homeMenu(client);
-        requireRow(menu, "CmdUploadToServer\tUpload to server", true);
-        requireRow(menu, "CmdDeleteFromServer\tDelete from server", false);
-
-        // Upload to server brings it back
+        // Upload to server replaces it
         sendCommand(frame, cmdId("CmdUploadToServer"));
-        await pollUntil(
-          () => homeRows(client),
-          (r) => serverFlag(r, kOnServer) === true,
-          { error: (r) => `sumatrapdf-web-home: no badge after upload ${JSON.stringify(r)}` },
-        );
-        if (!names.has(kOnServer)) {
+        await waitState(ServerState.Same, "no Server badge after upload");
+        if (files.get(kOnServer) !== statSync(onServer).size) {
           throw new Error("sumatrapdf-web-home: server did not get the upload");
         }
+        await menuIs(false, true);
+
+        // Delete from server drops the badge
+        sendCommand(frame, cmdId("CmdDeleteFromServer"));
+        await waitState(ServerState.None, "badge stayed after delete");
+        if (files.has(kOnServer)) {
+          throw new Error("sumatrapdf-web-home: server still has the file");
+        }
+        await menuIs(true, false);
       },
       ["-appdata", appdata, "-window-pos", "1100x900@40x40"],
     );

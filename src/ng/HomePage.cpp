@@ -1217,7 +1217,9 @@ constexpr Color kServerBadgeBgDark = MkRgb(0x11, 0x5e, 0x59);
 constexpr Color kServerBadgeFgDark = MkRgb(0xcc, 0xfb, 0xf1);
 constexpr float kServerBadgeFontPx = 11;
 
-static gp::El* ServerBadgeEl(gp::Ctx* cx) {
+// "Server ≠": the server copy has a different size
+static gp::El* ServerBadgeEl(gp::Ctx* cx, ServerFileState st) {
+    Str label = st == ServerFileState::Differs ? Tr("Server ≠") : Tr("Server");
     bool light = IsLightColor(ThemeMainWindowBackgroundColor());
     Color bg = light ? kServerBadgeBg : kServerBadgeBgDark;
     Color fg = light ? MkRgb(0xff, 0xff, 0xff) : kServerBadgeFgDark;
@@ -1226,7 +1228,7 @@ static gp::El* ServerBadgeEl(gp::Ctx* cx) {
         ->Radius(999)
         ->PadX(6)
         ->Bg(ToGpui(bg))
-        ->Child(gp::TextEl(cx->a, ToGpui(Tr("Server")))
+        ->Child(gp::TextEl(cx->a, ToGpui(label))
                     ->Font(kServerBadgeFontPx)
                     ->Weight(gp::FontWeight::Semibold)
                     ->Fg(ToGpui(fg)));
@@ -1307,8 +1309,9 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
         page->Child(close);
     }
     // ng: the website puts it top-right, where orig's ✕ is
-    if (IsFileOnServer(fs->filePath)) {
-        page->Child(ServerBadgeEl(cx)->Absolute()->Left(4)->Top(4));
+    ServerFileState srv = GetServerFileState(fs->filePath, GetHomeFileSize(fs->filePath));
+    if (srv != ServerFileState::None) {
+        page->Child(ServerBadgeEl(cx, srv)->Absolute()->Left(4)->Top(4));
     }
     float progress = 0;
     TempStr meta = HomeThumbnailMetaTemp(fs, &progress);
@@ -1389,8 +1392,9 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
     row->Child(
         FilterHighlightText(cx, path::GetBaseNameTemp(fs->filePath), filterWords, ToGpui(colText), kHomeTextFontPx)
             ->Shrink0());
-    if (IsFileOnServer(fs->filePath)) {
-        row->Child(ServerBadgeEl(cx));
+    ServerFileState srv = GetServerFileState(fs->filePath, GetHomeFileSize(fs->filePath));
+    if (srv != ServerFileState::None) {
+        row->Child(ServerBadgeEl(cx, srv));
     }
     // the wasm build's directories are the page's own (/uploads)
     TempStr dir = OS_WASM ? TempStr{} : path::GetDirTemp(fs->filePath);
@@ -1964,7 +1968,8 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
                        r.dy, progress, fs->filePath));
         Rect pathRc = BoundsRect(h->listPathBounds[i]);
         out.Append(fmt("pathRect=%d,%d,%d,%d\n", pathRc.x, pathRc.y, pathRc.dx, pathRc.dy));
-        out.Append(fmt("server=%d\n", IsFileOnServer(fs->filePath) ? 1 : 0));
+        // 0: not on the server, 1: same size, 2: different size
+        out.Append(fmt("server=%d\n", (int)GetServerFileState(fs->filePath, size)));
     }
     return finish(0);
 }
