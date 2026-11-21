@@ -62,6 +62,10 @@ TempStr PageInfoResultTemp(int* exitCodeOut = nullptr);
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut = nullptr);
 TempStr FrameNcStripsResultTemp(int* exitCodeOut = nullptr);
 TempStr WheelWhileClosingResultTemp(int* exitCodeOut = nullptr);
+TempStr TouchSelResultTemp(Str action, Str word, int* exitCodeOut = nullptr);
+
+// implemented by each app
+Point CanvasToScreenPt(MainWindow* win, Point pt);
 
 // helpers shared with each app's test commands
 void ExtractPageTextToStdout(EngineBase* engine, int pageNo);

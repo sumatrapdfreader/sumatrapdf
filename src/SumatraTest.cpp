@@ -361,6 +361,10 @@ TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
 // Drag-selects `word` on page 1 from its first glyph's outer edge to its last
 // glyph's (issue #6488): in right-to-left text the first glyph's outer edge is
 // its right one. Reports the selected text and the glyph range.
+Point CanvasToScreenPt(MainWindow* win, Point pt) {
+    return HwndClientToScreen(win->hwndCanvas, pt);
+}
+
 TempStr SelectWordEdgesResultTemp(Str word, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {

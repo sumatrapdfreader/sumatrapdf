@@ -940,9 +940,6 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
 // rather than from touch-down.
 constexpr DWORD kTouchLongPressMs = 500;
 
-// How far from the word the press may land and still count as meaning it.
-constexpr int kTouchLongPressMaxDistDip = 40;
-
 // How long after a finger leaves the glass mouse moves are still assumed to be
 // echoes of that touch rather than someone reaching for the mouse.
 constexpr DWORD kTouchMouseTakeoverMs = 1000;
@@ -981,43 +978,6 @@ static void ResetTouchLongPress(MainWindow* win) {
     win->touchLongPressDone = false;
 }
 
-// Dragging a touch selection handle: the other end stays put and the selection
-// is extended from it to wherever the finger is now.
-static void DragTouchSelHandle(MainWindow* win, int x, int y) {
-    DisplayModel* dm = win->AsFixed();
-    if (!dm || !dm->textSelection) {
-        return;
-    }
-    // aim at the text the handle belongs to, not at the fingertip below it
-    int handleDy = DpiScale(8);
-    Point pt(x, y - handleDy);
-    int pageNo = dm->GetPageNoByPoint(pt);
-    if (!win->ctrl->ValidPageNo(pageNo)) {
-        logf("touch: DragTouchSelHandle at %d,%d: no page there\n", x, y);
-        return;
-    }
-    int fromPage, fromGlyph, toPage, toGlyph;
-    dm->textSelection->GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
-    // anchor on the end that isn't moving
-    if (win->touchSelDragging == TouchSelHandle::Start) {
-        dm->textSelection->StartAt(toPage, toGlyph);
-    } else {
-        dm->textSelection->StartAt(fromPage, fromGlyph);
-    }
-    PointF ptf = dm->CvtFromScreen(pt, pageNo);
-    dm->textSelection->SelectUpTo(pageNo, ptf.x, ptf.y);
-
-    // the selection is rebuilt under the handles: they and the drag stay
-    TouchSelHandle dragging = win->touchSelDragging;
-    DeleteOldSelectionInfo(win, false);
-    win->touchSelHandles = true;
-    win->touchSelDragging = dragging;
-    WindowTab* tab = win->CurrentTab();
-    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
-    win->showSelection = tab->selectionOnPage != nullptr;
-    ScheduleRepaint(win, 0);
-}
-
 // A long press over a word selects it and puts a drag handle under each end.
 // Returns true when it handled the press, i.e. the context menu should not
 // open. x, y are canvas coordinates.
@@ -1027,10 +987,7 @@ static bool OnTouchLongPress(MainWindow* win, int x, int y) {
     if (!dm || !dm->textSelection) {
         return false;
     }
-    Point pt(x, y);
-    int pageNo = dm->GetPageNoByPoint(pt);
-    logf("touch: long press overText=%d pageNo=%d\n", (int)dm->IsOverText(pt), pageNo);
-    if (!win->ctrl->ValidPageNo(pageNo)) {
+    if (!win->ctrl->ValidPageNo(dm->GetPageNoByPoint(Point(x, y)))) {
         return false;
     }
     // a long press replaces whatever a stray drag may have started
@@ -1043,39 +1000,7 @@ static bool OnTouchLongPress(MainWindow* win, int x, int y) {
         KillTimer(win->hwndCanvas, kSelectSmoothScrollTimerID);
     }
 
-    PointF ptf = dm->CvtFromScreen(pt, pageNo);
-    dm->textSelection->SelectWordAt(pageNo, ptf.x, ptf.y);
-
-    DeleteOldSelectionInfo(win, false);
-    WindowTab* tab = win->CurrentTab();
-    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
-    int nRects = tab->selectionOnPage ? len(*tab->selectionOnPage) : 0;
-    logf("touch: long press selected %d rect(s)\n", nRects);
-    if (nRects == 0) {
-        return false;
-    }
-    // SelectWordAt() snaps to the nearest glyph, which is what a fingertip
-    // needs -- it is far bigger than a letter and IsOverText() rejects most
-    // presses that plainly meant a word. The nearest word can be anywhere on
-    // the page though, so it only counts if the press landed near it.
-    Rect wordRc = (*tab->selectionOnPage)[0].GetRect(dm);
-    for (SelectionOnPage& s : *tab->selectionOnPage) {
-        wordRc = wordRc.Union(s.GetRect(dm));
-    }
-    int maxDist = DpiScale(kTouchLongPressMaxDistDip);
-    Rect nearRc = wordRc;
-    nearRc.Inflate(maxDist, maxDist);
-    if (!nearRc.Contains(pt)) {
-        logf("touch: nearest word at %d,%d %dx%d is too far from %d,%d, ignoring\n", wordRc.x, wordRc.y, wordRc.dx,
-             wordRc.dy, x, y);
-        DeleteOldSelectionInfo(win, true);
-        return false;
-    }
-    win->showSelection = true;
-    win->touchSelHandles = true;
-    win->touchSelDragging = TouchSelHandle::None;
-    ScheduleRepaint(win, 0);
-    return true;
+    return TouchSelectWordAt(win, x, y);
 }
 
 // the last left press only deselected an annotation, so a double-click it

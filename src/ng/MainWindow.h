@@ -68,6 +68,15 @@ enum class MouseAction {
     SelectingText
 };
 
+// Which end of a touch text selection a finger is dragging (issue #538).
+// A long press over a word selects it and shows a handle under each end;
+// dragging a handle extends the selection from the other end.
+enum class TouchSelHandle {
+    None = 0,
+    Start,
+    End,
+};
+
 enum class SelectionDragEdge {
     None = 0,
     Left,
@@ -354,6 +363,11 @@ struct MainWindow {
     Rect selectionEditOrig;
     // a drag after a double click extends the selection a word at a time
     bool selectingByWord = false;
+    // a long press with a finger selected a word and put a drag handle under
+    // each end of the selection (issue #538)
+    bool touchSelHandles = false;
+    // the handle a finger currently has hold of, if any
+    TouchSelHandle touchSelDragging = TouchSelHandle::None;
     // the time and place of the last double click, so a third one nearby is a
     // triple click (line selection)
     u64 lastWordSelectTime = 0;

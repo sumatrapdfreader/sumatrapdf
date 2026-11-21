@@ -769,6 +769,8 @@ enum class ControlCmd : u16 {
     TestWindows = 172,
     // [path, value]: sets a setting the way the palette's "= settings" rows do
     TestSetSetting = 173,
+    // [action, word]: touch selection probe (TouchSelResultTemp)
+    TestTouchSel = 174,
     // [action, pageNo, x, y, length, unit]: drives the Measure tool
     TestMeasurement = 159,
     // [replace <path> | edit, pageNo, imageIdx]: an image embedded in a PDF
@@ -2133,6 +2135,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 TabsSelect(win, a);
             }
             AppendTestResult(req, 0, StripGroupsStateTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestTouchSel: {
+            int exitCode = 0;
+            Str res = TouchSelResultTemp(StringArg(req, 0), StringArg(req, 1), &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

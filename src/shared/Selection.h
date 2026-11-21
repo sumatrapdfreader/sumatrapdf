@@ -80,13 +80,13 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
 Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& selections);
 #endif
 
-#if !defined(SUMATRA_NG)
 // Touch text selection handles (issue #538). Rects are in canvas coordinates.
 // Returns false when there is no text selection to put handles on.
 bool GetTouchSelHandleRects(MainWindow* win, Rect& startOut, Rect& endOut);
 TouchSelHandle HitTestTouchSelHandle(MainWindow* win, int x, int y);
 void HideTouchSelHandles(MainWindow* win);
-#endif
+bool TouchSelectWordAt(MainWindow* win, int x, int y);
+void DragTouchSelHandle(MainWindow* win, int x, int y);
 
 bool IsRectangularSelection(MainWindow* win);
 bool IsDrawnRectSelection(MainWindow* win);

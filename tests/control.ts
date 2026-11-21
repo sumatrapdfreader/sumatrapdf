@@ -194,6 +194,9 @@ export enum ControlCommand {
   TestWindows = 172,
   // [path, value]: sets a setting the way the palette's "= settings" rows do
   TestSetSetting = 173,
+  // [action, word]: "word <w>" screen center of a word on page 1, "state" the
+  // touch selection handles
+  TestTouchSel = 174,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

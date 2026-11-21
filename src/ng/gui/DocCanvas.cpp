@@ -3670,6 +3670,8 @@ struct DocCanvasView {
     static void OnWheelOverHScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev);
     static void OnPinch(DocCanvasView* self, gp::Ctx* cx, const gp::PinchEvent* ev);
     static void OnGesture(DocCanvasView* self, gp::Ctx* cx, const gp::GestureEvent* ev);
+    static void OnTouch(DocCanvasView* self, gp::Ctx* cx, const gp::TouchEvent* ev);
+    static void OnTouchHold(DocCanvasView* self, gp::Ctx* cx, const gp::TickEvent* ev);
     static void OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
     static void OnUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev);
     static void OnHover(DocCanvasView* self, gp::Ctx* cx, const gp::HoverEvent* ev);
@@ -3709,6 +3711,25 @@ Point DocCanvasCursorPos(MainWindow* win) {
     return res;
 }
 #endif
+
+// a canvas point in screen pixels, for tests (canvas pixels are client pixels
+// offset by the canvas' place in the window)
+Point CanvasToScreenPt(MainWindow* win, Point pt) {
+    float k = CanvasScale(win);
+    float wx = (float)win->canvasRc.x + (float)pt.x * k;
+    float wy = (float)win->canvasRc.y + (float)pt.y * k;
+#if OS_WIN
+    HWND hwnd = MainWindowHwnd(win);
+    float dipScale = hwnd ? (float)DpiGetForHwnd(hwnd) / 96.f : 1.f;
+    POINT p{(int)(wx * dipScale), (int)(wy * dipScale)};
+    if (hwnd) {
+        ClientToScreen(hwnd, &p);
+    }
+    return Point(p.x, p.y);
+#else
+    return Point((int)wx, (int)wy);
+#endif
+}
 
 void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     auto* win = (MainWindow*)user;
@@ -3923,6 +3944,31 @@ void DocCanvasView::OnPinch(DocCanvasView* self, gp::Ctx* cx, const gp::PinchEve
     }
 }
 
+// orig's touch text selection (issue #538): the finger being timed for a long
+// press, which selects a word, or dragging one of its handles
+struct TouchHold {
+    MainWindow* win = nullptr;
+    u32 pointerId = 0;
+    bool down = false;
+    // moved past the slop: a scroll, not a hold
+    bool moved = false;
+    bool longPressDone = false;
+    Point downPos;
+    int timer = 0;
+    // the contact selected or grabbed a handle: the mouse press Windows makes
+    // from it must not act on the canvas
+    bool swallowMouse = false;
+    bool swallowUp = false;
+    TimeStamp lastActivity{};
+};
+static TouchHold gTouchHold;
+
+// the touch owns the canvas: a pan must not scroll it
+static bool TouchHoldActive(MainWindow* win) {
+    TouchHold& h = gTouchHold;
+    return h.down && h.win == win && (h.longPressDone || win->touchSelDragging != TouchSelHandle::None);
+}
+
 // the touch pan in progress, in window pixels
 struct TouchPan {
     MainWindow* win = nullptr;
@@ -3943,6 +3989,10 @@ static Point TouchPanPos(MainWindow* win, const gp::GestureEvent* ev) {
 // orig's OnGesture GID_PAN: flicking left or right changes the page, panning
 // moves the document
 static void CanvasTouchPan(MainWindow* win, DisplayModel* dm, const gp::GestureEvent* ev) {
+    if (TouchHoldActive(win)) {
+        gTouchPan.started = false;
+        return;
+    }
     Point pos = TouchPanPos(win, ev);
     if (ev->phase == gp::TouchPhase::Started) {
         gTouchPan = TouchPan{win, true, pos};
@@ -4047,6 +4097,134 @@ void DocCanvasView::OnGesture(DocCanvasView* self, gp::Ctx* cx, const gp::Gestur
     gp::Notify(cx);
 }
 
+// How long a finger has to hold still before it counts as a long press. 500ms
+// is the usual touch long-press; 300ms was too easy to trip while starting a
+// scroll (issue #6006).
+constexpr int kTouchLongPressMs = 500;
+// How long after a finger lifts mouse input is still assumed to be its echo.
+constexpr int kTouchMouseTakeoverMs = 1000;
+
+static void TouchHoldStopTimer(MainWindow* win) {
+    TouchHold& h = gTouchHold;
+    if (h.timer && win->gpuiWin) {
+        gp::WindowCancelTimer(win->gpuiWin, h.timer);
+    }
+    h.timer = 0;
+}
+
+// orig's kTouchLongPressTimerID: the finger held still, select the word
+void DocCanvasView::OnTouchHold(DocCanvasView* self, gp::Ctx* cx, const gp::TickEvent*) {
+    MainWindow* win = self->win;
+    TouchHold& h = gTouchHold;
+    h.timer = 0;
+    if (!IsMainWindowValid(win) || h.win != win || !h.down || h.moved || h.longPressDone) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSelection) {
+        return;
+    }
+    logf("touch: long press at %d,%d\n", h.downPos.x, h.downPos.y);
+    h.longPressDone = true;
+    // a long press replaces whatever a stray drag may have started
+    if (win->mouseAction != MouseAction::None) {
+        win->mouseAction = MouseAction::None;
+        win->dragStartPending = false;
+        win->selectingByWord = false;
+    }
+    if (TouchSelectWordAt(win, h.downPos.x, h.downPos.y)) {
+        h.swallowMouse = true;
+    }
+    AppShellInvalidate(win);
+    gp::Notify(cx);
+}
+
+// orig's OnTouchPointer: raw finger contacts time a long press and drag the
+// selection handles. Pens go the mouse's way. Gestures still come separately.
+void DocCanvasView::OnTouch(DocCanvasView* self, gp::Ctx* cx, const gp::TouchEvent* ev) {
+    MainWindow* win = self->win;
+    DisplayModel* dm = IsMainWindowValid(win) ? win->AsFixed() : nullptr;
+    if (!dm || ev->pen) {
+        return;
+    }
+    TouchHold& h = gTouchHold;
+    Point pt;
+    ToDoc(win, ev->x, ev->y, &pt);
+    h.lastActivity = TimeGet();
+    if (ev->phase == gp::TouchPhase::Started) {
+        if (!ev->primary) {
+            // a second finger: that's a gesture, not a press
+            TouchHoldStopTimer(win);
+            h.moved = true;
+            return;
+        }
+        TouchHoldStopTimer(win);
+        h = TouchHold{win, ev->pointerId, true};
+        h.downPos = pt;
+        h.lastActivity = TimeGet();
+        const_cast<gp::TouchEvent*>(ev)->propagate = false;
+        TouchSelHandle handle = HitTestTouchSelHandle(win, pt.x, pt.y);
+        if (handle != TouchSelHandle::None) {
+            logf("touch: grabbed handle %d at %d,%d\n", (int)handle, pt.x, pt.y);
+            win->touchSelDragging = handle;
+            h.swallowMouse = true;
+            return;
+        }
+        h.timer = gp::WindowSetTimeout(cx->win, kTouchLongPressMs, gp::Listen(cx, &DocCanvasView::OnTouchHold));
+        return;
+    }
+    if (!h.down || h.win != win || ev->pointerId != h.pointerId) {
+        return;
+    }
+    if (ev->phase == gp::TouchPhase::Moved) {
+        if (win->touchSelDragging != TouchSelHandle::None) {
+            DragTouchSelHandle(win, pt.x, pt.y);
+            AppShellInvalidate(win);
+            gp::Notify(cx);
+            return;
+        }
+        int slop = DpiScale(10);
+        if (!h.longPressDone && (abs(pt.x - h.downPos.x) > slop || abs(pt.y - h.downPos.y) > slop)) {
+            h.moved = true;
+            TouchHoldStopTimer(win);
+        }
+        return;
+    }
+    // Ended or Cancelled; the handles stay up for the next adjustment
+    TouchHoldStopTimer(win);
+    h.down = false;
+    win->touchSelDragging = TouchSelHandle::None;
+}
+
+// A mouse press Windows made from a touch that selected or dragged a handle,
+// arriving while the finger is down or just after it lifted.
+static bool TouchSwallowsMouseDown(MainWindow* win) {
+    TouchHold& h = gTouchHold;
+    if (h.win != win || !h.swallowMouse) {
+        return false;
+    }
+    if (!h.down && TimeSinceInMs(h.lastActivity) > kTouchMouseTakeoverMs) {
+        h.swallowMouse = false;
+        return false;
+    }
+    h.swallowUp = true;
+    return true;
+}
+
+// orig's OnMouseMove: a real mouse takes the handles away -- they're finger
+// furniture -- and leaves the selection alone. Moves while a finger is down or
+// has only just lifted are its echoes.
+static void TouchHandlesOnMouseMove(MainWindow* win) {
+    TouchHold& h = gTouchHold;
+    if (!win->touchSelHandles || h.down) {
+        return;
+    }
+    if (h.win == win && TimeSinceInMs(h.lastActivity) < kTouchMouseTakeoverMs) {
+        return;
+    }
+    HideTouchSelHandles(win);
+}
+
 void DocCanvasView::OnWheelOverHScrollbar(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev) {
     MainWindow* win = self->win;
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
@@ -4149,6 +4327,11 @@ void DocCanvasView::OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDown
         return;
     }
     SetCanvasModifiers(ev->modifiers);
+    if (TouchSwallowsMouseDown(win)) {
+        logf("touch: swallowing a mouse press made from the touch\n");
+        gp::WindowStopPropagation(cx);
+        return;
+    }
     if (IsContextClick(ev->button, ev->modifiers)) {
         // ng: gpui's ContextMenu would open from this press; orig's menu
         // opens when the button comes up without having dragged
@@ -4223,6 +4406,10 @@ void DocCanvasView::OnUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEven
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
         return;
     }
+    if (gTouchHold.swallowUp) {
+        gTouchHold.swallowUp = false;
+        return;
+    }
     Point pt;
     ToDoc(win, ev->x, ev->y, &pt);
     SetCanvasModifiers(ev->modifiers);
@@ -4281,6 +4468,7 @@ void DocCanvasView::OnMove(DocCanvasView* self, gp::Ctx* cx, const gp::MouseMove
     UpdateOverlayToolbarForMouse(win, Point{(int)ev->x, (int)ev->y});
     AppShellSidebarCanvasMove(win, ev);
     OverlayScrollbarsOnMouse(win, pt.x, pt.y, onCanvas);
+    TouchHandlesOnMouseMove(win);
     if (!onCanvas && win->mouseAction == MouseAction::None) {
         // the laser dot and the presentation auto-hide only own the canvas
         AppShellShowCursor(win, true);
@@ -4487,6 +4675,7 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
                          ->OnScrollWheel(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnWheel))
                          ->OnPinch(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnPinch))
                          ->OnGesture(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnGesture))
+                         ->OnTouch(gp::ListenTo(Ui(win)->view, &DocCanvasView::OnTouch))
                          ->OnDrop(GStrL("ExternalText"), gp::ListenTo(Ui(win)->view, &DocCanvasView::OnTextDrop));
     canvas->customPaint = &DocCanvasView::OnPaint;
     canvas->customUser = win;

@@ -1648,6 +1648,42 @@ Pixmap* EnsureReadablePixmap(Pixmap* p) {
 }
 
 // a spot on pageNo with no text under it, in canvas pixels
+// tests/touch-long-press-select.ts: where to touch, in screen pixels.
+// "word <w>": the center of word w on page 1. "state": the touch selection
+// handles, their centers when shown.
+TempStr TouchSelResultTemp(Str action, Str word, int* exitCodeOut) {
+    auto finish = [&](TempStr msg, int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return msg;
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return finish(str::DupTemp(StrL("NOTREADY no-doc")), 2);
+    }
+    if (str::Eq(action, StrL("word"))) {
+        double wx = 0, wy = 0;
+        if (!FindWordCenter(dm->GetEngine(), 1, word, &wx, &wy)) {
+            return finish(str::DupTemp(StrL("ERROR word-not-found")), 1);
+        }
+        Point pt = CanvasToScreenPt(win, dm->CvtToScreen(1, PointF((float)wx, (float)wy)));
+        return finish(fmt("OK %d %d", pt.x, pt.y), 0);
+    }
+    if (!str::Eq(action, StrL("state"))) {
+        return finish(str::DupTemp(StrL("ERROR unknown action")), 1);
+    }
+    Rect start, end;
+    if (!win->touchSelHandles || !GetTouchSelHandleRects(win, start, end)) {
+        return finish(str::DupTemp(StrL("OK handles=0")), 0);
+    }
+    Point s = CanvasToScreenPt(win, Point(start.x + start.dx / 2, start.y + start.dy / 2));
+    Point e = CanvasToScreenPt(win, Point(end.x + end.dx / 2, end.y + end.dy / 2));
+    return finish(fmt("OK handles=1 dragging=%d start=%d,%d end=%d,%d", (int)win->touchSelDragging, s.x, s.y, e.x, e.y),
+                  0);
+}
+
 Point FindEmptySpotOnPage(MainWindow* win, DisplayModel* dm, int pageNo) {
     Rect client = Rect(0, 0, win->canvasRc.dx, win->canvasRc.dy);
     constexpr int kStep = 8;
