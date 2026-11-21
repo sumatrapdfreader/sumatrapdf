@@ -861,7 +861,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdReplaceImage || cmdId == CmdEditImageExternally) {
-#if defined(SUMATRA_NG)
+#if defined(SUMATRA_NG) && !OS_WIN
+        // ng: the external editor and its file watch are Windows only for now
         return CommandVisibility::Hide;
 #else
         if (surface == CommandSurface::Palette || !ctx.isPdf) {

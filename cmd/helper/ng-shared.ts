@@ -166,6 +166,8 @@ export const sharedFiles = [
   "src/shared/MeasurementToolbarCommon.h",
   "src/shared/MenuCommon.cpp",
   "src/shared/MenuCommon.h",
+  "src/shared/ImageReplace.cpp",
+  "src/shared/ImageReplace.h",
   "src/shared/MenuDefs.cpp",
   "src/shared/MenuDefs.h",
   "src/shared/NavFilesInFolderCommon.cpp",

@@ -453,6 +453,9 @@
     <ClInclude Include="..\src\shared\ImageReader.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\ImageReplace.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\ImageSaveCropResizeCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1374,6 +1377,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ImageReader.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ImageReplace.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ImageSaveCropResizeCommon.cpp">

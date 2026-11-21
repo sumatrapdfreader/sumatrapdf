@@ -73,6 +73,7 @@
 #include "SumatraPDF.h"
 #include "SumatraLog.h"
 #include "MainWindow.h"
+#include "ImageReplace.h"
 #include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "Tabs.h"
@@ -4770,6 +4771,43 @@ static void OnImagePicked(ImagePickCtx* ctx, Str path) {
     InsertImageAtPath(ctx->win, ctx->pt, path);
 }
 
+// orig's PickImageFilePathTemp filter
+static TempStr ImageFileFilterTemp() {
+    return fmt("%s\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif;*.ico\1%s\1*.*\1",
+               Tr("Image files"), Tr("All files"));
+}
+
+// the embedded image Replace Image... was picked for
+struct ImageReplacePick {
+    MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    int pageNo = 0;
+    int imageIdx = 0;
+};
+
+static ImageReplacePick gImageReplacePick;
+
+static void OnReplaceImagePicked(ImageReplacePick* p, Str path) {
+    ReplaceImageFromPath(p->win, p->tab, p->pageNo, p->imageIdx, path);
+}
+
+// Replace Image...: asks for the image file to draw in place of the image
+void ReplaceImageFromFile(MainWindow* win, IPageElement* imageEl) {
+    int pageNo = 0;
+    int imageIdx = 0;
+    if (!ImageElementPos(imageEl, &pageNo, &imageIdx) || !CanAccessDisk()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    TempStr filter = ImageFileFilterTemp();
+    gImageReplacePick = {win, tab, pageNo, imageIdx};
+    if (AppShellPickFileAsync(win, Tr("Image files"), filter, MkFunc1(OnReplaceImagePicked, &gImageReplacePick))) {
+        return;
+    }
+    TempStr path = AppShellPromptForPathTemp(win, Tr("Image files"), filter);
+    ReplaceImageFromPath(win, tab, pageNo, imageIdx, path);
+}
+
 static void InsertImageFromFile(MainWindow* win, Point pt, ImageStampSource source) {
     WindowTab* tab = win->CurrentTab();
     DisplayModel* dm = win->AsFixed();
@@ -4787,9 +4825,7 @@ static void InsertImageFromFile(MainWindow* win, Point pt, ImageStampSource sour
     }
     if (len(path) == 0) {
         // orig's PickImageFilePathTemp
-        TempStr filter =
-            fmt("%s\1*.png;*.jpg;*.jpeg;*.jfif;*.bmp;*.gif;*.tif;*.tiff;*.webp;*.heic;*.heif;*.ico\1%s\1*.*\1",
-                Tr("Image files"), Tr("All files"));
+        TempStr filter = ImageFileFilterTemp();
         gImagePick = {win, tab, pt};
         if (AppShellPickFileAsync(win, Tr("Image files"), filter, MkFunc1(OnImagePicked, &gImagePick))) {
             return;

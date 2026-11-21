@@ -401,6 +401,7 @@ function sumatrapdf_files()
     "MainWindowCommon.*",
     "Menu.*",
     "MenuCommon.*",
+    "ImageReplace.*",
     "MenuDefs.*",
     "NavFilesInFolder.*",
     "NavFilesInFolderCommon.*",

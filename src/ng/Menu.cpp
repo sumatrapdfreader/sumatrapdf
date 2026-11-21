@@ -26,6 +26,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "ImageReplace.h"
 #include "ReadingBar.h"
 #include "ReadingAutoScroll.h"
 #include "AIChatTypes.h"
@@ -1051,6 +1052,10 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
         if (!onImage) {
             MenuRemove(popup, CmdSaveImage);
         }
+        if (!pageEl || !pageEl->Is(kindPageElementImage)) {
+            MenuRemove(popup, CmdReplaceImage);
+            MenuRemove(popup, CmdEditImageExternally);
+        }
         if (!isImageEngine && !onImage) {
             MenuRemove(popup, CmdCropImage);
             MenuRemove(popup, CmdResizeImage);
@@ -1207,6 +1212,14 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
         case CmdSearchGoogleLensImage:
             SearchGoogleLensImage(tab, pageEl);
             return;
+        case CmdReplaceImage:
+            ReplaceImageFromFile(win, pageEl);
+            return;
+#if OS_WIN
+        case CmdEditImageExternally:
+            EditImageExternally(win, pageEl);
+            return;
+#endif
 
         case CmdSaveImage:
         case CmdCropImage:

@@ -55,6 +55,7 @@
 #endif
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "ImageReplace.h"
 #include "AIChatTypes.h"
 #include "WindowTab.h"
 #include "HomePage.h"
@@ -764,6 +765,8 @@ enum class ControlCmd : u16 {
     TestWindows = 172,
     // [action, pageNo, x, y, length, unit]: drives the Measure tool
     TestMeasurement = 159,
+    // [replace <path> | edit, pageNo, imageIdx]: an image embedded in a PDF
+    TestImageReplace = 160,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -3559,6 +3562,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = PageRenderViewPrintResultTemp(path, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestImageReplace: {
+            i32 pageNo = 0, imageIdx = 0;
+            IntArg(req, 1, pageNo);
+            IntArg(req, 2, imageIdx);
+            AppendTestResult(req, 0,
+                             TestImageReplace(FirstWindow(), StringArg(req, 0), pageNo, imageIdx, StringArg(req, 3)));
             break;
         }
 

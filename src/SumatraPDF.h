@@ -336,9 +336,6 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
 void OnDocumentVerticalScrollIntent(MainWindow* win, bool down);
 void DismissNextFileScrollHint(MainWindow* win);
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
-void ReplaceImageFromFile(MainWindow* win, IPageElement* imageEl);
-void EditImageExternally(MainWindow* win, IPageElement* imageEl);
-TempStr TestImageReplace(MainWindow* win, Str action, int pageNo, int imageIdx, Str path);
 void RerenderTabPage(WindowTab*, int pageNo);
 void GetFrameNcStrips(MainWindow*, Vec<Rect>& out);
 EngineBase* CreatePdfEngineForDialog(Str path, HWND hwnd);

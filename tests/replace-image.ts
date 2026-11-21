@@ -73,14 +73,37 @@ async function waitColor(client: ControlClient, frame: number, want: Color, what
   throw new Error(`replace-image: ${what}: expected the image to be ${want}, it is ${got}`);
 }
 
+// the image fills the middle of the page, where the menu is opened
+async function imageMenuLabels(client: ControlClient, frame: number): Promise<string[]> {
+  if (!USE_NG) {
+    const menu = await readContextMenuTree(findCanvas(frame));
+    return (findSubMenu(menu, "Selected Image")?.items ?? []).map((it) => it.text);
+  }
+  const lay = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+  const m = /page n=1 shown=1 pos=\S+ screen=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(lay);
+  if (!m) {
+    throw new Error(`replace-image: page 1 is not shown:\n${lay}`);
+  }
+  const x = +m[1]! + Math.floor(+m[3]! / 2);
+  const y = +m[2]! + Math.floor(+m[4]! / 2);
+  const raw = String((await client.request(ControlCommand.TestContextMenuAt, [x, y]))[1] ?? "");
+  // rows: path, kind, cmd, disabled, checked, title, accel
+  const rows = raw.split("\n").map((l) => l.split("\t"));
+  const sub = rows.find((c) => c[1] === "S" && c[5] === "Selected Image");
+  if (!sub) {
+    return [];
+  }
+  return rows.filter((c) => c[0]!.startsWith(sub[0]! + ".") && c[1] === "I").map((c) => c[5]!);
+}
+
 async function image(client: ControlClient, action: string, path = ""): Promise<string> {
   const res = await client.request(ControlCommand.TestImageReplace, [action, 1, 0, path]);
   return String(res[1] ?? "");
 }
 
 export async function testit(): Promise<void> {
-  if (!IS_WIN || USE_NG) {
-    console.log("replace-image: only in the Windows app");
+  if (!IS_WIN) {
+    console.log("replace-image: only on Windows");
     return;
   }
   const pdf = tmpPath("replace-image.pdf");
@@ -94,9 +117,7 @@ export async function testit(): Promise<void> {
     await waitColor(client, frame, "red", "the document");
 
     // right-click on the image: both commands are in its submenu
-    const menu = await readContextMenuTree(findCanvas(frame));
-    const imageMenu = findSubMenu(menu, "Selected Image");
-    const labels = (imageMenu?.items ?? []).map((it) => it.text);
+    const labels = await imageMenuLabels(client, frame);
     for (const want of ["Replace Image...", "Edit Image in Another App"]) {
       if (!labels.includes(want)) {
         throw new Error(`replace-image: "${want}" missing from the image menu: ${JSON.stringify(labels)}`);

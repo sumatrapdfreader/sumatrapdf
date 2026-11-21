@@ -33,6 +33,7 @@
 #include "SumatraTest.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "ImageReplace.h"
 #include "AnnotPlacement.h"
 #include "Canvas.h"
 #include "Tabs.h"
