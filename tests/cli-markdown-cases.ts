@@ -316,6 +316,29 @@ function testEpubTable(): void {
   expect("the header row isn't a heading", !md.includes("# Format"), md);
 }
 
+// heading_levels_cluster: the largest size is #, sizes within a point and a
+// half are one level, all below the third level are ###
+function testHeadingLevels(): void {
+  let c = "";
+  let y = 760;
+  for (const size of [28, 48, 36, 47, 30, 60]) {
+    y -= size + 12;
+    c += textAt("F1", 72, y, `H${size}`, size);
+  }
+  const pages = [c];
+  // the body: most of the text, in 10pt
+  let body = "";
+  for (let i = 0; i < 40; i++) {
+    body += textAt("F1", 72, 740 - 14 * i, "Body text that is most of what the document is set in.");
+  }
+  pages.push(body);
+  const ls = lines(markdownOf(pages));
+  const want = ["# H60", "## H48", "## H47", "### H36", "### H30", "### H28"];
+  for (const w of want) {
+    expect(`'${w}'`, ls.includes(w), ls.join("\n").slice(0, 600));
+  }
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
@@ -332,6 +355,7 @@ export async function testit(): Promise<void> {
   testTwoColumnProse();
   testNotTables();
   testEpubTable();
+  testHeadingLevels();
   console.log(`${name}: OK`);
 }
 

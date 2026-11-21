@@ -1175,8 +1175,11 @@ static bool LineListMarker(const StyledPage& p, int i, bool* bullet, int* skip) 
 
 struct MdDoc {
     float bodySize = 0;
-    // font sizes that are headings, largest first: index + 1 is the level
+    // font sizes that are headings, largest first
     Vec<float> headingSizes;
+    // the level of each of headingSizes: 1 to 3
+    Vec<int> headingLevels;
+    int nHeadingLevels = 0;
     StrVec tocTitles;
     Vec<int> tocDepths;
     // the running headers' HeaderKeyTemp()
@@ -1186,7 +1189,7 @@ struct MdDoc {
 static int HeadingLevelForSize(MdDoc& d, float size) {
     for (int i = 0; i < len(d.headingSizes); i++) {
         if (fabsf(d.headingSizes[i] - size) < 0.5f) {
-            return i + 1;
+            return d.headingLevels[i];
         }
     }
     return 0;
@@ -1416,7 +1419,20 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
         int end = i;
         float maxSize = 0;
         int nChars = 0, nMono = 0, nBold = 0;
+        // a block's lines in one size class: a heading glued to the
+        // paragraph after it, or headings of several sizes, are runs apart
+        auto lineLevel = [&](int span) {
+            float size = 0;
+            for (int k = span; k < nSpans && p.spans[k].line == p.spans[span].line; k++) {
+                size = std::max(size, p.spans[k].size);
+            }
+            return HeadingLevelForSize(d, size);
+        };
+        int runLevel = lineLevel(i);
         while (end < nSpans && p.spans[end].block == block && inTable[end] < 0) {
+            if (end > i && p.spans[end].line != p.spans[end - 1].line && lineLevel(end) != runLevel) {
+                break;
+            }
             const StyledSpan& s = p.spans[end];
             maxSize = std::max(maxSize, s.size);
             nChars += len(s.text);
@@ -1446,7 +1462,7 @@ static void StyledPageToMarkdown(MdDoc& d, StyledPage& p, int pageNo, MdImages& 
         // a line of bold on its own in the body's size: the smallest heading
         // (a man page's NAME, a report's section titles)
         if (level == 0 && nLines == 1 && nBold == nChars && len(plain) < 80) {
-            level = std::min(len(d.headingSizes) + 1, 4);
+            level = std::min(d.nHeadingLevels + 1, 4);
         }
         if (level > 0) {
             Str text = plain;
@@ -1559,9 +1575,17 @@ static void FindSizes(MdDoc& d, Vec<StyledPage*>& pages) {
             VecAppend(bigger, c.size);
         }
     }
+    // largest first; sizes within 1.5pt of the one before are one level (a
+    // title set at 48 here and 47 there), and all below the third are the third
     std::sort(bigger.begin(), bigger.end(), [](float a, float b) { return a > b; });
-    for (int i = 0; i < len(bigger) && i < 3; i++) {
+    int level = 0;
+    for (int i = 0; i < len(bigger); i++) {
+        if (i == 0 || bigger[i - 1] - bigger[i] > 1.5f) {
+            level = std::min(level + 1, 3);
+        }
         VecAppend(d.headingSizes, bigger[i]);
+        VecAppend(d.headingLevels, level);
+        d.nHeadingLevels = level;
     }
 }
 
