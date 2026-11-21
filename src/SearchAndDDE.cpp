@@ -601,47 +601,18 @@ error: <error message>
 if file doesn't exist or no opened file
 */
 
-// returns the document position currently under the mouse cursor, in PDF points
-// -- the same unit as the "pt" cursor-position notification and .smx files
-// (issue #1411). page is 0 if the cursor isn't over a page.
-static Str HandleGetMousePosCmd(Str cmd, bool* ack, str::Builder& res) {
-    Str next = str::Parse(cmd, "[GetMousePos()]");
-    if (str::IsNull(next)) {
-        next = str::Parse(cmd, "[GetMousePos]");
-    }
-    if (str::IsNull(next)) {
-        return {};
-    }
-    *ack = true;
+// the window the last DDE command applies to and the mouse cursor in its
+// canvas, for the shared [GetMousePos] request
+DisplayModel* DdeMousePosModel(Point* posOut) {
     MainWindow* win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
     if (!win && len(gWindows) > 0) {
         win = gWindows[0];
     }
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
-    if (!dm) {
-        res.Append(StrL("error: no document\n"));
-        return next;
+    if (dm) {
+        *posOut = HwndGetCursorPos(win->hwndCanvas);
     }
-    Point pos = HwndGetCursorPos(win->hwndCanvas);
-    int pageNo = dm->GetPageNoByPoint(pos);
-    bool validPage = dm->ValidPageNo(pageNo);
-    PointF pt = dm->CvtFromScreen(pos);
-    // match FormatCursorPositionTemp's "pt" computation exactly
-    EngineBase* engine = dm->GetEngine();
-    float dpi = engine->fileDPI;
-    float x = pt.x < 0 ? 0 : pt.x;
-    float y = pt.y < 0 ? 0 : pt.y;
-    double xPt = (double)x / dpi * 72.0;
-    double yPt = (double)y / dpi * 72.0;
-    res.Append(fmt("page: %d\n", validPage ? pageNo : 0));
-    res.Append(fmt("x: %.2f\n", xPt));
-    res.Append(fmt("y: %.2f\n", yPt)); // MuPDF convention: origin top-left, y down
-    if (validPage) {
-        // also provide PDF/Adobe coordinates: origin bottom-left, y up (#1411)
-        double pageHeightPt = (double)engine->PageMediabox(pageNo).dy / dpi * 72.0;
-        res.Append(fmt("ypdf: %.2f\n", pageHeightPt - yPt));
-    }
-    return next;
+    return dm;
 }
 
 /*
@@ -653,11 +624,6 @@ eg: [CmdClose] or [CmdCreateAnnotHighlight #00ff00 openEdit]
 // a new batch of commands forgets the document the last one opened
 void DdeExecuteBegin() {
     gMostRecentlyOpenedDoc = nullptr;
-}
-
-// requests only orig answers
-Str HandleAppRequestCmd(Str cmd, bool* ack, str::Builder& res) {
-    return HandleGetMousePosCmd(cmd, ack, res);
 }
 
 static void OpenManyCopyDataAsyncRun(OpenManyCopyDataAsync* d) {

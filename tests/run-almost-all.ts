@@ -474,6 +474,7 @@ import { testit as contextMenuParity } from "./context-menu-parity.ts";
 import { testit as mainMenuParity } from "./main-menu-parity.ts";
 import { testit as endSessionSaves } from "./end-session-saves.ts";
 import { testit as quicklookForward } from "./quicklook-forward.ts";
+import { testit as ddeGetMousePos } from "./dde-get-mouse-pos.ts";
 import { testit as commandPaletteSettings } from "./command-palette-settings.ts";
 import { testit as settingsRestoreDefault } from "./settings-restore-default.ts";
 import { testit as palettePrefixKeys } from "./palette-prefix-keys.ts";
@@ -1045,6 +1046,7 @@ export const tests: NamedTest[] = [
   ["main-menu-parity", mainMenuParity],
   ["end-session-saves", endSessionSaves],
   ["quicklook-forward", quicklookForward],
+  ["dde-get-mouse-pos", ddeGetMousePos],
   ["command-palette-settings", commandPaletteSettings],
   ["settings-restore-default", settingsRestoreDefault],
   ["issue-6287", issue6287],

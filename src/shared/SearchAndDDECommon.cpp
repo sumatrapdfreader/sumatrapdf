@@ -2582,6 +2582,45 @@ Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
 
 #if OS_WIN
 
+// returns the document position currently under the mouse cursor, in PDF points
+// -- the same unit as the "pt" cursor-position notification and .smx files
+// (issue #1411). page is 0 if the cursor isn't over a page.
+static Str HandleGetMousePosCmd(Str cmd, bool* ack, str::Builder& res) {
+    Str next = str::Parse(cmd, "[GetMousePos()]");
+    if (str::IsNull(next)) {
+        next = str::Parse(cmd, "[GetMousePos]");
+    }
+    if (str::IsNull(next)) {
+        return {};
+    }
+    *ack = true;
+    Point pos;
+    DisplayModel* dm = DdeMousePosModel(&pos);
+    if (!dm) {
+        res.Append(StrL("error: no document\n"));
+        return next;
+    }
+    int pageNo = dm->GetPageNoByPoint(pos);
+    bool validPage = dm->ValidPageNo(pageNo);
+    PointF pt = dm->CvtFromScreen(pos);
+    // match FormatCursorPositionTemp's "pt" computation exactly
+    EngineBase* engine = dm->GetEngine();
+    float dpi = engine->fileDPI;
+    float x = pt.x < 0 ? 0 : pt.x;
+    float y = pt.y < 0 ? 0 : pt.y;
+    double xPt = (double)x / dpi * 72.0;
+    double yPt = (double)y / dpi * 72.0;
+    res.Append(fmt("page: %d\n", validPage ? pageNo : 0));
+    res.Append(fmt("x: %.2f\n", xPt));
+    res.Append(fmt("y: %.2f\n", yPt)); // MuPDF convention: origin top-left, y down
+    if (validPage) {
+        // also provide PDF/Adobe coordinates: origin bottom-left, y up (#1411)
+        double pageHeightPt = (double)engine->PageMediabox(pageNo).dy / dpi * 72.0;
+        res.Append(fmt("ypdf: %.2f\n", pageHeightPt - yPt));
+    }
+    return next;
+}
+
 static bool HandleRequestCmds(Str cmd, str::Builder& rsp) {
     bool didHandle = false;
     while (cmd) {
@@ -2592,7 +2631,7 @@ static bool HandleRequestCmds(Str cmd, str::Builder& rsp) {
             nextCmd = HandleGetOpenFilesCmd(cmd, &didHandle, rsp);
         }
         if (str::IsNull(nextCmd)) {
-            nextCmd = HandleAppRequestCmd(cmd, &didHandle, rsp);
+            nextCmd = HandleGetMousePosCmd(cmd, &didHandle, rsp);
         }
         if (str::IsNull(nextCmd)) {
             TempStr tmp;

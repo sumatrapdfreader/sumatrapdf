@@ -142,7 +142,7 @@ void HideFwdSearchMarkAfter(MainWindow* win, int delayMs);
 void ArmFindFlashTimer(MainWindow* win, int delayMs);
 MainWindow* WindowFromHwnd(HWND hwnd);
 MainWindow* LastActiveWindow();
-Str HandleAppRequestCmd(Str cmd, bool* ack, str::Builder& res);
+DisplayModel* DdeMousePosModel(Point* posOut);
 void DdeExecuteBegin();
 
 struct UpdateFindStatusData {

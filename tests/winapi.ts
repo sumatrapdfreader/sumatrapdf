@@ -2689,3 +2689,69 @@ export function getWindowVirtualDesktopId(hwnd: number): string {
   }
   return guidString(guid);
 }
+
+// --- DDE client (DDEML): a request as a DDE client like Acrobat's would send ---
+
+const APPCMD_CLIENTONLY = 0x10;
+const CP_WINUNICODE = 1200;
+const CF_UNICODETEXT = 13;
+const XTYP_REQUEST = 0x20b0;
+const kDdeTimeoutMs = 5000;
+
+const ddeml = IS_WIN
+  ? dlopen("user32.dll", {
+      DdeInitializeW: { args: [FFIType.ptr, FFIType.ptr, FFIType.u32, FFIType.u32], returns: FFIType.u32 },
+      DdeUninitialize: { args: [FFIType.u32], returns: FFIType.i32 },
+      DdeCreateStringHandleW: { args: [FFIType.u32, FFIType.ptr, FFIType.i32], returns: FFIType.u64 },
+      DdeFreeStringHandle: { args: [FFIType.u32, FFIType.u64], returns: FFIType.i32 },
+      DdeConnect: { args: [FFIType.u32, FFIType.u64, FFIType.u64, FFIType.ptr], returns: FFIType.u64 },
+      DdeDisconnect: { args: [FFIType.u64], returns: FFIType.i32 },
+      DdeClientTransaction: {
+        args: [FFIType.ptr, FFIType.u32, FFIType.u64, FFIType.u64, FFIType.u32, FFIType.u32, FFIType.u32, FFIType.ptr],
+        returns: FFIType.u64,
+      },
+      DdeGetData: { args: [FFIType.u64, FFIType.ptr, FFIType.u32, FFIType.u32], returns: FFIType.u32 },
+      DdeFreeDataHandle: { args: [FFIType.u64], returns: FFIType.i32 },
+    })
+  : null;
+
+// Sends one XTYP_REQUEST for `item` to the SUMATRA / control DDE server and
+// returns the answer, or null if there is no server or it doesn't answer.
+export function ddeRequest(item: string, service = "SUMATRA", topic = "control"): string | null {
+  if (!ddeml) {
+    return null;
+  }
+  const dde = ddeml.symbols;
+  const cb = new JSCallback(() => 0n, {
+    args: [FFIType.u32, FFIType.u32, FFIType.u64, FFIType.u64, FFIType.u64, FFIType.u64, FFIType.u64, FFIType.u64],
+    returns: FFIType.u64,
+  });
+  const inst = new Uint32Array(1);
+  if (dde.DdeInitializeW(ptr(inst), cb.ptr, APPCMD_CLIENTONLY, 0) !== 0) {
+    cb.close();
+    return null;
+  }
+  const wz = (s: string) => Buffer.from(s + "\0", "utf16le");
+  const hszService = dde.DdeCreateStringHandleW(inst[0]!, ptr(wz(service)), CP_WINUNICODE);
+  const hszTopic = dde.DdeCreateStringHandleW(inst[0]!, ptr(wz(topic)), CP_WINUNICODE);
+  const hszItem = dde.DdeCreateStringHandleW(inst[0]!, ptr(wz(item)), CP_WINUNICODE);
+  let answer: string | null = null;
+  const conv = dde.DdeConnect(inst[0]!, hszService, hszTopic, null);
+  if (conv) {
+    const data = dde.DdeClientTransaction(null, 0, conv, hszItem, CF_UNICODETEXT, XTYP_REQUEST, kDdeTimeoutMs, null);
+    if (data) {
+      const n = dde.DdeGetData(data, null, 0, 0);
+      const buf = Buffer.alloc(n);
+      dde.DdeGetData(data, ptr(buf), n, 0);
+      answer = buf.toString("utf16le").replace(/\0+$/, "");
+      dde.DdeFreeDataHandle(data);
+    }
+    dde.DdeDisconnect(conv);
+  }
+  for (const h of [hszService, hszTopic, hszItem]) {
+    dde.DdeFreeStringHandle(inst[0]!, h);
+  }
+  dde.DdeUninitialize(inst[0]!);
+  cb.close();
+  return answer;
+}

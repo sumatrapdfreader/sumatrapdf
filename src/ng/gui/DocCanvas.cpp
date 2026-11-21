@@ -3676,6 +3676,22 @@ static bool ToDoc(MainWindow* win, float wx, float wy, Point* out) {
     return wx >= (float)rc.x && wy >= (float)rc.y && wx < (float)(rc.x + rc.dx) && wy < (float)(rc.y + rc.dy);
 }
 
+#if OS_WIN
+// orig's HwndGetCursorPos(hwndCanvas): the mouse cursor in canvas coordinates,
+// mapped like a mouse move (client pixels are DIPs times the window's scale)
+Point DocCanvasCursorPos(MainWindow* win) {
+    HWND hwnd = MainWindowHwnd(win);
+    POINT pt{};
+    if (!hwnd || !GetCursorPos(&pt) || !ScreenToClient(hwnd, &pt)) {
+        return {};
+    }
+    float dipScale = (float)DpiGetForHwnd(hwnd) / 96.f;
+    Point res;
+    ToDoc(win, (float)pt.x / dipScale, (float)pt.y / dipScale, &res);
+    return res;
+}
+#endif
+
 void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     auto* win = (MainWindow*)user;
     if (!IsMainWindowValid(win) || !win->AsFixed()) {

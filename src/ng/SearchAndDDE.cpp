@@ -51,6 +51,7 @@
 #include "gui/AppShell.h"
 #include "VirtualDesktop.h"
 #include "SearchAndDDE.h"
+#include "gui/DocCanvas.h"
 #include "SearchAndDDECommon.h"
 #include "Toolbar.h"
 
@@ -591,9 +592,15 @@ bool ExecuteDdeCmds(Str cmd) {
 
 #if OS_WIN
 
-// ng answers no requests of its own
-Str HandleAppRequestCmd(Str, bool*, str::Builder&) {
-    return {};
+// the window the user last worked in and the mouse cursor in its canvas, for
+// the shared [GetMousePos] request
+DisplayModel* DdeMousePosModel(Point* posOut) {
+    MainWindow* win = LastActiveWindow();
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (dm) {
+        *posOut = DocCanvasCursorPos(win);
+    }
+    return dm;
 }
 
 static void OpenManyCopyDataAsyncRun(OpenManyCopyDataAsync* d) {
