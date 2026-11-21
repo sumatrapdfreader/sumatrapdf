@@ -7,8 +7,9 @@
 //
 // Run: bun tests/open-slow-drive.ts [--no-build] [-ng]
 
-import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { copyFileSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { extname, join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, runStandalone, tmpPath, writeStoredZip } from "./util.ts";
@@ -144,6 +145,10 @@ async function testNetworkCopy() {
     rmSync(dir, { recursive: true, force: true });
     return;
   }
+  // orig caches outside -appdata, under a name from path and size: without
+  // this every run after the first is a cache hit that copies nothing
+  const cached = origCbxCachePath(unc, statSync(unc).size);
+  rmSync(cached, { force: true });
 
   const { proc, client, frame } = await launchControlled(["-appdata", appData]);
   try {
@@ -192,7 +197,14 @@ async function testNetworkCopy() {
     await killAndWait(proc);
     rmSync(dir, { recursive: true, force: true });
     rmSync(appData, { recursive: true, force: true });
+    rmSync(cached, { force: true });
   }
+}
+
+// orig's GetCbxCachePathTemp: %LOCALAPPDATA%\SumatraPDF-data\cbx-cache\<md5("path|size")>.cbz
+function origCbxCachePath(path: string, size: number): string {
+  const name = createHash("md5").update(`${path}|${size}`).digest("hex") + extname(path);
+  return join(process.env.LOCALAPPDATA ?? "", "SumatraPDF-data", "cbx-cache", name);
 }
 
 export async function testit(): Promise<void> {
