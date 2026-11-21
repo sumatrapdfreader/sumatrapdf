@@ -100,10 +100,16 @@ export async function testit(): Promise<void> {
   });
 
   // a wider sidebar: fewer rows
+  // explicit: the default (a quarter of the window) can exceed 600 in a full-screen window
   let narrowRows = 0;
-  await withToc("narrow", true, (r) => {
-    narrowRows = r.rows.get(kLong)! / r.rowDy;
-  });
+  await withToc(
+    "narrow",
+    true,
+    (r) => {
+      narrowRows = r.rows.get(kLong)! / r.rowDy;
+    },
+    250,
+  );
   await withToc(
     "wide",
     true,
