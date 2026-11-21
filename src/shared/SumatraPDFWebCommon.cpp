@@ -148,12 +148,7 @@ static Str OnlineOrigin() {
 
 // The origins above and nothing else: no user info, no other host or port.
 static bool UrlAllowed(Str url) {
-#if OS_WIN
     return OnlineURLAllowed(url);
-#else
-    Str origin = OnlineOrigin();
-    return str::StartsWith(url, origin) && len(url) > len(origin) && url.s[len(origin)] == '/';
-#endif
 }
 
 TempStr OnlineLoginUrlTemp() {
@@ -177,8 +172,7 @@ static void NoteHttpError(Str* msgOut, DWORD err) {
     str::TrimWSInPlace(msg, str::TrimOpt::Both);
     *msgOut = str::Dup(msg);
 #else
-    (void)msgOut;
-    (void)err;
+    *msgOut = str::Dup(HttpErrorMsgTemp(err));
 #endif
 }
 
@@ -288,7 +282,6 @@ static void VerifyThread(OnlineVerifyReq* req) {
     res->token = str::Dup(req->token);
     res->onDone = req->onDone;
     res->urlRejected = !UrlAllowed(req->url);
-#if OS_WIN
     HttpRsp rsp;
     TempStr hdr = fmt("Authorization: Bearer %s", req->token);
     HttpGetWithHeaders(req->url, hdr, &rsp);
@@ -298,7 +291,6 @@ static void VerifyThread(OnlineVerifyReq* req) {
     if (!res->urlRejected && rsp.httpStatusCode == (DWORD)-1 && rsp.error != 0) {
         NoteHttpError(&res->message, rsp.error);
     }
-#endif
     uitask::Post(MkFunc0(VerifyDone, res), "OnlineKeyVerified");
 }
 
@@ -317,7 +309,6 @@ bool StartOnlineVerify(Str token, u32* idOut, Func1<OnlineVerifyResult*> onDone,
     return true;
 }
 
-#if OS_WIN
 static void NoteHttp(OnlineJobResult* res, const HttpRsp& rsp) {
     res->status = rsp.httpStatusCode;
     res->error = rsp.error;
@@ -327,14 +318,12 @@ static void NoteHttp(OnlineJobResult* res, const HttpRsp& rsp) {
     }
     NoteHttpError(&res->message, rsp.error);
 }
-#endif
 
 static void JobDone(OnlineJobResult* res) {
     AutoDelete del(res);
     res->onDone.Call(res);
 }
 
-#if OS_WIN
 // Content the server already has (another name, another device) isn't sent
 // again: ask it to name that content. 404: it doesn't have it. A server from
 // before sha1 links refuses the empty body. Either way, upload; the server
@@ -373,7 +362,6 @@ static void UploadJob(OnlineJobReq* req, OnlineJobResult* res, Str hdr) {
     str::Free(body);
     NoteHttp(res, rsp);
 }
-#endif
 
 static void JobThread(OnlineJobReq* req) {
     AutoDelete del(req);
@@ -391,7 +379,6 @@ static void JobThread(OnlineJobReq* req) {
         res->cachePath = str::Dup(req->destPath);
         res->displayName = str::Dup(req->displayName);
     }
-#if OS_WIN
     TempStr hdr = fmt("Authorization: Bearer %s", req->token);
     if (req->job == OnlineJob::Upload) {
         UploadJob(req, res, hdr);
@@ -408,7 +395,6 @@ static void JobThread(OnlineJobReq* req) {
             res->body = str::Dup(ToStr(rsp.data));
         }
     }
-#endif
     uitask::Post(MkFunc0(JobDone, res), "OnlineJobDone");
 }
 
