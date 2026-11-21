@@ -294,6 +294,12 @@ void DialogSelect::Free() {
 }
 
 void DialogSelect::SetItems(const StrVec& strings, int selected) {
+    // the select borrows `items`: it lets go of them before they are freed and
+    // gets the new ones, it reads the old ones to keep its selection
+    gpc::SelectState* selState = app && state.IsValid() ? state.Get(app) : nullptr;
+    if (selState) {
+        selState->SetItems(nullptr, 0);
+    }
     VecReset(items);
     titles.Reset();
     for (Str s : strings) {
@@ -306,6 +312,10 @@ void DialogSelect::SetItems(const StrVec& strings, int selected) {
         VecAppend(items, it);
     }
     sel = selected;
+    if (selState) {
+        selState->SetItems(items.els, len(items));
+        selState->SetSelectedIndex(selected, nullptr);
+    }
 }
 
 void DialogSelect::SetSel(gp::App* app, int selected) {
