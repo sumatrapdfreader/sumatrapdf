@@ -7255,7 +7255,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             return;
 
         case CmdSumatraPDFWeb:
-            ShowTemporaryNotification(win, StrL("SumatraPDF Web is not in this build yet."), kNotif5SecsTimeOut);
+            ShowSumatraPDFWebDialog(win);
             break;
 
         default:

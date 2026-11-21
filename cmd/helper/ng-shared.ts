@@ -152,6 +152,8 @@ export const sharedFiles = [
   "src/shared/HomePageCommon.h",
   "src/shared/OpenFromUrlCommon.cpp",
   "src/shared/OpenFromUrlCommon.h",
+  "src/shared/SumatraPDFWebCommon.cpp",
+  "src/shared/SumatraPDFWebCommon.h",
   "src/shared/ImageSaveCropResizeCommon.cpp",
   "src/shared/ImageSaveCropResizeCommon.h",
   "src/shared/InstallerUtil.h",

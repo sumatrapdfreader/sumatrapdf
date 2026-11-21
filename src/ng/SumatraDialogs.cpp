@@ -738,6 +738,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     if (gp::El* e = OpenFromUrlDialogBuild(win, cx)) {
         return e;
     }
+    if (gp::El* e = SumatraPDFWebDialogBuild(win, cx)) {
+        return e;
+    }
     if (gp::El* e = PropertiesDialogBuild(win, cx)) {
         return e;
     }
@@ -852,15 +855,15 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
     }
     bool any = IsMsgBoxVisible() || IsSimpleBrowserWindowVisible() || IsAIChatNotInstalledDialogVisible() ||
                IsSelectionTranslateDialogVisible() || IsAboutWindowVisible() || IsAddFavoriteDialogVisible() ||
-               IsOpenFromUrlDialogVisible() || IsGoToPageDialogVisible() || IsTabGroupsDialogVisible() ||
-               IsGetPasswordDialogVisible() || IsCustomZoomDialogVisible() || IsChangeScrollbarDialogVisible() ||
-               IsChangeLanguageDialogVisible() || IsChangeThemeDialogVisible() || IsChangeColorDialogVisible() ||
-               IsBrightnessContrastDialogVisible() || IsPDFScriptDialogVisible() || IsInverseSearchDialogVisible() ||
-               IsSignDocumentDialogVisible() || IsPdfToolDialogVisible() || IsImageEditWindowVisible() ||
-               IsSetScreenshotHotkeyDialogVisible() || IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() ||
-               IsAdvancedSettingsDialogVisible() || IsConfigureRestrictedUseDialogVisible() ||
-               IsPageGridDialogVisible() || IsKeyboardHelpVisible() || IsUnsavedAnnotationsDialogVisible() ||
-               IsSavePathDialogVisible() || IsRenameStripGroupDialogVisible();
+               IsOpenFromUrlDialogVisible() || IsSumatraPDFWebDialogVisible() || IsGoToPageDialogVisible() ||
+               IsTabGroupsDialogVisible() || IsGetPasswordDialogVisible() || IsCustomZoomDialogVisible() ||
+               IsChangeScrollbarDialogVisible() || IsChangeLanguageDialogVisible() || IsChangeThemeDialogVisible() ||
+               IsChangeColorDialogVisible() || IsBrightnessContrastDialogVisible() || IsPDFScriptDialogVisible() ||
+               IsInverseSearchDialogVisible() || IsSignDocumentDialogVisible() || IsPdfToolDialogVisible() ||
+               IsImageEditWindowVisible() || IsSetScreenshotHotkeyDialogVisible() || IsEbookSettingsDialogVisible() ||
+               IsSettingsDialogVisible() || IsAdvancedSettingsDialogVisible() ||
+               IsConfigureRestrictedUseDialogVisible() || IsPageGridDialogVisible() || IsKeyboardHelpVisible() ||
+               IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible() || IsRenameStripGroupDialogVisible();
     (void)win;
     return any ? DialogAccels::None : DialogAccels::All;
 }
@@ -1230,6 +1233,10 @@ bool DialogsOnEscape(MainWindow* win) {
     }
     if (IsOpenFromUrlDialogVisible()) {
         CloseOpenFromUrlDialog();
+        return true;
+    }
+    if (IsSumatraPDFWebDialogVisible()) {
+        CloseSumatraPDFWebDialog();
         return true;
     }
     if (IsGoToPageDialogVisible()) {

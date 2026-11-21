@@ -23,6 +23,7 @@
 #include "UpdateCheckCommon.h"
 #include "FileThumbnails.h"
 #include "HexViewCommon.h"
+#include "SumatraPDFWebCommon.h"
 
 struct OpenDdeArgs {
     bool parsed = false;
@@ -634,4 +635,32 @@ void HexViewTest() {
     free(data);
     file::Delete(path);
     utassert(!HexViewOpen(path));
+}
+
+void SumatraPDFWebTest() {
+    utassert(IsOnlineApiKey(StrL("so_abcdefghij_0123456789abcdef0123456789abcdef")));
+    utassert(!IsOnlineApiKey(StrL("")));
+    utassert(!IsOnlineApiKey(StrL("so_abcdefghij_0123456789abcdef0123456789abcde")));
+    utassert(!IsOnlineApiKey(StrL("xo_abcdefghij_0123456789abcdef0123456789abcdef")));
+    utassert(!IsOnlineApiKey(StrL("so_abcdefghij-0123456789abcdef0123456789abcdef")));
+    utassert(!IsOnlineApiKey(StrL("so_abcdefghi!_0123456789abcdef0123456789abcdef")));
+
+    utassert(ValidUploadName(StrL("a b.pdf")));
+    utassert(!ValidUploadName(StrL("")));
+    utassert(!ValidUploadName(StrL(".")));
+    utassert(!ValidUploadName(StrL("..")));
+    utassert(!ValidUploadName(StrL("a/b")));
+    utassert(!ValidUploadName(StrL("a\\b")));
+    utassert(!ValidUploadName(StrL("a\nb")));
+
+    Vec<OnlineListedFile> files;
+    Str body = StrL("{\"files\":[{\"name\":\"a.pdf\",\"size\":12},{\"size\":5},{\"name\":\"b c.epub\"}]}");
+    utassert(ParseOnlineFiles(body, files));
+    utassert(len(files) == 2);
+    utassert(str::Eq(files[0].name, StrL("a.pdf")) && files[0].size == 12);
+    utassert(str::Eq(files[1].name, StrL("b c.epub")) && files[1].size == 0);
+    FreeOnlineFiles(files);
+
+    utassert(!ParseOnlineFiles(StrL("{\"files\":[{\"name\":"), files));
+    utassert(len(files) == 0);
 }

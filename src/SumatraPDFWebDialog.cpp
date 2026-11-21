@@ -31,202 +31,7 @@
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
 #include "shared/PdfToolsCommon.h"
-
-// so_ + 10 char user id + _ + 32 char secret
-constexpr int kOnlineApiKeyLen = 46;
-constexpr DWORD kHttpStatusOk = 200;
-constexpr DWORD kHttpStatusUnauthorized = 401;
-
-// Desktop cap. The website still accepts 200 MiB; refusing here keeps a transfer
-// inside the server's existing timeouts. Exactly 50 MiB is allowed.
-constexpr i64 kOnlineMaxBytes = (i64)50 << 20;
-constexpr int kOnlineFileLines = 6;
-
-// 0: nothing in flight. A finished request whose id does not match is dropped.
-static u32 gOnlineReqSeq = 0;
-
-// The server's validUploadName: empty, "." and "..", / \ and control characters.
-// The server stores files by content, so the name is only metadata; older servers
-// also refused : " ; (": and " can't be in a Windows file name anyway).
-static bool ValidUploadName(Str name) {
-    if (len(name) == 0 || str::Eq(name, StrL(".")) || str::Eq(name, StrL(".."))) {
-        return false;
-    }
-    for (int i = 0; i < len(name); i++) {
-        u8 c = (u8)name.s[i];
-        if (c == '/' || c == '\\' || c < 0x20 || c == 0x7f) {
-            return false;
-        }
-    }
-    return true;
-}
-
-enum class OnlineJob : int {
-    List = 1,
-    Upload,
-    Download,
-};
-
-struct OnlineListedFile {
-    Str name;
-    i64 size = 0;
-};
-
-struct OnlineNameAcc {
-    int idx = -1;
-    Str name;
-    i64 size = 0;
-    bool haveName = false;
-    bool haveSize = false;
-};
-
-static void FreeOnlineFiles(Vec<OnlineListedFile>& v) {
-    for (OnlineListedFile& f : v) {
-        str::Free(f.name);
-        f.name = {};
-    }
-    VecReset(v);
-}
-
-static void PushOnlineName(Vec<OnlineListedFile>& out, OnlineNameAcc& cur) {
-    if (cur.haveName && len(cur.name) > 0) {
-        OnlineListedFile f;
-        f.name = cur.name;
-        f.size = cur.haveSize ? cur.size : 0;
-        cur.name = {};
-        VecAppend(out, f);
-    } else {
-        str::Free(cur.name);
-    }
-    cur = {};
-}
-
-// {"files":[{"name":"...","size":N}]} — name bytes are copied; the parser reuses its buffer.
-static bool ParseOnlineFiles(Str body, Vec<OnlineListedFile>& out) {
-    json::Reader r(body);
-    OnlineNameAcc cur;
-    for (json::Value& v : r) {
-        bool isName = json::PathMatch(v.path, StrL("/files"), StrL("*"), StrL("/name"));
-        bool isSize = json::PathMatch(v.path, StrL("/files"), StrL("*"), StrL("/size"));
-        if (!isName && !isSize) {
-            continue;
-        }
-        int idx = json::PathSegIndex(json::PathNth(v.path, 1));
-        if (idx < 0) {
-            continue;
-        }
-        if (cur.idx != idx) {
-            PushOnlineName(out, cur);
-            cur.idx = idx;
-        }
-        if (isName && v.type == json::Type::String) {
-            str::Free(cur.name);
-            cur.name = str::Dup(v.value);
-            cur.haveName = true;
-        } else if (isSize && v.type == json::Type::Number) {
-            cur.size = ParseInt64(v.value);
-            cur.haveSize = true;
-        }
-    }
-    PushOnlineName(out, cur);
-    if (!r.Ok()) {
-        FreeOnlineFiles(out);
-        return false;
-    }
-    return true;
-}
-
-struct OnlineJobResult {
-    u32 id = 0;
-    OnlineJob job = OnlineJob::List;
-    DWORD status = (DWORD)-1;
-    DWORD error = 0;
-    Str message;
-    Str body;
-    Str cachePath;
-    Str displayName;
-    bool urlRejected = false;
-    bool tooBig = false;
-    ~OnlineJobResult() {
-        str::Free(message);
-        str::Free(body);
-        str::Free(cachePath);
-        str::Free(displayName);
-    }
-};
-
-struct OnlineJobReq {
-    u32 id = 0;
-    OnlineJob job = OnlineJob::List;
-    Str url;
-    Str token;
-    Str filePath;
-    Str destPath;
-    Str displayName;
-    ~OnlineJobReq() {
-        str::Free(url);
-        str::Free(token);
-        str::Free(filePath);
-        str::Free(destPath);
-        str::Free(displayName);
-    }
-};
-
-struct OnlineVerifyResult {
-    u32 id = 0;
-    DWORD status = (DWORD)-1;
-    DWORD error = 0;
-    Str token;
-    Str message;
-    // set only when OnlineURLAllowed rejected the URL before WinHttpOpen
-    bool urlRejected = false;
-    ~OnlineVerifyResult() {
-        str::Free(token);
-        str::Free(message);
-    }
-};
-
-struct OnlineVerifyReq {
-    u32 id = 0;
-    Str url;
-    Str token;
-    ~OnlineVerifyReq() {
-        str::Free(url);
-        str::Free(token);
-    }
-};
-
-// ^so_[0-9A-Za-z]{10}_[0-9A-Za-z]{32}$
-static bool IsOnlineApiKey(Str s) {
-    if (len(s) != kOnlineApiKeyLen || !s.s || s.s[0] != 's' || s.s[1] != 'o' || s.s[2] != '_' || s.s[13] != '_') {
-        return false;
-    }
-    for (int i = 3; i < 13; i++) {
-        char c = s.s[i];
-        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
-            return false;
-        }
-    }
-    for (int i = 14; i < kOnlineApiKeyLen; i++) {
-        char c = s.s[i];
-        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
-            return false;
-        }
-    }
-    return true;
-}
-
-// Empty onlineServer is production. Anything that is not one of the three
-// origins is not used, even when it would pass a prefix check.
-static Str OnlineOrigin() {
-    Str server = (gSettings && len(gSettings->onlineServer) > 0) ? gSettings->onlineServer : Str{};
-    bool known = str::Eq(server, StrL("https://web.sumatrapdfreader.org")) ||
-                 str::Eq(server, StrL("http://localhost:9332")) || str::Eq(server, StrL("http://127.0.0.1:9332"));
-    if (known && OnlineURLAllowed(server)) {
-        return server;
-    }
-    return StrL("https://web.sumatrapdfreader.org");
-}
+#include "shared/SumatraPDFWebCommon.h"
 
 struct SumatraPDFWebWnd : WindowBase {
     ~SumatraPDFWebWnd() override = default;
@@ -364,9 +169,8 @@ void SumatraPDFWebWnd::OnFileSel() {
 }
 
 void SumatraPDFWebWnd::OnLogin(VirtMouseEvent*) {
-    Str origin = OnlineOrigin();
-    TempStr url = fmt("%s/desktop-link", origin);
-    if (!OnlineURLAllowed(url)) {
+    TempStr url = OnlineLoginUrlTemp();
+    if (len(url) == 0) {
         SetStatus(Tr("The server address is not allowed."));
         return;
     }
@@ -424,59 +228,16 @@ void SumatraPDFWebWnd::FinishVerify(OnlineVerifyResult* res) {
         UpdateFileButtons();
         return;
     }
-    if (res->status == kHttpStatusUnauthorized) {
-        SetStatus(Tr("That key was rejected. Create a new key on the website and paste it again."));
-        UpdateFileButtons();
-        return;
-    }
-    if (res->status >= 100 && res->status < 600) {
-        SetStatus(fmt("HTTP %d", (int)res->status));
-        UpdateFileButtons();
-        return;
-    }
-    if (res->urlRejected) {
-        SetStatus(Tr("The server address is not allowed."));
-        UpdateFileButtons();
-        return;
-    }
-    if (len(res->message) > 0) {
-        SetStatus(res->message);
-        UpdateFileButtons();
-        return;
-    }
-    SetStatus(Tr("Could not reach SumatraPDF Web."));
+    SetStatus(OnlineVerifyMsgTemp(res));
     UpdateFileButtons();
 }
 
 static void VerifyOnlineKeyDone(OnlineVerifyResult* res) {
-    AutoDelete del(res);
     SumatraPDFWebWnd* wnd = gSumatraPDFWebWnd;
     if (!wnd || wnd->reqId != res->id) {
         return;
     }
     wnd->FinishVerify(res);
-}
-
-static void VerifyOnlineKeyThread(OnlineVerifyReq* req) {
-    AutoDelete del(req);
-    HttpRsp rsp;
-    TempStr hdr = fmt("Authorization: Bearer %s", req->token);
-    HttpGetWithHeaders(req->url, hdr, &rsp);
-
-    auto* res = new OnlineVerifyResult();
-    res->id = req->id;
-    res->status = rsp.httpStatusCode;
-    res->error = rsp.error;
-    res->token = str::Dup(req->token);
-    // ERROR_INVALID_PARAMETER is also a WinHTTP failure after the session opens
-    res->urlRejected = !OnlineURLAllowed(req->url);
-    if (!res->urlRejected && rsp.httpStatusCode == (DWORD)-1 && rsp.error != 0) {
-        DWORD err = rsp.error;
-        TempStr msg = GetLastErrorStrTemp(err);
-        str::TrimWSInPlace(msg, str::TrimOpt::Both);
-        res->message = str::Dup(msg);
-    }
-    uitask::Post(MkFunc0(VerifyOnlineKeyDone, res), "OnlineKeyVerified");
 }
 
 void SumatraPDFWebWnd::OnOk(VirtMouseEvent*) {
@@ -488,198 +249,45 @@ void SumatraPDFWebWnd::OnOk(VirtMouseEvent*) {
         SetStatus(Tr("That is not a SumatraPDF Web API key."));
         return;
     }
-    Str origin = OnlineOrigin();
-    TempStr url = fmt("%s/api/files", origin);
-    if (!OnlineURLAllowed(url)) {
-        SetStatus(Tr("The server address is not allowed."));
+    TempStr err;
+    if (!StartOnlineVerify(token, &reqId, MkFunc1Void<OnlineVerifyResult*>(VerifyOnlineKeyDone), &err)) {
+        SetStatus(err);
         return;
     }
-
     inFlight = true;
-    reqId = ++gOnlineReqSeq;
     UpdateFileButtons();
-
-    auto* req = new OnlineVerifyReq();
-    req->id = reqId;
-    req->url = str::Dup(url);
-    req->token = str::Dup(token);
-    RunAsync(MkFunc0(VerifyOnlineKeyThread, req), StrL("SumatraPDFWebKey"));
-}
-
-static void NoteHttp(OnlineJobResult* res, const HttpRsp& rsp) {
-    res->status = rsp.httpStatusCode;
-    res->error = rsp.error;
-    if (res->status != (DWORD)-1 || rsp.error == 0 || rsp.error == ERROR_INVALID_PARAMETER ||
-        rsp.error == ERROR_FILE_TOO_LARGE || rsp.error == ERROR_READ_FAULT) {
-        return;
-    }
-    DWORD err = rsp.error;
-    TempStr msg = GetLastErrorStrTemp(err);
-    str::TrimWSInPlace(msg, str::TrimOpt::Both);
-    res->message = str::Dup(msg);
 }
 
 static void OnlineJobDone(OnlineJobResult* res);
-
-static void OnlineJobThread(OnlineJobReq* req) {
-    AutoDelete del(req);
-    auto* res = new OnlineJobResult();
-    res->id = req->id;
-    res->job = req->job;
-    res->urlRejected = !OnlineURLAllowed(req->url);
-    if (res->urlRejected) {
-        res->error = ERROR_INVALID_PARAMETER;
-        uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-        return;
-    }
-
-    TempStr hdr = fmt("Authorization: Bearer %s", req->token);
-    if (req->job == OnlineJob::Upload) {
-        i64 sz = file::GetSize(req->filePath);
-        if (sz < 0 || sz > kOnlineMaxBytes) {
-            res->tooBig = sz > kOnlineMaxBytes;
-            res->error = res->tooBig ? (DWORD)ERROR_FILE_TOO_LARGE : (DWORD)ERROR_READ_FAULT;
-            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-            return;
-        }
-        Str body = file::ReadFile(req->filePath);
-        if ((i64)len(body) > kOnlineMaxBytes) {
-            str::Free(body);
-            res->tooBig = true;
-            res->error = ERROR_FILE_TOO_LARGE;
-            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-            return;
-        }
-        if ((i64)len(body) != sz) {
-            str::Free(body);
-            res->error = ERROR_READ_FAULT;
-            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-            return;
-        }
-        // Content the server already has (another name, another device) isn't sent
-        // again: ask it to name that content. 404: it doesn't have it. A server from
-        // before sha1 links refuses the empty body. Either way, upload; the server
-        // checks the content against sha1.
-        u8 digest[20];
-        CalcSHA1Digest(body, digest);
-        TempStr url = fmt("%s&sha1=%s", req->url, str::MemToHexTemp(Str((const char*)digest, dimofi(digest))));
-        HttpRsp linkRsp;
-        HttpPostUrlNoRedirect(url, StrL("application/octet-stream"), hdr, Str{}, &linkRsp);
-        if (linkRsp.httpStatusCode == kHttpStatusOk || linkRsp.httpStatusCode == kHttpStatusUnauthorized) {
-            str::Free(body);
-            NoteHttp(res, linkRsp);
-            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-            return;
-        }
-        HttpRsp rsp;
-        HttpPostUrlNoRedirect(url, StrL("application/octet-stream"), hdr, body, &rsp);
-        str::Free(body);
-        NoteHttp(res, rsp);
-        uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-        return;
-    }
-
-    if (req->job == OnlineJob::Download) {
-        res->cachePath = str::Dup(req->destPath);
-        res->displayName = str::Dup(req->displayName);
-        HttpRsp rsp;
-        HttpDownloadWithHeaders(req->url, hdr, req->destPath, &rsp);
-        NoteHttp(res, rsp);
-        if (rsp.error == ERROR_FILE_TOO_LARGE) {
-            res->tooBig = true;
-        }
-        uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-        return;
-    }
-
-    HttpRsp rsp;
-    HttpGetWithHeaders(req->url, hdr, &rsp);
-    NoteHttp(res, rsp);
-    if (rsp.httpStatusCode == kHttpStatusOk) {
-        res->body = str::Dup(ToStr(rsp.data));
-    }
-    uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
-}
-
-void SumatraPDFWebWnd::StartJob(OnlineJobReq* req) {
-    inFlight = true;
-    reqId = ++gOnlineReqSeq;
-    req->id = reqId;
-    UpdateFileButtons();
-    RunAsync(MkFunc0(OnlineJobThread, req), StrL("SumatraPDFWebFile"));
-}
 
 void SumatraPDFWebWnd::StartList() {
     if (inFlight || !gSettings || !IsOnlineApiKey(gSettings->onlineApiKey)) {
         return;
     }
-    TempStr url = fmt("%s/api/files", OnlineOrigin());
-    if (!OnlineURLAllowed(url)) {
-        SetStatus(Tr("The server address is not allowed."));
+    bool hadStatus = status && len(status->s) > 0;
+    TempStr err;
+    if (!StartOnlineList(gSettings->onlineApiKey, &reqId, MkFunc1Void<OnlineJobResult*>(OnlineJobDone), &err)) {
+        SetStatus(err);
         return;
     }
-    if (!status || len(status->s) == 0) {
+    inFlight = true;
+    if (!hadStatus) {
         SetStatus(Tr("Contacting SumatraPDF Web..."));
         clearListStatus = true;
     } else {
         clearListStatus = false;
     }
-    auto* req = new OnlineJobReq();
-    req->job = OnlineJob::List;
-    req->url = str::Dup(url);
-    req->token = str::Dup(gSettings->onlineApiKey);
-    StartJob(req);
+    UpdateFileButtons();
 }
 
 // true when the caller should stop. A 401 keeps the saved key.
 bool SumatraPDFWebWnd::ShowTransportError(OnlineJobResult* res) {
-    if (res->tooBig || res->error == ERROR_FILE_TOO_LARGE) {
-        if (res->status >= 100 && res->status < 600) {
-            lastHttpStatus = res->status;
-        }
-        if (res->job == OnlineJob::Download) {
-            SetStatus(Tr("This file is over 50 MiB. SumatraPDF will not download it."));
-        } else {
-            SetStatus(
-                Tr("This file is over 50 MiB. SumatraPDF will not upload it. The website still accepts files up to 200 "
-                   "MiB."));
-        }
-        return true;
+    TempStr msg;
+    bool stop = OnlineJobFailed(res, &lastHttpStatus, &msg);
+    if (len(msg) > 0) {
+        SetStatus(msg);
     }
-    if (res->status == kHttpStatusUnauthorized) {
-        lastHttpStatus = kHttpStatusUnauthorized;
-        SetStatus(Tr("The server rejected the saved API key. It may have been revoked."));
-        return true;
-    }
-    if (res->status == kHttpStatusOk && res->error != ERROR_SUCCESS) {
-        lastHttpStatus = kHttpStatusOk;
-        SetStatus(res->job == OnlineJob::Download ? Tr("Could not save the download.")
-                                                  : Tr("Could not reach SumatraPDF Web."));
-        return true;
-    }
-    if (res->status == kHttpStatusOk) {
-        lastHttpStatus = kHttpStatusOk;
-        return false;
-    }
-    if (res->status >= 100 && res->status < 600) {
-        lastHttpStatus = res->status;
-        SetStatus(fmt("HTTP %d", (int)res->status));
-        return true;
-    }
-    if (res->urlRejected) {
-        SetStatus(Tr("The server address is not allowed."));
-        return true;
-    }
-    if (res->error == ERROR_READ_FAULT) {
-        SetStatus(Tr("Could not read the file."));
-        return true;
-    }
-    if (len(res->message) > 0) {
-        SetStatus(res->message);
-        return true;
-    }
-    SetStatus(Tr("Could not reach SumatraPDF Web."));
-    return true;
+    return stop;
 }
 
 void SumatraPDFWebWnd::FinishList(OnlineJobResult* res) {
@@ -755,7 +363,6 @@ void SumatraPDFWebWnd::FinishJob(OnlineJobResult* res) {
 }
 
 static void OnlineJobDone(OnlineJobResult* res) {
-    AutoDelete del(res);
     SumatraPDFWebWnd* wnd = gSumatraPDFWebWnd;
     if (!wnd || wnd->reqId != res->id) {
         return;
@@ -818,18 +425,9 @@ void SumatraPDFWebWnd::BeginUpload(Str localPath) {
     AutoFree<char> pathFree(pathOwned.s);
     Str baseOwned = str::Dup(path::GetBaseNameTemp(pathOwned));
     AutoFree<char> baseFree(baseOwned.s);
-    if (!ValidUploadName(baseOwned)) {
-        SetStatus(Tr("That file name cannot be uploaded."));
-        return;
-    }
-    i64 sz = file::GetSize(pathOwned);
-    if (sz < 0) {
-        SetStatus(Tr("Could not read the file."));
-        return;
-    }
-    if (sz > kOnlineMaxBytes) {
-        SetStatus(Tr(
-            "This file is over 50 MiB. SumatraPDF will not upload it. The website still accepts files up to 200 MiB."));
+    TempStr why = CheckOnlineUploadTemp(pathOwned);
+    if (len(why) > 0) {
+        SetStatus(why);
         return;
     }
 
@@ -848,17 +446,14 @@ void SumatraPDFWebWnd::BeginUpload(Str localPath) {
         return;
     }
 
-    TempStr url = fmt("%s/api/files?name=%s", OnlineOrigin(), url::EncodeTemp(baseOwned));
-    if (!OnlineURLAllowed(url)) {
-        SetStatus(Tr("The server address is not allowed."));
+    TempStr err;
+    if (!StartOnlineUpload(gSettings->onlineApiKey, pathOwned, &reqId, MkFunc1Void<OnlineJobResult*>(OnlineJobDone),
+                           &err)) {
+        SetStatus(err);
         return;
     }
-    auto* req = new OnlineJobReq();
-    req->job = OnlineJob::Upload;
-    req->url = str::Dup(url);
-    req->token = str::Dup(gSettings->onlineApiKey);
-    req->filePath = str::Dup(pathOwned);
-    StartJob(req);
+    inFlight = true;
+    UpdateFileButtons();
 }
 
 void SumatraPDFWebWnd::OnUpload(VirtMouseEvent*) {
@@ -896,33 +491,14 @@ void SumatraPDFWebWnd::OnOpen(VirtMouseEvent*) {
         return;
     }
     Str name = fileModel->Item(sel);
-    if (fileSizes[sel] > kOnlineMaxBytes) {
-        SetStatus(Tr("This file is over 50 MiB. SumatraPDF will not download it."));
+    TempStr err;
+    if (!StartOnlineDownload(gSettings->onlineApiKey, name, fileSizes[sel], &reqId,
+                             MkFunc1Void<OnlineJobResult*>(OnlineJobDone), &err)) {
+        SetStatus(err);
         return;
     }
-    if (!ValidUploadName(name)) {
-        SetStatus(Tr("That file name cannot be downloaded."));
-        return;
-    }
-    // <appdata>/SumatraPDF-web/<base name>, only after the name check. The same name overwrites.
-    TempStr dir = GetPathInAppDataDirTemp(StrL("SumatraPDF-web"));
-    if (!dir::CreateAll(dir)) {
-        SetStatus(Tr("Could not save the download."));
-        return;
-    }
-    TempStr cachePath = path::JoinTemp(dir, name);
-    TempStr url = fmt("%s/api/file?name=%s", OnlineOrigin(), url::EncodeTemp(name));
-    if (!OnlineURLAllowed(url)) {
-        SetStatus(Tr("The server address is not allowed."));
-        return;
-    }
-    auto* req = new OnlineJobReq();
-    req->job = OnlineJob::Download;
-    req->url = str::Dup(url);
-    req->token = str::Dup(gSettings->onlineApiKey);
-    req->destPath = str::Dup(cachePath);
-    req->displayName = str::Dup(name);
-    StartJob(req);
+    inFlight = true;
+    UpdateFileButtons();
 }
 
 static void CancelWebWnd() {

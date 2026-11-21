@@ -125,6 +125,10 @@ gpui::El* AddFavoriteDialogBuild(MainWindow* win, gpui::Ctx* cx);
 void CloseOpenFromUrlDialog();
 bool IsOpenFromUrlDialogVisible();
 gpui::El* OpenFromUrlDialogBuild(MainWindow* win, gpui::Ctx* cx);
+void ShowSumatraPDFWebDialog(MainWindow* win);
+void CloseSumatraPDFWebDialog();
+bool IsSumatraPDFWebDialogVisible();
+gpui::El* SumatraPDFWebDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
 // what the user typed in the password dialog; only valid during the callback
 struct PasswordDialogResult {

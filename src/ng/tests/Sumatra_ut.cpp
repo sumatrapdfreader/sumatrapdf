@@ -56,6 +56,7 @@ void DocPropertiesTest();
 void ParseFileArgsTest();
 void ParseCommandLineTest();
 void HexViewTest();
+void SumatraPDFWebTest();
 void RestrictedUseConfigTest();
 void ControlFrameActionTest();
 void OpenDdeCmdTest();
@@ -292,6 +293,7 @@ void SumatraPDF_UnitTests() {
     PngSizeTest();
     BenchRangeTest();
     HexViewTest();
+    SumatraPDFWebTest();
 #if OS_WIN
     ParseCommandLineTest();
     ParseFileArgsTest();

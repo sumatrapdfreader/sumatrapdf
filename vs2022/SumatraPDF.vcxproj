@@ -1589,6 +1589,7 @@
     <ClInclude Include="..\src\shared\SumatraCrashCommon.h" />
     <ClInclude Include="..\src\shared\SumatraLog.h" />
     <ClInclude Include="..\src\shared\SumatraPDFCommon.h" />
+    <ClInclude Include="..\src\shared\SumatraPDFWebCommon.h" />
     <ClInclude Include="..\src\shared\SumatraTest.h" />
     <ClInclude Include="..\src\shared\SvgIcons.h" />
     <ClInclude Include="..\src\shared\TabGroupsManage.h" />
@@ -2268,6 +2269,7 @@
     <ClCompile Include="..\src\shared\SumatraCrashCommon.cpp" />
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\SumatraPDFCommon.cpp" />
+    <ClCompile Include="..\src\shared\SumatraPDFWebCommon.cpp" />
     <ClCompile Include="..\src\shared\SumatraTestCommon.cpp" />
     <ClCompile Include="..\src\shared\SvgIcons.cpp" />
     <ClCompile Include="..\src\shared\TableOfContentsCommon.cpp" />
