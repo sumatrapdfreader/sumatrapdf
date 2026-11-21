@@ -422,6 +422,31 @@ EM_JS(int, WasmXhr,
 // NOLINTNEXTLINE
 EM_JS(int, WasmXhrTextLen, (), { return lengthBytesUTF8(Module.sumatraXhrText || ""); });
 
+// Sync GET of a binary body into MEMFS. Written whole, only on a 200 within
+// maxBytes. Returns the status (0: no response); -1: over maxBytes.
+// NOLINTNEXTLINE
+EM_JS(int, WasmXhrDownload, (const char* url, int urlLen, const char* path, int pathLen, double maxBytes), {
+    if (typeof XMLHttpRequest == "undefined") return 0;
+    try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", UTF8ToString(url, urlLen), false);
+        xhr.overrideMimeType("text/plain; charset=x-user-defined");
+        xhr.send(null);
+        if (xhr.status != 200) return xhr.status;
+        var text = xhr.responseText;
+        if (text.length > maxBytes) return -1;
+        var bytes = new Uint8Array(text.length);
+        for (var i = 0; i < text.length; i++) {
+            bytes[i] = text.charCodeAt(i) & 255;
+        }
+        FS.writeFile(UTF8ToString(path, pathLen), bytes);
+        return 200;
+    } catch (e) {
+        console.warn("download failed", e);
+        return 0;
+    }
+});
+
 // NOLINTNEXTLINE
 EM_JS(void, WasmXhrTake, (char* out, int cap), {
     stringToUTF8(Module.sumatraXhrText || "", out, cap);
@@ -470,6 +495,34 @@ bool HttpDeleteWithHeaders(Str url, Str, HttpRsp* rspOut) {
 bool HttpPostUrlNoRedirect(Str url, Str contentType, Str, Str body, HttpRsp* rspOut) {
     return WasmRequest("HttpPostUrlNoRedirect", StrL("POST"), url, contentType, body, rspOut);
 }
+
+// ERROR_FILE_TOO_LARGE, as Http.cpp reports a body over the cap
+constexpr DWORD kWasmErrFileTooLarge = 223;
+constexpr i64 kWasmDownloadMaxBytes = (i64)50 << 20;
+
+bool HttpDownloadWithHeaders(Str url, Str, Str destPath, HttpRsp* rspOut) {
+    rspOut->data.Reset();
+    rspOut->error = kHttpErrorSuccess;
+    rspOut->httpStatusCode = (DWORD)-1;
+    if (!OnlineURLAllowed(url)) {
+        rspOut->error = kWasmErrInvalidParam;
+        logf("HttpDownloadWithHeaders: url: '%s' status: %d\n", url, -1);
+        return false;
+    }
+    int sc = WasmXhrDownload(url.s, len(url), destPath.s, len(destPath), (double)kWasmDownloadMaxBytes);
+    logf("HttpDownloadWithHeaders: url: '%s' status: %d\n", url, sc);
+    if (sc == -1) {
+        rspOut->httpStatusCode = 200;
+        rspOut->error = kWasmErrFileTooLarge;
+        return false;
+    }
+    if (sc <= 0) {
+        rspOut->error = kHttpErrorFailure;
+        return false;
+    }
+    rspOut->httpStatusCode = (DWORD)sc;
+    return sc == 200;
+}
 #else
 bool HttpGetWithHeaders(Str, Str, HttpRsp* rspOut) {
     return NotSupported(rspOut);
@@ -482,11 +535,11 @@ bool HttpDeleteWithHeaders(Str, Str, HttpRsp* rspOut) {
 bool HttpPostUrlNoRedirect(Str, Str, Str, Str, HttpRsp* rspOut) {
     return NotSupported(rspOut);
 }
-#endif
 
 bool HttpDownloadWithHeaders(Str, Str, Str, HttpRsp* rspOut) {
     return NotSupported(rspOut);
 }
+#endif
 
 static void AppendShellQuoted(str::Builder* cmd, Str s) {
     cmd->AppendChar('\'');

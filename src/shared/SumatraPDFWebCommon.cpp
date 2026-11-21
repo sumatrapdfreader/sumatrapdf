@@ -446,7 +446,14 @@ bool StartOnlineUpload(Str token, Str path, u32* idOut, Func1<OnlineJobResult*> 
     return true;
 }
 
-// <appdata>/SumatraPDF-web/<name>, only after the name check. The same name overwrites.
+// <appdata>/SumatraPDF-web/<name>; wasm: /uploads/<name>, where the hosting
+// site keeps documents
+TempStr OnlineDownloadPathTemp(Str name) {
+    TempStr dir = OS_WASM ? str::DupTemp(StrL("/uploads")) : GetPathInAppDataDirTemp(StrL("SumatraPDF-web"));
+    return len(dir) > 0 ? path::JoinTemp(dir, name) : TempStr{};
+}
+
+// OnlineDownloadPathTemp(name), only after the name check. The same name overwrites.
 bool StartOnlineDownload(Str token, Str name, i64 size, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err) {
     if (size > kOnlineMaxBytes) {
         *err = str::DupTemp(Tr("This file is over 50 MiB. SumatraPDF will not download it."));
@@ -456,12 +463,11 @@ bool StartOnlineDownload(Str token, Str name, i64 size, u32* idOut, Func1<Online
         *err = str::DupTemp(Tr("That file name cannot be downloaded."));
         return false;
     }
-    TempStr dir = GetPathInAppDataDirTemp(StrL("SumatraPDF-web"));
-    if (!dir::CreateAll(dir)) {
+    TempStr cachePath = OnlineDownloadPathTemp(name);
+    if (len(cachePath) == 0 || !dir::CreateAll(path::GetDirTemp(cachePath))) {
         *err = str::DupTemp(Tr("Could not save the download."));
         return false;
     }
-    TempStr cachePath = path::JoinTemp(dir, name);
     TempStr url = OnlineUrlTemp(fmt("/api/file?name=%s", url::EncodeTemp(name)));
     if (len(url) == 0) {
         *err = str::DupTemp(NotAllowedMsg());

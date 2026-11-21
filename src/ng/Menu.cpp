@@ -1421,6 +1421,13 @@ MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
     if (len(filePath) == 0 || !path::IsAbsolute(filePath)) {
         return nullptr;
     }
+    // ng: a server-only file: open (downloads it) or delete the server copy
+    if (IsServerOnlyFile(filePath)) {
+        auto* popup = new MenuModel();
+        MenuAppendString(popup, Tr("&Open Document"), CmdOpenSelectedDocument);
+        MenuAppendString(popup, Tr("Delete from server"), CmdDeleteFromServer);
+        return popup;
+    }
     FileState* fs = FileHistoryFindByPath(filePath);
     if (!fs) {
         return nullptr;
@@ -1453,6 +1460,10 @@ void HomeContextMenuCommand(MainWindow* win, Str filePathIn, int cmdId) {
     FileState* fs = FileHistoryFindByPath(path);
     switch (cmdId) {
         case CmdOpenSelectedDocument:
+            if (IsServerOnlyFile(path)) {
+                OpenServerFile(win, path);
+                return;
+            }
             StartLoadDocument(win, path);
             return;
         case CmdShowInFolder:

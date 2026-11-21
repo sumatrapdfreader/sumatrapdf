@@ -86,5 +86,6 @@ TempStr CheckOnlineUploadTemp(Str path);
 bool StartOnlineVerify(Str token, u32* idOut, Func1<OnlineVerifyResult*> onDone, TempStr* err);
 bool StartOnlineList(Str token, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);
 bool StartOnlineUpload(Str token, Str path, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);
+TempStr OnlineDownloadPathTemp(Str name);
 bool StartOnlineDownload(Str token, Str name, i64 size, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);
 bool StartOnlineDelete(Str token, Str name, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);

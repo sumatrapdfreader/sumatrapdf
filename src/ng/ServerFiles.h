@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct MainWindow;
+struct FileState;
 
 void ServerFilesEnsureListed();
 void ServerFilesReset();
@@ -15,5 +16,9 @@ enum class ServerFileState {
 };
 
 ServerFileState GetServerFileState(Str path, i64 localSize);
+void ServerOnlyFileStates(Vec<FileState*>& out);
+bool IsServerOnlyFile(Str path);
+i64 ServerFileSize(Str path);
+void OpenServerFile(MainWindow* win, Str path);
 void UploadFileToServer(MainWindow* win, Str path);
 void DeleteFileFromServer(MainWindow* win, Str path);

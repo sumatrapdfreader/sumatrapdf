@@ -491,6 +491,10 @@ static void OpenHomeEntry(MainWindow* win, int idx, bool ctrl) {
         AppShellInvalidate(win);
         return;
     }
+    if (IsServerOnlyFile(path)) {
+        OpenServerFile(win, path);
+        return;
+    }
     StartLoadDocument(win, path);
 }
 
@@ -1305,7 +1309,9 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
                         ->IntoEl();
     close->Absolute()->Right(5)->Top(5)->GroupHoverVisible();
     // orig's UpdateCloseBtnVisibility
-    if (CanAccessDisk()) {
+    // a server-only file has no history entry to remove
+    bool serverOnly = IsServerOnlyFile(fs->filePath);
+    if (CanAccessDisk() && !serverOnly) {
         page->Child(close);
     }
     // ng: the website puts it top-right, where orig's ✕ is
@@ -1396,8 +1402,10 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
     if (srv != ServerFileState::None) {
         row->Child(ServerBadgeEl(cx, srv));
     }
-    // the wasm build's directories are the page's own (/uploads)
-    TempStr dir = OS_WASM ? TempStr{} : path::GetDirTemp(fs->filePath);
+    // the wasm build's directories are the page's own (/uploads); a server-only
+    // file isn't in a directory yet
+    bool serverOnly = IsServerOnlyFile(fs->filePath);
+    TempStr dir = (OS_WASM || serverOnly) ? TempStr{} : path::GetDirTemp(fs->filePath);
     row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, dir))
                    ->Font(12)
                    ->Fg(ToGpui(colDim))
@@ -1405,7 +1413,7 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
                    ->MinW(0)
                    ->Truncate()
                    ->BoundsOut(&Ui(win)->listPathBounds[idx]));
-    i64 size = GetHomeFileSize(fs->filePath);
+    i64 size = serverOnly ? ServerFileSize(fs->filePath) : GetHomeFileSize(fs->filePath);
     if (size >= 0) {
         row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, str::FormatSizeShortTemp(size)))
                        ->Font(12)
@@ -1418,6 +1426,10 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
         if (len(progress) > 0) {
             row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, progress))->Font(12)->Fg(ToGpui(colText))->Shrink0());
         }
+    }
+    // a server-only file has no history entry to remove or pin
+    if (serverOnly) {
+        return row;
     }
     row->Child(gpc::Button::New(cx, GpuiDup(cx->a, fmt("home-row-forget-%d", idx)))
                    ->Icon(gp::IconName::Close)
@@ -1539,6 +1551,14 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     VecReset(h->files);
     StrVec filterWords;
     CollectHomePageFiles(HomeSearchQueryTemp(win), h->files, filterWords);
+    // ng: the website's server-only documents, after the local ones
+    Vec<FileState*> serverOnly;
+    ServerOnlyFileStates(serverOnly);
+    for (FileState* fs : serverOnly) {
+        if (len(filterWords) == 0 || FilterMatches(path::GetBaseNameTemp(fs->filePath), filterWords)) {
+            VecAppend(h->files, fs);
+        }
+    }
     h->filesLaidOut = true;
     int nFiles = len(h->files);
     h->entryCount = nFiles;

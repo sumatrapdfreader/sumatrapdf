@@ -9,6 +9,10 @@
 //
 //   home page --> ServerFilesEnsureListed() --> StartOnlineList --> names --> redraw
 //   menu --> Upload / Delete --> job --> notification --> list again
+//   server-only entry --> OpenServerFile --> download --> open (joins history)
+//
+// A server file no history entry has the name of is shown on the home page
+// through a stand-in FileState whose path is where it downloads to.
 //
 // Desktop authenticates with the saved API key; wasm with the session cookie
 // of the site hosting it.
@@ -20,12 +24,16 @@
 #include "Settings.h"
 #include "AppSettings.h"
 #include "AppTools.h"
+#include "FileHistory.h"
 #include "MainWindow.h"
 #include "SumatraPDF.h"
 #include "Notifications.h"
 #include "Translations.h"
 #include "SumatraPDFWebCommon.h"
 #include "ServerFiles.h"
+#if OS_WASM
+#include "gui/WasmBridge.h"
+#endif
 
 struct ServerFilesState {
     StrVec names;
@@ -41,6 +49,11 @@ struct ServerFilesState {
 };
 
 static ServerFilesState gSrv;
+
+// stand-ins for server-only files, by name. Never freed: the home page caches
+// thumbnails by FileState*.
+static StrVec gStandInNames;
+static Vec<FileState*> gStandIns;
 
 static void ServerJobDone(OnlineJobResult* res);
 
@@ -118,6 +131,15 @@ static void FinishTransfer(OnlineJobResult* res) {
         Notify(win, msg);
         return;
     }
+    if (res->job == OnlineJob::Download) {
+#if OS_WASM
+        WasmPersistSettings();
+#endif
+        if (IsMainWindowValidAndNotClosing(win)) {
+            StartLoadDocument(win, res->cachePath);
+        }
+        return;
+    }
     if (res->job == OnlineJob::Upload) {
         Notify(win, fmt(Tr("Uploaded %s.").s, name));
     } else {
@@ -175,6 +197,87 @@ ServerFileState GetServerFileState(Str path, i64 localSize) {
     }
     bool differs = localSize >= 0 && localSize != gSrv.sizes[idx];
     return differs ? ServerFileState::Differs : ServerFileState::Same;
+}
+
+static FileState* StandInFor(Str name) {
+    int idx = gStandInNames.Find(name);
+    if (idx >= 0) {
+        return gStandIns[idx];
+    }
+    TempStr path = OnlineDownloadPathTemp(name);
+    if (len(path) == 0) {
+        return nullptr;
+    }
+    FileState* fs = NewFileState(path);
+    gStandInNames.Append(name);
+    VecAppend(gStandIns, fs);
+    return fs;
+}
+
+// the account's files no history entry has the name of, in the server's order
+void ServerOnlyFileStates(Vec<FileState*>& out) {
+    if (!ServerFilesListed()) {
+        return;
+    }
+    Vec<FileState*> history;
+    FileHistoryGetRecentlyOpenedOrder(history);
+    StrVec localNames;
+    for (FileState* fs : history) {
+        if (fs && len(fs->filePath) > 0) {
+            localNames.Append(path::GetBaseNameTemp(fs->filePath));
+        }
+    }
+    for (int i = 0; i < len(gSrv.names); i++) {
+        if (localNames.Contains(gSrv.names[i])) {
+            continue;
+        }
+        FileState* fs = StandInFor(gSrv.names[i]);
+        if (fs) {
+            VecAppend(out, fs);
+        }
+    }
+}
+
+bool IsServerOnlyFile(Str path) {
+    if (!ServerFilesListed() || len(path) == 0 || FileHistoryFindByPath(path)) {
+        return false;
+    }
+    Str name = path::GetBaseNameTemp(path);
+    int idx = gStandInNames.Find(name);
+    return idx >= 0 && str::Eq(gStandIns[idx]->filePath, path) && gSrv.names.Contains(name);
+}
+
+// the size of the server file with path's name; -1 if there is none
+i64 ServerFileSize(Str path) {
+    int idx = gSrv.names.Find(path::GetBaseNameTemp(path));
+    return (idx >= 0 && idx < len(gSrv.sizes)) ? gSrv.sizes[idx] : -1;
+}
+
+static bool CanStartTransfer(MainWindow* win);
+static void TransferStarted(MainWindow* win, Str name);
+
+// Opens the downloaded copy, downloading it first unless it has the server's size.
+void OpenServerFile(MainWindow* win, Str path) {
+    Str name = path::GetBaseNameTemp(path);
+    int idx = gSrv.names.Find(name);
+    if (idx < 0 || idx >= len(gSrv.sizes)) {
+        return;
+    }
+    if (file::GetSize(path) == gSrv.sizes[idx]) {
+        StartLoadDocument(win, path);
+        return;
+    }
+    if (!CanStartTransfer(win)) {
+        return;
+    }
+    TempStr err;
+    auto onDone = MkFunc1Void<OnlineJobResult*>(ServerJobDone);
+    if (!StartOnlineDownload(ServerToken(), name, gSrv.sizes[idx], &gSrv.transferId, onDone, &err)) {
+        gSrv.transferId = 0;
+        Notify(win, err);
+        return;
+    }
+    TransferStarted(win, name);
 }
 
 static bool CanStartTransfer(MainWindow* win) {
