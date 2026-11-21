@@ -1604,31 +1604,48 @@ static void InstallNativeMenu(MainWindow* win) {
     gp::MenuDef* defs = AllocArrayTemp<gp::MenuDef>(nTop + 2);
     int n = 0;
 
-    gp::MenuRow* appRows = AllocArrayTemp<gp::MenuRow>(4);
-    appRows[0].label = ToGpui(ParseMenuAccelTextTemp(Tr("&About")).display);
-    appRows[0].action = ActSumatraCmd();
-    appRows[0].arg = CmdHelpAbout;
-    appRows[1].label = ToGpui(ParseMenuAccelTextTemp(Tr("&Settings...")).display);
-    appRows[1].action = ActSumatraCmd();
-    appRows[1].arg = CmdOptions;
-    appRows[2].separator = true;
-    appRows[3].label = ToGpui(Tr("Quit"));
-    appRows[3].action = ActSumatraCmd();
-    appRows[3].arg = CmdExit;
-    appRows[3].stroke = "cmd-q";
+    // the layout every Mac application's menu has; the role rows are AppKit's
+    auto cmdRow = [](gp::MenuRow& row, Str title, int cmdId) {
+        row.label = ToGpui(ParseMenuAccelTextTemp(title).display);
+        row.action = ActSumatraCmd();
+        row.arg = cmdId;
+    };
+    constexpr int kAppRows = 11;
+    gp::MenuRow* appRows = AllocArrayTemp<gp::MenuRow>(kAppRows);
+    cmdRow(appRows[0], Tr("&About"), CmdHelpAbout);
+    appRows[1].separator = true;
+    cmdRow(appRows[2], Tr("&Settings..."), CmdOptions);
+    appRows[3].separator = true;
+    appRows[4].role = gp::MenuRole::Services;
+    appRows[5].separator = true;
+    appRows[6].role = gp::MenuRole::Hide;
+    appRows[7].role = gp::MenuRole::HideOthers;
+    appRows[8].role = gp::MenuRole::ShowAll;
+    appRows[9].separator = true;
+    cmdRow(appRows[10], Tr("Quit"), CmdExit);
+    appRows[10].stroke = "cmd-q";
     defs[n].name = GStrL("SumatraPDF");
     defs[n].items = appRows;
-    defs[n].n = 4;
+    defs[n].n = kAppRows;
     n++;
 
+    // AppKit lists the open windows after these
+    constexpr int kWindowRows = 4;
+    gp::MenuRow* windowRows = AllocArrayTemp<gp::MenuRow>(kWindowRows);
+    windowRows[0].role = gp::MenuRole::Minimize;
+    windowRows[1].role = gp::MenuRole::Zoom;
+    windowRows[2].separator = true;
+    windowRows[3].role = gp::MenuRole::BringAllToFront;
     gp::MenuDef windowDef = {};
     windowDef.name = GStrL("Window");
+    windowDef.items = windowRows;
+    windowDef.n = kWindowRows;
     bool windowPlaced = false;
     for (const MenuItemModel& it : win->menu->items) {
         if (!it.submenu) {
             continue;
         }
-        if (!windowPlaced && MenuContainsCmd(it.submenu, CmdHelpAbout)) {
+        if (!windowPlaced && MenuContainsCmd(it.submenu, CmdHelpOpenManual)) {
             defs[n++] = windowDef;
             windowPlaced = true;
         }
@@ -1643,6 +1660,8 @@ static void InstallNativeMenu(MainWindow* win) {
     if (!windowPlaced) {
         defs[n++] = windowDef;
     }
+    // View has ng's own Fullscreen
+    gp::AppSetOsFullScreenMenuItem(false);
     gp::AppSetMenus(gApp, defs, n);
 }
 

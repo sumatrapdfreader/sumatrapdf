@@ -8,7 +8,18 @@
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { kKeyEscape, macActivate, macCanSendKeys, macKeyCode, macKeystroke } from "./mac-system-events.ts";
+import {
+  kKeyEscape,
+  kKeyTab,
+  macActivate,
+  macCanSendKeys,
+  macFrontWindowTitle,
+  macKeyCode,
+  macKeystroke,
+  macMenuItems,
+  macPressHolding,
+  type MacMenuItem,
+} from "./mac-system-events.ts";
 import { ROOT, runStandalone, USE_NG } from "./util.ts";
 import { sleep } from "./winapi.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
@@ -30,6 +41,65 @@ function expect(what: string, ok: boolean, got: string): void {
   if (!ok) {
     throw new Error(`${name}: ${what}: ${got}`);
   }
+}
+
+// AXMenuItemCmdModifiers of a plain ⌘ shortcut
+const kModsCmd = 0;
+
+function findItem(items: MacMenuItem[], menu: string, path: string): MacMenuItem | undefined {
+  return items.find((it) => it.menu === menu && it.path === path);
+}
+
+// The application menu has Services and Hide, Edit has the edit rows, Window
+// Minimize; Windows idioms (File > Exit, About in Help, Show Menu) and
+// AppKit's tab and full screen rows are gone.
+function menuLayout(app: App): void {
+  const items = macMenuItems(app.pid);
+  const appMenu = items.find((it) => it.path === "Settings...")?.menu ?? "";
+  const shortcut = (menu: string, path: string, key: string) => {
+    const it = findItem(items, menu, path);
+    expect(`${menu} > ${path} is ⌘${key}`, it?.key === key && it?.mods === kModsCmd, JSON.stringify(it));
+  };
+  const absent = (menu: string, path: string) => {
+    expect(`no ${menu} > ${path}`, !findItem(items, menu, path), menu);
+  };
+  shortcut(appMenu, `Hide ${appMenu}`, "H");
+  expect("the application menu has Services", !!findItem(items, appMenu, "Services"), appMenu);
+  shortcut(appMenu, "Quit", "Q");
+  shortcut("Edit", "Undo", "Z");
+  shortcut("Edit", "Copy", "C");
+  shortcut("Edit", "Paste", "V");
+  shortcut("Edit", "Select All", "A");
+  shortcut("Window", "Minimize", "M");
+  absent("File", "Exit");
+  absent("Help", "About");
+  absent("View", "Show Menu");
+  absent("View", "Show Tab Bar");
+  absent("View", "Enter Full Screen");
+  absent("Window", "Show Next Tab");
+}
+
+// ⌃Tab switches the tab when Control is let go. AppKit took ⌃Tab for its own
+// tabs and focus moves, and never reported Control going up.
+async function tabKeys(app: App): Promise<void> {
+  const before = macFrontWindowTitle(app.pid);
+  await macPressHolding(kKeyTab, { ctrl: true });
+  // the switcher closes after the switch
+  await sleep(2 * kSettleMs);
+  const other = macFrontWindowTitle(app.pid);
+  expect("⌃Tab switches the tab", other !== before, other);
+  await macPressHolding(kKeyTab, { ctrl: true });
+  // the switcher closes after the switch
+  await sleep(2 * kSettleMs);
+  const again = macFrontWindowTitle(app.pid);
+  expect("⌃Tab switches again", again !== other, again);
+}
+
+async function minimizeKey(app: App): Promise<void> {
+  macKeystroke(app.pid, "m", { cmd: true });
+  await sleep(2 * kSettleMs);
+  const minimized = await field(app, / minimized=(\d)/);
+  expect("⌘M minimizes the window", minimized === "1", minimized);
 }
 
 // ⌘A is Select All in the menu bar, which takes it before the palette's
@@ -62,9 +132,14 @@ export async function testit(): Promise<void> {
   const app: App = { pid: proc.pid, client };
   try {
     await client.waitForRenderIdle();
-    macActivate(app.pid);
-    await sleep(kSettleMs);
-    await selectAllInTextField(app);
+    menuLayout(app);
+    // reading the menus moves the focus: each check takes it back first
+    const checks = [selectAllInTextField, tabKeys, minimizeKey]; // minimize last: the window is gone after it
+    for (const check of checks) {
+      macActivate(app.pid);
+      await sleep(kSettleMs);
+      await check(app);
+    }
   } finally {
     client.close();
     await killAndWait(proc);

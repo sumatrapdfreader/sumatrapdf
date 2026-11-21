@@ -46,6 +46,7 @@
 #include "GoogleLens.h"
 #include "gui/DocCanvas.h"
 #include "gui/Sidebar.h"
+#include "gui/AppShell.h"
 #include "Menu.h"
 #include "MenuCommon.h"
 #include "MenuDefs.h"
@@ -829,9 +830,54 @@ static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
     }
 }
 
+#if OS_DARWIN
+// The Edit menu of every Mac application. In a text field its rows edit the
+// text (SendEditToInput in AppShell.cpp).
+// clang-format off
+static MenuDef menuDefEditMac[] = {
+    {TrN("&Undo"), CmdUndo},
+    {TrN("&Redo"), CmdRedo},
+    {StrL(kMenuSeparator), 0},
+    {TrN("Cu&t"), CmdCutAnnotation},
+    {TrN("&Copy"), CmdCopySelection},
+    {TrN("&Paste"), CmdPasteClipboardImage},
+    {TrN("Select &All"), CmdSelectAll},
+    {{}, 0},
+};
+// clang-format on
+
+// The macOS menu bar has About, Settings and Quit in the application menu
+// (AppShell.cpp's InstallNativeMenu) and Copy and Select All in Edit. The
+// menu bar is the system's: there is no Show Menu.
+static void AdaptMenuToMac(MenuModel* menu, BuildMenuCtx* ctx) {
+    static const int kMoved[] = {CmdExit, CmdOptions, CmdHelpAbout, CmdToggleMenuBar, CmdCopySelection, CmdSelectAll};
+    for (int cmdId : kMoved) {
+        MenuRemove(menu, cmdId);
+    }
+    MenuSetText(menu, CmdShowInFolder, Tr("Show in Finder"));
+    MenuSetText(menu, CmdOpenFileWithOSFilePicker, Tr("Open using macOS File Picker..."));
+    for (MenuItemModel& it : menu->items) {
+        if (it.submenu) {
+            RemoveBadMenuSeparators(it.submenu);
+        }
+    }
+
+    MenuItemModel edit;
+    edit.title = Tr("&Edit");
+    edit.submenu = BuildMenuFromDef(menuDefEditMac, ctx);
+    constexpr int kAfterFile = 1;
+    VecInsertAt(menu->items, kAfterFile, edit);
+}
+#endif
+
 MenuModel* BuildMenu(MainWindow* win) {
     AppCommandCtx ctx = NewAppCommandCtx(win);
     MenuModel* menu = BuildMenuFromDef(menuDefMenubar, &ctx);
+#if OS_DARWIN
+    if (AppShellNativeMenu()) {
+        AdaptMenuToMac(menu, &ctx);
+    }
+#endif
     SetMenuChecks(menu, win);
     return menu;
 }
