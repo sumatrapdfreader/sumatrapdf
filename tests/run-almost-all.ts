@@ -454,6 +454,7 @@ import { testit as issue5890 } from "./issue-5890.ts";
 import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
 import { testit as hwheelHome } from "./hwheel-home.ts";
 import { testit as tabMenuClose } from "./tab-menu-close.ts";
+import { testit as tabDragToWindow } from "./tab-drag-to-window.ts";
 import { testit as chapterNav } from "./chapter-nav.ts";
 import { testit as pageLinksFreshEngine } from "./page-links-fresh-engine.ts";
 import { testit as mouseButtonShortcuts } from "./mouse-button-shortcuts.ts";
@@ -1036,6 +1037,7 @@ export const tests: NamedTest[] = [
   ["wheel-while-closing", wheelWhileClosing],
   ["hwheel-home", hwheelHome],
   ["tab-menu-close", tabMenuClose],
+  ["tab-drag-to-window", tabDragToWindow],
   ["chapter-nav", chapterNav],
   ["mouse-button-shortcuts", mouseButtonShortcuts],
   ["issue-6483", issue6483],

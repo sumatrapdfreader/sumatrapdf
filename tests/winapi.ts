@@ -73,7 +73,7 @@ const user32 = loadDll("user32.dll", {
     returns: FFIType.bool,
   },
   SetWindowPos: {
-    args: [FFIType.ptr, FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u32],
+    args: [FFIType.ptr, FFIType.i64, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.u32],
     returns: FFIType.bool,
   },
   GetWindowLongW: { args: [FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
@@ -108,6 +108,7 @@ const user32 = loadDll("user32.dll", {
   GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
   SystemParametersInfoW: { args: [FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.bool },
   SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
+  GetDpiForWindow: { args: [FFIType.ptr], returns: FFIType.u32 },
   InitializeTouchInjection: { args: [FFIType.u32, FFIType.u32], returns: FFIType.bool },
   InjectTouchInput: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
   GetCursorPos: { args: [FFIType.ptr], returns: FFIType.bool },
@@ -1032,6 +1033,7 @@ export function moveWindow(hwnd: number, x: number, y: number, w: number, h: num
 }
 
 // SWP_* flags (subset)
+export const HWND_TOPMOST = -1;
 export const SWP_NOZORDER = 0x0004;
 export const SWP_NOACTIVATE = 0x0010;
 export const SWP_FRAMECHANGED = 0x0020;
@@ -1068,8 +1070,9 @@ export function setWindowPos(
   w: number,
   h: number,
   flags = SWP_NOZORDER | SWP_NOACTIVATE,
+  insertAfter = 0,
 ): boolean {
-  return user32.symbols.SetWindowPos(hwnd, 0, x, y, w, h, flags);
+  return user32.symbols.SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
 }
 
 export function showWindow(hwnd: number, cmd: number): boolean {
@@ -1669,6 +1672,11 @@ export function topLevelWindowFromPoint(x: number, y: number): number {
 export function getRootWindow(hwnd: number): number {
   const GA_ROOT = 2;
   return Number(user32.symbols.GetAncestor(hwnd, GA_ROOT)) || hwnd;
+}
+
+// the window's DPI: 96 at 100% scaling
+export function getDpiForWindow(hwnd: number): number {
+  return user32.symbols.GetDpiForWindow(hwnd) || 96;
 }
 
 export function getParentWindow(hwnd: number): number {

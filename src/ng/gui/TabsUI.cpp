@@ -427,32 +427,20 @@ static gp::El* BuildTabDragImage(MainWindow* win, gp::Ctx* cx, int tabDx) {
     return el->Fixed()->Left(cx->win->mouseX - off.x)->Top(cx->win->mouseY - off.y)->Deferred();
 }
 
-// orig's MainWindowTabMigration: the window the tab was released over
-static MainWindow* MainWindowUnderCursor() {
-#if OS_WIN
-    POINT pt{};
-    if (!GetCursorPos(&pt)) {
-        return nullptr;
-    }
-    HWND hwnd = WindowFromPoint(pt);
-    if (hwnd) {
-        hwnd = GetAncestor(hwnd, GA_ROOT);
-    }
+// orig's MainWindowTabMigration: the main window the tab was released over.
+// The release arrives at the window the drag started in, in its coordinates.
+static MainWindow* MainWindowAtRelease(gp::Window* from, const gp::MouseUpEvent* ev) {
+    gp::Window* at = gp::WindowAtPoint(from, gp::Point{ev->x, ev->y}, nullptr);
     for (MainWindow* w : gWindows) {
-        if (hwnd && AppShellNativeHwnd(w) == hwnd) {
+        if (at && w->gpuiWin == at) {
             return w;
         }
     }
-#endif
-    // ng: gpui does not say which window is under the pointer
     return nullptr;
 }
 
-// ng: orig's TabsCtrl::MigrationEvent - a tab released outside the strip.
-// gpui's drag is confined to the window the press started in, so the window
-// under the cursor is asked of the OS (Windows only; elsewhere the tab always
-// gets a window of its own).
-void TabsView::OnBarUpOut(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent*) {
+// ng: orig's TabsCtrl::MigrationEvent - a tab released outside the strip
+void TabsView::OnBarUpOut(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
     MainWindow* win = self->win;
     const gp::DragPayload* drag = gp::WindowActiveDrag(cx);
     if (!drag || !str::Eq(FromGpui(drag->kind), StrL("sumatra-tab"))) {
@@ -462,7 +450,7 @@ void TabsView::OnBarUpOut(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent*) 
     if (!tab) {
         return;
     }
-    MainWindow* releaseWnd = MainWindowUnderCursor();
+    MainWindow* releaseWnd = MainWindowAtRelease(cx->win, ev);
     if (releaseWnd == win) {
         // don't re-add to the same window
         releaseWnd = nullptr;

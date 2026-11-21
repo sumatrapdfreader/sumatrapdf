@@ -66,8 +66,6 @@ Failures that were the test, not ng (fixed in the tests): `issue-3585`
 - GPUI gaps (need `../gpui-kit-cpp` changes):
   - touch long-press selection and drag handles: gpui's Windows layer never
     emits `LongPressEvent` and exposes no `WM_POINTER*`
-  - dropping a tab on another window's tab strip (mouse capture stays with the
-    source window)
   - UI Automation provider for document text (screen readers)
 - Off Windows, SumatraPDF Web can't transfer files: the HTTP helpers it uses
   are WinHTTP only (`Http_posix.cpp` needs curl versions).
