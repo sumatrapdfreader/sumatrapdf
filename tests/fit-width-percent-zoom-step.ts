@@ -24,7 +24,10 @@ export async function testit(): Promise<void> {
   mkdirSync(dir, { recursive: true });
   const pdf = join(dir, "doc.pdf");
   writeFileSync(pdf, makeTopBottomPdf(2));
-  writeFileSync(join(dir, "SumatraPDF-settings.txt"), "RestoreSession = false\nFitWidthPercent = 20\nZoomIncrement = 0\n");
+  writeFileSync(
+    join(dir, "SumatraPDF-settings.txt"),
+    "RestoreSession = false\nFitWidthPercent = 20\nZoomIncrement = 0\n",
+  );
 
   await withControlledSumatra(
     EXE,

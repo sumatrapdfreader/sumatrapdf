@@ -943,7 +943,9 @@ async function runAnalysis(row: DumpRow, reanalyze: boolean): Promise<void> {
   }
   const symPath = symParts.join(";");
   console.log(`cdb: ${cdb} (${row.id})`);
-  const pdbNote = symDir ? relative(process.cwd(), symDir).replaceAll("\\", "/") : `missing (${pdbMissingReason(row.version)})`;
+  const pdbNote = symDir
+    ? relative(process.cwd(), symDir).replaceAll("\\", "/")
+    : `missing (${pdbMissingReason(row.version)})`;
   console.log(`pdb: ${pdbNote}`);
   const args = ["-z", dmpPath, "-y", symPath, "-lines"];
   const imgDirs = [exeDir, renamedExeDir(row.id, exeDir)].filter((d) => d !== "");

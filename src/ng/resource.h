@@ -24,7 +24,6 @@
 #define IDC_PRINT_ROTATE 1069
 #define IDC_PRINT_AUTO_ROTATE 1071
 
-
 // Document-type icons (resource id = registry DefaultIcon ,-N).
 #define IDI_DOCTYPE_EPUB 3
 #define IDI_DOCTYPE_CBX 4
