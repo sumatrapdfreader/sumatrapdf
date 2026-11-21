@@ -115,7 +115,8 @@ static Str OptValue(CliCtx& cx, Str name) {
 
 // the options that take a value; any other --name is a flag
 static bool OptTakesValue(Str name) {
-    static const char* names[] = {"--pages", "--password", "--password-env", "-o", "--output", "--dpi", "--format"};
+    static const char* names[] = {"--pages", "--password", "--password-env", "--new-password", "--new-password-env",
+                                  "-o",      "--output",   "--dpi"};
     for (const char* n : names) {
         if (str::Eq(name, Str(n))) {
             return true;
@@ -734,6 +735,246 @@ static int CmdRender(CliCtx& cx) {
     return kCliOk;
 }
 
+//--- PDF tools: pages, merge, compress, decompress, encrypt, decrypt
+
+// the same file, however the two paths spell it
+static bool SamePath(Str a, Str b) {
+    TempStr fa = path::NormalizeTemp(a);
+    TempStr fb = path::NormalizeTemp(b);
+#if OS_WIN || OS_DARWIN
+    return str::EqI(fa, fb);
+#else
+    return str::Eq(fa, fb);
+#endif
+}
+
+// -o, which a PDF tool must have and which mustn't be one of its inputs
+static Str PdfOutputArg(CliCtx& cx, const StrVec& inputs, int* code) {
+    Str dest = OutputArg(cx);
+    if (len(dest) == 0) {
+        *code = Fail(cx, kCliUsage, StrL("needs -o <file.pdf>: the input is never changed"));
+        return {};
+    }
+    for (Str in : inputs) {
+        if (SamePath(in, dest)) {
+            *code = Fail(cx, kCliUsage, fmt("won't write over the input '%s': give another -o", in));
+            return {};
+        }
+    }
+    return dest;
+}
+
+// opens a PDF to check it: exists, is a PDF, the password is right. Returns
+// its page count, 0 after reporting the problem
+static int CheckPdf(CliCtx& cx, Str path, int* code) {
+    EngineBase* engine = OpenDoc(cx, path, code);
+    if (!engine) {
+        return 0;
+    }
+    int n = engine->PageCount();
+    bool isPdf = EngineMupdfIsPdf(engine);
+    SafeEngineRelease(&engine);
+    if (!isPdf) {
+        *code = Fail(cx, kCliNotSupported, fmt("'%s' isn't a PDF", path));
+        return 0;
+    }
+    return n;
+}
+
+// what a PDF tool reports on success: the file it wrote, its pages and size
+static int ReportPdfWritten(CliCtx& cx, Str dest, int nPages, Str extra = {}) {
+    i64 size = file::GetSize(dest);
+    if (size < 0) {
+        return Fail(cx, kCliFailed, fmt("'%s' wasn't written", dest));
+    }
+    if (cx.json) {
+        Out(fmt("{\"file\":%s,\"pages\":%d,\"bytes\":%lld%s}\n", JStr(dest), nPages, (long long)size, extra));
+    } else {
+        Out(fmt("%s: %d %s, %lld bytes\n", dest, nPages, nPages == 1 ? StrL("page") : StrL("pages"), (long long)size));
+    }
+    return kCliOk;
+}
+
+// "3,1,2-4": the pages in the order given, repeats allowed (pages order)
+static bool ParsePageOrder(Str s, int pageCount, Vec<int>& pages) {
+    StrVec parts;
+    Split(&parts, s, StrL(","), true);
+    for (Str part : parts) {
+        Vec<int> one;
+        if (!ParseDeletePages(part, pageCount, one)) {
+            return false;
+        }
+        for (int p : one) {
+            VecAppend(pages, p);
+        }
+    }
+    return len(pages) > 0;
+}
+
+static int CmdPages(CliCtx& cx) {
+    if (len(cx.positional) < 3) {
+        return Fail(cx, kCliUsage,
+                    StrL("usage: pages keep|delete|order|rotate <file.pdf> <range> [degrees] -o <out.pdf>"));
+    }
+    Str action = cx.positional[0];
+    Str path = cx.positional[1];
+    Str range = cx.positional[2];
+    bool keep = str::Eq(action, StrL("keep"));
+    bool del = str::Eq(action, StrL("delete"));
+    bool order = str::Eq(action, StrL("order"));
+    bool rotate = str::Eq(action, StrL("rotate"));
+    if (!keep && !del && !order && !rotate) {
+        return Fail(cx, kCliUsage, fmt("'%s': use keep, delete, order or rotate", action));
+    }
+    int degrees = 0;
+    if (rotate) {
+        degrees = len(cx.positional) > 3 ? ParseInt(cx.positional[3]) : 0;
+        degrees = ((degrees % 360) + 360) % 360;
+        if (degrees == 0 || degrees % 90 != 0) {
+            return Fail(cx, kCliUsage, StrL("rotate needs the degrees: 90, 180 or 270 (clockwise; -90 is 270)"));
+        }
+    }
+    StrVec inputs;
+    inputs.Append(path);
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, inputs, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    int n = CheckPdf(cx, path, &code);
+    if (n == 0) {
+        return code;
+    }
+    Vec<int> picked;
+    bool ok = order ? ParsePageOrder(range, n, picked) : ParseDeletePages(range, n, picked);
+    if (!ok) {
+        return Fail(cx, kCliUsage, fmt("'%s' isn't a page range of 1-%d, e.g. 1-3,7,10-N", range, n));
+    }
+    if (del && len(picked) >= n) {
+        return Fail(cx, kCliUsage, StrL("can't delete every page"));
+    }
+    Vec<PdfMergeSource> srcs;
+    VecAppend(srcs, PdfMergeSource{path, cx.password});
+    Vec<PdfMergePage> pages;
+    if (keep || order) {
+        for (int p : picked) {
+            VecAppend(pages, PdfMergePage{0, p, 0});
+        }
+    } else {
+        for (int p = 1; p <= n; p++) {
+            bool in = false;
+            for (int q : picked) {
+                in = in || q == p;
+            }
+            if (del && in) {
+                continue;
+            }
+            VecAppend(pages, PdfMergePage{0, p, rotate && in ? degrees : 0});
+        }
+    }
+    dir::CreateForFile(dest);
+    if (!EngineMupdfMergePdfs(srcs, pages, dest)) {
+        return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+    }
+    return ReportPdfWritten(cx, dest, len(pages));
+}
+
+static int CmdMerge(CliCtx& cx) {
+    if (len(cx.positional) < 2) {
+        return Fail(cx, kCliUsage, StrL("usage: merge <a.pdf> <b.pdf> ... -o <out.pdf>"));
+    }
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, cx.positional, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    Vec<PdfMergeSource> srcs;
+    Vec<PdfMergePage> pages;
+    for (int i = 0; i < len(cx.positional); i++) {
+        int n = CheckPdf(cx, cx.positional[i], &code);
+        if (n == 0) {
+            return code;
+        }
+        VecAppend(srcs, PdfMergeSource{cx.positional[i], cx.password});
+        for (int p = 1; p <= n; p++) {
+            VecAppend(pages, PdfMergePage{i, p, 0});
+        }
+    }
+    dir::CreateForFile(dest);
+    if (!EngineMupdfMergePdfs(srcs, pages, dest)) {
+        return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+    }
+    return ReportPdfWritten(cx, dest, len(pages));
+}
+
+// mupdf's clean, as the GUI's PDF tools run it. extra: the flags for the tool
+static int RunClean(CliCtx& cx, const char* const* extra, int nExtra, Str newPassword = {}) {
+    Str path = cx.positional[0];
+    StrVec inputs;
+    inputs.Append(path);
+    int code = kCliOk;
+    Str dest = PdfOutputArg(cx, inputs, &code);
+    if (len(dest) == 0) {
+        return code;
+    }
+    int n = CheckPdf(cx, path, &code);
+    if (n == 0) {
+        return code;
+    }
+    i64 before = file::GetSize(path);
+    Vec<char*> argv;
+    VecAppend(argv, (char*)"clean");
+    if (len(cx.password) > 0) {
+        VecAppend(argv, (char*)"-p");
+        VecAppend(argv, CStrTemp(cx.password));
+    }
+    for (int i = 0; i < nExtra; i++) {
+        Str a(extra[i]);
+        // <pwd>: the new password
+        VecAppend(argv, str::Eq(a, StrL("<pwd>")) ? CStrTemp(newPassword) : (char*)extra[i]);
+    }
+    VecAppend(argv, CStrTemp(path));
+    VecAppend(argv, CStrTemp(dest));
+    dir::CreateForFile(dest);
+    fz_set_optind(0);
+    if (pdfclean_main(len(argv), argv.els) != 0) {
+        return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
+    }
+    return ReportPdfWritten(cx, dest, n, fmt(",\"inputBytes\":%lld", (long long)before));
+}
+
+static int CmdCompress(CliCtx& cx) {
+    static const char* args[] = {"-gggg", "-e", "100", "-f", "-i", "-t", "-Z"};
+    return RunClean(cx, args, dimofi(args));
+}
+
+static int CmdDecompress(CliCtx& cx) {
+    static const char* args[] = {"-d"};
+    return RunClean(cx, args, dimofi(args));
+}
+
+static int CmdEncrypt(CliCtx& cx) {
+    Str pwd = OptValue(cx, StrL("--new-password"));
+    Str pwdEnv = OptValue(cx, StrL("--new-password-env"));
+    if (len(pwdEnv) > 0) {
+        const char* v = getenv(CStrTemp(pwdEnv));
+        if (!v) {
+            return Fail(cx, kCliUsage, fmt("--new-password-env: %s isn't set", pwdEnv));
+        }
+        pwd = Str(v);
+    }
+    if (len(pwd) == 0) {
+        return Fail(cx, kCliUsage, StrL("needs --new-password <pw> or --new-password-env <NAME>"));
+    }
+    static const char* args[] = {"-E", "aes-256", "-U", "<pwd>", "-O", "<pwd>"};
+    return RunClean(cx, args, dimofi(args), pwd);
+}
+
+static int CmdDecrypt(CliCtx& cx) {
+    static const char* args[] = {"-D"};
+    return RunClean(cx, args, dimofi(args));
+}
+
 //--- the command table and help
 
 static const CliCmd gCmds[] = {
@@ -754,6 +995,22 @@ static const CliCmd gCmds[] = {
      "-o <file>        the image; for several pages <N> in it is the page number\n--pages <range>  these pages "
      "(default: the first)\n--dpi <n>        resolution, default 150",
      "render paper.pdf -o page.png\nrender comic.cbz --pages 1-3 -o pages/<N>.jpg --dpi 96", CmdRender},
+    {"pages", "keep|delete|order|rotate <file.pdf> <range> [degrees] -o <out.pdf>",
+     "a PDF with some of its pages: kept, deleted, put in another order or turned", "-o <file>        the new PDF",
+     "pages keep scan.pdf 1-3,7 -o short.pdf\npages delete scan.pdf 2 -o out.pdf\n"
+     "pages order scan.pdf 3,1,2 -o out.pdf\npages rotate scan.pdf 2-N 90 -o out.pdf",
+     CmdPages},
+    {"merge", "<a.pdf> <b.pdf> ... -o <out.pdf>", "PDFs one after another in a new PDF", "-o <file>        the new PDF",
+     "merge a.pdf b.pdf -o both.pdf", CmdMerge},
+    {"compress", "<file.pdf> -o <out.pdf>", "a smaller copy of a PDF (same quality: unused objects and streams go)",
+     "-o <file>        the new PDF", "compress big.pdf -o small.pdf --json", CmdCompress},
+    {"decompress", "<file.pdf> -o <out.pdf>", "a copy of a PDF with its streams uncompressed, for reading its insides",
+     "-o <file>        the new PDF", "decompress a.pdf -o readable.pdf", CmdDecompress},
+    {"encrypt", "<file.pdf> -o <out.pdf> --new-password <pw>", "a copy of a PDF that needs a password (AES-256)",
+     "-o <file>        the new PDF\n--new-password <pw>  or --new-password-env <NAME>",
+     "encrypt a.pdf -o locked.pdf --new-password-env PDF_PW", CmdEncrypt},
+    {"decrypt", "<file.pdf> -o <out.pdf> --password <pw>", "a copy of an encrypted PDF without the password",
+     "-o <file>        the new PDF", "decrypt locked.pdf -o open.pdf --password-env PDF_PW", CmdDecrypt},
 };
 
 static const CliCmd* FindCmd(Str name) {
