@@ -142,6 +142,22 @@ void AppShellSetFullScreen(MainWindow* win, bool fullScreen, bool restoreMaximiz
     logf("AppShellSetFullScreen: off, %d,%d,%d,%d\n", restore.x, restore.y, restore.dx, restore.dy);
 }
 
+// orig's ResizeFullScreenToCurrentDisplay: a resolution change, rotation or
+// moved taskbar leaves a fullscreen window the old monitor's size
+static void RefitFullScreen(MainWindow* win) {
+    NativeWin* nw = NativeWinOf(win);
+    if (!win || !nw || !nw->isFullScreen) {
+        return;
+    }
+    HWND hwnd = nw->hwnd;
+    Rect fsRect = HwndGetFullscreenRect(hwnd);
+    if (fsRect == HwndWindowRect(hwnd)) {
+        return;
+    }
+    uint flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
+    SetWindowPos(hwnd, nullptr, fsRect.x, fsRect.y, fsRect.dx, fsRect.dy, flags);
+}
+
 Rect AppShellWindowScreenRect(MainWindow* win) {
     HWND hwnd = AppShellNativeHwnd(win);
     return hwnd ? HwndWindowRect(hwnd) : Rect{};
@@ -697,6 +713,9 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 return 0;
             }
             break;
+        case WM_DISPLAYCHANGE:
+            RefitFullScreen(WinOf(hwnd));
+            break;
         case WM_DPICHANGED:
             // gpui only moves the window to the suggested rect. The font sizes
             // follow frameDpi, which AppShellOnDpiChanged stores first.
@@ -743,6 +762,8 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             // high contrast can be toggled at any time (Alt+Shift+PrtScr)
             UpdateThemeAfterHighContrastChange();
+            // a work area change can come without WM_DISPLAYCHANGE
+            RefitFullScreen(WinOf(hwnd));
             break;
         case WM_QUERYENDSESSION:
             // block logoff/shutdown while a print job runs. The reason shows

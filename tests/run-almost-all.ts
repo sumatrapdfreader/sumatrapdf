@@ -270,6 +270,7 @@ import { testit as backgroundTabReload } from "./background-tab-reload.ts";
 import { testit as sessionRestoreBrokenFile } from "./session-restore-broken-file.ts";
 import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
 import { testit as reloadKeepsFullscreenLayout } from "./reload-keeps-fullscreen-layout.ts";
+import { testit as fullscreenDisplayChange } from "./fullscreen-display-change.ts";
 import { testit as closeWindowWithDialog } from "./close-window-with-dialog.ts";
 import { testit as captionCaptureLoss } from "./caption-capture-loss.ts";
 import { testit as menuBarArmedDeactivate } from "./menu-bar-armed-deactivate.ts";
@@ -1214,6 +1215,7 @@ export const tests: NamedTest[] = [
   ["session-restore-broken-file", sessionRestoreBrokenFile],
   ["tab-switch-presentation", tabSwitchPresentation],
   ["reload-keeps-fullscreen-layout", reloadKeepsFullscreenLayout],
+  ["fullscreen-display-change", fullscreenDisplayChange],
   ["close-window-with-dialog", closeWindowWithDialog],
   ["caption-capture-loss", captionCaptureLoss],
   ["menu-bar-armed-deactivate", menuBarArmedDeactivate],

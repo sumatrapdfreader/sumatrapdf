@@ -96,6 +96,8 @@ const user32 = loadDll("user32.dll", {
   ClientToScreen: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   GetWindowTextW: { args: [FFIType.ptr, FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
   GetWindowRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
+  MonitorFromWindow: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.u64 },
+  GetMonitorInfoW: { args: [FFIType.u64, FFIType.ptr], returns: FFIType.bool },
   IsWindowVisible: { args: [FFIType.ptr], returns: FFIType.bool },
   IsWindowEnabled: { args: [FFIType.ptr], returns: FFIType.bool },
   WindowFromPoint: { args: [FFIType.i64], returns: FFIType.u64 },
@@ -1688,6 +1690,17 @@ export function getParentWindow(hwnd: number): number {
 
 export function setForegroundWindow(hwnd: number): boolean {
   return user32.symbols.SetForegroundWindow(hwnd);
+}
+
+// the full rectangle (not the work area) of the monitor the window is on
+export function monitorRectOfWindow(hwnd: number): Rect {
+  const MONITOR_DEFAULTTONEAREST = 2;
+  const mon = user32.symbols.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+  // MONITORINFO: cbSize, rcMonitor, rcWork, dwFlags
+  const buf = new Int32Array(10);
+  buf[0] = 40;
+  user32.symbols.GetMonitorInfoW(mon, ptr(buf));
+  return { left: buf[1], top: buf[2], right: buf[3], bottom: buf[4] };
 }
 
 // the window the user is currently working with (across processes). Use it to
