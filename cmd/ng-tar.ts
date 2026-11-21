@@ -1,5 +1,5 @@
 // Builds the ng release and packs it as a .tar.xz for distributions with no
-// package of their own (Arch, openSUSE, ...). libstdc++ and libgcc are linked
+// package of their own (openSUSE, ...). libstdc++ and libgcc are linked
 // statically; build it on the oldest supported glibc (Ubuntu 22.04) so it
 // runs on newer ones. The GUI libraries stay shared.
 //

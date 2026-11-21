@@ -168,7 +168,8 @@ commit, waits for it, downloads its artifacts and uploads them with their
 `.debug` symbols, an `index.html` and the update-check file to
 `software/sumatrapdfng/linux/<ver>/`. The workflow runs `cmd/ng-linux-ci.sh`
 in a distro container per package: `cmd/ng-deb.ts` (Ubuntu, Debian),
-`cmd/ng-rpm.ts` (Fedora), `cmd/ng-tar.ts` (portable), for x86_64 and arm64. The package's desktop entry, MIME
+`cmd/ng-rpm.ts` (Fedora), `cmd/ng-tar.ts` (portable), for x86_64 and arm64, and
+`cmd/ng-arch.ts` (Arch Linux, x86_64). The package's desktop entry, MIME
 types and icons live in `src/ng/linux/`; `cmd/update-linux-icons.ts`
 regenerates the icons from the Windows artwork.
 

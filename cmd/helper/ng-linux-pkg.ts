@@ -1,6 +1,6 @@
 // What every Linux package of ng shares: building the release, the install
-// tree under usr/ and the split-off symbols. cmd/ng-deb.ts, cmd/ng-rpm.ts and
-// cmd/ng-tar.ts wrap it in their format.
+// tree under usr/ and the split-off symbols. cmd/ng-deb.ts, cmd/ng-rpm.ts,
+// cmd/ng-arch.ts and cmd/ng-tar.ts wrap it in their format.
 //
 //   usr/bin/sumatrapdf                         the app, usr/bin/SumatraPDF links to it
 //   usr/share/applications/sumatrapdf.desktop  launcher entry and "Open With"
@@ -137,7 +137,24 @@ export async function buildRelease(opts: PkgOptions, staticRuntime = false): Pro
     await runInherit(["bun", ...args]);
   }
   if (!existsSync(exe)) throw new Error(`missing ${exe}`);
+  sharedLibs(exe);
   return { out, exe };
+}
+
+// the shared libraries exe loads here, name => path, from ldd. Throws on one
+// the loader can't find: the package would not start on this distro
+export function sharedLibs(exe: string): Map<string, string> {
+  const libs = new Map<string, string>();
+  const missing: string[] = [];
+  for (const line of run(["ldd", exe]).split("\n")) {
+    // libX11.so.6 => /usr/lib/libX11.so.6 (0x...)  or  libfoo.so.1 => not found
+    const m = /^\s*(\S+) => (.+?)(?: \(0x[0-9a-f]+\))?$/.exec(line);
+    if (!m) continue;
+    if (m[2] === "not found") missing.push(m[1]!);
+    else libs.set(m[1]!, m[2]!);
+  }
+  if (missing.length > 0) throw new Error(`${exe} needs libraries not found here: ${missing.join(", ")}`);
+  return libs;
 }
 
 function copyright(): string {

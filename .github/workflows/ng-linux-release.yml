@@ -3,7 +3,8 @@ name: ng-linux-release
 run-name: ng-linux-release ${{ inputs.ver }}
 
 # Builds the ng Linux packages: a .deb per Ubuntu / Debian release, an .rpm
-# per Fedora release and a portable .tar.xz, each for x86_64 and arm64.
+# per Fedora release and a portable .tar.xz, each for x86_64 and arm64, and
+# an Arch Linux package for x86_64.
 # build-ng-linux.ts (in ../hack) starts it, downloads the artifacts and
 # uploads them to R2 with the update-check file.
 on:
@@ -39,6 +40,10 @@ jobs:
           - { image: "fedora:45", fmt: rpm }
           # oldest glibc, so it runs on newer distros
           - { image: "ubuntu:22.04", fmt: tar }
+        include:
+          # archlinux images are x86_64 only
+          - runner: ubuntu-24.04
+            target: { image: "archlinux:latest", fmt: arch }
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -67,6 +72,7 @@ jobs:
           path: |
             out/pkg/rel/*.deb
             out/pkg/rel/*.rpm
+            out/pkg/rel/*.pkg.tar.zst
             out/pkg/rel/*.tar.xz
             out/pkg/rel/*.debug
           if-no-files-found: error

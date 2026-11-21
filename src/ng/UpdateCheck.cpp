@@ -592,10 +592,11 @@ static TempStr OsNameTemp() {
 
 // Opens this distro's package instead of DownloadPage (the list of all) when
 // the update info has one, e.g. "Package-ubuntu24.04-x86_64: <.deb url>".
+// A rolling release has no VERSION_ID: "Package-arch-x86_64".
 static void PickLinuxPackage(UpdateInfo* updateInfo, Str data) {
     TempStr id = OsReleaseValueTemp(StrL("ID"));
     TempStr ver = OsReleaseValueTemp(StrL("VERSION_ID"));
-    if (len(id) == 0 || len(ver) == 0) {
+    if (len(id) == 0) {
         return;
     }
 #if defined(__aarch64__)
