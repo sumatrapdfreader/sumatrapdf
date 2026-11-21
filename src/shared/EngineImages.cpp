@@ -2721,10 +2721,22 @@ struct CbxPrefetch {
     int fileId;
 };
 
+// prefetch threads still running; each holds a reference to its engine
+static AtomicInt gCbxPrefetchesRunning = 0;
+
 static void CbxPrefetchThread(CbxPrefetch* p) {
     p->archive->GetFileDataById(p->fileId);
     p->engine->Release();
     delete p;
+    AtomicIntDec(&gCbxPrefetchesRunning);
+}
+
+// A prefetch can drop an engine's last reference. Exiting under it destroys
+// statics the engine's destructor still uses, so `cli` waits before it exits.
+void WaitForCbxPrefetches() {
+    while (AtomicIntGet(&gCbxPrefetchesRunning) > 0) {
+        SleepInMs(1);
+    }
 }
 
 // Paging forward asks for page N's media box and data while N+1 is still
@@ -2741,6 +2753,7 @@ void EngineCbx::PrefetchPageAfter(int pageNo) {
     }
     AtomicIntSet(&prefetchedPageNo, next);
     AddRef();
+    AtomicIntInc(&gCbxPrefetchesRunning);
     auto* p = new CbxPrefetch{this, cbxArchive, fi->fileId};
     RunAsync(MkFunc0(CbxPrefetchThread, p), StrL("CbxPrefetch"));
 }

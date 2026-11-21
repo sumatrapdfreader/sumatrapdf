@@ -86,6 +86,7 @@ EngineBase* CreateEngineCbxFromFile(Str path, PasswordUI* pwdUI = nullptr, FileT
                                     Str realPath = {});
 EngineBase* CreateEngineCbxFromData(Str data);
 bool EngineCbxHasComicInfoToc(EngineBase*);
+void WaitForCbxPrefetches();
 
 bool IsEngineImages(EngineBase*);
 void EngineImagesGetImageProperties(EngineBase*, int pageNo, Vec<PropValue>& propsOut);

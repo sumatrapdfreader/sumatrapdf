@@ -84,8 +84,12 @@ export async function testit(): Promise<void> {
   r = cli(["images", pdf, "--pages", "2", "-o", join(dir, "p2")]);
   expect("--pages 2", r.code === 0 && readdirSync(join(dir, "p2")).length === 1, r);
 
-  r = cli(["images", join(ROOT, "tests", "issue-1201.cbz"), "--pages", "1-2", "-o", join(dir, "cbz")]);
-  expect("a comic's pages", r.code === 0 && readdirSync(join(dir, "cbz")).length === 2, r);
+  // repeated: a page prefetch still running at exit crashed about every other run
+  for (let i = 0; i < 10; i++) {
+    rmSync(join(dir, "cbz"), { recursive: true, force: true });
+    r = cli(["images", join(ROOT, "tests", "issue-1201.cbz"), "--pages", "1-2", "-o", join(dir, "cbz")]);
+    expect(`a comic's pages (run ${i + 1})`, r.code === 0 && readdirSync(join(dir, "cbz")).length === 2, r);
+  }
   r = cli(["images", join(ROOT, "tests", "issue-6007.epub"), "-o", join(dir, "epub")]);
   expect("an EPUB's pictures", r.code === 0 && readdirSync(join(dir, "epub")).length > 0, r);
   expect("no -o is 2", cli(["images", pdf]).code === 2, "");

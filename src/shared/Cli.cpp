@@ -3359,6 +3359,7 @@ int CliMain(int argc, char** argv) {
         gSettings = NewSettings(Str{});
     }
     int res = cx.cmd->fn(cx);
+    WaitForCbxPrefetches();
     fflush(stdout);
     fflush(stderr);
     return res;
