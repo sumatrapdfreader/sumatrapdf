@@ -266,11 +266,13 @@ EXPORTS
 	fz_drop_page
 
 	fz_colorspace_is_rgb
+	fz_colorspace_is_gray
 	fz_colorspace_type
 
 	fz_colorspace_is_cmyk
 
 	fz_new_buffer_from_pixmap_as_jpeg
+	fz_new_buffer_from_pixmap_as_png
 
 	fz_new_buffer_from_image_as_png
 
