@@ -9,12 +9,14 @@
 
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { IS_WIN } from "./host.ts";
 import { EXE, ROOT, oneDrivePath, runStandalone, tmpPath } from "./util.ts";
 import { spawn } from "node:child_process";
 import { windowPosArgs } from "./win-automation.ts";
 import { killAndWait } from "./winapi.ts";
 
-const mutoolCandidates = [oneDrivePath("bin/mupdf-1.27.0/mutool.exe"), "mutool"];
+// the OneDrive copy is a Windows exe (a Mac syncs it too)
+const mutoolCandidates = [...(IS_WIN ? [oneDrivePath("bin/mupdf-1.27.0/mutool.exe")] : []), "mutool"];
 
 async function whichMutool(): Promise<string | null> {
   for (const c of mutoolCandidates) {
