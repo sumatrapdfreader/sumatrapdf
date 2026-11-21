@@ -567,7 +567,20 @@ export function macCaptureClientPixels(): { w: number; h: number; data: Uint8Arr
   if (res[0] !== 0) {
     return null;
   }
-  const png = decodePng(readFileSync(path));
+  // with web views in the window the PNG is written once their snapshots
+  // come back, after the request has answered
+  let png: ReturnType<typeof decodePng> | null = null;
+  const deadline = Date.now() + 5000;
+  while (!png) {
+    try {
+      png = decodePng(readFileSync(path));
+    } catch (e) {
+      if (Date.now() > deadline) {
+        throw e;
+      }
+      Bun.sleepSync(20);
+    }
+  }
   rmSync(path, { force: true });
   const sx = png.w / w;
   const sy = png.h / h;
