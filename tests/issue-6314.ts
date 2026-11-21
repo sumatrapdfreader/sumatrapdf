@@ -5,7 +5,8 @@
 //
 // Copies the exe next to a restrict ini, opens a PDF and counts the chat rows
 // the command palette offers (orig "AI Claude chat with document", ng "Claude
-// chat..."): the four backends when AI is allowed, none when it is not.
+// chat..."): the five backends (with the custom API) when AI is allowed, none
+// when it is not.
 //
 // Run: bun tests/issue-6314.ts [--no-build]
 
@@ -18,7 +19,7 @@ import { sleep } from "./winapi.ts";
 
 const PDF = resolve("ext/a-zlib/zlib.3.pdf");
 const AI_QUERY = ">chat";
-const AI_BACKENDS = 4;
+const AI_BACKENDS = 5;
 
 // what the exe needs beside it once copied out of the build directory
 const SIDE_BY_SIDE_DLLS = ["libsumatrapdf.dll", "clang_rt.asan_dynamic-x86_64.dll"].map((name) =>
