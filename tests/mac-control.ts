@@ -562,6 +562,29 @@ function input(kind: string, a: number, b: number, c: number, d: number, target?
   return raw;
 }
 
+// the character TranslateMessage makes of an unshifted key, 0 for none
+function keyChar(vk: number): number {
+  if (vk >= 0x41 && vk <= 0x5a) {
+    return vk + 0x20;
+  }
+  if ((vk >= 0x30 && vk <= 0x39) || vk === 0x20) {
+    return vk;
+  }
+  return 0;
+}
+
+// A posted WM_KEYDOWN: the message loop's TranslateMessage types the key's
+// character unless the app handled the key, as ngInput does on Windows.
+export function macPostKeyDown(wParam: number | bigint, lParam: number | bigint): void {
+  const vk = Number(BigInt(wParam) & 0xffffn);
+  const repeat = (BigInt(lParam) & (1n << 30n)) !== 0n ? 8 : 0;
+  const raw = input("key", vk, repeat, 0, 0);
+  const ch = keyChar(vk);
+  if (ch && !raw.includes("eaten=1")) {
+    input("char", ch, 0, 0, 0);
+  }
+}
+
 function invoke(name: string, x?: number, y?: number): void {
   const args: ControlArg[] = x === undefined ? [name] : [name, x, y];
   const res = macControlRequest(TestInvokeCommand, args);

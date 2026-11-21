@@ -21,6 +21,7 @@ import {
   macDdeExecute,
   macFrameClientRect,
   macFrameVisible,
+  macPostKeyDown,
   macSendMessage,
   macSendText,
   TestLayout,
@@ -823,7 +824,11 @@ export function postMessage(hwnd: number, msg: number, wParam: number, lParam: n
     return true;
   }
   if (IS_MAC) {
-    macSendMessage(msg, wParam, lParam);
+    if (msg === WM_KEYDOWN) {
+      macPostKeyDown(wParam, lParam);
+    } else {
+      macSendMessage(msg, wParam, lParam);
+    }
     return true;
   }
   return user32.symbols.PostMessageW(hwnd, msg, BigInt(wParam), BigInt(lParam));
