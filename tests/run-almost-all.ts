@@ -645,6 +645,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["open-slow-drive", openSlowDrive],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-6412", issue6412],
   ["issue-4788", issue4788],
@@ -800,7 +801,6 @@ export const tests: NamedTest[] = [
   ["toggle-zoom-failed-tab", toggleZoomFailedTab],
   ["restore-chm-missing-tab", restoreChmMissingTab],
   ["restore-session-close-reentry", restoreSessionCloseReentry],
-  ["open-slow-drive", openSlowDrive],
   ["issue-4705", issue4705],
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],
