@@ -4332,6 +4332,14 @@ static int WStrCodepointAt(WStr s, int& idx) {
     }
     return c;
 }
+
+// like MultiByteToWideChar(CP_UTF8): an invalid byte becomes U+FFFD
+static int Utf8CodepointForWide(Str s, int& byteIdx) {
+    int n = 0;
+    int c = Utf8CodepointAtByte(s, byteIdx, &n);
+    byteIdx += n > 0 ? n : 1;
+    return n == 1 && c >= 0x80 ? 0xfffd : c;
+}
 #endif
 
 Str ToUtf8(Arena* arena, WStr wide) {
@@ -4374,13 +4382,13 @@ WStr ToWStrTemp(Str s) {
 #else
     int wideLen = 0;
     for (int byteIdx = 0; byteIdx < s.len;) {
-        int c = Utf8CodepointNext(s, byteIdx);
+        int c = Utf8CodepointForWide(s, byteIdx);
         wideLen += c >= 0x10000 && sizeof(WCHAR) == 2 ? 2 : 1;
     }
     wchar_t* wide = (wchar_t*)AllocTemp((wideLen + 1) * sizeof(wchar_t));
     int dst = 0;
     for (int byteIdx = 0; byteIdx < s.len;) {
-        int c = Utf8CodepointNext(s, byteIdx);
+        int c = Utf8CodepointForWide(s, byteIdx);
         if constexpr (sizeof(WCHAR) == 2) {
             if (c >= 0x10000) {
                 c -= 0x10000;

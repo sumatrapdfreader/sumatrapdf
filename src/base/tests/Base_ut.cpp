@@ -527,10 +527,20 @@ static void InPlacePastLenTest() {
     utassert(Utf8CodepointStartByte(Str(cp, 1), 1) == 1);
 }
 
+static void ToWStrInvalidTest() {
+    WStr ws =
+        ToWStrTemp(StrL("a\xFF"
+                        "b"));
+    utassert(len(ws) == 3 && ws.s[0] == 'a' && ws.s[1] == 0xFFFD && ws.s[2] == 'b');
+    ws = ToWStrTemp(StrL("\x80"));
+    utassert(len(ws) == 1 && ws.s[0] == 0xFFFD);
+}
+
 void BaseUtilTest() {
     StrEqLenTest();
     ReplaceNoCaseTest();
     InPlacePastLenTest();
+    ToWStrInvalidTest();
     FlipPixmapTest();
 #if !OS_WASM
     WaitThreadTest();
