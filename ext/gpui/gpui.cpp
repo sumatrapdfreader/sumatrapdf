@@ -129200,6 +129200,8 @@ struct MainTask {
     Func0 f = {};
 };
 
+constexpr double kMainTaskBudgetS = 0.010;
+
 static Mutex gMainLock;
 static Vec<MainTask> gMainQueue;
 static Func0 gWake;
@@ -129281,10 +129283,34 @@ int ExecDrain() {
     gMainQueue.cap = 0;
     gMainLock.Unlock();
 
-    for (int i = 0; i < len(batch); i++) {
-        batch[i].f.Call();
+    double start = ClockMonotonicSecondsSinceStart();
+    int n = 0;
+    while (n < len(batch)) {
+        batch[n++].f.Call();
+        if (ClockMonotonicSecondsSinceStart() - start >= kMainTaskBudgetS) {
+            break;
+        }
     }
-    int n = len(batch);
+    if (n < len(batch)) {
+        gMainLock.Lock();
+        Vec<MainTask> rest;
+        for (int i = n; i < len(batch); i++) {
+            VecAppend(rest, batch[i]);
+        }
+        for (int i = 0; i < len(gMainQueue); i++) {
+            VecAppend(rest, gMainQueue[i]);
+        }
+        VecReset(gMainQueue);
+        gMainQueue.els = rest.els;
+        gMainQueue.len = len(rest);
+        gMainQueue.cap = rest.cap;
+        rest.els = nullptr;
+        rest.len = 0;
+        rest.cap = 0;
+        Func0 wake = gWake;
+        gMainLock.Unlock();
+        wake.Call();
+    }
     VecReset(batch);
     return n;
 }
@@ -252734,8 +252760,9 @@ static NSString* KeyEquivalent(Str key) {
         {"tab", 0x09},
         {"escape", 0x1b},
         {"space", ' '},
+
         {"backspace", 0x08},
-        {"delete", NSDeleteFunctionKey},
+        {"delete", 0x7f},
         {"up", NSUpArrowFunctionKey},
         {"down", NSDownArrowFunctionKey},
         {"left", NSLeftArrowFunctionKey},
