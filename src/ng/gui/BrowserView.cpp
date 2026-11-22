@@ -930,5 +930,13 @@ gp::El* BrowserViewBuild(BrowserView* bv, gp::Ctx* cx, int clipTop) {
         }
     }
     ClipBrowserTop(bv, clipTop);
-    return gp::WebViewEl(bv->view, cx);
+    // The web view stays hidden until the page loads. Without this fill the
+    // capture (and the user) sees the window's white ground instead of the theme.
+    gp::El* host = gp::Div(cx->a)->SizeFull();
+    if (ColorSkipsPaint(bv->background)) {
+        host->Bg(gp::ThemeNow(cx->app).tokens.muted);
+    } else {
+        host->Bg(ToGpui(bv->background));
+    }
+    return host->Child(gp::WebViewEl(bv->view, cx));
 }
