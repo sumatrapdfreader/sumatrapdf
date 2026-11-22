@@ -22,29 +22,13 @@ TempStr SpeedLabelTemp(WindowTab* tab);
 void ApplyArrowSpeed(MainWindow* win, WindowTab* tab, int keyDir);
 void ApplyDigitSpeed(MainWindow* win, int digit);
 
-// implemented by each app
-void BarUpdate(MainWindow* win, bool forceLayout = false);
+void BarSetSessionTab(MainWindow* win, WindowTab* tab);
 
 // implemented by each app
+void BarUpdate(MainWindow* win, bool forceLayout = false);
 void BarHide(MainWindow* win);
 void ArmReadingTimer(MainWindow* win, WindowTab* tab);
 void KillReadingTimer(MainWindow* win);
-void BarUpdate(MainWindow* win, bool forceLayout);
-void ReadingAutoScrollStart(MainWindow* win);
-
-// implemented by each app
-void BarSetSessionTab(MainWindow* win, WindowTab* tab);
-void ArmReadingTimer(MainWindow* win, WindowTab* tab);
-void KillReadingTimer(MainWindow* win);
-void BarUpdate(MainWindow* win, bool forceLayout);
 void StopMiddleClickScroll(MainWindow* win);
 float ReadingTickSeconds(WindowTab* tab, int elapsedMs);
 ReadingAutoScrollBar* BarEnsure(MainWindow* win);
-
-constexpr int kBarMargin = 8;
-
-constexpr int kBarPadX = 12;
-
-constexpr int kBarPadY = 6;
-
-constexpr int kBtnGap = 8;

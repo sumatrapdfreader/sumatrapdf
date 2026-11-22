@@ -23,9 +23,12 @@
 #include "SumatraPDF.h"
 #include "ReadingBar.h"
 #include "ReadingAutoScroll.h"
+#include "ReadAloudBarCommon.h"
 #include "ReadingAutoScrollCommon.h"
 
 #include "SumatraLog.h"
+
+static void ReadingAutoScrollStart(MainWindow* win);
 
 int SpeedCount() {
     return dimofi(kSpeeds);
@@ -355,7 +358,7 @@ void ReadingAutoScrollReverse(MainWindow* win) {
     BarUpdate(win, true);
 }
 
-void ReadingAutoScrollStart(MainWindow* win) {
+static void ReadingAutoScrollStart(MainWindow* win) {
     WindowTab* tab = CurrentDocTab(win);
     if (!tab || !ScrollModel(tab)) {
         return;

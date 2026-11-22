@@ -27,6 +27,7 @@
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
 #include "ReadingAutoScroll.h"
+#include "ReadAloudBarCommon.h"
 #include "ReadingAutoScrollCommon.h"
 
 #include "SumatraLog.h"

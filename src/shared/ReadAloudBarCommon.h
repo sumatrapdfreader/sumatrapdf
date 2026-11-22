@@ -1,7 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// --- constants shared by orig's and ng's ReadAloud.cpp ---
+// --- bar constants shared by both apps' ReadAloud.cpp and ReadingAutoScroll*.cpp ---
 
 constexpr int kBarMargin = 8;
 

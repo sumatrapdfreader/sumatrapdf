@@ -31,6 +31,7 @@
 #include "SumatraPDF.h"
 #include "ReadingBar.h"
 #include "ReadingAutoScroll.h"
+#include "ReadAloudBarCommon.h"
 #include "ReadingAutoScrollCommon.h"
 #include "SumatraLog.h"
 
