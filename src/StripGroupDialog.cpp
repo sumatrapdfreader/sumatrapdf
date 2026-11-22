@@ -44,8 +44,11 @@ struct RenameStripGroupWnd : WindowBase {
 
 static RenameStripGroupWnd* gRenameWnd = nullptr;
 
-static void ClearRenameWnd() {
-    gRenameWnd = nullptr;
+// a replaced dialog is deleted later, when the global points at its successor
+static void ClearRenameWnd(RenameStripGroupWnd* wnd) {
+    if (gRenameWnd == wnd) {
+        gRenameWnd = nullptr;
+    }
 }
 
 void RenameStripGroupWnd::OnCancel(VirtMouseEvent*) {
@@ -128,7 +131,7 @@ void ShowRenameStripGroupDialog(MainWindow* win, int groupId) {
     auto* wnd = new RenameStripGroupWnd();
     wnd->groupId = groupId;
     wnd->closeOnEsc = true;
-    wnd->onBeforeDelete = MkFunc0Void(ClearRenameWnd);
+    wnd->onBeforeDelete = MkFunc0<RenameStripGroupWnd>(ClearRenameWnd, wnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

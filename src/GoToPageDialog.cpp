@@ -63,8 +63,11 @@ struct GoToPageWnd : WindowBase {
 
 static GoToPageWnd* gGoToPageWnd = nullptr;
 
-static void ClearGoToPageWnd() {
-    gGoToPageWnd = nullptr;
+// a replaced dialog is deleted later, when the global points at its successor
+static void ClearGoToPageWnd(GoToPageWnd* wnd) {
+    if (gGoToPageWnd == wnd) {
+        gGoToPageWnd = nullptr;
+    }
 }
 
 // caller (ShowGoToPageDialog) only reuses this window when hasChapters still
@@ -256,7 +259,7 @@ void ShowGoToPageDialog(MainWindow* win) {
     }
     auto* wnd = new GoToPageWnd();
     wnd->closeOnEsc = true;
-    wnd->onBeforeDelete = MkFunc0Void(ClearGoToPageWnd);
+    wnd->onBeforeDelete = MkFunc0<GoToPageWnd>(ClearGoToPageWnd, wnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());

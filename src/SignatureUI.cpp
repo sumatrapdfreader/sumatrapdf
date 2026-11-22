@@ -323,8 +323,11 @@ static void OnSignatureWndDestroy(WindowBase::DestroyEvent*) {
     ScheduleSignatureDelete();
 }
 
-static void ClearSignatureWnd() {
-    gSignatureWnd = nullptr;
+// a replaced dialog is deleted later, when the global points at its successor
+static void ClearSignatureWnd(SignatureWnd* wnd) {
+    if (gSignatureWnd == wnd) {
+        gSignatureWnd = nullptr;
+    }
 }
 
 void SignatureWnd::OnShowCert(VirtMouseEvent*) {
@@ -401,7 +404,7 @@ void ShowSignatureDialog(MainWindow* win, int entryIdx) {
     }
     auto* wnd = new SignatureWnd();
     wnd->closeOnEsc = true;
-    wnd->onBeforeDelete = MkFunc0Void(ClearSignatureWnd);
+    wnd->onBeforeDelete = MkFunc0<SignatureWnd>(ClearSignatureWnd, wnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnSignatureWndClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnSignatureWndDestroy);
     gSignatureWnd = wnd;

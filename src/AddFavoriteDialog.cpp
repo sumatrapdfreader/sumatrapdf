@@ -97,8 +97,11 @@ AddFavoriteWnd::~AddFavoriteWnd() {
     str::Free(filePath);
 }
 
-static void ClearAddFavoriteWnd() {
-    gAddFavoriteWnd = nullptr;
+// a replaced dialog is deleted later, when the global points at its successor
+static void ClearAddFavoriteWnd(AddFavoriteWnd* wnd) {
+    if (gAddFavoriteWnd == wnd) {
+        gAddFavoriteWnd = nullptr;
+    }
 }
 
 void AddFavoriteWnd::SetTarget(MainWindow* win, Str path, int page, Str labelIn, Str name) {
@@ -357,7 +360,7 @@ static void ShowFavoriteDialog(MainWindow* win, FavDlgMode mode, Str filePath, i
     }
     auto* wnd = new AddFavoriteWnd();
     wnd->closeOnEsc = true;
-    wnd->onBeforeDelete = MkFunc0Void(ClearAddFavoriteWnd);
+    wnd->onBeforeDelete = MkFunc0<AddFavoriteWnd>(ClearAddFavoriteWnd, wnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->onKeyDown = MkMethod1<AddFavoriteWnd, KeyEvent*, &AddFavoriteWnd::OnKeyDown>(wnd);
