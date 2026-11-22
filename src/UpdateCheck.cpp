@@ -379,9 +379,13 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo) {
 
 static HRESULT CALLBACK TaskDialogHyperlinkCallback(HWND /*hwnd*/, UINT msg, WPARAM /*wParam*/, LPARAM lParam,
                                                     LONG_PTR /*lpRefData*/) {
-    if (msg == TDN_HYPERLINK_CLICKED) {
-        WCHAR* url = (WCHAR*)lParam;
-        SumatraLaunchBrowser(ToUtf8Temp(url));
+    if (msg != TDN_HYPERLINK_CLICKED) {
+        return S_OK;
+    }
+    // our dialogs only link to our website
+    TempStr url = ToUtf8Temp((WCHAR*)lParam);
+    if (IsTrustedUpdateDlUrl(url)) {
+        SumatraLaunchBrowser(url);
     }
     return S_OK;
 }
@@ -408,7 +412,7 @@ static void NotifySuspiciousUpdate(HWND hwndParent, Str dlURL) {
 Download link should come from <a href="%s">%s</a> but is %s.
 
 Visit <a href="%s">%s</a> to download the latest version.)",
-                       kExpectedDlHost, kExpectedDlHost, dlURL, kExpectedDlHost, kExpectedDlHost);
+                       kExpectedDlHost, kExpectedDlHost, NoLinkMarkupTemp(dlURL), kExpectedDlHost, kExpectedDlHost);
 
     TASKDIALOGCONFIG dialogConfig{};
     DWORD flags =

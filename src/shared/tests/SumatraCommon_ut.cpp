@@ -198,6 +198,11 @@ void UpdateCheckDecisionTest() {
     // ng: yy.mm.dd[.n]
     utassert(ShouldOfferProgramUpdate(StrL("26.11.20.1"), StrL("26.11.20"), false));
     utassert(ShouldOfferProgramUpdate(StrL("26.12.01"), StrL("26.11.20.3"), false));
+
+    // a server-supplied url shown in a task dialog must not add a link
+    TempStr shown = NoLinkMarkupTemp(StrL("x <a href=\"https://evil\">y</a>"));
+    utassert(str::Eq(shown, StrL("x _a href=\"https://evil\"_y_/a_")));
+    utassert(str::Eq(NoLinkMarkupTemp(StrL("https://a/b")), StrL("https://a/b")));
     utassert(!ShouldOfferProgramUpdate(StrL("26.11.20"), StrL("26.11.20.1"), false));
     utassert(IsValidProgramVersion(StrL("26.11.20.1")));
 

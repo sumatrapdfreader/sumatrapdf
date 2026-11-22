@@ -142,6 +142,13 @@ bool ShouldOfferProgramUpdate(Str latestVer, Str myVer, bool isStoreBuild) {
     return CompareProgramVersion(latestVer, myVer) > 0;
 }
 
+// server-supplied text shown in a task dialog with hyperlinks: "<a href=...>" must not become a link
+TempStr NoLinkMarkupTemp(Str s) {
+    TempStr res = str::DupTemp(s);
+    str::TransCharsInPlace(res, StrL("<>"), StrL("__"));
+    return res;
+}
+
 UpdateInfoFetch ClassifyUpdateInfoFetch(Str url, int error, int httpStatus, int bodyLen, const Str* allowed,
                                         int nAllowed) {
     if (error != 0) {

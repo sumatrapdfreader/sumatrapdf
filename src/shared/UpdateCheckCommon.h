@@ -7,6 +7,7 @@ struct UpdateInfo;
 extern UpdateInfo* gPendingUpdate;
 static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
 bool IsTrustedUpdateDlUrl(Str dlURL);
+TempStr NoLinkMarkupTemp(Str s);
 void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType);
 
 enum class UpdateCheckChoice : u8 {
