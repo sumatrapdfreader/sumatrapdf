@@ -22,6 +22,8 @@ gpui::App* AppShellGetApp();
 // ng: the theme is installed before the first window opens, so the app has to
 // be known before AppShellCreateWindow()
 void AppShellSetApp(gpui::App*);
+// a system setting changed (orig's WM_SETTINGCHANGE)
+void AppShellSettingChanged();
 // runs the event loop until the last window closes
 int AppShellRun(gpui::App* app);
 // height of the menu bar row above the canvas, in dips. Zero where the

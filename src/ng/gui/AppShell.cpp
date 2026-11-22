@@ -1172,6 +1172,10 @@ static void OnWindowAppearanceChanged(gp::App*, gp::WindowAppearance) {
 }
 #endif
 
+void AppShellSettingChanged() {
+    MenuCuesRefresh();
+}
+
 void AppShellSetApp(gp::App* app) {
     gApp = app;
 #if !OS_WIN

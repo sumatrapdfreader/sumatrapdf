@@ -671,13 +671,23 @@ struct DlgAccel {
 static Vec<DlgAccel> gDlgAccels;
 static bool gDlgCues = false;
 
+// -1: not read yet. Asked for every frame, so read once per setting change
+static int gMenuCuesAlways = -1;
+
+void MenuCuesRefresh() {
+    gMenuCuesAlways = -1;
+}
+
 // Windows underlines the access keys always or only once Alt was pressed
 // ("Underline access keys when available", off by default)
 bool MenuCuesAlways() {
 #if OS_WIN
-    BOOL on = FALSE;
-    SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &on, 0);
-    return on != FALSE;
+    if (gMenuCuesAlways < 0) {
+        BOOL on = FALSE;
+        SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &on, 0);
+        gMenuCuesAlways = on ? 1 : 0;
+    }
+    return gMenuCuesAlways == 1;
 #else
     return false;
 #endif

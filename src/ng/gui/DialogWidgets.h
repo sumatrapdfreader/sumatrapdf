@@ -294,4 +294,5 @@ gpui::El* DialogFooter(gpui::Ctx* cx, gpui::El* extra, gpui::Entity<V> ent, Str 
     return row;
 }
 bool MenuCuesAlways();
+void MenuCuesRefresh();
 TempStr InputTextTemp(gpui::InputState* e);

@@ -800,6 +800,7 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             // high contrast can be toggled at any time (Alt+Shift+PrtScr)
             UpdateThemeAfterHighContrastChange();
+            AppShellSettingChanged();
             // a work area change can come without WM_DISPLAYCHANGE
             RefitFullScreen(WinOf(hwnd));
             RefreshDpiAfterDisplayChange(WinOf(hwnd));
