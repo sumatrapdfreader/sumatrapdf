@@ -2320,7 +2320,7 @@ int FoldDiacriticsRune(int c);
 int WStrFindSubstr(WStr str, WStr substr);
 
 // human readable size, e.g. "1.23 GB", "456 KB", "17 B"
-TempStr FormatFileSizeTemp(u64 size);
+TempStr FormatSizeCompactTemp(u64 size);
 
 //--- StrUtf8.h ------------------------------------------------------------------
 

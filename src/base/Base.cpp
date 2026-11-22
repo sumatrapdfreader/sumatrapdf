@@ -1395,7 +1395,7 @@ void LogArenaStats(Str what, Arena* a) {
     u64 nAllocs = a->nAllocsLifetime;
     u64 peakBytes = a->peakBytesLifetime;
     logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
-         str::FormatNumWithThousandSepTemp((i64)peakBytes), FormatFileSizeTemp(peakBytes));
+         str::FormatNumWithThousandSepTemp((i64)peakBytes), FormatSizeCompactTemp(peakBytes));
 }
 
 //--- Str.cpp ----------------------------------------------------------------
@@ -3752,7 +3752,7 @@ int WStrFindSubstr(WStr str, WStr substr) {
 }
 
 // Format size in human readable form (e.g., "1.23 GB", "456 KB")
-TempStr FormatFileSizeTemp(u64 size) {
+TempStr FormatSizeCompactTemp(u64 size) {
     // clang-format off
 static const struct {
     u64 divisor;

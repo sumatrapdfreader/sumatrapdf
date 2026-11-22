@@ -15310,7 +15310,7 @@ static void ResetTempArenaWithLogging() {
     if (isNewMax) {
         logf("temp allocator new max: %s allocations, peak %s bytes (%s)\n",
              str::FormatNumWithThousandSepTemp((i64)gMaxAllocs), str::FormatNumWithThousandSepTemp((i64)gPeakBytes),
-             FormatFileSizeTemp(gPeakBytes));
+             FormatSizeCompactTemp(gPeakBytes));
     }
     ResetTempArena();
 }

@@ -271,7 +271,7 @@ static void UpdateCountLabel() {
     } else {
         int n = len(tab->filtered);
         int total = len(tab->logs);
-        TempWStr sizeBuf = ToWStrTemp(FormatFileSizeTemp((u64)tab->logBytes));
+        TempWStr sizeBuf = ToWStrTemp(FormatSizeCompactTemp((u64)tab->logBytes));
         if (n == total) {
             wsprintfW(buf, L"%d lines · %s", total, sizeBuf);
         } else {

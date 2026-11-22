@@ -536,11 +536,17 @@ static void ToWStrInvalidTest() {
     utassert(len(ws) == 1 && ws.s[0] == 0xFFFD);
 }
 
+static void FormatSizeTest() {
+    utassert(str::Eq(FormatSizeCompactTemp(1536), StrL("1.5 KB")));
+    utassert(str::Eq(FormatSizeCompactTemp(17), StrL("17 B")));
+}
+
 void BaseUtilTest() {
     StrEqLenTest();
     ReplaceNoCaseTest();
     InPlacePastLenTest();
     ToWStrInvalidTest();
+    FormatSizeTest();
     FlipPixmapTest();
 #if !OS_WASM
     WaitThreadTest();

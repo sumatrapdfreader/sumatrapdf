@@ -208,7 +208,7 @@ TempStr HexPositionTemp(HexView* hex, int shown) {
     u64 last = shown > 0 ? hex->top + (u64)shown - 1 : hex->top;
     TempStr from = HexOffsetTemp(hex->top, hex->size);
     TempStr to = HexOffsetTemp(last, hex->size);
-    return fmt("%s - %s of %s", from, to, FormatFileSizeTemp(hex->size));
+    return fmt("%s - %s of %s", from, to, FormatSizeCompactTemp(hex->size));
 }
 
 static char HexFoldAscii(char c) {
