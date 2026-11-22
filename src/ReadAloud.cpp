@@ -607,7 +607,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
         defaultFlags |= MF_CHECKED;
     }
 
-    AppendMenuW(voiceMenu, defaultFlags, CmdTtsVoiceDefault, L"System default");
+    AppendMenuW(voiceMenu, defaultFlags, CmdTtsVoiceDefault, CWStrTemp(Tr("System default")));
     AppendMenuW(voiceMenu, MF_SEPARATOR, 0, nullptr);
 
     Vec<TtsVoiceInfo> voices = TtsGetVoices();

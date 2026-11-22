@@ -241,7 +241,7 @@ static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
     logf("UpdateDownloadProgressNotif: %s\n", size);
     auto* wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
     if (wnd) {
-        TempStr msg = fmt("Downloading update: %s\n", size);
+        TempStr msg = fmt(Tr("Downloading update: %s").s, size);
         NotificationUpdateMessage(wnd, msg, 0, true);
     } else {
         logf("UpdateDownloadProgressNotif: no wnd\n");

@@ -552,7 +552,7 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
     if (engine && EngineHasUnsavedAnnotations(engine)) {
         tmpPath = GetTempFilePathTemp(StrL("bake"));
         if (len(tmpPath) == 0 || !EngineMupdfSaveCopy(engine, tmpPath)) {
-            MessageBoxWarning(hwnd, StrL("Failed to bake PDF file."), Tr("Bake PDF"));
+            MessageBoxWarning(hwnd, Tr("Failed to bake PDF file."), Tr("Bake PDF"));
             return;
         }
         inputPath = tmpPath;
@@ -581,7 +581,7 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfBakeDoIt: pdfbake_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, StrL("Failed to bake PDF file."), Tr("Bake PDF"));
+        MessageBoxWarning(hwnd, Tr("Failed to bake PDF file."), Tr("Bake PDF"));
     }
 }
 
@@ -657,7 +657,7 @@ void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
         ShowToolOutput(path);
     } else {
         logf("PdfExtractTextDoIt: failed to extract text, isPdf: %d\n", (int)isPdf);
-        MessageBoxWarning(hwnd, StrL("Failed to extract text."), Tr("Extract Text"));
+        MessageBoxWarning(hwnd, Tr("Failed to extract text."), Tr("Extract Text"));
     }
 }
 
@@ -794,7 +794,7 @@ void PdfCompressDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfCompressDoIt: pdfclean_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, StrL("Failed to compress PDF file."), Tr("Compress PDF"));
+        MessageBoxWarning(hwnd, Tr("Failed to compress PDF file."), Tr("Compress PDF"));
     }
 }
 
@@ -872,7 +872,7 @@ void PdfDecompressDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfDecompressDoIt: pdfclean_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, StrL("Failed to decompress PDF file."), Tr("Decompress PDF"));
+        MessageBoxWarning(hwnd, Tr("Failed to decompress PDF file."), Tr("Decompress PDF"));
     }
 }
 
@@ -965,7 +965,7 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     if (isExtract && sourceEngine && EngineHasUnsavedAnnotations(sourceEngine)) {
         tmpPath = GetTempFilePathTemp(StrL("extract-pages"));
         if (len(tmpPath) == 0 || !EngineMupdfSaveCopy(sourceEngine, tmpPath)) {
-            MessageBoxWarning(hwnd, StrL("Failed to extract pages from PDF file."), Tr("Extract Pages From PDF"));
+            MessageBoxWarning(hwnd, Tr("Failed to extract pages from PDF file."), Tr("Extract Pages From PDF"));
             return;
         }
         inputPath = tmpPath;
@@ -1000,7 +1000,7 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     } else {
         logf("PdfDeletePageDoIt: pdfclean_main failed with %d for %s\n", res, op);
         Str msg =
-            isExtract ? StrL("Failed to extract pages from PDF file.") : StrL("Failed to delete pages from PDF file.");
+            isExtract ? Tr("Failed to extract pages from PDF file.") : Tr("Failed to delete pages from PDF file.");
         Str title = isExtract ? Tr("Extract Pages From PDF") : Tr("Delete Pages From PDF");
         MessageBoxWarning(hwnd, msg, title);
     }
@@ -1129,7 +1129,7 @@ void PdfEncryptDialog::DoIt(VirtMouseEvent*) {
         StartLoadDocument(&args);
     } else {
         logf("PdfEncryptDoIt: pdfclean_main failed with %d\n", res);
-        MessageBoxWarning(hwnd, StrL("Failed to encrypt PDF file."), Tr("Encrypt PDF"));
+        MessageBoxWarning(hwnd, Tr("Failed to encrypt PDF file."), Tr("Encrypt PDF"));
     }
 }
 
@@ -1867,7 +1867,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
     DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
-        MessageBoxWarning(hwnd, StrL("Failed to convert to images."), Tr("Convert to Images"));
+        MessageBoxWarning(hwnd, Tr("Failed to convert to images."), Tr("Convert to Images"));
         return;
     }
 
@@ -1895,7 +1895,7 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
 
     if (nOk == 0) {
         str::Free(firstPath);
-        MessageBoxWarning(hwnd, StrL("Failed to convert to images."), Tr("Convert to Images"));
+        MessageBoxWarning(hwnd, Tr("Failed to convert to images."), Tr("Convert to Images"));
         return;
     }
     logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
@@ -1987,7 +1987,7 @@ void FinishSaveSelImg(SaveSelImgWork* d) {
         if (IsMainWindowValidAndNotClosing(d->win)) {
             parent = d->win->hwndFrame;
         }
-        MessageBoxWarning(parent, StrL("Failed to save the selection as an image."), Tr("Save Selection As Image"));
+        MessageBoxWarning(parent, Tr("Failed to save the selection as an image."), Tr("Save Selection As Image"));
     }
     str::Free(d->destPath);
     delete d;
@@ -2088,7 +2088,7 @@ void SaveSelectionAsImageDialog::DoIt(VirtMouseEvent*) {
     }
     TempStr withExt = WithDefaultImageExtTemp(destPath);
     if (len(withExt) == 0) {
-        MessageBoxWarning(hwnd, StrL("Unsupported image format."), Tr("Save Selection As Image"));
+        MessageBoxWarning(hwnd, Tr("Unsupported image format."), Tr("Save Selection As Image"));
         return;
     }
     // the box may have been filled without a change notification
@@ -2098,7 +2098,7 @@ void SaveSelectionAsImageDialog::DoIt(VirtMouseEvent*) {
     }
     Pixmap* px = RenderSelectionPixmap(engine, dm->GetRotation(), pageNo, selRect, (float)dpi);
     if (!px) {
-        MessageBoxWarning(hwnd, StrL("Failed to save the selection as an image."), Tr("Save Selection As Image"));
+        MessageBoxWarning(hwnd, Tr("Failed to save the selection as an image."), Tr("Save Selection As Image"));
         return;
     }
 
