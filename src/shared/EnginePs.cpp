@@ -308,10 +308,8 @@ bool IsEnginePsAvailable() {
 }
 
 bool IsEnginePsSupportedFileType(FileType kind) {
-    if (!IsEnginePsAvailable()) {
-        return false;
-    }
-    return kind == FileType::PS;
+    // check kind first: finding Ghostscript scans the registry and PATH
+    return kind == FileType::PS && IsEnginePsAvailable();
 }
 
 #else
