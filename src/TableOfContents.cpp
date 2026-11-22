@@ -48,7 +48,6 @@
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
 static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
-    auto* treeView = ev->treeView;
     auto ti = ev->treeItem;
     auto* nm = ev->info;
     TocItem* tocItem = (TocItem*)ti;
@@ -78,18 +77,6 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     ReportIf(!isOk);
 
     str::Builder infotip;
-
-    // Display the item's full label, if it's overlong
-    Rect rcLine, rcLabel;
-    treeView->GetItemRect(ev->treeItem, false, rcLine);
-    treeView->GetItemRect(ev->treeItem, true, rcLabel);
-
-    // TODO: this causes a duplicate. Not sure what changed
-    if (false && rcLine.x + rcLine.dx + 2 < rcLabel.x + rcLabel.dx) {
-        Str currInfoTip = treeView->treeModel->Text(ti);
-        infotip.Append(currInfoTip);
-        infotip.Append(StrL("\r\n"));
-    }
 
     if (kindDestinationLaunchEmbedded == k || kindDestinationAttachment == k) {
         TempStr tmp = fmt(Tr("Attachment: %s").s, path);
@@ -1046,12 +1033,6 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
     }
 }
 
-// disabled because of https://github.com/sumatrapdfreader/sumatrapdf/issues/2202
-// it was added for https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
-// but unclear if its still needed
-// this calls GoToTocLinkTask) which will eventually call GoToPage()
-// which adds nav point. Maybe I should not add nav point
-// if going to the same page?
 // set when a mouse click changed the tree selection (handled by
 // TocTreeSelectionChanged), so the NM_CLICK that follows doesn't navigate again
 static bool gTocSelChangedByMouseClick = false;
