@@ -2061,6 +2061,19 @@ static BrowserView* UpdateBrowserViews(MainWindow* win, bool overlayUp) {
     return curr;
 }
 
+// the error page is built every frame; check the disk once per failed tab
+static bool FailedTabFileExists(WindowTab* tab) {
+    static WindowTab* lastTab = nullptr;
+    static const char* lastPath = nullptr;
+    static bool lastExists = false;
+    if (tab != lastTab || tab->filePath.s != lastPath) {
+        lastTab = tab;
+        lastPath = tab->filePath.s;
+        lastExists = file::Exists(tab->filePath);
+    }
+    return lastExists;
+}
+
 // a fixed-page document draws through DocCanvas, the Home tab through
 // HomePage, a CHM or markdown document through the browser view
 static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
@@ -2102,7 +2115,7 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
                 canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, reason))->Font(16)->Fg(th.foreground));
             }
             // looking at the bytes can tell why; not when the file is gone
-            if (file::Exists(tab->filePath) && CanAccessDisk()) {
+            if (FailedTabFileExists(tab) && CanAccessDisk()) {
                 canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, Tr("Open in hex view")))
                                   ->Font(16)
                                   ->Fg(ToGpui(ThemeWindowLinkColor()))
