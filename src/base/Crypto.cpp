@@ -116,12 +116,17 @@ Str ExtractP7m(Str d) {
 
     DWORD cbContent = 0;
     ok = CryptMsgGetParam(hMsg, CMSG_CONTENT_PARAM, 0, nullptr, &cbContent);
-    if (!ok || cbContent == 0) {
+    if (!ok || cbContent == 0 || cbContent >= INT_MAX) {
         CryptMsgClose(hMsg);
         return {};
     }
 
-    u8* content = AllocArray<u8>((int)cbContent);
+    // +1 for the NUL terminator (AllocArray zeroes)
+    u8* content = AllocArray<u8>((int)cbContent + 1);
+    if (!content) {
+        CryptMsgClose(hMsg);
+        return {};
+    }
     ok = CryptMsgGetParam(hMsg, CMSG_CONTENT_PARAM, 0, content, &cbContent);
     CryptMsgClose(hMsg);
     if (!ok) {
