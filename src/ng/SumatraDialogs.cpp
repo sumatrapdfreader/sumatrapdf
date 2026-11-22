@@ -867,7 +867,8 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
                IsPdfToolDialogVisible() || IsImageEditWindowVisible() || IsSetScreenshotHotkeyDialogVisible() ||
                IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() || IsAdvancedSettingsDialogVisible() ||
                IsConfigureRestrictedUseDialogVisible() || IsPageGridDialogVisible() || IsKeyboardHelpVisible() ||
-               IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible() || IsRenameStripGroupDialogVisible();
+               IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible() || IsRenameStripGroupDialogVisible() ||
+               IsCaj2pdfDownloadDialogVisible();
     (void)win;
     return any ? DialogAccels::None : DialogAccels::All;
 }
