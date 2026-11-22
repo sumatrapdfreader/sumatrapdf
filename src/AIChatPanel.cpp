@@ -443,6 +443,7 @@ static void AIChatReadThread(AIChatReadThreadCtx* ctx) {
     Str rem = lineTooLong ? Str{} : ToStr(lineBuf);
     if (rem) {
         AIChatLog(p->logger, StrL("<<<"), rem);
+        p->ParseStreamLine(rem, &ctx->stream);
     }
     AIChatLog(p->logger, StrL("eof"), StrL("(stdout closed)"));
 
