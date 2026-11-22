@@ -5302,12 +5302,17 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     (void)locale;
     TempStr thousandSep = StrL(",");
 #endif
-    TempStr buf = str::FormatTemp("%d", num);
+    // the digits of |num|; a '-' goes in front of the first group
+    bool negative = num < 0;
+    TempStr buf = str::FormatTemp("%llu", negative ? (u64)0 - (u64)num : (u64)num);
 
     // i64 with thousand seps is well under 48 bytes (e.g. "9,223,372,036,854,775,807").
     char resScratch[48]{};
     str::Builder res;
     res.UseExternalBuffer(Str(resScratch, sizeofi(resScratch)));
+    if (negative) {
+        res.AppendChar('-');
+    }
     int i = 3 - (buf.len % 3);
     for (int src = 0; src < buf.len; src++) {
         res.AppendChar(buf.s[src]);
