@@ -884,7 +884,7 @@ bool LoadSettings() {
     }
 
     if (len(gprefs->treeFontName) == 0) {
-        gprefs->treeFontName = StrL("automatic");
+        str::ReplaceWithCopy(&gprefs->treeFontName, StrL("automatic"));
     }
 
     // drop file states without a path: they can't be opened, found by path
