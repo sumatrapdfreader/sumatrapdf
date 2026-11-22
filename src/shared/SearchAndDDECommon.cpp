@@ -1373,7 +1373,7 @@ Str HandleSyncCmd(Str cmd, bool* ack) {
         return next;
     }
 
-    int page;
+    int page = 0;
     Vec<Rect> rects;
     int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);

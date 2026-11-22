@@ -815,14 +815,16 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     VecReset(rects);
 
     while ((node = synctex_scanner_next_result(this->scanner)) != nullptr) {
+        int nodePage = synctex_node_page(node);
         if (firstpage == -1) {
-            firstpage = synctex_node_page(node);
-            if (firstpage <= 0 || firstpage > engine->PageCount()) {
+            // skip results on pages the document doesn't have
+            if (nodePage <= 0 || nodePage > engine->PageCount()) {
                 continue;
             }
-            *page = (int)(UINT)firstpage;
+            firstpage = nodePage;
+            *page = firstpage;
         }
-        if (synctex_node_page(node) != firstpage) {
+        if (nodePage != firstpage) {
             continue;
         }
 
