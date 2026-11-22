@@ -268,11 +268,17 @@ bool PdfCreator::AddPageFromImageData(Str data, float imgDpi) const {
     }
 
     fz_image* img = nullptr;
+    fz_buffer* buf = nullptr;
     fz_var(img);
+    fz_var(buf);
 
     fz_try(ctx) {
-        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)data.s, (size_t)data.len);
+        buf = fz_new_buffer_from_copied_data(ctx, (u8*)data.s, (size_t)data.len);
         img = fz_new_image_from_buffer(ctx, buf);
+    }
+    fz_always(ctx) {
+        // img keeps its own reference
+        fz_drop_buffer(ctx, buf);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
