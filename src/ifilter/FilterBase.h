@@ -251,7 +251,18 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
         HANDLE hFile =
             CreateFileW(pszFileName, GENERIC_READ, share, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE) return E_INVALIDARG;
-        DWORD size = GetFileSize(hFile, nullptr), read = 0;
+        // Str holds an int length, so files of 2 GB and more can't be loaded
+        LARGE_INTEGER fileSize{};
+        if (!GetFileSizeEx(hFile, &fileSize)) {
+            HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+            CloseHandle(hFile);
+            return hr;
+        }
+        if (fileSize.QuadPart >= INT_MAX) {
+            CloseHandle(hFile);
+            return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
+        }
+        DWORD size = (DWORD)fileSize.QuadPart, read = 0;
         char* data = AllocArray<char>((int)size + 1);
         if (!data) {
             CloseHandle(hFile);
