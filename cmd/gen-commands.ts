@@ -414,6 +414,7 @@ const commandsRaw = [
     "CmdExportMarkdown", "Export as Markdown...",
     "CmdImagesToPdf", "Make PDF From Images...",
     "CmdExportAnnotations", "Export Annotations...",
+    "CmdLocateFile", "Locate File...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

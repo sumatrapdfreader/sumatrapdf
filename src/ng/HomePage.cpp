@@ -2131,3 +2131,38 @@ void AskServerYesNo(MainWindow* win, Str question, Str caption, Func1<bool> onAn
     auto* q = new ServerYesNo{onAnswer};
     MsgBox(win, question, caption, MbYesNo | MbIconQuestion, MkFunc1(ServerYesNoAnswered, q));
 }
+
+// --- Locate File (CmdLocateFile) ---------------------------------------------
+
+struct LocateFileReq {
+    MainWindow* win = nullptr;
+    Str path;
+};
+
+// the prompt runs a message loop, so it is shown from the ui task queue
+static void LocateFileNow(LocateFileReq* req) {
+    MainWindow* win = req->win;
+    TempStr oldPath = str::DupTemp(req->path);
+    str::Free(req->path);
+    delete req;
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    TempStr picked = AppShellPromptForPathTemp(win, Tr("Locate File"), LocateFileFilterTemp(oldPath), oldPath);
+    if (len(picked) == 0) {
+        return;
+    }
+    TempStr newPath = str::DupTemp(picked);
+    LocateFileInHistory(oldPath, newPath);
+    StartLoadDocument(win, newPath);
+}
+
+// orig's HomePageLocateFile: asks where a moved file is now; its history entry
+// (page, zoom, favorites, ...) follows it there and it opens
+void HomePageLocateFile(MainWindow* win, Str path) {
+    if (len(path) == 0) {
+        return;
+    }
+    auto* req = new LocateFileReq{win, str::Dup(path)};
+    uitask::Post(MkFunc0(LocateFileNow, req), "LocateFile");
+}

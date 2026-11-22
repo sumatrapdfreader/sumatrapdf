@@ -413,6 +413,7 @@ const CommandInfo gCommands[] = {
     {CmdExportMarkdown, "CmdExportMarkdown\0", StrL("Export as Markdown...")},
     {CmdImagesToPdf, "CmdImagesToPdf\0", StrL("Make PDF From Images...")},
     {CmdExportAnnotations, "CmdExportAnnotations\0", StrL("Export Annotations...")},
+    {CmdLocateFile, "CmdLocateFile\0", StrL("Locate File...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

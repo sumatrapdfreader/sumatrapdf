@@ -165,8 +165,12 @@ static bool OpenFileDlg(MainWindow* win, Str title, const Vec<gp::PathFilter>& f
         return false;
     }
 #if OS_WIN
-    // a test's paths instead of the dialog
-    if (multiSelect && TakeTestOpenFileNames(*pathsOut)) {
+    // a test's paths instead of the dialog (the first, for one file)
+    StrVec testPaths;
+    if (TakeTestOpenFileNames(testPaths)) {
+        for (int i = 0; i < (multiSelect ? len(testPaths) : 1); i++) {
+            pathsOut->Append(testPaths[i]);
+        }
         return true;
     }
 #endif

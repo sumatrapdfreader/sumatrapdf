@@ -1013,6 +1013,11 @@ HMENU BuildHomeContextMenu(MainWindow* win, Str path) {
     // pick it up — show it next to Remove From History explicitly
     MenuSetText(popup, CmdForgetSelectedDocument, str::JoinTemp(Tr("&Remove From History"), StrL("\tDel")));
     AppendServerItems(popup, path);
+    // the file moved: point its history entry at where it is now
+    if (!file::Exists(path)) {
+        AppendMenuW(popup, MF_SEPARATOR, kMenuSeparatorID, nullptr);
+        AppendMenuW(popup, MF_STRING, CmdLocateFile, ToWStrTemp(Tr("Locate File...")).s);
+    }
     (void)win;
     return popup;
 }
@@ -1030,6 +1035,11 @@ static void HomeContextMenuCommand(MainWindow* win, Str path, int cmd) {
 
     if (CmdUploadToServer == cmd) {
         UploadFileToServer(win, path);
+        return;
+    }
+
+    if (CmdLocateFile == cmd) {
+        HomePageLocateFile(win, path);
         return;
     }
 

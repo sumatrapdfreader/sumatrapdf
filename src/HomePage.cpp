@@ -3633,3 +3633,38 @@ void AskServerYesNo(MainWindow* win, Str question, Str caption, Func1<bool> onAn
     int res = MsgBox(win->hwndFrame, question, caption, MB_YESNO | MB_ICONQUESTION);
     onAnswer.Call(res == IDYES);
 }
+
+// Locate File (CmdLocateFile): asks where a moved file is now; its history
+// entry (page, zoom, favorites, ...) follows it there and it opens
+void HomePageLocateFile(MainWindow* win, Str path) {
+    if (len(path) == 0) {
+        return;
+    }
+    TempStr oldPath = str::DupTemp(path);
+    StrVec picked;
+    if (!TakeTestOpenFileNames(picked)) {
+        WCHAR fileName[MAX_PATH + 1]{};
+        TempWStr filter = ToWStrTemp(LocateFileFilterTemp(oldPath));
+        for (int i = 0; i < len(filter); i++) {
+            if (filter.s[i] == 1) {
+                filter.s[i] = 0;
+            }
+        }
+        TempWStr dir = ToWStrTemp(path::GetDirTemp(oldPath));
+        OPENFILENAME ofn{};
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = win->hwndFrame;
+        ofn.lpstrFile = fileName;
+        ofn.nMaxFile = dimof(fileName);
+        ofn.lpstrFilter = filter.s;
+        ofn.lpstrInitialDir = dir::Exists(path::GetDirTemp(oldPath)) ? dir.s : nullptr;
+        ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+        if (!GetOpenFileNameW(&ofn)) {
+            return;
+        }
+        picked.Append(ToUtf8Temp(fileName));
+    }
+    TempStr newPath = str::DupTemp(picked[0]);
+    LocateFileInHistory(oldPath, newPath);
+    HomePageOpenFile(win, newPath);
+}

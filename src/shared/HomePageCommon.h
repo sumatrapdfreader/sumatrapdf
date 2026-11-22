@@ -54,3 +54,7 @@ struct HomeHeaderOut {
 };
 
 void LayoutHomeHeader(const HomeHeaderIn& in, HomeHeaderOut& out);
+
+// implemented in SumatraPDFCommon.cpp
+void LocateFileInHistory(Str oldPath, Str newPath);
+TempStr LocateFileFilterTemp(Str oldPath);

@@ -2064,6 +2064,27 @@ void RenameFileInHistory(Str oldPath, Str newPath) {
     }
 }
 
+// Locate File: a moved file's history entry (its page, zoom, favorites, ...)
+// now belongs to where the file is
+void LocateFileInHistory(Str oldPath, Str newPath) {
+    RenameFileInHistory(oldPath, newPath);
+    FileState* fs = FileHistoryFindByPath(newPath);
+    if (fs) {
+        fs->isMissing = false;
+    }
+    ScheduleSaveSettings();
+}
+
+// the Locate File dialog's filter: files like the missing one, then all
+// ("*.pdf\1*.pdf\1All files\1*.*\1"; "\1" separates, as ng's filters)
+TempStr LocateFileFilterTemp(Str oldPath) {
+    TempStr ext = path::GetExtTemp(oldPath);
+    if (len(ext) == 0) {
+        return str::DupTemp(StrL("All files\1*.*\1"));
+    }
+    return fmt("*%s\1*%s\1All files\1*.*\1", ext, ext);
+}
+
 MeasurementUnit cursorPosUnit = MeasurementUnit::pt;
 
 // end-of-document hint for "open next file in folder" discoverability

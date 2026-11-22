@@ -38,6 +38,7 @@ void HomePageOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos);
 void HomePageMoveSelection(MainWindow* win, int dCol, int dRow);
 Str HomePageSelectedFilePathTemp(MainWindow* win);
 void HomePageSelectFirst(MainWindow* win);
+void HomePageLocateFile(MainWindow* win, Str path);
 bool HomePageOnKeyDown(MainWindow* win, int vk, bool ctrl);
 // orig's WM_CONTEXTMENU from the keyboard: the selected entry's menu
 void HomePageContextMenuFromKey(MainWindow* win, gpui::Ctx* cx);

@@ -407,8 +407,9 @@ enum {
     CmdExportMarkdown = 601,
     CmdImagesToPdf = 602,
     CmdExportAnnotations = 603,
+    CmdLocateFile = 604,
 
-    CmdLast = 603,
+    CmdLast = 604,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

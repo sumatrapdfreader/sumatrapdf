@@ -1446,6 +1446,11 @@ MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
         it->accel = str::Dup(StrL("Del"));
     }
     AppendServerItems(popup, filePath);
+    // the file moved: point its history entry at where it is now
+    if (!file::Exists(filePath)) {
+        MenuAppendSeparator(popup);
+        MenuAppendString(popup, Tr("Locate File..."), CmdLocateFile);
+    }
     logf("BuildHomeContextMenu: '%s': %s\n", path::GetBaseNameTemp(filePath), MenuRowsTemp(popup));
     return popup;
 }
@@ -1484,6 +1489,9 @@ void HomeContextMenuCommand(MainWindow* win, Str filePathIn, int cmdId) {
             return;
         case CmdUploadToServer:
             UploadFileToServer(win, path);
+            return;
+        case CmdLocateFile:
+            HomePageLocateFile(win, path);
             return;
         case CmdDeleteFromServer:
             DeleteFileFromServer(win, path);

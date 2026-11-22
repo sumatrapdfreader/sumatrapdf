@@ -7548,6 +7548,12 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         // the home page's selected entry
+        case CmdLocateFile:
+            if (win->IsCurrentTabAbout()) {
+                HomePageLocateFile(win, HomePageSelectedFilePathTemp(win));
+            }
+            break;
+
         case CmdUploadToServer:
         case CmdDeleteFromServer: {
             Str path = win->IsCurrentTabAbout() ? HomePageSelectedFilePathTemp(win) : Str{};
