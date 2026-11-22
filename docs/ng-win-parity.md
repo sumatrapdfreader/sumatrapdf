@@ -84,10 +84,13 @@ Failures that were the test, not ng (fixed in the tests): `issue-3585`
 - `-html-backend` / IE fallback: ng renders CHM / markdown with WebView2 only.
 - Debug-only flags `-unit-tests`, `-test-render-page`, `-test-plugin` (ng has
   `test_util`).
-- Screen readers off Windows: the page elements come from gpui's document
-  parts, which only the UIA bridge exposes (not AT-SPI or AppKit yet).
-- Touch long-press and pen handling are Windows only: gpui emits `TouchEvent`
-  only there. Orig's pen barrel button is a left drag, so neither app has a pen
+- Screen readers: page elements on Windows (UIA) and Linux (AT-SPI, verified on
+  WSLg's a11y bus), not macOS (AppKit). The AT-SPI registry under WSL doesn't
+  list the app, so a screen reader that finds apps through it may miss ng.
+- Touch long-press and pen handling: Windows, and X11 when built with libXi
+  (`e5e18cb281`, `771903f63d`). X11 has no touch device under WSLg, so it is
+  tested by gpui's unit tests only; no cancelled phase or gestures there. Not
+  macOS. Orig's pen barrel button is a left drag, so neither app has a pen
   context menu.
 - Command-line files, reload and DDE `[Open]` load on the UI thread in both apps.
 - SumatraPDF Web on Wasm: no browser-fetch path, transfers report failure.
