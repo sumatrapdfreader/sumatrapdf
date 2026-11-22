@@ -2326,18 +2326,10 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         break;
     }
 
-    bool firstLayout = zoomReal < 0.01f;
     viewPort = layout.viewPort;
     canvasSize = layout.canvasSize;
     zoomReal = layout.zoomReal;
     CopyDocumentLayoutToPageInfo(this, layout);
-
-    Size slack = PanSlack();
-    if (firstLayout && (slack.dx > 0 || slack.dy > 0)) {
-        viewPort.x = slack.dx;
-        viewPort.y = slack.dy;
-        RecalcVisibleParts();
-    }
 
     // Page 1 of a rotated stack does not start at the canvas origin.
     if (openingLayout && ScrollFollowsRotation()) {
@@ -2346,6 +2338,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         if (pi && pi->pos.dx > 0 && pi->pos.dy > 0) {
             PlaceContentScroll(this, pi, 0);
             SnapCrossAxis(this, pi);
+            Size slack = PanSlack();
             viewPort.x = limitValue(viewPort.x, slack.dx, canvasSize.dx - viewPort.dx - slack.dx);
             viewPort.y = limitValue(viewPort.y, slack.dy, canvasSize.dy - viewPort.dy - slack.dy);
             RecalcVisibleParts();
