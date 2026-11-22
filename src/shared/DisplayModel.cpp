@@ -2632,8 +2632,9 @@ static float getZoomSafe(DisplayModel* dm, int pageNo, const PageInfo* pageInfo)
         return dm->zoomReal;
     }
 
+    // zoomVirtual is a percent
     if (dm->zoomVirtual > 0) {
-        return dm->zoomVirtual;
+        return dm->zoomVirtual * 0.01f * dm->dpiFactor;
     }
     // hail mary, return 100%
     return 1.f;

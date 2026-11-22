@@ -243,3 +243,33 @@ bool DocController_UnitTestDestroyHook() {
     }
     return ok;
 }
+
+// before the first layout, screen coordinates fall back to zoomVirtual: a
+// percent, so 100% must map one page unit to one pixel, not 100
+bool DisplayModel_UnitTestZoomFallback() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    EngineBase* engine = CreateEngineMupdfFromData(Str(kOnePagePdf), StrL("one-page.pdf"), nullptr);
+    if (!engine) {
+        return false;
+    }
+    NoopDocCb cb;
+    auto* dm = new DisplayModel(engine, &cb);
+    dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
+    dm->zoomVirtual = 100;
+    dm->zoomReal = 0;
+    dm->GetPageInfo(1)->zoomReal = 0;
+
+    Point p0 = dm->CvtToScreen(1, PointF(0, 0));
+    Point p1 = dm->CvtToScreen(1, PointF(100, 0));
+    int expected = (int)(100 * dm->dpiFactor + 0.5f);
+    bool ok = abs(p1.x - p0.x - expected) <= 1;
+    delete dm;
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+    return ok;
+}

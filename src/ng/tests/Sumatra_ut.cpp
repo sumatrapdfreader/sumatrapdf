@@ -65,6 +65,7 @@ void ImageReader_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
 bool RenderCache_UnitTestFullOfOneVisiblePage();
 bool RenderCache_UnitTestFullOfOldZoom();
+bool DisplayModel_UnitTestZoomFallback();
 bool EngineEbook_UnitTestUrlLink();
 
 #if OS_POSIX && !OS_WASM
@@ -273,6 +274,7 @@ void SumatraPDF_UnitTests() {
     utassert(RenderCache_UnitTestCookieUnlocked());
     utassert(RenderCache_UnitTestFullOfOneVisiblePage());
     utassert(RenderCache_UnitTestFullOfOldZoom());
+    utassert(DisplayModel_UnitTestZoomFallback());
 #if !OS_WIN
     // test_util has no GDI+ for the ebook formatter on Windows
     utassert(EngineEbook_UnitTestUrlLink());
