@@ -168,6 +168,11 @@ void RemoveNotificationsForTab(WindowTab* tab) {
 
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
     if (!gNotificationsEnabled) {
+        // richMsg is ours to free
+        if (args.richMsg) {
+            TipSpansFree(*args.richMsg);
+            delete args.richMsg;
+        }
         return nullptr;
     }
     // one notification per group per window, as orig does
