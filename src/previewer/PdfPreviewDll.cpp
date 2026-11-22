@@ -131,6 +131,11 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void* /*lpReserved*/)
     if (dwReason == DLL_PROCESS_DETACH) {
         UnregisterPreviewWndClass();
     }
+    // no logging per thread under the loader lock; DisableThreadLibraryCalls()
+    // isn't safe with the static CRT
+    if (dwReason == DLL_THREAD_ATTACH || dwReason == DLL_THREAD_DETACH) {
+        return TRUE;
+    }
     gLogAppName = StrL("PdfPreview");
     logf("PdfPreview: DllMain %s\n", GetReason(dwReason));
     return TRUE;
