@@ -210,13 +210,15 @@ static bool RunDviTool(Str exe, const Str* args, int nArgs, Str workDir) {
     for (int i = 0; i < nArgs; i++) {
         argv[i + 1] = (char*)CStrTemp(args[i]);
     }
+    // allocating in the child of a multi-threaded process can deadlock on the heap lock
+    const char* workDirZ = len(workDir) > 0 ? CStrTemp(workDir) : nullptr;
     pid_t pid = fork();
     if (pid < 0) {
         logf("dvi: fork failed: %s\n", exe);
         return false;
     }
     if (pid == 0) {
-        if (len(workDir) > 0 && chdir(CStrTemp(workDir)) != 0) {
+        if (workDirZ && chdir(workDirZ) != 0) {
             _exit(126);
         }
         execv(argv[0], argv);
