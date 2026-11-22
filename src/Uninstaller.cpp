@@ -108,8 +108,8 @@ static void OnUninstallationFinished() {
     gButtonUninstaller = nullptr;
     gButtonExit = CreateDefaultButton(gHwndFrame, Tr("Close"), isRtl);
     gButtonExit->onClick = MkFunc0Void(OnButtonExit);
-    SetMsg(Tr("SumatraPDF has been uninstalled."), gMsgError ? kColorMsgFailed : kColorMsgOk);
     gMsgError = gFirstError;
+    SetMsg(Tr("SumatraPDF has been uninstalled."), gMsgError ? kColorMsgFailed : kColorMsgOk);
     HwndRepaintNow(gHwndFrame);
 
     SafeCloseThreadHandle(&hThread);

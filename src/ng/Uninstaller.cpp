@@ -96,8 +96,8 @@ static void OnButtonUninstall(UninstallerWnd* wnd) {
 static void OnUninstallationFinished(UninstallerWnd* wnd) {
     wnd->uninstalling = false;
     wnd->finished = true;
-    SetMsg(Tr("SumatraPDF has been uninstalled."), gMsgError ? kColorMsgFailed : kColorMsgOk);
     gMsgError = gFirstError;
+    SetMsg(Tr("SumatraPDF has been uninstalled."), gMsgError ? kColorMsgFailed : kColorMsgOk);
     SafeCloseThreadHandle(&wnd->hThread);
 }
 
