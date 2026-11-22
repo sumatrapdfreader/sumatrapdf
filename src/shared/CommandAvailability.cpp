@@ -797,6 +797,18 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
+    // ng: the Markdown export of `cli markdown`, which orig doesn't have
+    if (cmdId == CmdExportMarkdown) {
+#if !defined(SUMATRA_NG) || OS_WASM
+        return CommandVisibility::Hide;
+#else
+        bool canExtract = ctx.engineKind == kindEngineMupdf || ctx.engineKind == kindEngineDjVu;
+        if (!canExtract || ctx.isImageCollection) {
+            return CommandVisibility::Hide;
+        }
+#endif
+    }
+
     bool isTextSelectCmd = cmdId == CmdSelectTextViaKeyboard || cmdId == CmdToggleTextSelecting ||
                            cmdId == CmdExtendSelectionCharLeft || cmdId == CmdExtendSelectionCharRight ||
                            cmdId == CmdExtendSelectionWordLeft || cmdId == CmdExtendSelectionWordRight;

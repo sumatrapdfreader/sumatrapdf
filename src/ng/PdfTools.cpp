@@ -56,6 +56,7 @@
 #include "SumatraDialogs.h"
 #include "PdfTools.h"
 #include "PdfToolsCommon.h"
+#include "Cli.h"
 
 #include "SumatraLog.h"
 
@@ -131,6 +132,7 @@ void FinishSaveSelImg(SaveSelImgWork* d) {
 enum class PdfToolKind {
     Bake,
     ExtractText,
+    ExportMarkdown,
     Compress,
     Decompress,
     DeletePages,
@@ -421,6 +423,8 @@ static Str ToolTitleFor(PdfToolKind kind) {
             return Tr("Bake PDF");
         case PdfToolKind::ExtractText:
             return Tr("Extract Text From PDF");
+        case PdfToolKind::ExportMarkdown:
+            return Tr("Export as Markdown");
         case PdfToolKind::Compress:
             return Tr("Compress PDF");
         case PdfToolKind::Decompress:
@@ -470,6 +474,8 @@ static Str (*ToolTitleFn(PdfToolKind kind))() {
             return ToolTitleOf<PdfToolKind::Bake>;
         case PdfToolKind::ExtractText:
             return ToolTitleOf<PdfToolKind::ExtractText>;
+        case PdfToolKind::ExportMarkdown:
+            return ToolTitleOf<PdfToolKind::ExportMarkdown>;
         case PdfToolKind::Compress:
             return ToolTitleOf<PdfToolKind::Compress>;
         case PdfToolKind::Decompress:
@@ -508,6 +514,8 @@ static Str ToolActionText() {
     switch (gTool.kind) {
         case PdfToolKind::ExtractText:
             return Tr("Extract Text");
+        case PdfToolKind::ExportMarkdown:
+            return Tr("Export");
         case PdfToolKind::DeletePages:
             return Tr("Delete Pages");
         case PdfToolKind::ExtractPages:
@@ -777,6 +785,30 @@ static void PdfExtractTextDoIt() {
     }
     logf("PdfExtractTextDoIt: failed to extract text, isPdf: %d\n", (int)isPdf);
     MessageBoxWarning(win, StrL("Failed to extract text."), Tr("Extract Text"));
+}
+
+// the pages picked as Markdown next to the document, as `cli markdown` writes
+static void ExportMarkdownDoIt() {
+    TempStr destPath = DestPathTemp();
+    Vec<int> pages;
+    if (len(destPath) == 0 || !PageRangeOk(InputTextTemp(gTool.pagesEdit), gTool.pageCount, true, pages)) {
+        return;
+    }
+    MainWindow* win = gTool.win;
+    WindowTab* tab = FindTabByFilePath(gTool.srcPath);
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    if (!engine) {
+        return;
+    }
+    logf("ExportMarkdownDoIt: %d pages of '%s' to '%s'\n", len(pages), gTool.srcPath, destPath);
+    TempStr md = DocumentToMarkdownTemp(engine, pages, destPath, MarkdownOpts{}, nullptr);
+    if (!file::WriteFile(destPath, md)) {
+        MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Export as Markdown"));
+        return;
+    }
+    TempStr path = str::DupTemp(destPath);
+    ClosePdfToolDialog();
+    ShowFileInFolder(win, path);
 }
 
 static void PdfCleanDoIt(bool decompress) {
@@ -2150,7 +2182,7 @@ static bool ActionEnabled() {
     if (len(DestPathTemp()) == 0) {
         return false;
     }
-    if (IsPageRangeTool() || gTool.kind == PdfToolKind::ExtractText) {
+    if (IsPageRangeTool() || gTool.kind == PdfToolKind::ExtractText || gTool.kind == PdfToolKind::ExportMarkdown) {
         Vec<int> parsed;
         bool isExtract = gTool.kind != PdfToolKind::DeletePages;
         return PageRangeOk(InputTextTemp(gTool.pagesEdit), gTool.pageCount, isExtract, parsed);
@@ -2213,6 +2245,9 @@ static void PdfToolDoIt() {
             break;
         case PdfToolKind::ExtractText:
             PdfExtractTextDoIt();
+            break;
+        case PdfToolKind::ExportMarkdown:
+            ExportMarkdownDoIt();
             break;
         case PdfToolKind::Compress:
             PdfCleanDoIt(false);
@@ -2779,6 +2814,8 @@ void PdfToolView::OnBrowse(PdfToolView*, gp::Ctx* cx, const gp::ClickEvent*) {
         args->nativeFile = str::Dup(shown);
     } else if (gTool.kind == PdfToolKind::ExtractText) {
         args->filter = str::Dup(StrL("Text Files\1*.txt\1All Files\1*.*\1"));
+    } else if (gTool.kind == PdfToolKind::ExportMarkdown) {
+        args->filter = str::Dup(StrL("Markdown Files\1*.md\1All Files\1*.*\1"));
     } else {
         args->filter = str::Dup(StrL("PDF Files\1*.pdf\1All Files\1*.*\1"));
     }
@@ -2864,6 +2901,8 @@ static const char* ToolWindowName(PdfToolKind kind) {
             return "pdfbake";
         case PdfToolKind::ExtractText:
             return "pdfextracttext";
+        case PdfToolKind::ExportMarkdown:
+            return "pdfexportmarkdown";
         case PdfToolKind::Compress:
             return "pdfcompress";
         case PdfToolKind::Decompress:
@@ -2989,6 +3028,23 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
     logf("ShowPdfExtractTextDialog: opening for '%s'\n", srcPath);
     TempStr txtPath = str::JoinTemp(path::GetPathNoExtTemp(srcPath), StrL(".txt"));
     if (!StartToolDialog(win, PdfToolKind::ExtractText, MakeUniqueFilePathTemp(txtPath), StrL(".txt"))) {
+        return;
+    }
+    int pageCount = win->ctrl ? win->ctrl->PageCount() : 1;
+    gTool.pagesEdit = NewInput(win, fmt("1-%d", pageCount));
+    gTool.focusPages = true;
+    AppShellInvalidate(win);
+}
+
+void ShowExportMarkdownDialog(MainWindow* win) {
+    ToolScope scope;
+    if (!CanShowToolDialog(win, false)) {
+        return;
+    }
+    Str srcPath = win->CurrentTab()->filePath;
+    logf("ShowExportMarkdownDialog: opening for '%s'\n", srcPath);
+    TempStr mdPath = str::JoinTemp(path::GetPathNoExtTemp(srcPath), StrL(".md"));
+    if (!StartToolDialog(win, PdfToolKind::ExportMarkdown, MakeUniqueFilePathTemp(mdPath), StrL(".md"))) {
         return;
     }
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 1;
@@ -4158,6 +4214,7 @@ static gp::El* PdfToolColumn(MainWindow* win, gp::Ctx* cx) {
     int nLines = 0;
     switch (gTool.kind) {
         case PdfToolKind::ExtractText:
+        case PdfToolKind::ExportMarkdown:
         case PdfToolKind::DeletePages:
         case PdfToolKind::ExtractPages:
             col->Child(ToolPagesLine(cx, gTool.kind != PdfToolKind::DeletePages));

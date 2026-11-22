@@ -467,6 +467,7 @@ import { testit as tabDragToWindow } from "./tab-drag-to-window.ts";
 import { testit as pdfCompressQuality } from "./pdf-compress-quality.ts";
 import { testit as formFieldFit } from "./form-field-fit.ts";
 import { testit as nextFileAtEnd } from "./next-file-at-end.ts";
+import { testit as exportMarkdown } from "./export-markdown.ts";
 import { testit as chapterNav } from "./chapter-nav.ts";
 import { testit as pageLinksFreshEngine } from "./page-links-fresh-engine.ts";
 import { testit as mouseButtonShortcuts } from "./mouse-button-shortcuts.ts";
@@ -1195,6 +1196,7 @@ export const tests: NamedTest[] = [
   ["pdf-compress-quality", pdfCompressQuality],
   ["form-field-fit", formFieldFit],
   ["next-file-at-end", nextFileAtEnd],
+  ["export-markdown", exportMarkdown],
   ["cli-markdown", cliMarkdown],
   ["cli-markdown-cases", cliMarkdownCases],
   ["cli-markdown-docs", cliMarkdownDocs],

@@ -7,3 +7,13 @@
 
 // argv[0] is the command (argv after "cli"). Returns the process exit code.
 int CliMain(int argc, char** argv);
+
+class EngineBase;
+struct MarkdownOpts {
+    // <!-- page N --> before each page
+    bool pageMarkers = true;
+    // pictures written next to the file, in <name>_images
+    bool images = true;
+};
+TempStr DocumentToMarkdownTemp(EngineBase* engine, const Vec<int>& pages, Str dest, MarkdownOpts opts,
+                               StrVec* imagesOut);

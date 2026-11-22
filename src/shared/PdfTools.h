@@ -10,6 +10,7 @@ struct MainWindow;
 
 void ShowPdfBakeDialog(MainWindow* win);
 void ShowPdfExtractTextDialog(MainWindow* win);
+void ShowExportMarkdownDialog(MainWindow* win);
 void ShowPdfCompressDialog(MainWindow* win);
 void ShowPdfDecompressDialog(MainWindow* win);
 void ShowPdfDeletePageDialog(MainWindow* win);

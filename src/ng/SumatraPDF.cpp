@@ -7476,6 +7476,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowPdfExtractTextDialog(win);
             break;
 
+        case CmdExportMarkdown:
+            ShowExportMarkdownDialog(win);
+            break;
+
         case CmdSaveSelectionAsImage:
             ShowSaveSelectionAsImageDialog(win);
             break;

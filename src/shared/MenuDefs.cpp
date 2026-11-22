@@ -1140,6 +1140,10 @@ MenuDef menuDefDocumentOperations[] = {
         CmdDocumentExtractText,
     },
     {
+        TrN("Export as Markdown"),
+        CmdExportMarkdown,
+    },
+    {
         TrN("Compress PDF"),
         CmdPdfCompress,
     },

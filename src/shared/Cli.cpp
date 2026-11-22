@@ -2449,26 +2449,13 @@ static TempStr TableMarkdownTemp(const StyledPage& p, const MdTable& t) {
     return ToStrTemp(out);
 }
 
-static int CmdMarkdown(CliCtx& cx) {
-    Str dest = OutputArg(cx);
-    Str src = cx.positional[0];
-    if (len(dest) > 0 && SamePath(src, dest)) {
-        return Fail(cx, kCliUsage, StrL("won't write over the input: give another -o"));
-    }
-    int code = kCliOk;
-    EngineBase* engine = OpenDoc(cx, src, &code);
-    if (!engine) {
-        return code;
-    }
-    Vec<int> pages;
-    if (!PagesArg(cx, engine, pages, &code)) {
-        SafeEngineRelease(&engine);
-        return code;
-    }
-    bool pageMarkers = !HasOpt(cx, StrL("--no-page-markers"));
+// The pages of a document as Markdown: headings from the fonts, lists, tables,
+// running headers and page numbers left out. With `dest`, its pictures are
+// written next to it in <name>_images and *imagesOut lists them.
+TempStr DocumentToMarkdownTemp(EngineBase* engine, const Vec<int>& pages, Str dest, MarkdownOpts opts,
+                               StrVec* imagesOut) {
     MdImages imgs;
-    // pictures go next to the markdown file, in <name>_images
-    if (len(dest) > 0 && !HasOpt(cx, StrL("--no-images"))) {
+    if (len(dest) > 0 && opts.images) {
         TempStr base = path::GetPathNoExtTemp(path::GetBaseNameTemp(dest));
         imgs.dirRel = fmt("%s_images", base);
         imgs.dir = path::JoinTemp(path::GetDirTemp(dest), imgs.dirRel);
@@ -2495,9 +2482,8 @@ static int CmdMarkdown(CliCtx& cx) {
         }
     }
     MdChunks out;
-    TempStr title = engine->GetPropertyTemp(DocProp::Title);
     for (int k = 0; k < len(pages); k++) {
-        if (pageMarkers) {
+        if (opts.pageMarkers) {
             out.Add(MdKind::Marker, fmt("<!-- page %d -->", pages[k]));
         }
         if (haveStyles) {
@@ -2509,7 +2495,36 @@ static int CmdMarkdown(CliCtx& cx) {
     for (StyledPage* p : styled) {
         delete p;
     }
-    Str md = JoinChunksTemp(out);
+    if (imagesOut) {
+        for (Str s : imgs.written) {
+            imagesOut->Append(s);
+        }
+    }
+    return JoinChunksTemp(out);
+}
+
+static int CmdMarkdown(CliCtx& cx) {
+    Str dest = OutputArg(cx);
+    Str src = cx.positional[0];
+    if (len(dest) > 0 && SamePath(src, dest)) {
+        return Fail(cx, kCliUsage, StrL("won't write over the input: give another -o"));
+    }
+    int code = kCliOk;
+    EngineBase* engine = OpenDoc(cx, src, &code);
+    if (!engine) {
+        return code;
+    }
+    Vec<int> pages;
+    if (!PagesArg(cx, engine, pages, &code)) {
+        SafeEngineRelease(&engine);
+        return code;
+    }
+    MarkdownOpts opts;
+    opts.pageMarkers = !HasOpt(cx, StrL("--no-page-markers"));
+    opts.images = !HasOpt(cx, StrL("--no-images"));
+    StrVec written;
+    TempStr title = engine->GetPropertyTemp(DocProp::Title);
+    Str md = DocumentToMarkdownTemp(engine, pages, dest, opts, &written);
     if (len(dest) > 0) {
         dir::CreateForFile(dest);
         if (!file::WriteFile(dest, md)) {
@@ -2525,8 +2540,8 @@ static int CmdMarkdown(CliCtx& cx) {
         }
         if (len(dest) > 0) {
             j.Append(fmt(",\"file\":%s,\"images\":[", JStr(dest)));
-            for (int k = 0; k < len(imgs.written); k++) {
-                j.Append(fmt("%s%s", k > 0 ? StrL(",") : StrL(""), JStr(imgs.written[k])));
+            for (int k = 0; k < len(written); k++) {
+                j.Append(fmt("%s%s", k > 0 ? StrL(",") : StrL(""), JStr(written[k])));
             }
             j.Append(StrL("]}\n"));
         } else {
@@ -2534,7 +2549,7 @@ static int CmdMarkdown(CliCtx& cx) {
         }
         Out(ToStr(j));
     } else if (len(dest) > 0) {
-        Out(fmt("%s: %d pages, %d images\n", dest, len(pages), len(imgs.written)));
+        Out(fmt("%s: %d pages, %d images\n", dest, len(pages), len(written)));
     } else {
         Out(md);
     }
