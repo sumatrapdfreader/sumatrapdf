@@ -652,6 +652,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-5938", issue5938],
   ["lint-posted-tasks", lintPostedTasks],
   ["auto-scroll-extras", autoScrollExtras],
   ["custom-zoom-dialog", customZoomDialog],
@@ -905,7 +906,6 @@ export const tests: NamedTest[] = [
   ["issue-5869", issue5869],
   ["issue-5881", issue5881],
   ["rect-selection-drag", rectSelectionDrag],
-  ["issue-5938", issue5938],
   ["issue-1085", issue1085],
   ["issue-2873", issue2873],
   ["issue-5937", issue5937],

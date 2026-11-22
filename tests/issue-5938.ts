@@ -107,7 +107,11 @@ async function run(pdf: string, ignoreDestinationZoom: boolean): Promise<Nav[]> 
   );
   return withControlledSumatra(
     EXE,
-    async (client) => [await followDest(client, 1, 100), await followDest(client, 2, 100)],
+    async (client) => {
+      // laid out and painted: a destination is scrolled to in the canvas's size
+      await client.waitForRenderIdle();
+      return [await followDest(client, 1, 100), await followDest(client, 2, 100)];
+    },
     ["-appdata", dir, pdf],
   );
 }
