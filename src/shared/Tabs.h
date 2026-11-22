@@ -36,7 +36,8 @@ struct AppCommandCtx;
 void SetTabCloseFlags(AppCommandCtx&);
 void TabsOnCtrlTab(MainWindow* win, bool reverse);
 void RemoveTab(WindowTab*);
-TempStr MakeTabTooltipTemp(Str path, bool dirty = false);
+TempStr MakeTabTooltipTemp(WindowTab* tab, bool dirty = false);
+extern int gTabTooltipSizeLookups;
 void CloseAllTabs(MainWindow*);
 void MoveTab(MainWindow* win, int dir);
 

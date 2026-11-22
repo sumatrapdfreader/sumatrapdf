@@ -416,7 +416,7 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
             // this runs on every page change
             TabInfo* ti = win->tabsCtrl->GetTab(i);
             if (ti && tab && tab->filePath && (dirty != ti->isDirty || len(ti->tooltip) == 0)) {
-                TempStr tooltip = MakeTabTooltipTemp(tab->filePath, dirty);
+                TempStr tooltip = MakeTabTooltipTemp(tab, dirty);
                 str::ReplaceWithCopy(&ti->tooltip, tooltip);
             }
             win->tabsCtrl->SetTabDirty(i, dirty);

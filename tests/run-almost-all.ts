@@ -504,6 +504,7 @@ import { testit as recentFilesMenu } from "./recent-files-menu.ts";
 import { testit as contextMenuParity } from "./context-menu-parity.ts";
 import { testit as mainMenuParity } from "./main-menu-parity.ts";
 import { testit as menuRebuildBurst } from "./menu-rebuild-burst.ts";
+import { testit as tabTooltipSize } from "./tab-tooltip-size.ts";
 import { testit as endSessionSaves } from "./end-session-saves.ts";
 import { testit as quicklookForward } from "./quicklook-forward.ts";
 import { testit as ddeGetMousePos } from "./dde-get-mouse-pos.ts";
@@ -1105,6 +1106,7 @@ export const tests: NamedTest[] = [
   ["context-menu-parity", contextMenuParity],
   ["main-menu-parity", mainMenuParity],
   ["menu-rebuild-burst", menuRebuildBurst],
+  ["tab-tooltip-size", tabTooltipSize],
   ["end-session-saves", endSessionSaves],
   ["quicklook-forward", quicklookForward],
   ["dde-get-mouse-pos", ddeGetMousePos],

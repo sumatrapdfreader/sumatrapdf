@@ -64,6 +64,7 @@ void WindowTab::SetFilePath(Str path) {
         str::FreePtr(&pendingFindText);
     }
     str::ReplaceWithCopy(&filePath, path);
+    tooltipFileSize = kTabFileSizeUnknown;
 }
 
 void WindowTab::SetDisplayName(Str name) {

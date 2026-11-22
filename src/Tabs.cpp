@@ -65,7 +65,7 @@ static void UpdateTabTitle(WindowTab* tab) {
     if (tab->AsFixed()) {
         dirty = EngineHasUnsavedAnnotations(tab->AsFixed()->GetEngine());
     }
-    TempStr tooltip = MakeTabTooltipTemp(tab->filePath, dirty);
+    TempStr tooltip = MakeTabTooltipTemp(tab, dirty);
     // a "+" Home tab a document was opened in is sized like the other documents
     TabInfo* ti = win->tabsCtrl->GetTab(idx);
     if (ti) {
@@ -757,7 +757,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     // TabsOnChangedDoc for the active tab)
     // a lazy tab (a session's, not loaded yet) leaves its file alone: no size
     bool lazy = !tab->ctrl && tab->tabState;
-    newTab->tooltip = str::Dup(lazy ? PathForDisplayTemp(tab->filePath) : MakeTabTooltipTemp(tab->filePath, false));
+    newTab->tooltip = str::Dup(lazy ? PathForDisplayTemp(tab->filePath) : MakeTabTooltipTemp(tab, false));
     newTab->userData = (UINT_PTR)tab;
     newTab->tabColor = tab->tabColor;
     newTab->groupId = tab->stripGroupId;

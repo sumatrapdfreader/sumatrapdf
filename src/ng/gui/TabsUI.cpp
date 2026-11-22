@@ -336,7 +336,7 @@ void TabsView::OnTabHover(TabsView* self, gp::Ctx* cx, const gp::HoverEvent* ev,
     ui->highlighted = want;
     WindowTab* tab = win->GetTab((int)idx);
     if (ev->hovered && tab && idx < ui->tabBounds.len) {
-        TempStr tip = MakeTabTooltipTemp(tab->filePath, TabIsDirty(tab));
+        TempStr tip = MakeTabTooltipTemp(tab, TabIsDirty(tab));
         if (len(tip) > 0) {
             HoverTooltipShow(cx, tip, ui->tabBounds[(int)idx]);
         }
