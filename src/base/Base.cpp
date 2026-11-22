@@ -3675,16 +3675,22 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
 }
 
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
-    int n = toReplace.len;
-    int idx = str::IndexOfI(s, toReplace);
+    int n = len(toReplace);
+    int idx = n > 0 ? str::IndexOfI(s, toReplace) : -1;
     if (idx < 0) {
         return s;
     }
-    char* pos = s.s + idx;
-    if (!MemEq(pos, toReplace.s, n)) {
-        toReplace = str::DupTemp(Str(pos, n));
+    // each match is found separately: "${SELECTION} ${selection}" differ in case
+    str::Builder result;
+    Str curr = s;
+    while (idx >= 0 && idx <= len(curr) - n) {
+        result.Append(Str(curr.s, idx));
+        result.Append(replaceWith);
+        curr = Str(curr.s + idx + n, curr.len - idx - n);
+        idx = str::IndexOfI(curr, toReplace);
     }
-    return str::ReplaceTemp(s, toReplace, replaceWith);
+    result.Append(curr);
+    return ToStrTemp(result);
 }
 } // namespace str
 

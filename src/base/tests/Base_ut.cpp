@@ -503,8 +503,16 @@ static void StrEqLenTest() {
     utassert(!wstr::EqN(WStrL(L"a"), WStrL(L"ab"), 2));
 }
 
+static void ReplaceNoCaseTest() {
+    Str s = StrL("${SELECTION} and ${selection}");
+    utassert(str::Eq(str::ReplaceNoCaseTemp(s, StrL("${selection}"), StrL("x")), StrL("x and x")));
+    utassert(str::Eq(str::ReplaceNoCaseTemp(StrL("aAa"), StrL("a"), StrL("b")), StrL("bbb")));
+    utassert(str::Eq(str::ReplaceNoCaseTemp(StrL("abc"), StrL("x"), StrL("y")), StrL("abc")));
+}
+
 void BaseUtilTest() {
     StrEqLenTest();
+    ReplaceNoCaseTest();
     FlipPixmapTest();
 #if !OS_WASM
     WaitThreadTest();
