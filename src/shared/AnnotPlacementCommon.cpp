@@ -423,7 +423,10 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
 }
 
 bool CommitShapePlacement(MainWindow* win) {
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!win) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
     AnnotPlacement& p = win->annotPlacement;
     if (!IsPlacingShapeAnnotation(win) || !dm || !dm->ValidPageNo(p.pageNo)) {
         return false;
