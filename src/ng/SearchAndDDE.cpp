@@ -160,8 +160,7 @@ void FindDebounceTick(MainWindow* win, int elapsedMs) {
     }
 }
 
-// if a debounced search is pending, cancel the timer and start it now (so Enter
-// forces the search to start immediately). Returns true if one was pending.
+// stops the debounce timer without running the pending search
 void FindDebounceStop(MainWindow* win) {
     win->findDebounce.Cancel();
 }

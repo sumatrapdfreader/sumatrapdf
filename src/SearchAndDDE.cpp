@@ -163,10 +163,10 @@ void FindDebounceTimerFired(MainWindow* win) {
     }
 }
 
-// if a debounced search is pending, cancel the timer and start it now (so Enter
-// forces the search to start immediately). Returns true if one was pending.
+// stops the debounce timer without running the pending search
 void FindDebounceStop(MainWindow* win) {
     KillTimer(win->hwndFrame, kFindDebounceTimerId);
+    win->findDebouncePending = false;
 }
 
 // the find buttons are disabled while a find runs
@@ -223,7 +223,6 @@ void UpdateFindStatus(UpdateFindStatusData* d) {
 // the term) recompute the index instantly from the cache, and a new scan only
 // runs when the search term or match-case option changes.
 
-// returns true if did abort a thread or hidden the notification
 // cancel a pending debounced find-as-you-type search
 void CancelPendingFind(MainWindow* win) {
     if (!win->findDebouncePending) {
