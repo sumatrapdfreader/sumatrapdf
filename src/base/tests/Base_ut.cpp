@@ -492,7 +492,19 @@ static void FlipPixmapTest() {
     }
 }
 
+// Str/WStr compare by len: an embedded NUL is data, not the end
+static void StrEqLenTest() {
+    utassert(!str::Eq(StrL("a\0b"), StrL("a\0c")));
+    utassert(!str::Eq(StrL("ab\0"), StrL("ab")));
+    utassert(str::Eq(StrL("a\0b"), StrL("a\0b")));
+    utassert(str::Eq(Str(), StrL("")));
+    utassert(str::EqN(Str(), StrL("a"), 0));
+    utassert(wstr::EqN(WStr(), WStrL(L"a"), 0));
+    utassert(!wstr::EqN(WStrL(L"a"), WStrL(L"ab"), 2));
+}
+
 void BaseUtilTest() {
+    StrEqLenTest();
     FlipPixmapTest();
 #if !OS_WASM
     WaitThreadTest();

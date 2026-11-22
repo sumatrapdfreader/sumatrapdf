@@ -1918,22 +1918,13 @@ void StrNodeListPop(StrNodeList* list) {
 
 namespace str {
 
-// length up to the first NUL within len: a Str may span more than its C string
-static int CStrLen(Str s) {
-    int n = 0;
-    while (s.s && n < s.len && s.s[n]) {
-        n++;
-    }
-    return n;
-}
-
 // return true if s1 == s2, case sensitive
 bool Eq(Str s1, Str s2) {
-    if (s1.s == s2.s) {
+    if (s1.s == s2.s && s1.len == s2.len) {
         return true;
     }
-    int n = CStrLen(s1);
-    return n == CStrLen(s2) && (n == 0 || MemEq(s1.s, s2.s, n));
+    int n = len(s1);
+    return n == len(s2) && (n == 0 || MemEq(s1.s, s2.s, n));
 }
 
 // return true if s1 == s2, case insensitive
@@ -3317,10 +3308,13 @@ bool EqN(WStr s1, WStr s2, int n) {
     if (s1.s == s2.s) {
         return true;
     }
-    if (len(s1) == 0 || len(s2) == 0) {
+    if (len(s1) == 0 || len(s2) == 0 || n == 0) {
+        return n == 0;
+    }
+    if (s1.len < n || s2.len < n) {
         return false;
     }
-    return 0 == wcsncmp(s1.s, s2.s, (size_t)n);
+    return MemEq(s1.s, s2.s, n * (int)sizeof(WCHAR));
 }
 
 bool StartsWith(WStr str, WStr prefix) {
