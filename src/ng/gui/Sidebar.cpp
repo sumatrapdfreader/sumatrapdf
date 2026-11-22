@@ -756,7 +756,14 @@ static bool TreeKeyToFilter(MainWindow* win, gp::InputState* filter, int vkey, b
         return false;
     }
     if (vkey == VK_ESCAPE) {
+        bool hadText = gp::InputValue(filter).len > 0;
         gp::InputSetValue(filter, GStrL(""));
+        // setting the value sends no change event: restore the full tree
+        if (hadText && filter == Ui(win)->tocFilter) {
+            TocFilterChanged(win);
+        } else if (hadText) {
+            FavFilterChanged(win);
+        }
     } else if (vkey != VK_UP || !onFirstRow) {
         return false;
     }
