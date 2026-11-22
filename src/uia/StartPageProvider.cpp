@@ -104,12 +104,18 @@ SumatraUIAutomationStartPageProvider::get_FragmentRoot(IRawElementProviderFragme
 // IRawElementProviderSimple
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPatternProvider(__unused PATTERNID patternId,
                                                                                    IUnknown** pRetVal) {
+    if (pRetVal == nullptr) {
+        return E_POINTER;
+    }
     *pRetVal = nullptr;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPropertyValue(PROPERTYID propertyId,
                                                                                  VARIANT* pRetVal) {
+    if (pRetVal == nullptr) {
+        return E_POINTER;
+    }
     if (propertyId == UIA_NamePropertyId) {
         pRetVal->vt = VT_BSTR;
         pRetVal->bstrVal = SysAllocString(L"Start Page");

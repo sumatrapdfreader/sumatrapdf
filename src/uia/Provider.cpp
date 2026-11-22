@@ -74,6 +74,9 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release() {
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPatternProvider(__unused PATTERNID patternId,
                                                                           IUnknown** pRetVal) {
+    if (pRetVal == nullptr) {
+        return E_POINTER;
+    }
     *pRetVal = nullptr;
     return S_OK;
 }
