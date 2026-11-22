@@ -1082,45 +1082,51 @@ bool DisplayModel::ShouldTreatLandscapeAsSpread() const {
     return gSettings->imageUI.landscapeAsSpread;
 }
 
-void DisplayModel::EnsureSpreadFlags() const {
+// UI thread only (Relayout). Render threads read the cache under pagesInfoLock
+// (FreeIfFull, PageVisibleNearbyLocked), so it is built aside and swapped in.
+void DisplayModel::BuildSpreadFlags() {
     int n = PageCount();
-    if (spreadCacheValid && spreadFlags.len == n && rowFirst.len == n && rowLast.len == n) {
-        return;
-    }
-    spreadCacheValid = true;
-    if (n <= 0) {
-        VecReset(spreadFlags);
-        VecReset(rowFirst);
-        VecReset(rowLast);
-        return;
-    }
-    VecResize(spreadFlags, n);
-    VecResize(rowFirst, n);
-    VecResize(rowLast, n);
-    bool useSpreads = ShouldTreatLandscapeAsSpread();
-    for (int i = 0; i < n; i++) {
-        spreadFlags[i] = 0;
-        if (!useSpreads) {
-            continue;
+    bool useSpreads = n > 0 && ShouldTreatLandscapeAsSpread();
+    Vec<u8> flags;
+    Vec<int> first;
+    Vec<int> last;
+    if (useSpreads) {
+        VecResize(flags, n);
+        VecResize(first, n);
+        VecResize(last, n);
+        for (int i = 0; i < n; i++) {
+            flags[i] = 0;
+            PageInfo* pi = GetPageInfo(i + 1);
+            if (!pi || !IsMediaBoxKnown(pi->mediaBox)) {
+                continue;
+            }
+            SizeF sz = PageSizeAfterRotation(i + 1);
+            if (sz.dx > sz.dy) {
+                flags[i] = 1;
+            }
         }
-        PageInfo* pi = GetPageInfo(i + 1);
-        if (!pi || !IsMediaBoxKnown(pi->mediaBox)) {
-            continue;
-        }
-        SizeF sz = PageSizeAfterRotation(i + 1);
-        if (sz.dx > sz.dy) {
-            spreadFlags[i] = 1;
-        }
-    }
-    Vec<FacingRow> rows;
-    CollectFacingRows(rows, n, IsBookView(GetDisplayMode()), spreadFlags);
-    for (int i = 0; i < len(rows); i++) {
-        const FacingRow& row = rows[i];
-        for (int p = row.firstPage; p <= row.lastPage; p++) {
-            rowFirst[p - 1] = row.firstPage;
-            rowLast[p - 1] = row.lastPage;
+        Vec<FacingRow> rows;
+        CollectFacingRows(rows, n, IsBookView(GetDisplayMode()), flags);
+        for (int i = 0; i < len(rows); i++) {
+            const FacingRow& row = rows[i];
+            for (int p = row.firstPage; p <= row.lastPage; p++) {
+                first[p - 1] = row.firstPage;
+                last[p - 1] = row.lastPage;
+            }
         }
     }
+
+    ScopedMutex scope(&pagesInfoLock);
+    spreadFlags = flags;
+    rowFirst = first;
+    rowLast = last;
+    spreadCacheValid = useSpreads;
+}
+
+// readers never build the cache: callers fall back to rows without spreads
+bool DisplayModel::HasSpreadFlags() const {
+    int n = PageCount();
+    return spreadCacheValid && len(spreadFlags) == n && len(rowFirst) == n && len(rowLast) == n;
 }
 
 // rows of a non-continuous facing / book view stepping one page start at any
@@ -1144,8 +1150,7 @@ int DisplayModel::FirstPageInRow(int pageNo) const {
     if (columns < 2 || !ShouldTreatLandscapeAsSpread()) {
         return FirstPageInARowNo(pageNo, columns, book);
     }
-    EnsureSpreadFlags();
-    if (rowFirst.len != n) {
+    if (!HasSpreadFlags()) {
         return FirstPageInARowNo(pageNo, columns, book);
     }
     return rowFirst[pageNo - 1];
@@ -1159,10 +1164,7 @@ int DisplayModel::LastPageInRow(int pageNo) const {
     pageNo = limitValue(pageNo, 1, n);
     if (StepsOnePage()) {
         Vec<u8> noSpreads;
-        bool spreads = ShouldTreatLandscapeAsSpread();
-        if (spreads) {
-            EnsureSpreadFlags();
-        }
+        bool spreads = ShouldTreatLandscapeAsSpread() && HasSpreadFlags();
         return FacingRowAt(pageNo, n, IsBookView(GetDisplayMode()), spreads ? spreadFlags : noSpreads).lastPage;
     }
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
@@ -1170,8 +1172,7 @@ int DisplayModel::LastPageInRow(int pageNo) const {
     if (columns < 2 || !ShouldTreatLandscapeAsSpread()) {
         return LastPageInARowNo(pageNo, columns, book, n);
     }
-    EnsureSpreadFlags();
-    if (rowLast.len != n) {
+    if (!HasSpreadFlags()) {
         return LastPageInARowNo(pageNo, columns, book, n);
     }
     return rowLast[pageNo - 1];
@@ -1885,7 +1886,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         row = PageSizeAfterRotation(pageNo, fitToContent, ContentFitPadding(zoomVirtual));
         int nCols = columns;
         if (columns > 1 && ShouldTreatLandscapeAsSpread() && FirstPageInRow(pageNo) == LastPageInRow(pageNo) &&
-            spreadFlags.len >= pageNo && spreadFlags[pageNo - 1] != 0) {
+            len(spreadFlags) >= pageNo && spreadFlags[pageNo - 1] != 0) {
             nCols = 1;
         }
         row.dx *= (float)nCols;
@@ -2215,7 +2216,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
 
     rotation = NormalizeRotation(newRotation);
     zoomVirtual = newZoomVirtual;
-    spreadCacheValid = false;
+    BuildSpreadFlags();
 
     bool needHScroll = false;
     bool needVScroll = false;
@@ -2241,6 +2242,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
                 PageMediaBox(pageNo);
             }
         }
+        BuildSpreadFlags();
     }
     bool hideScrollbars = ScrollbarsAreHidden();
     bool useOverlayScrollbar = ScrollbarsUseOverlay();
@@ -2305,8 +2307,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         params.freePan = freePan && !inPresentation;
         params.landscapeAsSpread = ShouldTreatLandscapeAsSpread();
         params.stepOnePage = StepsOnePage();
-        if (params.landscapeAsSpread) {
-            EnsureSpreadFlags();
+        if (params.landscapeAsSpread && HasSpreadFlags()) {
             params.spreadFlags = spreadFlags;
         }
         layout.Relayout(params);

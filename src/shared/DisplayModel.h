@@ -301,7 +301,8 @@ struct DisplayModel : DocController {
     float ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
     SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false, float contentPad = 0) const;
     bool ShouldTreatLandscapeAsSpread() const;
-    void EnsureSpreadFlags() const;
+    void BuildSpreadFlags();
+    bool HasSpreadFlags() const;
     bool StepsOnePage() const;
     int FirstPageInRow(int pageNo) const;
     int LastPageInRow(int pageNo) const;
@@ -443,10 +444,10 @@ struct DisplayModel : DocController {
 
     /* landscape image pages that occupy a full facing/book row
        (ComicBookUI / ImageUI LandscapeAsSpread; issues #1324, #872) */
-    mutable Vec<u8> spreadFlags;
-    mutable Vec<int> rowFirst;
-    mutable Vec<int> rowLast;
-    mutable bool spreadCacheValid = false;
+    Vec<u8> spreadFlags;
+    Vec<int> rowFirst;
+    Vec<int> rowLast;
+    bool spreadCacheValid = false;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
     bool inPresentation = false;
