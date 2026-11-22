@@ -878,5 +878,4 @@ void GetFontsThread(GetFontsData* data) {
     uitask::Post(fn, "GetFontsFinished");
     data->engine->Release();
     delete data;
-    DestroyTempArena();
 }

@@ -1307,7 +1307,6 @@ static void PrintThread(PrintThreadData* ptd) {
     data->threadData = ptd;
     auto fn = MkFunc0<DeletePrinterThreadData>(DeletePrinterThread, data);
     uitask::Post(fn, "PrintDeleteThread");
-    DestroyTempArena();
 }
 
 static void PrintToDeviceOnThread(MainWindow* win, PrintData* data) {

@@ -3614,7 +3614,6 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
     d->bmp = RenderFileThumbnail(d);
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileDone, d);
     uitask::Post(fn, "SetThumbnailFromFile");
-    DestroyTempArena();
 }
 
 // create a thumbnail by loading the file with a temporary engine
