@@ -207,6 +207,21 @@ void MobiDoc_UnitTests() {
         utassert(doc == nullptr);
     }
 
+    // a text record count past the last record is clamped
+    {
+        constexpr int kRecordsCountOffset = 8;
+        Str data = MkMobi(0);
+        AutoFree<char> cleanup(data.s);
+        BeWriter writer{(u8*)data.s, kRec0Off + kRecordsCountOffset};
+        writer.U16(0xffff);
+        AutoDelete<MobiDoc> doc(MobiDoc::CreateFromData(data));
+        utassert(doc.o != nullptr);
+        utassert(doc->docRecCount == kNumRecs - 1);
+    }
+
+    utassert(KindleEmbedToRecIndex(StrL("kindle:embed:000A")) == 10);
+    utassert(KindleEmbedToRecIndex(StrL("kindle:embed:VVVVVVVVVVVV")) == 0);
+
     // a '<' that doesn't start a TealDoc tag used to loop forever appending "&lt;"
     {
         Str data = MkPalmDoc(StrL("a<b"));

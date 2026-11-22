@@ -383,12 +383,9 @@ bool MobiDoc::ParseHeader() {
             return false;
         }
     }
-    docRecCount = palmDocHdr.recordsCount;
-    if (docRecCount == pdbReader->GetRecordCount()) {
-        // catch the case where a broken document has an off-by-one error
-        // cf. https://code.google.com/archive/p/sumatrapdf/issues/2529
-        docRecCount--;
-    }
+    // text records are 1..docRecCount; a broken document can claim more than
+    // it has (off by one in https://code.google.com/archive/p/sumatrapdf/issues/2529)
+    docRecCount = std::min((int)palmDocHdr.recordsCount, pdbReader->GetRecordCount() - 1);
     constexpr u32 kMaxMobiTextSize = 256 * 1024 * 1024;
     if (palmDocHdr.uncompressedDocSize > kMaxMobiTextSize) {
         logf("MOBI text is too large\n");
@@ -443,7 +440,8 @@ bool MobiDoc::ParseHeader() {
 
     if (kCompressionHuff == compressionType) {
         ReportIf(PdbDocType::Mobipocket != docType);
-        if (mobiHdr.huffmanFirstRec > (u32)INT_MAX - (u32)kCdicsMax) {
+        u32 nRecs = (u32)pdbReader->GetRecordCount();
+        if (mobiHdr.huffmanFirstRec >= nRecs || mobiHdr.huffmanRecCount > nRecs - mobiHdr.huffmanFirstRec) {
             return false;
         }
         rec = pdbReader->GetRecord((int)mobiHdr.huffmanFirstRec);
@@ -510,8 +508,9 @@ bool MobiDoc::DecodeExthHeader(const u8* data, int dataLen) {
         d.Skip(len(value));
 
         if (type == kExthCoverOffset) {
-            if (len(value) == 4 && imageFirstRec) {
-                coverImageRec = imageFirstRec + (int)UInt32BE((const u8*)value.s);
+            u32 coverOff = len(value) == 4 ? UInt32BE((const u8*)value.s) : 0;
+            if (len(value) == 4 && imageFirstRec && coverOff <= (u32)(INT_MAX - imageFirstRec)) {
+                coverImageRec = imageFirstRec + (int)coverOff;
             }
             continue;
         }
@@ -737,6 +736,9 @@ int KindleEmbedToRecIndex(Str src) {
         int digit = str::IndexOfChar(kDigits, c);
         if (digit < 0) {
             break;
+        }
+        if (n > (INT_MAX - digit) / len(kDigits)) {
+            return 0;
         }
         n = (n * len(kDigits)) + digit;
     }
