@@ -459,6 +459,31 @@ static bool filterMatchesEverything(Str ext) {
     return str::IsEmptyOrWhiteSpace(ext) || str::EqIS(ext, StrL("*"));
 }
 
+// is ext one of the ';'-separated exts? ".ps" is not in ".xps;.oxps"
+static bool ExtInList(Str exts, Str ext) {
+    Str rest = exts;
+    while (len(rest) > 0) {
+        int idx = str::IndexOfChar(rest, ';');
+        Str one = idx < 0 ? rest : Str(rest.s, idx);
+        if (len(one) > 0 && str::EqI(one, ext)) {
+            return true;
+        }
+        if (idx < 0) {
+            break;
+        }
+        rest = Str(rest.s + idx + 1, rest.len - idx - 1);
+    }
+    return false;
+}
+
+#if IS_DEBUG
+bool ExternalViewers_UnitTestExtInList() {
+    return ExtInList(StrL(".xps;.oxps"), StrL(".XPS")) && ExtInList(StrL(".xps;.oxps"), StrL(".oxps")) &&
+           ExtInList(StrL(".pdf"), StrL(".pdf")) && !ExtInList(StrL(".xps;.oxps"), StrL(".ps")) &&
+           !ExtInList(StrL(".pdf;.djvu"), StrL(".djv")) && !ExtInList(StrL(".pdf"), StrL(""));
+}
+#endif
+
 bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     if (!tab || !CanViewExternally(tab)) {
         return false;
@@ -471,7 +496,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
 
     if (!filterMatchesEverything(ev->exts)) {
         TempStr ext = path::GetExtTemp(tab->filePath);
-        if (!str::ContainsI(ev->exts, ext)) {
+        if (!ExtInList(ev->exts, ext)) {
             return false;
         }
     }
