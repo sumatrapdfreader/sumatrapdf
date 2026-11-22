@@ -269,6 +269,7 @@ import { testit as copyJoinLines } from "./copy-join-lines.ts";
 import { testit as tabSwitchEndsModes } from "./tab-switch-ends-modes.ts";
 import { testit as scrollbarCaptureLoss } from "./scrollbar-capture-loss.ts";
 import { testit as nextFileSavePrompt } from "./next-file-save-prompt.ts";
+import { testit as savePromptFails } from "./save-prompt-fails.ts";
 import { testit as backgroundTabReload } from "./background-tab-reload.ts";
 import { testit as sessionRestoreBrokenFile } from "./session-restore-broken-file.ts";
 import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
@@ -1250,6 +1251,7 @@ export const tests: NamedTest[] = [
   ["tab-switch-ends-modes", tabSwitchEndsModes],
   ["scrollbar-capture-loss", scrollbarCaptureLoss],
   ["next-file-save-prompt", nextFileSavePrompt],
+  ["save-prompt-fails", savePromptFails],
   ["background-tab-reload", backgroundTabReload],
   ["session-restore-broken-file", sessionRestoreBrokenFile],
   ["tab-switch-presentation", tabSwitchPresentation],

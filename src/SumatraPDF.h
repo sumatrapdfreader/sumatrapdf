@@ -13,6 +13,7 @@ constexpr const WCHAR* kFrameClassName = L"SUMATRA_PDF_FRAME";
 constexpr int kFrameResizeHitTest = 5;
 
 extern bool gRedrawLog;
+extern bool gTestFailSavePrompt;
 
 constexpr const char* kWebsiteURL = "https://www.sumatrapdfreader.org/";
 constexpr const char* kManualURL = "https://www.sumatrapdfreader.org/manual";

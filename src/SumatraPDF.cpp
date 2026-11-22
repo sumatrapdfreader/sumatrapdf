@@ -5268,6 +5268,9 @@ enum class SaveChoice {
     Cancel,
 };
 
+// -dbg-control's TestFailSavePrompt
+bool gTestFailSavePrompt = false;
+
 static SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
     TempStr fileName = path::GetBaseNameTemp(filePath);
     TempStr mainInstrA = fmt(Tr("Unsaved changes in '%s'").s, fileName);
@@ -5316,11 +5319,17 @@ static SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, Str filePath) {
 
     int buttonPressedId = 0;
 
-    auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
+    HRESULT hr = E_FAIL;
+    if (gTestFailSavePrompt) {
+        gTestFailSavePrompt = false;
+    } else {
+        hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
+    }
     ReportIf(hr == E_INVALIDARG);
-    bool discard = (hr != S_OK) || (buttonPressedId == kBtnIdDiscard);
-    if (discard) {
-        return SaveChoice::Discard;
+    // no answer is not "discard": keep the document open with its changes
+    if (hr != S_OK) {
+        logf("ShouldSaveAnnotationsDialog: TaskDialogIndirect failed with 0x%x\n", (uint)hr);
+        return SaveChoice::Cancel;
     }
     switch (buttonPressedId) {
         case kBtnIdSaveToExisting:

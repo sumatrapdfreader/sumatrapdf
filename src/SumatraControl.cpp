@@ -752,6 +752,8 @@ enum class ControlCmd : u16 {
     TestContentHash = 175,
     // [paths, a line each]: the files the next multi-file Open takes, without its dialog
     TestOpenFileNames = 176,
+    // the next "Unsaved changes" prompt fails as if TaskDialogIndirect had
+    TestFailSavePrompt = 177,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1976,6 +1978,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
 #if OS_WIN
             SetTestOpenFileNames(StringArg(req, 0));
 #endif
+            AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestFailSavePrompt: {
+            gTestFailSavePrompt = true;
             AppendTestResult(req, 0, StrL("OK"));
             break;
         }

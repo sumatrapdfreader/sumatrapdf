@@ -203,6 +203,8 @@ export enum ControlCommand {
   TestContentHash = 175,
   // [paths, a line each]: the files the next multi-file Open takes, without its dialog
   TestOpenFileNames = 176,
+  // orig: the next "Unsaved changes" prompt fails as if TaskDialogIndirect had
+  TestFailSavePrompt = 177,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
