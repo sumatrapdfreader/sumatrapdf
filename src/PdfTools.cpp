@@ -771,7 +771,14 @@ void PdfCompressDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    logf("PdfCompressDoIt: compressing '%s' to '%s'\n", srcPath, destPath);
+    WindowTab* tab = SrcTab();
+    TempStr tmpPath;
+    TempStr inputPath = PdfToolInputTemp(tab ? tab->GetEngine() : nullptr, srcPath, &tmpPath);
+    if (len(inputPath) == 0) {
+        MessageBoxWarning(hwnd, Tr("Failed to compress PDF file."), Tr("Compress PDF"));
+        return;
+    }
+    logf("PdfCompressDoIt: compressing '%s' to '%s'\n", inputPath, destPath);
 
     // equivalent of: clean -gggg -e 100 -f -i -t -Z [picture options] input output
     auto quality = dropQuality ? (PdfCompressQuality)CbGetCurrentSelection(dropQuality) : PdfCompressQuality::Same;
@@ -780,11 +787,14 @@ void PdfCompressDialog::DoIt(VirtMouseEvent*) {
     VecAppend(argv, (char*)"-p");
     VecAppend(argv, PdfToolPasswordTemp(win, srcPath));
     AppendPdfCompressArgs(argv, quality);
-    VecAppend(argv, CStrTemp(srcPath));
+    VecAppend(argv, CStrTemp(inputPath));
     VecAppend(argv, CStrTemp(destPath));
 
     fz_set_optind(0);
     int res = pdfclean_main(len(argv), argv.els);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfCompressDoIt: compressed successfully\n");
         MainWindow* w = win;
@@ -854,15 +864,25 @@ void PdfDecompressDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    logf("PdfDecompressDoIt: decompressing '%s' to '%s'\n", srcPath, destPath);
+    WindowTab* tab = SrcTab();
+    TempStr tmpPath;
+    TempStr inputPath = PdfToolInputTemp(tab ? tab->GetEngine() : nullptr, srcPath, &tmpPath);
+    if (len(inputPath) == 0) {
+        MessageBoxWarning(hwnd, Tr("Failed to decompress PDF file."), Tr("Decompress PDF"));
+        return;
+    }
+    logf("PdfDecompressDoIt: decompressing '%s' to '%s'\n", inputPath, destPath);
 
     // equivalent of: clean -d input output
-    char* argv[] = {(char*)"clean", (char*)"-p",       PdfToolPasswordTemp(win, srcPath),
-                    (char*)"-d",    CStrTemp(srcPath), CStrTemp(destPath)};
+    char* argv[] = {(char*)"clean", (char*)"-p",         PdfToolPasswordTemp(win, srcPath),
+                    (char*)"-d",    CStrTemp(inputPath), CStrTemp(destPath)};
     int argc = dimofi(argv);
 
     fz_set_optind(0);
     int res = pdfclean_main(argc, argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfDecompressDoIt: decompressed successfully\n");
         MainWindow* w = win;
@@ -944,7 +964,7 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    WindowTab* sourceTab = isExtract ? FindTabByFilePath(srcPath, win) : nullptr;
+    WindowTab* sourceTab = FindTabByFilePath(srcPath, win);
     EngineBase* sourceEngine = sourceTab ? sourceTab->GetEngine() : nullptr;
 
     TempStr pageRange;
@@ -962,10 +982,12 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
 
     Str inputPath = srcPath;
     TempStr tmpPath;
-    if (isExtract && sourceEngine && EngineHasUnsavedAnnotations(sourceEngine)) {
+    if (sourceEngine && EngineHasUnsavedAnnotations(sourceEngine)) {
         tmpPath = GetTempFilePathTemp(StrL("extract-pages"));
         if (len(tmpPath) == 0 || !EngineMupdfSaveCopy(sourceEngine, tmpPath)) {
-            MessageBoxWarning(hwnd, Tr("Failed to extract pages from PDF file."), Tr("Extract Pages From PDF"));
+            Str msg =
+                isExtract ? Tr("Failed to extract pages from PDF file.") : Tr("Failed to delete pages from PDF file.");
+            MessageBoxWarning(hwnd, msg, isExtract ? Tr("Extract Pages From PDF") : Tr("Delete Pages From PDF"));
             return;
         }
         inputPath = tmpPath;
@@ -1110,16 +1132,25 @@ void PdfEncryptDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", srcPath, destPath);
+    WindowTab* tab = SrcTab();
+    TempStr tmpPath;
+    TempStr inputPath = PdfToolInputTemp(tab ? tab->GetEngine() : nullptr, srcPath, &tmpPath);
+    if (len(inputPath) == 0) {
+        MessageBoxWarning(hwnd, Tr("Failed to encrypt PDF file."), Tr("Encrypt PDF"));
+        return;
+    }
+    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", inputPath, destPath);
 
     // equivalent of: clean -E aes-256 -U <pwd> -O <pwd> input output
     char* pwdZ = CStrTemp(pwd);
-    char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256",  (char*)"-U",       pwdZ,
-                    (char*)"-O",    pwdZ,        CStrTemp(srcPath), CStrTemp(destPath)};
-    int argc = 9;
+    char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256",    (char*)"-U",       pwdZ,
+                    (char*)"-O",    pwdZ,        CStrTemp(inputPath), CStrTemp(destPath)};
 
     fz_set_optind(0);
-    int res = pdfclean_main(argc, argv);
+    int res = pdfclean_main(dimofi(argv), argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfEncryptDoIt: encrypted successfully\n");
         MainWindow* w = win;
@@ -1298,14 +1329,24 @@ void PdfDecryptDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    logf("PdfDecryptDoIt: decrypting '%s' to '%s'\n", srcPath, destPath);
+    WindowTab* tab = SrcTab();
+    TempStr tmpPath;
+    TempStr inputPath = PdfToolInputTemp(tab ? tab->GetEngine() : nullptr, srcPath, &tmpPath);
+    if (len(inputPath) == 0) {
+        ShowWarningNotification(win, Tr("Failed to decrypt PDF file."), kNotif5SecsTimeOut);
+        return;
+    }
+    logf("PdfDecryptDoIt: decrypting '%s' to '%s'\n", inputPath, destPath);
 
     // equivalent of: clean -p <key> -D input output
-    char* argv[] = {(char*)"clean", (char*)"-p",       PdfToolPasswordTemp(win, srcPath),
-                    (char*)"-D",    CStrTemp(srcPath), CStrTemp(destPath)};
+    char* argv[] = {(char*)"clean", (char*)"-p",         PdfToolPasswordTemp(win, srcPath),
+                    (char*)"-D",    CStrTemp(inputPath), CStrTemp(destPath)};
 
     fz_set_optind(0);
     int res = pdfclean_main(dimofi(argv), argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfDecryptDoIt: decrypted successfully\n");
         MainWindow* w = win;

@@ -828,7 +828,16 @@ static void PdfCleanDoIt(bool decompress) {
     }
     MainWindow* win = gTool.win;
     Str what = decompress ? StrL("decompress") : StrL("compress");
-    logf("PdfCleanDoIt: %s '%s' to '%s'\n", what, gTool.srcPath, destPath);
+    Str msg = decompress ? Tr("Failed to decompress PDF file.") : Tr("Failed to compress PDF file.");
+    Str title = decompress ? Tr("Decompress PDF") : Tr("Compress PDF");
+    WindowTab* tab = ToolSrcTab();
+    TempStr tmpPath;
+    TempStr inputPath = PdfToolInputTemp(tab ? tab->GetEngine() : nullptr, gTool.srcPath, &tmpPath);
+    if (len(inputPath) == 0) {
+        MessageBoxWarning(win, msg, title);
+        return;
+    }
+    logf("PdfCleanDoIt: %s '%s' to '%s'\n", what, inputPath, destPath);
 
     // compress is: clean -gggg -e 100 -f -i -t -Z [picture options] input output
     // decompress is: clean -d input output
@@ -841,19 +850,21 @@ static void PdfCleanDoIt(bool decompress) {
     } else {
         AppendPdfCompressArgs(argv, (PdfCompressQuality)gTool.ddQuality.sel);
     }
-    VecAppend(argv, CStrTemp(gTool.srcPath));
+    VecAppend(argv, CStrTemp(inputPath));
     VecAppend(argv, CStrTemp(destPath));
 
     fz_set_optind(0);
     int res = pdfclean_main(len(argv), argv.els);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfCleanDoIt: %sed successfully\n", what);
         CloseAndLoad(destPath);
         return;
     }
     logf("PdfCleanDoIt: pdfclean_main failed with %d\n", res);
-    Str msg = decompress ? Tr("Failed to decompress PDF file.") : Tr("Failed to compress PDF file.");
-    MessageBoxWarning(win, msg, decompress ? Tr("Decompress PDF") : Tr("Compress PDF"));
+    MessageBoxWarning(win, msg, title);
 }
 
 static void PdfDeletePageDoIt() {
@@ -884,7 +895,7 @@ static void PdfDeletePageDoIt() {
         return;
     }
 
-    WindowTab* sourceTab = isExtract ? FindTabByFilePath(gTool.srcPath) : nullptr;
+    WindowTab* sourceTab = FindTabByFilePath(gTool.srcPath);
     EngineBase* sourceEngine = sourceTab ? sourceTab->GetEngine() : nullptr;
 
     TempStr pageRange;
@@ -902,10 +913,12 @@ static void PdfDeletePageDoIt() {
 
     Str inputPath = gTool.srcPath;
     TempStr tmpPath;
-    if (isExtract && sourceEngine && EngineHasUnsavedAnnotations(sourceEngine)) {
+    if (sourceEngine && EngineHasUnsavedAnnotations(sourceEngine)) {
         tmpPath = GetTempFilePathTemp(StrL("extract-pages"));
         if (len(tmpPath) == 0 || !EngineMupdfSaveCopy(sourceEngine, tmpPath)) {
-            MessageBoxWarning(win, Tr("Failed to extract pages from PDF file."), Tr("Extract Pages From PDF"));
+            Str msg =
+                isExtract ? Tr("Failed to extract pages from PDF file.") : Tr("Failed to delete pages from PDF file.");
+            MessageBoxWarning(win, msg, isExtract ? Tr("Extract Pages From PDF") : Tr("Delete Pages From PDF"));
             return;
         }
         inputPath = tmpPath;
@@ -951,17 +964,26 @@ static void PdfEncryptDoIt() {
         return;
     }
     MainWindow* win = gTool.win;
+    WindowTab* tab = ToolSrcTab();
+    TempStr tmpPath;
+    TempStr inputPath = PdfToolInputTemp(tab ? tab->GetEngine() : nullptr, gTool.srcPath, &tmpPath);
+    if (len(inputPath) == 0) {
+        MessageBoxWarning(win, Tr("Failed to encrypt PDF file."), Tr("Encrypt PDF"));
+        return;
+    }
 
-    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", gTool.srcPath, destPath);
+    logf("PdfEncryptDoIt: encrypting '%s' to '%s' with AES-256\n", inputPath, destPath);
 
     // equivalent of: clean -E aes-256 -U <pwd> -O <pwd> input output
     char* pwdZ = CStrTemp(pwd);
-    char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256",        (char*)"-U",       pwdZ,
-                    (char*)"-O",    pwdZ,        CStrTemp(gTool.srcPath), CStrTemp(destPath)};
-    int argc = 9;
+    char* argv[] = {(char*)"clean", (char*)"-E", (char*)"aes-256",    (char*)"-U",       pwdZ,
+                    (char*)"-O",    pwdZ,        CStrTemp(inputPath), CStrTemp(destPath)};
 
     fz_set_optind(0);
-    int res = pdfclean_main(argc, argv);
+    int res = pdfclean_main(dimofi(argv), argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfEncryptDoIt: encrypted successfully\n");
         CloseAndLoad(destPath);
@@ -999,15 +1021,25 @@ static void PdfDecryptDoIt() {
         return;
     }
     MainWindow* win = gTool.win;
+    WindowTab* tab = ToolSrcTab();
+    TempStr tmpPath;
+    TempStr inputPath = PdfToolInputTemp(tab ? tab->GetEngine() : nullptr, gTool.srcPath, &tmpPath);
+    if (len(inputPath) == 0) {
+        ShowWarningNotification(win, Tr("Failed to decrypt PDF file."), kNotif5SecsTimeOut);
+        return;
+    }
 
-    logf("PdfDecryptDoIt: decrypting '%s' to '%s'\n", gTool.srcPath, destPath);
+    logf("PdfDecryptDoIt: decrypting '%s' to '%s'\n", inputPath, destPath);
 
     // equivalent of: clean -p <key> -D input output
-    char* argv[] = {(char*)"clean",          (char*)"-p",       PdfToolPasswordTemp(win, gTool.srcPath), (char*)"-D",
-                    CStrTemp(gTool.srcPath), CStrTemp(destPath)};
+    char* argv[] = {(char*)"clean", (char*)"-p",         PdfToolPasswordTemp(win, gTool.srcPath),
+                    (char*)"-D",    CStrTemp(inputPath), CStrTemp(destPath)};
 
     fz_set_optind(0);
     int res = pdfclean_main(dimofi(argv), argv);
+    if (tmpPath) {
+        file::Delete(tmpPath);
+    }
     if (res == 0) {
         logf("PdfDecryptDoIt: decrypted successfully\n");
         CloseAndLoad(destPath);

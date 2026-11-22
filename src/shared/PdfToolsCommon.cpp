@@ -45,6 +45,22 @@ char* PdfToolPasswordTemp(MainWindow* win, Str srcPath) {
     return CStrTemp(EngineMupdfToolPasswordTemp(tab ? tab->GetEngine() : nullptr, srcPath));
 }
 
+// The file a tool that re-opens the PDF from disk reads: srcPath, or a temp copy
+// with the unsaved annotations (*tmpPath, deleted by the caller). Empty if saving failed.
+TempStr PdfToolInputTemp(EngineBase* engine, Str srcPath, TempStr* tmpPath) {
+    *tmpPath = {};
+    if (!engine || !EngineHasUnsavedAnnotations(engine)) {
+        return str::DupTemp(srcPath);
+    }
+    TempStr path = GetTempFilePathTemp(StrL("pdftool"));
+    if (len(path) == 0 || !EngineMupdfSaveCopy(engine, path)) {
+        file::Delete(path);
+        return {};
+    }
+    *tmpPath = path;
+    return path;
+}
+
 bool PageRangeOk(Str s, int pageCount, bool isExtract, Vec<int>& pages) {
     if (!ParseDeletePages(s, pageCount, pages)) {
         return false;
