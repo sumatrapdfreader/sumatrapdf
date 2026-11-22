@@ -659,7 +659,11 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
 }
 
 Vec<IPageElement*> EngineEbook::GetElements(int pageNo) {
+    ScopedRecursiveMutex scope(&pagesAccess);
     HtmlPage* pi = GetHtmlPage2(pageNo);
+    if (!pi) {
+        return Vec<IPageElement*>();
+    }
     if (pi->gotElements) {
         return pi->elements;
     }
