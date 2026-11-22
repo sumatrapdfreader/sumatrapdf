@@ -138,6 +138,16 @@ bool IsSavePathDialogVisible() {
     return gSave.visible;
 }
 
+static void FreeSaveArgs(SavePathArgs* args) {
+    str::Free(args->title);
+    str::Free(args->initialPath);
+    str::Free(args->defExt);
+    str::Free(args->filter);
+    str::Free(args->nativeFile);
+    str::Free(args->nativeDir);
+    delete args;
+}
+
 static void FinishSavePathDialog(Str path) {
     SavePathArgs* args = gSave.args;
     gSave.args = nullptr;
@@ -164,13 +174,7 @@ static void FinishSavePathDialog(Str path) {
             WasmDownloadFile(path);
         }
 #endif
-        str::Free(args->title);
-        str::Free(args->initialPath);
-        str::Free(args->defExt);
-        str::Free(args->filter);
-        str::Free(args->nativeFile);
-        str::Free(args->nativeDir);
-        delete args;
+        FreeSaveArgs(args);
     }
 }
 
@@ -205,7 +209,7 @@ void ShowSavePathDialog(SavePathArgs* args) {
     MainWindow* win = args->win;
     if (!win || !win->gpuiWin) {
         args->onDone.Call(args);
-        delete args;
+        FreeSaveArgs(args);
         return;
     }
 #if OS_WIN
@@ -275,7 +279,9 @@ static void TryAccept() {
         }
         return;
     }
-    if (file::Exists(path) && !gSave.confirmingOverwrite) {
+    // confirm again when the name changed after the question
+    bool confirmed = gSave.confirmingOverwrite && str::Eq(path, gSave.pendingPath);
+    if (file::Exists(path) && !confirmed) {
         gSave.confirmingOverwrite = true;
         str::ReplaceWithCopy(&gSave.pendingPath, path);
         AppShellInvalidate(gSave.args ? gSave.args->win : nullptr);
