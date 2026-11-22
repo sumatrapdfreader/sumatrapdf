@@ -264,6 +264,8 @@ struct PdfToolDlg {
     gpui::InputState* textEdit = nullptr;
     // Add Page Numbers: where on the page
     DialogSelect ddPosition;
+    // Compress PDF: what happens to the pictures (PdfCompressQuality)
+    DialogSelect ddQuality;
     // Merge PDF as orig's window, where the platform can have one
     // (gui/ToolWindow.h); null: a dialog in the frame
     ToolWindow* tw = nullptr;
@@ -628,6 +630,7 @@ static void FreeToolState(gp::Window* toolWin) {
     gTool.textEdit = nullptr;
     gTool.ddFormat.Free();
     gTool.ddPosition.Free();
+    gTool.ddQuality.Free();
     gTool.ddDpi.Free();
     DetachMergeThumbs();
     for (MergeSourceDlg& source : gTool.mergeSources) {
@@ -785,19 +788,22 @@ static void PdfCleanDoIt(bool decompress) {
     Str what = decompress ? StrL("decompress") : StrL("compress");
     logf("PdfCleanDoIt: %s '%s' to '%s'\n", what, gTool.srcPath, destPath);
 
-    // compress is: clean -gggg -e 100 -f -i -t -Z input output
+    // compress is: clean -gggg -e 100 -f -i -t -Z [picture options] input output
     // decompress is: clean -d input output
-    char* pwd = PdfToolPasswordTemp(gTool.win, gTool.srcPath);
-    char* compressArgv[] = {
-        (char*)"clean", (char*)"-p", pwd,         (char*)"-gggg",          (char*)"-e",       (char*)"100", (char*)"-f",
-        (char*)"-i",    (char*)"-t", (char*)"-Z", CStrTemp(gTool.srcPath), CStrTemp(destPath)};
-    char* decompressArgv[] = {(char*)"clean",          (char*)"-p",       pwd, (char*)"-d",
-                              CStrTemp(gTool.srcPath), CStrTemp(destPath)};
-    char** argv = decompress ? decompressArgv : compressArgv;
-    int argc = decompress ? dimofi(decompressArgv) : dimofi(compressArgv);
+    Vec<char*> argv;
+    VecAppend(argv, (char*)"clean");
+    VecAppend(argv, (char*)"-p");
+    VecAppend(argv, PdfToolPasswordTemp(gTool.win, gTool.srcPath));
+    if (decompress) {
+        VecAppend(argv, (char*)"-d");
+    } else {
+        AppendPdfCompressArgs(argv, (PdfCompressQuality)gTool.ddQuality.sel);
+    }
+    VecAppend(argv, CStrTemp(gTool.srcPath));
+    VecAppend(argv, CStrTemp(destPath));
 
     fz_set_optind(0);
-    int res = pdfclean_main(argc, argv);
+    int res = pdfclean_main(len(argv), argv.els);
     if (res == 0) {
         logf("PdfCleanDoIt: %sed successfully\n", what);
         CloseAndLoad(destPath);
@@ -3001,6 +3007,10 @@ void ShowPdfCompressDialog(MainWindow* win) {
                          StrL(".pdf"))) {
         return;
     }
+    gTool.ddQuality.Init(win->gpuiWin ? win->gpuiWin->app : nullptr);
+    StrVec items;
+    PdfCompressQualityLabels(items);
+    gTool.ddQuality.SetItems(items, (int)PdfCompressQuality::Same);
     AppShellInvalidate(win);
 }
 
@@ -4154,6 +4164,15 @@ static gp::El* PdfToolColumn(MainWindow* win, gp::Ctx* cx) {
             nLines++;
             hint = PageRangeHint();
             break;
+        case PdfToolKind::Compress:
+            col->Child(
+                ToolLine(cx, Tr("Pictures"))
+                    ->Child(gp::Div(cx->a)
+                                ->W(kCompressQualityDx)
+                                ->Shrink0()
+                                ->Child(gTool.ddQuality.Build(cx, StrL("pdftool-quality"), kCompressQualityDx))));
+            nLines++;
+            break;
         case PdfToolKind::Encrypt:
             col->Child(
                 ToolLine(cx, Tr("Password"))->Child(ToolLineInput(cx, GStrL("pdftool-pwd"), gTool.passwordEdit, true)));
@@ -4256,6 +4275,9 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
     }
     if (gTool.kind == PdfToolKind::PageNumbers) {
         gTool.ddPosition.PollChanged(cx->app);
+    }
+    if (gTool.kind == PdfToolKind::Compress) {
+        gTool.ddQuality.PollChanged(cx->app);
     }
     if (HasDpiCombo()) {
         gTool.dpiEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);

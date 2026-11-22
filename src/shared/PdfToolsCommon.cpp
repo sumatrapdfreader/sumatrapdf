@@ -295,6 +295,54 @@ void PageNumberPositionLabels(StrVec& out) {
     }
 }
 
+void PdfCompressQualityLabels(StrVec& out) {
+    for (Str label : {Tr("Same quality"), Tr("Balanced (150 dpi pictures)"), Tr("Smallest (96 dpi pictures)")}) {
+        out.Append(label);
+    }
+}
+
+bool PdfCompressQualityFromName(Str name, PdfCompressQuality& out) {
+    if (str::EqI(name, StrL("same"))) {
+        out = PdfCompressQuality::Same;
+    } else if (str::EqI(name, StrL("balanced"))) {
+        out = PdfCompressQuality::Balanced;
+    } else if (str::EqI(name, StrL("smallest"))) {
+        out = PdfCompressQuality::Smallest;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+// mutool clean's options for Compress PDF. Color and gray pictures above 1.5x
+// the target dpi are scaled down to it and saved as JPEG, kept as they were
+// when that isn't smaller. Black and white scans are left alone.
+void AppendPdfCompressArgs(Vec<char*>& argv, PdfCompressQuality quality) {
+    static const char* lossless[] = {"-gggg", "-e", "100", "-f", "-i", "-t", "-Z"};
+    for (const char* a : lossless) {
+        VecAppend(argv, (char*)a);
+    }
+    // the subsample options take threshold,target dpi
+    static const char* balanced[] = {"--color-image-subsample-dpi=225,150", "--gray-image-subsample-dpi=225,150",
+                                     "--color-image-recompress-method=jpeg:75",
+                                     "--gray-image-recompress-method=jpeg:75"};
+    static const char* smallest[] = {"--color-image-subsample-dpi=144,96", "--gray-image-subsample-dpi=144,96",
+                                     "--color-image-recompress-method=jpeg:60",
+                                     "--gray-image-recompress-method=jpeg:60"};
+    if (quality == PdfCompressQuality::Same) {
+        return;
+    }
+    // average only halves, so 300 dpi stays 300 for a 150 target
+    static const char* bicubic[] = {"--color-image-subsample-method=bicubic", "--gray-image-subsample-method=bicubic"};
+    for (const char* a : bicubic) {
+        VecAppend(argv, (char*)a);
+    }
+    const char** extra = quality == PdfCompressQuality::Balanced ? balanced : smallest;
+    for (int i = 0; i < dimofi(balanced); i++) {
+        VecAppend(argv, (char*)extra[i]);
+    }
+}
+
 // what Add Watermark (gray, see-through, across the middle) and Add Page
 // Numbers (at positionIdx, numbered from 1) put on the pages
 void DialogStamps(bool watermark, Str text, const Vec<int>& pages, int positionIdx, Vec<PdfStamp>& out) {

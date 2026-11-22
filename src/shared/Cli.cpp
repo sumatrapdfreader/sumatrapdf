@@ -123,7 +123,7 @@ static bool OptTakesValue(Str name) {
                                   "--color",  "--size",     "--format",       "--position",     "--start",
                                   "--margin", "--every",    "--ranges",       "--text",         "--contents",
                                   "--at",     "--rect",     "--key",          "--key-password", "--key-password-env",
-                                  "--field",  "--reason",   "--location"};
+                                  "--field",  "--reason",   "--location",     "--quality"};
     for (const char* n : names) {
         if (str::Eq(name, Str(n))) {
             return true;
@@ -1188,8 +1188,14 @@ static int RunClean(CliCtx& cx, const char* const* extra, int nExtra, Str newPas
 }
 
 static int CmdCompress(CliCtx& cx) {
-    static const char* args[] = {"-gggg", "-e", "100", "-f", "-i", "-t", "-Z"};
-    return RunClean(cx, args, dimofi(args));
+    auto quality = PdfCompressQuality::Same;
+    Str name = OptValue(cx, StrL("--quality"));
+    if (len(name) > 0 && !PdfCompressQualityFromName(name, quality)) {
+        return Fail(cx, kCliUsage, fmt("--quality: '%s' isn't same, balanced or smallest", name));
+    }
+    Vec<char*> args;
+    AppendPdfCompressArgs(args, quality);
+    return RunClean(cx, args.els, len(args));
 }
 
 static int CmdDecompress(CliCtx& cx) {
@@ -3079,7 +3085,7 @@ Page ranges: `1-3,7,10-N` (N is the last page). Page numbers are 1-based.
 - `merge a.pdf b.pdf -o both.pdf`
 - `images-to-pdf scan1.jpg scan2.png -o scans.pdf`
 - `split <file.pdf> -o folder/ [--every 10 | --ranges "1-3;4-N"]`
-- `compress <file.pdf> -o small.pdf`
+- `compress <file.pdf> -o small.pdf [--quality balanced|smallest]`
 - `encrypt <file.pdf> -o locked.pdf --new-password-env NAME`
 - `sign <file.pdf> --key me.pfx --key-password-env NAME [--pages 2 --rect x,y,w,h] -o signed.pdf`
 - `verify <file.pdf>`: each signature valid, untrusted (intact, signer not
@@ -3196,8 +3202,11 @@ static const CliCmd gCmds[] = {
      "-o <folder>      where the PDFs go\n--every <n>      n pages to a PDF (default 1)\n--ranges <r;r>   a PDF per "
      "range, e.g. \"1-3;4-9;10-N\"",
      "split book.pdf -o chapters/ --ranges \"1-12;13-40;41-N\"\nsplit scan.pdf -o pages/", CmdSplit},
-    {"compress", "<file.pdf> -o <out.pdf>", "a smaller copy of a PDF (same quality: unused objects and streams go)",
-     "-o <file>        the new PDF", "compress big.pdf -o small.pdf --json", CmdCompress},
+    {"compress", "<file.pdf> -o <out.pdf> [--quality same|balanced|smallest]",
+     "a smaller copy of a PDF: unused objects and streams go, and balanced / smallest scale pictures down to 150 / "
+     "96 dpi as JPEG",
+     "-o <file>        the new PDF\n--quality <q>    same (the default), balanced or smallest",
+     "compress scan.pdf -o small.pdf --quality balanced --json", CmdCompress},
     {"decompress", "<file.pdf> -o <out.pdf>", "a copy of a PDF with its streams uncompressed, for reading its insides",
      "-o <file>        the new PDF", "decompress a.pdf -o readable.pdf", CmdDecompress},
     {"encrypt", "<file.pdf> -o <out.pdf> --new-password <pw>", "a copy of a PDF that needs a password (AES-256)",

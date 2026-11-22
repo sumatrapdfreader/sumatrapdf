@@ -21,6 +21,8 @@ constexpr int kToolDlgRowDy = 30;
 constexpr int kToolDlgFilesPadDy = 8;
 constexpr int kToolDlgFootPadDy = 10;
 constexpr int kToolDlgComboDx = 84;
+// Compress PDF's Pictures drop-down: its labels are longer
+constexpr int kCompressQualityDx = 220;
 constexpr int kToolDlgQueryFontPx = 15;
 constexpr int kToolDlgTextFontPx = 13;
 constexpr int kToolDlgMetaFontPx = 12;
@@ -44,6 +46,16 @@ void PageStamps(const Vec<int>& pages, const PdfStamp& tmpl, Str format, int sta
 void PageNumberPositionLabels(StrVec& out);
 void DialogStamps(bool watermark, Str text, const Vec<int>& pages, int positionIdx, Vec<PdfStamp>& out);
 bool StampPdfToFile(EngineBase* engine, const Vec<PdfStamp>& stamps, Str destPath, Str* errOut);
+// Compress PDF's Pictures drop-down (and `cli compress --quality`): Same keeps
+// the pictures, Balanced and Smallest scale them down and save them as JPEG
+enum class PdfCompressQuality {
+    Same,
+    Balanced,
+    Smallest,
+};
+void PdfCompressQualityLabels(StrVec& out);
+bool PdfCompressQualityFromName(Str name, PdfCompressQuality& out);
+void AppendPdfCompressArgs(Vec<char*>& argv, PdfCompressQuality quality);
 constexpr int kConvertPdfToImagesDpi = 150;
 constexpr int kSaveSelectionDefaultDpi = 300;
 float SaveSelectionZoom(EngineBase* engine, float dpi);

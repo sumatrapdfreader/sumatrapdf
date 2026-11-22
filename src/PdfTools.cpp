@@ -689,6 +689,8 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
 // --- Compress PDF dialog ---
 
 struct PdfCompressDialog : PdfToolDialog {
+    DropDown* dropQuality = nullptr;
+
     bool Create(MainWindow* win, WindowTab* tab);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
@@ -701,15 +703,18 @@ void PdfCompressDialog::DoIt(VirtMouseEvent*) {
 
     logf("PdfCompressDoIt: compressing '%s' to '%s'\n", srcPath, destPath);
 
-    // equivalent of: clean -gggg -e 100 -f -i -t -Z input output
-    char* argv[] = {(char*)"clean", (char*)"-p",       PdfToolPasswordTemp(win, srcPath),
-                    (char*)"-gggg", (char*)"-e",       (char*)"100",
-                    (char*)"-f",    (char*)"-i",       (char*)"-t",
-                    (char*)"-Z",    CStrTemp(srcPath), CStrTemp(destPath)};
-    int argc = dimofi(argv);
+    // equivalent of: clean -gggg -e 100 -f -i -t -Z [picture options] input output
+    auto quality = dropQuality ? (PdfCompressQuality)CbGetCurrentSelection(dropQuality) : PdfCompressQuality::Same;
+    Vec<char*> argv;
+    VecAppend(argv, (char*)"clean");
+    VecAppend(argv, (char*)"-p");
+    VecAppend(argv, PdfToolPasswordTemp(win, srcPath));
+    AppendPdfCompressArgs(argv, quality);
+    VecAppend(argv, CStrTemp(srcPath));
+    VecAppend(argv, CStrTemp(destPath));
 
     fz_set_optind(0);
-    int res = pdfclean_main(argc, argv);
+    int res = pdfclean_main(len(argv), argv.els);
     if (res == 0) {
         logf("PdfCompressDoIt: compressed successfully\n");
         MainWindow* w = win;
@@ -727,6 +732,20 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Compress PDF"))) {
         return false;
     }
+    AddLine(Tr("Pictures"));
+    auto* dd = new DropDown();
+    DropDown::CreateArgs args;
+    args.parent = hwnd;
+    args.font = fontText;
+    args.isRtl = IsUIRtl();
+    dd->Create(args);
+    StrVec items;
+    PdfCompressQualityLabels(items);
+    dd->SetItems(items);
+    CbSetCurrentSelection(dd, (int)PdfCompressQuality::Same);
+    dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    dropQuality = dd;
+    lastLine->AddChild(dropQuality);
     AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
     AddFooter(Tr("Compress PDF"));
     FinishDialog(destEdit);
