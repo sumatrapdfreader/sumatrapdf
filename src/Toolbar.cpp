@@ -199,7 +199,7 @@ static void SetToolbarButtonCheckedByIdx(MainWindow* win, int idx, bool isChecke
     ib->Invalidate();
 }
 
-void SetToolbarButtonCheckedState(MainWindow* win, int cmdId, bool isChecked) {
+static void SetToolbarButtonCheckedState(MainWindow* win, int cmdId, bool isChecked) {
     int originalCmdId = OriginalCommandId(cmdId);
     int n = TotalButtonsCount();
     for (int i = 0; i < n; i++) {
@@ -1117,9 +1117,6 @@ struct ToolbarHoverRow : VirtCtrl {
         Rect tr{x, r.y, right - x, r.dy};
         ctx.gfx->DrawText(text, tr, gfxTextVCenter | gfxTextEllipsis, font, col);
     }
-
-    void OnMouseEnter() { Invalidate(); }
-    void OnMouseLeave() { Invalidate(); }
 };
 
 // A cell of NewToolbarHoverStrip(): a label in a row of them, no icon. The one
@@ -1150,9 +1147,6 @@ struct ToolbarHoverCell : VirtCtrl {
         Color col = enabled ? TbTextColor() : TbDisabledColor();
         ctx.gfx->DrawText(text, r, gfxTextCenter | gfxTextVCenter, font, col);
     }
-
-    void OnMouseEnter() { Invalidate(); }
-    void OnMouseLeave() { Invalidate(); }
 };
 
 static void PostedHideHoverDropdown(MainWindow* win) {
@@ -1468,7 +1462,7 @@ static bool HostHasPoint(VirtHost* host, Point pt) {
     return host && host->IsVisible() && host->ScreenRect().Contains(pt);
 }
 
-bool ToolbarHoverDropdownContainsScreenPoint(MainWindow* win, Point pt) {
+static bool ToolbarHoverDropdownContainsScreenPoint(MainWindow* win, Point pt) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
     return HostHasPoint(tb ? tb->hoverHost : nullptr, pt);
 }

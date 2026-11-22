@@ -30,7 +30,6 @@ void UpdateToolbarFindText(MainWindow*);
 void UpdateToolbarPageText(MainWindow*, int pageCount, bool updateOnly = false);
 void UpdateFindbox(MainWindow*);
 void SetToolbarButtonEnableState(MainWindow*, int cmdId, bool isEnabled);
-void SetToolbarButtonCheckedState(MainWindow*, int cmdId, bool isChecked);
 bool ShouldShowToolbar(MainWindow*);
 bool ShouldOverlayToolbar(MainWindow*);
 void ShowOrHideToolbar(MainWindow*);
@@ -90,7 +89,6 @@ ILayout* NewToolbarHoverMenu(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
 // surrounds the middle, the last one the two ends
 ILayout* NewToolbarHoverStrip(MainWindow*, const Vec<ToolbarHoverMenuItem>&);
 void HideToolbarHoverDropdown(MainWindow*);
-bool ToolbarHoverDropdownContainsScreenPoint(MainWindow*, Point);
 
 // the markup buttons' color drop-down, under a rect that is not a toolbar
 // button (the annotation edit toolbar's color chips). withNone adds a swatch
