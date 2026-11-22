@@ -910,6 +910,11 @@ static Vec<PRINTPAGERANGE> ClampPageRanges(const Vec<PRINTPAGERANGE>& ranges, in
     return res;
 }
 
+static bool SkipPageForRange(PrintRangeAdv range, DWORD pageNo) {
+    bool isOdd = pageNo % 2 != 0;
+    return (range == PrintRangeAdv::Even && isOdd) || (range == PrintRangeAdv::Odd && !isOdd);
+}
+
 static bool PrintToDevice(const PrintData& pd) {
     ReportIf(!pd.engine);
     if (!pd.engine) {
@@ -964,10 +969,11 @@ static bool PrintToDevice(const PrintData& pd) {
             return false;
         }
         for (int i = 0; i < len(ranges); i++) {
-            if (ranges[i].nToPage < ranges[i].nFromPage) {
-                total += (int)ranges[i].nFromPage - (int)ranges[i].nToPage + 1;
-            } else {
-                total += (int)ranges[i].nToPage - (int)ranges[i].nFromPage + 1;
+            int dir = ranges[i].nFromPage > ranges[i].nToPage ? -1 : 1;
+            for (DWORD pageNo = ranges[i].nFromPage; pageNo != ranges[i].nToPage + dir; pageNo += dir) {
+                if (!SkipPageForRange(pd.advData.range, pageNo)) {
+                    total++;
+                }
             }
         }
     } else {
@@ -977,7 +983,8 @@ static bool PrintToDevice(const PrintData& pd) {
             }
         }
     }
-    ReportIf(total <= 0);
+    // even / odd pages only can legitimately leave none
+    ReportIf(total <= 0 && pd.advData.range == PrintRangeAdv::All);
     if (0 == total) {
         logf("PrintToDevice: total == 0\n");
         return false;
@@ -1156,8 +1163,7 @@ static bool PrintToDevice(const PrintData& pd) {
     for (int i = 0; i < len(ranges); i++) {
         int dir = ranges[i].nFromPage > ranges[i].nToPage ? -1 : 1;
         for (DWORD pageNo = ranges[i].nFromPage; pageNo != ranges[i].nToPage + dir; pageNo += dir) {
-            if ((PrintRangeAdv::Even == pd.advData.range && pageNo % 2 != 0) ||
-                (PrintRangeAdv::Odd == pd.advData.range && pageNo % 2 == 0)) {
+            if (SkipPageForRange(pd.advData.range, pageNo)) {
                 continue;
             }
             UpdateProgress(progressCb, current, total);
