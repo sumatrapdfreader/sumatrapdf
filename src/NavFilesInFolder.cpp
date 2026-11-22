@@ -156,13 +156,13 @@ NavFilesInFolderWnd::~NavFilesInFolderWnd() {
     str::Free(pendingSelectPath);
 }
 
-static void SafeDeleteNavFilesWnd() {
-    if (!gNavFilesWnd) {
+// deletes the window it was scheduled for, not whatever gNavFilesWnd is by then
+static void SafeDeleteNavFilesWnd(NavFilesInFolderWnd* wnd) {
+    delete wnd;
+    // a replacement window is open: it owns the window to re-activate
+    if (gNavFilesWnd) {
         return;
     }
-    auto* tmp = gNavFilesWnd;
-    gNavFilesWnd = nullptr;
-    delete tmp;
     if (gHwndToActivateOnNavClose) {
         HWND fg = GetForegroundWindow();
         if (!fg || fg == gHwndToActivateOnNavClose) {
@@ -172,12 +172,21 @@ static void SafeDeleteNavFilesWnd() {
     }
 }
 
+// clears gNavFilesWnd now so a second request (onClose then onDestroy) is a no-op
 static void ScheduleDeleteNavFilesWnd() {
     if (!gNavFilesWnd) {
         return;
     }
-    auto fn = MkFunc0Void(SafeDeleteNavFilesWnd);
+    auto fn = MkFunc0<NavFilesInFolderWnd>(SafeDeleteNavFilesWnd, gNavFilesWnd);
+    gNavFilesWnd = nullptr;
     uitask::Post(fn, "SafeDeleteNavFilesWnd");
+}
+
+// a window deleted after its replacement opened must not schedule the replacement
+static void OnNavFilesWndGone(NavFilesInFolderWnd* wnd) {
+    if (wnd == gNavFilesWnd) {
+        ScheduleDeleteNavFilesWnd();
+    }
 }
 
 // Alt-Tab / activation finishes setting focus after WM_ACTIVATE, so set list
@@ -1312,8 +1321,8 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath, bool skipHistory) {
     auto* wnd = new NavFilesInFolderWnd();
     wnd->skipHistory = skipHistory;
     wnd->closeOnEsc = true;
-    wnd->onClose = MkFunc0Void(ScheduleDeleteNavFilesWnd);
-    wnd->onDestroy = MkFunc0Void(ScheduleDeleteNavFilesWnd);
+    wnd->onClose = MkFunc0<NavFilesInFolderWnd>(OnNavFilesWndGone, wnd);
+    wnd->onDestroy = MkFunc0<NavFilesInFolderWnd>(OnNavFilesWndGone, wnd);
     wnd->onActivate = MkMethod1<NavFilesInFolderWnd, WindowBase::ActivateEvent*, &NavFilesInFolderWnd::OnActivate>(wnd);
     wnd->onFocus = MkMethod1<NavFilesInFolderWnd, WindowBase::FocusEvent*, &NavFilesInFolderWnd::OnFocus>(wnd);
     wnd->onKeyDown = MkMethod1<NavFilesInFolderWnd, KeyEvent*, &NavFilesInFolderWnd::OnKeyDown>(wnd);
@@ -1322,7 +1331,8 @@ void ShowNavFilesInFolder(MainWindow* win, Str selectPath, bool skipHistory) {
     gNavFilesWnd = wnd;
     gHwndToActivateOnNavClose = win->hwndFrame;
     bool ok = wnd->Create(win, filePath);
-    if (!ok) {
+    // unless Esc during Create already scheduled its delete
+    if (!ok && gNavFilesWnd == wnd) {
         gNavFilesWnd = nullptr;
         gHwndToActivateOnNavClose = nullptr;
         delete wnd;
