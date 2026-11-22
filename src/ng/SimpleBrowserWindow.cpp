@@ -195,6 +195,8 @@ void SimpleBrowserWindowShow(const SimpleBrowserCreateArgs& args) {
     // the WebView's dark canvas
     BrowserViewSetBackground(gBrowser.view, ThemeWindowBackgroundColor());
     if (!gBrowser.view) {
+        str::FreePtr(&gBrowser.title);
+        str::FreePtr(&gBrowser.currentUrl);
         SumatraLaunchBrowser(args.url);
         return;
     }
