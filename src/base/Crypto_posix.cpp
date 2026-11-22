@@ -28,6 +28,25 @@ void CalcSHA2Digest(Str data, u8 digest[32]) {
     CC_SHA256(data.s, (CC_LONG)data.len, digest);
 }
 
+struct Sha1Hasher {
+    CC_SHA1_CTX ctx;
+};
+
+Sha1Hasher* NewSha1Hasher() {
+    auto* h = new Sha1Hasher();
+    CC_SHA1_Init(&h->ctx);
+    return h;
+}
+
+void Sha1Update(Sha1Hasher* h, Str data) {
+    CC_SHA1_Update(&h->ctx, data.s, (CC_LONG)data.len);
+}
+
+void Sha1Finish(Sha1Hasher* h, u8 digest[20]) {
+    CC_SHA1_Final(digest, &h->ctx);
+    delete h;
+}
+
 #else
 // Linux (and other non-Darwin POSIX): self-contained hashes so we don't
 // require openssl headers for base/. mupdf still links -lcrypto separately.
@@ -321,6 +340,58 @@ void CalcSHA1Digest(Str data, u8 digest[20]) {
 
 void CalcSHA2Digest(Str data, u8 digest[32]) {
     HashSha256((const u8*)(data.s ? data.s : ""), (size_t)data.len, digest);
+}
+
+// HashSha1 in pieces: whole blocks go through Sha1Transform as they fill
+struct Sha1Hasher {
+    u32 state[5] = {0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0};
+    u8 block[64]{};
+    size_t blockLen = 0;
+    u64 total = 0;
+};
+
+Sha1Hasher* NewSha1Hasher() {
+    return new Sha1Hasher();
+}
+
+void Sha1Update(Sha1Hasher* h, Str data) {
+    const u8* p = (const u8*)data.s;
+    size_t n = (size_t)data.len;
+    h->total += n;
+    while (n > 0) {
+        size_t take = 64 - h->blockLen;
+        if (take > n) {
+            take = n;
+        }
+        memcpy(h->block + h->blockLen, p, take);
+        h->blockLen += take;
+        p += take;
+        n -= take;
+        if (h->blockLen == 64) {
+            Sha1Transform(h->state, h->block);
+            h->blockLen = 0;
+        }
+    }
+}
+
+void Sha1Finish(Sha1Hasher* h, u8 digest[20]) {
+    size_t rem = h->blockLen;
+    h->block[rem] = 0x80;
+    if (rem < 56) {
+        memset(h->block + rem + 1, 0, 55 - rem);
+    } else {
+        memset(h->block + rem + 1, 0, 63 - rem);
+        Sha1Transform(h->state, h->block);
+        memset(h->block, 0, 56);
+    }
+    u64 bits = h->total * 8;
+    StoreBE32(h->block + 56, (u32)(bits >> 32));
+    StoreBE32(h->block + 60, (u32)bits);
+    Sha1Transform(h->state, h->block);
+    for (int k = 0; k < 5; k++) {
+        StoreBE32(digest + (k * 4), h->state[k]);
+    }
+    delete h;
 }
 
 #endif

@@ -78,6 +78,26 @@ static void Notify(MainWindow* win, Str msg) {
     }
 }
 
+// Hashes history files that might be server files (same size), so they match
+// by content. At most every kHashRescanMs: the home page asks on every build.
+constexpr u64 kHashRescanMs = 2000;
+
+enum class HashScan {
+    IfDue,
+    Now,
+};
+
+static void QueueHistoryHashes(HashScan scan) {
+    static u64 lastMs = 0;
+    u64 now = GetTickCount64();
+    bool due = scan == HashScan::Now || lastMs == 0 || now - lastMs >= kHashRescanMs;
+    if (!gSrv.listed || !due) {
+        return;
+    }
+    lastMs = now;
+    QueueContentHashes(gSrv.sizes, MkFunc0Void(ServerFilesChanged));
+}
+
 static void FinishList(OnlineJobResult* res) {
     gSrv.listId = 0;
     gSrv.names.Reset();
@@ -101,6 +121,8 @@ static void FinishList(OnlineJobResult* res) {
     }
     FreeOnlineFiles(parsed);
     gSrv.listed = true;
+    ForgetContentHashChecks();
+    QueueHistoryHashes(HashScan::Now);
     ServerFilesChanged();
 }
 
@@ -162,6 +184,7 @@ static void StartListAsync(void*) {
 // not the build (wasm runs the request inline).
 void ServerFilesEnsureListed() {
     SaveKnownContentHashes();
+    QueueHistoryHashes(HashScan::IfDue);
     if (gSrv.tried || !CanUseServer()) {
         return;
     }

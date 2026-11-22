@@ -67,6 +67,34 @@ void CalcSHA2Digest(Str data, u8 digest[32]) {
     CalcDigestWin(data, digest, 32, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CALG_SHA_256);
 }
 
+struct Sha1Hasher {
+    HCRYPTPROV prov = 0;
+    HCRYPTHASH hash = 0;
+};
+
+Sha1Hasher* NewSha1Hasher() {
+    auto* h = new Sha1Hasher();
+    BOOL ok = CryptAcquireContextW(&h->prov, nullptr, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    ReportIf(!ok);
+    ok = CryptCreateHash(h->prov, CALG_SHA1, 0, 0, &h->hash);
+    ReportIf(!ok);
+    return h;
+}
+
+void Sha1Update(Sha1Hasher* h, Str data) {
+    BOOL ok = CryptHashData(h->hash, (const BYTE*)data.s, (DWORD)data.len, 0);
+    ReportIf(!ok);
+}
+
+void Sha1Finish(Sha1Hasher* h, u8 digest[20]) {
+    DWORD hashLen = 20;
+    BOOL ok = CryptGetHashParam(h->hash, HP_HASHVAL, digest, &hashLen, 0);
+    ReportIf(!ok || hashLen != 20);
+    CryptDestroyHash(h->hash);
+    CryptReleaseContext(h->prov, 0);
+    delete h;
+}
+
 // extracts the content (e.g. PDF) from a PKCS#7 / .p7m wrapper using Win32 crypto APIs
 Str ExtractP7m(Str d) {
     if (len(d) == 0) {

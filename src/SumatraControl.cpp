@@ -64,6 +64,7 @@
 #include "AnnotFilterToolbar.h"
 #include "Annotation.h"
 #include "Menu.h"
+#include "ContentHash.h"
 #include "EngineAll.h"
 #include "EutlTrust.h"
 #include "SignatureUICommon.h"
@@ -744,6 +745,9 @@ enum class ControlCmd : u16 {
     TestSetSetting = 173,
     // [action, word]: touch selection probe (TouchSelResultTemp)
     TestTouchSel = 174,
+    // ["status"] or ["hooks", stallMs, delayMs, pathMatch]: the content hashes
+    // of history files (ContentHashStatusTemp), or their test hooks
+    TestContentHash = 175,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1450,6 +1454,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = SelectedTextResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestContentHash: {
+            if (str::Eq(StringArg(req, 0), StrL("hooks"))) {
+                i32 stallMs = 0;
+                i32 delayMs = 0;
+                IntArg(req, 1, stallMs);
+                IntArg(req, 2, delayMs);
+                SetContentHashTestHooks(stallMs, delayMs, StringArg(req, 3));
+            }
+            AppendTestResult(req, 0, ContentHashStatusTemp());
             break;
         }
 

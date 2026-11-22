@@ -47,6 +47,7 @@
 #include "CommandPalette.h"
 #include "CommandAvailability.h"
 #include "Menu.h"
+#include "ContentHash.h"
 #include "AppSettings.h"
 #include "Flags.h"
 #if OS_WIN
@@ -771,6 +772,9 @@ enum class ControlCmd : u16 {
     TestSetSetting = 173,
     // [action, word]: touch selection probe (TouchSelResultTemp)
     TestTouchSel = 174,
+    // ["status"] or ["hooks", stallMs, delayMs, pathMatch]: the content hashes
+    // of history files (ContentHashStatusTemp), or their test hooks
+    TestContentHash = 175,
     // [action, pageNo, x, y, length, unit]: drives the Measure tool
     TestMeasurement = 159,
     // [replace <path> | edit, pageNo, imageIdx]: an image embedded in a PDF
@@ -2145,6 +2149,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 TabsSelect(win, a);
             }
             AppendTestResult(req, 0, StripGroupsStateTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestContentHash: {
+            if (str::Eq(StringArg(req, 0), StrL("hooks"))) {
+                i32 stallMs = 0;
+                i32 delayMs = 0;
+                IntArg(req, 1, stallMs);
+                IntArg(req, 2, delayMs);
+                SetContentHashTestHooks(stallMs, delayMs, StringArg(req, 3));
+            }
+            AppendTestResult(req, 0, ContentHashStatusTemp());
             break;
         }
 

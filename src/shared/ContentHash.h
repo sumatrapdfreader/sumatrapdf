@@ -19,3 +19,7 @@ bool StoredContentHash(Str path, ContentHash& out);
 void RememberContentHash(Str path, const ContentHash& h);
 bool KnownContentHash(Str path, ContentHash& out);
 void SaveKnownContentHashes();
+void QueueContentHashes(const Vec<i64>& sizes, const Func0& onHashed);
+void ForgetContentHashChecks();
+void SetContentHashTestHooks(int stallMs, int delayMs, Str match);
+TempStr ContentHashStatusTemp();

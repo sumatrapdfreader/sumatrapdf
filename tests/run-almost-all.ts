@@ -348,6 +348,7 @@ import { testit as issue6123 } from "./issue-6123.ts";
 import { testit as customZoomDialog } from "./custom-zoom-dialog.ts";
 import { testit as sumatrapdfWebDialog } from "./sumatrapdf-web-dialog.ts";
 import { testit as sumatrapdfWebHome } from "./sumatrapdf-web-home.ts";
+import { testit as serverSyncHash } from "./server-sync-hash.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue814 } from "./issue-814.ts";
 import { testit as issue1422 } from "./issue-1422.ts";
@@ -666,6 +667,7 @@ export const tests: NamedTest[] = [
   ["custom-zoom-dialog", customZoomDialog],
   ["sumatrapdf-web-dialog", sumatrapdfWebDialog],
   ["sumatrapdf-web-home", sumatrapdfWebHome],
+  ["server-sync-hash", serverSyncHash],
   ["ctx-menu-pick", ctxMenuPick],
   ["cli-images", cliImages],
   ["issue-1139", issue1139],

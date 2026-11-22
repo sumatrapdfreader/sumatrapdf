@@ -197,6 +197,9 @@ export enum ControlCommand {
   // [action, word]: "word <w>" screen center of a word on page 1, "state" the
   // touch selection handles
   TestTouchSel = 174,
+  // ["status"] or ["hooks", stallMs, delayMs, pathMatch]: content hashes of
+  // history files, one "status=<state> path=<path>" line each
+  TestContentHash = 175,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
