@@ -275,7 +275,11 @@ TempStr GetPathNoExtTemp(Str path) {
 }
 
 TempStr ToOSTemp(Str path) {
+#if OS_WIN
     return str::ReplaceTemp(path, StrL("/"), StrL("\\"));
+#else
+    return str::DupTemp(path);
+#endif
 }
 
 static Str AdvanceUntilWildcardMatch(Str fileName, Str filter);
