@@ -274,6 +274,9 @@ bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunch
     for (Str arg : args) {
         VecAppend(argv, arg.s);
     }
+    VecAppend(argv, (char*)nullptr);
+    // the child must not allocate between fork and exec
+    char* cwdZ = len(cwd) > 0 ? CStrTemp(cwd) : nullptr;
 
     int fds[2];
     if (pipe(fds) != 0) {
@@ -291,7 +294,7 @@ bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunch
             _exit(126);
         }
         close(fds[1]);
-        if (len(cwd) > 0 && chdir(CStrTemp(cwd)) != 0) {
+        if (cwdZ && chdir(cwdZ) != 0) {
             _exit(126);
         }
         execvp(argv[0], argv.els);
