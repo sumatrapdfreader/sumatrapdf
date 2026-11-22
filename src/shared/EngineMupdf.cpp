@@ -13022,6 +13022,7 @@ Str EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
         return epdf->_doc ? OfdLoadAttachment(epdf, attachmentNo) : Str{};
     }
 
+    ScopedRecursiveMutex scope(&epdf->docLock);
     return PdfLoadAttachment(epdf->Ctx(), epdf->pdfdoc, attachmentNo);
 }
 
