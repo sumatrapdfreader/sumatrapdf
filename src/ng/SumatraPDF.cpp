@@ -3185,8 +3185,15 @@ static void ShowSaveAnnotationError(ShowErrorData* d, Str err) {
 bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     MainWindow* win = nullptr;
     EngineBase* engine = GetLiveTabEngine(tab, &win);
-    if (!engine || !IsCurrentTab(win, tab)) {
+    if (!engine) {
         return false;
+    }
+    if (!IsCurrentTab(win, tab)) {
+        SelectTabInWindow(tab);
+        engine = GetLiveTabEngine(tab, &win);
+        if (!engine || !IsCurrentTab(win, tab)) {
+            return false;
+        }
     }
     Str path = engine->FilePath();
     tab->ignoreNextAutoReload = true;
@@ -3293,6 +3300,10 @@ static void OnSaveAnnotsPathPicked(SaveAnnotsCtx* ctx, SavePathArgs* args) {
 void SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab, const Func1<bool>& onDone) {
     MainWindow* win = nullptr;
     EngineBase* engine = GetLiveTabEngine(tab, &win);
+    if (engine && !IsCurrentTab(win, tab)) {
+        SelectTabInWindow(tab);
+        engine = GetLiveTabEngine(tab, &win);
+    }
     if (!engine || !IsCurrentTab(win, tab)) {
         onDone.Call(false);
         return;
