@@ -143,6 +143,7 @@ void ToggleCursorPositionInDoc(MainWindow* win);
 
 extern Str gNextPrevDir;
 extern StrVec gNextPrevDirCache;
+void StealStrVec(StrVec& dst, StrVec& src);
 extern bool gNextPrevDirReady;
 extern bool gNextPrevDirScanning;
 void ScheduleReloadTab(WindowTab* tab);

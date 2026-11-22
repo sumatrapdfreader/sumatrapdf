@@ -2512,10 +2512,7 @@ static void FinishNextPrevDirScan(NextPrevDirScan* r) {
         return;
     }
     logf("NextPrevDirScan: %d files in '%s'\n", len(r->files), r->dir);
-    gNextPrevDirCache.Reset();
-    for (Str s : r->files) {
-        gNextPrevDirCache.Append(s);
-    }
+    StealStrVec(gNextPrevDirCache, r->files);
     RemoveFailedFiles(gNextPrevDirCache);
     gNextPrevDirReady = true;
     gNextPrevDirScanning = false;

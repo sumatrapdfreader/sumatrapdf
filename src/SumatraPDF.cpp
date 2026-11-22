@@ -6579,22 +6579,6 @@ void RemoveFailedFiles(StrVec& files) {
 
 static void MaybeShowNextFileScrollHint(MainWindow* win);
 
-// Take ownership of src's pages so a 50k-file result isn't copied on the UI thread.
-static void StealStrVec(StrVec& dst, StrVec& src) {
-    dst.Reset();
-    dst.first = src.first;
-    dst.last = src.last;
-    dst.sortIndexes = src.sortIndexes;
-    dst.nextPageSize = src.nextPageSize;
-    dst.size = src.size;
-    dst.dataSize = src.dataSize;
-    src.first = nullptr;
-    src.last = nullptr;
-    src.sortIndexes = nullptr;
-    src.size = 0;
-    src.nextPageSize = 256;
-}
-
 struct NextPrevDirScanReq {
     int gen = 0;
     Str dir; // owned
