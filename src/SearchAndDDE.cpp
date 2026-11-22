@@ -721,11 +721,13 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         }
         const auto* data = (const SumatraOpenCopyData*)cds->lpData;
         size_t pathMax = cds->cbData - sizeof(SumatraOpenCopyData);
-        Str pathZ = Str((char*)(const u8*)(data + 1), (int)pathMax);
-        // require null-terminator within bounds
-        if (strnlen_s(pathZ.s, pathMax) >= pathMax) {
+        // require null-terminator within bounds; the NUL is not part of the path
+        const char* pathS = (const char*)(const u8*)(data + 1);
+        size_t pathLen = strnlen_s(pathS, pathMax);
+        if (pathLen >= pathMax) {
             return FALSE;
         }
+        Str pathZ((char*)pathS, (int)pathLen);
         // During startup (cmdline load, often blocked on a password dialog) the
         // message pump can deliver COPYDATA opens. Match HandleOpenCmd: queue
         // them so they load after the current LoadDocument finishes, instead of
