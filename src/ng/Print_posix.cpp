@@ -185,7 +185,7 @@ static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<Selecti
     return c.SaveToFile(destPath);
 }
 
-// `output=<path>` of -print-settings, the only token this path understands
+// `docname=<name>` of -print-settings
 static TempStr DocNameFromSettingsTemp(Str settings) {
     StrVec list;
     Split(&list, settings, StrL(","), true);
@@ -197,6 +197,7 @@ static TempStr DocNameFromSettingsTemp(Str settings) {
     return {};
 }
 
+// `output=<path>` of -print-settings
 static TempStr OutputPathFromSettingsTemp(Str settings) {
     if (len(settings) == 0) {
         return {};

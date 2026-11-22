@@ -53,10 +53,7 @@
 
 #include "SumatraLog.h"
 
-#if OS_WIN
-// clang-format on
-
-#else
+#if !OS_WIN
 // Map the selected UI language when the OS has no Windows LANGID API.
 static const char* gLangCodeToName =
     "en\0English\0zh\0Chinese (Simplified)\0tw\0Chinese (Traditional)\0cn\0Chinese (Simplified)\0de\0German\0"
