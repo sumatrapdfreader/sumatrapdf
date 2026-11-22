@@ -1,5 +1,5 @@
 // The last SumatraPDF Web list is kept on disk and listed again once stale
-// (docs/server-sync-plan.md, phase 4):
+// (AGENTS.md, "SumatraPDF Web"):
 //   1. a list is shown and cached; a list older than the re-list interval is
 //      fetched again when the window is activated
 //   2. with the server failing, the cached list still shows

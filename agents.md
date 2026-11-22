@@ -211,6 +211,34 @@ that repo's main, run `bun cmd/update-dist.ts` there, then vendor here with
 `bun cmd/ng-update-gpui.ts`. The updater records the dist commit in
 `ext/gpui/VERSION.txt`; `-commit <sha>` selects a revision.
 
+## SumatraPDF Web (server files)
+
+Both apps show the linked account's files on the home page; the logic is
+shared in `src/shared/ServerFiles.cpp` (list, badges, upload / delete),
+`ContentHash.cpp` (hashes) and `SumatraPDFWebCommon.cpp` (HTTP). The server is
+`../hack/webapps/sumatra-web` (`server/store_files.go`): content stored once per
+sha1, `GET /api/files` lists `name, size, sha1, uploadedAt`.
+
+```
+GET /api/files ──> list ──> <appdata>/SumatraPDF-web-files.txt (cache, per account)
+history file ──> same size as a server file? ──> background sha1 ──> FileState.ContentSha1
+match: sha1 equal = Server; same name, other sha1 = Server ≠; not hashed yet = name + size
+```
+
+- `FileState.ContentSha1` is `<sha1> <size> <mtime>`, valid while the file keeps
+  that size and mtime; uploads and downloads store it too.
+- Hashing runs on a coordinator thread with one I/O thread per file. A file
+  with no progress for 5 s is cancelled and abandoned, and its share (`X:`,
+  `\\server\share`, first two posix path parts) is skipped for 10 minutes.
+- The list is fetched on the first home page, after a transfer, and again when
+  older than 5 minutes (home page layout, window activation). A failed fetch
+  keeps the last list unless the key was rejected.
+- Wasm doesn't hash or cache: its documents live in `/uploads` under their
+  server names.
+- Tests: `sumatrapdf-web-home`, `server-sync-hash`, `server-sync-match`,
+  `server-sync-cache` (a local server on port 9332, the allowed loopback origin);
+  `-dbg-control` `TestContentHash` exposes hash states and test hooks.
+
 ## C/C++ #include conventions
 
 We rely on a controlled include order rather than self-sufficient headers (this is the inverse of the common "own header first" advice). In a `.cpp`/`.c` file:

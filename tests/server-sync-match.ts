@@ -1,5 +1,5 @@
 // Local and SumatraPDF Web files match by content once hashed
-// (docs/server-sync-plan.md, phase 3):
+// (AGENTS.md, "SumatraPDF Web"):
 //   - a renamed copy of a server file gets the Server badge, and that server
 //     file isn't listed again as server-only
 //   - a file with a server file's name and size but other content is Server ≠

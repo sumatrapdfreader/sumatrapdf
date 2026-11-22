@@ -1,5 +1,5 @@
 // History files are hashed in the background to match SumatraPDF Web files by
-// content (docs/server-sync-plan.md, phase 2):
+// content (AGENTS.md, "SumatraPDF Web"):
 //   - a copy of a server file under another name gets hashed and stored
 //   - a file whose size no server file has isn't read
 //   - a stored hash whose size and mtime still match is reused, not recomputed
