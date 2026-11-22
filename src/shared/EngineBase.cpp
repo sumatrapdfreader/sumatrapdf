@@ -130,10 +130,7 @@ static bool ParseJsQuotedString(const char*& p, const char* end, str::Builder& b
             continue;
         }
         p += digits;
-        if (e == 'x') {
-            b.AppendChar((char)cp);
-            continue;
-        }
+        // \xNN is U+00NN, like \u00NN: >= 0x80 needs 2 UTF-8 bytes
         char utf8[4];
         int off = 0;
         str::Utf8Encode(utf8, off, cp);

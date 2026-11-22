@@ -386,6 +386,16 @@ void DocPropertiesTest() {
     utassert(str::Eq(PropNameTemp(DocProp::CreationDate), StrL("creationDate")));
 }
 
+void JsMenuTest() {
+    // \xNN is a code point, UTF-8 encoded like \u00NN
+    StrVec items;
+    Vec<int> levels;
+    utassert(ParseJsPopUpMenuItems(StrL("app.popUpMenu('caf\\xe9', 'a\\u00e9');"), items, levels));
+    utassert(len(items) == 2);
+    utassert(str::Eq(items[0], StrL("caf\xc3\xa9")));
+    utassert(str::Eq(items[1], StrL("a\xc3\xa9")));
+}
+
 void ParseFileArgsTest() {
     FileArgs* fa = ParseFileArgs(StrL("C:\\foo.pdf?page=4"));
     utassert(fa && str::Eq(fa->cleanPath, StrL("C:\\foo.pdf")) && fa->pageNumber == 4);
