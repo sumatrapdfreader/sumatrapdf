@@ -640,7 +640,6 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
     }
     path::Type pathType = path::GetType(fullPath);
     if (pathType == path::Type::None) {
-        auto* win = gWindows[0];
         ShowErrorLoadingNotification(win, fullPath, true);
         return;
     }
