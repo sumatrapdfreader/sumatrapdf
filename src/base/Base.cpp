@@ -1968,7 +1968,7 @@ bool EqIS(Str s1, Str s2) {
         if (i1 >= s1.len || i2 >= s2.len) {
             break;
         }
-        if (tolower(s1.s[i1]) != tolower(s2.s[i2])) {
+        if (tolower((u8)s1.s[i1]) != tolower((u8)s2.s[i2])) {
             return false;
         }
         i1++;
@@ -2007,7 +2007,7 @@ bool EqNI(Str s1, Str s2, int n) {
         return false;
     }
     for (int i = 0; i < n; i++) {
-        if (tolower(s1.s[i]) != tolower(s2.s[i])) {
+        if (tolower((u8)s1.s[i]) != tolower((u8)s2.s[i])) {
             return false;
         }
     }
@@ -2090,7 +2090,7 @@ int IndexOfI(Str s, Str toFind) {
     if (toFind.len <= 0) {
         return -1;
     }
-    char first = (char)tolower(toFind.s[0]);
+    char first = (char)tolower((u8)toFind.s[0]);
     if (!first) {
         return -1;
     }
@@ -2109,7 +2109,7 @@ int IndexOfI(Str s, Str toFind) {
     }
     if (asciiNeedle) {
         for (int off = 0; off < s.len && s.s[off]; off++) {
-            char c = (char)tolower(s.s[off]);
+            char c = (char)tolower((u8)s.s[off]);
             if (c == first && str::StartsWithI(Str(s.s + off, s.len - off), toFind)) {
                 return off;
             }

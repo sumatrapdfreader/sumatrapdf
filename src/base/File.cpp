@@ -301,7 +301,7 @@ static bool MatchWildcardsRec(Str fileName, Str filter) {
             return len(fileName) > 0 &&
                    MatchWildcardsRec(Str(fileName.s + 1, fileName.len - 1), Str(filter.s + 1, filter.len - 1));
         default:
-            return tolower(fileName.s[0]) == tolower(filter.s[0]) &&
+            return tolower((u8)fileName.s[0]) == tolower((u8)filter.s[0]) &&
                    MatchWildcardsRec(Str(fileName.s + 1, fileName.len - 1), Str(filter.s + 1, filter.len - 1));
     }
 }
@@ -921,7 +921,7 @@ bool IsSame(Str path1, Str path2) {
 
 bool HasVariableDriveLetter(Str path) {
     char root[] = R"(?:\)";
-    root[0] = (char)toupper(path.s[0]);
+    root[0] = (char)toupper((u8)path.s[0]);
     if (root[0] < 'A' || 'Z' < root[0]) {
         return false;
     }

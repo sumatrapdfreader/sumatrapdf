@@ -580,5 +580,9 @@ void BaseUtilTest() {
     utassert(ParseInt64(StrL("-9223372036854775809")) == 0);
     utassert(ParseInt64(StrL("-17")) == -17);
 
+    // bytes >= 0x80 must not reach tolower() as negative values
+    utassert(str::EqIS(StrL("a \xC3\xA9"), StrL("A\xC3\xA9")));
+    utassert(str::EqNI(StrL("\xC3\xA9X"), StrL("\xC3\xA9x"), 3));
+    utassert(str::IndexOfI(StrL("\xC3\xA9x"), StrL("X")) == 2);
     GeomTest();
 }

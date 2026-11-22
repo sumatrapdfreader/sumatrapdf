@@ -90,6 +90,7 @@ void FileUtilTest() {
     }
     utassert(!path::Match(StrL("C:\\file.pdf"), StrL("f??f.p?f")));
     utassert(!path::Match(StrL("C:\\.pdf"), StrL("?.pdf")));
+    utassert(path::Match(StrL("\xC3\xA9.pdf"), StrL("\xC3\xA9.PDF")));
     {
         TempStr path = path::JoinTemp(StrL("foo"), StrL("bar"));
         utassert(str::Eq(path, StrL("foo\\bar")));
