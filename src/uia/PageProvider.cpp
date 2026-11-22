@@ -65,7 +65,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Navigate(enum Navigat
 
     // disallow traverse if we are lingering
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     *pRetVal = nullptr;
@@ -122,7 +122,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_BoundingRectangle
     }
 
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     // some engines might not support GetPageInfo
@@ -143,7 +143,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_BoundingRectangle
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal) {
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     // let our parent to handle this
@@ -204,7 +204,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_Value(BSTR* pRetV
         return E_POINTER;
     }
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     Str pageContent = dm->GetEngine()->GetTextForPage(pageNum);

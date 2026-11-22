@@ -225,7 +225,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
         return E_POINTER;
     }
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     // properties that are simply TRUE for a document element
@@ -277,7 +277,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
         return E_POINTER;
     }
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, 1);
@@ -303,7 +303,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
         return E_POINTER;
     }
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     // return all pages' ranges that are even partially visible
@@ -342,7 +342,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
         return E_POINTER;
     }
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     // a client can pass any element (e.g. the Document itself), so only
@@ -368,7 +368,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(st
         return E_POINTER;
     }
     if (released || !dm) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     Point pt = HwndScreenToClient(canvasHwnd, Point((int)point.x, (int)point.y));
@@ -392,7 +392,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_DocumentRange
         return E_POINTER;
     }
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     SumatraUIAutomationTextRange* documentRange = new SumatraUIAutomationTextRange(this);
@@ -417,7 +417,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString
         return E_POINTER;
     }
     if (released) {
-        return E_FAIL;
+        return UIA_E_ELEMENTNOTAVAILABLE;
     }
 
     for (SumatraUIAutomationPageProvider* it = child_first; it; it = it->sibling_next) {
