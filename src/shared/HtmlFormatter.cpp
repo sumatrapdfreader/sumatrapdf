@@ -1351,6 +1351,121 @@ Vec<HtmlPage*>* HtmlFormatter::FormatAllPages(bool skipEmptyPages) {
     return pages;
 }
 
+#if OS_LINUX || OS_DARWIN
+static Pixmap* PixmapForHtml(Str data);
+#endif
+
+// what the cache keeps of an image: a GDI+ bitmap on Windows, the BGRA pixmap
+// cairo / Core Graphics draw from elsewhere
+static void* DecodeHtmlImage(Str data) {
+#if OS_WIN
+    return NewGdiplusBitmapFromPixmap(PixmapFromData(data));
+#elif OS_LINUX || OS_DARWIN
+    return PixmapForHtml(data);
+#else
+    return PixmapFromData(data);
+#endif
+}
+
+static void FreeHtmlImage(void* image) {
+#if OS_WIN
+    delete (Gdiplus::Bitmap*)image;
+#else
+    FreePixmap((Pixmap*)image);
+#endif
+}
+
+static i64 HtmlImageBytes(void* image) {
+    if (!image) {
+        return 0;
+    }
+#if OS_WIN
+    auto* bmp = (Gdiplus::Bitmap*)image;
+    return (i64)bmp->GetWidth() * bmp->GetHeight() * 4;
+#else
+    auto* px = (Pixmap*)image;
+    return (i64)px->stride * px->height;
+#endif
+}
+
+// decoded images past this are dropped, least recently drawn first
+constexpr i64 kHtmlImageCacheMaxBytes = 128LL * 1024 * 1024;
+
+struct HtmlCachedImage {
+    // the encoded bytes, which the document keeps while it is open
+    const char* data = nullptr;
+    int dataLen = 0;
+    // null: it doesn't decode
+    void* image = nullptr;
+    i64 bytes = 0;
+    u64 lastUse = 0;
+};
+
+struct HtmlImageCache {
+    Vec<HtmlCachedImage> images;
+    i64 totalBytes = 0;
+    u64 useCount = 0;
+    int nDecodes = 0;
+};
+
+HtmlImageCache* NewHtmlImageCache() {
+    return new HtmlImageCache();
+}
+
+void DeleteHtmlImageCache(HtmlImageCache* cache) {
+    if (!cache) {
+        return;
+    }
+    for (HtmlCachedImage& img : cache->images) {
+        FreeHtmlImage(img.image);
+    }
+    delete cache;
+}
+
+static void HtmlImageCacheMakeRoom(HtmlImageCache* cache, i64 bytes) {
+    while (cache->totalBytes + bytes > kHtmlImageCacheMaxBytes) {
+        int oldest = -1;
+        for (int i = 0; i < len(cache->images); i++) {
+            HtmlCachedImage& img = cache->images[i];
+            if (img.bytes > 0 && (oldest < 0 || img.lastUse < cache->images[oldest].lastUse)) {
+                oldest = i;
+            }
+        }
+        if (oldest < 0) {
+            return;
+        }
+        cache->totalBytes -= cache->images[oldest].bytes;
+        FreeHtmlImage(cache->images[oldest].image);
+        VecRemoveAt(cache->images, oldest);
+    }
+}
+
+// the decoded image for data, decoding it the first time; null if it doesn't decode
+static void* HtmlImageCacheGet(HtmlImageCache* cache, Str data) {
+    cache->useCount++;
+    for (HtmlCachedImage& img : cache->images) {
+        if (img.data == data.s && img.dataLen == len(data)) {
+            img.lastUse = cache->useCount;
+            return img.image;
+        }
+    }
+    void* image = DecodeHtmlImage(data);
+    cache->nDecodes++;
+    i64 bytes = HtmlImageBytes(image);
+    HtmlImageCacheMakeRoom(cache, bytes);
+    VecAppend(cache->images, HtmlCachedImage{data.s, len(data), image, bytes, cache->useCount});
+    cache->totalBytes += bytes;
+    return image;
+}
+
+bool HtmlImageCacheHas(HtmlImageCache* cache, Str data) {
+    return HtmlImageCacheGet(cache, data) != nullptr;
+}
+
+int HtmlImageCacheDecodes(HtmlImageCache* cache) {
+    return cache->nDecodes;
+}
+
 #if OS_WIN || OS_LINUX || OS_DARWIN
 // Draw text in one lock before shapes; GDI's GetHDC/ReleaseHDC is expensive.
 static void DrawHtmlText(PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX, float offY,
@@ -1388,7 +1503,7 @@ using Gdiplus::UnitPixel;
 using Gdiplus::Win32Error;
 
 void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Color textColor, bool* abortCookie) {
+                  float offY, bool showBbox, Color textColor, bool* abortCookie, HtmlImageCache* images) {
     Pen debugPen(Gdiplus::Color(255, 0, 0), 1);
     Pen linePen(Gdiplus::Color(0x5F, 0x4B, 0x32), 2.f);
     Pen linkPen(textColor);
@@ -1412,15 +1527,15 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
             status = g->DrawLine(rule ? &linePen : &linkPen, p1, p2);
             ReportIf(status != Ok);
         } else if (DrawInstrType::Image == i.type) {
-            // TODO: cache the bitmap somewhere (?)
-            Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(i.GetImage()));
+            Bitmap* owned = images ? nullptr : (Bitmap*)DecodeHtmlImage(i.GetImage());
+            Bitmap* bmp = images ? (Bitmap*)HtmlImageCacheGet(images, i.GetImage()) : owned;
             if (bmp) {
                 status = g->DrawImage(bmp, ToGdipRectF(bbox), 0, 0, (float)bmp->GetWidth(), (float)bmp->GetHeight(),
                                       UnitPixel);
                 // GDI+ sometimes seems to succeed in loading an image because it lazily decodes it
                 ReportIf(status != Ok && status != Win32Error);
             }
-            delete bmp;
+            delete owned;
         } else if (DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) {
             if (showBbox) {
                 status = g->DrawRectangle(&debugPen, ToGdipRectF(bbox));
@@ -1486,8 +1601,9 @@ static void HtmlSetColor(cairo_t* cairo, Color col) {
     cairo_set_source_rgb(cairo, r / 255.0, g / 255.0, b / 255.0);
 }
 
-static void HtmlDrawImage(cairo_t* cairo, Str data, RectF bbox) {
-    Pixmap* pixmap = PixmapForHtml(data);
+static void HtmlDrawImage(cairo_t* cairo, Str data, RectF bbox, HtmlImageCache* images) {
+    Pixmap* owned = images ? nullptr : PixmapForHtml(data);
+    Pixmap* pixmap = images ? (Pixmap*)HtmlImageCacheGet(images, data) : owned;
     if (!pixmap) {
         return;
     }
@@ -1503,7 +1619,7 @@ static void HtmlDrawImage(cairo_t* cairo, Str data, RectF bbox) {
         cairo_restore(cairo);
     }
     cairo_surface_destroy(surface);
-    FreePixmap(pixmap);
+    FreePixmap(owned);
 }
 
 #endif
@@ -1519,8 +1635,9 @@ static void HtmlSetColor(CGContextRef context, Color color) {
     CGContextSetRGBStrokeColor(context, r / 255.0, g / 255.0, b / 255.0, 1);
 }
 
-static void HtmlDrawImage(CGContextRef context, Str data, RectF bbox) {
-    Pixmap* pixmap = PixmapForHtml(data);
+static void HtmlDrawImage(CGContextRef context, Str data, RectF bbox, HtmlImageCache* images) {
+    Pixmap* owned = images ? nullptr : PixmapForHtml(data);
+    Pixmap* pixmap = images ? (Pixmap*)HtmlImageCacheGet(images, data) : owned;
     if (!pixmap) {
         return;
     }
@@ -1541,14 +1658,14 @@ static void HtmlDrawImage(CGContextRef context, Str data, RectF bbox) {
         CGContextRelease(bitmap);
     }
     CGColorSpaceRelease(colorSpace);
-    FreePixmap(pixmap);
+    FreePixmap(owned);
 }
 
 #endif
 
 #if OS_LINUX || OS_DARWIN
 void DrawHtmlPage(HtmlDrawContext context, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Color textColor, bool* abortCookie) {
+                  float offY, bool showBbox, Color textColor, bool* abortCookie, HtmlImageCache* images) {
     DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
 
     for (DrawInstr& i : *drawInstructions) {
@@ -1570,7 +1687,7 @@ void DrawHtmlPage(HtmlDrawContext context, PlatformTextRender* textDraw, Vec<Dra
             CGContextStrokePath(context);
 #endif
         } else if (DrawInstrType::Image == i.type) {
-            HtmlDrawImage(context, i.GetImage(), bbox);
+            HtmlDrawImage(context, i.GetImage(), bbox, images);
         } else if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && showBbox) {
             HtmlSetColor(context, kColRed);
 #if OS_LINUX

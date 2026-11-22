@@ -25,6 +25,14 @@
 #include "FileThumbnails.h"
 #include "HexViewCommon.h"
 #include "SumatraPDFWebCommon.h"
+#include "base/HtmlTags.h"
+#include "GumboHtmlParser.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
+#include "HtmlFormatter.h"
+#if OS_WIN
+#include "base/ScopedWin.h"
+#endif
 
 struct OpenDdeArgs {
     bool parsed = false;
@@ -760,4 +768,32 @@ void HttpTransferTest() {
     utassert(file::GetSize(part) < 0);
 
     file::Delete(dest);
+}
+
+// a 2x2 RGBA PNG
+static const u8 kTinyPng[] = {
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x02, 0x08, 0x06, 0x00, 0x00, 0x00, 0x72, 0xb6, 0x0d, 0x24, 0x00, 0x00, 0x00, 0x12, 0x49,
+    0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0xf8, 0xcf, 0xc0, 0xf0, 0x1f, 0x84, 0x19, 0xa0, 0xf4, 0x7f, 0x00, 0x43, 0xce,
+    0x07, 0xf9, 0xfa, 0x81, 0x4a, 0xfd, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+};
+
+// an ebook page render draws its images from the cache, decoding each once
+void HtmlImageCacheTest() {
+#if OS_WIN
+    // the cache keeps GDI+ bitmaps; test_util doesn't start GDI+ otherwise
+    ScopedGdiPlus gdiPlus;
+#endif
+    HtmlImageCache* cache = NewHtmlImageCache();
+    Str png((char*)kTinyPng, (int)sizeof(kTinyPng));
+    utassert(HtmlImageCacheHas(cache, png));
+    utassert(HtmlImageCacheHas(cache, png));
+    utassert(HtmlImageCacheDecodes(cache) == 1);
+
+    // what doesn't decode isn't tried again either
+    Str junk = StrL("not an image");
+    utassert(!HtmlImageCacheHas(cache, junk));
+    utassert(!HtmlImageCacheHas(cache, junk));
+    utassert(HtmlImageCacheDecodes(cache) == 2);
+    DeleteHtmlImageCache(cache);
 }

@@ -55,6 +55,7 @@ void PngSizeTest();
 void parseCommandsTest();
 void DocPropertiesTest();
 void JsMenuTest();
+void HtmlImageCacheTest();
 void ParseFileArgsTest();
 void ParseCommandLineTest();
 void RestrictedUseConfigTest();
@@ -442,6 +443,7 @@ static void SumatraPDF_UnitTests() {
     GhostButtonDisabledTest();
     DocPropertiesTest();
     JsMenuTest();
+    HtmlImageCacheTest();
     parseCommandsTest();
     colorTest();
     PngSizeTest();

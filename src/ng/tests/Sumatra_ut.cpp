@@ -48,6 +48,7 @@ void PngSizeTest();
 void parseCommandsTest();
 void DocPropertiesTest();
 void JsMenuTest();
+void HtmlImageCacheTest();
 void ParseFileArgsTest();
 void ParseCommandLineTest();
 void HexViewTest();
@@ -284,6 +285,7 @@ void SumatraPDF_UnitTests() {
 #endif
     DocPropertiesTest();
     JsMenuTest();
+    HtmlImageCacheTest();
     PageAspectViewTest();
     parseCommandsTest();
     colorTest();

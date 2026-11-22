@@ -266,15 +266,26 @@ struct HtmlFormatter {
     Vec<HtmlPage*>* FormatAllPages(bool skipEmptyPages = true);
 };
 
+// decoded images of one document, so a page render doesn't decode them again.
+// Not thread-safe: EngineEbook draws under its pagesAccess lock.
+struct HtmlImageCache;
+HtmlImageCache* NewHtmlImageCache();
+void DeleteHtmlImageCache(HtmlImageCache*);
+bool HtmlImageCacheHas(HtmlImageCache*, Str data);
+int HtmlImageCacheDecodes(HtmlImageCache*);
+
 #if OS_WIN
 void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr);
+                  float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr,
+                  HtmlImageCache* images = nullptr);
 #elif OS_LINUX
 struct _cairo;
 void DrawHtmlPage(struct _cairo* cairo, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr);
+                  float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr,
+                  HtmlImageCache* images = nullptr);
 #elif OS_DARWIN
 struct CGContext;
 void DrawHtmlPage(struct CGContext* context, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr);
+                  float offY, bool showBbox, Color textColor, bool* abortCookie = nullptr,
+                  HtmlImageCache* images = nullptr);
 #endif

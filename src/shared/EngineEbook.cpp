@@ -174,6 +174,8 @@ class EngineEbook : public EngineBase {
     // itself takes this lock) while a caller already holds it (RenderPage,
     // ExtractPageText, ...)
     RecursiveMutex pagesAccess;
+    // decoded images, so each page render doesn't decode them again; under pagesAccess
+    HtmlImageCache* imageCache = NewHtmlImageCache();
     Str sourceData;
     TocTree* tocTree = nullptr;
     bool tocBuilt = false;
@@ -262,6 +264,7 @@ EngineEbook::~EngineEbook() {
         DeleteVecMembers(*pages);
     }
     delete pages;
+    DeleteHtmlImageCache(imageCache);
 
     pagesAccess.Unlock();
     DestroyTocTree(tocTree);
@@ -449,7 +452,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     ScopedRecursiveMutex scope(&pagesAccess);
     PlatformTextRender* textDraw = CreateCairoTextRender(cairo);
     DrawHtmlPage(cairo, textDraw, GetHtmlPage(loc), pageBorder, pageBorder, false, kColBlack,
-                 cookie ? &cookie->abort : nullptr);
+                 cookie ? &cookie->abort : nullptr, imageCache);
     delete textDraw;
     cairo_surface_flush(surface);
     cairo_destroy(cairo);
@@ -497,7 +500,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     ScopedRecursiveMutex scope(&pagesAccess);
     PlatformTextRender* textDraw = CreateCoreTextRender(context);
     DrawHtmlPage(context, textDraw, GetHtmlPage(loc), pageBorder, pageBorder, false, kColBlack,
-                 cookie ? &cookie->abort : nullptr);
+                 cookie ? &cookie->abort : nullptr, imageCache);
     delete textDraw;
     CGContextFlush(context);
     CGContextRelease(context);
@@ -546,7 +549,7 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
 
     PlatformTextRender* textDraw = CreateGdiplusTextRender(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(loc), pageBorder, pageBorder, false, kColBlack,
-                 cookie ? &cookie->abort : nullptr);
+                 cookie ? &cookie->abort : nullptr, imageCache);
     delete textDraw;
     DeleteDC(hDC);
 
