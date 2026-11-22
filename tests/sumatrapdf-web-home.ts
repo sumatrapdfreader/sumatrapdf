@@ -7,7 +7,7 @@
 // Run: bun tests/sumatrapdf-web-home.ts [-ng] [--no-build]   (or via tests/run-almost-all.ts)
 
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { EXE, ROOT, USE_NG, cmdId, pollUntil, runStandalone, tmpPath, writeAppdata } from "./util.ts";
@@ -99,11 +99,19 @@ export async function testit(): Promise<void> {
   const src = join(ROOT, "tests", "issue-5871.pdf");
   const onServer = join(dir, kOnServer);
   const localOnly = join(dir, kLocalOnly);
+  // Files match by content, so each has its own: the server-only file and
+  // the local-only one differ from web-home-on-server.pdf by a byte.
+  const srcBytes = readFileSync(src);
+  const withByteFlipped = (i: number) => {
+    const b = Uint8Array.from(srcBytes);
+    b[i] = b[i]! ^ 0xff;
+    return b;
+  };
+  const serverOnlyBytes = withByteFlipped(100);
   copyFileSync(src, onServer);
-  copyFileSync(src, localOnly);
+  writeFileSync(localOnly, withByteFlipped(200));
 
   // name -> size and sha1; the server copy starts out with a different size
-  const srcBytes = readFileSync(src);
   const sha1 = (b: Uint8Array) => createHash("sha1").update(b).digest("hex");
   const files = new Map<string, number>([
     [kOnServer, statSync(onServer).size - 1],
@@ -111,7 +119,7 @@ export async function testit(): Promise<void> {
   ]);
   const sha1s = new Map<string, string>([
     [kOnServer, sha1(srcBytes.subarray(0, srcBytes.length - 1))],
-    [kServerOnly, sha1(srcBytes)],
+    [kServerOnly, sha1(serverOnlyBytes)],
   ]);
   const server = Bun.serve({
     port: kPort,
@@ -132,7 +140,7 @@ export async function testit(): Promise<void> {
         return Response.json({ ok: true });
       }
       if (url.pathname === "/api/file" && req.method === "GET") {
-        return files.has(name) ? new Response(srcBytes) : new Response("not found", { status: 404 });
+        return files.has(name) ? new Response(serverOnlyBytes) : new Response("not found", { status: 404 });
       }
       if (url.pathname === "/api/file" && req.method === "DELETE") {
         if (!files.delete(name)) {

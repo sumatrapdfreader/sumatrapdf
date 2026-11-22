@@ -535,6 +535,10 @@ void HomeView::OnEntryHover(HomeView* self, gp::Ctx* cx, const gp::HoverEvent* e
     if (size >= 0) {
         tip = fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
     }
+    TempStr serverNote = ServerNameNoteTemp(fs->filePath);
+    if (len(serverNote) > 0) {
+        tip = fmt("%s\n%s", tip, serverNote);
+    }
     HoverTooltipShow(cx, tip, h->entryBounds[i]);
 }
 

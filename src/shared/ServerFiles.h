@@ -7,8 +7,8 @@ struct FileState;
 void ServerFilesEnsureListed();
 void ServerFilesReset();
 bool ServerFilesListed();
-// a server file with the same name: same size, or a different size (edited
-// locally or elsewhere)
+// a server file with the same content (or, until it's hashed, the same name
+// and size), or one with the same name and different content
 enum class ServerFileState {
     None,
     Same,
@@ -16,6 +16,8 @@ enum class ServerFileState {
 };
 
 ServerFileState GetServerFileState(Str path, i64 localSize);
+TempStr ServerNameOfTemp(Str path);
+TempStr ServerNameNoteTemp(Str path);
 void ServerOnlyFileStates(Vec<FileState*>& out);
 bool IsServerOnlyFile(Str path);
 i64 ServerFileSize(Str path);

@@ -36,9 +36,15 @@
 #include "gui/WasmBridge.h"
 #endif
 
+struct ServerSha1 {
+    u8 v[kSha1Len]{};
+    bool has = false;
+};
+
 struct ServerFilesState {
     StrVec names;
     Vec<i64> sizes;
+    Vec<ServerSha1> sha1s;
     // names are the account's files
     bool listed = false;
     // a list was started for the current key
@@ -98,11 +104,16 @@ static void QueueHistoryHashes(HashScan scan) {
     QueueContentHashes(gSrv.sizes, MkFunc0Void(ServerFilesChanged));
 }
 
-static void FinishList(OnlineJobResult* res) {
-    gSrv.listId = 0;
+static void ClearServerList() {
     gSrv.names.Reset();
     VecReset(gSrv.sizes);
+    VecReset(gSrv.sha1s);
     gSrv.listed = false;
+}
+
+static void FinishList(OnlineJobResult* res) {
+    gSrv.listId = 0;
+    ClearServerList();
     DWORD lastStatus = 0;
     TempStr msg;
     if (OnlineJobFailed(res, &lastStatus, &msg)) {
@@ -118,6 +129,10 @@ static void FinishList(OnlineJobResult* res) {
     for (OnlineListedFile& f : parsed) {
         gSrv.names.Append(f.name);
         VecAppend(gSrv.sizes, f.size);
+        ServerSha1 sha;
+        memcpy(sha.v, f.sha1, sizeof(sha.v));
+        sha.has = f.hasSha1;
+        VecAppend(gSrv.sha1s, sha);
     }
     FreeOnlineFiles(parsed);
     gSrv.listed = true;
@@ -194,9 +209,7 @@ void ServerFilesEnsureListed() {
 
 // The key changed: forget the names, list again on the next home page.
 void ServerFilesReset() {
-    gSrv.names.Reset();
-    VecReset(gSrv.sizes);
-    gSrv.listed = false;
+    ClearServerList();
     gSrv.tried = false;
     gSrv.listId = 0;
     ServerFilesChanged();
@@ -206,17 +219,59 @@ bool ServerFilesListed() {
     return gSrv.listed && CanUseServer();
 }
 
-// localSize < 0: unknown, taken as the same
-ServerFileState GetServerFileState(Str path, i64 localSize) {
+// The server file path corresponds to, -1 if none:
+//   - its content's hash is known: the server file with that sha1 (preferring
+//     its name), else the one with its name, which then Differs
+//   - not known yet: the one with its name; a different size Differs
+// localSize < 0: unknown, taken as the same.
+static int MatchServerFile(Str path, i64 localSize, ServerFileState* stOut) {
+    *stOut = ServerFileState::None;
     if (!ServerFilesListed() || len(path) == 0) {
-        return ServerFileState::None;
+        return -1;
     }
-    int idx = gSrv.names.Find(path::GetBaseNameTemp(path));
-    if (idx < 0 || idx >= len(gSrv.sizes)) {
-        return ServerFileState::None;
+    Str name = path::GetBaseNameTemp(path);
+    int byName = gSrv.names.Find(name);
+
+    ContentHash h;
+    bool known = KnownContentHash(path, h);
+    if (known) {
+        int byContent = -1;
+        for (int i = 0; i < len(gSrv.sha1s); i++) {
+            if (!gSrv.sha1s[i].has || memcmp(gSrv.sha1s[i].v, h.sha1, kSha1Len) != 0) {
+                continue;
+            }
+            if (byContent < 0 || i == byName) {
+                byContent = i;
+            }
+        }
+        if (byContent >= 0) {
+            *stOut = ServerFileState::Same;
+            return byContent;
+        }
     }
-    bool differs = localSize >= 0 && localSize != gSrv.sizes[idx];
-    return differs ? ServerFileState::Differs : ServerFileState::Same;
+    if (byName < 0) {
+        return -1;
+    }
+    bool differs = localSize >= 0 && localSize != gSrv.sizes[byName];
+    if (known && gSrv.sha1s[byName].has) {
+        differs = true;
+    }
+    *stOut = differs ? ServerFileState::Differs : ServerFileState::Same;
+    return byName;
+}
+
+ServerFileState GetServerFileState(Str path, i64 localSize) {
+    ServerFileState st;
+    MatchServerFile(path, localSize, &st);
+    return st;
+}
+
+// the name of the server file path corresponds to (it may differ from path's
+// own when the content matched), empty if none
+TempStr ServerNameOfTemp(Str path) {
+    ServerFileState st;
+    int idx = MatchServerFile(path, -1, &st);
+    return idx >= 0 ? str::DupTemp(gSrv.names[idx]) : TempStr{};
 }
 
 static FileState* StandInFor(Str name) {
@@ -234,21 +289,40 @@ static FileState* StandInFor(Str name) {
     return fs;
 }
 
-// the account's files no history entry has the name of, in the server's order
+// The tooltip line for a file that is on the server under another name, empty
+// otherwise: "On SumatraPDF Web as notes.pdf".
+TempStr ServerNameNoteTemp(Str path) {
+    TempStr name = ServerNameOfTemp(path);
+    if (len(name) == 0 || str::Eq(name, path::GetBaseNameTemp(path))) {
+        return {};
+    }
+    return fmt(Tr("On SumatraPDF Web as %s").s, name);
+}
+
+// the account's files no history file corresponds to (by content, else by
+// name), in the server's order
 void ServerOnlyFileStates(Vec<FileState*>& out) {
     if (!ServerFilesListed()) {
         return;
     }
     Vec<FileState*> history;
     FileHistoryGetRecentlyOpenedOrder(history);
-    StrVec localNames;
+    Vec<bool> covered;
+    for (int i = 0; i < len(gSrv.names); i++) {
+        VecAppend(covered, false);
+    }
     for (FileState* fs : history) {
-        if (fs && len(fs->filePath) > 0) {
-            localNames.Append(path::GetBaseNameTemp(fs->filePath));
+        if (!fs || len(fs->filePath) == 0) {
+            continue;
+        }
+        ServerFileState st;
+        int idx = MatchServerFile(fs->filePath, -1, &st);
+        if (idx >= 0) {
+            covered[idx] = true;
         }
     }
     for (int i = 0; i < len(gSrv.names); i++) {
-        if (localNames.Contains(gSrv.names[i])) {
+        if (covered[i]) {
             continue;
         }
         FileState* fs = StandInFor(gSrv.names[i]);
@@ -379,8 +453,8 @@ static void StartDelete(MainWindow* win, Str path) {
     if (!CanStartTransfer(win)) {
         return;
     }
-    Str name = path::GetBaseNameTemp(path);
-    if (!gSrv.names.Contains(name)) {
+    TempStr name = ServerNameOfTemp(path);
+    if (len(name) == 0) {
         return;
     }
     TempStr err;
@@ -404,13 +478,14 @@ static void DeleteAnswered(ServerAsk* ask, bool yes) {
     StartDelete(win, path);
 }
 
-// a server delete can't be undone (a local one goes to the trash), so ask first
+// A server delete can't be undone (a local one goes to the trash), so ask
+// first. It deletes the server file path corresponds to, whatever its name.
 void DeleteFileFromServer(MainWindow* win, Str path) {
     if (!CanStartTransfer(win)) {
         return;
     }
-    Str name = path::GetBaseNameTemp(path);
-    if (!gSrv.names.Contains(name)) {
+    TempStr name = ServerNameOfTemp(path);
+    if (len(name) == 0) {
         return;
     }
     auto* ask = NewServerAsk(win, path);

@@ -3322,6 +3322,10 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
     if (size >= 0) {
         tip = fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
     }
+    TempStr serverNote = ServerNameNoteTemp(fs->filePath);
+    if (len(serverNote) > 0) {
+        tip = fmt("%s\n%s", tip, serverNote);
+    }
 
     HWND hwnd = win->hwndCanvas;
     Rect outline = HomeSelectionOutlineRect(t);
