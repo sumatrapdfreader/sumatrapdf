@@ -56,7 +56,11 @@ export async function testit(): Promise<void> {
   const dir = tmpPath("issue-6224");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
-  const pdf = join(dir, "issue-6224.pdf");
+  // The settings file is openable. Page Down at the end of the document opens
+  // the next file in the folder, so the PDF has to be the only file there.
+  const docs = join(dir, "docs");
+  mkdirSync(docs);
+  const pdf = join(docs, "issue-6224.pdf");
   writeFileSync(pdf, buildPdf(), "latin1");
   const settingsPath = join(dir, "SumatraPDF-settings.txt");
   writeFileSync(
