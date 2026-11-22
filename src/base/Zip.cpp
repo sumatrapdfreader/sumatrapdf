@@ -317,6 +317,7 @@ Str Ungzip(const Str& d, int maxSize) {
             u8* dataUncr2 = (u8*)realloc(dataUncr, newLen + 2);
             if (!dataUncr2) {
                 free((void*)dataUncr);
+                inflateEnd(&strm);
                 return {};
             }
             dataUncr = dataUncr2;
