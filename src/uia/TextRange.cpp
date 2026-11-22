@@ -417,11 +417,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
         return S_OK;
     }
 
-    // Format: what is a "format" anyway?
-    if (textUnit == TextUnit_Character || textUnit == TextUnit_Format) {
+    if (textUnit == TextUnit_Character) {
         // a degenerate range must come back holding one character, or a screen
         // reader walking the document character by character reads nothing
-        if (textUnit == TextUnit_Character && IsEmptyRange()) {
+        if (IsEmptyRange()) {
             if (endGlyph < GetPageGlyphCount(endPage)) {
                 endGlyph++;
             } else if (endPage < GetPageCount()) {
@@ -430,7 +429,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
             }
         }
         return S_OK;
-    } else if (textUnit == TextUnit_Word) {
+    } else if (textUnit == TextUnit_Word || textUnit == TextUnit_Format) {
+        // Format isn't supported: UIA falls back to the next larger unit, Word
         // select current word at start endpoint
         int word_beg = FindPreviousWordEndpoint(startPage, startGlyph);
         int word_end = FindNextWordEndpoint(startPage, startGlyph);

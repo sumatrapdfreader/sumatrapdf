@@ -10,7 +10,7 @@
 
 import { writeFileSync } from "node:fs";
 import { IS_WIN } from "./host.ts";
-import { makeLinesPdf, runPowerShell, runStandalone, tmpPath } from "./util.ts";
+import { makeLinesPdf, runPowerShell, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 
 const kWord = "Zanzibar";
@@ -97,6 +97,22 @@ function checkPages(pages: UiaPage[]): void {
   }
 }
 
+// Text of a degenerate range at the document start expanded to `unit`.
+function expandAtStart(frame: number, unit: string): string {
+  const res = runUia(`
+$root = $A::FromHandle([IntPtr]${frame})
+$cond = New-Object System.Windows.Automation.PropertyCondition($A::AutomationIdProperty, 'Document')
+$doc = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $cond)
+$tp = $doc.GetCurrentPattern([System.Windows.Automation.TextPattern]::Pattern)
+$r = $tp.DocumentRange.Clone()
+$ep = [System.Windows.Automation.Text.TextPatternRangeEndpoint]
+$r.MoveEndpointByRange($ep::End, $r, $ep::Start)
+$r.ExpandToEnclosingUnit([System.Windows.Automation.Text.TextUnit]::${unit})
+$out = @{ text = $r.GetText(-1) }
+`);
+  return res.text ?? "";
+}
+
 // orig's StartPageProvider: the canvas's one child when no document is open
 function readStartPage(frame: number): string {
   const res = runUia(`
@@ -149,6 +165,17 @@ export async function testit(): Promise<void> {
       throw new Error(`uia-document-text: selection before selecting: ${JSON.stringify(before.selection)}`);
     }
     checkPages(before.pages);
+
+    // Format isn't a supported unit, so it expands like the next larger one, Word
+    if (!USE_NG) {
+      const word = expandAtStart(frame, "Word");
+      const format = expandAtStart(frame, "Format");
+      if (word === "" || format !== word) {
+        throw new Error(
+          `uia-document-text: Format expanded to ${JSON.stringify(format)}, Word to ${JSON.stringify(word)}`,
+        );
+      }
+    }
 
     await client.seedTextSelection(1);
     const after = readUiaDocument(frame, true);
