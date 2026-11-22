@@ -1098,7 +1098,10 @@ void CanvasHideScrollbars(MainWindow* win) {
 }
 
 int CanvasScrollPosV(MainWindow* win) {
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!win) {
+        return 0;
+    }
+    DisplayModel* dm = win->AsFixed();
     if (dm && dm->ScrollFollowsRotation()) {
         return dm->ContentScrollPos();
     }
