@@ -17,8 +17,6 @@ struct DirIterEntry {
     FILETIME modificationTime{};
     bool isDir = false;
     bool isFile = false;
-    bool stopTraversal = false;
-    bool fileMatches = false;
 };
 
 struct DirIter {

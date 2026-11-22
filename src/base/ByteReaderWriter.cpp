@@ -75,65 +75,6 @@ u32 BitReader::Peek(int nBits) {
 
 // --- ByteReader
 
-// Unpacks a structure from the data according to the given format
-// e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
-bool ByteReader::Unpack(void* strct, int size, Str format, int off, bool isBE) const {
-    if (::len(format) == 0) {
-        return false;
-    }
-    int repeat = 0;
-    int idx = 0;
-    for (int i = 0; i < format.len; i++) {
-        char c = format.s[i];
-        if (isdigit((u8)c)) {
-            repeat = ParseInt(Str(format.s + i, format.len - i));
-            for (i++; i < format.len && isdigit((u8)format.s[i]); i++) {
-                ;
-            }
-            if (i >= format.len) {
-                break;
-            }
-            c = format.s[i];
-        }
-        switch (c) {
-            case 'b':
-                if (off + idx + 1 > len || idx + 1 > size) {
-                    return false;
-                }
-                *(u8*)((u8*)strct + idx) = UInt8(off + idx);
-                idx += 1;
-                break;
-            case 'w':
-                if (off + idx + 2 > len || idx + 2 > size) {
-                    return false;
-                }
-                *(u16*)((u8*)strct + idx) = UInt16(off + idx, isBE);
-                idx += 2;
-                break;
-            case 'd':
-                if (off + idx + 4 > len || idx + 4 > size) {
-                    return false;
-                }
-                *(u32*)((u8*)strct + idx) = UInt32(off + idx, isBE);
-                idx += 4;
-                break;
-            case 'q':
-                if (off + idx + 8 > len || idx + 8 > size) {
-                    return false;
-                }
-                *(u64*)((u8*)strct + idx) = UInt64(off + idx, isBE);
-                idx += 8;
-                break;
-            default:
-                return false;
-        }
-        if (--repeat > 0) {
-            i--;
-        }
-    }
-    return idx == size;
-}
-
 ByteReader::ByteReader(Str data) : d((const u8*)data.s), len(data.len) {}
 
 ByteReader::ByteReader(const u8* data, int n) : d(data), len(n) {}
@@ -275,12 +216,6 @@ const u8* ByteReader::Find(int off, u8 byte) const {
         return nullptr;
     }
     return (const u8*)memchr(d + off, byte, (size_t)(len - off));
-}
-
-// Unpacks a structure from the data according to the given format
-// e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
-bool ByteReader::Unpack(void* strct, int size, Str format, bool isBE, int off) const {
-    return Unpack(strct, size, format, off, isBE);
 }
 
 u16 UInt16BE(const u8* d) {

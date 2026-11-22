@@ -24,7 +24,5 @@ struct SimpleArchive {
 bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* archiveOut);
 int GetIdxFromName(SimpleArchive* archive, Str name);
 u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* a);
-u8* GetFileDataByName(SimpleArchive* archive, Str fileName, Arena* a);
-bool ExtractFiles(Str archivePath, Str dstDir, Str* files, Arena* a);
 
 } // namespace lzma

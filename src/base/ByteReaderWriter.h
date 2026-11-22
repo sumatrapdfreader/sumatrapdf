@@ -23,8 +23,6 @@ struct ByteReader {
     int off = 0;
     bool ok = true;
 
-    bool Unpack(void* strct, int size, Str format, int off, bool isBE) const;
-
     explicit ByteReader(Str data);
     ByteReader(const u8* data, int n);
 
@@ -56,7 +54,6 @@ struct ByteReader {
     bool IsOk() const;
 
     const u8* Find(int off, u8 byte) const;
-    bool Unpack(void* strct, int size, Str format, bool isBE, int off = 0) const;
 };
 
 u16 UInt16BE(const u8* d);

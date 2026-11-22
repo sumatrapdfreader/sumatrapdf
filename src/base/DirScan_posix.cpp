@@ -67,11 +67,6 @@ void AdvanceDirIter(DirIter::iterator* it, int n) {
     if (it->didFinish) {
         return;
     }
-    if (it->data.stopTraversal) {
-        // could have been set by user accessing prev traversal
-        it->didFinish = true;
-        return;
-    }
 
     bool includeFiles = it->di->includeFiles;
     bool includeDirs = it->di->includeDirs;
