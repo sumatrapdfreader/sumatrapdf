@@ -2256,9 +2256,9 @@ static void ApplyPrintSettings(Printer* printer, Str settings, int pageCount, Ve
             devMode->dmPaperSize = GetPaperKind(s);
             devMode->dmFields |= DM_PAPERSIZE;
         } else if (str::TrimPrefixI(s, StrL("output="))) {
-            printer->output = str::Dup(s);
+            str::ReplaceWithCopy(&printer->output, s);
         } else if (str::TrimPrefixI(s, StrL("docname="))) {
-            printer->docName = str::Dup(s);
+            str::ReplaceWithCopy(&printer->docName, s);
         } else if (str::EqI(s, kIgnorePdfPrintSettingsToken)) {
             // handled before ApplyPrintSettings (see PrintFile2); ignore here
         }
