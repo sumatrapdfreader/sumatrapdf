@@ -89,6 +89,7 @@ struct OnlineVerifyResult {
 
 bool ValidUploadName(Str name);
 bool IsOnlineApiKey(Str s);
+TempStr OnlineAccountTemp();
 void FreeOnlineFiles(Vec<OnlineListedFile>& v);
 bool ParseOnlineFiles(Str body, Vec<OnlineListedFile>& out);
 TempStr OnlineLoginUrlTemp();

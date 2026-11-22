@@ -3366,6 +3366,9 @@ void HomePageOnWindowActivate(MainWindow* win, bool active) {
     if (!win) {
         return;
     }
+    if (active && win->IsCurrentTabAbout()) {
+        ServerFilesEnsureListed();
+    }
     if (!active || IsIconic(win->hwndFrame)) {
         // Also when the frame is iconic: activate can fire while minimized and
         // ClientToScreen then pins the tip at the top-left of the desktop (#5928).

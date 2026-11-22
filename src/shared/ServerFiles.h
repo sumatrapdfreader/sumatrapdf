@@ -6,6 +6,7 @@ struct FileState;
 
 void ServerFilesEnsureListed();
 void ServerFilesReset();
+void SetServerRelistMsForTesting(int ms);
 bool ServerFilesListed();
 // a server file with the same content (or, until it's hashed, the same name
 // and size), or one with the same name and different content

@@ -76,6 +76,7 @@
 #include "gui/NavFilesUI.h"
 #include "gui/ToolWindow.h"
 #include "HomePage.h"
+#include "ServerFiles.h"
 #include "DocumentProperties.h"
 #include "TabGroupsManage.h"
 #include "Annotation.h"
@@ -3415,6 +3416,14 @@ static void CheckMinimized(MainWindow* win) {
     }
 }
 
+// orig's HomePageOnWindowActivate: a stale SumatraPDF Web list is fetched again
+static void OnWindowActivation(void* data, gp::Window*, bool active) {
+    auto* win = (MainWindow*)data;
+    if (active && IsMainWindowValidAndNotClosing(win) && win->IsCurrentTabAbout()) {
+        ServerFilesEnsureListed();
+    }
+}
+
 static void OnWindowBounds(void* data, gp::Window*, gp::WindowBoundsEvent ev) {
     auto* win = (MainWindow*)data;
     if (ev == gp::WindowBoundsEvent::MinimizedChanged && IsMainWindowValidAndNotClosing(win)) {
@@ -3947,6 +3956,7 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH, bool hiddenUn
     VecAppend(gWindows, win);
     gp::WindowOnShouldClose(gw, OnWindowShouldClose, win);
     gp::WindowOnBoundsChanged(gw, OnWindowBounds, win);
+    gp::WindowOnActivationChanged(gw, OnWindowActivation, win);
     view->win = win;
     view->menuBarState = gp::EntityNewState<gpc::AppMenuBarState>(app);
 

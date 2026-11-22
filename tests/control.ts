@@ -197,8 +197,9 @@ export enum ControlCommand {
   // [action, word]: "word <w>" screen center of a word on page 1, "state" the
   // touch selection handles
   TestTouchSel = 174,
-  // ["status"] or ["hooks", stallMs, delayMs, pathMatch]: content hashes of
-  // history files, one "status=<state> path=<path>" line each
+  // ["status"] or ["hooks", stallMs, delayMs, pathMatch, relistMs]: content
+  // hashes of history files, one "status=<state> path=<path>" line each; the
+  // hooks also set how soon SumatraPDF Web files are listed again
   TestContentHash = 175,
 }
 

@@ -350,6 +350,7 @@ import { testit as sumatrapdfWebDialog } from "./sumatrapdf-web-dialog.ts";
 import { testit as sumatrapdfWebHome } from "./sumatrapdf-web-home.ts";
 import { testit as serverSyncHash } from "./server-sync-hash.ts";
 import { testit as serverSyncMatch } from "./server-sync-match.ts";
+import { testit as serverSyncCache } from "./server-sync-cache.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue814 } from "./issue-814.ts";
 import { testit as issue1422 } from "./issue-1422.ts";
@@ -670,6 +671,7 @@ export const tests: NamedTest[] = [
   ["sumatrapdf-web-home", sumatrapdfWebHome],
   ["server-sync-hash", serverSyncHash],
   ["server-sync-match", serverSyncMatch],
+  ["server-sync-cache", serverSyncCache],
   ["ctx-menu-pick", ctxMenuPick],
   ["cli-images", cliImages],
   ["issue-1139", issue1139],

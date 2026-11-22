@@ -49,6 +49,10 @@ struct ServerFilesState {
     bool listed = false;
     // a list was started for the current key
     bool tried = false;
+    // when the last list was started
+    u64 listStartedMs = 0;
+    // the disk cache was looked at for the current key
+    bool cacheLoaded = false;
     u32 listId = 0;
     u32 transferId = 0;
     Str transferName;
@@ -56,6 +60,10 @@ struct ServerFilesState {
 };
 
 static ServerFilesState gSrv;
+
+// a list older than this is fetched again (another device may have changed it)
+constexpr u64 kRelistMs = 5ULL * 60 * 1000;
+static u64 gRelistMs = kRelistMs;
 
 // stand-ins for server-only files, by name. Never freed: the home page caches
 // thumbnails by FileState*.
@@ -111,21 +119,19 @@ static void ClearServerList() {
     gSrv.listed = false;
 }
 
-static void FinishList(OnlineJobResult* res) {
-    gSrv.listId = 0;
-    ClearServerList();
-    DWORD lastStatus = 0;
-    TempStr msg;
-    if (OnlineJobFailed(res, &lastStatus, &msg)) {
-        logf("ServerFiles: list failed: %s\n", msg);
-        ServerFilesChanged();
-        return;
-    }
+// The last list is kept on disk, so the badges show at startup and offline:
+// "<origin> <user id>" (OnlineAccountTemp), then the /api/files JSON.
+static TempStr ServerListCachePathTemp() {
+    return GetPathInAppDataDirTemp(StrL("SumatraPDF-web-files.txt"));
+}
+
+// Makes body (the /api/files JSON) the server list. False if it doesn't parse.
+static bool ApplyServerList(Str body) {
     Vec<OnlineListedFile> parsed;
-    if (!ParseOnlineFiles(res->body, parsed)) {
-        ServerFilesChanged();
-        return;
+    if (!ParseOnlineFiles(body, parsed)) {
+        return false;
     }
+    ClearServerList();
     for (OnlineListedFile& f : parsed) {
         gSrv.names.Append(f.name);
         VecAppend(gSrv.sizes, f.size);
@@ -138,6 +144,62 @@ static void FinishList(OnlineJobResult* res) {
     gSrv.listed = true;
     ForgetContentHashChecks();
     QueueHistoryHashes(HashScan::Now);
+    return true;
+}
+
+static void SaveServerListCache(Str body) {
+    TempStr account = OnlineAccountTemp();
+    TempStr path = ServerListCachePathTemp();
+    if (len(account) == 0 || len(path) == 0) {
+        return;
+    }
+    file::WriteFile(path, str::JoinTemp(account, StrL("\n"), body));
+}
+
+// once per key: the cached list, if it is this account's
+static void LoadServerListCache() {
+    if (gSrv.cacheLoaded || gSrv.listed) {
+        return;
+    }
+    gSrv.cacheLoaded = true;
+    TempStr account = OnlineAccountTemp();
+    TempStr path = ServerListCachePathTemp();
+    if (len(account) == 0 || len(path) == 0) {
+        return;
+    }
+    Str data = file::ReadFile(path);
+    if (!data.s) {
+        return;
+    }
+    AutoFree<char> dataFree(data.s);
+    int nl = str::IndexOfChar(data, '\n');
+    if (nl < 0 || !str::Eq(Str(data.s, nl), account)) {
+        return;
+    }
+    if (ApplyServerList(Str(data.s + nl + 1, len(data) - nl - 1))) {
+        logf("ServerFiles: showing the cached list until a fresh one arrives\n");
+        // posted: this runs while the home page lays out
+        uitask::Post(MkFunc0Void(ServerFilesChanged), "ServerFilesCached");
+    }
+}
+
+static void FinishList(OnlineJobResult* res) {
+    gSrv.listId = 0;
+    DWORD lastStatus = 0;
+    TempStr msg;
+    if (OnlineJobFailed(res, &lastStatus, &msg)) {
+        logf("ServerFiles: list failed: %s\n", msg);
+        // a rejected key: what we had is not ours to show; otherwise (offline)
+        // keep showing the last list
+        if (lastStatus == kHttpStatusUnauthorized) {
+            ClearServerList();
+        }
+        ServerFilesChanged();
+        return;
+    }
+    if (ApplyServerList(res->body)) {
+        SaveServerListCache(res->body);
+    }
     ServerFilesChanged();
 }
 
@@ -145,6 +207,7 @@ static void StartList() {
     if (gSrv.listId != 0 || !CanUseServer()) {
         return;
     }
+    gSrv.listStartedMs = GetTickCount64();
     TempStr err;
     if (!StartOnlineList(ServerToken(), &gSrv.listId, MkFunc1Void<OnlineJobResult*>(ServerJobDone), &err)) {
         gSrv.listId = 0;
@@ -195,22 +258,36 @@ static void StartListAsync(void*) {
     StartList();
 }
 
-// Called while the home page is built: starts the list from the message loop,
-// not the build (wasm runs the request inline).
+// Called while the home page is built (and, in orig, when a window is
+// activated): shows the cached list, then fetches it, again once it's older
+// than gRelistMs. The fetch starts from the message loop, not the build (wasm
+// runs the request inline).
 void ServerFilesEnsureListed() {
     SaveKnownContentHashes();
+    if (!CanUseServer()) {
+        return;
+    }
+    LoadServerListCache();
     QueueHistoryHashes(HashScan::IfDue);
-    if (gSrv.tried || !CanUseServer()) {
+    bool stale = gSrv.listId == 0 && GetTickCount64() - gSrv.listStartedMs >= gRelistMs;
+    if (gSrv.tried && !stale) {
         return;
     }
     gSrv.tried = true;
+    gSrv.listStartedMs = GetTickCount64();
     uitask::Post(MkFunc0<void>(StartListAsync, nullptr), "ServerFilesList");
+}
+
+// test hook: list again after ms instead of kRelistMs (0 restores it)
+void SetServerRelistMsForTesting(int ms) {
+    gRelistMs = ms > 0 ? (u64)ms : kRelistMs;
 }
 
 // The key changed: forget the names, list again on the next home page.
 void ServerFilesReset() {
     ClearServerList();
     gSrv.tried = false;
+    gSrv.cacheLoaded = false;
     gSrv.listId = 0;
     ServerFilesChanged();
 }

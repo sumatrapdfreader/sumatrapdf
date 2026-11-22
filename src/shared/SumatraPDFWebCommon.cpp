@@ -164,6 +164,17 @@ static Str OnlineOrigin() {
     return known ? server : kOnlineProdOrigin;
 }
 
+// "<origin> <user id>" of the saved key, which a cached file list belongs to;
+// empty without a key (and in wasm, which uses its host site's session)
+TempStr OnlineAccountTemp() {
+    if (OS_WASM || !gSettings || !IsOnlineApiKey(gSettings->onlineApiKey)) {
+        return {};
+    }
+    // so_<10 char user id>_<secret>
+    Str userId = Str(gSettings->onlineApiKey.s + 3, 10);
+    return fmt("%s %s", OnlineOrigin(), userId);
+}
+
 // The origins above and nothing else: no user info, no other host or port.
 static bool UrlAllowed(Str url) {
     return OnlineURLAllowed(url);

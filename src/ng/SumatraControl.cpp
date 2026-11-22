@@ -48,6 +48,7 @@
 #include "CommandAvailability.h"
 #include "Menu.h"
 #include "ContentHash.h"
+#include "ServerFiles.h"
 #include "AppSettings.h"
 #include "Flags.h"
 #if OS_WIN
@@ -772,8 +773,9 @@ enum class ControlCmd : u16 {
     TestSetSetting = 173,
     // [action, word]: touch selection probe (TouchSelResultTemp)
     TestTouchSel = 174,
-    // ["status"] or ["hooks", stallMs, delayMs, pathMatch]: the content hashes
-    // of history files (ContentHashStatusTemp), or their test hooks
+    // ["status"] or ["hooks", stallMs, delayMs, pathMatch, relistMs]: the
+    // content hashes of history files (ContentHashStatusTemp), or the test hooks
+    // of the hashing and of re-listing SumatraPDF Web files
     TestContentHash = 175,
     // [action, pageNo, x, y, length, unit]: drives the Measure tool
     TestMeasurement = 159,
@@ -2159,6 +2161,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 IntArg(req, 1, stallMs);
                 IntArg(req, 2, delayMs);
                 SetContentHashTestHooks(stallMs, delayMs, StringArg(req, 3));
+                i32 relistMs = 0;
+                IntArg(req, 4, relistMs);
+                SetServerRelistMsForTesting(relistMs);
             }
             AppendTestResult(req, 0, ContentHashStatusTemp());
             break;
