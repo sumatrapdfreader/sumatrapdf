@@ -647,7 +647,6 @@ static gp::El* BuildChip(MainWindow* win, gp::Ctx* cx, StripGroup* g) {
 
 static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     TabsUI* ui = Ui(win);
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     WindowTab* tab = win->GetTab(idx);
     // while the Ctrl+Tab list is open it previews the tab it points at, as
     // orig's TabsCtrl::SetHighlighted does

@@ -3837,14 +3837,11 @@ static void DeleteCurrentFile(MainWindow* win) {
 #if OS_WIN
 // the .lnk the shortcut dialog is about to write
 struct LnkShortcutCtx {
-    MainWindow* win = nullptr;
-    Str docPath; // owned
-    Str args;    // owned
-    Str desc;    // owned
+    Str args; // owned
+    Str desc; // owned
 };
 
 static void DeleteLnkShortcutCtx(LnkShortcutCtx* c) {
-    str::Free(c->docPath);
     str::Free(c->args);
     str::Free(c->desc);
     delete c;
@@ -3895,8 +3892,6 @@ static void CreateLnkShortcut(MainWindow* win) {
     TempStr label = ctrl->GetPageLabeTemp(ss.page);
 
     auto* c = new LnkShortcutCtx();
-    c->win = win;
-    c->docPath = str::Dup(path);
     c->args = str::Dup(fmt("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode, zoomVirtual,
                            (int)ss.x, (int)ss.y));
     c->desc = str::Dup(fmt(Tr("Bookmark shortcut to page %s of %s").s, label, path));

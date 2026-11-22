@@ -36,7 +36,6 @@ gp::Rgba ThemeGpuiCanvasBg() {
 // orig's UpdateGuiColorsFromTheme(), slot for slot, onto gpui's theme fields
 static void FillTheme(gp::Theme* t) {
     Color text = ThemeWindowTextColor();
-    Color disabled = ThemeWindowTextDisabledColor();
     Color darker = ThemeWindowDarkerTextColor();
     Color link = ThemeWindowLinkColor();
     // what dialogs, side panels and the chrome around the document put their
@@ -167,7 +166,6 @@ static void FillTheme(gp::Theme* t) {
 
     // ThemeWindowTextDisabledColor() has no slot of its own in gpui: a
     // disabled element is drawn with mutedFg or with the element's own opacity
-    (void)disabled;
 }
 
 void ThemeStartPlatformColors() {}
