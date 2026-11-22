@@ -207,7 +207,7 @@ MainWindow::~MainWindow() {
     ShutdownAIChatForMainWindow(this);
     auto tabs = Tabs();
     DeleteVecMembers(tabs);
-    {
+    if (tabsCtrl) {
         TabsCtrl* tabsCtrlToDelete = tabsCtrl;
         logf("~MainWindow: destroy tabsCtrl: 0x%p, HWND: 0x%p\n", tabsCtrlToDelete, tabsCtrlToDelete->hwnd);
         // Tab close can re-enter comctl32 subclass dispatch while unwinding
