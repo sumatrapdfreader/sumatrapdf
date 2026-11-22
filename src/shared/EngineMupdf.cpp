@@ -6702,7 +6702,14 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    fz_link* link = fz_load_links(ctx, page);
+    fz_link* link = nullptr;
+    fz_try(ctx) {
+        link = fz_load_links(ctx, page);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        link = nullptr;
+    }
     link = FixupPageLinks(link);
     if (e->pdfdoc) {
         fz_link* btnLinks = nullptr;
