@@ -482,8 +482,6 @@ static void OnDropFiles(HWND hwnd, HDROP hdrop) {
     AppShellOnDropFiles(hwnd, hdrop, ptDrop, inClient);
 }
 
-float CanvasScale(MainWindow* win);
-
 // orig's SumatraPDF.h. Posted to the canvas; ng has no canvas child.
 constexpr int kSbHalfPageUp = WM_USER + 102;
 constexpr int kSbHalfPageDown = WM_USER + 103;

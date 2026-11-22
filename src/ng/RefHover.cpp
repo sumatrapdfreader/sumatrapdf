@@ -22,9 +22,8 @@
 #include "DisplayModel.h"
 #include "MainWindow.h"
 #include "gui/AppShell.h"
+#include "gui/DocCanvas.h"
 #include "RefHover.h"
-
-float CanvasScale(MainWindow* win);
 
 // Tests pass a frame client point. The document hit-test wants canvas pixels.
 static bool FrameClientToDoc(MainWindow* win, int px, int py, Point* out) {

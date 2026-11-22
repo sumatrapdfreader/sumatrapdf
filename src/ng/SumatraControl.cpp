@@ -927,7 +927,6 @@ static Str MarkupTypeName(AnnotationType tp) {
     }
 }
 
-float CanvasScale(MainWindow* win);
 TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut);
 
 // the inverse: a visibility probe hands back the frame point CanvasToFramePx reported
