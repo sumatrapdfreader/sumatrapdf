@@ -1076,12 +1076,13 @@ export function setWindowPos(
   flags = SWP_NOZORDER | SWP_NOACTIVATE,
   insertAfter = 0,
 ): boolean {
-  // macOS: "place" takes the frame's index; no z-order or flags
+  // macOS: "place" takes the frame's index. HWND_TOPMOST raises it.
   if (IS_MAC) {
     const idx = macWindows()
       .filter((m) => !m.toolName)
       .findIndex((m) => m.hwnd === hwnd);
-    return macControlRequest(TestUiState, ["place", x, y, w, h, idx])[0] === 0;
+    const above = insertAfter === HWND_TOPMOST ? 1 : 0;
+    return macControlRequest(TestUiState, ["place", x, y, w, h, idx, above])[0] === 0;
   }
   return user32.symbols.SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
 }

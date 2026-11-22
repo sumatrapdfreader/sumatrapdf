@@ -3360,12 +3360,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
                     IntArg(req, 3, dx);
                     IntArg(req, 4, dy);
                     IntArg(req, 5, winIdx);
+                    i32 above = 0;
+                    IntArg(req, 6, above);
                     MainWindow* placed = (winIdx >= 0 && winIdx < len(gWindows)) ? gWindows[winIdx] : nullptr;
                     if (!placed || dx <= 0 || dy <= 0) {
                         AppendTestResult(req, 2, StrL("NOTREADY no-window"));
                         break;
                     }
                     AppShellPlaceWindow(placed, Rect{arg, y, dx, dy}, false);
+                    if (above) {
+                        AppShellRaiseAbove(placed);
+                    }
                     AppendTestResult(req, 0, StrL("OK"));
                     break;
                 }

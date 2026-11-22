@@ -980,6 +980,10 @@ void AppShellActivateWindow(MainWindow* win) {
     }
 }
 
+#if !OS_DARWIN
+void AppShellRaiseAbove(MainWindow*) {}
+#endif
+
 void AppShellMinimizeWindow(MainWindow* win) {
     if (win && win->gpuiWin) {
         // a window that isn't on screen yet can't be minimized

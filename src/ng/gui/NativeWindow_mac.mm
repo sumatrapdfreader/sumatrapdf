@@ -71,3 +71,15 @@ void AppShellOpenDocsReady() {
     gOpenDocsReady = true;
     OpenQueuedDocs();
 }
+
+// Tests pass HWND_TOPMOST. orderFront stays under the active app, so the
+// frame also moves to the floating level, above ordinary windows.
+void AppShellRaiseAbove(MainWindow* win) {
+    NSView* view = win && win->gpuiWin ? (__bridge NSView*)gp::PlatWindowHandle(win->gpuiWin) : nil;
+    NSWindow* w = view.window;
+    if (!w) {
+        return;
+    }
+    w.level = NSFloatingWindowLevel;
+    [w orderFront:nil];
+}
