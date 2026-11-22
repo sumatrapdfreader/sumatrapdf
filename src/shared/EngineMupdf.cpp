@@ -8243,23 +8243,7 @@ static Str StandaloneJpegFromPdfCmykImage(fz_context* ctx, fz_image* image) {
 // JPEG/PNG/GIF/BMP/TIFF streams that are already a complete file. Flate-raw
 // samples, JPEG2000, JBIG2, and images with a decode/mask are not. CMYK JPEG
 // is re-encoded (see StandaloneJpegFromPdfCmykImage).
-Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
-    if (!ipel || ipel->GetKind() != kindPageElementImage) {
-        return {};
-    }
-    auto* pel = (PageElementImage*)ipel;
-    Location loc = pel->loc.IsValid() ? pel->loc : LocationFromPageNo(pel->pageNo);
-    FzPageInfo* pageInfo = GetFzPageInfo(loc, false);
-    if (!pageInfo || !pageInfo->page) {
-        return {};
-    }
-    auto* ctx = Ctx();
-    ScopedRecursiveMutex scope(&docLock);
-    fz_matrix imgCtm = fz_identity;
-    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, pel->imageID, &imgCtm);
-    if (!image) {
-        return {};
-    }
+static Str ImageFileData(fz_context* ctx, fz_image* image, fz_matrix imgCtm) {
     // A transformed image must be saved from its reoriented bitmap.
     if (imgCtm.a <= 0 || imgCtm.d <= 0 || imgCtm.b != 0 || imgCtm.c != 0) {
         return {};
@@ -8288,6 +8272,28 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
         return {};
     }
     return str::Dup(Str((char*)data, (int)n));
+}
+
+Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
+    if (!ipel || ipel->GetKind() != kindPageElementImage) {
+        return {};
+    }
+    auto* pel = (PageElementImage*)ipel;
+    Location loc = pel->loc.IsValid() ? pel->loc : LocationFromPageNo(pel->pageNo);
+    FzPageInfo* pageInfo = GetFzPageInfo(loc, false);
+    if (!pageInfo || !pageInfo->page) {
+        return {};
+    }
+    auto* ctx = Ctx();
+    ScopedRecursiveMutex scope(&docLock);
+    fz_matrix imgCtm = fz_identity;
+    fz_image* image = FzFindImageAtIdx(ctx, pageInfo, pel->imageID, &imgCtm);
+    if (!image) {
+        return {};
+    }
+    Str res = ImageFileData(ctx, image, imgCtm);
+    fz_drop_image(ctx, image);
+    return res;
 }
 
 bool EngineMupdf::BenchLoadPage(int pageNo) {
