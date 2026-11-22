@@ -100,6 +100,8 @@ static void CopyPixmapToThumbnail(const Pixmap* bmp, u8* dst, int dx, int dy) {
 }
 
 IFACEMETHODIMP PdfPreview::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
+    // thumbnail hosts live long; temp data never outlives a call
+    ResetTempArena();
     EngineBase* engine = GetEngine();
     if (!engine) {
         logf("PdfPreview::GetThumbnail: failed to get the engine\n");
@@ -495,6 +497,8 @@ static LRESULT OnPaint(HWND hwnd) {
     PAINTSTRUCT ps;
     buffer.Flush(BeginPaint(hwnd, &ps));
     EndPaint(hwnd, &ps);
+    // nothing on this thread keeps temp data across messages
+    ResetTempArena();
     return 0;
 }
 

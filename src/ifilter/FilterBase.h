@@ -175,6 +175,8 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
 
     IFACEMETHODIMP GetChunk(STAT_CHUNK* pStat) {
         if (!pStat) return E_INVALIDARG;
+        // indexer hosts live long; temp data never outlives a call
+        ResetTempArena();
         m_currentChunk.Clear();
         HRESULT hr = GetNextChunkValue(m_currentChunk);
         if (hr != S_OK) return hr;
