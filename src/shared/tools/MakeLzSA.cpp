@@ -121,6 +121,7 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
 // (this is required for absolute paths)
 bool CreateArchive(Str archivePath, StrVec& files, Packing packing, size_t skipFiles = 0) {
     Str prevData = file::ReadFile(archivePath);
+    AutoFree<char> prevDataFree(prevData.s);
     lzma::SimpleArchive prevArchive;
     if (!lzma::ParseSimpleArchive((const u8*)prevData.s, prevData.len, &prevArchive)) {
         prevArchive.filesCount = 0;
@@ -145,7 +146,7 @@ bool CreateArchive(Str archivePath, StrVec& files, Packing packing, size_t skipF
         }
 
         str::TransCharsInPlace(utf8Name, StrL("/"), StrL("\\"));
-        if ('/' == utf8Name.s[0] || str::Contains(utf8Name, StrL("../"))) {
+        if ('\\' == utf8Name.s[0] || str::Contains(utf8Name, StrL("..\\"))) {
             fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name.s);
             return false;
         }
