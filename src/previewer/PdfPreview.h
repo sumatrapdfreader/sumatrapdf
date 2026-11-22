@@ -178,6 +178,8 @@ class PdfPreview : public IThumbnailProvider,
     int panY = 0;
     bool panning = false;
     Point panLast;
+    HFONT pageNoFont = nullptr;
+    int pageNoFontDpi = 0;
 
   protected:
     AtomicInt m_lRef = 1;

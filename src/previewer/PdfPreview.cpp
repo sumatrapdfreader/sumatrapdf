@@ -428,20 +428,30 @@ static PreviewLayout ComputePreviewLayout(HWND hwnd, PdfPreview* preview, int pa
 }
 
 // "3 / 120" in the bottom-right corner: shows the page count without opening the file
-static void DrawPageNumber(HWND hwnd, HDC hdc, Rect client) {
+static void DrawPageNumber(HWND hwnd, PdfPreview* preview, HDC hdc, Rect client) {
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_POS | SIF_RANGE;
     if (!GetScrollInfo(hwnd, SB_VERT, &si)) {
         return;
     }
-    NONCLIENTMETRICS ncm{};
-    if (!GetNonClientMetricsForDpi(DpiGetForHwnd(hwnd), &ncm)) {
-        return;
+
+    // re-create the font only when the dpi changes
+    int dpi = DpiGetForHwnd(hwnd);
+    if (!preview->pageNoFont || preview->pageNoFontDpi != dpi) {
+        NONCLIENTMETRICS ncm{};
+        if (!GetNonClientMetricsForDpi(dpi, &ncm)) {
+            return;
+        }
+        if (preview->pageNoFont) {
+            DeleteObject(preview->pageNoFont);
+        }
+        preview->pageNoFont = CreateFontIndirectW(&ncm.lfMessageFont);
+        preview->pageNoFontDpi = dpi;
     }
+    HFONT font = preview->pageNoFont;
 
     TempStr s = fmt("%d / %d", si.nPos, si.nMax);
-    HFONT font = CreateFontIndirectW(&ncm.lfMessageFont);
     uint format = DT_SINGLELINE | DT_NOPREFIX;
     Size sz = HdcMeasureText(hdc, s, client.dx, format, font);
     int pad = sz.dy / 4;
@@ -458,7 +468,6 @@ static void DrawPageNumber(HWND hwnd, HDC hdc, Rect client) {
     HdcDrawText(hdc, s, r, format | DT_CENTER | DT_VCENTER, font);
     SetTextColor(hdc, prevCol);
     SetBkMode(hdc, prevMode);
-    DeleteObject(font);
 }
 
 static LRESULT OnPaint(HWND hwnd) {
@@ -478,11 +487,10 @@ static LRESULT OnPaint(HWND hwnd) {
             HdcFillRect(hdc, lo.visible, brushWhite);
             preview->renderer->Render(hdc, lo, pageNo);
         }
-        DrawPageNumber(hwnd, hdc, rect);
+        DrawPageNumber(hwnd, preview, hdc, rect);
     }
 
     DeleteObject(brushBg);
-    DeleteObject(brushWhite);
 
     PAINTSTRUCT ps;
     buffer.Flush(BeginPaint(hwnd, &ps));
@@ -692,6 +700,10 @@ static LRESULT OnDestroy(HWND hwnd) {
         delete preview->renderer;
         preview->renderer = nullptr;
         preview->panning = false;
+        if (preview->pageNoFont) {
+            DeleteObject(preview->pageNoFont);
+            preview->pageNoFont = nullptr;
+        }
     }
     return 0;
 }
