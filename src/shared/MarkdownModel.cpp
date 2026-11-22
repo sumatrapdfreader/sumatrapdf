@@ -215,6 +215,7 @@ MarkdownModel::~MarkdownModel() {
     DestroyOwnedTocTree(tocTree);
     ArenaDelete(poolAlloc);
     str::Free(fileName);
+    str::Free(baseDir);
 }
 
 Str MarkdownModel::GetFilePath() const {
