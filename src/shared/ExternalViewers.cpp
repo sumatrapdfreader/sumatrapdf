@@ -6,6 +6,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/Launch.h"
+#include "base/WinDynCalls.h"
 
 #include "gui/UIModels.h"
 
@@ -720,7 +721,7 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
 #if OS_WIN
 
 static bool IsMapiSendMailAvailable() {
-    HMODULE hMapi = LoadLibraryW(L"mapi32.dll");
+    HMODULE hMapi = SafeLoadLibrary(StrL("mapi32.dll"));
     if (!hMapi) {
         return false;
     }
@@ -742,7 +743,7 @@ static bool IsEmailAttachmentSendAvailable() {
 // Use MAPISendMailW to send email with attachment.
 // Works with Outlook, Thunderbird and other MAPI-registered email clients.
 static bool SendAsEmailAttachmentWithMapi(HWND hwndParent, Str filePath) {
-    HMODULE hMapi = LoadLibraryW(L"mapi32.dll");
+    HMODULE hMapi = SafeLoadLibrary(StrL("mapi32.dll"));
     if (!hMapi) {
         return false;
     }

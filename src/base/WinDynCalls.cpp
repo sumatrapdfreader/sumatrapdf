@@ -29,7 +29,7 @@ Sig_GetDpiForMonitor DynGetDpiForMonitor = nullptr;
 #define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
 
 // Loads a DLL explicitly from the system's library collection
-static HMODULE SafeLoadLibrary(Str dllName) {
+HMODULE SafeLoadLibrary(Str dllName) {
     WCHAR dllPath[MAX_PATH];
     uint res = GetSystemDirectoryW(dllPath, dimof(dllPath));
     if (!res || res >= dimof(dllPath)) {
