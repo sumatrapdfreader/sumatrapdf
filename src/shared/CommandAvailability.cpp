@@ -797,9 +797,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
-    // ng: the Markdown export of `cli markdown`, which orig doesn't have
+    // the Markdown export of `cli markdown`; wasm has no files to write it to
     if (cmdId == CmdExportMarkdown) {
-#if !defined(SUMATRA_NG) || OS_WASM
+#if OS_WASM
         return CommandVisibility::Hide;
 #else
         bool canExtract = ctx.engineKind == kindEngineMupdf || ctx.engineKind == kindEngineDjVu;

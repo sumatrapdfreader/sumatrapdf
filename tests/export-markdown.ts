@@ -1,14 +1,14 @@
 // Export as Markdown... (CmdExportMarkdown): the dialog writes the document as
 // Markdown next to it, the same as `SumatraPDF cli markdown`.
 //
-// ng only: orig has no Markdown export.
-// Run: bun tests/export-markdown.ts [--no-build]
+// Run: bun tests/export-markdown.ts [--no-build] [-ng]
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { type ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, EXE, pollUntil, ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { killAndWait, launchControlled, pressEnter, sendCommand, waitToolWindow } from "./win-automation.ts";
+import { enumChildWindows, getClassName, getControlText } from "./winapi.ts";
 
 const name = "export-markdown";
 const kTool = "pdfexportmarkdown";
@@ -30,11 +30,29 @@ async function click(client: ControlClient, label: string): Promise<void> {
   await client.request(ControlCommand.TestToolWindow, ["input", kTool, "click", x, y, 0, 0]);
 }
 
-export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
+// orig: a Win32 dialog; Enter in the destination edit runs it
+async function exportOrig(client: ControlClient, pid: number, md: string): Promise<void> {
+  const dlg = await waitToolWindow(client, pid, "pdftool", { title: "Export as Markdown" });
+  if (!dlg) {
+    throw new Error(`${name}: no Export as Markdown dialog`);
   }
+  let destEdit = 0;
+  enumChildWindows(dlg, (hwnd) => {
+    if (getClassName(hwnd) === "Edit" && /\.md$/i.test(getControlText(hwnd))) {
+      destEdit = hwnd;
+    }
+    return true;
+  });
+  if (!destEdit) {
+    throw new Error(`${name}: the dialog has no .md destination edit`);
+  }
+  if (getControlText(destEdit) !== md) {
+    throw new Error(`${name}: destination is '${getControlText(destEdit)}', want '${md}'`);
+  }
+  await pressEnter(destEdit);
+}
+
+export async function testit(): Promise<void> {
   const dir = tmpPath(name);
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
@@ -46,7 +64,11 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdExportMarkdown"));
-    await click(client, "Export");
+    if (USE_NG) {
+      await click(client, "Export");
+    } else {
+      await exportOrig(client, proc.pid!, md);
+    }
     await pollUntil(
       async () => existsSync(md),
       (ok) => ok,

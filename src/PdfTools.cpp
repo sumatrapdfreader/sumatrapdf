@@ -44,6 +44,7 @@
 #include "Commands.h"
 #include "PdfTools.h"
 #include "PdfToolsCommon.h"
+#include "Cli.h"
 
 // compute a dialog client width that fits the source path text, clamped to a
 // minimum and to 80% of the screen width (long paths get ellipsized instead)
@@ -681,6 +682,69 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
     logf("ShowPdfExtractTextDialog: opening for '%s'\n", tab->filePath);
 
     auto* dlg = new PdfExtractTextDialog();
+    if (!dlg->Create(win, tab)) {
+        delete dlg;
+    }
+}
+
+// --- Export as Markdown dialog ---
+
+struct PdfExportMarkdownDialog : PdfPagesDialog {
+    bool Create(MainWindow* win, WindowTab* tab);
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
+};
+
+// the pages picked as Markdown next to the document, as `cli markdown` writes
+// them (pictures in <name>_images)
+void PdfExportMarkdownDialog::DoIt(VirtMouseEvent*) {
+    TempStr destPath = destEdit->GetTextTemp();
+    Vec<int> pages;
+    if (len(destPath) == 0 || !PageRangeOk(pagesEdit->GetTextTemp(), pageCount, true, pages)) {
+        return;
+    }
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    if (!engine) {
+        return;
+    }
+    logf("PdfExportMarkdownDoIt: %d pages of '%s' to '%s'\n", len(pages), srcPath, destPath);
+    TempStr md = DocumentToMarkdownTemp(engine, pages, destPath, MarkdownOpts{}, nullptr);
+    if (!file::WriteFile(destPath, md)) {
+        logf("PdfExportMarkdownDoIt: failed to write '%s'\n", destPath);
+        MessageBoxWarning(hwnd, Tr("Failed to save a file"), Tr("Export as Markdown"));
+        return;
+    }
+    TempStr path = str::DupTemp(destPath);
+    Close();
+    ShowToolOutput(path);
+}
+
+bool PdfExportMarkdownDialog::Create(MainWindow* w, WindowTab* tab) {
+    if (!CreateToolDialog(w, tab, Tr("Export as Markdown"))) {
+        return false;
+    }
+    pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
+    AddPagesLine(fmt("1-%d", pageCount));
+    TempStr mdPath = str::JoinTemp(path::GetPathNoExtTemp(srcPath), StrL(".md"));
+    AddFilesBlock(MakeUniqueFilePathTemp(mdPath), L"Markdown Files\0*.md\0All Files\0*.*\0", L"md");
+    AddFooter(Tr("Export"), PageRangeHint());
+    FinishDialog(pagesEdit);
+    pagesEdit->onTextChanged = MkMethod0<PdfPagesDialog, &PdfPagesDialog::UpdatePages>(this);
+    UpdatePages();
+    return true;
+}
+
+void ShowExportMarkdownDialog(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || len(tab->filePath) == 0) {
+        return;
+    }
+    logf("ShowExportMarkdownDialog: opening for '%s'\n", tab->filePath);
+
+    auto* dlg = new PdfExportMarkdownDialog();
     if (!dlg->Create(win, tab)) {
         delete dlg;
     }

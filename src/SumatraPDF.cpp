@@ -11892,6 +11892,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowPdfExtractTextDialog(win);
             break;
 
+        case CmdExportMarkdown:
+            ShowExportMarkdownDialog(win);
+            break;
+
         case CmdMoveFrameFocus:
             if (!HwndIsFocused(win->hwndFrame)) {
                 HwndSetFocus(win->hwndFrame);
