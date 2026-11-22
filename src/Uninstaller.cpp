@@ -34,7 +34,6 @@ static Button* gButtonUninstaller = nullptr;
 static bool gWasSearchFilterInstalled = false;
 static bool gWasPreviewInstaller = false;
 static PreviewHandlers gOurPreviewHandlers;
-static Str gUninstallerLogPath;
 
 static void UninstallerThread() {
     log(StrL("UninstallerThread started\n"));
