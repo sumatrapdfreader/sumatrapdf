@@ -67,6 +67,7 @@ void UpdateCheckDecisionTest();
 
 // in src/base/tests/
 void ArchiveTest();
+void ZipDirTest();
 void BaseUtilTest();
 void ByteOrderTests();
 void ClipboardImageTest();
@@ -671,6 +672,7 @@ int RunAppUnitTests(bool forAi) {
     printf("Running unit tests\n");
 
     ArchiveTest();
+    ZipDirTest();
     BaseUtilTest();
     ByteOrderTests();
     ClipboardImageTest();

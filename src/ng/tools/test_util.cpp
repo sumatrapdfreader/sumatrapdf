@@ -10,6 +10,7 @@
 #include "base/tests/UtAssert.h"
 
 extern void ArchiveTest();
+extern void ZipDirTest();
 extern void BaseUtilTest();
 extern void ByteOrderTests();
 extern void CryptoUtilTest();
@@ -141,6 +142,7 @@ int main(int argc, char** argv) {
 #endif
 
     ArchiveTest();
+    ZipDirTest();
     BaseUtilTest();
     ByteOrderTests();
     CryptoUtilTest();

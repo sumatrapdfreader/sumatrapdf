@@ -2,7 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/Archive.h"
+#include "base/Zip.h"
 
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
@@ -35,5 +37,27 @@ void ArchiveTest() {
         return;
     }
     utassert(str::Eq(Str(fi->data, fi->fileSizeUncompressed), StrL("secret payload")));
+#endif
+}
+
+void ZipDirTest() {
+#if !OS_WASM
+    TempStr dir = GetTempFilePathTemp(StrL("zipdir"));
+    file::Delete(dir);
+    utassert(dir::Create(dir));
+    utassert(file::WriteFile(path::JoinTemp(dir, StrL("empty.txt")), Str()));
+    utassert(file::WriteFile(path::JoinTemp(dir, StrL("data.txt")), StrL("hello")));
+
+    Str zip = ZipDirToData(dir, false);
+    utassert(len(zip) > 0);
+    Archive archive;
+    utassert(archive.OpenFromData(zip));
+    auto* fi = archive.GetFileDataByName(StrL("empty.txt"));
+    utassert(fi && fi->fileSizeUncompressed == 0);
+    fi = archive.GetFileDataByName(StrL("data.txt"));
+    utassert(fi && str::Eq(Str(fi->data, fi->fileSizeUncompressed), StrL("hello")));
+    str::Free(zip);
+
+    dir::RemoveAll(dir);
 #endif
 }

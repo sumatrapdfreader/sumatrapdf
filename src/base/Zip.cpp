@@ -110,14 +110,20 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     }
 
     u16 method = Z_DEFLATED;
-    char* compressed = AllocArrayTemp<char>(size);
-    if (!compressed) {
-        return false;
+    char* compressed = nullptr;
+    uLongf compressedSize = 0;
+    if (size > 0) {
+        compressed = AllocArrayTemp<char>(size);
+        if (!compressed) {
+            return false;
+        }
+        compressedSize = storeOnly ? 0 : zip_compress(compressed, (u32)size, data.s, (u32)size);
     }
-    uLongf compressedSize = storeOnly ? 0 : zip_compress(compressed, (u32)size, data.s, (u32)size);
     if (!compressedSize) {
         method = 0; // Store
-        memcpy(compressed, data.s, size);
+        if (size > 0) {
+            memcpy(compressed, data.s, size);
+        }
         compressedSize = (u32)size;
     }
 
@@ -169,7 +175,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
 bool ZipCreator::AddFile(Str path, Str nameInZip) {
     AutoArenaSavepoint tempScope;
     Str fileData = file::ReadFile(path);
-    if (len(fileData) == 0) {
+    if (!fileData.s) {
         return false;
     }
 
