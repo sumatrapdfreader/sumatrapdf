@@ -3,12 +3,11 @@
 // highlight marks), a color, a note with its text, a shape at a rect; the
 // input stays as it was; refusals.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-annotate.ts [--no-build]
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, makeTextPdf, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { EXE, makeTextPdf, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-annotate";
 
@@ -33,10 +32,6 @@ function annotsOf(pdf: string): any[] {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   const src = tmpPath("cli-annotate.pdf");
   writeFileSync(src, makeTextPdf("hello cli world, hello again"));
   const before = readFileSync(src);

@@ -95,6 +95,7 @@
 #include "Selection.h"
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
+#include "Cli.h"
 #include "KeyboardHelp.h"
 #include "SelectionToolbar.h"
 #include "AnnotEditToolbar.h"
@@ -16237,7 +16238,8 @@ static bool IsRunningTool() {
     if (!wargv) {
         return false;
     }
-    bool isTool = false;
+    // `SumatraPDF cli <command>`
+    bool isTool = argc >= 2 && wstr::Eq(wargv[1], WStrL(L"cli"));
     for (int i = 1; i < argc; i++) {
         if (wstr::EqI(wargv[i], WStrL(L"-dump-chm")) || wstr::EqI(wargv[i], WStrL(L"-dump-exif"))) {
             isTool = true;
@@ -16366,7 +16368,9 @@ static int MaybeRunMutool() {
     {
         Str toolName = Str(argv[0]);
         int idx = SeqStrIndexIS(gToolNames, toolName);
-        if (idx >= 0) {
+        // `SumatraPDF cli <command>`: src/shared/Cli.cpp
+        bool isCli = str::Eq(toolName, StrL("cli"));
+        if (idx >= 0 || isCli) {
             // PowerShell pipes a GUI app's stdout through a pipe that the CRT
             // can't write to ("cannot fwrite: Invalid argument"), so the tool's
             // output is silently lost. Detect it and tell the user how to run it
@@ -16390,8 +16394,9 @@ Run the command from cmd.exe instead, e.g.:
                 goto Exit;
             }
             // in the installed dll build, hand off to the console
-            // sumatrapdf-tool.exe (which interacts properly with the console)
-            int delegated = MaybeDelegateToToolExe();
+            // sumatrapdf-tool.exe (which interacts properly with the console).
+            // Not cli: it needs the app's engines, which that exe doesn't link.
+            int delegated = isCli ? kNoMutool : MaybeDelegateToToolExe();
             if (delegated != kNoMutool) {
                 res = delegated;
                 goto Exit;
@@ -16399,7 +16404,7 @@ Run the command from cmd.exe instead, e.g.:
             fz_redirect_io_to_existing_console();
             // the tools need the base14 fonts from the embedded archive
             InstallEmbeddedFontLoader();
-            res = toolFuncs[idx](argc, argv);
+            res = isCli ? CliMain(argc - 1, argv + 1) : toolFuncs[idx](argc, argv);
             goto Exit;
         }
     }

@@ -2,12 +2,11 @@
 // and from the table of contents), emphasis with the spaces around it kept,
 // page markers, pictures written next to the .md, --json and --pages.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-markdown.ts [--no-build]
 
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-markdown";
 
@@ -25,10 +24,6 @@ function expect(what: string, ok: boolean, res: Res): void {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   // a man page: bold section titles in the body's size, italic words
   const man = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
   let r = cli(["markdown", man]);

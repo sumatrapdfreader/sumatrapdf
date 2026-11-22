@@ -4,11 +4,10 @@
 // tests of Kitab's Markdown export (crates/kitab-mupdf/src/export.rs); the
 // PDFs are made here.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-markdown-cases.ts [--no-build]
 
 import { writeFileSync } from "node:fs";
-import { assemblePdf, EXE, makeZip, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, EXE, makeZip, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-markdown-cases";
 
@@ -351,10 +350,6 @@ function testSuperscripts(): void {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   testLists();
   testPageNumbers();
   testRunningHeaders();

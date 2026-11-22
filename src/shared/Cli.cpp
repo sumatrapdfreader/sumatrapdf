@@ -18,6 +18,7 @@ struct WindowTab;
 #include "ImageReader.h"
 #include "SumatraConfig.h"
 #include "Annotation.h"
+#include "FileHistory.h"
 #include "base/Pixmap.h"
 #include "Cli.h"
 
@@ -3381,6 +3382,11 @@ int CliMain(int argc, char** argv) {
     // reading or writing the user's settings file
     if (!gSettings) {
         gSettings = NewSettings(Str{});
+    }
+    // engines look a document up in the history (orig runs this before its
+    // settings, and so the history, are loaded)
+    if (!FileHistoryStates()) {
+        FileHistorySetStates(gSettings->fileStates);
     }
     int res = cx.cmd->fn(cx);
     WaitForCbxPrefetches();

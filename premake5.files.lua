@@ -391,6 +391,7 @@ function sumatrapdf_files()
     "SumatraPDFWebCommon.*",
     "ServerFiles.*",
     "ContentHash.*",
+    "Cli.*",
     "AppHelpersCommon.*",
     "BrowserViewCommon.*",
     "Installer.*",

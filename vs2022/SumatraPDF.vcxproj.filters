@@ -330,6 +330,9 @@
     <ClInclude Include="..\src\shared\ChmModel.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\Cli.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\CommandAvailability.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1266,6 +1269,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmModel.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\Cli.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\CommandAvailability.cpp">

@@ -2,13 +2,12 @@
 // order / rotate, merge, split, compress, decompress, encrypt and decrypt. Each
 // writes a new PDF, never the input, and refuses an EPUB (exit 5).
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-pdf-tools.ts [--no-build]
 
 import { readdirSync, readFileSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { deflateSync } from "node:zlib";
-import { EXE, makePdf, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { EXE, makePdf, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-pdf-tools";
 
@@ -141,10 +140,6 @@ function testCompressQuality(dir: string): void {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   // 2 pages, US Letter
   const src = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
   const before = readFileSync(src);

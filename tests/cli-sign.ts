@@ -5,13 +5,12 @@
 // unsigned PDF has no signatures (exit 1); a wrong key password or a missing
 // key file is refused.
 //
-// Needs openssl to make the certificate. ng only for now: orig doesn't have
-// the cli command yet.
+// Needs openssl to make the certificate.
 // Run: bun tests/cli-sign.ts [--no-build]
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-sign";
 
@@ -59,10 +58,6 @@ function makePfx(dir: string): string {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   if (!Bun.which("openssl")) {
     console.log(`SKIP ${name}: needs openssl to make a certificate`);
     return;

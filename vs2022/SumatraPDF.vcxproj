@@ -1483,6 +1483,7 @@
     <ClInclude Include="..\src\shared\ChmDump.h" />
     <ClInclude Include="..\src\shared\ChmFile.h" />
     <ClInclude Include="..\src\shared\ChmModel.h" />
+    <ClInclude Include="..\src\shared\Cli.h" />
     <ClInclude Include="..\src\shared\CommandAvailability.h" />
     <ClInclude Include="..\src\shared\CommandPalette.h" />
     <ClInclude Include="..\src\shared\CommandPaletteCommon.h" />
@@ -2139,6 +2140,7 @@
     <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
     <ClCompile Include="..\src\shared\ChmModel.cpp" />
+    <ClCompile Include="..\src\shared\Cli.cpp" />
     <ClCompile Include="..\src\shared\CommandAvailability.cpp" />
     <ClCompile Include="..\src\shared\CommandPaletteCommon.cpp" />
     <ClCompile Include="..\src\shared\Commands.cpp" />

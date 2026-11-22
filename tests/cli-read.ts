@@ -2,11 +2,10 @@
 // toc, as text and --json, the exit codes, an encrypted PDF with no, a wrong
 // and the right password, and agent-skill.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-read.ts [--no-build]
 
 import { readFileSync, writeFileSync } from "node:fs";
-import { EXE, makePdf, makeTextPdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { EXE, makePdf, makeTextPdf, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-read";
 
@@ -36,10 +35,6 @@ function json(what: string, res: Res): any {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   const text = tmpPath("cli-read-text.pdf");
   writeFileSync(text, makeTextPdf("hello cli world, hello again"));
   const toc = tmpPath("cli-read-toc.pdf");

@@ -6,12 +6,11 @@
 // epub_converts_with_needles, plain_text_has_needles,
 // password_and_other_formats); the documents are made here.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-markdown-docs.ts [--no-build]
 
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { assemblePdf, EXE, makeZip, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, EXE, makeZip, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-markdown-docs";
 
@@ -252,10 +251,6 @@ function testPasswordAndFormats(pdf: string): void {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   const pdf = tmpPath("cli-markdown-docs.pdf");
   writeFileSync(pdf, makeOutlinedPdf(), "latin1");
   testOutlinedPdf(pdf);

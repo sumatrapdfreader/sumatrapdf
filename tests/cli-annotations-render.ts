@@ -3,12 +3,11 @@
 // EPUB has no annotations (exit 5); render writes one image per page with
 // <N> for the page number.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-annotations-render.ts [--no-build]
 
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { assemblePdf, EXE, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-annotations-render";
 
@@ -43,10 +42,6 @@ function makeAnnotatedPdf(): string {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   const pdf = tmpPath("cli-annotated.pdf");
   writeFileSync(pdf, makeAnnotatedPdf(), "latin1");
 

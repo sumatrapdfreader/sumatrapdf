@@ -4,12 +4,11 @@
 // where asked, as the page shows; only on the pages asked for; any script
 // (system fonts, shaped, right to left); refusals.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-stamp.ts [--no-build]
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, loadPng, makePdf, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { EXE, loadPng, makePdf, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-stamp";
 
@@ -129,10 +128,6 @@ function testScripts(src: string, out: (f: string) => string): void {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   const src = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
   const dir = tmpPath("cli-stamp");
   rmSync(dir, { recursive: true, force: true });

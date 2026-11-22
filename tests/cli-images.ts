@@ -3,12 +3,11 @@
 // and an EPUB's pictures too; --pages. `cli images-to-pdf`: a page per image,
 // JPEG, PNG and WebP.
 //
-// ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-images.ts [--no-build]
 
 import { readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { assemblePdf, EXE, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const name = "cli-images";
 
@@ -50,10 +49,6 @@ function pdfWithImages(jpeg: Buffer, w: number, h: number): string {
 }
 
 export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log(`SKIP ${name}: ng only (run with -ng)`);
-    return;
-  }
   const dir = tmpPath(name);
   rmSync(dir, { recursive: true, force: true });
   // a JPEG to put in a PDF: a page rendered as one
