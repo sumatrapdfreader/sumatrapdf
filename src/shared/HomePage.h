@@ -61,6 +61,7 @@ bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LR
 void HomePageOnWindowActivate(MainWindow* win, bool active);
 bool HomePageOnHover(MainWindow* win, int x, int y);
 Str HomePageFilePathAtTemp(MainWindow* win, int x, int y);
+void HomePageOpenFile(MainWindow* win, Str path);
 void HomePageClearActiveEntry(MainWindow* win);
 #endif
 TempStr HomeListRowsResultTemp(int* exitCodeOut);

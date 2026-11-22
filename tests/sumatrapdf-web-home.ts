@@ -1,17 +1,17 @@
-// ng's home page marks documents that are on SumatraPDF Web with a Server
+// The home page marks documents that are on SumatraPDF Web with a Server
 // badge ("Server ≠" when the sizes differ) and offers Upload to server /
 // Delete from server, and Delete local for Delete File. A file only on the
 // server is listed after the local ones and opening it downloads it. A local
 // server stands in for the website.
 //
-// Run: bun tests/sumatrapdf-web-home.ts -ng [--no-build]   (or via tests/run-almost-all.ts)
+// Run: bun tests/sumatrapdf-web-home.ts [-ng] [--no-build]   (or via tests/run-almost-all.ts)
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { EXE, ROOT, USE_NG, cmdId, pollUntil, runStandalone, tmpPath, writeAppdata } from "./util.ts";
 import { pressEnter, pressEscape, pressKey, sendCommand, waitForFrame } from "./win-automation.ts";
-import { VK_DOWN, getWindowText, sleep } from "./winapi.ts";
+import { VK_DOWN, WM_COMMAND, getWindowText, postMessage, sleep, waitForTopWindow } from "./winapi.ts";
 
 const kPort = 9332;
 const kKey = "so_abcdefghij_0123456789abcdef0123456789abcdef";
@@ -71,11 +71,24 @@ function requireRow(menu: string[], row: string, present: boolean) {
   }
 }
 
-export async function testit(): Promise<void> {
-  if (!USE_NG) {
-    console.log("sumatrapdf-web-home: ng only, skipped");
+const IDYES = 6;
+const IDNO = 7;
+
+// answers the Upload / Delete question: ng's in-window box takes Enter / Esc,
+// orig's is a Win32 message box
+async function answer(frame: number, pid: number, yes: boolean) {
+  if (USE_NG) {
+    await (yes ? pressEnter(frame) : pressEscape(frame));
     return;
   }
+  const dlg = await waitForTopWindow(pid, "#32770", 5000);
+  if (!dlg) {
+    throw new Error("sumatrapdf-web-home: no question asked");
+  }
+  postMessage(dlg, WM_COMMAND, yes ? IDYES : IDNO, 0);
+}
+
+export async function testit(): Promise<void> {
   const dir = tmpPath("sumatrapdf-web-home-docs");
   mkdirSync(dir, { recursive: true });
   const src = join(ROOT, "tests", "issue-5871.pdf");
@@ -165,7 +178,7 @@ export async function testit(): Promise<void> {
         // Upload to server asks before replacing it (#6577): No keeps the server copy
         const serverSize = files.get(kOnServer);
         sendCommand(frame, cmdId("CmdUploadToServer"));
-        await pressEscape(frame);
+        await answer(frame, proc.pid!, false);
         await sleep(500);
         if (files.get(kOnServer) !== serverSize) {
           throw new Error("sumatrapdf-web-home: replaced the server copy without asking");
@@ -173,7 +186,7 @@ export async function testit(): Promise<void> {
 
         // Yes replaces it
         sendCommand(frame, cmdId("CmdUploadToServer"));
-        await pressEnter(frame);
+        await answer(frame, proc.pid!, true);
         await waitState(ServerState.Same, "no Server badge after upload");
         if (files.get(kOnServer) !== statSync(onServer).size) {
           throw new Error("sumatrapdf-web-home: server did not get the upload");
@@ -182,7 +195,7 @@ export async function testit(): Promise<void> {
 
         // Delete from server asks first: No keeps the file
         sendCommand(frame, cmdId("CmdDeleteFromServer"));
-        await pressEscape(frame);
+        await answer(frame, proc.pid!, false);
         await sleep(500);
         if (!files.has(kOnServer)) {
           throw new Error("sumatrapdf-web-home: deleted from the server without asking");
@@ -190,7 +203,7 @@ export async function testit(): Promise<void> {
 
         // Yes deletes it and drops the badge
         sendCommand(frame, cmdId("CmdDeleteFromServer"));
-        await pressEnter(frame);
+        await answer(frame, proc.pid!, true);
         await waitState(ServerState.None, "badge stayed after delete");
         if (files.has(kOnServer)) {
           throw new Error("sumatrapdf-web-home: server still has the file");

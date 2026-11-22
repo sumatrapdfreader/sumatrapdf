@@ -22,3 +22,8 @@ i64 ServerFileSize(Str path);
 void OpenServerFile(MainWindow* win, Str path);
 void UploadFileToServer(MainWindow* win, Str path);
 void DeleteFileFromServer(MainWindow* win, Str path);
+
+// implemented by each app
+void ServerFilesChanged();
+void OpenDownloadedServerFile(MainWindow* win, Str path);
+void AskServerYesNo(MainWindow* win, Str question, Str caption, Func1<bool> onAnswer);

@@ -51,6 +51,7 @@
 #include "SvgIcons.h"
 #include "gui/DialogWidgets.h"
 #include "OverlayScrollbar.h"
+#include "SumatraDialogs.h"
 #include "ServerFiles.h"
 #include "HomePage.h"
 #include "HomePageCommon.h"
@@ -2098,4 +2099,29 @@ bool HomePageOnKeyDown(MainWindow* win, int vk, bool ctrl) {
         }
     }
     return false;
+}
+
+// --- ServerFiles hooks ------------------------------------------------------
+
+void ServerFilesChanged() {
+    RedrawAllWindows();
+}
+
+void OpenDownloadedServerFile(MainWindow* win, Str path) {
+    StartLoadDocument(win, path);
+}
+
+struct ServerYesNo {
+    Func1<bool> onAnswer;
+};
+
+static void ServerYesNoAnswered(ServerYesNo* q, int res) {
+    Func1<bool> onAnswer = q->onAnswer;
+    delete q;
+    onAnswer.Call(res == MbRetYes);
+}
+
+void AskServerYesNo(MainWindow* win, Str question, Str caption, Func1<bool> onAnswer) {
+    auto* q = new ServerYesNo{onAnswer};
+    MsgBox(win, question, caption, MbYesNo | MbIconQuestion, MkFunc1(ServerYesNoAnswered, q));
 }

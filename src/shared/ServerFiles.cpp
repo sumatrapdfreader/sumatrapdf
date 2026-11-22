@@ -28,7 +28,6 @@
 #include "MainWindow.h"
 #include "SumatraPDF.h"
 #include "Notifications.h"
-#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "SumatraPDFWebCommon.h"
 #include "ServerFiles.h"
@@ -87,12 +86,12 @@ static void FinishList(OnlineJobResult* res) {
     TempStr msg;
     if (OnlineJobFailed(res, &lastStatus, &msg)) {
         logf("ServerFiles: list failed: %s\n", msg);
-        RedrawAllWindows();
+        ServerFilesChanged();
         return;
     }
     Vec<OnlineListedFile> parsed;
     if (!ParseOnlineFiles(res->body, parsed)) {
-        RedrawAllWindows();
+        ServerFilesChanged();
         return;
     }
     for (OnlineListedFile& f : parsed) {
@@ -101,7 +100,7 @@ static void FinishList(OnlineJobResult* res) {
     }
     FreeOnlineFiles(parsed);
     gSrv.listed = true;
-    RedrawAllWindows();
+    ServerFilesChanged();
 }
 
 static void StartList() {
@@ -131,7 +130,7 @@ static void FinishTransfer(OnlineJobResult* res) {
         WasmPersistSettings();
 #endif
         if (IsMainWindowValidAndNotClosing(win)) {
-            StartLoadDocument(win, res->cachePath);
+            OpenDownloadedServerFile(win, res->cachePath);
         }
         return;
     }
@@ -174,7 +173,7 @@ void ServerFilesReset() {
     gSrv.listed = false;
     gSrv.tried = false;
     gSrv.listId = 0;
-    RedrawAllWindows();
+    ServerFilesChanged();
 }
 
 bool ServerFilesListed() {
@@ -259,7 +258,7 @@ void OpenServerFile(MainWindow* win, Str path) {
         return;
     }
     if (file::GetSize(path) == gSrv.sizes[idx]) {
-        StartLoadDocument(win, path);
+        OpenDownloadedServerFile(win, path);
         return;
     }
     if (!CanStartTransfer(win)) {
@@ -318,12 +317,12 @@ static ServerAsk* NewServerAsk(MainWindow* win, Str path) {
     return ask;
 }
 
-static void UploadAnswered(ServerAsk* ask, int answer) {
+static void UploadAnswered(ServerAsk* ask, bool yes) {
     MainWindow* win = ask->win;
     Str path = ask->path;
     AutoFree<char> pathFree(path.s);
     delete ask;
-    if (answer != MbRetYes || !IsMainWindowValidAndNotClosing(win)) {
+    if (!yes || !IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     StartUpload(win, path);
@@ -347,7 +346,7 @@ void UploadFileToServer(MainWindow* win, Str path) {
     }
     auto* ask = NewServerAsk(win, path);
     TempStr question = fmt(Tr("Replace %s on SumatraPDF Web?").s, name);
-    MsgBox(win, question, Tr("Upload to server"), MbYesNo | MbIconQuestion, MkFunc1(UploadAnswered, ask));
+    AskServerYesNo(win, question, Tr("Upload to server"), MkFunc1(UploadAnswered, ask));
 }
 
 static void StartDelete(MainWindow* win, Str path) {
@@ -368,12 +367,12 @@ static void StartDelete(MainWindow* win, Str path) {
     TransferStarted(win, name);
 }
 
-static void DeleteAnswered(ServerAsk* ask, int answer) {
+static void DeleteAnswered(ServerAsk* ask, bool yes) {
     MainWindow* win = ask->win;
     Str path = ask->path;
     AutoFree<char> pathFree(path.s);
     delete ask;
-    if (answer != MbRetYes || !IsMainWindowValidAndNotClosing(win)) {
+    if (!yes || !IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     StartDelete(win, path);
@@ -390,5 +389,5 @@ void DeleteFileFromServer(MainWindow* win, Str path) {
     }
     auto* ask = NewServerAsk(win, path);
     TempStr question = fmt(Tr("Delete %s from SumatraPDF Web?").s, name);
-    MsgBox(win, question, Tr("Delete from server"), MbYesNo | MbIconQuestion, MkFunc1(DeleteAnswered, ask));
+    AskServerYesNo(win, question, Tr("Delete from server"), MkFunc1(DeleteAnswered, ask));
 }

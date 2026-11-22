@@ -38,6 +38,7 @@
 #include "DarkMode.h"
 #include "SvgIcons.h"
 #include "PagePosition.h"
+#include "ServerFiles.h"
 #include "HomePage.h"
 #include "HomePageCommon.h"
 
@@ -825,6 +826,7 @@ struct ThumbnailLayout {
     Rect rcListProgress;
     Rect rcListRemove;
     Rect rcListPin;
+    Rect rcListBadge;        // SumatraPDF Web's Server badge, after the file name
     FileState* fs = nullptr; // info needed to draw the thumbnail
     // Cached file::GetSize() so we don't hit the disk on every paint.
     // AppendBlanks zero-fills, so set to kSizeNotFetched after AppendBlanks.
@@ -849,6 +851,27 @@ static i64 HomeFileSize(ThumbnailLayout& t) {
     }
     t.fileSize = size < 0 ? kSizeFetchFail : size;
     return t.fileSize;
+}
+
+// SumatraPDF Web's server-only documents, after the local ones
+static void AppendServerOnlyFiles(Vec<FileState*>& files, const StrVec& filterWords) {
+    Vec<FileState*> serverOnly;
+    ServerOnlyFileStates(serverOnly);
+    for (FileState* fs : serverOnly) {
+        if (len(filterWords) == 0 || FilterMatches(path::GetBaseNameTemp(fs->filePath), filterWords)) {
+            VecAppend(files, fs);
+        }
+    }
+}
+
+static ServerFileState HomeServerState(ThumbnailLayout& t) {
+    if (!t.fs) {
+        return ServerFileState::None;
+    }
+    if (IsServerOnlyFile(t.fs->filePath)) {
+        return ServerFileState::Same;
+    }
+    return GetServerFileState(t.fs->filePath, HomeFileSize(t));
 }
 
 // true if r overlaps the visible thumbs band (optionally with a small margin)
@@ -972,6 +995,8 @@ struct HomeEntryCtrl : VirtCtrl {
     VirtCloseButton* closeBtn = nullptr;
     VirtCloseButton* removeBtn = nullptr;
     HomeListIconCtrl* pinBtn = nullptr;
+    // a SumatraPDF Web file with no history entry
+    bool serverOnly = false;
 
     HomeEntryCtrl();
     ~HomeEntryCtrl() override;
@@ -1511,6 +1536,8 @@ static void LayoutHomePage(HomePageLayout& l) {
         }
         VecAppend(fileStates, fs);
     }
+    ServerFilesEnsureListed();
+    AppendServerOnlyFiles(fileStates, l.filterWords);
 
     bool isRtl = IsUIRtl();
     PlatformFont* fontText = HomePageFont(13);
@@ -1838,6 +1865,35 @@ static void DrawHomeSelectionOutline(Gfx* gfx, const Rect& r, int radius) {
     DrawHomeRoundedOutline(gfx, r, radius, col, penDx);
 }
 
+// SumatraPDF Web's Server badge: amber pill, teal on a dark theme; "Server ≠"
+// when the server copy has a different size
+constexpr Color kServerBadgeBg = MkRgb(0x8a, 0x5a, 0x00);
+constexpr Color kServerBadgeBgDark = MkRgb(0x11, 0x5e, 0x59);
+constexpr Color kServerBadgeFgDark = MkRgb(0xcc, 0xfb, 0xf1);
+
+static Str ServerBadgeLabel(ServerFileState st) {
+    return st == ServerFileState::Differs ? Tr("Server ≠") : Tr("Server");
+}
+
+static Size HomeServerBadgeSize(Gfx* gfx, ServerFileState st) {
+    if (st == ServerFileState::None) {
+        return {};
+    }
+    Size sz = gfx->MeasureText(ServerBadgeLabel(st), HomePageFont(11));
+    return {sz.dx + DpiScale(12), sz.dy + DpiScale(2)};
+}
+
+static void DrawHomeServerBadge(Gfx* gfx, Rect r, ServerFileState st) {
+    if (st == ServerFileState::None || r.IsEmpty()) {
+        return;
+    }
+    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
+    Color bg = light ? kServerBadgeBg : kServerBadgeBgDark;
+    Color fg = light ? kColWhite : kServerBadgeFgDark;
+    gfx->FillRoundedRect(r, r.dy / 2, bg);
+    gfx->DrawText(ServerBadgeLabel(st), r, gfxTextCenter | gfxTextVCenter, HomePageFont(11), fg);
+}
+
 // Give the file name the width it needs and put the directory path in what's
 // left, right-aligned (mirrored for RTL). Done on first paint of a row, not
 // during layout: measuring every history entry made layout (and so scrolling)
@@ -1852,20 +1908,33 @@ static void MeasureHomeListRowText(Gfx* gfx, ThumbnailLayout& thumb, PlatformFon
     Rect rcFileName = thumb.rcListFileName;
     TempStr fileName = path::GetBaseNameTemp(thumb.fs->filePath);
     int nameDx = gfx->MeasureText(fileName, font).dx + DpiScale(4);
+    // the Server badge goes right after the name
+    Size badge = HomeServerBadgeSize(gfx, HomeServerState(thumb));
+    int badgeDx = badge.dx > 0 ? badge.dx + kHomeListRowGapDx : 0;
     int minPathDx = DpiScale(80);
-    if (nameDx + kHomeListRowGapDx + minPathDx > rcFileName.dx) {
+    // a server-only file isn't in a directory yet
+    bool noPath = IsServerOnlyFile(thumb.fs->filePath);
+    if (badgeDx == 0 && (noPath || nameDx + kHomeListRowGapDx + minPathDx > rcFileName.dx)) {
         // no room for a path, the name gets the whole span
         return;
     }
-    int pathDx = rcFileName.dx - nameDx - kHomeListRowGapDx;
-    if (isRtl) {
-        thumb.rcListPath = Rect(rcFileName.x, rcFileName.y, pathDx, rcFileName.dy);
-        rcFileName.x = rcFileName.x + rcFileName.dx - nameDx;
+    if (noPath || nameDx + badgeDx + kHomeListRowGapDx + minPathDx > rcFileName.dx) {
+        nameDx = std::min(nameDx, std::max(rcFileName.dx - badgeDx, 0));
     } else {
-        thumb.rcListPath = Rect(rcFileName.x + nameDx + kHomeListRowGapDx, rcFileName.y, pathDx, rcFileName.dy);
+        int pathDx = rcFileName.dx - nameDx - badgeDx - kHomeListRowGapDx;
+        int pathX = isRtl ? rcFileName.x : rcFileName.x + nameDx + badgeDx + kHomeListRowGapDx;
+        thumb.rcListPath = Rect(pathX, rcFileName.y, pathDx, rcFileName.dy);
+    }
+    if (isRtl) {
+        rcFileName.x = rcFileName.x + rcFileName.dx - nameDx;
     }
     rcFileName.dx = nameDx;
     thumb.rcListFileName = rcFileName;
+    if (badge.dx > 0) {
+        int y = rcFileName.y + ((rcFileName.dy - badge.dy) / 2);
+        int x = isRtl ? rcFileName.x - kHomeListRowGapDx - badge.dx : rcFileName.x + nameDx + kHomeListRowGapDx;
+        thumb.rcListBadge = Rect(x, y, badge.dx, badge.dy);
+    }
 }
 
 // True when keyboard focus is in the home search box (hide list selection then).
@@ -1901,6 +1970,7 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
     u32 nameFmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
     DrawMaybeHighlightedText(gfx, thumb.rcListFileName, fileName, filterWords, highlighted, backgroundColor, isRtl,
                              false, nameFmt, fontText, ThemeWindowTextColor());
+    DrawHomeServerBadge(gfx, thumb.rcListBadge, HomeServerState(thumb));
 
     // directory path, right-aligned and muted, in the space the file name doesn't need.
     // Must use DrawTextW: dirPath is UTF-8; DrawTextA treated it as the system ANSI
@@ -1915,7 +1985,8 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
     // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses
     // it). kSizeNotFetched = not tried; kSizeFetchFail = GetSize failed; >= 0
     // is a real size (including empty files).
-    TempStr fileSize = FileSizeForHomeListTemp(HomeFileSize(thumb));
+    bool serverOnly = IsServerOnlyFile(path);
+    TempStr fileSize = FileSizeForHomeListTemp(serverOnly ? ServerFileSize(path) : HomeFileSize(thumb));
     u32 sizeFmt = gfxTextVCenter | gfxTextEllipsis | (isRtl ? gfxTextLeft : gfxTextRight);
     Rect sizeRect = thumb.rcListSize;
     gfx->DrawText(fileSize, sizeRect, sizeFmt, fontText, ThemeWindowTextColor());
@@ -1928,6 +1999,10 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
         }
     }
 
+    // a server-only file has no history entry to pin
+    if (serverOnly) {
+        return;
+    }
     if (fs->isPinned) {
         gfx->FillRect(thumb.rcListPin, ThemeControlBackgroundColor());
     }
@@ -1977,6 +2052,14 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
         gfx->FillRect(page, ThemeControlBackgroundColor());
     }
     gfx->DrawRect(page, ThemeEdgeColor());
+    // opposite the close button
+    ServerFileState srv = HomeServerState(thumb);
+    Size badge = HomeServerBadgeSize(gfx, srv);
+    if (badge.dx > 0) {
+        int margin = DpiScale(4);
+        int x = isRtl ? page.x + page.dx - margin - badge.dx : page.x + margin;
+        DrawHomeServerBadge(gfx, Rect(x, page.y + margin, badge.dx, badge.dy), srv);
+    }
 
     float progress = 0;
     TempStr meta = HomeThumbnailMetaTemp(fs, &progress);
@@ -2139,6 +2222,8 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
         }
         out.Append(fmt("row=%d size='%s' sizeRect=%d,%d,%d,%d progress='%s' path=%s\n", i,
                        FileSizeForHomeListTemp(t.fileSize), r.x, r.y, r.dx, r.dy, progress, path));
+        // 0: not on the server, 1: same size, 2: different size
+        out.Append(fmt("server=%d\n", (int)HomeServerState(t)));
     }
     return finish(0);
 }
@@ -2294,11 +2379,7 @@ static void HomeEntryOpenClicked(MainWindow* win, VirtMouseEvent* ev) {
     if (len(entry->filePath) == 0) {
         return;
     }
-    LoadArgs args(entry->filePath, win);
-    // ctrl forces always opening
-    args.activateExisting = !ev->isCtrl;
-    args.activateExistingInWindow = true;
-    StartLoadDocument(&args);
+    HomePageOpenFile(win, entry->filePath);
 }
 
 static void HomeViewModeClicked(MainWindow* win, VirtMouseEvent* ev) {
@@ -2434,7 +2515,7 @@ void HomeEntriesCtrl::UpdateCloseBtnVisibility() {
     int n = ChildCount();
     for (int i = 0; i < n; i++) {
         HomeEntryCtrl* e = EntryAt(i);
-        bool show = canShow && (i == activeIdx);
+        bool show = canShow && (i == activeIdx) && !e->serverOnly;
         e->closeBtn->visibility = show ? Visibility::Visible : Visibility::Collapse;
     }
 }
@@ -2832,10 +2913,13 @@ static void HomePageSyncChrome(HomePageLayout& l) {
         Rect rc = HomeEntryRect(t);
         e->visibility = rc.IsEmpty() ? Visibility::Collapse : Visibility::Visible;
         e->SetBounds(rc);
+        // a server-only file has no history entry to remove or pin
+        e->serverOnly = IsServerOnlyFile(path);
         if (listView) {
-            e->removeBtn->visibility = Visibility::Visible;
+            Visibility vis = e->serverOnly ? Visibility::Collapse : Visibility::Visible;
+            e->removeBtn->visibility = vis;
             e->removeBtn->SetBounds(t.rcListRemove);
-            e->pinBtn->visibility = Visibility::Visible;
+            e->pinBtn->visibility = vis;
             e->pinBtn->SetBounds(t.rcListPin);
         } else {
             e->removeBtn->visibility = Visibility::Collapse;
@@ -3034,6 +3118,7 @@ void HomePageRelayout(MainWindow* win) {
         Vec<FileState*> files;
         StrVec filterWords;
         CollectHomePageFiles(HomeSearchQueryTemp(win), files, filterWords);
+        AppendServerOnlyFiles(files, filterWords);
         if (HomeLayoutCacheFilesMatch(win, files)) {
             ApplyHomeLayoutCache(l, win->homePageScrollY);
             usedCache = true;
@@ -3507,4 +3592,35 @@ void HomePageThumbnailChanged(FileState* fs) {
             break;
         }
     }
+}
+
+// opens a home page entry; ctrl forces always opening. A server-only file
+// is downloaded first.
+void HomePageOpenFile(MainWindow* win, Str path) {
+    if (IsServerOnlyFile(path)) {
+        OpenServerFile(win, path);
+        return;
+    }
+    LoadArgs args(path, win);
+    args.activateExisting = !IsCtrlPressed();
+    args.activateExistingInWindow = true;
+    StartLoadDocument(&args);
+}
+
+// --- ServerFiles hooks ------------------------------------------------------
+
+void ServerFilesChanged() {
+    HomePageInvalidateLayoutCache();
+    MaybeRedrawHomePage();
+}
+
+void OpenDownloadedServerFile(MainWindow* win, Str path) {
+    LoadArgs args(path, win);
+    args.activateExistingInWindow = true;
+    StartLoadDocument(&args);
+}
+
+void AskServerYesNo(MainWindow* win, Str question, Str caption, Func1<bool> onAnswer) {
+    int res = MsgBox(win->hwndFrame, question, caption, MB_YESNO | MB_ICONQUESTION);
+    onAnswer.Call(res == IDYES);
 }

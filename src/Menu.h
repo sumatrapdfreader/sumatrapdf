@@ -16,6 +16,8 @@ void RemoveBadMenuSeparators(HMENU menu);
 HMENU BuildMenu(MainWindow* win);
 void OnWindowContextMenu(MainWindow* win, int x, int y);
 void OnAboutContextMenu(MainWindow* win, int x, int y);
+HMENU BuildHomeContextMenu(MainWindow* win, Str path);
+TempStr HomeContextMenuRowsTemp(MainWindow* win);
 bool CommandUsesContextMenuPoint(int cmdId);
 void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath);
 int CmdIdFromVirtualZoom(float virtualZoom);

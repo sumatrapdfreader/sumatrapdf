@@ -139,11 +139,7 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
                     if (len(path) == 0) {
                         return 0;
                     }
-                    LoadArgs args(path, win);
-                    // ctrl forces always opening, as for a click
-                    args.activateExisting = !IsCtrlPressed();
-                    args.activateExistingInWindow = true;
-                    StartLoadDocument(&args);
+                    HomePageOpenFile(win, path);
                     return 0;
                 }
                 case VK_DELETE: {

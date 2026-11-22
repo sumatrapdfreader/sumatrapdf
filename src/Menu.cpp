@@ -55,6 +55,7 @@
 #include "ReadingBar.h"
 #include "TableOfContents.h"
 #include "SidebarPanel.h"
+#include "ServerFiles.h"
 #include "Menu.h"
 #include "MenuCommon.h"
 #include "MenuDefs.h"
@@ -965,31 +966,42 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdToggleFilePicker, gSettings && str::EqI(gSettings->filePicker, StrL("sumatrapdf")));
 }
 
-void OnAboutContextMenu(MainWindow* win, int x, int y) {
+// SumatraPDF Web's Upload to server / Delete from server. While linked,
+// Delete File reads Delete local. A changed server copy can be replaced.
+static void AppendServerItems(HMENU popup, Str filePath) {
+    if (!ServerFilesListed()) {
+        return;
+    }
+    MenuSetText(popup, CmdDeleteFile, Tr("Delete local"));
+    AppendMenuW(popup, MF_SEPARATOR, kMenuSeparatorID, nullptr);
+    ServerFileState st = GetServerFileState(filePath, file::GetSize(filePath));
+    if (st != ServerFileState::Same) {
+        AppendMenuW(popup, MF_STRING, CmdUploadToServer, ToWStrTemp(Tr("Upload to server")).s);
+    }
+    if (st != ServerFileState::None) {
+        AppendMenuW(popup, MF_STRING, CmdDeleteFromServer, ToWStrTemp(Tr("Delete from server")).s);
+    }
+}
+
+// the home page entry's menu; nullptr if it has none
+HMENU BuildHomeContextMenu(MainWindow* win, Str path) {
     if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !SettingsRememberOpenedFiles() ||
         !gSettings->showStartPage) {
-        return;
-    }
-
-    // Prefer the file under the click; keyboard/context-menu key falls back to
-    // the keyboard-selected home entry.
-    TempStr path = HomePageFilePathAtTemp(win, x, y);
-    bool fromClick = path && path::IsAbsolute(path);
-    if (!fromClick) {
-        path = str::DupTemp(HomePageSelectedFilePathTemp(win));
+        return nullptr;
     }
     if (len(path) == 0 || !path::IsAbsolute(path)) {
-        return;
+        return nullptr;
     }
-
-    // Keep keyboard selection in sync with the right-clicked thumbnail
-    if (fromClick) {
-        HomePageOnHover(win, x, y);
+    // a server-only file: open (downloads it) or delete the server copy
+    if (IsServerOnlyFile(path)) {
+        HMENU popup = CreatePopupMenu();
+        AppendMenuW(popup, MF_STRING, CmdOpenSelectedDocument, ToWStrTemp(Tr("&Open Document")).s);
+        AppendMenuW(popup, MF_STRING, CmdDeleteFromServer, ToWStrTemp(Tr("Delete from server")).s);
+        return popup;
     }
-
     FileState* fs = FileHistoryFindByPath(path);
     if (!fs) {
-        return;
+        return nullptr;
     }
 
     BuildMenuCtx ctx;
@@ -1000,30 +1012,29 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     // Del is home-page-only (not a global accelerator), so AppendAccelKey won't
     // pick it up — show it next to Remove From History explicitly
     MenuSetText(popup, CmdForgetSelectedDocument, str::JoinTemp(Tr("&Remove From History"), StrL("\tDel")));
-    Point pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, {x, y});
-    // keyboard menu (no hit under the cursor): place at cursor or near the frame
-    if (!fromClick) {
-        Point cursor = GetCursorPosition();
-        if (!cursor.IsEmpty()) {
-            pt = cursor;
-        } else {
-            Rect rc = HwndWindowRect(win->hwndFrame);
-            pt = Point(rc.x + 40, rc.y + 80);
-        }
-    }
-    INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    DestroyMenu(popup);
+    AppendServerItems(popup, path);
+    (void)win;
+    return popup;
+}
 
+static void HomeContextMenuCommand(MainWindow* win, Str path, int cmd) {
     if (CmdOpenSelectedDocument == cmd) {
-        LoadArgs args(path, win);
-        args.activateExisting = !IsCtrlPressed();
-        args.activateExistingInWindow = true;
-        LoadDocument(&args);
+        HomePageOpenFile(win, path);
         return;
     }
 
     if (CmdShowInFolder == cmd) {
         ShowFileInFolder(win, path);
+        return;
+    }
+
+    if (CmdUploadToServer == cmd) {
+        UploadFileToServer(win, path);
+        return;
+    }
+
+    if (CmdDeleteFromServer == cmd) {
+        DeleteFileFromServer(win, path);
         return;
     }
 
@@ -1054,6 +1065,11 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
+    FileState* fs = FileHistoryFindByPath(path);
+    if (!fs) {
+        return;
+    }
+
     if (CmdPinSelectedDocument == cmd) {
         fs->isPinned = !fs->isPinned;
         win->DeleteToolTip();
@@ -1065,6 +1081,98 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         ForgetFileFromFrequentlyRead(win, path);
         return;
     }
+}
+
+// The home page menu of the selected entry (else the first), one
+// "idx\tkind\tcmd\tdisabled\tchecked\ttitle\taccel" row per item, as ng's
+// TestMainMenu.
+TempStr HomeContextMenuRowsTemp(MainWindow* win) {
+    if (!win->IsCurrentTabAbout()) {
+        return {};
+    }
+    Str path = HomePageSelectedFilePathTemp(win);
+    if (len(path) == 0) {
+        HomePageSelectFirst(win);
+        path = HomePageSelectedFilePathTemp(win);
+    }
+    HMENU popup = BuildHomeContextMenu(win, path);
+    if (!popup) {
+        return {};
+    }
+    str::Builder out;
+    int n = GetMenuItemCount(popup);
+    for (int i = 0; i < n; i++) {
+        WCHAR buf[256]{};
+        MENUITEMINFOW mii{};
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_ID | MIIM_FTYPE | MIIM_STATE | MIIM_STRING | MIIM_SUBMENU;
+        mii.dwTypeData = buf;
+        mii.cch = dimof(buf);
+        if (!GetMenuItemInfoW(popup, (UINT)i, TRUE, &mii)) {
+            continue;
+        }
+        if (mii.fType & MFT_SEPARATOR) {
+            out.Append(fmt("%d\t-\t\t0\t0\t\t\n", i));
+            continue;
+        }
+        Str kind = mii.hSubMenu ? StrL("S") : StrL("I");
+        Str cmd = mii.hSubMenu ? Str{} : GetCommandName((int)mii.wID);
+        TempStr text = ToUtf8Temp(WStr(buf));
+        Str accel;
+        int tab = str::IndexOfChar(text, '\t');
+        if (tab >= 0) {
+            accel = Str(text.s + tab + 1, len(text) - tab - 1);
+            text = str::DupTemp(Str(text.s, tab));
+        }
+        Str title = ParseMenuAccelTextTemp(text).display;
+        int disabled = (mii.fState & MFS_DISABLED) ? 1 : 0;
+        int checked = (mii.fState & MFS_CHECKED) ? 1 : 0;
+        out.Append(fmt("%d\t%s\t%s\t%d\t%d\t%s\t%s\n", i, kind, cmd, disabled, checked, title, accel));
+    }
+    DestroyMenu(popup);
+    return ToStrTemp(out);
+}
+
+void OnAboutContextMenu(MainWindow* win, int x, int y) {
+    if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !SettingsRememberOpenedFiles() ||
+        !gSettings->showStartPage) {
+        return;
+    }
+
+    // Prefer the file under the click; keyboard/context-menu key falls back to
+    // the keyboard-selected home entry.
+    TempStr path = HomePageFilePathAtTemp(win, x, y);
+    bool fromClick = path && path::IsAbsolute(path);
+    if (!fromClick) {
+        path = str::DupTemp(HomePageSelectedFilePathTemp(win));
+    }
+    if (len(path) == 0 || !path::IsAbsolute(path)) {
+        return;
+    }
+
+    // Keep keyboard selection in sync with the right-clicked thumbnail
+    if (fromClick) {
+        HomePageOnHover(win, x, y);
+    }
+
+    HMENU popup = BuildHomeContextMenu(win, path);
+    if (!popup) {
+        return;
+    }
+    Point pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, {x, y});
+    // keyboard menu (no hit under the cursor): place at cursor or near the frame
+    if (!fromClick) {
+        Point cursor = GetCursorPosition();
+        if (!cursor.IsEmpty()) {
+            pt = cursor;
+        } else {
+            Rect rc = HwndWindowRect(win->hwndFrame);
+            pt = Point(rc.x + 40, rc.y + 80);
+        }
+    }
+    INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+    DestroyMenu(popup);
+    HomeContextMenuCommand(win, path, cmd);
 }
 
 // removes a file from the Frequently Read list on the home page. Files with

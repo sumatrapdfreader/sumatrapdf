@@ -32,6 +32,7 @@
 #include "SumatraDialogs.h"
 #include "shared/PdfToolsCommon.h"
 #include "shared/SumatraPDFWebCommon.h"
+#include "ServerFiles.h"
 
 struct SumatraPDFWebWnd : WindowBase {
     ~SumatraPDFWebWnd() override = default;
@@ -189,6 +190,7 @@ void SumatraPDFWebWnd::OnForget(VirtMouseEvent*) {
     lastHttpStatus = 0;
     clearListStatus = false;
     ClearFileList();
+    ServerFilesReset();
     SetForgetEnabled(false);
     if (edit) {
         edit->SetText(Str{});
@@ -218,6 +220,7 @@ void SumatraPDFWebWnd::FinishVerify(OnlineVerifyResult* res) {
         if (!same) {
             ClearFileList();
         }
+        ServerFilesReset();
         lastHttpStatus = kHttpStatusOk;
         if (edit) {
             edit->SetText(res->token);
@@ -328,6 +331,7 @@ void SumatraPDFWebWnd::FinishUpload(OnlineJobResult* res) {
         return;
     }
     SetStatus(Tr("Uploaded."));
+    ServerFilesReset();
     UpdateFileButtons();
     StartList();
 }

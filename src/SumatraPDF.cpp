@@ -105,6 +105,7 @@
 #include "ImageSaveCropResize.h"
 #include "StressTesting.h"
 #include "HomePage.h"
+#include "ServerFiles.h"
 #include "DocumentProperties.h"
 #include "TabGroupsManage.h"
 #include "PageThumbnails.h"
@@ -10782,6 +10783,21 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdSumatraPDFWeb:
             ShowSumatraPDFWebDialog(win);
             break;
+
+        // the home page's selected entry
+        case CmdUploadToServer:
+        case CmdDeleteFromServer: {
+            Str path = win->IsCurrentTabAbout() ? HomePageSelectedFilePathTemp(win) : Str{};
+            if (len(path) == 0) {
+                break;
+            }
+            if (cmdId == CmdUploadToServer) {
+                UploadFileToServer(win, path);
+            } else {
+                DeleteFileFromServer(win, path);
+            }
+            break;
+        }
 
         case CmdCopyFilePath:
             CopyFilePath(tab);

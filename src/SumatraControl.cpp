@@ -734,6 +734,9 @@ enum class ControlCmd : u16 {
     // [action, a, b, c]: "drop" from to groupPos, "move" dir, "select" idx, or
     // "" for the state; answers with the strip groups and tabs (StripGroupsStateTemp)
     TestStripGroups = 169,
+    // the home page's context menu of the selected entry (else the first), in
+    // ng's TestMainMenu row format
+    TestContextMenuAt = 127,
     // 170 is ng's TestCaptureWindow
     // [ms]: every document open waits this long first, like a sleeping drive
     TestLoadDelay = 171,
@@ -2237,6 +2240,16 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = HomeSelectionResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestContextMenuAt: {
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            if (!win) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            AppendTestResult(req, 0, HomeContextMenuRowsTemp(win));
             break;
         }
 
