@@ -183,7 +183,7 @@ static void RefreshDpiLater(MainWindow* win) {
 // value when WM_DISPLAYCHANGE first arrives
 static void RefreshDpiAfterDisplayChange(MainWindow* win) {
     RefreshDpi(win);
-    uitask::Post(MkFunc0<MainWindow>(RefreshDpiLater, win), "DpiAfterDisplayChange");
+    PostForWindow(win, RefreshDpiLater, "DpiAfterDisplayChange");
 }
 
 Rect AppShellWindowScreenRect(MainWindow* win) {

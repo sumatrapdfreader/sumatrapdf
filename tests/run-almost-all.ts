@@ -652,6 +652,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["lint-posted-tasks", lintPostedTasks],
   ["auto-scroll-extras", autoScrollExtras],
   ["custom-zoom-dialog", customZoomDialog],
   ["sumatrapdf-web-dialog", sumatrapdfWebDialog],
@@ -842,7 +843,6 @@ export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
   ["lint-control-ids", lintControlIds],
-  ["lint-posted-tasks", lintPostedTasks],
   ["font-map-current", fontMapCurrent],
   ["build-cli", buildCli],
   ["app-unit-tests", appUnitTests],
