@@ -371,6 +371,7 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
 // works right now.
 TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
     TempStr res = str::DupTemp(StrL(""));
+    StrVec seen;
     int n = 0;
     for (int i = 0; i < gAccelsCount && n < maxCount; i++) {
         const Accel& a = gAccels[i];
@@ -391,9 +392,10 @@ TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
             continue;
         }
         // skip a duplicate that formats to the same text (e.g. '+' and numpad '+')
-        if (n > 0 && str::Contains(res, key)) {
+        if (seen.Contains(key)) {
             continue;
         }
+        seen.Append(key);
         if (n > 0) {
             res = str::JoinTemp(res, StrL(", "));
         }
