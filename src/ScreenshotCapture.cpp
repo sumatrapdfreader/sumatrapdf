@@ -308,6 +308,11 @@ static HBITMAP TrimBlackBorders(HBITMAP hbm, int* pW, int* pH) {
 
 // replace black corner pixels from PrintWindow with bgColor using a rounded corner mask
 static void FixRoundedCorners(HBITMAP hbm, int w, int h, Color bgColor, int radius) {
+    // corners must not overlap or index outside a tiny bitmap
+    radius = std::min(radius, std::min(w, h) / 2);
+    if (radius <= 0) {
+        return;
+    }
     BITMAPINFO bmi;
     InitBitmapInfo32(bmi, w, h);
 
