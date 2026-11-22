@@ -42,6 +42,7 @@ bool AppShellNativeMenu();
 void AppShellSyncMenu(MainWindow* win);
 // the model was rebuilt; the next sync of the front window reinstalls it
 void AppShellMenuRebuilt(MainWindow* win);
+void AppShellScheduleMenuRebuild(MainWindow* win);
 
 void AppShellInvalidate(MainWindow* win);
 // one line of gpui frame timings since the last call, for the -dbg-control

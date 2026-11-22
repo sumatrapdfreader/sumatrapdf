@@ -912,10 +912,24 @@ void UpdateWindowTitle(MainWindow* win) {
     AppShellSetTitle(win, title);
 }
 
+static int gMenuBuildCount = 0;
+
+int MenuBuildCount() {
+    return gMenuBuildCount;
+}
+
 void RebuildMenuBar(MainWindow* win) {
+    gMenuBuildCount++;
+    win->menuDirty = false;
     DeleteMenuModel(win->menu);
     win->menu = BuildMenu(win);
     AppShellMenuRebuilt(win);
+}
+
+void RebuildMenuIfDirty(MainWindow* win) {
+    if (win->menuDirty) {
+        RebuildMenuBar(win);
+    }
 }
 
 // Find the first window showing a given file.
@@ -7585,7 +7599,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
-    RebuildMenuBar(win);
+    // a held key repeats a command many times a second (scroll, zoom): the menu
+    // catches up once the commands pause, or as soon as a menu opens
+    win->menuDirty = true;
+    AppShellScheduleMenuRebuild(win);
     AppShellInvalidate(win);
 }
 

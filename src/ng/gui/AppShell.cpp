@@ -145,6 +145,7 @@ struct ShellView {
     // Rearming happens off the timer callback: cancelling the timer that is
     // firing shifts the window's other timers under the dispatch loop.
     int tickTimer = 0;
+    int menuRebuildTimer = 0;
     int tickMs = 0;
     int tickWanted = 0;
     bool tickRearmPosted = false;
@@ -159,6 +160,7 @@ struct ShellView {
     static void OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev);
     static void OnRearmTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent*);
     static void OnRevealCheck(ShellView* self, gp::Ctx* cx, const gp::TickEvent*);
+    static void OnMenuRebuildDue(ShellView* self, gp::Ctx* cx, const gp::TickEvent*);
     static void OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
     static void OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnKeyUp(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
@@ -1789,6 +1791,7 @@ static void UnderlineMenuBarTitle(gp::Ctx* cx, gp::El* bar, int barIdx, gp::Str 
 // matched here (orig lets win32 open the menu and underline the letter)
 static bool MenuBarOnAltKey(ShellView* self, gp::Ctx* cx, u16 vk) {
     MainWindow* win = self->win;
+    RebuildMenuIfDirty(win);
     // the macOS menu bar is the system's; it has no Alt access keys
     if (gp::AppHasMenuBar() || !win->menu) {
         return false;
@@ -1836,6 +1839,7 @@ static int MenuBarTitleCount(MainWindow* win) {
 // its first title, with no menu open
 static void MenuBarArm(ShellView* self, gp::Ctx* cx) {
     MainWindow* win = self->win;
+    RebuildMenuIfDirty(win);
     if (gp::AppHasMenuBar() || !win->menu || MenuBarTitleCount(win) == 0) {
         return;
     }
@@ -1987,6 +1991,10 @@ static gp::El* BuildMenuBar(ShellView* self, gp::Ctx* cx) {
         self->menuCues = false;
     }
     bool cues = self->menuCues || MenuCuesAlways();
+    // an open menu shows what the last command changed, even mid-burst
+    if (menuOpen) {
+        RebuildMenuIfDirty(win);
+    }
 
     struct BarTitle {
         gp::Str label;
@@ -3380,6 +3388,36 @@ static void ShellApplyTickPace(ShellView* self, gp::Window* gw, int ms) {
     }
     self->tickMs = ms;
     self->tickTimer = gp::WindowSetInterval(gw, ms, gp::ListenTo(ShellViewOf(self->win), &ShellView::OnTick));
+}
+
+// how long commands must pause before the menu is rebuilt
+constexpr int kMenuRebuildDelayMs = 150;
+
+// (re)starts the countdown: a burst of commands rebuilds once, after it ends
+void AppShellScheduleMenuRebuild(MainWindow* win) {
+    ShellView* self = nullptr;
+    if (win && win->gpuiWin && win->shell) {
+        self = (ShellView*)gp::EntityGet(win->gpuiWin->app, win->shell->view.id);
+    }
+    if (!self) {
+        RebuildMenuIfDirty(win);
+        return;
+    }
+    if (self->menuRebuildTimer) {
+        gp::WindowCancelTimer(win->gpuiWin, self->menuRebuildTimer);
+    }
+    gp::Listener l = gp::ListenTo(ShellViewOf(win), &ShellView::OnMenuRebuildDue);
+    self->menuRebuildTimer = gp::WindowSetTimeout(win->gpuiWin, kMenuRebuildDelayMs, l);
+}
+
+void ShellView::OnMenuRebuildDue(ShellView* self, gp::Ctx*, const gp::TickEvent*) {
+    self->menuRebuildTimer = 0;
+    MainWindow* win = self->win;
+    if (!IsMainWindowValidAndNotClosing(win) || !win->menuDirty) {
+        return;
+    }
+    RebuildMenuBar(win);
+    AppShellInvalidate(win);
 }
 
 void ShellView::OnRevealCheck(ShellView* self, gp::Ctx*, const gp::TickEvent*) {

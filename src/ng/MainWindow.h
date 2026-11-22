@@ -248,6 +248,8 @@ struct MainWindow {
 
     // the menu bar, rebuilt when the document or the selection changes
     MenuModel* menu = nullptr;
+    // a command changed what the menu shows; rebuilt after a pause (ExecuteCmd)
+    bool menuDirty = false;
     bool isMenuBarVisible = true;
     // ng: orig rebuilds the menu on the way out of fullscreen from
     // IsMenubarVisible(); the port's menu bar is a row of its own that F9

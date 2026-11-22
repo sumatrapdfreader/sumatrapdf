@@ -53,6 +53,8 @@ void SetTocVisibility(MainWindow* win, bool tocVisible, SidebarResizeFrame = Sid
 
 void UpdateWindowTitle(MainWindow* win);
 void RebuildMenuBar(MainWindow* win);
+void RebuildMenuIfDirty(MainWindow* win);
+int MenuBuildCount();
 void ExecuteCmd(MainWindow* win, int cmdId);
 // set by the last ExecuteCmd() that reached its default branch
 extern bool gLastCmdFellThrough;

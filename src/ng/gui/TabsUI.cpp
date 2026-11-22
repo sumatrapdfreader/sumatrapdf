@@ -737,6 +737,12 @@ gp::El* TabsUIMenuButton(MainWindow* win, gp::Ctx* cx) {
         return nullptr;
     }
     gpc::PopupMenu* popup = AppShellMenuPopup(cx, win->menu, StrL("sumatra-menu-btn"), MenuCuesAlways());
+    // an open menu shows what the last command changed, even mid-burst
+    gp::PopupMenuState* popupState = popup->state.Get(cx);
+    if (win->menuDirty && popupState && popupState->open) {
+        RebuildMenuBar(win);
+        popup = AppShellMenuPopup(cx, win->menu, StrL("sumatra-menu-btn"), MenuCuesAlways());
+    }
     popup->MinW(160);
     TrackPopup(cx, popup);
 
