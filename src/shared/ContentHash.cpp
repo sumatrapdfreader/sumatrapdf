@@ -434,7 +434,10 @@ static void PostResult(HashJob* job, HashState st) {
     auto* res = new HashResult();
     res->path = str::Dup(job->path);
     res->st = st;
-    res->h = job->h;
+    // after a stall the I/O thread may still be writing job->h
+    if (st == HashState::Hashed) {
+        res->h = job->h;
+    }
     uitask::Post(MkFunc0(HashResultDone, res), "ContentHashDone");
 }
 
