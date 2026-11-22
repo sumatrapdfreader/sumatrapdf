@@ -110,7 +110,7 @@ void WebViewClearChat(MainWindow* win) {
 void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     AIChatProvider* p = CurrentProvider(win);
-    TempStr msg = fmt("%s is only available for PDF and image files.", p ? p->name : StrL("AI chat"));
+    TempStr msg = fmt("%s is only available for PDF files.", p ? p->name : StrL("AI chat"));
     TempStr js = fmt("addError('%s')", AIChatJsEscapeTemp(msg));
     WebViewEval(win, js, false);
 }
