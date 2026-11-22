@@ -157,16 +157,6 @@ static Color BarHoverBg() {
     return AccentColor(BarBg(), 10);
 }
 
-// --- PdfColor helpers (orig's) ----------------------------------------------
-
-// --- which chips an annotation gets (orig's CollectItems) --------------------
-
-// clang-format on
-
-// --- the names each list drop-down offers -----------------------------------
-
-// clang-format on
-
 // orig paints the annotation list's rows itself (type on the left, contents in
 // a muted color, page on the right). gpui's list rows are text, so the three
 // columns become one string.
@@ -2108,9 +2098,6 @@ TempStr AnnotColorPopupStateTemp(MainWindow* win) {
 
 // --- selection and the annotation lists -------------------------------------
 
-// Drop non-owning Annotation* held by UI (selection, drag, hover, form edit).
-// Call before DeleteAnnotation frees the wrapper, or when the engine is about
-// to die and raw Annotation* must not be used again.
 // drops the click anchor of an annotation that is going away
 void DetachAnnotationFromEditors(Annotation* annot) {
     if (annot == gClickAnchorAnnot) {
@@ -2185,8 +2172,6 @@ bool AnnotResizeRerenderPending(MainWindow* win) {
 }
 
 // --- the hover card of the annotation under the cursor (Edit PDF) -----------
-
-// clang-format on
 
 // ng: orig's card is a layered popup window (a VirtHost); here it is an
 // element the canvas draws, so this keeps what the card shows and where

@@ -3,7 +3,7 @@
 
 // ng: what a browser tab offers in place of the desktop's file services.
 // gpui's wasm backend has no PromptForPathTemp and no downloads, so these are
-// ours (src/gui/WasmBridge_wasm.cpp): a <input type=file> that lands the bytes
+// ours (src/ng/gui/WasmBridge_wasm.cpp): a <input type=file> that lands the bytes
 // in MEMFS, blob download / sharing, and OPFS write-back.
 
 #if OS_WASM
@@ -12,7 +12,7 @@
 // sample documents live
 constexpr const char* kWasmUploadDir = "/uploads";
 constexpr const char* kWasmDocsDir = "/docs";
-// loaded from OPFS by src/gui/WasmShell.js; GetAppDataDirTemp() answers it
+// loaded from OPFS by src/ng/gui/WasmShell.js; GetAppDataDirTemp() answers it
 constexpr const char* kWasmSettingsDir = "/settings";
 
 // Opens the browser's file picker. The file is written to kWasmUploadDir and

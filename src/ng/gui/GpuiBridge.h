@@ -102,9 +102,6 @@ inline Rect FromGpui(gp::ScreenBounds b) {
     return Rect{b.x, b.y, b.w, b.h};
 }
 
-// ng: gpui's Listen() needs the listener's owner entity type, so it can't be
-// wrapped generically. This is the one shape the shell repeats: a handler on
-// the root view entity.
 // Blur a text field in the window it is focused in. A dialog's field lives in
 // its tool window: blurred against the main window, the tool window kept
 // pointing at it after it was freed, and closing that window read it.

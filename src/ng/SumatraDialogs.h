@@ -281,8 +281,8 @@ int PageGridMarkPixels(MainWindow* win);
 // --- print options ----------------------------------------------------------
 
 // ng: the Advanced page of the print dialog is a win32 property sheet page
-// (the print dialog itself is the OS one), so it stays win32; it lives in
-// Print.cpp because there is no .rc here and the template is built in memory.
+// (the print dialog itself is the OS one), so it stays win32. There is no .rc
+// here: SumatraDialogs.cpp builds the template in memory.
 
 enum class PrintRangeAdv {
     All = 0,

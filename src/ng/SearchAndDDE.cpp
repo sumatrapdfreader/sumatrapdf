@@ -572,9 +572,6 @@ Handle all commands as defined in Commands.h
 eg: [CmdClose] or [CmdCreateAnnotHighlight #00ff00 openEdit]
 */
 
-// returns true if did handle a message
-// ng: orig also has [ForwardSearch(...)], which needs the forward-search mark
-// this port doesn't draw yet
 void DdeExecuteBegin() {}
 
 // [Open] / [GotoPageWord] / the rest of the DDE execute grammar.

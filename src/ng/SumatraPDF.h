@@ -32,7 +32,6 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 TempStr RenameFileResultTemp(Str dstPath, int* exitCodeOut);
 Str CliPassword();
 
-// orig's sidebar layout limits (SumatraPDF.cpp)
 // orig re-arms a WM_TIMER on the canvas; the shell's tick counts this down
 constexpr int kAutoReloadDelayInMs = 100;
 // give up waiting for a writer to go quiet after this long
@@ -182,9 +181,6 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
 
 // if pt is given (a point on the canvas) that point stays put across the zoom
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
-
-enum class FileType : u8;
-// true for the ebook formats EbookDoc handles (epub, fb2, mobi, palmdoc)
 
 bool SettingsUseTabs();
 bool SettingsRememberOpenedFiles();

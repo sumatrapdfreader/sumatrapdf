@@ -4,10 +4,9 @@
 // ng: orig's Canvas.cpp, the part that draws and drives a DisplayModel:
 // DrawDocument, the page frame and shadow, the WM_VSCROLL / WM_HSCROLL
 // handlers, the mouse wheel (scroll, page flip, cursor-anchored ctrl+wheel
-// zoom), drag panning, middle-button auto-scroll, and (step 8a) the mouse
-// handling for links and selection. The win32 half (HDC, capture, timers,
-// touch, OLE drag-drop) is gpui here; find and annotations arrive with steps
-// 8b and 13.
+// zoom), drag panning, middle-button auto-scroll, and the mouse handling for
+// links, selection and annotations. The win32 half (HDC, capture, timers,
+// touch, OLE drag-drop) is gpui here.
 
 #include "gui/GpuiBridge.h"
 #include "base/Pixmap.h"

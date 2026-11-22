@@ -139,8 +139,6 @@ void ProcessesUsingInstallation(StrVec& names) {
     }
 }
 
-// clang-format on
-
 // ng repaints on its next frame
 void InstallerRepaintNow() {}
 

@@ -101,10 +101,6 @@ struct KeyboardLinkTarget {
     int hintLen = 0;
 };
 
-// ng: orig keeps the scroll range on the canvas HWND and reads it back with
-// GetScrollInfo(). gpui has no window scrollbars, so UpdateScrollbars fills
-// this in and the overlay scrollbars and OnVScroll / OnHScroll read it. The
-// field names are win32's SCROLLINFO, so the ported code stays readable.
 enum class ReadingBarDrag {
     None = 0,
     Move,
@@ -185,6 +181,10 @@ enum class ResizeHandle {
     Vertex,
 };
 
+// ng: orig keeps the scroll range on the canvas HWND and reads it back with
+// GetScrollInfo(). gpui has no window scrollbars, so UpdateScrollbars fills
+// this in and the overlay scrollbars and OnVScroll / OnHScroll read it. The
+// field names are win32's SCROLLINFO, so the ported code stays readable.
 struct CanvasScrollInfo {
     int nMin = 0;
     int nMax = 0;

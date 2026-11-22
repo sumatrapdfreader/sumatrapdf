@@ -280,8 +280,6 @@ void AppShellOnDpiChanged(MainWindow* win, int dpi) {
     AppShellInvalidate(win);
 }
 
-// gpui keeps the last kFrameTraceCap frames per window; the cursor makes each
-// call report only what was drawn since the previous one
 // --- the caption (orig's tabsInTitlebar) -------------------------------------
 
 static gp::El* BuildMenuBar(ShellView* self, gp::Ctx* cx);
@@ -554,6 +552,8 @@ static void BuildCaption(ShellView* self, gp::Ctx* cx, gp::El* root, bool twoRow
     }
 }
 
+// gpui keeps the last kFrameTraceCap frames per window; the cursor makes each
+// call report only what was drawn since the previous one
 TempStr AppShellFrameStatsTemp(MainWindow* win, bool reset) {
     static u64 cursor = 0;
     if (reset) {
@@ -3328,8 +3328,6 @@ void ShellView::OnKeyUp(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {
     }
 }
 
-// drains the ui task queue, runs middle-button auto-scroll and repaints while
-// a page is still rendering
 #if OS_DARWIN || OS_WASM
 // The framebuffer is a scaled copy of the logical canvas. Tiles have to be
 // rendered at that scale or the page is stretched.
@@ -3448,6 +3446,8 @@ static void OnWindowBounds(void* data, gp::Window*, gp::WindowBoundsEvent ev) {
     }
 }
 
+// drains the ui task queue, runs middle-button auto-scroll and repaints while
+// a page is still rendering
 void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     uitask::DrainQueue();
     AppShellReapClosedWindows();
@@ -3535,7 +3535,6 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     }
 }
 
-// Document area under the caption, menu, tabs and toolbar.
 // At most one drain queued: every uitask::Post wakes, and a second drain in
 // the same batch runs what the first one posted. A job that runs in slices
 // (see kUiSliceMs) then runs slice after slice without the browser getting a

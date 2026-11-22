@@ -119,7 +119,7 @@ Pixmap* AppShellAppIconPixmap(MainWindow* win);
 void AppShellForgetNativeHwnd(MainWindow* win);
 // ng: gpui has no fullscreen window state (see "gpui gaps"). On Windows this
 // is orig's EnterFullScreen / ExitFullScreen on the native frame
-// (src/gui/NativeWindow.cpp); elsewhere WindowSetFullScreen.
+// (src/ng/gui/NativeWindow.cpp); elsewhere WindowSetFullScreen.
 // `restoreMaximized` re-maximizes on the way out (orig: the window was
 // maximized before presentation mode).
 void AppShellSetFullScreen(MainWindow* win, bool fullScreen, bool restoreMaximized);

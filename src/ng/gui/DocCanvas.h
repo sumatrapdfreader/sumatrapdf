@@ -3,8 +3,7 @@
 
 // ng: the gpui half of orig's Canvas.cpp - the DisplayModel-driven part:
 // DrawDocument, the page frame / shadow, scrolling, wheel, drag panning and
-// the overlay scrollbars. Links, selection, find, annotations and the touch /
-// gesture handlers arrive with steps 8 and 13.
+// the overlay scrollbars, links, selection, annotations and touch gestures.
 
 namespace gpui {
 struct Ctx;
