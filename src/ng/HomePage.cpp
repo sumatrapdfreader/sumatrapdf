@@ -852,11 +852,7 @@ void CopyAboutInfoToClipboard(MainWindow* win) {
 }
 
 void HomeView::OnCopyInfo(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*) {
-    str::Builder info;
-    info.Reserve(1024);
-    AppendBugReportInfo(info);
-    gp::ClipboardSetText(cx->win, ToGpui(ToStr(info)));
-    info.Reset();
+    CopyAboutInfoToClipboard(self->win);
     HomeNotify(self->win, cx);
 }
 
@@ -1152,7 +1148,6 @@ static gp::El* AboutPageBuild(MainWindow* win, gp::Ctx* cx) {
     if (!showLink) {
         return root;
     }
-    (void)win;
     gp::El* link = gp::TextEl(cx->a, ToGpui(Tr("Show frequently read")))
                        ->Font((float)kAboutTextFontPx)
                        ->BorderB(1, ToGpui(ThemeWindowTextDisabledColor()))
@@ -1904,8 +1899,8 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
         outline = outlineFull.Intersect(BoundsRect(h->entriesView));
     }
     Rect lastCaption;
-    if (!HomePageIsListView() && len(h->entryBounds) > 0) {
-        lastCaption = BoundsRect(h->entryBounds[len(h->entryBounds) - 1]);
+    if (!HomePageIsListView() && h->entryCount > 0 && h->entryCount <= len(h->entryBounds)) {
+        lastCaption = BoundsRect(h->entryBounds[h->entryCount - 1]);
     }
     Rect tipRect = BoundsRect(h->tipBounds);
     // the header row's items, which must not overlap (issue #6367)
