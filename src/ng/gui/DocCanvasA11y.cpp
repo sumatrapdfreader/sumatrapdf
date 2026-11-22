@@ -175,6 +175,9 @@ static bool DocA11yPageRange(void* data, int part, int* start, int* end) {
         return false;
     }
     BuildText(a);
+    if (part < 0 || part >= len(a->pageStart)) {
+        return false;
+    }
     *start = a->pageStart[part];
     *end = *start + a->pageLen[part];
     return true;
