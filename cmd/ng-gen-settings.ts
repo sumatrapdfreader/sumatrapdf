@@ -1893,7 +1893,7 @@ const globalPrefs: Field[] = [
     "ShowFileNavigateHint",
     Bool,
     true,
-    "if true, at the end of a document show a hint to open the next file in the folder. Closing the hint sets it to false",
+    "if true, going on at the end of a document (next page, Page Down, Space) offers the next file in the folder, and going on again opens it. Closing the hint sets it to false",
   ).ver("3.7"),
   field(
     "ShowAnnotationAuthorInTooltip",

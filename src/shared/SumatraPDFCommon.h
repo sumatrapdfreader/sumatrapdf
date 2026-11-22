@@ -90,6 +90,7 @@ void ClearPendingNextPrevNav();
 void DeferNextPrevNav(MainWindow* win, WindowTab* tab, bool forward, Str pathToDelete);
 void ReplayPendingNextPrevNav();
 bool IsAtDocumentBottom(MainWindow* win);
+bool GoOnToNextFile(MainWindow* win, int cmdId);
 void OnNextFileHintClosed(NotificationClosedEvent* ev);
 void ToggleMangaMode(MainWindow* win);
 void ToggleFacingStepOne(MainWindow* win);

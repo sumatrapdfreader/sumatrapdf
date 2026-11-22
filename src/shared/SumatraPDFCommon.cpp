@@ -1122,6 +1122,30 @@ bool IsAtDocumentBottom(MainWindow* win) {
     return false;
 }
 
+// A command that goes on (next page, Page Down, Space, ...) at the end of the
+// document while the next-file hint shows opens that file, as the hint offers:
+// the first going on shows it, the second takes it. The wheel doesn't come
+// here, so a burst of notches can't open a file. True when it opened.
+bool GoOnToNextFile(MainWindow* win, int cmdId) {
+    bool goesOn = cmdId == CmdGoToNextPage || cmdId == CmdScrollDown || cmdId == CmdScrollDownHalfPage ||
+                  cmdId == CmdScrollDownPage;
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if ((cmdId == CmdScrollRight || cmdId == CmdScrollLeft) && dm && !dm->NeedHScroll()) {
+        // manga (R2L): Left goes on
+        goesOn = (cmdId == CmdScrollRight) != dm->GetDisplayR2L();
+    }
+    if (!goesOn || !IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded() || win->IsCurrentTabAbout()) {
+        return false;
+    }
+    NotificationWnd* hint = GetNotificationForGroup(win, kNotifNextFileHint);
+    if (!hint || hint->tab != win->CurrentTab() || !IsAtDocumentBottom(win)) {
+        return false;
+    }
+    DismissNextFileScrollHint(win);
+    OpenNextPrevFileInFolder(win, true);
+    return true;
+}
+
 void OnNextFileHintClosed(NotificationClosedEvent* ev) {
     RemoveNotification(ev->wnd);
     if (ev->reason != NotifCloseReason::User) {

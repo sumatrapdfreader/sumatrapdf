@@ -2486,6 +2486,7 @@ void DuplicateTabInNewTab(WindowTab* tab) {
 // --- next / prev file in folder ---------------------------------------------
 
 static int gNextPrevDirScanGen = 0;
+static void MaybeShowNextFileScrollHint(MainWindow* win);
 static StrVec gFilesFailedToOpen;
 
 void RemoveFailedFiles(StrVec& files) {
@@ -2520,6 +2521,20 @@ static void FinishNextPrevDirScan(NextPrevDirScan* r) {
     gNextPrevDirScanning = false;
 
     ReplayPendingNextPrevNav();
+
+    // the going on that started the scan offers the next file now
+    for (MainWindow* w : gWindows) {
+        if (!IsMainWindowValidAndNotClosing(w) || !w->IsDocLoaded()) {
+            continue;
+        }
+        WindowTab* tab = w->CurrentTab();
+        if (!tab || len(tab->filePath) == 0 || !str::EqI(path::GetDirTemp(tab->filePath), gNextPrevDir)) {
+            continue;
+        }
+        if (IsAtDocumentBottom(w)) {
+            MaybeShowNextFileScrollHint(w);
+        }
+    }
 }
 
 static void NextPrevDirScanThread(NextPrevDirScan* req) {
@@ -5745,6 +5760,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
     // a SelectionHandlers entry from the settings file
     if (cmdId == CmdSelectionHandler) {
         RunSelectionHandler(tab, cmd);
+        return;
+    }
+    // going on again while the end-of-document hint offers the next file
+    if (GoOnToNextFile(win, cmdId)) {
         return;
     }
 

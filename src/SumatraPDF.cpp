@@ -10560,6 +10560,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
 
+    // going on again while the end-of-document hint offers the next file
+    if (GoOnToNextFile(win, cmdId)) {
+        return 0;
+    }
+
     auto* ctrl = win->ctrl;
     DisplayModel* dm = win->AsFixed();
 
