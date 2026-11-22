@@ -469,6 +469,34 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (cmdId <= CmdFirst) {
         return CommandVisibility::Hide;
     }
+
+    // sumatrapdfrestrict.ini wins over every rule below (e.g. the no-document whitelist)
+    if (!HasPermission(Perm::InternetAccess) && CmdIdInList(cmdId, removeIfNoInternetPerms)) {
+        return CommandVisibility::Hide;
+    }
+    if (!HasPermission(Perm::FullscreenAccess) && CmdIdInList(cmdId, removeIfNoFullscreenPerms)) {
+        return CommandVisibility::Hide;
+    }
+    if (!HasPermission(Perm::SavePreferences) && CmdIdInList(cmdId, removeIfNoPrefsPerms)) {
+        return CommandVisibility::Hide;
+    }
+    if (!HasPermission(Perm::PrinterAccess) && (cmdId == CmdPrint || cmdId == CmdPrintSelection)) {
+        return CommandVisibility::Hide;
+    }
+    if (!CanAccessDisk()) {
+        if (CmdIdInList(cmdId, removeIfNoDiskAccessPerm)) {
+            return CommandVisibility::Hide;
+        }
+        if (CmdIdInList(cmdId, removeIfAnnotsNotSupported)) {
+            return CommandVisibility::Hide;
+        }
+        if (IsOpenWithKnownExternalViewerCmd(cmdId)) {
+            return CommandVisibility::Hide;
+        }
+    }
+    if (!HasPermission(Perm::CopySelection) && CmdIdInList(cmdId, removeIfNoCopyPerms)) {
+        return CommandVisibility::Hide;
+    }
     if (cmdId == CmdDebugToggleDpiOverride && !ctx.debugDpiOverrideAvailable) {
         return CommandVisibility::Hide;
     }
@@ -625,12 +653,6 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
             return CommandVisibility::Show;
         }
         return MapForSurface(CommandVisibility::Disable, surface);
-    }
-
-    // The whitelist returns before the permission lists. This command is on
-    // that list, so the internet and prefs checks have to happen here.
-    if (cmdId == CmdSumatraPDFWeb && (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::SavePreferences))) {
-        return CommandVisibility::Hide;
     }
 
     // on the whitelist too, so checked before it
@@ -977,35 +999,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Disable;
     }
 
-    if (!HasPermission(Perm::InternetAccess) && CmdIdInList(cmdId, removeIfNoInternetPerms)) {
-        return CommandVisibility::Hide;
-    }
-    if (!HasPermission(Perm::FullscreenAccess) && CmdIdInList(cmdId, removeIfNoFullscreenPerms)) {
-        return CommandVisibility::Hide;
-    }
-    if (!HasPermission(Perm::SavePreferences) && CmdIdInList(cmdId, removeIfNoPrefsPerms)) {
-        return CommandVisibility::Hide;
-    }
-    if (!HasPermission(Perm::PrinterAccess) && (cmdId == CmdPrint || cmdId == CmdPrintSelection)) {
-        return CommandVisibility::Hide;
-    }
     // orig's MenuUpdatePrintItem also relabels the row "&Print... (denied)"
     if (!ctx.allowsPrinting && cmdId == CmdPrint) {
         return CommandVisibility::Disable;
-    }
-    if (!CanAccessDisk()) {
-        if (CmdIdInList(cmdId, removeIfNoDiskAccessPerm)) {
-            return CommandVisibility::Hide;
-        }
-        if (CmdIdInList(cmdId, removeIfAnnotsNotSupported)) {
-            return CommandVisibility::Hide;
-        }
-        if (IsOpenWithKnownExternalViewerCmd(cmdId)) {
-            return CommandVisibility::Hide;
-        }
-    }
-    if (!HasPermission(Perm::CopySelection) && CmdIdInList(cmdId, removeIfNoCopyPerms)) {
-        return CommandVisibility::Hide;
     }
 
     if (!ctx.cursorOnLinkTarget && cmdId == CmdCopyLinkTarget) {

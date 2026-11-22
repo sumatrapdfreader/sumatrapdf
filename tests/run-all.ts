@@ -30,6 +30,7 @@ import { testit as issue2693 } from "./issue-2693.ts";
 import { testit as issue5865 } from "./issue-5865.ts";
 import { testit as ghsaCrhmW5qrWjj4 } from "./security-ghsa-crhm-w5qr-wjj4.ts";
 import { testit as issue6314 } from "./issue-6314.ts";
+import { testit as restrictCommands } from "./restrict-commands.ts";
 import { testit as issue1195 } from "./issue-1195.ts";
 import { testit as issue5870ListDirs } from "./issue-5870-list-dirs.ts";
 import { testit as issue1324 } from "./issue-1324.ts";
@@ -81,6 +82,7 @@ export const slowTests: NamedTest[] = [
   ["security-ghsa-crhm-w5qr-wjj4", ghsaCrhmW5qrWjj4],
   // copies the exe next to a restrict ini, like the ghsa test above
   ["issue-6314", issue6314],
+  ["restrict-commands", restrictCommands],
   ["issue-1195", issue1195],
   ["dvi-open", dviOpen],
   // quits during background EPUB layout; ASan catches the font-cache use-after-free
