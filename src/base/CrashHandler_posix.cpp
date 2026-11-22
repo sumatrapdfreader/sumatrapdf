@@ -183,6 +183,12 @@ static bool ShouldUpload(bool isCrash) {
     return isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
 }
 
+// glibc marks write() warn_unused_result, which a (void) cast doesn't silence
+static void WriteStderr(Str s) {
+    ssize_t n = write(STDERR_FILENO, s.s, (size_t)len(s));
+    (void)n;
+}
+
 // sig, sigInfo and uctx are the signal handler's arguments; 0 / null for a debug report
 static void WriteCrashReport(Str condStr, Str fileLine, bool isCrash, int sig, void* sigInfo, void* uctx) {
     str::Builder b(gCrashHandlerArena);
@@ -222,8 +228,8 @@ static void WriteCrashReport(Str condStr, Str fileLine, bool isCrash, int sig, v
     }
     // log() takes a lock the faulting code may hold
     TempStr msg = fmt("crash report written to '%s'\n", path);
-    write(STDERR_FILENO, msg.s, (size_t)len(msg));
-    write(STDERR_FILENO, report.s, (size_t)len(report));
+    WriteStderr(msg);
+    WriteStderr(report);
 }
 
 static void RestoreDefaultSignals();
