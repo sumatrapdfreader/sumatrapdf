@@ -40,6 +40,67 @@ void ArchiveTest() {
 #endif
 }
 
+// flags every zip header as UTF-8 and puts an invalid UTF-8 byte in name, so
+// libarchive returns ARCHIVE_WARN for that entry's header
+static void MakeZipNameInvalidUtf8(Str zip, Str name) {
+    u8* d = (u8*)zip.s;
+    int n = len(zip);
+    for (int i = 0; i + 4 <= n; i++) {
+        bool local = d[i] == 'P' && d[i + 1] == 'K' && d[i + 2] == 3 && d[i + 3] == 4;
+        bool central = d[i] == 'P' && d[i + 1] == 'K' && d[i + 2] == 1 && d[i + 3] == 2;
+        int flagsOff = local ? 7 : (central ? 9 : 0);
+        if (flagsOff && i + flagsOff < n) {
+            d[i + flagsOff] |= 0x08; // bit 11: name is UTF-8
+        }
+        if (i + len(name) <= n && memcmp(d + i, name.s, (size_t)len(name)) == 0) {
+            d[i + 1] = 0xff;
+        }
+    }
+}
+
+// both entries, in whatever order the directory listing gave them
+static bool HasBothEntries(Archive& archive) {
+    if (len(archive.GetFileInfos()) != 2) {
+        return false;
+    }
+    str::Builder all;
+    for (int i = 0; i < 2; i++) {
+        auto* fi = archive.GetFileDataById(i);
+        if (!fi || !fi->data) {
+            return false;
+        }
+        all.Append(Str(fi->data, fi->fileSizeUncompressed));
+    }
+    Str got = ToStr(all);
+    return str::Eq(got, StrL("firstsecond")) || str::Eq(got, StrL("secondfirst"));
+}
+
+void ArchiveWarnTest() {
+#if !OS_WASM
+    TempStr dir = GetTempFilePathTemp(StrL("zipwarn"));
+    file::Delete(dir);
+    utassert(dir::Create(dir));
+    utassert(file::WriteFile(path::JoinTemp(dir, StrL("aaaa.txt")), StrL("first")));
+    utassert(file::WriteFile(path::JoinTemp(dir, StrL("bbbb.txt")), StrL("second")));
+    Str zip = ZipDirToData(dir, false);
+    dir::RemoveAll(dir);
+    utassert(len(zip) > 0);
+    MakeZipNameInvalidUtf8(zip, StrL("aaaa.txt"));
+    MakeZipNameInvalidUtf8(zip, StrL("bbbb.txt"));
+
+    // a warning on an entry's header must not end the listing
+    Archive archive;
+    utassert(archive.OpenFromData(zip));
+    utassert(HasBothEntries(archive));
+
+    // lazy loading re-reads the headers to reach an entry
+    Archive lazy;
+    utassert(lazy.OpenFromData(zip, false));
+    utassert(HasBothEntries(lazy));
+    str::Free(zip);
+#endif
+}
+
 void ZipDirTest() {
 #if !OS_WASM
     TempStr dir = GetTempFilePathTemp(StrL("zipdir"));

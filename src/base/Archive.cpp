@@ -59,6 +59,12 @@ Archive::~Archive() {
     ArenaDelete(a);
 }
 
+// ARCHIVE_WARN (e.g. a name that doesn't convert) still yields a usable header
+static bool NextHeader(struct archive* a, struct archive_entry** entry) {
+    int r = archive_read_next_header(a, entry);
+    return r == ARCHIVE_OK || r == ARCHIVE_WARN;
+}
+
 static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
     int size = fileInfo->fileSizeUncompressed;
     if (size <= 0) {
@@ -98,7 +104,7 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
     i64 eagerSize = 0;
     ArchiveExtractProgress prog{};
     prog.nTotal = -1; // libarchive streams; total is only known at end
-    while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+    while (NextHeader(a, &entry)) {
         if (fileId >= kMaxArchiveEntries) {
             return false;
         }
@@ -390,7 +396,7 @@ Str Archive::ReadLibarchiveEntry(FileInfo* fi, int toRead, bool* permanent) {
     }
 
     struct archive_entry* entry;
-    for (int idx = 0; archive_read_next_header(a, &entry) == ARCHIVE_OK; idx++) {
+    for (int idx = 0; NextHeader(a, &entry); idx++) {
         if (idx != fi->fileId) {
             archive_read_data_skip(a);
             continue;

@@ -68,6 +68,7 @@ void UpdateCheckDecisionTest();
 // in src/base/tests/
 void ArchiveTest();
 void ZipDirTest();
+void ArchiveWarnTest();
 void BaseUtilTest();
 void ByteOrderTests();
 void ClipboardImageTest();
@@ -673,6 +674,7 @@ int RunAppUnitTests(bool forAi) {
 
     ArchiveTest();
     ZipDirTest();
+    ArchiveWarnTest();
     BaseUtilTest();
     ByteOrderTests();
     ClipboardImageTest();
