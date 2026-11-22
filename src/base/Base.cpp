@@ -4023,6 +4023,22 @@ int utf8StrLen(const u8* s) {
 
 // --- end of Unicode, Inc. utf8 code
 
+// runes in s, -1 if it isn't valid UTF-8; utf8StrLen within len
+static int Utf8RuneCountChecked(Str s) {
+    const u8* p = (const u8*)s.s;
+    const u8* end = p + len(s);
+    int n = 0;
+    while (p < end) {
+        int k = utf8RuneLen(p);
+        if (k > end - p || !isLegalUTF8(p, k)) {
+            return -1;
+        }
+        p += k;
+        n++;
+    }
+    return n;
+}
+
 void str::AppendBase64(str::Builder& out, const u8* data, size_t size) {
     static constexpr char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     for (size_t i = 0; i < size; i += 3) {
@@ -4239,18 +4255,19 @@ static TempStr ShortenStringTemp(Str s, int maxLen) {
     if (sLen <= maxLen) {
         return s;
     }
-    char* ret = AllocArrayTemp<char>(maxLen + 2);
-    const int half = maxLen / 2;
+    // the "..." in the middle needs a few characters on each side
+    const int half = std::max(maxLen / 2, 2);
+    char* ret = AllocArrayTemp<char>((2 * half) + 1);
     for (int i = 0; i < half; i++) {
         ret[i] = s.s[i];
         ret[i + half] = s.s[sLen - half + i];
     }
     ret[half - 2] = ret[half - 1] = ret[half] = '.';
-    return Str(ret, maxLen + 2);
+    return Str(ret, 2 * half);
 }
 
 TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
-    int nRunes = utf8StrLen((u8*)s.s);
+    int nRunes = Utf8RuneCountChecked(s);
     if (nRunes < 0) {
         int sLen = len(s);
         if (sLen <= maxRunes) {
@@ -4290,7 +4307,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
 }
 
 TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
-    int nRunes = utf8StrLen((u8*)s.s);
+    int nRunes = Utf8RuneCountChecked(s);
     if (nRunes < 0) {
         return ShortenStringTemp(s, maxRunes);
     }
