@@ -10933,6 +10933,191 @@ static pdf_obj* PageResourceDict(fz_context* ctx, pdf_document* doc, pdf_obj* pa
     return dict;
 }
 
+// a stamp whose text Helvetica can't show (Thai, Arabic, Zażółć) is laid out by
+// mupdf's HTML engine at this size: system fonts, shaped, right to left
+constexpr float kStampStoryEm = 100;
+// the story's frame: wide enough that one line never wraps
+constexpr float kStampStoryDx = 100000;
+constexpr float kStampStoryDy = 1000;
+
+// a PDF text string of `s`, UTF-16BE in hex: <FEFF...>
+static TempStr PdfTextStringHexTemp(fz_context* ctx, Str s) {
+    str::Builder out;
+    out.Append(StrL("<FEFF"));
+    const char* p = CStrTemp(s);
+    while (*p) {
+        int c = 0;
+        p += fz_chartorune(&c, p);
+        if (c >= 0x10000) {
+            c -= 0x10000;
+            out.Append(fmt("%04X%04X", 0xd800 + (c >> 10), 0xdc00 + (c & 0x3ff)));
+        } else {
+            out.Append(fmt("%04X", c));
+        }
+    }
+    out.AppendChar('>');
+    return ToStrTemp(out);
+}
+
+// where a story's line is, at kStampStoryEm, y down; x1 < x0 when empty
+struct StampLine {
+    float x0 = 1e9f;
+    float x1 = -1e9f;
+    float baseline = 0;
+};
+
+// the stamp's text drawn by mupdf's HTML engine into a display list
+static fz_display_list* StampStoryList(fz_context* ctx, const PdfStamp& st, StampLine* line) {
+    str::Builder html;
+    html.Append(StrL("<p>"));
+    const char* p = st.text.s;
+    for (int i = 0; i < len(st.text); i++) {
+        char c = p[i];
+        if (c == '&') {
+            html.Append(StrL("&amp;"));
+        } else if (c == '<') {
+            html.Append(StrL("&lt;"));
+        } else if (c == '>') {
+            html.Append(StrL("&gt;"));
+        } else {
+            html.AppendChar(c);
+        }
+    }
+    html.Append(StrL("</p>"));
+    TempStr css =
+        fmt("@page{margin:0} body{margin:0} p{margin:0;white-space:pre;font-family:sans-serif;"
+            "color:#%02x%02x%02x}",
+            (int)st.r, (int)st.g, (int)st.b);
+    fz_buffer* buf = nullptr;
+    fz_story* story = nullptr;
+    fz_display_list* list = nullptr;
+    fz_device* dev = nullptr;
+    fz_stext_page* stext = nullptr;
+    fz_var(buf);
+    fz_var(story);
+    fz_var(list);
+    fz_var(dev);
+    fz_var(stext);
+    fz_try(ctx) {
+        Str h = ToStr(html);
+        buf = fz_new_buffer_from_copied_data(ctx, (const unsigned char*)h.s, (size_t)len(h));
+        story = fz_new_story(ctx, buf, CStrTemp(css), kStampStoryEm, nullptr);
+        fz_rect frame = fz_make_rect(0, 0, kStampStoryDx, kStampStoryDy);
+        fz_place_story(ctx, story, frame, nullptr);
+        list = fz_new_display_list(ctx, frame);
+        dev = fz_new_list_device(ctx, list);
+        fz_draw_story(ctx, story, dev, fz_identity);
+        fz_close_device(ctx, dev);
+        // the line's extent by advance widths and its baseline, as the
+        // Helvetica stamp measures (glyph bounds are the fonts' whole boxes)
+        fz_stext_options opts{};
+        stext = fz_new_stext_page_from_display_list(ctx, list, &opts);
+        for (fz_stext_block* b = stext->first_block; b; b = b->next) {
+            if (b->type != FZ_STEXT_BLOCK_TEXT) {
+                continue;
+            }
+            for (fz_stext_line* l = b->u.t.first_line; l; l = l->next) {
+                for (fz_stext_char* ch = l->first_char; ch; ch = ch->next) {
+                    if (line->x1 < line->x0) {
+                        line->baseline = ch->origin.y;
+                    }
+                    line->x0 = std::min(line->x0, std::min(ch->quad.ll.x, ch->quad.ul.x));
+                    line->x1 = std::max(line->x1, std::max(ch->quad.lr.x, ch->quad.ur.x));
+                }
+            }
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_stext_page(ctx, stext);
+        fz_drop_device(ctx, dev);
+        fz_drop_story(ctx, story);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_drop_display_list(ctx, list);
+        fz_rethrow(ctx);
+    }
+    return list;
+}
+
+// each display list (null: a Helvetica stamp) as a Form XObject: what mupdf's
+// PDF writer makes of it. They are made in a scratch document, a page each,
+// and its fonts subset there, so only the letters used are embedded, once for
+// all stamps, and the document's own fonts aren't touched. An XObject's space
+// is the story's flipped: (x, kStampStoryDy - y)
+static void StampStoryXObjects(fz_context* ctx, pdf_document* doc, const Vec<fz_display_list*>& lists,
+                               Vec<pdf_obj*>& xobjs) {
+    fz_rect frame = fz_make_rect(0, 0, kStampStoryDx, kStampStoryDy);
+    pdf_document* tmp = nullptr;
+    pdf_obj* res = nullptr;
+    fz_buffer* contents = nullptr;
+    fz_device* dev = nullptr;
+    pdf_obj* page = nullptr;
+    pdf_graft_map* map = nullptr;
+    pdf_obj* docRes = nullptr;
+    fz_buffer* subset = nullptr;
+    fz_var(tmp);
+    fz_var(res);
+    fz_var(contents);
+    fz_var(dev);
+    fz_var(page);
+    fz_var(map);
+    fz_var(docRes);
+    fz_var(subset);
+    fz_try(ctx) {
+        tmp = pdf_create_document(ctx);
+        for (fz_display_list* list : lists) {
+            if (!list) {
+                continue;
+            }
+            dev = pdf_page_write(ctx, tmp, frame, &res, &contents);
+            fz_run_display_list(ctx, list, dev, fz_identity, frame, nullptr);
+            fz_close_device(ctx, dev);
+            fz_drop_device(ctx, dev);
+            dev = nullptr;
+            page = pdf_add_page(ctx, tmp, frame, 0, res, contents);
+            pdf_insert_page(ctx, tmp, -1, page);
+            pdf_drop_obj(ctx, page);
+            page = nullptr;
+            pdf_drop_obj(ctx, res);
+            res = nullptr;
+            fz_drop_buffer(ctx, contents);
+            contents = nullptr;
+        }
+        pdf_subset_fonts(ctx, tmp, 0, nullptr);
+        // one map, so the stamps share the fonts in doc too
+        map = pdf_new_graft_map(ctx, doc);
+        int pageIdx = 0;
+        for (int i = 0; i < len(lists); i++) {
+            pdf_obj* xobj = nullptr;
+            if (lists[i]) {
+                pdf_obj* pageObj = pdf_lookup_page_obj(ctx, tmp, pageIdx++);
+                subset = pdf_load_stream(ctx, pdf_dict_get(ctx, pageObj, PDF_NAME(Contents)));
+                docRes = pdf_graft_mapped_object(ctx, map, pdf_dict_get(ctx, pageObj, PDF_NAME(Resources)));
+                xobj = pdf_new_xobject(ctx, doc, frame, fz_identity, docRes, subset);
+                pdf_drop_obj(ctx, docRes);
+                docRes = nullptr;
+                fz_drop_buffer(ctx, subset);
+                subset = nullptr;
+            }
+            VecAppend(xobjs, xobj);
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+        fz_drop_buffer(ctx, subset);
+        pdf_drop_obj(ctx, docRes);
+        pdf_drop_graft_map(ctx, map);
+        pdf_drop_obj(ctx, page);
+        pdf_drop_obj(ctx, res);
+        fz_drop_buffer(ctx, contents);
+        pdf_drop_document(ctx, tmp);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+}
+
 bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* errOut) {
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
@@ -10951,23 +11136,52 @@ bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* 
     fz_var(fontRef);
     fz_var(ok);
     fz_var(inOperation);
+    // per stamp: its story (null: Helvetica), the story's line and XObject
+    Vec<fz_display_list*> lists;
+    Vec<StampLine> lines;
+    Vec<pdf_obj*> xobjs;
     fz_try(ctx) {
         // one step of the undo journal the document keeps
         pdf_begin_operation(ctx, doc, "Stamp text");
         inOperation = true;
         font = fz_new_base14_font(ctx, "Helvetica");
         fontRef = pdf_add_simple_font(ctx, doc, font, PDF_SIMPLE_ENCODING_LATIN);
+        // text Helvetica can't show is laid out first, so all of it is
+        // made into XObjects at once and shares its fonts
+        bool anyStory = false;
         for (int i = 0; i < len(stamps) && ok; i++) {
             const PdfStamp& st = stamps[i];
             str::Builder encoded;
             Vec<int> cps;
+            fz_display_list* list = nullptr;
+            StampLine line;
             if (!StampTextToWinAnsi(st.text, encoded, cps)) {
-                *errOut = str::DupTemp(fmt("'%s' has a character the stamp's font (Latin) lacks", st.text));
-                ok = false;
-                break;
+                list = StampStoryList(ctx, st, &line);
+                anyStory = true;
             }
-            pdf_page* page = pdf_load_page(ctx, doc, st.pageNo - 1);
+            VecAppend(lists, list);
+            VecAppend(lines, line);
+            if (list && line.x1 <= line.x0) {
+                *errOut = str::DupTemp(fmt("'%s' has nothing to draw", st.text));
+                ok = false;
+            }
+        }
+        if (ok && anyStory) {
+            StampStoryXObjects(ctx, doc, lists, xobjs);
+        }
+        for (int i = 0; i < len(stamps) && ok; i++) {
+            const PdfStamp& st = stamps[i];
+            str::Builder encoded;
+            Vec<int> cps;
+            bool latin = !lists[i];
+            if (latin) {
+                StampTextToWinAnsi(st.text, encoded, cps);
+            }
+            const StampLine& line = lines[i];
+            pdf_page* page = nullptr;
+            fz_var(page);
             fz_try(ctx) {
+                page = pdf_load_page(ctx, doc, st.pageNo - 1);
                 // the page as it shows: rotated, from its top left, y down
                 fz_rect mediabox;
                 fz_matrix ctm;
@@ -10975,9 +11189,14 @@ bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* 
                 fz_rect vis = fz_transform_rect(mediabox, ctm);
                 float W = vis.x1 - vis.x0;
                 float H = vis.y1 - vis.y0;
+                // the text's width in ems
                 float em = 0;
-                for (int cp : cps) {
-                    em += fz_advance_glyph(ctx, font, fz_encode_character(ctx, font, cp), 0);
+                if (latin) {
+                    for (int cp : cps) {
+                        em += fz_advance_glyph(ctx, font, fz_encode_character(ctx, font, cp), 0);
+                    }
+                } else {
+                    em = (line.x1 - line.x0) / kStampStoryEm;
                 }
                 float size = st.size;
                 bool diagonal = st.pos == PdfStampPos::Diagonal;
@@ -10992,38 +11211,64 @@ bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* 
                 float c = cosf(angle), s = sinf(angle);
                 fz_point dir = {c, -s};
                 fz_point down = {s, c};
-                fz_point at;
-                if (diagonal) {
-                    // centered, the baseline a third of the size below the middle
-                    at.x = vis.x0 + W / 2 - dir.x * w / 2 + down.x * size * 0.35f;
-                    at.y = vis.y0 + H / 2 - dir.y * w / 2 + down.y * size * 0.35f;
-                } else {
-                    float m = st.margin;
-                    bool top = st.pos == PdfStampPos::TopLeft || st.pos == PdfStampPos::TopCenter ||
-                               st.pos == PdfStampPos::TopRight;
-                    bool left = st.pos == PdfStampPos::TopLeft || st.pos == PdfStampPos::BottomLeft;
-                    bool right = st.pos == PdfStampPos::TopRight || st.pos == PdfStampPos::BottomRight;
-                    at.x = vis.x0 + (left ? m : right ? W - m - w : (W - w) / 2);
-                    at.y = vis.y0 + (top ? m + size * 0.75f : H - m);
-                }
-                fz_matrix text = {c, -s, -s, -c, at.x, at.y};
-                fz_matrix tm = fz_concat(text, fz_invert_matrix(ctm));
+                bool top = st.pos == PdfStampPos::TopLeft || st.pos == PdfStampPos::TopCenter ||
+                           st.pos == PdfStampPos::TopRight;
+                bool left = st.pos == PdfStampPos::TopLeft || st.pos == PdfStampPos::BottomLeft;
+                bool right = st.pos == PdfStampPos::TopRight || st.pos == PdfStampPos::BottomRight;
+                float m = st.margin;
                 pdf_obj* pageObj = page->obj;
-                TempStr fontName = fmt("SumatraStampF%d", i);
                 TempStr gsName = fmt("SumatraStampGS%d", i);
-                pdf_dict_puts(ctx, PageResourceDict(ctx, doc, pageObj, PDF_NAME(Font)), CStrTemp(fontName), fontRef);
                 pdf_obj* gs = pdf_new_dict(ctx, doc, 3);
                 pdf_dict_put(ctx, gs, PDF_NAME(Type), PDF_NAME(ExtGState));
                 pdf_dict_put_real(ctx, gs, PDF_NAME(ca), st.opacity);
                 pdf_dict_put_real(ctx, gs, PDF_NAME(CA), st.opacity);
                 pdf_dict_puts_drop(ctx, PageResourceDict(ctx, doc, pageObj, PDF_NAME(ExtGState)), CStrTemp(gsName),
                                    pdf_add_object_drop(ctx, doc, gs));
-                // the page's own content in q / Q, so what it leaves set
-                // doesn't move or color the stamp
-                TempStr content = fmt(
-                    "\nQ\nq /%s gs %.3f %.3f %.3f rg BT /%s %.2f Tf %.4f %.4f %.4f %.4f %.2f %.2f Tm (%s) Tj ET Q\n",
-                    gsName, st.r / 255.f, st.g / 255.f, st.b / 255.f, fontName, size, tm.a, tm.b, tm.c, tm.d, tm.e,
-                    tm.f, ToStr(encoded));
+                // where the baseline starts
+                fz_point at;
+                if (diagonal) {
+                    // centered, the baseline a third of the size below the middle
+                    at.x = vis.x0 + W / 2 - dir.x * w / 2 + down.x * size * 0.35f;
+                    at.y = vis.y0 + H / 2 - dir.y * w / 2 + down.y * size * 0.35f;
+                } else {
+                    at.x = vis.x0 + (left ? m : right ? W - m - w : (W - w) / 2);
+                    at.y = vis.y0 + (top ? m + size * 0.75f : H - m);
+                }
+                TempStr content;
+                if (latin) {
+                    fz_matrix text = {c, -s, -s, -c, at.x, at.y};
+                    fz_matrix tm = fz_concat(text, fz_invert_matrix(ctm));
+                    TempStr fontName = fmt("SumatraStampF%d", i);
+                    pdf_dict_puts(ctx, PageResourceDict(ctx, doc, pageObj, PDF_NAME(Font)), CStrTemp(fontName),
+                                  fontRef);
+                    // the page's own content in q / Q, so what it leaves set
+                    // doesn't move or color the stamp
+                    content =
+                        fmt("\nQ\nq /%s gs %.3f %.3f %.3f rg BT /%s %.2f Tf %.4f %.4f %.4f %.4f %.2f %.2f Tm (%s) Tj "
+                            "ET Q\n",
+                            gsName, st.r / 255.f, st.g / 255.f, st.b / 255.f, fontName, size, tm.a, tm.b, tm.c, tm.d,
+                            tm.e, tm.f, ToStr(encoded));
+                } else {
+                    // the line's baseline start goes to `at`, turned by angle
+                    float k = size / kStampStoryEm;
+                    fz_matrix flip = {1, 0, 0, -1, 0, kStampStoryDy};
+                    fz_matrix place = {k * c,
+                                       -k * s,
+                                       k * s,
+                                       k * c,
+                                       at.x - k * (c * line.x0 + s * line.baseline),
+                                       at.y - k * (-s * line.x0 + c * line.baseline)};
+                    fz_matrix cm = fz_concat(fz_concat(flip, place), fz_invert_matrix(ctm));
+                    TempStr xobjName = fmt("SumatraStampX%d", i);
+                    pdf_dict_puts(ctx, PageResourceDict(ctx, doc, pageObj, PDF_NAME(XObject)), CStrTemp(xobjName),
+                                  xobjs[i]);
+                    // shaped glyphs (a consonant with its mark) map back to
+                    // no text, so search and copy read /ActualText instead
+                    content =
+                        fmt("\nQ\n/Span <</ActualText %s>> BDC q /%s gs %.4f %.4f %.4f %.4f %.2f %.2f cm /%s Do Q "
+                            "EMC\n",
+                            PdfTextStringHexTemp(ctx, st.text), gsName, cm.a, cm.b, cm.c, cm.d, cm.e, cm.f, xobjName);
+                }
                 fz_buffer* pre = fz_new_buffer_from_copied_data(ctx, (const unsigned char*)"q\n", 2);
                 fz_buffer* post = fz_new_buffer_from_copied_data(ctx, (const unsigned char*)content.s, len(content));
                 pdf_obj* preRef = pdf_add_stream(ctx, doc, pre, nullptr, 0);
@@ -11060,6 +11305,12 @@ bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* 
     fz_always(ctx) {
         pdf_drop_obj(ctx, fontRef);
         fz_drop_font(ctx, font);
+        for (fz_display_list* list : lists) {
+            fz_drop_display_list(ctx, list);
+        }
+        for (pdf_obj* xobj : xobjs) {
+            pdf_drop_obj(ctx, xobj);
+        }
     }
     fz_catch(ctx) {
         fz_report_error(ctx);

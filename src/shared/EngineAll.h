@@ -170,7 +170,7 @@ enum class PdfStampPos : u8 {
 };
 struct PdfStamp {
     int pageNo = 0;
-    Str text; // Latin (WinAnsi) only
+    Str text; // UTF-8; beyond WinAnsi it is drawn in system fonts
     PdfStampPos pos = PdfStampPos::Diagonal;
     // points; 0: Diagonal across 60% of the page's diagonal, else 10
     float size = 0;

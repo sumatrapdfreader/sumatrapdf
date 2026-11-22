@@ -3214,12 +3214,12 @@ static const CliCmd gCmds[] = {
      "encrypt a.pdf -o locked.pdf --new-password-env PDF_PW", CmdEncrypt},
     {"decrypt", "<file.pdf> -o <out.pdf> --password <pw>", "a copy of an encrypted PDF without the password",
      "-o <file>        the new PDF", "decrypt locked.pdf -o open.pdf --password-env PDF_PW", CmdDecrypt},
-    {"watermark", "<file.pdf> <text> -o <out.pdf>", "a copy of a PDF with text across its pages (Latin text)",
+    {"watermark", "<file.pdf> <text> -o <out.pdf>", "a copy of a PDF with text across its pages (any script)",
      "-o <file>        the new PDF\n--pages <range>  only these pages\n--opacity <0-1>  default 0.25\n"
      "--color <#rgb>   default #808080\n--size <pt>      default: across 60% of the page's diagonal",
      "watermark report.pdf DRAFT -o draft.pdf\nwatermark a.pdf \"Do not copy\" --color #cc0000 --opacity 0.15 -o b.pdf",
      CmdWatermark},
-    {"number", "<file.pdf> -o <out.pdf>", "a copy of a PDF with page numbers on its pages (Latin text)",
+    {"number", "<file.pdf> -o <out.pdf>", "a copy of a PDF with page numbers on its pages (any script)",
      "-o <file>          the new PDF\n--format <text>    {n} is the number, {total} the last one; default {n}\n"
      "--position <where> top-left, top-center, top-right, bottom-left, bottom-center (default), bottom-right\n"
      "--start <n>        the first page's number, default 1\n--pages <range>    only these pages, numbered from "

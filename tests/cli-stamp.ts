@@ -1,14 +1,15 @@
 // `SumatraPDF cli watermark` and `cli number` (src/shared/Cli.cpp,
 // EngineMupdfStampText): a watermark across the middle of the pages, rising
 // from the bottom left as the page shows (a rotated page too); page numbers
-// where asked, as the page shows; only on the pages asked for; refusals.
+// where asked, as the page shows; only on the pages asked for; any script
+// (system fonts, shaped, right to left); refusals.
 //
 // ng only for now: orig doesn't have the cli command yet.
 // Run: bun tests/cli-stamp.ts [--no-build]
 
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, loadPng, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { EXE, loadPng, makePdf, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
 
 const name = "cli-stamp";
 
@@ -94,6 +95,39 @@ function testNumber(src: string, out: (f: string) => string): void {
   expect("a bad position is 2", cli(["number", src, "--position", "middle", "-o", out("x.pdf")]).code === 2, "");
 }
 
+// text Helvetica lacks: drawn in a system font, shaped, searchable
+function testScripts(src: string, out: (f: string) => string): void {
+  const text = "ไทย বাংলা हिन्दी العربية Zażółć";
+  let r = cli(["watermark", src, text, "--color", "#ff0000", "--opacity", "1", "-o", out("ws.pdf")]);
+  expect("watermark in other scripts", r.code === 0, r);
+  expectRising("other scripts", redQuarters(out("ws.pdf"), 1, out("ws1.png")));
+  for (const word of ["ไทย", "বাংলা", "Zażółć"]) {
+    r = cli(["text", out("ws.pdf"), "--pages", "1"]);
+    expect(`the watermark has '${word}' as text`, r.out.includes(word), r);
+  }
+  // on a blank page: where the ink is (search boxes under ActualText are rough)
+  writeFileSync(out("blank.pdf"), makePdf(1, 612, 0, 0), "latin1");
+  r = cli(["number", out("blank.pdf"), "--format", "หน้า {n}", "-o", out("ns.pdf")]);
+  expect("Thai page numbers", r.code === 0, r);
+  expect("the page number is text", cli(["text", out("ns.pdf")]).out.includes("หน้า 1"), "");
+  r = cli(["render", out("ns.pdf"), "--dpi", "72", "-o", out("ns.png")]);
+  const img = loadPng(out("ns.png"));
+  let x0 = img.w;
+  let x1 = -1;
+  let y1 = -1;
+  for (let y = 0; y < img.h; y++) {
+    for (let x = 0; x < img.w; x++) {
+      if (img.data[(y * img.w + x) * img.nComp]! < 128) {
+        x0 = Math.min(x0, x);
+        x1 = Math.max(x1, x + 1);
+        y1 = Math.max(y1, y + 1);
+      }
+    }
+  }
+  near("Thai bottom-center: the middle", (x0 + x1) / 2, 306, 2);
+  near("Thai bottom-center: the bottom", y1, 792 - 30, 2);
+}
+
 export async function testit(): Promise<void> {
   if (!USE_NG) {
     console.log(`SKIP ${name}: ng only (run with -ng)`);
@@ -123,13 +157,13 @@ export async function testit(): Promise<void> {
   expect("on page 2", cli(["text", out("p2.pdf"), "--pages", "2"]).out.includes("DRAFT"), "");
 
   // refusals
-  expect("text the font lacks is 2", cli(["watermark", src, "Zażółć", "-o", out("x.pdf")]).code === 2, "");
   expect("a bad color is 2", cli(["watermark", src, "A", "--color", "red", "-o", out("x.pdf")]).code === 2, "");
   expect("opacity 2 is 2", cli(["watermark", src, "A", "--opacity", "2", "-o", out("x.pdf")]).code === 2, "");
   expect("over the input is 2", cli(["watermark", src, "A", "-o", src]).code === 2, "");
   const epub = join(ROOT, "tests", "issue-6007.epub");
   expect("an EPUB is 5", cli(["watermark", epub, "A", "-o", out("x.pdf")]).code === 5, "");
   testNumber(src, out);
+  testScripts(src, out);
   console.log(`${name}: OK`);
 }
 
