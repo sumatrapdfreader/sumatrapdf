@@ -698,6 +698,7 @@ bool IsUntrustedFile(Str filePath, Str fileURL) {
     while (len(path) > 2 && str::ContainsChar(Str(path.s + 2, path.len - 2), ':')) {
         Str lastColon = str::SliceFromCharLast(path, ':');
         *lastColon.s = '\0';
+        path.len = (int)(lastColon.s - path.s);
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET) {
             return true;
         }
