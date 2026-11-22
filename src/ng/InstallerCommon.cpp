@@ -52,7 +52,7 @@ Str gMsg;
 Color gMsgColor = gCol5;
 
 void SetMsg(Str msg, Color color) {
-    gMsg = str::Dup(GetPermArena(), msg);
+    str::ReplaceWithCopy(&gMsg, msg);
     gMsgColor = color;
 }
 

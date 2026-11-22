@@ -73,7 +73,7 @@ static Str gMsg;
 static Gdiplus::Color gMsgColor;
 
 void SetMsg(Str msg, Gdiplus::Color color) {
-    gMsg = str::Dup(GetPermArena(), msg);
+    str::ReplaceWithCopy(&gMsg, msg);
     gMsgColor = color;
 }
 
