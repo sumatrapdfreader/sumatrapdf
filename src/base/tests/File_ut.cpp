@@ -105,6 +105,9 @@ void FileUtilTest() {
 
         path = path::JoinTemp(StrL("foo\\"), StrL("\\bar\\"), StrL("\\z"));
         utassert(str::Eq(path, StrL("foo\\bar\\z")));
+
+        path = path::JoinTemp(StrL("C:\\"), StrL("a"), StrL("b"));
+        utassert(str::Eq(path, StrL("C:\\a\\b")));
     }
     {
         Str path = path::Join(StrL("foo"), StrL("bar"));
@@ -185,6 +188,8 @@ void FileUtilTest() {
     utassert(str::Eq(path, StrL("foo/bar")));
     path = path::JoinTemp(StrL("foo/"), StrL("/bar/"), StrL("/z"));
     utassert(str::Eq(path, StrL("foo/bar/z")));
+    path = path::JoinTemp(StrL("/"), StrL("a"), StrL("b"));
+    utassert(str::Eq(path, StrL("/a/b")));
 
     Str joined = path::Join(StrL("foo"), StrL("bar"));
     utassert(str::Eq(joined, StrL("foo/bar")));

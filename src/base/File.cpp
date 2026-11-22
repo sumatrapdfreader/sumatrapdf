@@ -183,10 +183,11 @@ static S JoinTempT(S dir, S name, S name2, S sep) {
     if (name && IsSep(name.s[0])) {
         name = S(name.s + 1, name.len - 1);
     }
+    S dirSep = sep;
     if (len(dir) == 0 || IsSep(dir.s[dir.len - 1])) {
-        sep = {};
+        dirSep = {};
     }
-    S res = str::JoinTemp(dir, sep, name);
+    S res = str::JoinTemp(dir, dirSep, name);
     if (name2) {
         res = JoinTempT(res, name2, S{}, sep);
     }
