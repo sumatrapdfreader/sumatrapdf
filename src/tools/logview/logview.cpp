@@ -467,7 +467,7 @@ static DWORD WINAPI ReaderThread(void* arg) {
     ConnInfo* ci = (ConnInfo*)arg;
     HANDLE hPipe = ci->hPipe;
     int connNo = ci->connNo;
-    free(ci);
+    delete ci;
 
     LineSplitter ls;
     char buf[kPipeBufSize];
