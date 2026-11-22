@@ -652,6 +652,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["tab-drag-to-window", tabDragToWindow],
   ["issue-6270", issue6270],
   ["issue-5938", issue5938],
   ["lint-posted-tasks", lintPostedTasks],
@@ -1052,7 +1053,6 @@ export const tests: NamedTest[] = [
   ["wheel-while-closing", wheelWhileClosing],
   ["hwheel-home", hwheelHome],
   ["tab-menu-close", tabMenuClose],
-  ["tab-drag-to-window", tabDragToWindow],
   ["chapter-nav", chapterNav],
   ["mouse-button-shortcuts", mouseButtonShortcuts],
   ["issue-6483", issue6483],

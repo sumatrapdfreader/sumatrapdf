@@ -2177,6 +2177,24 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
+            // at <x> <y>: the frame a tab released there (client dips of the
+            // target frame) lands on, as the tab drop asks; 0 for none of ours
+            if (str::EqI(StringArg(req, 0), StrL("at"))) {
+                i32 x = 0, y = 0;
+                IntArg(req, 1, x);
+                IntArg(req, 2, y);
+                MainWindow* from = FirstWindow();
+                gp::Window* at =
+                    from ? gp::WindowAtPoint(from->gpuiWin, gp::Point{(float)x, (float)y}, nullptr) : nullptr;
+                int id = 0;
+                for (MainWindow* w : gWindows) {
+                    if (at && w->gpuiWin == at) {
+                        id = w->testId;
+                    }
+                }
+                AppendTestResult(req, 0, fmt("%d", id));
+                break;
+            }
             AppendTestResult(req, 0, TestWindowsListTemp());
             break;
         }

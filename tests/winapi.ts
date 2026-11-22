@@ -1076,6 +1076,13 @@ export function setWindowPos(
   flags = SWP_NOZORDER | SWP_NOACTIVATE,
   insertAfter = 0,
 ): boolean {
+  // macOS: "place" takes the frame's index; no z-order or flags
+  if (IS_MAC) {
+    const idx = macWindows()
+      .filter((m) => !m.toolName)
+      .findIndex((m) => m.hwnd === hwnd);
+    return macControlRequest(TestUiState, ["place", x, y, w, h, idx])[0] === 0;
+  }
   return user32.symbols.SetWindowPos(hwnd, insertAfter, x, y, w, h, flags);
 }
 
@@ -1140,6 +1147,7 @@ const KEYEVENTF_KEYUP = 0x0002;
 
 // ControlCommand.TestUiState (control.ts imports this file)
 const TestUiState = 122;
+const TestWindows = 172;
 
 export function isIconic(hwnd: number): boolean {
   if (IS_MAC) {
@@ -1666,6 +1674,11 @@ export function windowFromPoint(x: number, y: number): number {
 }
 
 export function topLevelWindowFromPoint(x: number, y: number): number {
+  // macOS: the app's frame there, 0 for another app's window or none
+  if (IS_MAC) {
+    const origin = macClientToScreen(0, 0);
+    return Number(macControlRequest(TestWindows, ["at", x - origin.x, y - origin.y])[1] ?? 0);
+  }
   const h = windowFromPoint(x, y);
   if (!h) {
     return 0;
@@ -1680,6 +1693,10 @@ export function getRootWindow(hwnd: number): number {
 
 // the window's DPI: 96 at 100% scaling
 export function getDpiForWindow(hwnd: number): number {
+  // macOS: a test's client pixels are dips
+  if (IS_MAC) {
+    return 96;
+  }
   return user32.symbols.GetDpiForWindow(hwnd) || 96;
 }
 

@@ -6,7 +6,6 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { type ControlClient, ControlCommand } from "./control.ts";
-import { IS_MAC } from "./host.ts";
 import { makePdf, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
@@ -122,12 +121,6 @@ async function tabPoint(
 }
 
 export async function testit(): Promise<void> {
-  // two windows side by side and a real drag between them: Win32 calls
-  // (SetWindowPos, WindowFromPoint) the macOS test helpers don't have yet
-  if (IS_MAC) {
-    console.log("SKIP tab-drag-to-window: needs Win32 window placement and a real drag (not on macOS yet)");
-    return;
-  }
   // client pixels and screen pixels are the same thing only when DPI aware
   setProcessDpiAware();
   const dir = tmpPath("tab-drag-to-window");
