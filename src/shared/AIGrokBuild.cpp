@@ -133,11 +133,12 @@ static TempStr GrokSessionsProjectDirTemp(Str dir) {
         return {};
     }
     TempStr encodedDir = EncodeGrokDirTemp(dir);
-    return fmt("%s\\.grok\\sessions\\%s", userProfile, encodedDir);
+    TempStr sessionsDir = path::JoinTemp(userProfile, StrL(".grok"), StrL("sessions"));
+    return path::JoinTemp(sessionsDir, encodedDir);
 }
 
 static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
-    TempStr historyPath = fmt("%s\\prompt_history.jsonl", projectDir);
+    TempStr historyPath = path::JoinTemp(projectDir, StrL("prompt_history.jsonl"));
     Str data = file::ReadFile(historyPath);
     if (len(data) == 0) {
         return str::Dup(StrL("(no description)"));
@@ -253,7 +254,7 @@ static void LoadGrokSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     if (len(projectDir) == 0) {
         return;
     }
-    TempStr sessionPath = fmt("%s\\%s\\chat_history.jsonl", projectDir, sessionId);
+    TempStr sessionPath = path::JoinTemp(projectDir, sessionId, StrL("chat_history.jsonl"));
     AIChatJsonlReader jsonl(sessionPath);
     Str line;
     while (jsonl.Next(line)) {

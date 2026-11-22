@@ -193,7 +193,11 @@ static TempStr CodexHomeTemp() {
     if (len(configured) > 0) {
         return configured;
     }
-    return path::JoinTemp(AIChatHomeDirTemp(), StrL(".codex"));
+    TempStr home = AIChatHomeDirTemp();
+    if (len(home) == 0) {
+        return {};
+    }
+    return path::JoinTemp(home, StrL(".codex"));
 }
 
 // the models the CLI lists, from the catalog it caches
@@ -264,11 +268,11 @@ static TempStr CodexErrorMessageTemp(Str line) {
 // --- Session history ---
 
 static TempStr CodexSessionsRootTemp() {
-    TempStr userProfile = AIChatHomeDirTemp();
-    if (len(userProfile) == 0) {
+    TempStr codexHome = CodexHomeTemp();
+    if (len(codexHome) == 0) {
         return {};
     }
-    return fmt("%s\\.codex\\sessions", userProfile);
+    return path::JoinTemp(codexHome, StrL("sessions"));
 }
 
 static TempStr NormalizeCodexPathTemp(Str path) {
@@ -293,8 +297,8 @@ static bool IsCodexRolloutFileName(Str name) {
 }
 
 static Str GetCodexSessionDescription(Str sessionId) {
-    TempStr userProfile = AIChatHomeDirTemp();
-    TempStr historyPath = len(userProfile) > 0 ? fmt("%s\\.codex\\history.jsonl", userProfile) : TempStr();
+    TempStr codexHome = CodexHomeTemp();
+    TempStr historyPath = len(codexHome) > 0 ? path::JoinTemp(codexHome, StrL("history.jsonl")) : TempStr();
     if (len(historyPath) == 0) {
         return str::Dup(StrL("(no description)"));
     }
