@@ -596,7 +596,7 @@ static void FillRect(gp::PaintCtx* ctx, Rect rc, Color col) {
 
 // orig has two versions of this behind DRAW_PAGE_SHADOWS; SumatraPDF ships the
 // shadow-less one, which just fills the page rect with the placeholder color
-static void PaintPageFrameAndShadow(gp::PaintCtx* ctx, Rect& bounds, Rect&, bool, Color bgCol) {
+static void PaintPageFrameAndShadow(gp::PaintCtx* ctx, Rect& bounds, Color bgCol) {
     FillRect(ctx, Rect(bounds.x, bounds.y, bounds.dx + 1, bounds.dy + 1), bgCol);
 }
 
@@ -963,8 +963,7 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
             if (ShowTransparencyGrid()) {
                 PaintCheckerboard(ctx, bounds);
             } else {
-                Rect r = pi->pageOnScreen;
-                PaintPageFrameAndShadow(ctx, bounds, r, win->InPresentation(), colPlaceholder);
+                PaintPageFrameAndShadow(ctx, bounds, colPlaceholder);
             }
         }
 
@@ -2062,7 +2061,7 @@ static void SetTextOrArrowCursor(MainWindow* win, DisplayModel* dm, Point pt) {
 static int CursorForResizeHandle(ResizeHandle handle);
 
 // orig's OnSetCursorMouseNone: the cursor and the link tooltip while no mouse
-// button is down. The laser-pointer branch is step 14.
+// button is down
 static void OnSetCursorMouseNone(MainWindow* win, Point pt) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
@@ -2668,13 +2667,9 @@ static void PaintAnnotationMove(MainWindow* win, gp::PaintCtx* ctx) {
     CanvasDrawRect(ctx, r, kAnnotMarkBlue, 2);
 }
 
-#if OS_WIN
-#endif
-
 // --- left button ------------------------------------------------------------
 
-// orig's OnMouseLeftButtonDown, minus the annotation, form-field, signature,
-// touch and reading-bar branches (steps 12 / 13)
+// orig's OnMouseLeftButtonDown
 // ng: orig's IsTripleClick() compares the time and place of this press with the
 // double-click that selected a word. gpui counts the clicks of a sequence, so
 // the third (fifth, ...) press of one whose double-click selected a word is it
@@ -2955,10 +2950,6 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     }
 }
 
-// the 3rd click of a triple click: select the whole line (issue #694)
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/5289: CmdToggleInverseSearch
-// turns the double-click inverse search off for a session
-
 // orig's OnMouseLeftButtonDblClk. False when the press was not a double-click
 // action, so the caller can still treat it as an ordinary click.
 static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
@@ -3005,6 +2996,7 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     if (!IsPlacingHighlighterAnnotation(win) && StartFreeTextInPlaceEditAt(win, Point{x, y})) {
         return true;
     }
+    // CmdToggleInverseSearch turns it off for a session (issue #5289)
     if (gSettings->enableTeXEnhancements && !gDisableInteractiveInverseSearch) {
         bool dontSelect = OnInverseSearch(win, x, y);
         if (dontSelect) {
