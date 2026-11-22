@@ -72,9 +72,27 @@ function click(s: Sidebar, page: number) {
   sendMessage(s.hwnd, WM_LBUTTONUP, 0, packed);
 }
 
+// The thumbnails where they stopped: the list scrolls to the current page
+// after a click or a view change, and a click aimed while it moves hits a
+// neighbor.
+async function settledSidebar(client: ControlClient): Promise<Sidebar> {
+  let prev = await sidebar(client);
+  return pollUntil(
+    async () => {
+      await new Promise((r) => setTimeout(r, 100));
+      const now = await sidebar(client);
+      const same = now.raw === prev.raw;
+      prev = now;
+      return same ? now : null;
+    },
+    (s) => s !== null,
+    { error: () => `issue-6270: the thumbnails kept moving: ${prev.raw}` },
+  ) as Promise<Sidebar>;
+}
+
 // The clicked thumbnail stays highlighted. Book view reports the row's first page.
 async function clickHighlights(client: ControlClient, page: number) {
-  const before = await sidebar(client);
+  const before = await settledSidebar(client);
   click(before, page);
   const after = await pollUntil(
     () => sidebar(client),
