@@ -8183,7 +8183,7 @@ void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom) {
 
     Point ptSmart;
     if (smartZoom) {
-        ptSmart = GetSmartZoomPos(win, ptSmart);
+        ptSmart = GetSmartZoomPos(win, pt ? *pt : Point{});
         if (!ptSmart.IsEmpty()) {
             pt = &ptSmart;
         }
