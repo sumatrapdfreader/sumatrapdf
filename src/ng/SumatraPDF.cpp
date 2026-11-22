@@ -5664,6 +5664,29 @@ static void ReadAloudAtPoint(WindowTab* tab, Point pt) {
     ReadAloudFromCursorInTab(tab, pt);
 }
 
+// the annotation a context menu command was opened on, while it runs
+static Annotation* gMenuAnnot = nullptr;
+
+// The annotation a command acts on before the selected one, as in orig: the
+// right-clicked one (context menu), the one under the caret in keyboard
+// selection mode (#6579), else the one under the mouse.
+static Annotation* PointerAnnotation(MainWindow* win) {
+    if (gMenuAnnot) {
+        return gMenuAnnot;
+    }
+    Annotation* annot = AnnotationAtCaret(win);
+    return annot ? annot : win->annotationUnderCursor;
+}
+
+// copy / cut: orig's pointer annotation when it can be copied, else the selected one
+static Annotation* CopyTargetAnnotation(MainWindow* win, WindowTab* tab) {
+    Annotation* annot = PointerAnnotation(win);
+    if (annot && AnnotationCanBeCopied(annot->type)) {
+        return annot;
+    }
+    return tab->selectedAnnotation;
+}
+
 void ExecuteCmd(MainWindow* win, int cmdId) {
     gLastCmdFellThrough = false;
     if (!win || win->isBeingClosed) {
@@ -6012,23 +6035,23 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdShowAnnotationText:
-            if (tab && win->annotationUnderCursor) {
-                ShowAnnotationTextPopup(win, win->annotationUnderCursor);
+            if (tab && PointerAnnotation(win)) {
+                ShowAnnotationTextPopup(win, PointerAnnotation(win));
             } else if (tab && tab->selectedAnnotation) {
                 StartSelectedAnnotContentsEdit(win);
             }
             break;
 
         case CmdCopyAnnotation:
-            if (tab && tab->selectedAnnotation && HasPermission(Perm::CopySelection)) {
-                CopyAnnotationToClipboard(win, tab->selectedAnnotation, false);
+            if (tab && HasPermission(Perm::CopySelection)) {
+                CopyAnnotationToClipboard(win, CopyTargetAnnotation(win, tab), false);
             }
             break;
 
         case CmdCutAnnotation:
             // The original stays until paste. CutAnnotation only marks it.
-            if (tab && tab->selectedAnnotation && HasPermission(Perm::CopySelection)) {
-                if (CopyAnnotationToClipboard(win, tab->selectedAnnotation, true)) {
+            if (tab && HasPermission(Perm::CopySelection)) {
+                if (CopyAnnotationToClipboard(win, CopyTargetAnnotation(win, tab), true)) {
                     ShowTemporaryNotification(tab->win, Tr("Annotation cut. Paste to move it."));
                 }
             }
@@ -6068,7 +6091,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdEditAnnotationText: {
             // the annotation under the cursor (context menu), else the selected one
-            Annotation* annot = tab ? win->annotationUnderCursor : nullptr;
+            Annotation* annot = tab ? PointerAnnotation(win) : nullptr;
             if (!annot && tab) {
                 annot = tab->selectedAnnotation;
             }
@@ -6087,15 +6110,15 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         }
 
         case CmdDeleteAnnotation:
-            // A dialog owns the keyboard. Delete removes the selection, or
-            // the annotation under the cursor when nothing is selected.
-            if (DialogsAccelTable(win) != DialogAccels::All) {
+            // A dialog owns the keyboard. As orig: the annotation under the
+            // cursor (or the caret), else the selected one.
+            if (DialogsAccelTable(win) != DialogAccels::All || !tab) {
                 break;
             }
-            if (tab && tab->selectedAnnotation) {
+            if (Annotation* annot = PointerAnnotation(win)) {
+                DeleteAnnotationAndUpdateUI(tab, annot);
+            } else if (tab->selectedAnnotation) {
                 DeleteAnnotationAndUpdateUI(tab, tab->selectedAnnotation);
-            } else if (tab && win->annotationUnderCursor) {
-                DeleteAnnotationAndUpdateUI(tab, win->annotationUnderCursor);
             }
             break;
 
@@ -7569,8 +7592,9 @@ void ExecuteCmdAtPoint(MainWindow* win, int cmdId, Point pt) {
     // Delete / Cut / Copy always work on the annotation the menu was opened
     // on, even when the annotation list has a different selection
     DisplayModel* dm = win->AsFixed();
+    Annotation* annot = nullptr;
     if (tab && dm) {
-        Annotation* annot = dm->GetAnnotationAtPos(pt, nullptr);
+        annot = dm->GetAnnotationAtPos(pt, nullptr);
         if (annot) {
             SetSelectedAnnotation(tab, annot);
         } else if (origId == CmdDeleteAnnotation) {
@@ -7580,7 +7604,9 @@ void ExecuteCmdAtPoint(MainWindow* win, int cmdId, Point pt) {
     }
     // paste reads dragPrevPos; a command sent with a point pastes there
     win->dragPrevPos = pt;
+    gMenuAnnot = annot;
     ExecuteCmd(win, cmdId);
+    gMenuAnnot = nullptr;
 }
 
 // --- startup ----------------------------------------------------------------

@@ -8602,6 +8602,14 @@ static Annotation* GetAnnotionUnderCursor(WindowTab* tab, Annotation* annot, LPA
     return annot;
 }
 
+// The annotation a command acts on before the selected one: the right-clicked
+// one (context menu), the one under the caret in keyboard selection mode
+// (#6579), else the one under the mouse.
+static Annotation* PointerAnnotation(WindowTab* tab, LPARAM lp) {
+    Annotation* annot = lp == 0 ? AnnotationAtCaret(tab->win) : nullptr;
+    return annot ? annot : GetAnnotionUnderCursor(tab, nullptr, lp);
+}
+
 // Shift+arrows extend an existing text selection instead of scrolling (#5814).
 static bool TryExtendTextSelectionFromKey(MainWindow* win, WPARAM key) {
     if (!win || !IsShiftPressed() || IsCtrlPressed() || IsAltPressed()) {
@@ -9343,7 +9351,7 @@ static bool CopyOrCutAnnotationInTab(WindowTab* tab, LPARAM lp, bool cut) {
     if (!tab || !HasPermission(Perm::CopySelection)) {
         return false;
     }
-    Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
+    Annotation* annot = PointerAnnotation(tab, lp);
     bool ok = CopyAnnotationToClipboard(annot, cut);
     if (!ok) {
         ok = CopyAnnotationToClipboard(tab->selectedAnnotation, cut);
@@ -12370,7 +12378,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdEditAnnotationText: {
             // the annotation under the cursor (context menu), else the selected one
-            Annotation* annot = tab ? GetAnnotionUnderCursor(tab, nullptr, lp) : nullptr;
+            Annotation* annot = tab ? PointerAnnotation(tab, lp) : nullptr;
             if (!annot && tab) {
                 annot = tab->selectedAnnotation;
             }
@@ -12392,9 +12400,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!tab) {
                 return 0;
             }
-            // Ctrl+Delete always removes the annot under the cursor, even when
-            // the annotation list has a different selection.
-            Annotation* annot = GetAnnotionUnderCursor(tab, nullptr, lp);
+            // Ctrl+Delete always removes the annot under the cursor (or the
+            // caret), even when the annotation list has a different selection.
+            Annotation* annot = PointerAnnotation(tab, lp);
             if (!annot) {
                 annot = tab->selectedAnnotation;
             }

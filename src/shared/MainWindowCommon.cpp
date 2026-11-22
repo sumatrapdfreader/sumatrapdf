@@ -43,6 +43,7 @@
 #include "HomePage.h"
 #include "MainWindow.h"
 #include "Selection.h"
+#include "SelectTextKeyboard.h"
 #include "MainWindowCommon.h"
 
 Vec<MainWindow*> gWindows;
@@ -520,6 +521,10 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.canRedo = EngineCanUndoRedo(engine, UndoDir::Redo, EngineWait::NoWait);
         ctx.isCursorOnPage = dm->GetPageNoByPoint(cursorPos) > 0;
         ctx.annotationUnderCursor = AnnotationUnderCursor(win, dm, cursorPos);
+        // keyboard selection mode: the annotation under the caret (#6579)
+        if (!ctx.annotationUnderCursor) {
+            ctx.annotationUnderCursor = AnnotationAtCaret(win);
+        }
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
             Str value = pageEl->GetValue();

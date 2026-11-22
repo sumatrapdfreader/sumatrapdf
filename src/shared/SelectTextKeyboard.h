@@ -8,6 +8,7 @@ struct PaintCtx;
 struct MainWindow;
 struct Gfx;
 struct TextSearch;
+struct Annotation;
 enum class TextSelectUnit;
 
 enum class CaretMove {
@@ -32,6 +33,7 @@ void ToggleSelectTextWithKeyboard(MainWindow*);
 void ToggleTextSelecting(MainWindow*);
 bool TextSelectingActive(MainWindow*);
 bool SelectTextWithKeyboardActive(MainWindow*);
+Annotation* AnnotationAtCaret(MainWindow*);
 bool StopSelectTextWithKeyboard(MainWindow*);
 bool KeepCaretAfterMarkup(MainWindow*);
 void SelectTextWithKeyboardOnKeyUp(MainWindow*, int key);

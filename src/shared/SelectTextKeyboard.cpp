@@ -141,6 +141,34 @@ static int NearestGlyphWithBox(Rect* coords, int textLen, int ix, bool* isBefore
     return -1;
 }
 
+// The annotation on the glyph the keyboard caret is on: in keyboard selection
+// mode the annotation commands act on it instead of the mouse's (#6579).
+Annotation* AnnotationAtCaret(MainWindow* win) {
+    if (!SelectTextWithKeyboardActive(win) || AnnotationsAreDisabled()) {
+        return nullptr;
+    }
+    DisplayModel* dm = win->AsFixed();
+    int pageNo = win->textSelectPage;
+    if (!dm || !dm->ValidPageNo(pageNo)) {
+        return nullptr;
+    }
+    EngineBase* engine = dm->GetEngine();
+    Rect* coords = nullptr;
+    int textLen = 0;
+    engine->GetTextForPage(pageNo, &textLen, &coords);
+    if (textLen <= 0 || !coords) {
+        return nullptr;
+    }
+    bool trailing = false;
+    int ix = NearestGlyphWithBox(coords, textLen, win->textSelectGlyph, &trailing);
+    if (ix < 0) {
+        return nullptr;
+    }
+    RectF r = ToRectF(coords[ix]);
+    PointF center{r.x + (r.dx / 2), r.y + (r.dy / 2)};
+    return EngineGetAnnotationAtPos(engine, pageNo, center, 0, nullptr);
+}
+
 // Screen rects for the caret: the bar itself - on the leading edge of the glyph
 // the caret sits before, or on the trailing edge of the glyph to its left when
 // that glyph is the last one with a box (end of line, end of text) - and the
