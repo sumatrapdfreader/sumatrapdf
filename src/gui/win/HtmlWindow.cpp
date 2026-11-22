@@ -432,6 +432,9 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
 }
 
 STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
+    if (pcbRead) {
+        *pcbRead = 0;
+    }
     if (len(data) == 0) {
         return S_FALSE;
     }
@@ -446,7 +449,9 @@ STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
     u8* dataToRead = (u8*)data.s + dataCurrPos;
     memcpy(pv, dataToRead, toRead);
     dataCurrPos += toRead;
-    *pcbRead = toRead;
+    if (pcbRead) {
+        *pcbRead = toRead;
+    }
     return S_OK;
 }
 
