@@ -222,9 +222,10 @@ bool ForwardToRunningInstance(Flags& flags, bool* otherInstanceRunning) {
         TempStr cmd = OpenDdeCmdTemp(fullPath, flags, n == 0, newWindow ? 2 : 0);
         if (!SendToInstance(path, cmd)) {
             // it went away: open what's left here
-            if (n == 0) {
-                return false;
+            for (int i = 0; i < n; i++) {
+                flags.fileNames.RemoveAt(0);
             }
+            return false;
         }
     }
     return true;
