@@ -785,8 +785,8 @@ static void AppendVirtLine(str::Builder& out, Str cls, HWND hwnd, VirtCtrl* w) {
     Str kindName = k ? Str(k) : StrL("none");
     Str name = w->name ? w->name : StrL("-");
     VirtText* text = AsVirtText(w);
-    out.Append(fmt("virt class=%s hwnd=%d kind=%s name=%s rect=%d,%d,%d,%d text=", cls, (i64)(uintptr_t)hwnd, kindName,
-                   name, r.x, r.y, r.dx, r.dy));
+    out.Append(fmt("virt class=%s hwnd=%lld kind=%s name=%s rect=%d,%d,%d,%d text=", cls, (i64)(uintptr_t)hwnd,
+                   kindName, name, r.x, r.y, r.dx, r.dy));
     if (text) {
         AppendSanitized(out, text->s);
     }
