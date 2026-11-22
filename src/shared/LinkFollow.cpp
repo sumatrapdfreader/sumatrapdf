@@ -265,18 +265,16 @@ void ToggleKeyboardLinkFollowing(MainWindow* win) {
 // scrolling stops. The badges stay glued to their links meanwhile because they
 // are stored in page coordinates.
 #if defined(SUMATRA_NG)
-static Countdown gRecomputePending;
-
 void KeyboardLinkFollowingViewportChanged(MainWindow* win, int elapsedMs) {
     if (!KeyboardLinkFollowingActive(win)) {
-        gRecomputePending.Cancel();
+        win->linkFollowRecompute.Cancel();
         return;
     }
     if (elapsedMs < 0) {
-        gRecomputePending.Arm(kLinkFollowRecomputeDelayInMs);
+        win->linkFollowRecompute.Arm(kLinkFollowRecomputeDelayInMs);
         return;
     }
-    if (!gRecomputePending.Tick(elapsedMs)) {
+    if (!win->linkFollowRecompute.Tick(elapsedMs)) {
         return;
     }
     KeyboardLinkFollowingRecompute(win);

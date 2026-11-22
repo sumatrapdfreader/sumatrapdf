@@ -384,6 +384,7 @@ struct MainWindow {
     Vec<KeyboardLinkTarget> linkFollowTargets;
     char linkFollowInput[kMaxKeyboardLinkHintLength]{};
     int linkFollowInputLen = 0;
+    Countdown linkFollowRecompute;
 
     SelectionToolbar* selectionToolbar = nullptr;
     // an action was picked for the current selection: stay hidden until it changes
