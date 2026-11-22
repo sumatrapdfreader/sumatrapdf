@@ -578,6 +578,9 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     bool insertSpace = false;
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
+    if (!pageInstrs) {
+        return {};
+    }
     for (DrawInstr& i : *pageInstrs) {
         Rect bbox = GetInstrBbox(i, pageBorder);
         bool hasCoords = len(coords) > 0;
@@ -715,6 +718,9 @@ RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
     PageElementImage* el = (PageElementImage*)iel;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = el->loc.IsValid() ? GetHtmlPage(el->loc) : GetHtmlPage(el->pageNo);
+    if (!pageInstrs || idx < 0 || idx >= len(*pageInstrs)) {
+        return nullptr;
+    }
     auto&& i = (*pageInstrs)[idx];
     ReportIf(i.type != DrawInstrType::Image);
     return getImageFromData(i.GetImage());
