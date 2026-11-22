@@ -135,9 +135,9 @@ void ReadingAutoScrollView::OnSpeed(ReadingAutoScrollView* self, gp::Ctx* cx, co
     if (!bar) {
         return;
     }
-    int idx = limitValue((int)(bar->speedSlider.value.End() + 0.5f), 0, SpeedCount() - 1);
+    int idx = limitValue((int)(bar->speedSlider.value.End() + 0.5f), 0, ReadingAutoScrollSpeedCount() - 1);
     bar->sliderIdx = idx;
-    SetSpeed(SessionTab(win), kSpeeds[idx]);
+    ReadingAutoScrollSetSpeed(ReadingAutoScrollSessionTab(win), ReadingAutoScrollSpeedAt(idx));
     gp::Notify(cx);
 }
 
@@ -152,8 +152,9 @@ static ToolWindow* BarWindowOf(MainWindow* win, gp::Ctx* cx) {
 
 void ReadingAutoScrollView::OnSpeedMove(ReadingAutoScrollView* self, gp::Ctx* cx, const gp::MouseMoveEvent* ev) {
     float pct = ev->el.w > 0 ? (ev->x - ev->el.x) / ev->el.w : 0;
-    int idx = limitValue((int)(pct * (float)(SpeedCount() - 1) + 0.5f), 0, SpeedCount() - 1);
-    TempStr tip = fmt("%d px/s", (int)lroundf(kSpeeds[idx]));
+    int idx = limitValue((int)(pct * (float)(ReadingAutoScrollSpeedCount() - 1) + 0.5f), 0,
+                         ReadingAutoScrollSpeedCount() - 1);
+    TempStr tip = fmt("%d px/s", (int)lroundf(ReadingAutoScrollSpeedAt(idx)));
     ToolWindow* tw = BarWindowOf(self->win, cx);
     if (!tw) {
         HoverTooltipShow(cx, tip, ev->el);
@@ -171,14 +172,15 @@ void ReadingAutoScrollView::OnSpeedHover(ReadingAutoScrollView* self, gp::Ctx* c
     HoverTooltipHideBar(self->win->gpuiWin, ev->hovered, BarWindowOf(self->win, cx) != nullptr, cx);
 }
 
-ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
+ReadingAutoScrollBar* ReadingAutoScrollBarEnsure(MainWindow* win) {
     if (!win) {
         return nullptr;
     }
     if (!win->readingAutoScrollBar) {
         auto* bar = new ReadingAutoScrollBar();
-        bar->speedSlider = gp::SliderStateNew(0, (float)(SpeedCount() - 1),
-                                              gp::SliderSingle((float)ClosestSpeedIdx(CurrentSpeed(SessionTab(win)))));
+        bar->speedSlider = gp::SliderStateNew(0, (float)(ReadingAutoScrollSpeedCount() - 1),
+                                              gp::SliderSingle((float)ReadingAutoScrollSpeedIdx(
+                                                  ReadingAutoScrollCurSpeed(ReadingAutoScrollSessionTab(win)))));
         win->readingAutoScrollBar = bar;
     }
     return win->readingAutoScrollBar;
@@ -191,9 +193,9 @@ constexpr float kBarGuessDy = 38;
 
 // the bar shows while the tab it scrolls is the current one
 static bool BarIsShown(MainWindow* win) {
-    WindowTab* tab = ActiveTab(win);
+    WindowTab* tab = ReadingAutoScrollActiveTab(win);
     ReadingAutoScrollBar* bar = win ? win->readingAutoScrollBar : nullptr;
-    return tab && bar && SessionTab(win) == tab;
+    return tab && bar && ReadingAutoScrollSessionTab(win) == tab;
 }
 
 // orig's ReadingAutoScrollBar::UpdateLayout
@@ -225,7 +227,7 @@ static void BarSyncWindow(MainWindow* win) {
     if (!bar) {
         return;
     }
-    bool want = SessionTab(win) != nullptr && ToolWindowsAvailable();
+    bool want = ReadingAutoScrollSessionTab(win) != nullptr && ToolWindowsAvailable();
     if (!want) {
         if (bar->tw) {
             ToolWindowClose(bar->tw);
@@ -248,7 +250,7 @@ static void BarSyncWindow(MainWindow* win) {
     bar->tw = ToolWindowOpen(desc, win, r);
 }
 
-void BarHide(MainWindow* win) {
+void ReadingAutoScrollBarHide(MainWindow* win) {
     if (win && win->readingAutoScrollBar) {
         win->readingAutoScrollTab = nullptr;
     }
@@ -256,7 +258,7 @@ void BarHide(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
-void BarUpdate(MainWindow* win, bool) {
+void ReadingAutoScrollBarUpdate(MainWindow* win, bool) {
     BarSyncWindow(win);
     AppShellInvalidate(win);
 }
@@ -291,9 +293,9 @@ gp::El* ReadingAutoScrollBarBuild(MainWindow* win, gp::Ctx* cx) {
 }
 
 static gp::El* BarRowBuild(MainWindow* win, gp::Ctx* cx, bool ownWindow) {
-    WindowTab* tab = ActiveTab(win);
+    WindowTab* tab = ReadingAutoScrollActiveTab(win);
     ReadingAutoScrollBar* bar = win ? win->readingAutoScrollBar : nullptr;
-    if (!tab || !bar || SessionTab(win) != tab) {
+    if (!tab || !bar || ReadingAutoScrollSessionTab(win) != tab) {
         return nullptr;
     }
     if (!bar->view.IsValid()) {
@@ -305,7 +307,7 @@ static gp::El* BarRowBuild(MainWindow* win, gp::Ctx* cx, bool ownWindow) {
     // a speed set from a key / command has to reach the slider, but not while
     // the user is dragging it (orig's VirtSlider::IsAdjusting)
     if (!bar->speedSlider.dragging) {
-        int idx = ClosestSpeedIdx(CurrentSpeed(SessionTab(win)));
+        int idx = ReadingAutoScrollSpeedIdx(ReadingAutoScrollCurSpeed(ReadingAutoScrollSessionTab(win)));
         if (idx != bar->sliderIdx) {
             bar->sliderIdx = idx;
             gp::SliderSetValue(&bar->speedSlider, gp::SliderSingle((float)idx));
@@ -344,8 +346,10 @@ static gp::El* BarRowBuild(MainWindow* win, gp::Ctx* cx, bool ownWindow) {
                    ->IntoEl()
                    ->OnMouseMove(gp::ListenTo(bar->view, &ReadingAutoScrollView::OnSpeedMove))
                    ->OnHover(gp::ListenTo(bar->view, &ReadingAutoScrollView::OnSpeedHover)));
-    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, SpeedLabelTemp(tab)))->Font(13)->Fg(th.foreground)->Shrink0());
-    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, StatusTextTemp(tab)))->Font(13)->Fg(th.foreground)->Shrink0());
+    row->Child(
+        gp::TextEl(cx->a, GpuiDup(cx->a, ReadingAutoScrollLabelTemp(tab)))->Font(13)->Fg(th.foreground)->Shrink0());
+    row->Child(
+        gp::TextEl(cx->a, GpuiDup(cx->a, ReadingAutoScrollStatusTemp(tab)))->Font(13)->Fg(th.foreground)->Shrink0());
     Str help =
         Tr("\xE2\x86\x91\xE2\x86\x93 speed \xC2\xB7 0-9 \xC2\xB7 \xE2\x88\x92 reverse \xC2\xB7 Space pause "
            "\xC2\xB7 Esc stop");
@@ -368,14 +372,14 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
         return finish(2);
     }
     MainWindow* win = gWindows[0];
-    WindowTab* tab = ActiveTab(win);
+    WindowTab* tab = ReadingAutoScrollActiveTab(win);
     DisplayModel* dm = tab ? tab->AsFixed() : win->AsFixed();
     int scrollY = dm ? dm->viewPort.y : -1;
     int page = dm ? dm->CurrentPageNo() : 0;
     int pages = dm ? dm->PageCount() : 0;
     ReadingAutoScrollBar* bar = win->readingAutoScrollBar;
     bool on = tab != nullptr;
-    if (!on || !bar || SessionTab(win) != tab) {
+    if (!on || !bar || ReadingAutoScrollSessionTab(win) != tab) {
         out.Append(fmt("NOTREADY no-bar on=%d scrollY=%d\n", (int)on, scrollY));
         return finish(2);
     }
@@ -386,9 +390,9 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
 #endif
     out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
                    (int)tab->autoScroll.IsStopped(), (int)(tab->autoScroll.stop == AutoScrollStop::AtEnd),
-                   tab->autoScroll.dir, (int)(CurrentSpeed(tab) + 0.5f), scrollY, page, pages, hwnd));
-    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", ClosestSpeedIdx(CurrentSpeed(tab)), SpeedCount(),
-                   SpeedLabelTemp(tab)));
-    out.Append(fmt("status=%s\n", StatusTextTemp(tab)));
+                   tab->autoScroll.dir, (int)(ReadingAutoScrollCurSpeed(tab) + 0.5f), scrollY, page, pages, hwnd));
+    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", ReadingAutoScrollSpeedIdx(ReadingAutoScrollCurSpeed(tab)),
+                   ReadingAutoScrollSpeedCount(), ReadingAutoScrollLabelTemp(tab)));
+    out.Append(fmt("status=%s\n", ReadingAutoScrollStatusTemp(tab)));
     return finish(0);
 }

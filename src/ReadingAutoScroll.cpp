@@ -140,12 +140,12 @@ static void OnReverseClickedBar(ReadingAutoScrollBar* bar, VirtMouseEvent*) {
 }
 
 static void SyncSpeedLabel(ReadingAutoScrollBar* bar) {
-    bar->speedLabel->SetText(SpeedLabelTemp(SessionTab(WinFromBar(bar))));
+    bar->speedLabel->SetText(ReadingAutoScrollLabelTemp(ReadingAutoScrollSessionTab(WinFromBar(bar))));
 }
 
 static void OnSpeedSliderDrag(ReadingAutoScrollBar* bar) {
-    int idx = limitValue(bar->speedSlider->value, 0, SpeedCount() - 1);
-    SetSpeed(SessionTab(WinFromBar(bar)), kSpeeds[idx]);
+    int idx = limitValue(bar->speedSlider->value, 0, ReadingAutoScrollSpeedCount() - 1);
+    ReadingAutoScrollSetSpeed(ReadingAutoScrollSessionTab(WinFromBar(bar)), ReadingAutoScrollSpeedAt(idx));
     SyncSpeedLabel(bar);
     HwndInvalidate(bar->hwnd);
 }
@@ -156,8 +156,8 @@ static void OnSpeedSliderCommit(ReadingAutoScrollBar* bar) {
 
 static void OnSpeedSliderTooltip(ReadingAutoScrollBar* bar, VirtTooltipEvent* ev) {
     int idx = bar->speedSlider->ValueFromLocalX(ev->ptLocal.x);
-    idx = limitValue(idx, 0, SpeedCount() - 1);
-    ev->tip = fmt("%d px/s", (int)lroundf(kSpeeds[idx]));
+    idx = limitValue(idx, 0, ReadingAutoScrollSpeedCount() - 1);
+    ev->tip = fmt("%d px/s", (int)lroundf(ReadingAutoScrollSpeedAt(idx)));
 }
 
 HWND ReadingAutoScrollBar::Create(HWND parentCanvas) {
@@ -212,8 +212,9 @@ void ReadingAutoScrollBar::BuildLayout() {
 
     speedSlider = new VirtSlider();
     speedSlider->minVal = 0;
-    speedSlider->maxVal = SpeedCount() - 1;
-    speedSlider->value = ClosestSpeedIdx(CurrentSpeed(SessionTab(WinFromBar(this))));
+    speedSlider->maxVal = ReadingAutoScrollSpeedCount() - 1;
+    speedSlider->value =
+        ReadingAutoScrollSpeedIdx(ReadingAutoScrollCurSpeed(ReadingAutoScrollSessionTab(WinFromBar(this))));
     speedSlider->onValueChanged = MkFunc0(OnSpeedSliderDrag, this);
     speedSlider->onValueCommitted = MkFunc0(OnSpeedSliderCommit, this);
     speedSlider->onGetTooltip = MkFunc1(OnSpeedSliderTooltip, this);
@@ -259,14 +260,14 @@ void ReadingAutoScrollBar::BuildLayout() {
 }
 
 void ReadingAutoScrollBar::SyncLabels() {
-    WindowTab* tab = SessionTab(WinFromBar(this));
+    WindowTab* tab = ReadingAutoScrollSessionTab(WinFromBar(this));
     bool paused = tab && tab->autoScroll.IsStopped();
     btnPause->SetText(paused ? Tr("Resume") : Tr("Pause"));
     if (speedSlider && !speedSlider->IsAdjusting()) {
-        speedSlider->SetValue(ClosestSpeedIdx(CurrentSpeed(tab)), false);
+        speedSlider->SetValue(ReadingAutoScrollSpeedIdx(ReadingAutoScrollCurSpeed(tab)), false);
     }
     SyncSpeedLabel(this);
-    status->SetText(StatusTextTemp(tab));
+    status->SetText(ReadingAutoScrollStatusTemp(tab));
 }
 
 void ReadingAutoScrollBar::SyncColors() {
@@ -336,7 +337,7 @@ static void BarOnWindowMoved(ReadingAutoScrollBar* bar, MainWindow*) {
     RelayoutIfVisible(bar);
 }
 
-ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
+ReadingAutoScrollBar* ReadingAutoScrollBarEnsure(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return nullptr;
     }
@@ -354,7 +355,7 @@ ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
     return bar;
 }
 
-void BarHide(MainWindow* win) {
+void ReadingAutoScrollBarHide(MainWindow* win) {
     if (!win || !win->readingAutoScrollBar || !win->readingAutoScrollBar->hwnd) {
         return;
     }
@@ -363,7 +364,7 @@ void BarHide(MainWindow* win) {
                  SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 }
 
-void BarUpdate(MainWindow* win, bool forceLayout) {
+void ReadingAutoScrollBarUpdate(MainWindow* win, bool forceLayout) {
     if (!win || !win->readingAutoScrollBar || !win->readingAutoScrollBar->hwnd) {
         return;
     }
@@ -376,10 +377,10 @@ void BarUpdate(MainWindow* win, bool forceLayout) {
 
 void ReadingAutoScrollRelayout(HWND hwndCanvas) {
     MainWindow* win = FindMainWindowByHwnd(hwndCanvas);
-    if (!win || !ActiveTab(win)) {
+    if (!win || !ReadingAutoScrollActiveTab(win)) {
         return;
     }
-    BarUpdate(win);
+    ReadingAutoScrollBarUpdate(win);
 }
 
 void ReadingAutoScrollDestroy(MainWindow* win) {
@@ -407,7 +408,7 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
         return finish(2);
     }
     MainWindow* win = gWindows[0];
-    WindowTab* tab = ActiveTab(win);
+    WindowTab* tab = ReadingAutoScrollActiveTab(win);
     DisplayModel* dm = tab ? tab->AsFixed() : win->AsFixed();
     int scrollY = dm ? dm->viewPort.y : -1;
     int page = dm ? dm->CurrentPageNo() : 0;
@@ -426,13 +427,13 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
     Rect speed = bar->speedSlider->bounds;
     out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
                    (int)tab->autoScroll.IsStopped(), (int)(tab->autoScroll.stop == AutoScrollStop::AtEnd),
-                   tab->autoScroll.dir, (int)lroundf(CurrentSpeed(tab)), scrollY, page, pages,
+                   tab->autoScroll.dir, (int)lroundf(ReadingAutoScrollCurSpeed(tab)), scrollY, page, pages,
                    (int)(uintptr_t)bar->hwnd));
     out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("reverse=%d,%d,%d,%d\n", reverse.x, reverse.y, reverse.dx, reverse.dy));
     out.Append(fmt("speed=%d,%d,%d,%d\n", speed.x, speed.y, speed.dx, speed.dy));
-    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", bar->speedSlider->value, SpeedCount(),
+    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", bar->speedSlider->value, ReadingAutoScrollSpeedCount(),
                    bar->speedLabel ? bar->speedLabel->s : Str{}));
     out.Append(fmt("status=%s\n", bar->status ? bar->status->s : Str{}));
     return finish(0);

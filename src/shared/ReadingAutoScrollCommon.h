@@ -3,32 +3,30 @@
 
 // --- shared by ReadingAutoScrollCommon.cpp and each app's ReadingAutoScroll.cpp ---
 
-// Arrow keys step these. Finer than Acrobat's 0-9 so speed is tunable.
-static const float kSpeeds[] = {1, 2, 3, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96, 120, 160, 200, 260, 320};
-int SpeedCount();
-float CurrentSpeed(WindowTab* tab);
-int ClosestSpeedIdx(float s);
-void SetSpeed(WindowTab* tab, float s);
-void StepSpeed(WindowTab* tab, int dir);
-TempStr StatusTextTemp(WindowTab* tab);
-DisplayModel* ScrollModel(WindowTab* tab);
-WindowTab* CurrentDocTab(MainWindow* win);
-WindowTab* ActiveTab(MainWindow* win);
-WindowTab* SessionTab(MainWindow* win);
-bool AtScrollLimit(DisplayModel* dm, int dir);
-void ClearTabScroll(WindowTab* tab);
+int ReadingAutoScrollSpeedCount();
+float ReadingAutoScrollSpeedAt(int idx);
+float ReadingAutoScrollCurSpeed(WindowTab* tab);
+int ReadingAutoScrollSpeedIdx(float s);
+void ReadingAutoScrollSetSpeed(WindowTab* tab, float s);
+void ReadingAutoScrollStepSpeed(WindowTab* tab, int dir);
+TempStr ReadingAutoScrollStatusTemp(WindowTab* tab);
+DisplayModel* ReadingAutoScrollModel(WindowTab* tab);
+WindowTab* ReadingAutoScrollActiveTab(MainWindow* win);
+WindowTab* ReadingAutoScrollSessionTab(MainWindow* win);
+bool ReadingAutoScrollAtLimit(DisplayModel* dm, int dir);
+void ReadingAutoScrollClearTab(WindowTab* tab);
 
-TempStr SpeedLabelTemp(WindowTab* tab);
-void ApplyArrowSpeed(MainWindow* win, WindowTab* tab, int keyDir);
-void ApplyDigitSpeed(MainWindow* win, int digit);
+TempStr ReadingAutoScrollLabelTemp(WindowTab* tab);
+void ReadingAutoScrollArrowSpeed(MainWindow* win, WindowTab* tab, int keyDir);
+void ReadingAutoScrollDigitSpeed(MainWindow* win, int digit);
 
-void BarSetSessionTab(MainWindow* win, WindowTab* tab);
+void ReadingAutoScrollBarSetTab(MainWindow* win, WindowTab* tab);
 
 // implemented by each app
-void BarUpdate(MainWindow* win, bool forceLayout = false);
-void BarHide(MainWindow* win);
+void ReadingAutoScrollBarUpdate(MainWindow* win, bool forceLayout = false);
+void ReadingAutoScrollBarHide(MainWindow* win);
 void ArmReadingTimer(MainWindow* win, WindowTab* tab);
 void KillReadingTimer(MainWindow* win);
 void StopMiddleClickScroll(MainWindow* win);
 float ReadingTickSeconds(WindowTab* tab, int elapsedMs);
-ReadingAutoScrollBar* BarEnsure(MainWindow* win);
+ReadingAutoScrollBar* ReadingAutoScrollBarEnsure(MainWindow* win);
