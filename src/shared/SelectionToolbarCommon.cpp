@@ -106,7 +106,7 @@ void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
 // Remove separators that would be leading, trailing, or adjacent after
 // unavailable commands have been dropped. A trailing layout separator is
 // retained when a selection-handler button follows it.
-void NormalizeSelectionToolbarSeparators(Vec<SelectionToolbarButton>& buttons) {
+static void NormalizeSelectionToolbarSeparators(Vec<SelectionToolbarButton>& buttons) {
     int dst = 0;
     bool separatorPending = false;
     for (int i = 0; i < len(buttons); i++) {

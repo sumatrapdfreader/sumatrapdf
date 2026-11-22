@@ -16,23 +16,15 @@ void BrowserFindGotoMatch(MainWindow* win, DocController* md, int pageNo, int id
 void StartIncrementalFind(MainWindow* win);
 u64 MatchKey(int page, int offset);
 int CmpFindMatchByPos(const FindMatch* a, const FindMatch* b);
-int CmpMatchKey(const u64* a, const u64* b);
-int MatchIndexInCache(MainWindow* win, u64 key);
 // stop scanning after this many matches: with a common word the full count
 // isn't useful, only slow. The status then shows "n / 999+".
 constexpr int kMaxFindCount = 999;
-TempStr BuildSnippet(EngineBase* engine, const FindMatch& m);
 void FreeMatchSnippets(Vec<FindMatch>* matches);
 extern int gFindCountCurPage;
 void SetFindCountProgressStatus(MainWindow* win, int nFound, int pageNo);
-Vec<FindMatch>* CloneMatchesRange(Vec<FindMatch>* matches, int from, int to);
-bool FindMatchTouchesVisiblePages(const FindMatch& fm, int firstPage, int lastPage);
-void GetVisiblePageRange(DisplayModel* dm, int& firstOut, int& lastOut);
-void AppendMatchPageRects(EngineBase* engine, const FindMatch& fm, Vec<FindMatchPaintPageRect>& out);
 void AppendPageRectsToScreen(DisplayModel* dm, const Rect& clipRc, const FindMatchPaintPageRect* pageRects, int nRects,
                              Vec<Rect>& out);
 void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, Vec<TextSel>* sel, Vec<Rect>& out);
-bool LinkDestHighlightRect(DisplayModel* dm, int pageNo, RectF dest, Rect* out);
 struct OpenDdeArgs {
     bool parsed = false;
     TempStr filePath;
@@ -46,14 +38,6 @@ OpenDdeArgs ParseOpenDdeCmd(Str cmd);
 int ApplyOpenNewWindow(int newWindow, int inCurrentTab);
 int FindDebounceDelayMs(int nChars);
 TempStr ForwardSearchFailTextTemp(int ret, Str fileName, int line, int page);
-Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack);
-Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack);
-Str HandleGotoCmd(HWND hwnd, Str cmd, bool* ack);
-Str HandlePageCmd(HWND hwnd, Str cmd, bool* ack);
-Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack);
-Str HandleFullScreenCmd(HWND hwnd, Str cmd, bool* ack);
-Str HandleNewWindowCmd(Str cmd, bool* ack);
-Str HandleGetOpenFilesCmd(Str cmd, bool* ack, str::Builder& res);
 
 // implemented by each app
 struct FindEndTaskData;
@@ -96,7 +80,6 @@ struct FindMatchPaintCache {
 };
 
 extern FindMatchPaintCache gFindMatchPaintCache;
-void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int firstPage, int lastPage);
 
 // implemented by each app
 bool HandleExecuteCmds(HWND hwnd, Str cmd);
@@ -128,8 +111,6 @@ constexpr Color kFindOtherMatchColor = MkRgb(0xff, 0x96, 0x32);
 bool ApplyFindPageRange(MainWindow* win);
 void StartFindCount(MainWindow* win, Str text, bool matchCase, bool matchWholeWord);
 
-Str HandleSyncCmd(Str cmd, bool* ack);
-
 // implemented by each app
 struct UpdateFindStatusData;
 void UpdateFindStatus(UpdateFindStatusData* d);
@@ -158,8 +139,6 @@ struct FindThreadData;
 void CountThread(CountThreadData* d);
 void FindThread(FindThreadData* ftd);
 
-Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res);
-Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack);
 Str HandleOpenCmd(Str cmd, bool* ack);
 void FindDebounceStop(MainWindow* win);
 void BrowserFindStatusShown(MainWindow* win);

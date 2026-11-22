@@ -192,7 +192,7 @@ GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool sele
     return data;
 }
 
-bool IsScrollToLink(IPageDestination* link) {
+static bool IsScrollToLink(IPageDestination* link) {
     if (!link) {
         return false;
     }

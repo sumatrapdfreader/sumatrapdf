@@ -60,6 +60,8 @@
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 
+static bool WriteControlResponse(ControlConn h, ControlRequest* req);
+
 LayoutProbeState gLayoutProbe;
 
 void LayoutProbeNote(MainWindow* win) {
@@ -374,7 +376,7 @@ void ControlPollSleep(u64 startMs) {
 
 // Block on the control thread until visible tiles are cached at target
 // resolution, or until timeoutMs. Optional first int arg is the timeout.
-void RunWaitRenderIdle(ControlRequest* req) {
+static void RunWaitRenderIdle(ControlRequest* req) {
     i32 timeoutMs = 15000;
     IntArg(req, 0, timeoutMs);
     if (timeoutMs < 1) {
@@ -400,7 +402,7 @@ void RunWaitRenderIdle(ControlRequest* req) {
 }
 
 // Block on the control thread until the restored session's tabs have loaded.
-void RunWaitSessionRestored(ControlRequest* req) {
+static void RunWaitSessionRestored(ControlRequest* req) {
     i32 timeoutMs = 15000;
     IntArg(req, 0, timeoutMs);
     if (timeoutMs < 1) {
@@ -530,7 +532,7 @@ void SumatraControlThread(ControlThreadArg* arg) {
 
 #endif // OS_WIN
 
-ControlRequest* ReadControlRequest(ControlConn h) {
+static ControlRequest* ReadControlRequest(ControlConn h) {
     u32 size = 0;
     if (!ReadExact(h, &size, sizeof(size))) {
         return nullptr;
@@ -585,7 +587,7 @@ ControlServeResult ServeControlRequest(ControlConn h, ControlExecFn execOnUi) {
     return res;
 }
 
-bool WriteControlResponse(ControlConn h, ControlRequest* req) {
+static bool WriteControlResponse(ControlConn h, ControlRequest* req) {
     str::Builder payload;
     AppendU16(payload, req->reqId);
     payload.Append(ToStr(req->results));

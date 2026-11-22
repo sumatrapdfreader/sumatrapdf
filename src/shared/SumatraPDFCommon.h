@@ -73,7 +73,6 @@ bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter);
 bool FilePickerIsSumatraPDF();
 bool IsOpenableNextPrevFile(Str path);
 void CollectHistoryFilesInDir(Str dir, StrVec& out);
-void InsertSortedNatural(StrVec* v, Str s);
 struct PendingNextPrevNav {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr;
@@ -107,7 +106,6 @@ TempStr GetISO639LangCodeFromLangTemp(Str lang);
 Str EbookLayoutSnapshot();
 void ReloadEbookLayoutDocs();
 TempStr ZoomArgTemp(DocController* ctrl);
-Str HelpThemePref();
 void ManualOnJsNotify(void*, Str method, Str paramsJson);
 TempStr DocURIToLocalManualUrlTemp(Str docURI);
 void TocItemToText(str::Builder& s, TocItem* item, int level);
@@ -118,7 +116,6 @@ void PrintSelectionDeferred(MainWindow* win);
 void ReplaceColor(ParsedColor& col, Str maybeColor);
 
 bool WindowHasDocumentLoading(MainWindow* win);
-TempStr FindCoverImageTemp(Str docPath);
 void TogglePageInfoHelper(MainWindow* win);
 void RenameFileInHistory(Str oldPath, Str newPath);
 extern MeasurementUnit cursorPosUnit;
@@ -188,14 +185,12 @@ void NotifyUrlSelectionTruncated(WindowTab* tab);
 void ReopenLastClosedFile(MainWindow* win);
 void RememberClosedWindow(MainWindow* win);
 
-bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 newWindow);
 bool SendOpenFilesToExistingInstance(HWND targetHwnd, StrVec& paths, u32 newWindow);
 
 // implemented by each app
 void UndoRedoUnavailable(MainWindow* win, bool redo);
 void ApplyWindowPosFlag(const Flags& i);
 void ToolbarModeApplied(MainWindow* win);
-void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine);
 
 void CreateThumbnailForFile(MainWindow* win, FileState* ds);
 void DeleteCurrentFileAndOpenNext(MainWindow* win);

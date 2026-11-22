@@ -24,7 +24,6 @@ struct GoToTocLinkData {
     }
 };
 GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool selectInTree);
-bool IsScrollToLink(IPageDestination* link);
 void CollectTocItemsOnPage(TreeModel* tm, int pageNo, Vec<TocItem*>& out);
 bool TocMatchingItemsContains(const Vec<TocItem*>& items, TocItem* item);
 bool TocMatchingItemsEq(const Vec<TocItem*>& a, const Vec<TocItem*>& b);

@@ -110,7 +110,7 @@ bool LanguagesAreSameTemp(Str a, Str b) {
     return str::EqI(aa, bb);
 }
 
-Str BackendLogName(AIChatBackend backend) {
+static Str BackendLogName(AIChatBackend backend) {
     if (backend == AIChatBackend::Grok) {
         return StrL("grok");
     }
@@ -179,7 +179,7 @@ TempStr FormatTranslationErrorForDisplayTemp(AIChatBackend backend, Str raw) {
     return str::DupTemp(raw);
 }
 
-TempStr StripTrailingSlashTemp(TempStr path) {
+static TempStr StripTrailingSlashTemp(TempStr path) {
     if (len(path) == 0) {
         return {};
     }
@@ -312,7 +312,7 @@ static void AppendAntiGravityTranslationText(Str line, str::Builder& out) {
     }
 }
 
-void ParseTranslationOutput(AIChatBackend backend, Str output, str::Builder& translationOut) {
+static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Builder& translationOut) {
     if (str::IsEmptyOrWhiteSpace(output)) {
         return;
     }
@@ -353,7 +353,7 @@ void ParseTranslationOutput(AIChatBackend backend, Str output, str::Builder& tra
     }
 }
 
-TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
+static TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     Str model = gSettings->grokBuild.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = StrL("grok-composer-2.5-fast");
@@ -366,7 +366,7 @@ TempStr BuildGrokTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
                QuoteCmdLineArgTemp(model), permsFlag);
 }
 
-TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
+static TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
     Str model = gSettings->claudeCode.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = StrL("claude-sonnet-4-20250514");
@@ -378,7 +378,7 @@ TempStr BuildClaudeTranslateCmdLineTemp(Str exePath, Str prompt) {
                QuoteCmdLineArgTemp(prompt));
 }
 
-TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
+static TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
     Str model = gSettings->codexBuild.model;
     bool hasModel = !str::IsEmptyOrWhiteSpace(model);
     Str skipFlag = gSettings->codexBuild.skipSandbox ? StrL("--dangerously-bypass-approvals-and-sandbox") : Str{};
@@ -399,7 +399,7 @@ TempStr BuildCodexTranslateCmdLineTemp(Str exePath, Str prompt, Str cwd) {
                QuoteCmdLineArgTemp(cwd), QuoteCmdLineArgTemp(prompt));
 }
 
-TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
+static TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
     Str model = gSettings->antiGravity.model;
     if (str::IsEmptyOrWhiteSpace(model)) {
         model = Str(kAntiGravityDefaultModel);
@@ -412,7 +412,7 @@ TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
                QuoteCmdLineArgTemp(model), permsFlag, QuoteCmdLineArgTemp(prompt));
 }
 
-TempStr FindBackendExecutableTemp(AIChatBackend backend) {
+static TempStr FindBackendExecutableTemp(AIChatBackend backend) {
     if (backend == AIChatBackend::Grok) {
         return GetGrokBuildProvider()->FindExecutableTemp();
     }

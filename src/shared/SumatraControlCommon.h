@@ -111,8 +111,6 @@ struct PacketReader {
 };
 bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitCount, u16 count = 0);
 void ControlPollSleep(u64 startMs);
-void RunWaitRenderIdle(ControlRequest* req);
-void RunWaitSessionRestored(ControlRequest* req);
 
 // implemented by each app
 bool ParseArg(PacketReader& r, ControlArg** argOut);
@@ -173,9 +171,6 @@ struct LayoutProbeState {
 
 extern LayoutProbeState gLayoutProbe;
 void LayoutProbeNote(MainWindow* win);
-
-ControlRequest* ReadControlRequest(ControlConn h);
-bool WriteControlResponse(ControlConn h, ControlRequest* req);
 
 TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut);
 TempStr ScrollStateResultTemp(int* exitCodeOut);

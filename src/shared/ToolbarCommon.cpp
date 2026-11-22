@@ -333,7 +333,7 @@ ParsedColor* AnnotPresetColorSetting(int cmdId) {
 
 // What an annotation is made in when its setting is empty: MuPDF's defaults,
 // which are also what Acrobat, PDF-XChange and Foxit use
-Color AnnotDefaultColor(int cmdId) {
+static Color AnnotDefaultColor(int cmdId) {
     switch (cmdId) {
         case CmdCreateAnnotText:
         case CmdCreateAnnotFileAttachment:

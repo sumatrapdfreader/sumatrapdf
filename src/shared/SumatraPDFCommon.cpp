@@ -120,6 +120,8 @@
 
 #include "SumatraLog.h"
 
+static void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine);
+
 // in restricted mode, some features can be disabled (such as
 // opening files, printing, following URLs), so that SumatraPDF
 // can be used as a PDF reader on locked down systems
@@ -1050,7 +1052,7 @@ void CollectHistoryFilesInDir(Str dir, StrVec& out) {
 }
 
 // Keep the cached list naturally sorted without a full SortNatural on the UI thread.
-void InsertSortedNatural(StrVec* v, Str s) {
+static void InsertSortedNatural(StrVec* v, Str s) {
     if (v->Contains(s)) {
         return;
     }
@@ -1506,7 +1508,7 @@ TempStr ZoomArgTemp(DocController* ctrl) {
 static const char* kHelpThemeValues[] = {"app", "light", "dark"};
 
 // HelpTheme setting, "app" unless it holds one of the known values
-Str HelpThemePref() {
+static Str HelpThemePref() {
     for (const char* v : kHelpThemeValues) {
         if (str::EqI(gSettings->helpTheme, Str(v))) {
             return Str(v);
@@ -1997,7 +1999,7 @@ static bool HasSiblingCover(FileType ft) {
 
 // an image next to an ebook with the same base name (Calibre puts a
 // "Title.jpg" cover next to "Title.epub") beats page 1 as the thumbnail
-TempStr FindCoverImageTemp(Str docPath) {
+static TempStr FindCoverImageTemp(Str docPath) {
     static const char* kCoverExts[] = {".jpg", ".jpeg", ".png"};
     if (!HasSiblingCover(GuessFileTypeFromName(docPath, true))) {
         return {};
@@ -2825,7 +2827,7 @@ void SwitchToFullScreen(MainWindow* win, bool presentation) {
 // Send just the path + newWindow flag to an already-running SumatraPDF via
 // WM_COPYDATA. Receiver (OnCopyData) handles it asynchronously so this
 // SendMessageW returns fast. Returns true if the message was handled.
-bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 newWindow) {
+static bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 newWindow) {
     size_t pathLen = (size_t)len(fullPath);
     size_t cbData = sizeof(SumatraOpenCopyData) + pathLen + 1;
     auto* payload = (SumatraOpenCopyData*)malloc(cbData);
@@ -3601,7 +3603,7 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
 
 // create a thumbnail by loading the file with a temporary engine
 // used for lazy-loaded files that don't have a loaded controller
-void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
+static void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
     auto* d = new CreateThumbnailFromFileData();
     d->filePath = str::Dup(ds->filePath);
     d->engine = engine;

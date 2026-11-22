@@ -362,7 +362,7 @@ int CmpFindMatchByPos(const FindMatch* a, const FindMatch* b) {
     return a->startGlyph - b->startGlyph;
 }
 
-int CmpMatchKey(const u64* a, const u64* b) {
+static int CmpMatchKey(const u64* a, const u64* b) {
     if (*a == *b) {
         return 0;
     }
@@ -372,7 +372,7 @@ int CmpMatchKey(const u64* a, const u64* b) {
 // 1-based index of `key` within the positions cache, or 0 if not found.
 // positions are in document order, but a linear lookup is cheap enough here
 // (n <= kMaxFindCount)
-int MatchIndexInCache(MainWindow* win, u64 key) {
+static int MatchIndexInCache(MainWindow* win, u64 key) {
     Vec<u64>& pos = win->findCountPositions;
     int n = len(pos);
     for (int i = 0; i < n; i++) {
@@ -401,7 +401,7 @@ void ClearFindMatches(MainWindow* win) {
 }
 
 // build a one-line "...context match context..." snippet (UTF-8) around a match
-TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
+static TempStr BuildSnippet(EngineBase* engine, const FindMatch& m) {
     int textLen = 0;
     Str pageText = engine->GetTextForPage(m.startPage, &textLen);
     if (len(pageText) == 0) {
@@ -451,7 +451,7 @@ void SetFindCountProgressStatus(MainWindow* win, int nFound, int pageNo) {
 }
 
 // clones matches[from..to) incl. copies of the snippet strings
-Vec<FindMatch>* CloneMatchesRange(Vec<FindMatch>* matches, int from, int to) {
+static Vec<FindMatch>* CloneMatchesRange(Vec<FindMatch>* matches, int from, int to) {
     auto* res = new Vec<FindMatch>();
     for (int i = from; i < to; i++) {
         FindMatch fm = (*matches)[i];
@@ -488,11 +488,11 @@ void StartPendingSearch(MainWindow* win) {
     StartSearchFromCommandLine(win, text);
 }
 
-bool FindMatchTouchesVisiblePages(const FindMatch& fm, int firstPage, int lastPage) {
+static bool FindMatchTouchesVisiblePages(const FindMatch& fm, int firstPage, int lastPage) {
     return fm.endPage >= firstPage && fm.startPage <= lastPage;
 }
 
-void GetVisiblePageRange(DisplayModel* dm, int& firstOut, int& lastOut) {
+static void GetVisiblePageRange(DisplayModel* dm, int& firstOut, int& lastOut) {
     firstOut = dm->FirstVisiblePageNo();
     lastOut = firstOut;
     if (!dm->ValidPageNo(firstOut)) {
@@ -508,7 +508,7 @@ void GetVisiblePageRange(DisplayModel* dm, int& firstOut, int& lastOut) {
     }
 }
 
-void AppendMatchPageRects(EngineBase* engine, const FindMatch& fm, Vec<FindMatchPaintPageRect>& out) {
+static void AppendMatchPageRects(EngineBase* engine, const FindMatch& fm, Vec<FindMatchPaintPageRect>& out) {
     if (!engine) {
         return;
     }
@@ -561,7 +561,7 @@ void AppendTextSelScreenRects(DisplayModel* dm, const Rect& clipRc, Vec<TextSel>
 // have a rectangle. /XYZ is a point: a short strip at dest Y from dest X to
 // the right of the page, like the LaTeX forward-search mark. Page-level
 // /Fit with no coordinates returns empty (nothing useful to highlight).
-bool LinkDestHighlightRect(DisplayModel* dm, int pageNo, RectF dest, Rect* out) {
+static bool LinkDestHighlightRect(DisplayModel* dm, int pageNo, RectF dest, Rect* out) {
     EngineBase* engine = dm->GetEngine();
     if (!engine || !out) {
         return false;
@@ -644,7 +644,7 @@ static bool ParseDdeQuoted(Str cmd, int off, TempStr* out, int* endOff) {
     return false;
 }
 
-Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
+static Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
     // Manual parse so search terms may contain " via "" escapes; str::Parse
     // stops at the first " and cannot express that.
     Str kPrefix = StrL("[Search(\"");
@@ -694,7 +694,7 @@ Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
     return next;
 }
 
-Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack) {
+static Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr pdfFile;
     TempStr term;
     int page = 0;
@@ -734,7 +734,7 @@ Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack) {
     return next;
 }
 
-Str HandleGotoCmd(HWND hwnd, Str cmd, bool* ack) {
+static Str HandleGotoCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr pdfFile, destName;
     Str next = str::Parse(cmd, R"([GotoNamedDest("%s",%? "%s")])", &pdfFile, &destName);
     if (str::IsNull(next)) {
@@ -758,7 +758,7 @@ Str HandleGotoCmd(HWND hwnd, Str cmd, bool* ack) {
     return next;
 }
 
-Str HandlePageCmd(HWND hwnd, Str cmd, bool* ack) {
+static Str HandlePageCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr pdfFile;
     uint page = 0;
     Str next = str::Parse(cmd, "[GotoPage(\"%S\",%u)]", &pdfFile, &page);
@@ -787,7 +787,7 @@ Str HandlePageCmd(HWND hwnd, Str cmd, bool* ack) {
     return next;
 }
 
-Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
+static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr filePath, viewMode;
     float zoom = kInvalidZoom;
     Point scroll(-1, -1);
@@ -835,7 +835,7 @@ Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
     return next;
 }
 
-Str HandleFullScreenCmd(HWND hwnd, Str cmd, bool* ack) {
+static Str HandleFullScreenCmd(HWND hwnd, Str cmd, bool* ack) {
     TempStr filePath;
     bool presentation = true;
     Str next = str::Parse(cmd, R"([Presentation("%s")])", &filePath);
@@ -856,7 +856,7 @@ Str HandleFullScreenCmd(HWND hwnd, Str cmd, bool* ack) {
     return next;
 }
 
-Str HandleNewWindowCmd(Str cmd, bool* ack) {
+static Str HandleNewWindowCmd(Str cmd, bool* ack) {
     Str kNewWindowCmd = StrL("[NewWindow]");
     if (!str::TrimPrefix(cmd, kNewWindowCmd)) {
         return {};
@@ -868,7 +868,7 @@ Str HandleNewWindowCmd(Str cmd, bool* ack) {
 }
 
 // returns the full path of every open document, one per line (issue #5060)
-Str HandleGetOpenFilesCmd(Str cmd, bool* ack, str::Builder& res) {
+static Str HandleGetOpenFilesCmd(Str cmd, bool* ack, str::Builder& res) {
     Str next = str::Parse(cmd, "[GetOpenFiles()]");
     if (str::IsNull(next)) {
         next = str::Parse(cmd, "[GetOpenFiles]");
@@ -1106,7 +1106,7 @@ void InvalidateFindMatchPaintCache() {
     gFindMatchPaintCache.countEpoch = 0;
 }
 
-void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int firstPage, int lastPage) {
+static void RebuildFindMatchPaintCache(MainWindow* win, DisplayModel* dm, int firstPage, int lastPage) {
     FreeFindMatchPaintCacheEntries();
     gFindMatchPaintCache.win = win;
     gFindMatchPaintCache.dm = dm;
@@ -1324,7 +1324,7 @@ void ShowMatchCount(MainWindow* win) {
     logf("ShowMatchCount: %s (page %d)\n", s, dm && dm->textSearch ? dm->textSearch->startPage : 0);
 }
 
-Str HandleSyncCmd(Str cmd, bool* ack) {
+static Str HandleSyncCmd(Str cmd, bool* ack) {
     TempStr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
     Str next = str::Parse(cmd, R"([ForwardSearch("%s",%? "%s",%u,%u)])", &pdfFile, &srcFile, &line, &col);
@@ -2477,7 +2477,7 @@ MainWindow* FindDdeTargetWindow(HWND hwnd, Str pdfFile, bool focusTab) {
     return FindMainWindowByFile(pdfFile, focusTab);
 }
 
-Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res) {
+static Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res) {
     TempStr filePath;
     Str next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
     if (str::IsNull(next)) {
@@ -2532,7 +2532,7 @@ static bool IsRunProgramCmd(int cmdId) {
     return cmdId == CmdExec || cmdId == CmdSelectionHandler || cmdId == CmdViewWithExternalViewer;
 }
 
-Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
+static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     TempStr cmdContent;
     Str next = str::Parse(cmd, "[%s]", &cmdContent);
     if (str::IsNull(next)) {
