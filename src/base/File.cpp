@@ -1941,7 +1941,7 @@ TempStr GetHomeDirTemp() {
     WCHAR path[MAX_PATH];
     DWORD driveLen = GetEnvironmentVariableW(L"HOMEDRIVE", drive, MAX_PATH);
     DWORD pathLen = GetEnvironmentVariableW(L"HOMEPATH", path, MAX_PATH);
-    if (driveLen > 0 && pathLen > 0) {
+    if (driveLen > 0 && driveLen < MAX_PATH && pathLen > 0 && pathLen < MAX_PATH) {
         WCHAR combined[MAX_PATH * 2];
         int pos = 0;
         for (DWORD i = 0; i < driveLen && pos < MAX_PATH * 2 - 1; i++) {
