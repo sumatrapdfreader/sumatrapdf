@@ -4420,25 +4420,27 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
     }
 
     // load a stream from inside a pdf document
+    // LoadFromStream dropped file: only a pdf stream can replace it
     pdfdoc = pdf_specifics(ctx, _doc);
-    if (pdfdoc) {
-        if (!pdf_obj_num_is_stream(ctx, pdfdoc, streamNo)) {
-            return false;
-        }
+    if (!pdfdoc) {
+        return false;
+    }
+    if (!pdf_obj_num_is_stream(ctx, pdfdoc, streamNo)) {
+        return false;
+    }
 
-        fz_buffer* buffer = nullptr;
-        fz_var(buffer);
-        fz_try(ctx) {
-            buffer = pdf_load_stream_number(ctx, pdfdoc, streamNo);
-            file = fz_open_buffer(ctx, buffer);
-        }
-        fz_always(ctx) {
-            fz_drop_buffer(ctx, buffer);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            return false;
-        }
+    fz_buffer* buffer = nullptr;
+    fz_var(buffer);
+    fz_try(ctx) {
+        buffer = pdf_load_stream_number(ctx, pdfdoc, streamNo);
+        file = fz_open_buffer(ctx, buffer);
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buffer);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return false;
     }
 
     fz_drop_document(ctx, _doc);
