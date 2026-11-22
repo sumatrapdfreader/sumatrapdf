@@ -203,7 +203,11 @@ void log(Str s) {
 
     if (gLogFilePath) {
         if (!gLogFile) {
-            gLogFile = fopen(gLogFilePath.s, "a");
+#if OS_WIN
+            gLogFile = _wfopen(CWStrTemp(gLogFilePath), L"a");
+#else
+            gLogFile = fopen(CStrTemp(gLogFilePath), "a");
+#endif
         }
         if (gLogFile) {
             fwrite(s.s, 1, n, gLogFile);
