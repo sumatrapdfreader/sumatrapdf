@@ -14775,6 +14775,23 @@ static void MaybeStartSearch(MainWindow* win, Str searchTerm) {
     StartSearchFromCommandLine(win, searchTerm);
 }
 
+// -view, -zoom and -scroll for the document the command line opened
+static void ApplyStartupView(MainWindow* win, const Flags& flags) {
+    if (flags.startView != DisplayMode::Automatic) {
+        SwitchToDisplayMode(win, flags.startView);
+    }
+    if (flags.startZoom != kInvalidZoom) {
+        SmartZoom(win, flags.startZoom, nullptr, false);
+    }
+    if ((flags.startScroll.x != -1 || flags.startScroll.y != -1) && win->AsFixed()) {
+        DisplayModel* dm = win->AsFixed();
+        ScrollState ss = dm->GetScrollState();
+        ss.x = flags.startScroll.x;
+        ss.y = flags.startScroll.y;
+        dm->SetScrollState(ss);
+    }
+}
+
 static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstWin) {
     LoadArgs args(filePath, nullptr);
     args.showWin = !(flags.printDialog && flags.exitWhenDone) && !gPluginMode;
@@ -14808,19 +14825,7 @@ static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstW
         return win;
     }
     FlagsEnterFullscreen(flags, win);
-    if (flags.startView != DisplayMode::Automatic) {
-        SwitchToDisplayMode(win, flags.startView);
-    }
-    if (flags.startZoom != kInvalidZoom) {
-        SmartZoom(win, flags.startZoom, nullptr, false);
-    }
-    if ((flags.startScroll.x != -1 || flags.startScroll.y != -1) && win->AsFixed()) {
-        DisplayModel* dm = win->AsFixed();
-        ScrollState ss = dm->GetScrollState();
-        ss.x = flags.startScroll.x;
-        ss.y = flags.startScroll.y;
-        dm->SetScrollState(ss);
-    }
+    ApplyStartupView(win, flags);
     if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         int page;
         Vec<Rect> rects;
@@ -16669,6 +16674,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     HWND existingHwnd = nullptr;
     bool openInNewWindow = false;
     WindowTab* tabToSelect = nullptr;
+    // per-file flags (-page, -zoom, ...) go to the first file, also after a restored session
+    bool openedCmdLineFile = false;
     Str logFilePath;
     bool logFileBecauseDebug = false;
 
@@ -17314,6 +17321,7 @@ ContinueOpenWindow:
             auto* tab = FindTabByFilePath(path);
             if (tab) {
                 tabToSelect = tab;
+                openedCmdLineFile = true;
                 if (len(flags.forwardSearchOrigin) == 0 || !flags.forwardSearchLine) {
                     continue;
                 }
@@ -17337,14 +17345,16 @@ ContinueOpenWindow:
             if (auto* existing = FindMainWindowByFile(path, true)) {
                 win = existing;
                 tabToSelect = FindTabByFilePath(path);
+                openedCmdLineFile = true;
             }
             continue;
         }
-        win = LoadOnStartup(path, flags, !win);
+        win = LoadOnStartup(path, flags, !openedCmdLineFile);
         if (!win) {
             exitCode++;
             continue;
         }
+        openedCmdLineFile = true;
         if (flags.printDialog) {
             // one dialog per file, one after another: only the classic one is modal
             PrintUI ui = len(flags.fileNames) > 1 ? PrintUI::Classic : PrintUI::Auto;
@@ -17355,6 +17365,9 @@ ContinueOpenWindow:
         SelectTabInWindow(tabToSelect);
         MaybeStartSearch(tabToSelect->win, flags.search);
         MaybeGoTo(tabToSelect->win, flags.namedDest, flags.pageNumber);
+        if (tabToSelect->win->IsDocLoaded()) {
+            ApplyStartupView(tabToSelect->win, flags);
+        }
     }
 
     nWithDde = len(gDdeOpenOnStartup);
