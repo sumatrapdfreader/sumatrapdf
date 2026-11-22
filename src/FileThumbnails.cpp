@@ -73,8 +73,13 @@ void SaveThumbnail(FileState* fs) {
     WCHAR* pathW = CWStrTemp(tmpPath);
     Gdiplus::Status st = bmp->Save(pathW, &tmpClsid, nullptr);
     delete bmp;
-    if (st != Gdiplus::Ok || !file::RenameReplace(thumbnailPath, tmpPath)) {
-        logf("SaveThumbnail: Save('%s') failed with %d\n", thumbnailPath, (int)st);
+    if (st != Gdiplus::Ok) {
+        logf("SaveThumbnail: Save('%s') failed with %d\n", tmpPath, (int)st);
+        file::Delete(tmpPath);
+        return;
+    }
+    if (!file::RenameReplace(thumbnailPath, tmpPath)) {
+        logf("SaveThumbnail: RenameReplace('%s', '%s') failed\n", thumbnailPath, tmpPath);
         file::Delete(tmpPath);
     }
 }
