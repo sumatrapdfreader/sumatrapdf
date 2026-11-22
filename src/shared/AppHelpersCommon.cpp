@@ -205,6 +205,21 @@ Shortcut* FindScreenshotShortcutEntry() {
     return nullptr;
 }
 
+// removes and frees the CmdScreenshot entry; settings structs are malloc'ed (AllocStruct)
+void RemoveScreenshotShortcutEntry() {
+    Shortcut* sc = FindScreenshotShortcutEntry();
+    if (!sc) {
+        return;
+    }
+    VecRemove(*gSettings->shortcuts, sc);
+    str::Free(sc->cmd);
+    str::Free(sc->key);
+    str::Free(sc->name);
+    str::Free(sc->toolbarText);
+    str::Free(sc->toolbarSvgIcon);
+    free(sc);
+}
+
 TempStr FavoritePromptTemp(Str pageLabel) {
     int chapter = 0, page = 0;
     if (str::Parse(pageLabel, "%d/%d%$", &chapter, &page)) {

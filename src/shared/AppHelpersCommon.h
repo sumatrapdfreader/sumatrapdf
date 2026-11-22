@@ -24,6 +24,7 @@ int FindFirstMatchFromPage(MainWindow* win);
 int FieldFontPx(Annotation* widget, Rect rc);
 int DecimalDigits(int n);
 Shortcut* FindScreenshotShortcutEntry();
+void RemoveScreenshotShortcutEntry();
 TempStr FavoritePromptTemp(Str pageLabel);
 bool AnnotationHasText(Annotation* annot);
 Color TabTextColorForBackground(Color text, Color tabBg);

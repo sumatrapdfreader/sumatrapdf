@@ -180,7 +180,7 @@ void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
     if (sc) {
         str::ReplaceWithCopy(&sc->key, globalKey);
     } else {
-        sc = new Shortcut();
+        sc = AllocStruct<Shortcut>();
         sc->cmd = str::Dup(StrL("CmdScreenshot"));
         sc->key = str::Dup(globalKey);
         sc->name = {};
@@ -199,10 +199,7 @@ void SetHotkeyWnd::DoSet(VirtMouseEvent*) {
 void SetHotkeyWnd::DoRemove(VirtMouseEvent*) {
     logf("SetHotkeyDoRemove: removing screenshot hotkey\n");
 
-    Shortcut* sc = FindScreenshotShortcutEntry();
-    if (sc) {
-        VecRemove(*gSettings->shortcuts, sc);
-    }
+    RemoveScreenshotShortcutEntry();
     auto* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdScreenshot) {

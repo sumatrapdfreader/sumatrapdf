@@ -337,7 +337,7 @@ void SetHotkeyView::OnSet(SetHotkeyView*, gp::Ctx* cx, const gp::ClickEvent*) {
     if (sc) {
         str::ReplaceWithCopy(&sc->key, globalKey);
     } else {
-        sc = new Shortcut();
+        sc = AllocStruct<Shortcut>();
         sc->cmd = str::Dup(StrL("CmdScreenshot"));
         sc->key = str::Dup(globalKey);
         VecAppend(*gSettings->shortcuts, sc);
@@ -350,10 +350,7 @@ void SetHotkeyView::OnSet(SetHotkeyView*, gp::Ctx* cx, const gp::ClickEvent*) {
 
 void SetHotkeyView::OnRemove(SetHotkeyView*, gp::Ctx* cx, const gp::ClickEvent*) {
     logf("SetHotkeyDoRemove: removing screenshot hotkey\n");
-    Shortcut* sc = FindScreenshotShortcutEntry();
-    if (sc) {
-        VecRemove(*gSettings->shortcuts, sc);
-    }
+    RemoveScreenshotShortcutEntry();
     auto* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdScreenshot) {
