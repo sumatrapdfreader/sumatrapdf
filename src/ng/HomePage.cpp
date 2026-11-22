@@ -2154,6 +2154,10 @@ static void LocateFileNow(LocateFileReq* req) {
     }
     TempStr newPath = str::DupTemp(picked);
     LocateFileInHistory(oldPath, newPath);
+    // the window may have closed while the prompt ran its message loop
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
     StartLoadDocument(win, newPath);
 }
 
