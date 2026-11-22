@@ -853,6 +853,7 @@ bool AIChatRunCapture(Str cmdLine, int timeoutMs, str::Builder& out) {
     }
 
     ULONGLONG deadline = GetTickCount64() + timeoutMs;
+    bool exited = false;
     while (GetTickCount64() < deadline && out.len < kAIChatMaxCaptureBytes) {
         DWORD available = 0;
         if (!PeekNamedPipe(launch.hReadPipe, nullptr, 0, nullptr, &available, nullptr)) {
@@ -868,8 +869,13 @@ bool AIChatRunCapture(Str cmdLine, int timeoutMs, str::Builder& out) {
             out.Append(Str(buf, (int)nRead));
             continue;
         }
-        if (WaitForSingleObject(launch.hProcess, 10) != WAIT_TIMEOUT) {
+        if (exited) {
             break;
+        }
+        // drain what it wrote before exiting
+        if (WaitForSingleObject(launch.hProcess, 10) != WAIT_TIMEOUT) {
+            exited = true;
+            continue;
         }
         Sleep(10);
     }
