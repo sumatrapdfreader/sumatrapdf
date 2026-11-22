@@ -77,12 +77,16 @@ static int JsFaultTest(const char* path, JsFault fault) {
     }
     fz_catch(ctx) {
         fprintf(stderr, "%s: %s\n", path, fz_caught_message(ctx));
+        fz_drop_document(ctx, doc);
+        fz_drop_context(ctx);
         return 1;
     }
 
     fz_context* clone = fz_clone_context(ctx);
     if (!clone) {
         fprintf(stderr, "fz_clone_context() failed\n");
+        fz_drop_document(ctx, doc);
+        fz_drop_context(ctx);
         return 1;
     }
     int res = 0;
