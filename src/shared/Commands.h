@@ -406,8 +406,9 @@ enum {
     CmdDeleteFromServer = 600,
     CmdExportMarkdown = 601,
     CmdImagesToPdf = 602,
+    CmdExportAnnotations = 603,
 
-    CmdLast = 602,
+    CmdLast = 603,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

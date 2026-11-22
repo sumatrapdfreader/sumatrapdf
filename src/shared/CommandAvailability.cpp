@@ -800,6 +800,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
+    // a PDF's annotations as Markdown or CSV; wasm has no files to write them to
+    if (cmdId == CmdExportAnnotations && (OS_WASM || !ctx.isPdf || !ctx.supportsAnnots)) {
+        return CommandVisibility::Hide;
+    }
+
     // the Markdown export of `cli markdown`; wasm has no files to write it to
     if (cmdId == CmdExportMarkdown) {
 #if OS_WASM

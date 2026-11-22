@@ -18,6 +18,7 @@ struct WindowTab;
 #include "ImageReader.h"
 #include "SumatraConfig.h"
 #include "Annotation.h"
+#include "AnnotationsExport.h"
 #include "FileHistory.h"
 #include "base/Pixmap.h"
 #include "Cli.h"
@@ -543,59 +544,6 @@ static int CmdToc(CliCtx& cx) {
 
 //--- annotations
 
-static TempStr HexColorTemp(PdfColor c) {
-    if (c == 0 || c == (PdfColor)kColorUnset) {
-        return {};
-    }
-    u8 r, g, b, a;
-    UnpackPdfColor(c, r, g, b, a);
-    return fmt("#%02x%02x%02x", r, g, b);
-}
-
-static TempStr IsoTimeTemp(time_t t) {
-    if (t <= 0) {
-        return {};
-    }
-    struct tm tmv;
-#if OS_WIN
-    gmtime_s(&tmv, &t);
-#else
-    gmtime_r(&t, &tmv);
-#endif
-    return fmt("%04d-%02d-%02dT%02d:%02d:%02dZ", tmv.tm_year + 1900, tmv.tm_mon + 1, tmv.tm_mday, tmv.tm_hour,
-               tmv.tm_min, tmv.tm_sec);
-}
-
-static bool IsTextMarkup(AnnotationType tp) {
-    return tp == AnnotationType::Highlight || tp == AnnotationType::Underline || tp == AnnotationType::Squiggly ||
-           tp == AnnotationType::StrikeOut;
-}
-
-// the page text a highlight (underline, ...) is over: the characters whose
-// box's center is in one of its quads
-static TempStr MarkedTextTemp(const PageText& pt, const Vec<RectF>& quads) {
-    str::Builder out;
-    const u8* p = (const u8*)pt.text.s;
-    const u8* end = p + len(pt.text);
-    for (int i = 0; i < pt.nCodepoints && p < end; i++) {
-        int n = utf8RuneLen(p);
-        if (n < 1 || p + n > end) {
-            n = 1;
-        }
-        Rect c = pt.coords ? pt.coords[i] : Rect();
-        PointF center((float)c.x + (float)c.dx / 2, (float)c.y + (float)c.dy / 2);
-        for (const RectF& q : quads) {
-            if (q.Contains(center)) {
-                out.Append(Str((const char*)p, n));
-                break;
-            }
-        }
-        p += n;
-    }
-    TempStr res = ToStrTemp(out);
-    return str::ReplaceTemp(res, StrL("\n"), StrL(" "));
-}
-
 static int CmdAnnotations(CliCtx& cx) {
     int code = kCliOk;
     EngineBase* engine = OpenDoc(cx, cx.positional[0], &code);
@@ -611,75 +559,45 @@ static int CmdAnnotations(CliCtx& cx) {
         SafeEngineRelease(&engine);
         return code;
     }
-    for (int pageNo : pages) {
-        EngineMupdfLoadAnnotsForPage(engine, pageNo);
-    }
-    Vec<Annotation*> annots;
-    EngineMupdfGetLoadedAnnotations(engine, annots);
+    Vec<AnnotRow> rows;
+    CollectAnnotRows(engine, pages, rows);
     str::Builder out;
     int n = 0;
-    for (int pageNo : pages) {
-        PageText pt{};
-        bool haveText = false;
-        for (Annotation* a : annots) {
-            if (PageNo(a) != pageNo) {
-                continue;
+    for (const AnnotRow& r : rows) {
+        Str typeName = AnnotationTypeName(r.type);
+        if (cx.json) {
+            out.Append(fmt("%s{%s,\"type\":%s,\"rect\":[%.1f,%.1f,%.1f,%.1f]", n > 0 ? StrL(",") : StrL(""),
+                           JPage(engine, r.pageNo), JStr(typeName), r.rect.x, r.rect.y, r.rect.dx, r.rect.dy));
+            if (len(r.marked) > 0) {
+                out.Append(fmt(",\"text\":%s", JStr(r.marked)));
             }
-            AnnotationType tp = Type(a);
-            // a popup is the note window of another annotation, a widget a form field
-            if (tp == AnnotationType::Popup || tp == AnnotationType::Widget) {
-                continue;
+            if (len(r.contents) > 0) {
+                out.Append(fmt(",\"contents\":%s", JStr(r.contents)));
             }
-            RectF r = GetRect(a);
-            TempStr marked;
-            if (IsTextMarkup(tp)) {
-                if (!haveText) {
-                    pt = engine->ExtractPageText(pageNo);
-                    haveText = true;
-                }
-                marked = MarkedTextTemp(pt, GetQuadPointsAsRect(a));
+            if (len(r.author) > 0) {
+                out.Append(fmt(",\"author\":%s", JStr(r.author)));
             }
-            Str contents = Contents(a);
-            Str author = Author(a);
-            TempStr color = HexColorTemp(GetColor(a));
-            TempStr modified = IsoTimeTemp(ModificationDate(a));
-            if (cx.json) {
-                out.Append(fmt("%s{%s,\"type\":%s,\"rect\":[%.1f,%.1f,%.1f,%.1f]", n > 0 ? StrL(",") : StrL(""),
-                               JPage(engine, pageNo), JStr(AnnotationTypeName(tp)), r.x, r.y, r.dx, r.dy));
-                if (len(marked) > 0) {
-                    out.Append(fmt(",\"text\":%s", JStr(marked)));
-                }
-                if (len(contents) > 0) {
-                    out.Append(fmt(",\"contents\":%s", JStr(contents)));
-                }
-                if (len(author) > 0) {
-                    out.Append(fmt(",\"author\":%s", JStr(author)));
-                }
-                if (len(color) > 0) {
-                    out.Append(fmt(",\"color\":%s", JStr(color)));
-                }
-                if (len(modified) > 0) {
-                    out.Append(fmt(",\"modified\":%s", JStr(modified)));
-                }
-                out.Append(StrL("}"));
-            } else {
-                out.Append(fmt("page %d: %s", pageNo, AnnotationTypeName(tp)));
-                if (len(marked) > 0) {
-                    out.Append(fmt(" \"%s\"", marked));
-                }
-                if (len(contents) > 0) {
-                    out.Append(fmt(": %s", str::ReplaceTemp(contents, StrL("\n"), StrL(" "))));
-                }
-                if (len(author) > 0) {
-                    out.Append(fmt(" (%s)", author));
-                }
-                out.Append(StrL("\n"));
+            if (len(r.color) > 0) {
+                out.Append(fmt(",\"color\":%s", JStr(r.color)));
             }
-            n++;
+            if (len(r.modified) > 0) {
+                out.Append(fmt(",\"modified\":%s", JStr(r.modified)));
+            }
+            out.Append(StrL("}"));
+        } else {
+            out.Append(fmt("page %d: %s", r.pageNo, typeName));
+            if (len(r.marked) > 0) {
+                out.Append(fmt(" \"%s\"", r.marked));
+            }
+            if (len(r.contents) > 0) {
+                out.Append(fmt(": %s", str::ReplaceTemp(r.contents, StrL("\n"), StrL(" "))));
+            }
+            if (len(r.author) > 0) {
+                out.Append(fmt(" (%s)", r.author));
+            }
+            out.Append(StrL("\n"));
         }
-        if (haveText) {
-            FreePageText(&pt);
-        }
+        n++;
     }
     if (cx.json) {
         Out(fmt("{\"count\":%d,\"annotations\":[%s]}\n", n, ToStr(out)));
@@ -2800,7 +2718,7 @@ static int CmdAnnotate(CliCtx& cx) {
         return Fail(cx, kCliUsage,
                     fmt("'%s': use highlight, underline, strikeout, squiggly, note, freetext, square or circle", type));
     }
-    bool markup = IsTextMarkup(at);
+    bool markup = IsTextMarkupAnnot(at);
     bool shape = at == AnnotationType::Square || at == AnnotationType::Circle;
     Str text = OptValue(cx, StrL("--text"));
     Str contents = OptValue(cx, StrL("--contents"));

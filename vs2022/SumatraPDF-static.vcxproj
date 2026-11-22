@@ -1455,6 +1455,7 @@
     <ClInclude Include="..\src\shared\AnnotSearch.h" />
     <ClInclude Include="..\src\shared\AnnotTextPopup.h" />
     <ClInclude Include="..\src\shared\Annotation.h" />
+    <ClInclude Include="..\src\shared\AnnotationsExport.h" />
     <ClInclude Include="..\src\shared\AppHelpersCommon.h" />
     <ClInclude Include="..\src\shared\AppSettings.h" />
     <ClInclude Include="..\src\shared\AppTools.h" />
@@ -2110,6 +2111,7 @@
     <ClCompile Include="..\src\shared\AnnotPlacementCursors_win.cpp" />
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
     <ClCompile Include="..\src\shared\Annotation.cpp" />
+    <ClCompile Include="..\src\shared\AnnotationsExport.cpp" />
     <ClCompile Include="..\src\shared\AppDecisions.cpp" />
     <ClCompile Include="..\src\shared\AppHelpersCommon.cpp" />
     <ClCompile Include="..\src\shared\AppSettings.cpp" />

@@ -17,6 +17,7 @@ void ShowPdfDeletePageDialog(MainWindow* win);
 void ShowPdfExtractPagesDialog(MainWindow* win);
 void ShowMergePdfDialog(MainWindow* win);
 void MakePdfFromImages(MainWindow* win);
+void ExportAnnotations(MainWindow* win);
 TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut);
 void ShowPdfEncryptDialog(MainWindow* win);
 void ShowPdfDecryptDialog(MainWindow* win);

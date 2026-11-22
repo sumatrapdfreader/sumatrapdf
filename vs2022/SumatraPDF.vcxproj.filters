@@ -291,6 +291,9 @@
     <ClInclude Include="..\src\shared\Annotation.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\AnnotationsExport.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\AppHelpersCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1227,6 +1230,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\Annotation.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AnnotationsExport.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AppDecisions.cpp">

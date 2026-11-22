@@ -2232,3 +2232,33 @@ void MakePdfFromImages(MainWindow* win) {
     LoadArgs args(dest, win);
     StartLoadDocument(&args);
 }
+
+// Export Annotations (CmdExportAnnotations): the PDF's annotations, unsaved
+// ones too, as Markdown or CSV, to a file the Save As dialog picks
+void ExportAnnotations(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    if (!engine || len(tab->filePath) == 0) {
+        return;
+    }
+    WCHAR dstFileName[MAX_PATH + 1]{};
+    wstr::BufSet(WStr(dstFileName, MAX_PATH), ToWStrTemp(AnnotationsExportDestTemp(tab->filePath)));
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = win->hwndFrame;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = L"Markdown\0*.md\0CSV\0*.csv\0";
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = L"md";
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
+        return;
+    }
+    TempStr dest = ToUtf8Temp(dstFileName);
+    TempStr err = ExportAnnotationsTemp(engine, tab->filePath, dest);
+    if (len(err) > 0) {
+        ShowWarningNotification(win, err, kNotif5SecsTimeOut);
+        return;
+    }
+    ShowTemporaryNotification(win, fmt(Tr("Saved annotations to '%s'").s, dest));
+}

@@ -14,6 +14,7 @@
 #include "EngineAll.h"
 #include "Annotation.h"
 #include "PdfCreator.h"
+#include "AnnotationsExport.h"
 #include "ImageReader.h"
 #include "PngOptimizer.h"
 #include "base/Pixmap.h"
@@ -412,6 +413,29 @@ TempStr MakePdfFromImagesTemp(const StrVec& paths, Str dest) {
         return fmt(Tr("Couldn't load image '%s'").s, path::GetBaseNameTemp(paths[bad]));
     }
     if (res == ImagesPdfResult::WriteFailed) {
+        return fmt(Tr("Couldn't save '%s'").s, dest);
+    }
+    return {};
+}
+
+// Export Annotations: next to the document, foo.pdf -> foo-annotations.md
+TempStr AnnotationsExportDestTemp(Str docPath) {
+    TempStr base = str::JoinTemp(path::GetPathNoExtTemp(docPath), StrL("-annotations.md"));
+    return MakeUniqueFilePathTemp(base);
+}
+
+// Writes the document's annotations (unsaved ones too) to dest: CSV for a .csv
+// file, else Markdown. Empty when it worked, else what to tell the user.
+TempStr ExportAnnotationsTemp(EngineBase* engine, Str docPath, Str dest) {
+    Vec<int> pages;
+    for (int i = 1; i <= engine->PageCount(); i++) {
+        VecAppend(pages, i);
+    }
+    Vec<AnnotRow> rows;
+    CollectAnnotRows(engine, pages, rows);
+    bool csv = str::EndsWithI(dest, StrL(".csv"));
+    TempStr data = csv ? AnnotationsCsvTemp(rows) : AnnotationsMarkdownTemp(rows, path::GetBaseNameTemp(docPath));
+    if (!file::WriteFile(dest, data)) {
         return fmt(Tr("Couldn't save '%s'").s, dest);
     }
     return {};

@@ -352,6 +352,7 @@ import { testit as serverSyncHash } from "./server-sync-hash.ts";
 import { testit as serverSyncMatch } from "./server-sync-match.ts";
 import { testit as serverSyncCache } from "./server-sync-cache.ts";
 import { testit as imagesToPdf } from "./images-to-pdf.ts";
+import { testit as exportAnnotations } from "./export-annotations.ts";
 import { testit as issue1106 } from "./issue-1106.ts";
 import { testit as issue814 } from "./issue-814.ts";
 import { testit as issue1422 } from "./issue-1422.ts";
@@ -675,6 +676,7 @@ export const tests: NamedTest[] = [
   ["server-sync-match", serverSyncMatch],
   ["server-sync-cache", serverSyncCache],
   ["images-to-pdf", imagesToPdf],
+  ["export-annotations", exportAnnotations],
   ["ctx-menu-pick", ctxMenuPick],
   ["cli-images", cliImages],
   ["issue-1139", issue1139],

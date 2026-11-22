@@ -276,6 +276,8 @@ export const sharedFiles = [
   "src/shared/ChmModel.h",
   "src/shared/Cli.cpp",
   "src/shared/Cli.h",
+  "src/shared/AnnotationsExport.cpp",
+  "src/shared/AnnotationsExport.h",
   "src/shared/CommandAvailability.cpp",
   "src/shared/CommandAvailability.h",
   "src/shared/CommandPalette.h",

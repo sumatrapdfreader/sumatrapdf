@@ -413,6 +413,7 @@ const commandsRaw = [
     "CmdDeleteFromServer", "Delete from Server",
     "CmdExportMarkdown", "Export as Markdown...",
     "CmdImagesToPdf", "Make PDF From Images...",
+    "CmdExportAnnotations", "Export Annotations...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

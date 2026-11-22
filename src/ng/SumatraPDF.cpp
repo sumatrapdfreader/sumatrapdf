@@ -7484,6 +7484,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowExportMarkdownDialog(win);
             break;
 
+        case CmdExportAnnotations:
+            ExportAnnotations(win);
+            break;
+
         case CmdSaveSelectionAsImage:
             ShowSaveSelectionAsImageDialog(win);
             break;

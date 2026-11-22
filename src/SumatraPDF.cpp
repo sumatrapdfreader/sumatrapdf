@@ -11900,6 +11900,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowExportMarkdownDialog(win);
             break;
 
+        case CmdExportAnnotations:
+            ExportAnnotations(win);
+            break;
+
         case CmdMoveFrameFocus:
             if (!HwndIsFocused(win->hwndFrame)) {
                 HwndSetFocus(win->hwndFrame);

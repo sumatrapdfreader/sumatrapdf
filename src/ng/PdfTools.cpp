@@ -4439,3 +4439,41 @@ static void ImagesToPdfPromptNow(MainWindow* win) {
 void MakePdfFromImages(MainWindow* win) {
     uitask::Post(MkFunc0(ImagesToPdfPromptNow, win), "ImagesToPdf");
 }
+
+// --- Export Annotations (CmdExportAnnotations) -------------------------------
+
+static void OnAnnotationsExportDest(SavePathArgs* args) {
+    MainWindow* win = args->win;
+    TempStr dest = str::DupTemp(args->path);
+    if (len(dest) == 0 || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+    if (!engine) {
+        return;
+    }
+    TempStr err = ExportAnnotationsTemp(engine, tab->filePath, dest);
+    if (len(err) > 0) {
+        ShowWarningNotification(win, err, kNotif5SecsTimeOut);
+        return;
+    }
+    ShowTemporaryNotification(win, fmt(Tr("Saved annotations to '%s'").s, dest));
+}
+
+// orig's ExportAnnotations: the PDF's annotations, unsaved ones too, as
+// Markdown or CSV, to a file the Save As dialog picks
+void ExportAnnotations(MainWindow* win) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!tab || !tab->GetEngine() || len(tab->filePath) == 0) {
+        return;
+    }
+    auto* args = new SavePathArgs();
+    args->win = win;
+    args->title = str::Dup(Tr("Save As"));
+    args->initialPath = str::Dup(AnnotationsExportDestTemp(tab->filePath));
+    args->defExt = str::Dup(StrL(".md"));
+    args->filter = str::Dup(StrL("Markdown\1*.md\1CSV\1*.csv\1"));
+    args->onDone = MkFunc1Void<SavePathArgs*>(OnAnnotationsExportDest);
+    ShowSavePathDialog(args);
+}

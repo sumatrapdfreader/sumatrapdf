@@ -1601,6 +1601,7 @@ export const targets: Target[] = [
       "src/ng/PdfTools.cpp",
       "src/ng/PdfToolsCommon.cpp",
       "src/ng/Cli.cpp",
+      "src/ng/AnnotationsExport.cpp",
       "src/ng/SelectionHandlers.cpp",
       "src/ng/SelectionTranslate.cpp",
       "src/ng/SelectionTranslateCommon.cpp",

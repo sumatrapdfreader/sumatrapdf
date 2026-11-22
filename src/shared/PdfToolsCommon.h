@@ -37,6 +37,8 @@ bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath);
 Str ImagesToPdfFilter();
 TempStr ImagesToPdfDestTemp(Str firstImage);
 TempStr MakePdfFromImagesTemp(const StrVec& paths, Str dest);
+TempStr AnnotationsExportDestTemp(Str docPath);
+TempStr ExportAnnotationsTemp(EngineBase* engine, Str docPath, Str dest);
 
 // Add Watermark / Add Page Numbers (and `cli watermark`, `cli number`)
 struct PdfStamp;
