@@ -68,12 +68,14 @@ static void SampleImageBorder(fz_context* ctx, fz_pixmap* pix, ImageStats* stats
         n++;
     };
 
-    int stepX = pix->w >= kBorderSamplesPerEdge ? pix->w / kBorderSamplesPerEdge : 1;
+    // rounded up: at most kBorderSamplesPerEdge per edge, so left and right
+    // edges still fit in samples
+    int stepX = std::max(1, (pix->w + kBorderSamplesPerEdge - 1) / kBorderSamplesPerEdge);
     for (int x = 0; x < pix->w; x += stepX) {
         sampleAt(x, 0);
         sampleAt(x, pix->h - 1);
     }
-    int stepY = pix->h >= kBorderSamplesPerEdge ? pix->h / kBorderSamplesPerEdge : 1;
+    int stepY = std::max(1, (pix->h + kBorderSamplesPerEdge - 1) / kBorderSamplesPerEdge);
     for (int y = 0; y < pix->h; y += stepY) {
         sampleAt(0, y);
         sampleAt(pix->w - 1, y);
@@ -303,7 +305,8 @@ bool PdfDarkModeImageStats_UnitTest() {
 
     ImageStats stats;
     SampleImageBorder(ctx, pix, &stats);
-    bool ok = stats.borderLightRatio == 88.f / 128.f && stats.borderUniformity == 0.f;
+    // 20 samples per edge; only the bottom edge is dark
+    bool ok = stats.borderLightRatio == 60.f / 80.f && stats.borderUniformity == 0.f;
 
     fz_clear_pixmap_with_value(ctx, pix, 255);
     SampleImageBorder(ctx, pix, &stats);
