@@ -71,13 +71,25 @@ export async function testit(): Promise<void> {
     // it is still the pre-scroll one - and the predicate below is already true
     // then, which is what used to make this test read stale rects and give up
     // before the band had moved at all. Wait for the band to settle instead.
-    const settled = async (): Promise<HomeSelection> => {
+    // A notch is applied on a later frame. Two identical reads before that
+    // frame are the pre-scroll state, so wait until the outline moves, then
+    // until it holds still. ASan often misses a fixed 60ms sample.
+    const settled = async (before?: number[]): Promise<HomeSelection> => {
       const deadline = Date.now() + 4000;
       let prev = await waitForHome(client, (s) => s.ready && s.entries === nFiles, "home page lost its files");
+      let moved = !!before && !sameRect(prev.outlineFull, before);
       for (;;) {
+        if (Date.now() >= deadline) {
+          return prev;
+        }
         await sleep(60);
         const cur = await waitForHome(client, (s) => s.ready && s.entries === nFiles, "home page lost its files");
-        if (sameRect(cur.outlineFull, prev.outlineFull) || Date.now() >= deadline) {
+        if (!sameRect(cur.outlineFull, prev.outlineFull)) {
+          moved = true;
+          prev = cur;
+          continue;
+        }
+        if (moved) {
           return cur;
         }
         prev = cur;
@@ -116,7 +128,7 @@ export async function testit(): Promise<void> {
       } else {
         postMessage(canvas, WM_MOUSEWHEEL, (-WHEEL_DELTA << 16) >>> 0, 0n);
       }
-      const h = await settled();
+      const h = await settled(last.outlineFull);
       if (rectsOverlap(h.outline, h.search)) {
         throw new Error(`issue-5978: painted outline overlaps the search field: ${h.raw}`);
       }
