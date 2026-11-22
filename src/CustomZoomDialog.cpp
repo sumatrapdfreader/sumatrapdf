@@ -217,11 +217,8 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 }
 
 bool CustomZoomWnd::Create(MainWindow* mainWin) {
-    win = mainWin;
-    if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
-        forChm = IsBrowserDocController(win->ctrl);
-        startZoom = win->ctrl->GetZoomVirtual();
-    }
+    // the list doesn't exist yet, so this only sets win, forChm and startZoom
+    SetTarget(mainWin);
 
     colTxt = ThemeWindowTextColor();
     colBg = ThemeWindowControlBackgroundColor();
