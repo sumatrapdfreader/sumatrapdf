@@ -63,51 +63,8 @@ static DLGTEMPLATE* DupTemplate(int dlgId, Arena* arena = nullptr) {
     return ret;
 }
 
-/*
-Type: sz_Or_Ord
-
-A variable-length array of 16-bit elements that identifies a menu resource for the dialog box. If the first element of
-this array is 0x0000, the dialog box has no menu and the array has no other elements. If the first element is 0xFFFF,
-the array has one additional element that specifies the ordinal value of a menu resource in an executable file. If the
-first element has any other value, the system treats the array as a null-terminated Unicode string that specifies the
-name of a menu resource in an executable file.
-*/
-static u8* SkipSzOrOrd(u8* d) {
-    WORD* pw = (WORD*)d;
-    WORD w = *pw++;
-    if (w == 0x0000) {
-        // no menu
-    } else if (w == 0xffff) {
-        // menu id followed by another WORD item
-        pw++;
-    } else {
-        // anything else: zero-terminated WCHAR*
-        WCHAR* s = (WCHAR*)pw;
-        while (*s) {
-            s++;
-        }
-        s++;
-        pw = (WORD*)s;
-    }
-    return (u8*)pw;
-}
-
-static u8* SkipSz(u8* d) {
-    WCHAR* s = (WCHAR*)d;
-    while (*s) {
-        s++;
-    }
-    s++;
-    return (u8*)s;
-}
-
 static bool IsDlgTemplateEx(DLGTEMPLATE* tpl) {
     return tpl->style == MAKELONG(0x0001, 0xFFFF);
-}
-
-static bool HasDlgTemplateExFont(DLGTEMPLATEEX* tpl) {
-    DWORD style = tpl->style & (DS_SETFONT | DS_FIXEDSYS);
-    return style != 0;
 }
 
 // gets a dialog template from the resources and sets the RTL flag
@@ -120,60 +77,10 @@ static void SetDlgTemplateRtl(DLGTEMPLATE* tpl) {
     }
 }
 
-static int ToFontPointSize(int fontSize) {
-    int res = (fontSize * 72) / 96;
-    return res;
-}
-
-// https://stackoverflow.com/questions/14370238/can-i-dynamically-change-the-font-size-of-a-dialog-window-created-with-c-in-vi
-// TODO: if changing font name would have do more complicated dance of replacing
-// variable string in the middle of the struct
-static void SetDlgTemplateExFont(DLGTEMPLATE* tmp, bool isRtl, int fontSize) {
-    ReportIf(!IsDlgTemplateEx(tmp));
-    if (isRtl) {
-        SetDlgTemplateRtl(tmp);
-    }
-    DLGTEMPLATEEX* tpl = (DLGTEMPLATEEX*)tmp;
-    ReportIf(!HasDlgTemplateExFont(tpl));
-    u8* d = (u8*)tpl;
-    d += sizeof(DLGTEMPLATEEX);
-    // sz_Or_Ord menu
-    d = SkipSzOrOrd(d);
-    // sz_Or_Ord windowClass;
-    d = SkipSzOrOrd(d);
-    // WCHAR[] title
-    d = SkipSz(d);
-    // WCHAR pointSize;
-    WORD* wd = (WORD*)d;
-    fontSize = ToFontPointSize(fontSize);
-    *wd = (WORD)fontSize;
-}
-
 static DLGTEMPLATE* GetRtLDlgTemplateTemp(int dlgId) {
     DLGTEMPLATE* tpl = DupTemplate(dlgId, GetTempArena());
     SetDlgTemplateRtl(tpl);
     return tpl;
-}
-
-// creates a dialog box that dynamically gets a right-to-left layout if needed
-[[maybe_unused]] static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM data) {
-    bool isRtl = IsUIRtl();
-    bool isDefaultFont = IsAppFontSizeDefault();
-    if (!isRtl && isDefaultFont) {
-        return DialogBoxParam(nullptr, MAKEINTRESOURCE(dlgId), parent, DlgProc, data);
-    }
-
-    DLGTEMPLATE* tpl = DupTemplate(dlgId);
-    int fntSize = GetAppFontSize();
-    if (isDefaultFont) {
-        SetDlgTemplateRtl(tpl);
-    } else {
-        SetDlgTemplateExFont(tpl, isRtl, fntSize);
-    }
-
-    INT_PTR res = DialogBoxIndirectParamW(nullptr, tpl, parent, DlgProc, data);
-    free(tpl);
-    return res;
 }
 
 void PrintAdvancedInitDlg(HWND hDlg) {
