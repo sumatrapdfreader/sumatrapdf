@@ -131,7 +131,6 @@ static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static VirtRoot* gAboutRoot = nullptr;
 static Tooltip* gAboutTooltip = nullptr;
-static Str gClickedURL;
 
 // one row of the About screen's two-column table
 struct AboutRow {
@@ -786,8 +785,6 @@ void DrawAboutPage(MainWindow* win, Gfx* gfx) {
 
 /* alternate static page to display when no document is loaded */
 
-constexpr int kThumbsSeparatorDy = 2;
-constexpr int kThumbsBorderDx = 1;
 #define kThumbsMarginLeft DpiScale(40)
 #define kThumbsMarginRight DpiScale(40)
 #define kThumbsMarginTop DpiScale(50)
