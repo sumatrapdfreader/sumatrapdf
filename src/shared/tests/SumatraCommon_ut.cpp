@@ -32,6 +32,8 @@
 #include "HtmlFormatter.h"
 #if OS_WIN
 #include "base/ScopedWin.h"
+#include "SumatraDialogs.h"
+#include "Print.h"
 #endif
 
 struct OpenDdeArgs {
@@ -797,3 +799,31 @@ void HtmlImageCacheTest() {
     utassert(HtmlImageCacheDecodes(cache) == 2);
     DeleteHtmlImageCache(cache);
 }
+
+// the classic dialog, -print-to and the Windows 11 dialog all start from
+// PrinterDefaults (the Windows 11 one used to ignore PrintDpi)
+// orig only: ng's test_util doesn't link Print.cpp
+#if OS_WIN && !defined(SUMATRA_NG)
+void PrintAdvancedDefaultsTest() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    float prevDpi = gSettings->printerDefaults.printDpi;
+    bool prevAutoRotate = gSettings->printerDefaults.autoRotate;
+    gSettings->printerDefaults.printDpi = 300;
+    gSettings->printerDefaults.autoRotate = false;
+
+    Print_Advanced_Data advanced;
+    SetPrintAdvancedDefaults(&advanced);
+    utassert(advanced.dpiOverride == 300);
+    utassert(!advanced.autoRotate);
+
+    gSettings->printerDefaults.printDpi = prevDpi;
+    gSettings->printerDefaults.autoRotate = prevAutoRotate;
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+}
+#endif

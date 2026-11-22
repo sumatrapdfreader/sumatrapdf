@@ -505,6 +505,8 @@ class PrintDocumentSource final
     EngineBase* engine = nullptr;
     int currentPage = 1;
     Print_Advanced_Data advanced;
+    // CmdToggleMirror: print as shown
+    bool mirror = false;
     float previewDpi = 96.f;
     Mutex mutex;
     Vec<int> pages;
@@ -652,6 +654,10 @@ class PrintDocumentSource final
                 }
                 return E_FAIL;
             }
+            // CmdToggleMirror: a band is the page's full width, so flipping it mirrors the page
+            if (mirror) {
+                FlipPixmapHorizontally(band);
+            }
             // the engine can be a pixel off on either axis; copy what both agree on
             UINT32 w = (UINT32)std::min(band->width, fullW);
             UINT32 rows = (UINT32)std::min(band->height, fullH - dy);
@@ -702,7 +708,8 @@ class PrintDocumentSource final
     }
 
   public:
-    HRESULT RuntimeClassInitialize(EngineBase* sourceEngine, int currentPage, PrintScaleAdv scale, float previewDpi) {
+    HRESULT RuntimeClassInitialize(EngineBase* sourceEngine, int currentPage, PrintScaleAdv scale, float previewDpi,
+                                   bool mirrorPages) {
         if (!sourceEngine) {
             return E_INVALIDARG;
         }
@@ -710,7 +717,8 @@ class PrintDocumentSource final
         engine->AddRef();
         this->currentPage = currentPage;
         advanced = Print_Advanced_Data(PrintRangeAdv::All, scale);
-        advanced.autoRotate = gSettings->printerDefaults.autoRotate;
+        SetPrintAdvancedDefaults(&advanced);
+        mirror = mirrorPages;
         this->previewDpi = previewDpi;
         UseAllPages();
         return S_OK;
@@ -1126,7 +1134,8 @@ class Win11PrintSession {
         wstr::Free(jobTitle);
     }
 
-    HRESULT Initialize(HWND hwnd, EngineBase* engine, int currentPage, PrintScaleAdv scale, float previewDpi) {
+    HRESULT Initialize(HWND hwnd, EngineBase* engine, int currentPage, PrintScaleAdv scale, float previewDpi,
+                       bool mirror) {
         HRESULT hr = EnsureWinRt();
         if (FAILED(hr)) {
             logf("Win11 print: EnsureWinRt failed: 0x%08x\n", (uint)hr);
@@ -1141,7 +1150,7 @@ class Win11PrintSession {
             printEngine = engine;
             printEngine->AddRef();
         }
-        hr = MakeAndInitialize<PrintDocumentSource>(&source, printEngine, currentPage, scale, previewDpi);
+        hr = MakeAndInitialize<PrintDocumentSource>(&source, printEngine, currentPage, scale, previewDpi, mirror);
         printEngine->Release();
         if (FAILED(hr)) {
             logf("Win11 print: PrintDocumentSource initialization failed: 0x%08x\n", (uint)hr);
@@ -1265,8 +1274,8 @@ bool TryPrintCurrentFileWin11(MainWindow* win, HWND hwndFrame, PrintScaleAdv def
 
     delete gPrintSession;
     gPrintSession = new Win11PrintSession();
-    HRESULT hr =
-        gPrintSession->Initialize(hwndFrame, engine, win->AsFixed()->CurrentPageNo(), defaultScale, previewDpi);
+    HRESULT hr = gPrintSession->Initialize(hwndFrame, engine, win->AsFixed()->CurrentPageNo(), defaultScale, previewDpi,
+                                           win->AsFixed()->GetMirror());
     if (SUCCEEDED(hr)) {
         hr = gPrintSession->Show(win);
     }

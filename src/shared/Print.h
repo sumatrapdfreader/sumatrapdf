@@ -62,6 +62,9 @@ PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const P
                                          Size paperSize, Rect printable, float dpiX, float dpiY, bool printPortrait,
                                          Str printerName);
 
+// PrinterDefaults' PrintDpi and AutoRotate: where every print path starts
+void SetPrintAdvancedDefaults(Print_Advanced_Data* advanced);
+
 // the advanced print page: dialog procedure shared, template per app
 struct _PROPSHEETPAGEW;
 // implemented by each app

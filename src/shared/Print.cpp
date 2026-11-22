@@ -699,6 +699,11 @@ static float SanitizePrintZoom(float zoom, float fallback, Str why, Size paperSi
     return 1.f;
 }
 
+void SetPrintAdvancedDefaults(Print_Advanced_Data* advanced) {
+    advanced->dpiOverride = gSettings->printerDefaults.printDpi;
+    advanced->autoRotate = gSettings->printerDefaults.autoRotate;
+}
+
 // An image resolution override controls 1:1 printing for scans, image folders
 // and comic books. Document formats with physical page units ignore it.
 static float PrintFileDPI(EngineBase& engine, const Print_Advanced_Data& advanced) {
@@ -1720,8 +1725,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     pdex.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
-    advanced.dpiOverride = gSettings->printerDefaults.printDpi;
-    advanced.autoRotate = gSettings->printerDefaults.autoRotate;
+    SetPrintAdvancedDefaults(&advanced);
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced);
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;
@@ -2354,8 +2358,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     devMode->dmPaperSize = GetPaperSize(engine);
     {
         Print_Advanced_Data advanced;
-        advanced.dpiOverride = gSettings->printerDefaults.printDpi;
-        advanced.autoRotate = gSettings->printerDefaults.autoRotate;
+        SetPrintAdvancedDefaults(&advanced);
         Vec<PRINTPAGERANGE> ranges;
 
         // apply print defaults from the PDF's /ViewerPreferences (issue #534),
