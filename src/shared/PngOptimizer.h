@@ -8,4 +8,3 @@ void OptimizePngFileAsync(Str path);
 void OptimizePngFilesAsync(const StrVec& paths);
 
 Str EncodePngFromPixmap(const Pixmap* px);
-Str EncodeAndOptimizePngFromPixmap(const Pixmap* px);

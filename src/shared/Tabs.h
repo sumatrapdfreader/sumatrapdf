@@ -48,8 +48,6 @@ bool TabIsDirty(WindowTab* tab);
 
 // is the tab bar shown at all (orig's UpdateTabWidth)
 bool TabsAreVisible(MainWindow* win);
-// orig's UpdateAfterDrag: move the tab at `from` so it lands at `to`
-void TabsMoveTab(MainWindow* win, int from, int to);
 // a tab dropped outside the strip moves to `newWin`, or into a new window
 void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin);
 

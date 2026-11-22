@@ -211,23 +211,6 @@ static u8* PixmapToRgbaContiguous(const Pixmap* px) {
     return rgba;
 }
 
-// Consume PNG bytes, keeping the original if recompression fails or does not shrink.
-static Str OptimizePngBytesOwned(Str png) {
-    int nOrig = len(png);
-    if (nOrig > kMaxPngSizeToOptimize) {
-        return png;
-    }
-    unsigned char* out = nullptr;
-    size_t outSize = 0;
-    int err = RecompressPng(png, &out, &outSize);
-    if (err != 0 || !out || outSize == 0 || outSize >= (size_t)nOrig) {
-        free(out);
-        return png;
-    }
-    str::Free(png);
-    return Str((char*)out, (int)outSize);
-}
-
 // plain lodepng encode, no zopfli. Caller frees
 Str EncodePngFromPixmap(const Pixmap* px) {
     u8* rgba = PixmapToRgbaContiguous(px);
@@ -244,16 +227,4 @@ Str EncodePngFromPixmap(const Pixmap* px) {
         return {};
     }
     return Str((char*)pngOut, (int)pngSize);
-}
-
-// encode and recompress with zopfli, for embedding in a PDF. Caller frees
-Str EncodeAndOptimizePngFromPixmap(const Pixmap* px) {
-    Str rawPng = EncodePngFromPixmap(px);
-    if (len(rawPng) == 0) {
-        return {};
-    }
-    int nOrig = len(rawPng);
-    Str optimized = OptimizePngBytesOwned(rawPng);
-    logf("EncodeAndOptimizePngFromPixmap: %dx%d png %d -> %d bytes\n", px->width, px->height, nOrig, len(optimized));
-    return optimized;
 }

@@ -498,27 +498,6 @@ void TabsStripGroupsChanged(MainWindow* win) {
     win->RedrawAll();
 }
 
-// orig's UpdateAfterDrag: `from` is pulled out of the strip and re-inserted so
-// it ends up in front of what used to be at `to`
-void TabsMoveTab(MainWindow* win, int from, int to) {
-    int nTabs = win->TabCount();
-    bool badState = (from == to) || (from < 0) || (to < 0) || (from >= nTabs) || (to > nTabs);
-    if (badState) {
-        return;
-    }
-    WindowTab* moved = win->tabs[from];
-    VecRemoveAt(win->tabs, from);
-    if (from < to) {
-        // we moved from left to right e.g. from 1 to 3
-        // after removing 1 we insert not at 3 but 2
-        to -= 1;
-    }
-    VecInsertAt(win->tabs, to, moved);
-    TabsUIOnTabsChanged(win);
-    TabsSelect(win, to);
-    win->RedrawAll();
-}
-
 // --- the tab context menu ---------------------------------------------------
 
 // a submenu of `items` right after the item with `afterCmdId`; none if empty
