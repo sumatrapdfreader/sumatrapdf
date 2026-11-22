@@ -18,6 +18,14 @@ static void AddGlyphs(ReadAloudByteLoc* locs, int& n, int count, int x, int y, i
     }
 }
 
+static void ReadAloudCleanTextTests() {
+    utassert(len(ReadAloudCleanTextTemp(StrL(""))) == 0);
+    utassert(str::Eq(ReadAloudCleanTextTemp(StrL("cap-\r\nturing")), StrL("capturing")));
+    utassert(str::Eq(ReadAloudCleanTextTemp(StrL("A-\r\nB")), StrL("A- B")));
+    utassert(str::Eq(ReadAloudCleanTextTemp(StrL("one\r\ntwo  \tthree")), StrL("one two three")));
+    utassert(str::Eq(ReadAloudCleanTextTemp(StrL("end.\n\nNext")), StrL("end.  Next")));
+}
+
 // A line of horizontal text is one run; a column of vertical text (issue #6530)
 // is one vertical run, and the next column starts another.
 static void ReadAloudRunsTests() {
@@ -116,4 +124,5 @@ void ReadAloudHighlight_UnitTests() {
     utassert(e == cjk.len);
 
     ReadAloudRunsTests();
+    ReadAloudCleanTextTests();
 }

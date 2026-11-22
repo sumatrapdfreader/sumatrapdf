@@ -526,91 +526,6 @@ SpeakChunkResult ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
     return SpeakChunkResult::Ok;
 }
 
-// Text cleanup for speech
-static TempStr CleanReadAloudTextTemp(Str text) {
-    if (len(text) == 0) {
-        return {};
-    }
-
-    str::Builder out;
-    int i = 0;
-    bool lastWasSpace = false;
-
-    while (i < text.len) {
-        char c = text.s[i];
-
-        // Remove likely soft hyphenation caused by PDF line wrapping:
-        // "cap-\nturing" -> "capturing"
-        //
-        // Conservative rule: only join lowercase ASCII on both sides.
-        // This avoids damaging many intentional hyphen cases.
-        if (c == '-' && i + 1 < text.len && IsReadAloudLineBreak(text.s[i + 1])) {
-            int after = i + 1;
-
-            while (after < text.len && IsReadAloudLineBreak(text.s[after])) {
-                after++;
-            }
-
-            bool prevIsLower = i > 0 && IsReadAloudLowerAscii(text.s[i - 1]);
-            bool nextIsLower = after < text.len && IsReadAloudLowerAscii(text.s[after]);
-
-            if (prevIsLower && nextIsLower) {
-                i = after;
-                lastWasSpace = false;
-                continue;
-            }
-        }
-
-        // Convert extracted visual line breaks into spaces.
-        if (IsReadAloudLineBreak(c)) {
-            int lineBreaks = 0;
-
-            while (i < text.len && IsReadAloudLineBreak(text.s[i])) {
-                if (text.s[i] == '\n') {
-                    lineBreaks++;
-                }
-                i++;
-            }
-
-            while (i < text.len && IsReadAloudHorizontalSpace(text.s[i])) {
-                i++;
-            }
-
-            if (!lastWasSpace && len(out) > 0) {
-                out.AppendChar(' ');
-                lastWasSpace = true;
-            }
-
-            // Keep a slightly stronger pause for paragraph breaks.
-            if (lineBreaks >= 2) {
-                out.AppendChar(' ');
-            }
-
-            continue;
-        }
-
-        // Collapse spaces and tabs.
-        if (IsReadAloudHorizontalSpace(c)) {
-            if (!lastWasSpace && len(out) > 0) {
-                out.AppendChar(' ');
-                lastWasSpace = true;
-            }
-
-            i++;
-            continue;
-        }
-
-        out.AppendChar(c);
-        lastWasSpace = false;
-        i++;
-    }
-
-    if (len(out) == 0) {
-        return {};
-    }
-    return ToStrTemp(out);
-}
-
 // Read-aloud lifetime and commands
 static void ReadAloudSetSourceTab(WindowTab* tab) {
     // reading moves to another tab: stop the old one as pause does, so it keeps
@@ -883,7 +798,7 @@ static void ReadAloudStartFromSelection(WindowTab* tab, Str errMsg) {
     if (!ReadAloudHighlightBuildFromTextSelection(dm->textSelection, &map, cleaned)) {
         bool isTextOnlySelection = false;
         TempStr text = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelection);
-        TempStr cleanedStr = CleanReadAloudTextTemp(text);
+        TempStr cleanedStr = ReadAloudCleanTextTemp(text);
         ReadAloudStartText(tab, cleanedStr, nullptr, 0, errMsg);
         return;
     }

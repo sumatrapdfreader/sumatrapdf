@@ -173,6 +173,24 @@ static bool CleanRawBytes(Vec<ReadAloudRawByte>& raw, ReadAloudHighlightMap* map
     return true;
 }
 
+// Cleans plain text for speech, without page positions (fallback when the selection has no glyphs).
+TempStr ReadAloudCleanTextTemp(Str text) {
+    Vec<ReadAloudRawByte> raw;
+    ReadAloudByteLoc noLoc;
+    for (int i = 0; i < len(text); i++) {
+        ReadAloudHighlightAppendRaw(raw, text.s[i], noLoc);
+    }
+
+    ReadAloudHighlightMap map{};
+    str::Builder cleaned;
+    bool ok = CleanRawBytes(raw, &map, cleaned);
+    ReadAloudHighlightFree(&map);
+    if (!ok || len(cleaned) == 0) {
+        return {};
+    }
+    return ToStrTemp(cleaned);
+}
+
 void ReadAloudHighlightFree(ReadAloudHighlightMap* map) {
     if (!map) {
         return;

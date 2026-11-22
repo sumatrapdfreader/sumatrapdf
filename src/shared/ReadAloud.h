@@ -95,6 +95,8 @@ struct ReadAloudHighlightMap {
 
 void ReadAloudHighlightFree(ReadAloudHighlightMap* map);
 
+TempStr ReadAloudCleanTextTemp(Str text);
+
 bool ReadAloudHighlightBuildFromTextSelection(TextSelection* ts, ReadAloudHighlightMap* map, str::Builder& cleanedOut);
 
 bool ReadAloudGetViewportStart(DisplayModel* dm, int* startPageOut, int* startGlyphOut);
