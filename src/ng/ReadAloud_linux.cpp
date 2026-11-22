@@ -83,6 +83,7 @@ static int gTtsQueuedMessage = 0;
 static bool gTtsActive = false;
 static bool gTtsQueuedStarted = false;
 static bool gTtsInitTried = false;
+static bool gSpdLibTried = false;
 // the latest begin / end notifications: they can arrive on speechd's thread
 // before say() has returned the message's id, so say() checks these after
 static int gTtsLastBegun = 0;
@@ -151,14 +152,16 @@ static void TtsOnMark(size_t messageId, size_t, SpdNotificationType, char* mark)
     }
 }
 
-static bool TtsInit() {
-    if (gTtsConnection) {
+// loads libspeechd without connecting: a cheap availability probe, as
+// connecting can spawn speech-dispatcher
+static bool TtsLoadLib() {
+    if (gSpd.lib) {
         return true;
     }
-    if (gTtsInitTried) {
+    if (gSpdLibTried) {
         return false;
     }
-    gTtsInitTried = true;
+    gSpdLibTried = true;
 
     gSpd.lib = dlopen("libspeechd.so.2", RTLD_NOW | RTLD_LOCAL);
     if (!gSpd.lib) {
@@ -174,6 +177,20 @@ static bool TtsInit() {
             dlclose(gSpd.lib);
         }
         gSpd = {};
+        return false;
+    }
+    return true;
+}
+
+static bool TtsInit() {
+    if (gTtsConnection) {
+        return true;
+    }
+    if (gTtsInitTried) {
+        return false;
+    }
+    gTtsInitTried = true;
+    if (!TtsLoadLib()) {
         return false;
     }
 
@@ -227,8 +244,15 @@ static int TtsRate() {
     return (int)(((gTtsSpeed - 1.0f) / (kTtsSpeedMax - 1.0f)) * 100.0f);
 }
 
+// connecting is deferred to the first use; a failed connect hides read aloud
 bool TtsIsAvailable() {
-    return TtsInit();
+    if (gTtsConnection) {
+        return true;
+    }
+    if (gTtsInitTried) {
+        return false;
+    }
+    return TtsLoadLib();
 }
 
 bool TtsSpeakUtf8(Str text) {
@@ -380,6 +404,7 @@ void TtsLinuxRelease() {
         dlclose(gSpd.lib);
     }
     gSpd = {};
+    gSpdLibTried = false;
     str::FreePtr(&gTtsVoiceId);
 }
 
