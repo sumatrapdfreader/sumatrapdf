@@ -323,10 +323,6 @@ void ReadAloudSaveVoicePref(Str voiceId) {
 // WinRT speech synthesis is too slow for whole-document requests; speak in chunks.
 static constexpr int kReadAloudMaxChunkLen = 1024;
 
-static bool IsReadAloudSentencePunct(int c) {
-    return c == '.' || c == '!' || c == '?' || c == 0x3002 || c == 0xFF01 || c == 0xFF1F || c == 0x2026;
-}
-
 // Prefer a sentence end in the window so TTS does not drop intonation mid-clause
 // (issue #6110). Skip "e.g. the" (lowercase after the period). Else last space.
 static int ReadAloudFindChunkEnd(Str text, int start, int maxLen) {
@@ -349,33 +345,13 @@ static int ReadAloudFindChunkEnd(Str text, int start, int maxLen) {
             bestSpace = i;
             continue;
         }
-        if (!IsReadAloudSentencePunct(c)) {
+        if (!IsReadAloudSentPunct(c)) {
             continue;
         }
 
-        int after = i;
-        while (after < textLen) {
-            int t = after;
-            int d = Utf8CodepointNext(text, t);
-            if (!IsReadAloudCloser(d)) {
-                break;
-            }
-            after = t;
-        }
-        while (after < textLen) {
-            int t = after;
-            int d = Utf8CodepointNext(text, t);
-            if (d != ' ' && d != '\t') {
-                break;
-            }
-            after = t;
-        }
-        if (after < textLen) {
-            int t = after;
-            int d = Utf8CodepointNext(text, t);
-            if (d >= 'a' && d <= 'z') {
-                continue;
-            }
+        int after = ReadAloudAfterSentEnd(text, i);
+        if (after == 0) {
+            continue;
         }
         if (after > start && after <= limit) {
             bestSent = after;

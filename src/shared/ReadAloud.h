@@ -129,6 +129,8 @@ bool IsReadAloudLowerAscii(char c);
 bool IsReadAloudLineBreak(char c);
 bool IsReadAloudHorizontalSpace(char c);
 bool IsReadAloudCloser(int c);
+bool IsReadAloudSentPunct(int c);
+int ReadAloudAfterSentEnd(Str text, int afterPunct);
 int ReadAloudWordEndUtf8(Str text, int pos);
 bool ReadAloudByteLocHasRect(const ReadAloudByteLoc& loc);
 Rect ReadAloudByteLocToRect(const ReadAloudByteLoc& loc);

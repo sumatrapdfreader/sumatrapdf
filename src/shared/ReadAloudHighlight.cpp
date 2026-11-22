@@ -466,7 +466,7 @@ int ReadAloudWordEndUtf8(Str text, int pos) {
     return end;
 }
 
-static bool IsReadAloudSentPunct(int c) {
+bool IsReadAloudSentPunct(int c) {
     return c == '.' || c == '!' || c == '?' || c == 0x3002 || c == 0xFF01 || c == 0xFF1F || c == 0x2026;
 }
 
@@ -475,7 +475,7 @@ bool IsReadAloudCloser(int c) {
 }
 
 // Byte after punctuation (and closers / spaces). 0 if this looks like "e.g. the".
-static int ReadAloudAfterSentEnd(Str text, int afterPunct) {
+int ReadAloudAfterSentEnd(Str text, int afterPunct) {
     int after = afterPunct;
     while (after < text.len) {
         int t = after;
