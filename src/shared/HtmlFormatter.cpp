@@ -438,11 +438,30 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align) {
     }
 }
 
+// a link's bbox (its hit area and underline) spans the visible instructions up to its LinkEnd
+static void UpdateLinkBboxes(HtmlPage* page) {
+    Vec<DrawInstr>& a = page->instructions;
+    int n = len(a);
+    for (int i = 0; i < n; i++) {
+        DrawInstr& link = a[i];
+        if (DrawInstrType::LinkStart != link.type) {
+            continue;
+        }
+        for (int j = i + 1; j < n && a[j].type != DrawInstrType::LinkEnd; j++) {
+            if (!IsVisibleDrawInstr(a[j])) {
+                continue;
+            }
+            link.bbox = link.bbox.IsEmpty() ? a[j].bbox : link.bbox.Union(a[j].bbox);
+        }
+    }
+}
+
 void HtmlFormatter::ForceNewPage() {
     bool createdNewPage = FlushCurrLine(true);
     if (createdNewPage) {
         return;
     }
+    UpdateLinkBboxes(currPage);
     VecAppend(pagesToSend, currPage);
 
     EmitNewPage();
@@ -470,6 +489,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
     if (currY + totalLineDy > pageDy) {
         // current line too big to fit in current page,
         // so need to start another page
+        UpdateLinkBboxes(currPage);
         VecAppend(pagesToSend, currPage);
         // instructions for each page need to be self-contained
         // so we have to carry over some state (like current font)
@@ -1323,6 +1343,7 @@ HtmlPage* HtmlFormatter::Next(bool skipEmptyPages) {
         if (!t) {
             AutoCloseTags(len(tagNesting));
             FlushCurrLine(true);
+            UpdateLinkBboxes(currPage);
             VecAppend(pagesToSend, currPage);
             currPage = nullptr;
             finishedParsing = true;

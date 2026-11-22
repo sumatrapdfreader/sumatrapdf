@@ -147,6 +147,7 @@ void ReadAloudHighlight_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
 bool RenderCache_UnitTestFullOfOneVisiblePage();
 bool RenderCache_UnitTestFullOfOldZoom();
+bool EngineEbook_UnitTestUrlLink();
 bool DocController_UnitTestDestroyHook();
 bool Commands_UnitTestIdLimit();
 bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut);
@@ -795,6 +796,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(RenderCache_UnitTestCookieUnlocked());
     utassert(RenderCache_UnitTestFullOfOneVisiblePage());
     utassert(RenderCache_UnitTestFullOfOldZoom());
+    utassert(EngineEbook_UnitTestUrlLink());
     utassert(DocController_UnitTestDestroyHook());
     utassert(Commands_UnitTestIdLimit());
     ReadAloudHighlight_UnitTests();

@@ -207,16 +207,6 @@ class EngineEbook : public EngineBase {
 };
 
 static IPageElement* NewEbookLink(Rect rect, IPageDestination* dest, int pageNo = 0, bool destOwned = true) {
-    if (!dest) {
-        // TODO: this doesn't make sense
-        dest = new PageDestination();
-        dest->kind = kindDestinationLaunchURL;
-        // TODO: not sure about this
-        // dest->value = str::Dup(res->value);
-        dest->rect = ToRectF(rect);
-        destOwned = true;
-    }
-
     auto res = new PageElementDestination(dest, destOwned);
     res->pageNo = pageNo;
     res->rect = ToRectF(rect);
@@ -644,7 +634,9 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     Str linkStr = link->str;
     TempStr url = ResolveHtmlEntitiesTemp(linkStr);
     if (url::IsAbsolute(url)) {
-        return NewEbookLink(rect, nullptr, pageNo);
+        auto* dest = new PageDestinationURL(url);
+        dest->rect = ToRectF(rect);
+        return NewEbookLink(rect, dest, pageNo);
     }
 
     // out of range for a chaptered engine (EngineMobi never populates
@@ -1198,6 +1190,29 @@ EngineBase* CreateEngineFb2FromFile(Str fileName) {
 EngineBase* CreateEngineFb2FromData(Str data) {
     return EngineFb2::CreateFromData(data);
 }
+
+#if IS_DEBUG
+// an absolute link must carry its url so a click opens it in the browser
+bool EngineEbook_UnitTestUrlLink() {
+    Str xml = StrL(
+        "<FictionBook xmlns:l=\"http://www.w3.org/1999/xlink\"><body><section>"
+        "<p><a l:href=\"https://example.com/x\">link</a></p></section></body></FictionBook>");
+    EngineBase* engine = CreateEngineFb2FromData(xml);
+    if (!engine) {
+        return false;
+    }
+    bool ok = false;
+    for (IPageElement* el : engine->GetElements(1)) {
+        IPageDestination* dest = el->AsLink();
+        if (!dest || dest->GetKind() != kindDestinationLaunchURL) {
+            continue;
+        }
+        ok = str::Eq(dest->GetValue(), StrL("https://example.com/x"));
+    }
+    engine->Release();
+    return ok;
+}
+#endif
 
 /* EngineBase for handling Mobi documents */
 
