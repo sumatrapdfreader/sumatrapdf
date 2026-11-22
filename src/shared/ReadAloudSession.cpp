@@ -227,7 +227,9 @@ static bool ReadAloudIsWordRectVisibleInViewport(MainWindow* win, const Rect& wo
     if (!win) {
         return false;
     }
-    return !wordRect.Intersect(win->canvasRc).IsEmpty();
+    // wordRect is canvas-relative; ng's canvasRc has a non-zero origin
+    Rect canvas(0, 0, win->canvasRc.dx, win->canvasRc.dy);
+    return !wordRect.Intersect(canvas).IsEmpty();
 }
 
 bool ReadAloudIsWordRectFullyVisibleInViewport(MainWindow* win, const Rect& wordRect, int margin) {
