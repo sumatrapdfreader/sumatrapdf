@@ -127,14 +127,29 @@ static RectF SelectionBounds(const Vec<SelectionOnPage>& selection, int pageNo) 
     return bounds;
 }
 
+// the document's resolution, which sets the printed size. dpi= / PrintDpi
+// overrides it for scans, image folders and comic books; formats with real
+// page sizes (PDF, ...) keep theirs, as on Windows (PrintFileDPI)
+static float PrintFileDpi(EngineBase* engine, float dpiOverride) {
+    float fileDpi = IsEngineImages(engine) ? dpiOverride : 0;
+    if (!(fileDpi > 0) || !isfinite(fileDpi)) {
+        fileDpi = engine->fileDPI;
+    }
+    if (!(fileDpi > 0) || !isfinite(fileDpi)) {
+        fileDpi = 96.f;
+    }
+    return fileDpi;
+}
+
 // renders every page, or the selected part of its pages, into a new PDF.
 // docName is -print-settings docname=; the file records it as the title.
+// mirror flips the pages left to right (CmdToggleMirror: print as shown).
 static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<SelectionOnPage>* selection = nullptr,
-                             int rotation = 0, const Vec<int>* pages = nullptr, float dpi = kPrintToPdfDpi,
-                             int orientation = 0, Str docName = {}) {
+                             int rotation = 0, const Vec<int>* pages = nullptr, float dpiOverride = 0,
+                             int orientation = 0, Str docName = {}, bool mirror = false) {
     EnsureFullLayout(engine);
     PdfCreator c;
-    float zoom = dpi / engine->fileDPI;
+    float zoom = (float)kPrintToPdfDpi / PrintFileDpi(engine, dpiOverride);
     int nPages = engine->PageCount();
     int nAdded = 0;
     int nToPrint = pages ? len(*pages) : nPages;
@@ -167,7 +182,10 @@ static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<Selecti
             logf("PrintEngineToPdf: failed to render page %d\n", pageNo);
             return false;
         }
-        bool ok = c.AddPageFromPixmap(bmp, dpi);
+        if (mirror) {
+            FlipPixmapHorizontally(bmp);
+        }
+        bool ok = c.AddPageFromPixmap(bmp, kPrintToPdfDpi);
         FreePixmap(bmp);
         if (!ok) {
             logf("PrintEngineToPdf: failed to add page %d\n", pageNo);
@@ -213,7 +231,8 @@ static TempStr OutputPathFromSettingsTemp(Str settings) {
 }
 
 // parses the page-selection subset of the original -print-settings syntax
-static void ApplyRenderSettings(Str settings, int pageCount, Vec<int>& pages, float& dpi, int& rotation,
+// dpiOverride: dpi=, the document's resolution (see PrintFileDpi)
+static void ApplyRenderSettings(Str settings, int pageCount, Vec<int>& pages, float& dpiOverride, int& rotation,
                                 int& orientation) {
     Vec<PosixPageRange> ranges;
     int parity = 0;
@@ -257,7 +276,7 @@ static void ApplyRenderSettings(Str settings, int pageCount, Vec<int>& pages, fl
         } else if (str::TrimPrefixI(s, StrL("dpi="))) {
             float value = 0;
             if (!str::IsNull(str::Parse(s, "%f%$", &value)) && value > 0) {
-                dpi = value;
+                dpiOverride = value;
             }
         }
     }
@@ -392,12 +411,12 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     }
     logf("PrintFile2: printing '%s' to '%s'\n", engine->FilePath(), destPath);
     Vec<int> pages;
-    float dpi = kPrintToPdfDpi;
+    float dpiOverride = gSettings->printerDefaults.printDpi;
     int rotation = 0;
     int orientation = 0;
-    ApplyRenderSettings(settings, engine->PageCount(), pages, dpi, rotation, orientation);
+    ApplyRenderSettings(settings, engine->PageCount(), pages, dpiOverride, rotation, orientation);
     TempStr docName = DocNameFromSettingsTemp(settings);
-    if (!PrintEngineToPdf(engine, destPath, nullptr, rotation, &pages, dpi, orientation, docName)) {
+    if (!PrintEngineToPdf(engine, destPath, nullptr, rotation, &pages, dpiOverride, orientation, docName)) {
         if (sendToPrinter) {
             file::Delete(destPath);
         }
@@ -428,8 +447,8 @@ PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str set
 // the browser prints a PDF itself, so a PDF goes there as it is (with unsaved
 // annotations, as a copy that has them); rendering pages is only for the rest
 // and for a selection or a rotated view, which the original can't show
-static bool WasmPrintEngine(EngineBase* engine, Vec<SelectionOnPage>* selection, int rotation) {
-    bool wholeDoc = !selection && rotation == 0;
+static bool WasmPrintEngine(EngineBase* engine, Vec<SelectionOnPage>* selection, int rotation, bool mirror) {
+    bool wholeDoc = !selection && rotation == 0 && !mirror;
     TempStr tmpPath = GetTempFilePathTemp(StrL("sumatra-print-"));
     if (wholeDoc && EngineMupdfIsPdf(engine) && !engine->isPasswordProtected) {
         if (!EngineHasUnsavedAnnotations(engine) && file::Exists(engine->FilePath())) {
@@ -445,7 +464,8 @@ static bool WasmPrintEngine(EngineBase* engine, Vec<SelectionOnPage>* selection,
     // No fallback converter: it would zopfli each WebP/JXL/... page
     bool ok = wholeDoc && engine->isImageCollection && PdfCreator::SaveImageCollectionAsPdf(tmpPath, engine);
     if (!ok) {
-        ok = PrintEngineToPdf(engine, tmpPath, selection, rotation);
+        float dpiOverride = gSettings->printerDefaults.printDpi;
+        ok = PrintEngineToPdf(engine, tmpPath, selection, rotation, nullptr, dpiOverride, 0, {}, mirror);
     }
     ok = ok && WasmPrintPdf(tmpPath);
     file::Delete(tmpPath);
@@ -458,16 +478,25 @@ struct PrintToPdfCtx {
     EngineBase* engine;
     Vec<SelectionOnPage>* selection;
     int rotation;
+    bool mirror;
 };
+
+// the print dialog's job: the view's rotation and mirroring, PrinterDefaults' PrintDpi
+static bool PrintViewToPdf(EngineBase* engine, Str destPath, const Vec<SelectionOnPage>* selection, int rotation,
+                           bool mirror) {
+    float dpiOverride = gSettings->printerDefaults.printDpi;
+    return PrintEngineToPdf(engine, destPath, selection, rotation, nullptr, dpiOverride, 0, {}, mirror);
+}
 
 static void OnPrintPathPicked(PrintToPdfCtx* ctx, SavePathArgs* args) {
     MainWindow* win = ctx->win;
     EngineBase* engine = ctx->engine;
     Vec<SelectionOnPage>* selection = ctx->selection;
     int rotation = ctx->rotation;
+    bool mirror = ctx->mirror;
     delete ctx;
     bool canceled = len(args->path) == 0;
-    bool ok = !canceled && PrintEngineToPdf(engine, args->path, selection, rotation);
+    bool ok = !canceled && PrintViewToPdf(engine, args->path, selection, rotation, mirror);
     logf("PrintCurrentFile: wrote '%s', ok=%d\n", args->path, (int)ok);
     SafeEngineRelease(&engine);
     delete selection;
@@ -506,14 +535,15 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
         }
     }
     int rotation = dm->GetRotation();
+    bool mirror = dm->GetMirror();
     if (waitForCompletion) {
         // -print-dialog -exit-when-done has nobody to answer the dialog
-        PrintEngineToPdf(engine, destPath, selection, rotation);
+        PrintViewToPdf(engine, destPath, selection, rotation, mirror);
         delete selection;
         return;
     }
 #if OS_WASM
-    bool ok = WasmPrintEngine(engine, selection, rotation);
+    bool ok = WasmPrintEngine(engine, selection, rotation, mirror);
     delete selection;
     if (!ok) {
         MessageBoxWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
@@ -521,7 +551,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
     return;
 #endif
     engine->AddRef();
-    auto* ctx = new PrintToPdfCtx{win, engine, selection, rotation};
+    auto* ctx = new PrintToPdfCtx{win, engine, selection, rotation, mirror};
     auto* args = new SavePathArgs();
     args->win = win;
     args->title = str::Dup(Tr("Print"));

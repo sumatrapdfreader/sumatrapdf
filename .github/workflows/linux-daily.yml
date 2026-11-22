@@ -37,6 +37,10 @@ jobs:
           "$e" out/posix-print.pdf out/posix-print.png 1 | tee out/posix-print.txt
           grep -q 'pages: 1' out/posix-print.txt
           grep -q 'page 1: 792 x 612' out/posix-print.txt
+          # dpi= is the image's resolution: 681 x 26 px at 300 dpi is 163 x 6 pt
+          "$app" -for-testing -silent -print-to PDF -print-settings "dpi=300,output=out/posix-print-dpi.pdf" docs/test/test.png
+          "$e" out/posix-print-dpi.pdf out/posix-print-dpi.png 1 | tee out/posix-print-dpi.txt
+          grep -Eq 'page 1: 16[34] x [67] ' out/posix-print-dpi.txt
       - name: print through spooler
         run: |
           mkdir -p out/fake-bin
