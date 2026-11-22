@@ -8025,8 +8025,14 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
 // don't delete the result
 IPageElement* EngineMupdf::GetElementAtPos(int pageNo, PointF pt) {
+    // iterate under pagesLock: render threads append to pageInfo->images
+    if (!pagesLock.TryLock()) {
+        return nullptr;
+    }
     FzPageInfo* pageInfo = GetFzPageInfoCanFail(pageNo);
-    return FzGetElementAtPos(pageInfo, pt);
+    IPageElement* res = FzGetElementAtPos(pageInfo, pt);
+    pagesLock.Unlock();
+    return res;
 }
 
 // GetElementAtPos uses TryLock and returns null while text extraction (started
@@ -8037,11 +8043,13 @@ IPageElement* EngineMupdfElementAtPosWait(EngineBase* engine, int pageNo, PointF
     if (!epdf) {
         return nullptr;
     }
+    ScopedRecursiveMutex scope(&epdf->pagesLock);
     FzPageInfo* pageInfo = epdf->GetFzPageInfo(pageNo, true, nullptr);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
 Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
+    ScopedRecursiveMutex scope(&pagesLock);
     auto* pageInfo = GetFzPageInfoFast(pageNo);
     if (!pageInfo) {
         return Vec<IPageElement*>();
