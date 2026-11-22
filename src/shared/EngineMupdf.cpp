@@ -7934,8 +7934,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
     // Fallback: Print or hideAnnotations (each needs different content/usage,
     // not what the cached display list captured), or display-list construction
-    // failed. Run the page directly under per-page lock.
+    // failed. Run the page directly; docLock as for the list build above.
     ScopedMutex cs(&renderLock);
+    ScopedRecursiveMutex docScope(&docLock);
 
     page = pageInfo->page;
     if (!page) {
@@ -7965,7 +7966,6 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
                 pdf_run_page_widgets_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
             } else if (skipAnnot) {
-                ScopedRecursiveMutex docScope(&docLock);
                 pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
                 for (pdf_annot* a = pdf_first_annot(ctx, pdfpage); a; a = pdf_next_annot(ctx, a)) {
                     if (a != skipAnnot) {
