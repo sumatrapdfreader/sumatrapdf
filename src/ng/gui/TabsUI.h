@@ -23,3 +23,4 @@ void TabsUIDelete(MainWindow*);
 // tabs were added, removed or reordered: drop the hover / drag state
 void TabsUIOnTabsChanged(MainWindow*);
 TempStr TabsUIWidthsTemp(MainWindow*);
+extern int gTabTextMeasureCount;

@@ -161,14 +161,52 @@ static Color TabBgColor(WindowTab* tab, bool isSelected, bool isUnderMouse) {
 // the tab label's size; Home's margins are 1rem of it
 constexpr float kTabFontSize = 12;
 
+struct TabTextDx {
+    Str text;
+    Str family;
+    int fontPx;
+    int dx;
+};
+
+static Vec<TabTextDx> gTabTextDx;
+// titles, page suffixes and chip labels; cleared when full
+constexpr int kTabTextDxMax = 128;
+int gTabTextMeasureCount = 0;
+
+static void FreeTabTextDx() {
+    for (TabTextDx& e : gTabTextDx) {
+        str::Free(e.text);
+        str::Free(e.family);
+    }
+    VecReset(gTabTextDx);
+}
+
+// the tab bar is laid out every frame and measuring text is slow (pango
+// lays it out), so widths are remembered by text, font and size
+static int MeasureTabTextDx(Str family, int fontPx, Str s) {
+    for (const TabTextDx& e : gTabTextDx) {
+        if (e.fontPx == fontPx && str::Eq(e.text, s) && str::Eq(e.family, family)) {
+            return e.dx;
+        }
+    }
+    if (len(gTabTextDx) >= kTabTextDxMax) {
+        FreeTabTextDx();
+    }
+    PlatformFont* font = GetUserGuiFont(family, fontPx);
+    int dx = PlatformFontMeasureText(font, s).dx;
+    VecAppend(gTabTextDx, TabTextDx{str::Dup(s), str::Dup(family), fontPx, dx});
+    gTabTextMeasureCount++;
+    return dx;
+}
+
 // TabsEqualWidth = false: what a tab sized to its name needs, in dips, as
 // BuildTab lays it out: margins, page suffix, dirty dot and room for the ✕
 static int FitToNameDx(MainWindow* win, WindowTab* tab) {
     int dpi = std::max(AppShellWindowDpi(win), 96);
     Str family = FromGpui(gp::PaintSystemUIFontMappedFamily());
     auto measure = [&](Str s, float fontSize) {
-        PlatformFont* font = GetUserGuiFont(family, MulDiv((int)fontSize, dpi, 96));
-        return MulDiv(PlatformFontMeasureText(font, s).dx, 96, dpi);
+        int dx = MeasureTabTextDx(family, MulDiv((int)fontSize, dpi, 96), s);
+        return MulDiv(dx, 96, dpi);
     };
     int dx = 8 + measure(tab->GetTabTitle(), kTabFontSize);
     TempStr pageText = TabPageSuffixTemp(tab);
@@ -191,8 +229,7 @@ static int ChipDx(MainWindow* win, StripGroup* g) {
     }
     int dpi = std::max(AppShellWindowDpi(win), 96);
     Str family = FromGpui(gp::PaintSystemUIFontMappedFamily());
-    PlatformFont* font = GetUserGuiFont(family, MulDiv((int)kTabFontSize, dpi, 96));
-    int dx = MulDiv(PlatformFontMeasureText(font, label).dx, 96, dpi) + 18;
+    int dx = MulDiv(MeasureTabTextDx(family, MulDiv((int)kTabFontSize, dpi, 96), label), 96, dpi) + 18;
     return limitValue(dx, kMinDx, kMaxDx);
 }
 
