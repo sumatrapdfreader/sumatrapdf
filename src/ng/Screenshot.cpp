@@ -41,6 +41,7 @@
 #include "shared/PdfToolsCommon.h"
 #include "SumatraDialogs.h"
 #include "ImageSaveCropResize.h"
+#include "GlobalHotkeys.h"
 #if OS_WASM
 #include "gui/WasmBridge.h"
 #endif
@@ -343,7 +344,7 @@ void SetHotkeyView::OnSet(SetHotkeyView*, gp::Ctx* cx, const gp::ClickEvent*) {
         VecAppend(*gSettings->shortcuts, sc);
     }
     ScheduleSaveSettings();
-    // ng: registering the global hotkey with the OS is GlobalHotkeys.cpp, step 14
+    ReRegisterGlobalHotkeys();
     CloseSetScreenshotHotkeyDialog();
     gp::Notify(cx);
 }
@@ -359,6 +360,7 @@ void SetHotkeyView::OnRemove(SetHotkeyView*, gp::Ctx* cx, const gp::ClickEvent*)
         curr = curr->next;
     }
     ScheduleSaveSettings();
+    ReRegisterGlobalHotkeys();
     CloseSetScreenshotHotkeyDialog();
     gp::Notify(cx);
 }
