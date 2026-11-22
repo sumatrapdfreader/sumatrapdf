@@ -612,7 +612,7 @@ static void AddCustomShortcuts(AccelTablesBuilder& b) {
         }
         Accel accel{};
         accel.cmd = curr->id;
-        if (ParseShortcutString(curr->key, accel.sc)) {
+        if (ParseAccelShortcutString(curr->key, accel.sc)) {
             b.Add(accel);
         }
     }

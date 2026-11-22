@@ -40,6 +40,7 @@ bool IsValidShortcutString(Str shortcut);
 bool IsGlobalShortcut(Str shortcut);
 int TrimGlobalPrefix(Str& shortcut);
 bool ParseShortcutString(Str shortcut, KeyShortcut& sc);
+bool ParseAccelShortcutString(Str shortcut, KeyShortcut& sc);
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const KeyShortcut& sc);
 TempStr ShortcutToGpuiStroke(const KeyShortcut& sc);
 

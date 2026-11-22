@@ -224,6 +224,39 @@ static u8 PunctVk(char unshifted) {
     return 0;
 }
 
+#if OS_WIN
+// The key that types wc on the active keyboard layout, and the Shift / Ctrl /
+// Alt it needs (AltGr is Ctrl + Alt).
+static bool KeyFromLayout(WCHAR wc, u8& fVirt, u16& key) {
+    HKL kl = GetKeyboardLayout(0);
+    SHORT vkAndShift = VkKeyScanExW(wc, kl);
+    if (vkAndShift == -1) {
+        return false;
+    }
+    // https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-vkkeyscanexw
+    // ... high-order byte contains the shift state,
+    // 1 Either SHIFT key is pressed.
+    // 2 Either CTRL key is pressed.
+    // 4 Either ALT key is pressed.
+    BYTE shiftState = HIBYTE(vkAndShift);
+    key = (u16)LOBYTE(vkAndShift);
+    if (shiftState & 0x1) {
+        fVirt |= (kShift | kVirt);
+    }
+    if (shiftState & 0x2) {
+        fVirt |= (kCtrl | kVirt);
+    }
+    if (shiftState & 0x4) {
+        fVirt |= (kAlt | kVirt);
+    }
+    return true;
+}
+#endif
+
+static bool IsAsciiPunct(char c) {
+    return c > ' ' && c < 0x7f && !str::IsAlNum(c);
+}
+
 // Parses a string like Ctrl+Shift+A into a KeyShortcut
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
 static bool ParseShortcut(Str shortcut, KeyShortcut& sc) {
@@ -264,6 +297,18 @@ again:
     if (skipVirtKey(cursor, StrL("global"))) {
         goto again;
     }
+
+#if OS_WIN
+    // punctuation is the key that types it on the active layout, not on a US
+    // one: '+' is Shift + '=' on US but its own key on Spanish (#6578)
+    if (cursor.len == 1 && IsAsciiPunct(*cursor.s)) {
+        u16 vk = 0;
+        if (KeyFromLayout((WCHAR)*cursor.s, fVirt, vk)) {
+            sc = KeyShortcut(fVirt | kVirt, vk);
+            return true;
+        }
+    }
+#endif
 
     // when user puts e.g. "~" it's actually "`" but with SHIFT
     static Str shiftKeys = Str("`~,<.>/?;:'\"-_=+[{]}\\|");
@@ -315,27 +360,9 @@ again:
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/4490
         // handle cyrrilic / hebrew keyboards where shortcut character
         // is unicode and needs to be translated to virtual char
-        HKL kl = GetKeyboardLayout(0);
-        SHORT vkAndShift = VkKeyScanExW(wc, kl);
-        if (vkAndShift == -1) {
+        if (!KeyFromLayout(wc, fVirt, key)) {
             logf("can't map char 0x%x\n", (int)wc);
             return false;
-        }
-        // https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-vkkeyscanexw
-        // ... high-order byte contains the shift state,
-        // 1 Either SHIFT key is pressed.
-        // 2 Either CTRL key is pressed.
-        // 4 Either ALT key is pressed.
-        BYTE shiftState = HIBYTE(vkAndShift);
-        key = (u16)LOBYTE(vkAndShift);
-        if (shiftState & 0x1) {
-            fVirt |= (kShift | kVirt);
-        }
-        if (shiftState & 0x2) {
-            fVirt |= (kCtrl | kVirt);
-        }
-        if (shiftState & 0x4) {
-            fVirt |= (kAlt | kVirt);
         }
         sc = KeyShortcut(fVirt | kVirt, key);
         return true;
@@ -408,6 +435,19 @@ bool IsGlobalShortcut(Str shortcut) {
 // Fills sc with the key and modifiers shortcut names. Returns false if it
 // doesn't name a key.
 bool ParseShortcutString(Str shortcut, KeyShortcut& sc) {
+    return ParseShortcut(shortcut, sc);
+}
+
+// As ParseShortcutString, but punctuation without modifiers ("+", "*") binds
+// the typed character, as the built-in '=' and '.' do: it then follows any
+// keyboard layout and also matches the numpad '+' / '*' (#6578).
+bool ParseAccelShortcutString(Str shortcut, KeyShortcut& sc) {
+    Str s = shortcut;
+    str::TrimWs(s);
+    if (len(s) == 1 && IsAsciiPunct(*s.s)) {
+        sc = KeyShortcut(0, (u16)(u8)*s.s);
+        return true;
+    }
     return ParseShortcut(shortcut, sc);
 }
 
