@@ -504,6 +504,7 @@ import { testit as recentFilesMenu } from "./recent-files-menu.ts";
 import { testit as contextMenuParity } from "./context-menu-parity.ts";
 import { testit as mainMenuParity } from "./main-menu-parity.ts";
 import { testit as menuRebuildBurst } from "./menu-rebuild-burst.ts";
+import { testit as commandPaletteRowsBuilt } from "./command-palette-rows-built.ts";
 import { testit as tabWidthMeasure } from "./tab-width-measure.ts";
 import { testit as tocLayoutCache } from "./toc-layout-cache.ts";
 import { testit as tabTooltipSize } from "./tab-tooltip-size.ts";
@@ -1108,6 +1109,7 @@ export const tests: NamedTest[] = [
   ["context-menu-parity", contextMenuParity],
   ["main-menu-parity", mainMenuParity],
   ["menu-rebuild-burst", menuRebuildBurst],
+  ["command-palette-rows-built", commandPaletteRowsBuilt],
   ["tab-width-measure", tabWidthMeasure],
   ["toc-layout-cache", tocLayoutCache],
   ["tab-tooltip-size", tabTooltipSize],

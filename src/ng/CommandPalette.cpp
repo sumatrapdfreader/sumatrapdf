@@ -848,6 +848,9 @@ static bool RemoveSelectedItem() {
 }
 
 // orig's list-box dump. exit 2 when the palette is not open.
+// the list rows BuildList made, for tests
+static int gPaletteRowsBuilt = 0;
+
 TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](int code) -> TempStr {
@@ -913,6 +916,7 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
             rendered, nAnnots, annotPage, annotsDone));
     int editFocus = wnd->editQuery && wnd->editQuery->focused ? 1 : 0;
     int helpShown = (!wnd->thumbnailMode && ShowsSettingHelp(wnd)) ? 1 : 0;
+    out.Append(fmt("rowsBuilt=%d ", gPaletteRowsBuilt));
     out.Append(fmt("settingHelp=%d editFocus=%d selValue=%s selText=%s\n", helpShown, editFocus, selValue, selText));
     return finish(0);
 }
@@ -1528,7 +1532,14 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
 
     gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H(listDy)->PadX(kPaletteInsetDx)->ScrollY(wnd->scrollOff);
     int n = len(wnd->items);
-    for (int i = 0; i < n; i++) {
+    // only the rows in view are built, spacers stand in for the rest: there
+    // can be thousands (commands, files, settings) and this runs every frame
+    int first = std::max(0, (int)(wnd->scrollOff / kPaletteRowDy) - 1);
+    int end = std::min(n, (int)((wnd->scrollOff + listDy) / kPaletteRowDy) + 2);
+    if (first > 0) {
+        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kPaletteRowDy)->Shrink0());
+    }
+    for (int i = first; i < end; i++) {
         ItemDataCP* data = wnd->items.AtData(i);
         Str itemText = wnd->items[i];
         gp::El* row = gp::Div(cx->a)
@@ -1594,6 +1605,10 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
             row->Child(rightEl);
         }
         list->Child(row);
+        gPaletteRowsBuilt++;
+    }
+    if (end < n) {
+        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - end) * kPaletteRowDy)->Shrink0());
     }
     if (n == 0) {
         list->Child(
