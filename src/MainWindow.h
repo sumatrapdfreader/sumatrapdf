@@ -248,7 +248,6 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     //       which doesn't allow distinction between PDF, XPS, etc. errors
     bool IsCurrentTabAbout() const;
     bool IsDocLoaded() const;
-    bool HasDocsLoaded() const;
 
     DisplayModel* AsFixed() const;
     ChmModel* AsChm() const;

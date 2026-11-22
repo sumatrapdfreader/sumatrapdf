@@ -208,7 +208,6 @@ struct MainWindow {
 
     bool IsCurrentTabAbout() const;
     bool IsDocLoaded() const;
-    bool HasDocsLoaded() const;
 
     DisplayModel* AsFixed() const;
     ChmModel* AsChm() const;

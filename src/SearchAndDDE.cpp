@@ -342,7 +342,7 @@ Go to a page and select the search term, but only if it's found on that page
 static MainWindow* FindEmptyWinToReuse() {
     MainWindow* elsewhere = nullptr;
     for (auto& w : gWindows) {
-        if (w->HasDocsLoaded()) {
+        if (HasOpenedDocuments(w)) {
             continue;
         }
         if (IsOnCurrentDesktop(w->hwndFrame)) {
