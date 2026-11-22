@@ -12,6 +12,8 @@
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
 
+TempStr TestDocPathTemp(Str relPath);
+
 #if !OS_WIN
 static void WriteTiffIfd(ByteWriterLE& w, u32 nextIfd, u32 pixelOffset) {
     constexpr u16 kLong = 4;
@@ -77,7 +79,7 @@ void ImageReader_UnitTests() {
     FreePixmap(tiffSrc);
 
 #if !OS_WIN
-    Str pngData = file::ReadFile(StrL("docs/test/test.png"));
+    Str pngData = file::ReadFile(TestDocPathTemp(StrL("docs/test/test.png")));
     utassert(len(pngData) > 0);
     Pixmap* png = PixmapFromData(pngData);
     utassert(png);
@@ -104,7 +106,6 @@ void ImageReader_UnitTests() {
         FreePixmap(frame);
     }
 
-#if !OS_WIN
     // Pillow's duplicate_frame.gif: three visually identical animation frames.
     const u8 gif[] = {
         0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x0a, 0x00, 0x0a, 0x00, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -143,9 +144,8 @@ void ImageReader_UnitTests() {
     for (Pixmap* frame : frames) {
         FreePixmap(frame);
     }
-#endif
 
-    Str icoData = file::ReadFile(StrL("src/shared/gfx/SumatraPDF-smaller.ico"));
+    Str icoData = file::ReadFile(TestDocPathTemp(StrL("src/shared/gfx/SumatraPDF-smaller.ico")));
     FileTypeInfo icoInfo = GuessFileInfoFromData(icoData);
     utassert(icoInfo.nImages > 1);
     frames = PixmapsFromData(icoData);

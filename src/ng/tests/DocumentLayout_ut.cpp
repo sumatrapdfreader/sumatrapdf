@@ -23,6 +23,9 @@ void DocumentLayout_UnitTests() {
 
     EngineBase* engine = CreateEngineMupdfFromFile(path, FileType::PDF, 96);
     utassert(engine != nullptr);
+    if (!engine) {
+        return;
+    }
     utassert(engine->PageCount() == 2);
 
     // the layout is what a canvas would ask for; no window is involved

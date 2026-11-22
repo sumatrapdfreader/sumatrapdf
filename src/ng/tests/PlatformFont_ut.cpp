@@ -88,11 +88,17 @@ static void TestEbookRender() {
     EngineBase* engine = CreateEngineEpubFromData(data);
     str::Free(data);
     utassert(engine && engine->PageCount() > 0);
+    if (!engine || engine->PageCount() == 0) {
+        SafeEngineRelease(&engine);
+        return;
+    }
 
     RenderPageArgs args(1, 1.0f, 0);
     Pixmap* pixmap = engine->RenderPage(args);
     utassert(pixmap && pixmap->data);
-    utassert(HasInk(pixmap));
+    if (pixmap && pixmap->data) {
+        utassert(HasInk(pixmap));
+    }
     FreePixmap(pixmap);
     engine->Release();
 }
@@ -100,6 +106,9 @@ static void TestEbookRender() {
 bool PlatformFontPosix_UnitTests() {
     PlatformFont* font = GetPlatformFont(StrL("Sans"), 12.0f, PlatformFontStyle::Regular);
     utassert(font && font->nativeFont);
+    if (!font || !font->nativeFont) {
+        return false;
+    }
 
     Size narrow = PlatformFontMeasureText(font, StrL("iiii"));
     Size wide = PlatformFontMeasureText(font, StrL("WWWW"));

@@ -3,8 +3,8 @@
 
 // ng: orig's src/tests/Sumatra_ut.cpp is also the unit test driver
 // (RunAppUnitTests). src/tools/test_util.cpp is the driver here, so this file
-// keeps only the test bodies. ParseTip_UnitTests and SvgTextIcon_UnitTests are
-// left out: they need VirtCtrl / SvgIcons (step 12).
+// keeps only the test bodies. ParseTip_UnitTests is TipMarkup_ut.cpp here;
+// SvgTextIcon_UnitTests is left out: it tests orig's VirtCtrl / SvgIcons.
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
@@ -24,20 +24,14 @@
 #include "AIChatCommon.h"
 #include "SystemFonts.h"
 
-#if OS_LINUX || OS_DARWIN
-extern "C" {
-#include <mupdf/fitz.h>
-#if OS_LINUX
-void install_load_linux_font_funcs(fz_context* ctx);
-#else
-void install_load_mac_font_funcs(fz_context* ctx);
-#endif
-}
-#endif
-
 extern "C" {
 #include <mupdf/fitz.h>
 #include <mupdf/ucdn.h>
+#if OS_LINUX
+void install_load_linux_font_funcs(fz_context* ctx);
+#elif OS_DARWIN
+void install_load_mac_font_funcs(fz_context* ctx);
+#endif
 }
 #include "mupdf/noto_sumatra.h"
 #include "EmbeddedResources.h"
@@ -242,7 +236,7 @@ static void PlatformSystemFontTest() {
 }
 #endif
 
-#if OS_WIN || OS_LINUX || defined(__APPLE__)
+#if OS_WIN || OS_LINUX || OS_DARWIN
 static void SystemFontNamesTest() {
     StrVec names;
     GetInstalledFontNames(names);
@@ -285,7 +279,7 @@ void SumatraPDF_UnitTests() {
 #if OS_LINUX || OS_DARWIN
     PlatformSystemFontTest();
 #endif
-#if OS_WIN || OS_LINUX || defined(__APPLE__)
+#if OS_WIN || OS_LINUX || OS_DARWIN
     SystemFontNamesTest();
 #endif
     DocPropertiesTest();
