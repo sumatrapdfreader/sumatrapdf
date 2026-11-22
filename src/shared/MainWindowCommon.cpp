@@ -79,15 +79,19 @@ bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
     if (!str::TrimPrefixI(rest, StrL("file:"))) {
         return false;
     }
-    // file://host/path or file:///path → drop authority (// or ///)
+    // file:///path and file://localhost/path are local; file://host/share is UNC
+    bool isUnc = false;
     if (str::TrimPrefix(rest, StrL("//"))) {
-        // empty host: next char is / of absolute path
-        if (rest && rest.s[0] == '/') {
-            // Windows drive path: /C:/foo → C:/foo
-            if (rest.len >= 3 && rest.s[1] && rest.s[2] == ':') {
-                rest = Str(rest.s + 1, rest.len - 1);
-            }
+        Str localhost = StrL("localhost/");
+        if (str::StartsWithI(rest, localhost)) {
+            rest = Str(rest.s + len(localhost) - 1, rest.len - len(localhost) + 1);
+        } else if (len(rest) > 0 && rest.s[0] != '/') {
+            isUnc = true;
         }
+    }
+    // Windows drive path: /C:/foo → C:/foo
+    if (!isUnc && len(rest) >= 3 && rest.s[0] == '/' && rest.s[2] == ':') {
+        rest = Str(rest.s + 1, rest.len - 1);
     }
     TempStr path = str::DupTemp(rest);
     Str pathStr = path;
@@ -97,7 +101,12 @@ bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
         frag = Str(frag.s + 1, frag.len - 1);
     }
     path = url::DecodeTemp(pathStr);
-    str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
+    if (OS_WIN) {
+        str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
+    }
+    if (isUnc) {
+        path = str::JoinTemp(OS_WIN ? StrL("\\\\") : StrL("//"), path);
+    }
     *pathOut = path;
     if (fragmentOut) {
         *fragmentOut = frag ? str::DupTemp(frag) : Str{};

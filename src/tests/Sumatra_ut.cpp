@@ -144,6 +144,28 @@ bool RenderCache_UnitTestFullOfOneVisiblePage();
 bool RenderCache_UnitTestFullOfOldZoom();
 bool DocController_UnitTestDestroyHook();
 bool Commands_UnitTestIdLimit();
+bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut);
+static void FileUriTest() {
+    struct {
+        Str uri;
+        Str path;
+    } cases[] = {
+        {StrL("file:///C:/a%20b/x.pdf"), StrL("C:\\a b\\x.pdf")},
+        {StrL("file://server/share/x.pdf"), StrL("\\\\server\\share\\x.pdf")},
+        {StrL("file://localhost/C:/x.pdf"), StrL("C:\\x.pdf")},
+        {StrL("file:C:/x.pdf"), StrL("C:\\x.pdf")},
+    };
+    for (auto& c : cases) {
+        TempStr path;
+        utassert(PathFromFileUriTemp(c.uri, &path, nullptr));
+        utassert(str::Eq(path, c.path));
+    }
+    TempStr path;
+    Str frag;
+    utassert(PathFromFileUriTemp(StrL("file:///C:/x.pdf#page=2"), &path, &frag));
+    utassert(str::Eq(path, StrL("C:\\x.pdf")) && str::Eq(frag, StrL("page=2")));
+    utassert(!PathFromFileUriTemp(StrL("https://x.com/a.pdf"), &path, nullptr));
+}
 
 // every SidebarView the app saves must survive loading; the settings enum used
 // to drop signatures / layers, which came back as bookmarks
@@ -442,6 +464,7 @@ static void SumatraPDF_UnitTests() {
     CommandPaletteModel_UnitTests();
     PaletteRowColorTest();
     SidebarViewSettingTest();
+    FileUriTest();
     GhostButtonDisabledTest();
     DocPropertiesTest();
     JsMenuTest();
