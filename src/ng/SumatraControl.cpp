@@ -749,6 +749,10 @@ enum class ControlCmd : u16 {
     TestSelectedText = 157,
     // the bookmarks tree's visible rows and their heights
     TestTocRows = 158,
+    // [action, pageNo, x, y, length, unit]: drives the Measure tool
+    TestMeasurement = 159,
+    // [replace <path> | edit, pageNo, imageIdx]: an image embedded in a PDF
+    TestImageReplace = 160,
     // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads
     TestPerfStats = 161,
     // ng: not one of orig's; the state of the six canvas overlays
@@ -779,10 +783,6 @@ enum class ControlCmd : u16 {
     TestContentHash = 175,
     // [paths, a line each]: the files the next multi-file Open takes, without its dialog
     TestOpenFileNames = 176,
-    // [action, pageNo, x, y, length, unit]: drives the Measure tool
-    TestMeasurement = 159,
-    // [replace <path> | edit, pageNo, imageIdx]: an image embedded in a PDF
-    TestImageReplace = 160,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
