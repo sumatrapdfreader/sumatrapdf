@@ -798,6 +798,11 @@ IFACEMETHODIMP PdfPreview::DoPreview() {
         return HRESULT_FROM_WIN32(GetLastError());
     }
 
+    // a repeated DoPreview() replaces the window instead of leaking it
+    if (m_hwnd) {
+        DestroyWindow(m_hwnd);
+        m_hwnd = nullptr;
+    }
     m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE, m_rcParent.x, m_rcParent.y,
                           m_rcParent.dx, m_rcParent.dy, m_hwndParent, nullptr, GetInstance(), nullptr);
     if (!m_hwnd) {

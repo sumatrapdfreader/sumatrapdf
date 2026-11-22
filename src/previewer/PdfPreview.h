@@ -58,6 +58,9 @@ class PdfPreview : public IThumbnailProvider,
         // the document can't write over it (issue #1530). We only ever read it
         // once anyway - every engine is built from a memory buffer - so read it
         // here and let go of the file.
+        if (!str::IsNull(m_data) || m_engine) {
+            return HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED);
+        }
         m_data = ReadIStream(pStm);
         return str::IsNull(m_data) ? E_FAIL : S_OK;
     };
