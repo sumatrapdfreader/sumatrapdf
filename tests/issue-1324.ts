@@ -102,6 +102,8 @@ async function runSession(opts: {
       "RestoreSession = false",
       "ShowStartPage = false",
       "CheckForUpdates = false",
+      // past the last page "next page" would open the next file in the folder
+      "ShowFileNavigateHint = false",
       "ComicBookUI [",
       `    LandscapeAsSpread = ${opts.spread}`,
       "]",
