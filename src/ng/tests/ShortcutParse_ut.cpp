@@ -322,6 +322,11 @@ static const struct {
     {StrL("Cmd + ,"), CmdOptions},
     {StrL("Cmd + I"), CmdProperties},
     {StrL("Cmd + D"), CmdFavoriteAdd},
+    // ⌘+ / ⌘- zoom, as in other Mac apps; rotate keeps [ and ]
+    {StrL("Cmd + Shift + ="), CmdZoomIn},
+    {StrL("Cmd + Shift + _"), CmdZoomOut},
+    {StrL("Cmd + E"), CmdFindNextSel},
+    {StrL("Cmd + Shift + W"), CmdCloseWindow},
     {StrL("Cmd + 0"), CmdZoomActualSize},
     {StrL("Cmd + 9"), CmdZoomFitPage},
     {StrL("Ctrl + Cmd + F"), CmdToggleFullscreen},
