@@ -346,13 +346,21 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
             toCheck.Append(fs->filePath);
         }
     }
-    // add missing paths from the list of most frequently opened documents
+    // then the most frequently opened documents not listed yet. History
+    // paths are unique, so only the recent ones above can repeat
+    int nRecent = len(toCheck);
     Vec<FileState*> frequencyList;
     FileHistoryGetFrequencyOrder(frequencyList);
     int iMax = std::min(2 * kFileHistoryMaxFrequent, len(frequencyList));
     for (int i = 0; i < iMax; i++) {
         fs = frequencyList[i];
-        AppendIfNotExists(&toCheck, fs->filePath);
+        bool listed = false;
+        for (int j = 0; j < nRecent && !listed; j++) {
+            listed = str::Eq(toCheck[j], fs->filePath);
+        }
+        if (!listed) {
+            toCheck.Append(fs->filePath);
+        }
     }
 }
 
