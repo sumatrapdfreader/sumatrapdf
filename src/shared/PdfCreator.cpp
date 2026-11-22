@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Pixmap.h"
+#include "base/File.h"
 #include "base/Win.h"
 #include "base/GdiPlusUtil.h"
 
@@ -430,4 +431,27 @@ bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine) {
     bool ok = c->SaveToFile(pdfFileName);
     delete c;
     return ok;
+}
+
+// A PDF with a page per image, in the order given; mupdf's decoders first
+// (JPEG, PNG, GIF, BMP, TIFF, JPEG 2000 keep their bytes), then SumatraPDF's
+// (WebP, HEIC, AVIF, ...). *badIdxOut: the image that failed (BadImage).
+ImagesPdfResult PdfCreator::SaveImagesAsPdf(const StrVec& paths, Str dest, int* badIdxOut) {
+    PdfCreator c;
+    for (int i = 0; i < len(paths); i++) {
+        Str data = file::ReadFile(paths[i]);
+        bool ok = len(data) > 0 && c.AddPageFromImageData(data);
+        if (!ok && len(data) > 0 && !ImageDecodedPixmapWouldBeHuge(data)) {
+            Pixmap* px = PixmapFromData(data);
+            ok = px && c.AddPageFromPixmap(px);
+            FreePixmap(px);
+        }
+        str::Free(data);
+        if (!ok) {
+            *badIdxOut = i;
+            return ImagesPdfResult::BadImage;
+        }
+    }
+    dir::CreateForFile(dest);
+    return c.SaveToFile(dest) ? ImagesPdfResult::Ok : ImagesPdfResult::WriteFailed;
 }

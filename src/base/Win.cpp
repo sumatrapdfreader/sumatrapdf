@@ -1491,6 +1491,24 @@ bool TakeTestSaveFileName(OPENFILENAMEW* ofn) {
     return true;
 }
 
+// paths, a line each, the next multi-file Open takes instead of showing the
+// dialog: tests set them through the control channel
+static Str gTestOpenFileNames;
+
+void SetTestOpenFileNames(Str paths) {
+    str::ReplaceWithCopy(&gTestOpenFileNames, paths);
+}
+
+// call before an Open dialog: true when a test's paths were put in out
+bool TakeTestOpenFileNames(StrVec& out) {
+    if (len(gTestOpenFileNames) == 0) {
+        return false;
+    }
+    Split(&out, gTestOpenFileNames, StrL("\n"), true);
+    SetTestOpenFileNames({});
+    return len(out) > 0;
+}
+
 bool IsCtrlPressed() {
     return IsKeyPressed(VK_CONTROL);
 }

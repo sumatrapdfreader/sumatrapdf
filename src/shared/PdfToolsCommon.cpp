@@ -389,6 +389,34 @@ bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath) {
     return PdfCreator::SaveImageCollectionAsPdf(destPath, engine);
 }
 
+// Make PDF From Images: the Open dialog's filter, "\1" separated as ng's
+Str ImagesToPdfFilter() {
+    return StrL(
+        "Images\1*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.tif;*.tiff;*.webp;*.heic;*.heif;*.avif;*.jp2;*.jxl\1"
+        "All files\1*.*\1");
+}
+
+// next to the first image, named after it: scan1.jpg -> scan1.pdf
+TempStr ImagesToPdfDestTemp(Str firstImage) {
+    return MakeUniqueFilePathTemp(str::JoinTemp(path::GetPathNoExtTemp(firstImage), StrL(".pdf")));
+}
+
+// Writes a PDF with a page per image to dest. Empty when it worked, else what
+// to tell the user.
+TempStr MakePdfFromImagesTemp(const StrVec& paths, Str dest) {
+    TempStr producer = fmt("SumatraPDF %s", currentVersion);
+    PdfCreator::SetProducerName(producer);
+    int bad = 0;
+    ImagesPdfResult res = PdfCreator::SaveImagesAsPdf(paths, dest, &bad);
+    if (res == ImagesPdfResult::BadImage) {
+        return fmt(Tr("Couldn't load image '%s'").s, path::GetBaseNameTemp(paths[bad]));
+    }
+    if (res == ImagesPdfResult::WriteFailed) {
+        return fmt(Tr("Couldn't save '%s'").s, dest);
+    }
+    return {};
+}
+
 // 0 if not a usable font size
 int EbookPdfFontSizeFromText(Str s) {
     str::TrimWsBoth(s);

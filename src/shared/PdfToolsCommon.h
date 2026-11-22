@@ -34,6 +34,9 @@ bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages);
 TempStr DefaultPdfDestPathTemp(Str srcPath);
 bool ExtractPagesToNewPdf(WindowTab* tab, const Vec<int>& pages, Str destPath);
 bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath);
+Str ImagesToPdfFilter();
+TempStr ImagesToPdfDestTemp(Str firstImage);
+TempStr MakePdfFromImagesTemp(const StrVec& paths, Str dest);
 
 // Add Watermark / Add Page Numbers (and `cli watermark`, `cli number`)
 struct PdfStamp;

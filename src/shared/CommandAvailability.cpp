@@ -94,6 +94,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdSumatraPDFWeb,
     CmdUploadToServer,
     CmdDeleteFromServer,
+    CmdImagesToPdf,
     0,
 };
 
@@ -102,6 +103,7 @@ static const i32 gNoDocWhitelist[] = {
 // showing "not supported" (docs/wasm-browser-plan.md).
 static const i32 gHiddenOnWasm[] = {
     CmdRunPDFScript,
+    CmdImagesToPdf,
     // a browser tab can't be minimized
     CmdMinimizeWindow,
     // a browser tab has one canvas, so one window
@@ -274,6 +276,7 @@ static const i32 removeIfNoCopyPerms[] = {
 
 static const i32 removeIfNoDiskAccessPerm[] = {
     CmdRunPDFScript,
+    CmdImagesToPdf,
     CmdNewWindow,
     CmdOpenFile,
     CmdOpenFileNoHistory,

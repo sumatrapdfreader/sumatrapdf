@@ -7448,6 +7448,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowPdfDeletePageDialog(win);
             break;
 
+        case CmdImagesToPdf:
+            MakePdfFromImages(win);
+            break;
+
         case CmdMergePDF:
             ShowMergePdfDialog(win);
             break;

@@ -2165,3 +2165,70 @@ void ShowSaveSelectionAsImageDialog(MainWindow* win) {
         delete dlg;
     }
 }
+
+// the images picked in a multi-select Open dialog; false if cancelled
+static bool PickImageFiles(HWND owner, StrVec& paths) {
+    // a multi-select buffer: the folder, then the file names, then an empty string
+    constexpr int kBufSize = 64 * 1024;
+    Vec<WCHAR> buf;
+    VecAppendBlanks(buf, kBufSize);
+    // the filter's separators become the NULs OPENFILENAME wants
+    TempWStr filter = ToWStrTemp(ImagesToPdfFilter());
+    for (int i = 0; i < len(filter); i++) {
+        if (filter.s[i] == 1) {
+            filter.s[i] = 0;
+        }
+    }
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = owner;
+    ofn.lpstrFile = buf.els;
+    ofn.nMaxFile = kBufSize;
+    ofn.lpstrFilter = filter.s;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
+    if (!GetOpenFileNameW(&ofn)) {
+        return false;
+    }
+    WCHAR* first = buf.els;
+    WCHAR* name = first + wcslen(first) + 1;
+    if (*name == 0) {
+        // one file: the buffer is its full path
+        paths.Append(ToUtf8Temp(first));
+    }
+    for (; *name; name += wcslen(name) + 1) {
+        paths.Append(path::JoinTemp(ToUtf8Temp(first), ToUtf8Temp(name)));
+    }
+    return len(paths) > 0;
+}
+
+// Make PDF From Images (CmdImagesToPdf): picks images, then where the PDF goes,
+// makes it with a page per image (in name order: scan1, scan2, ...) and opens it
+void MakePdfFromImages(MainWindow* win) {
+    StrVec paths;
+    if (!TakeTestOpenFileNames(paths) && !PickImageFiles(win->hwndFrame, paths)) {
+        return;
+    }
+    SortNatural(&paths);
+
+    WCHAR dstFileName[MAX_PATH + 1]{};
+    wstr::BufSet(WStr(dstFileName, MAX_PATH), ToWStrTemp(ImagesToPdfDestTemp(paths[0])));
+    OPENFILENAME ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = win->hwndFrame;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = L"PDF documents\0*.pdf\0";
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = L"pdf";
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
+        return;
+    }
+    TempStr dest = ToUtf8Temp(dstFileName);
+    TempStr err = MakePdfFromImagesTemp(paths, dest);
+    if (len(err) > 0) {
+        ShowWarningNotification(win, err, kNotif5SecsTimeOut);
+        return;
+    }
+    LoadArgs args(dest, win);
+    StartLoadDocument(&args);
+}

@@ -1099,26 +1099,16 @@ static int CmdImagesToPdf(CliCtx& cx) {
     }
     TempStr producer = fmt("SumatraPDF %s", currentVersion);
     PdfCreator::SetProducerName(producer);
-    PdfCreator c;
-    for (Str path : cx.positional) {
-        Str data = file::ReadFile(path);
-        if (len(data) == 0) {
-            str::Free(data);
+    int bad = 0;
+    ImagesPdfResult res = PdfCreator::SaveImagesAsPdf(cx.positional, dest, &bad);
+    if (res == ImagesPdfResult::BadImage) {
+        Str path = cx.positional[bad];
+        if (file::GetSize(path) <= 0) {
             return Fail(cx, kCliCantOpen, fmt("can't read '%s'", path));
         }
-        bool ok = c.AddPageFromImageData(data);
-        if (!ok && !ImageDecodedPixmapWouldBeHuge(data)) {
-            Pixmap* px = PixmapFromData(data);
-            ok = px && c.AddPageFromPixmap(px);
-            FreePixmap(px);
-        }
-        str::Free(data);
-        if (!ok) {
-            return Fail(cx, kCliCantOpen, fmt("'%s' isn't an image SumatraPDF can read", path));
-        }
+        return Fail(cx, kCliCantOpen, fmt("'%s' isn't an image SumatraPDF can read", path));
     }
-    dir::CreateForFile(dest);
-    if (!c.SaveToFile(dest)) {
+    if (res == ImagesPdfResult::WriteFailed) {
         return Fail(cx, kCliFailed, fmt("couldn't write '%s'", dest));
     }
     return ReportPdfWritten(cx, dest, len(cx.positional));

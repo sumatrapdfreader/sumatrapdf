@@ -4388,3 +4388,54 @@ gp::El* PdfToolDialogBuild(MainWindow* win, gp::Ctx* cx) {
     ToolScope scope(tool);
     return PdfToolBuildCurrent(win, cx);
 }
+
+// --- Make PDF From Images (CmdImagesToPdf) -----------------------------------
+
+// the images picked, while the Save As question is up
+static StrVec gImagesToPdfPaths;
+
+static void OnImagesToPdfDest(SavePathArgs* args) {
+    MainWindow* win = args->win;
+    TempStr dest = str::DupTemp(args->path);
+    if (len(dest) == 0 || len(gImagesToPdfPaths) == 0 || !IsMainWindowValidAndNotClosing(win)) {
+        gImagesToPdfPaths.Reset();
+        return;
+    }
+    TempStr err = MakePdfFromImagesTemp(gImagesToPdfPaths, dest);
+    gImagesToPdfPaths.Reset();
+    if (len(err) > 0) {
+        ShowWarningNotification(win, err, kNotif5SecsTimeOut);
+        return;
+    }
+    LoadDocument(win, dest);
+}
+
+// the prompt runs a message loop, so it is shown from the ui task queue,
+// after gpui has unwound from the command
+static void ImagesToPdfPromptNow(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    StrVec paths;
+    if (!AppShellPromptForFiles(win, ImagesToPdfFilter(), &paths)) {
+        return;
+    }
+    // in name order: scan1, scan2, ...
+    SortNatural(&paths);
+    gImagesToPdfPaths = paths;
+
+    auto* args = new SavePathArgs();
+    args->win = win;
+    args->title = str::Dup(Tr("Save As"));
+    args->initialPath = str::Dup(ImagesToPdfDestTemp(paths[0]));
+    args->defExt = str::Dup(StrL(".pdf"));
+    args->filter = str::Dup(StrL("PDF documents\1*.pdf\1"));
+    args->onDone = MkFunc1Void<SavePathArgs*>(OnImagesToPdfDest);
+    ShowSavePathDialog(args);
+}
+
+// orig's MakePdfFromImages: picks images, then where the PDF goes, makes it
+// with a page per image and opens it
+void MakePdfFromImages(MainWindow* win) {
+    uitask::Post(MkFunc0(ImagesToPdfPromptNow, win), "ImagesToPdf");
+}

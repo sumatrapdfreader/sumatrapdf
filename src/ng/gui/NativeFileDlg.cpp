@@ -164,6 +164,12 @@ static bool OpenFileDlg(MainWindow* win, Str title, const Vec<gp::PathFilter>& f
     if (!win || !win->gpuiWin) {
         return false;
     }
+#if OS_WIN
+    // a test's paths instead of the dialog
+    if (multiSelect && TakeTestOpenFileNames(*pathsOut)) {
+        return true;
+    }
+#endif
     Str dir, name;
     SplitDirName(initialPath, {}, &dir, &name);
     gp::PathPrompt prompt;

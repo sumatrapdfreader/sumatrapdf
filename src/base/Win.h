@@ -285,6 +285,8 @@ bool IsShiftPressed();
 bool IsAltPressed();
 void SetTestSaveFileName(Str path);
 bool TakeTestSaveFileName(OPENFILENAMEW* ofn);
+void SetTestOpenFileNames(Str paths);
+bool TakeTestOpenFileNames(StrVec& out);
 bool IsCtrlPressed();
 bool IsRightButtonPressed();
 int ReleaseThreadKeyState();

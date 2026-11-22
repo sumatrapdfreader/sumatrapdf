@@ -1132,6 +1132,10 @@ MenuDef menuDefDocumentOperations[] = {
         CmdMergePDF,
     },
     {
+        TrN("Make PDF From Images..."),
+        CmdImagesToPdf,
+    },
+    {
         TrN("Run PDF Script..."),
         CmdRunPDFScript,
     },

@@ -7,6 +7,13 @@ struct fz_image;
 struct pdf_document;
 enum class DocProp : u8;
 
+enum class ImagesPdfResult {
+    Ok,
+    // an image couldn't be read or decoded
+    BadImage,
+    WriteFailed,
+};
+
 class PdfCreator {
   public:
     fz_context* ctx = nullptr;
@@ -32,4 +39,5 @@ class PdfCreator {
     static void SetProducerName(Str name);
 
     static bool SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine);
+    static ImagesPdfResult SaveImagesAsPdf(const StrVec& paths, Str dest, int* badIdxOut);
 };

@@ -750,6 +750,8 @@ enum class ControlCmd : u16 {
     // content hashes of history files (ContentHashStatusTemp), or the test hooks
     // of the hashing and of re-listing SumatraPDF Web files
     TestContentHash = 175,
+    // [paths, a line each]: the files the next multi-file Open takes, without its dialog
+    TestOpenFileNames = 176,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1973,6 +1975,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = SaveFileAsResultTemp(dstPath, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestOpenFileNames: {
+#if OS_WIN
+            SetTestOpenFileNames(StringArg(req, 0));
+#endif
+            AppendTestResult(req, 0, StrL("OK"));
             break;
         }
 

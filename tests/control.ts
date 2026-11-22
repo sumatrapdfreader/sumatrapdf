@@ -201,6 +201,8 @@ export enum ControlCommand {
   // hashes of history files, one "status=<state> path=<path>" line each; the
   // hooks also set how soon SumatraPDF Web files are listed again
   TestContentHash = 175,
+  // [paths, a line each]: the files the next multi-file Open takes, without its dialog
+  TestOpenFileNames = 176,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
