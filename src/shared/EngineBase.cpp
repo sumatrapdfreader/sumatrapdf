@@ -1266,11 +1266,10 @@ bool EngineBase::HasErrors() {
     return len(errors) > 0;
 }
 
-// internal builder buffer (no copy); valid until next AppendError or engine
-// destruction — do not free or keep beyond the current frame
+// copied under the lock: render threads may append (and reallocate) meanwhile
 TempStr EngineBase::GetErrorsTextTemp() {
     ScopedMutex scope(&errorsLock);
-    return ToStr(errors);
+    return str::DupTemp(ToStr(errors));
 }
 
 Func1<EngineBase*> gOnEngineDestroyed;
