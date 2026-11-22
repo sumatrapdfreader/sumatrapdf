@@ -9,19 +9,18 @@
 #include "TeXFilter.h"
 
 HRESULT TeXFilter::OnInit() {
-    if (!m_pData) {
-        // load content of LaTeX file into m_pData
-        if (str::IsNull(m_data)) {
-            return E_FAIL;
-        }
+    // m_data changes when Load() is called again
+    CleanUp();
+    if (str::IsNull(m_data)) {
+        return E_FAIL;
+    }
 
-        m_pData = strconv::StrCPToWStr(Str((char*)(u8*)m_data.s, (int)(size_t)m_data.len), CP_ACP).s;
-        m_pBuffer = AllocArray<WCHAR>(m_data.len + 1);
+    m_pData = strconv::StrCPToWStr(Str((char*)(u8*)m_data.s, (int)(size_t)m_data.len), CP_ACP).s;
+    m_pBuffer = AllocArray<WCHAR>(m_data.len + 1);
 
-        if (!m_pData || !m_pBuffer) {
-            CleanUp();
-            return E_OUTOFMEMORY;
-        }
+    if (!m_pData || !m_pBuffer) {
+        CleanUp();
+        return E_OUTOFMEMORY;
     }
 
     m_state = STATE_TEX_START;
