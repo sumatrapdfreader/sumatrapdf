@@ -243,7 +243,8 @@ NextDir:
         it->pattern = path::Join(ws, WStrL(L"*"));
         it->h = FindFirstFileW(it->pattern.s, &it->fd);
         if (!IsValidHandle(it->h)) {
-            goto DidFinish;
+            CloseDirIter(it);
+            goto NextDir;
         }
     } else {
         ok = FindNextFileW(it->h, &it->fd);
