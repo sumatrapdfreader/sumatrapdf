@@ -331,6 +331,7 @@ import { testit as readAloudRestyleStalePage } from "./read-aloud-restyle-stale-
 import { testit as readAloudLazyChapters } from "./read-aloud-lazy-chapters.ts";
 import { testit as readAloudLazyVoices } from "./read-aloud-lazy-voices.ts";
 import { testit as lazyTabStateAfterSave } from "./lazy-tab-state-after-save.ts";
+import { testit as sessionRestoreEmptyWindow } from "./session-restore-empty-window.ts";
 import { testit as lazyTabSelectPaint } from "./lazy-tab-select-paint.ts";
 import { testit as pendingTabFreedSessionState } from "./pending-tab-freed-session-state.ts";
 import { testit as formJsNoStderr } from "./form-js-no-stderr.ts";
@@ -828,6 +829,7 @@ export const tests: NamedTest[] = [
   ["read-aloud-close-during-speak", readAloudCloseDuringSpeak],
   ["read-aloud-restyle-stale-page", readAloudRestyleStalePage],
   ["lazy-tab-state-after-save", lazyTabStateAfterSave],
+  ["session-restore-empty-window", sessionRestoreEmptyWindow],
   ["lazy-tab-select-paint", lazyTabSelectPaint],
   ["pending-tab-freed-session-state", pendingTabFreedSessionState],
   ["form-js-throw", formJsThrow],

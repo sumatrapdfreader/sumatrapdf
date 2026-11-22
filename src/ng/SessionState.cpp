@@ -416,9 +416,17 @@ bool RestoreSession(MainWindow* firstWin) {
 #if OS_WIN
     // each window goes back to the virtual desktop it was on (#6271)
     ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
-    int sessionGen = gInitialSessionDataGen;
 #endif
-    for (SessionData* data : *gInitialSessionData) {
+    // a settings save rebuilds gInitialSessionData, freeing its SessionData
+    int sessionGen = gInitialSessionDataGen;
+    // closing a window saves the settings, so empty ones are closed after the loop
+    Vec<MainWindow*> emptyWindows;
+    for (int i = 0; i < len(*gInitialSessionData); i++) {
+        if (sessionGen != gInitialSessionDataGen) {
+            logf("RestoreSession: session re-saved while restoring, stopping\n");
+            break;
+        }
+        SessionData* data = (*gInitialSessionData)[i];
         MainWindow* win = nWindows == 0 ? firstWin : CreateAndShowMainWindow(data);
         if (!win) {
             continue;
@@ -451,7 +459,7 @@ bool RestoreSession(MainWindow* firstWin) {
             // an empty window is one the user never sees; only the first one
             // (which already existed) stays
             if (nWindows > 0) {
-                CloseWindow(win, false, false);
+                VecAppend(emptyWindows, win);
             }
             continue;
         }
@@ -476,6 +484,11 @@ bool RestoreSession(MainWindow* firstWin) {
             break;
         }
 #endif
+    }
+    for (MainWindow* win : emptyWindows) {
+        if (IsMainWindowValid(win)) {
+            CloseWindow(win, false, false);
+        }
     }
 #if OS_WIN
     if (vdm) {
