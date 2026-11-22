@@ -116,6 +116,7 @@ void ShowRenameStripGroupDialog(MainWindow* win, int groupId) {
     gRename.editName->focus = gp::FocusHandleNew(app);
     gp::InputSetValue(gRename.editName, ToGpui(g->name));
     gRename.visible = true;
+    DialogsTrackFrameDialog(IsRenameStripGroupDialogVisible, [] { return gRename.win; }, CloseRenameStripGroupDialog);
     gRename.wantFocus = true;
     DlgWindowSpec spec;
     spec.name = "renamestripgroup";

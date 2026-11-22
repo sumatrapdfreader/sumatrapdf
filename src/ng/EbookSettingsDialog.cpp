@@ -318,6 +318,7 @@ void ShowEbookSettingsDialog(MainWindow* win) {
     FillFontList();
     LoadFromTarget();
     gEbook.visible = true;
+    DialogsTrackFrameDialog(IsEbookSettingsDialogVisible, [] { return gEbook.win; }, CloseEbookSettingsDialog);
     DlgWindowSpec spec;
     spec.name = "ebooksettings";
     spec.title = EbookSettingsDlgTitle;

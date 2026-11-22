@@ -157,6 +157,7 @@ void ShowBrightnessContrastDialog(MainWindow* win) {
     gBc.sliderBrightness = NewAdjustSlider(gBc.brightness);
     gBc.sliderContrast = NewAdjustSlider(gBc.contrast);
     gBc.visible = true;
+    DialogsTrackFrameDialog(IsBrightnessContrastDialogVisible, [] { return gBc.win; }, CloseBrightnessContrastDialog);
     DlgWindowSpec spec;
     spec.name = "brightnesscontrast";
     spec.title = BrightnessContrastTitle;

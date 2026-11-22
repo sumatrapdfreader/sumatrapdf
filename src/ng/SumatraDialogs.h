@@ -31,6 +31,8 @@ enum class DialogAccels {
     None
 };
 DialogAccels DialogsAccelTable(MainWindow* win);
+void DialogsTrackFrameDialog(bool (*isFrameVisible)(), MainWindow* (*owner)(), void (*close)());
+void DialogsCloseFrameDialogsFor(MainWindow* win);
 // Up / Down (dir -1 / 1) in a dialog whose list they drive, as orig's do
 bool DialogsOnArrowKey(MainWindow* win, int dir, bool editFocused);
 // Enter in a dialog that has no focused text field (orig's default button)

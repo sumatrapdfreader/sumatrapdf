@@ -284,6 +284,7 @@ void MsgBox(MainWindow* win, Str text, Str caption, uint flags, Func1<int> onRes
     gMsgBox.flags = flags;
     gMsgBox.onResult = onResult;
     gMsgBox.visible = true;
+    DialogsTrackFrameDialog(IsMsgBoxVisible, [] { return gMsgBox.win; }, CancelMsgBox);
     logf("MsgBox: '%s' / '%s' flags 0x%x\n", caption, text, flags);
     AppShellInvalidate(win);
 }
@@ -852,6 +853,35 @@ bool DialogsOnArrowKey(MainWindow*, int dir, bool editFocused) {
     return AdvancedSettingsMoveSelection(dir);
 }
 
+// a dialog drawn inside its main window (tool windows off: wasm, plugin mode)
+// stays "visible" after that window is gone, blocking every window's shortcuts
+struct FrameDialog {
+    bool (*isFrameVisible)();
+    MainWindow* (*owner)();
+    void (*close)();
+};
+static Vec<FrameDialog> gFrameDialogs;
+
+// called by a dialog each time it shows; remembered once
+void DialogsTrackFrameDialog(bool (*isFrameVisible)(), MainWindow* (*owner)(), void (*close)()) {
+    for (FrameDialog& d : gFrameDialogs) {
+        if (d.isFrameVisible == isFrameVisible && d.owner == owner && d.close == close) {
+            return;
+        }
+    }
+    VecAppend(gFrameDialogs, FrameDialog{isFrameVisible, owner, close});
+}
+
+// `win` is closing: close the dialogs drawn inside it while they can still use it
+void DialogsCloseFrameDialogsFor(MainWindow* win) {
+    for (int i = 0; i < len(gFrameDialogs); i++) {
+        FrameDialog d = gFrameDialogs[i];
+        if (d.isFrameVisible() && d.owner() == win) {
+            d.close();
+        }
+    }
+}
+
 DialogAccels DialogsAccelTable(MainWindow* win) {
     // Only the properties window and its children use the edit table
     if (IsPropertiesDialogVisible()) {
@@ -1022,6 +1052,7 @@ void ShowCaj2pdfDownloadDialog(MainWindow* win, Func1<Caj2pdfDownloadDialogResul
     gCaj2pdf.dontAskAgain = false;
     gCaj2pdf.onDone = onDone;
     gCaj2pdf.visible = true;
+    DialogsTrackFrameDialog(IsCaj2pdfDownloadDialogVisible, [] { return gCaj2pdf.win; }, CloseCaj2pdfDownloadDialog);
     DlgWindowSpec spec;
     spec.name = "caj2pdf-download";
     spec.title = Caj2pdfDlgTitle;
@@ -1156,6 +1187,8 @@ void ShowUnsavedAnnotationsDialog(MainWindow* win, Str fileName, Func1<int> onCh
     gUnsaved.fileName = str::Dup(fileName);
     gUnsaved.onChoice = onChoice;
     gUnsaved.visible = true;
+    DialogsTrackFrameDialog(
+        IsUnsavedAnnotationsDialogVisible, [] { return gUnsaved.win; }, [] { FinishUnsaved(SaveChoice::Cancel); });
     logf("ShowUnsavedAnnotationsDialog: '%s'\n", fileName);
     AppShellInvalidate(win);
 }

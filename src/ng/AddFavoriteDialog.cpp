@@ -300,6 +300,7 @@ static void ShowFavoriteDialog(MainWindow* win, FavDlgMode mode, Str filePath, i
         gp::InputSetValue(gAddFav.editName, ToGpui(name));
     }
     gAddFav.visible = true;
+    DialogsTrackFrameDialog(IsAddFavoriteDialogVisible, [] { return gAddFav.win; }, CloseAddFavoriteDialog);
     DlgWindowSpec spec;
     spec.name = "addfavorite";
     spec.title = AddFavoriteDlgTitle;

@@ -3367,6 +3367,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, SignDocumentChecksTemp());
                 break;
             }
+            // 0 = all shortcuts, 1 = edit keys only, 2 = none (a dialog is up)
+            if (str::Eq(StringArg(req, 0), StrL("dialog-accels"))) {
+                MainWindow* win = FirstWindow();
+                int accels = win ? (int)DialogsAccelTable(win) : -1;
+                AppendTestResult(req, 0, fmt("OK accels=%d", accels));
+                break;
+            }
             i32 a = 0, b = 0, c = 0, d = 0;
             IntArg(req, 3, a);
             IntArg(req, 4, b);

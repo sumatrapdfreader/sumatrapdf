@@ -164,6 +164,7 @@ void ShowGoToPageDialog(MainWindow* win) {
         gGoToPage.editPage = NewNumberInput(app, ctrl->GetPageLabeTemp(ctrl->CurrentPageNo()));
     }
     gGoToPage.visible = true;
+    DialogsTrackFrameDialog(IsGoToPageDialogVisible, [] { return gGoToPage.win; }, CloseGoToPageDialog);
     gGoToPage.wantFocus = true;
     DlgWindowSpec spec;
     spec.name = "gotopage";

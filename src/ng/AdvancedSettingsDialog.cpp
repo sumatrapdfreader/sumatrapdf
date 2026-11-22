@@ -396,6 +396,7 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     gAdv.sel = NextSettingRow(gAdv.rows, -1, 1);
     gAdv.scrollY = 0;
     gAdv.visible = true;
+    DialogsTrackFrameDialog(IsAdvancedSettingsDialogVisible, [] { return gAdv.win; }, CloseAdvancedSettingsDialog);
     gAdv.wantFocus = true;
     AdvOpenToolWindow(win);
     if (gAdv.tw) {
@@ -1106,6 +1107,8 @@ void ShowConfigureRestrictedUseDialog(MainWindow* win) {
     gRestrictedUse.win = win;
     gRestrictedUse.sel = 0;
     gRestrictedUse.visible = true;
+    DialogsTrackFrameDialog(
+        IsConfigureRestrictedUseDialogVisible, [] { return gRestrictedUse.win; }, CloseConfigureRestrictedUseDialog);
     DlgWindowSpec spec;
     spec.name = "restricteduse";
     spec.title = RestrictedUseTitle;

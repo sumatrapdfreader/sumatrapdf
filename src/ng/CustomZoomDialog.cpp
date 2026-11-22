@@ -248,6 +248,7 @@ void ShowCustomZoomDialog(MainWindow* win) {
     gCustomZoom.editZoom = s;
     FillZoom();
     gCustomZoom.visible = true;
+    DialogsTrackFrameDialog(IsCustomZoomDialogVisible, [] { return gCustomZoom.win; }, CloseCustomZoomDialog);
     gCustomZoom.wantFocus = true;
     DlgWindowSpec spec;
     spec.name = "customzoom";

@@ -17,6 +17,7 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
+#include "SumatraDialogs.h"
 #include "PDFScript.h"
 #include "shared/PdfToolsCommon.h"
 
@@ -210,6 +211,7 @@ void ShowPDFScriptDialog(MainWindow* win) {
     gScript.win = win;
     gScript.input = str::Dup(tab->filePath);
     gScript.visible = true;
+    DialogsTrackFrameDialog(IsPDFScriptDialogVisible, [] { return gScript.win; }, ClosePDFScriptDialog);
     gScript.running = false;
     gScript.showExamples = false;
     gScript.example = 0;

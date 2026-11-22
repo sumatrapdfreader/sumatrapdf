@@ -47,6 +47,7 @@
 #if OS_WIN
 #include <wincrypt.h>
 #endif
+#include "SumatraDialogs.h"
 #include "DocumentProperties.h"
 #include "DocumentPropertiesCommon.h"
 #include "shared/PdfToolsCommon.h"
@@ -333,6 +334,8 @@ void ShowProperties(MainWindow* win, DocController* ctrl) {
     gProps.textEdit->readonly = true;
     gp::InputSetValue(gProps.textEdit, ToGpui(ToStr(gProps.propsText)));
     gProps.visible = true;
+    DialogsTrackFrameDialog(
+        IsPropertiesDialogVisible, [] { return gProps.win; }, [] { DeletePropertiesWindow(gProps.win); });
     gProps.longestLine = {};
     gProps.oneChar = {};
     gProps.remeasure = true;

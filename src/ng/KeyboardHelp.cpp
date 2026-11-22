@@ -31,6 +31,7 @@
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
 #include "Commands.h"
+#include "SumatraDialogs.h"
 #include "KeyboardHelp.h"
 #include "KeyboardHelpCommon.h"
 
@@ -91,6 +92,7 @@ void ToggleKeyboardHelp(const KeyboardHelpArgs& args) {
     gKbHelp.win = args.win;
     gKbHelp.dataSource = args.dataSource ? args.dataSource : GetDefaultKeyboardHelpDataSource();
     gKbHelp.visible = true;
+    DialogsTrackFrameDialog(IsKeyboardHelpVisible, [] { return gKbHelp.win; }, CloseKeyboardHelp);
     gKbHelp.scrollY = 0;
     gKbHelp.parentFullscreen = args.parentFullscreen;
     KbHelpOpenToolWindow(args.win);

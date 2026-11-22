@@ -34,6 +34,7 @@
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
 #include "shared/PdfToolsCommon.h"
+#include "SumatraDialogs.h"
 #include "TabGroupsManage.h"
 #include "AppHelpersCommon.h"
 
@@ -187,6 +188,13 @@ void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     gTg->autoSync = false;
     gTg->scrollY = 0;
     gTg->visible = true;
+    DialogsTrackFrameDialog(
+        IsTabGroupsDialogVisible,
+        [] {
+            TabGroupsDlg* d = FrameDlg();
+            return d ? d->win : nullptr;
+        },
+        CloseTabGroupsDialog);
     if (mode == TabGroupDialogMode::Save) {
         auto* s = new gp::InputState();
         s->focus = gp::FocusHandleNew(win->gpuiWin ? win->gpuiWin->app : nullptr);

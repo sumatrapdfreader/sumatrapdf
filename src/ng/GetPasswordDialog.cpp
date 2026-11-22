@@ -128,6 +128,7 @@ void ShowGetPasswordDialog(MainWindow* win, Str fileName, bool canRemember, Func
     s->focus = gp::FocusHandleNew(win->gpuiWin ? win->gpuiWin->app : nullptr);
     gGetPassword.editPwd = s;
     gGetPassword.visible = true;
+    DialogsTrackFrameDialog(IsGetPasswordDialogVisible, [] { return gGetPassword.win; }, CloseGetPasswordDialog);
     gGetPassword.wantFocus = true;
     gGetPassword.notDrawn = true;
     DlgWindowSpec spec;

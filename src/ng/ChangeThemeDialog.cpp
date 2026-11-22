@@ -425,6 +425,7 @@ void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly) {
     gChangeTheme.ddFollow.SetItems(modes, FollowThemeToIndex(gChangeTheme.startDocumentColorsFollowTheme));
     gChangeTheme.previewMs = -1;
     gChangeTheme.visible = true;
+    DialogsTrackFrameDialog(IsChangeThemeDialogVisible, [] { return gChangeTheme.win; }, CloseChangeThemeDialog);
     ChangeThemeOpenToolWindow(win);
     ScrollSelIntoView();
     AppShellInvalidate(win);

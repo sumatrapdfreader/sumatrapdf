@@ -144,6 +144,7 @@ void ShowOpenFromUrlDialog(MainWindow* win) {
     }
     gUrlDlg.win = win;
     gUrlDlg.visible = true;
+    DialogsTrackFrameDialog(IsOpenFromUrlDialogVisible, [] { return gUrlDlg.win; }, CloseOpenFromUrlDialog);
     DlgWindowSpec spec;
     spec.name = "openfromurl";
     spec.title = OpenFromUrlDlgTitle;

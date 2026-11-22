@@ -289,6 +289,8 @@ void ShowSetScreenshotHotkeyDialog(MainWindow* win) {
     gHotkey.currentHotkey = str::Dup(shown);
     gHotkey.newHotkey = {};
     gHotkey.visible = true;
+    DialogsTrackFrameDialog(
+        IsSetScreenshotHotkeyDialogVisible, [] { return gHotkey.win; }, CloseSetScreenshotHotkeyDialog);
     logf("ShowSetScreenshotHotkeyDialog: current '%s'\n", gHotkey.currentHotkey);
     DlgWindowSpec spec;
     spec.name = "screenshothotkey";

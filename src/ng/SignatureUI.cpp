@@ -228,6 +228,7 @@ void ShowSignatureDialog(MainWindow* win, int entryIdx) {
     gp::InputSetValue(s, ToGpui(gSigDlg.text));
     gSigDlg.edit = s;
     gSigDlg.visible = true;
+    DialogsTrackFrameDialog(IsSignatureDialogVisible, [] { return gSigDlg.win; }, CloseSignatureDialog);
 
     DlgWindowSpec spec;
     spec.name = "signature";

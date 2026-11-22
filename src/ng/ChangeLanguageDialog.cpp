@@ -129,6 +129,8 @@ void ShowChangeLanguageDialog(MainWindow* win) {
     gChangeLanguage.editSearch = s;
     FilterList();
     gChangeLanguage.visible = true;
+    DialogsTrackFrameDialog(
+        IsChangeLanguageDialogVisible, [] { return gChangeLanguage.win; }, CloseChangeLanguageDialog);
     DlgWindowSpec spec;
     spec.name = "changelanguage";
     spec.title = ChangeLanguageDlgTitle;

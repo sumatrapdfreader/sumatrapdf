@@ -1023,6 +1023,7 @@ void ShowAboutWindow(MainWindow* win) {
     }
     gAboutWin = win;
     gAboutVisible = true;
+    DialogsTrackFrameDialog(IsAboutWindowVisible, [] { return gAboutWin; }, CloseAboutWindow);
     AboutOpenToolWindow(win);
     AppShellInvalidate(win);
 }

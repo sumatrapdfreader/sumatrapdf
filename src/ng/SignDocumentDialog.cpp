@@ -721,6 +721,8 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField, int c
     FillSignatureType();
     FillAppearance();
     gSign.visible = true;
+    DialogsTrackFrameDialog(
+        IsSignDocumentDialogVisible, [] { return gSign.win; }, [] { CloseSignDocumentDialog(gSign.win); });
     gSign.placing = false;
     logf("ShowSignDocumentDialog: %d unsigned fields, %d certificates\n", len(gSign.fieldNames), len(gSign.certThumbs));
     SignDocumentSyncWindow();

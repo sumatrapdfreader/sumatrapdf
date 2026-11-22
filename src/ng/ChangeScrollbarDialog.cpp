@@ -81,6 +81,8 @@ void ShowChangeScrollbarDialog(MainWindow* win) {
     int curr = ScrollbarModeFromPrefs();
     gChangeScrollbar.sel = (curr >= 0 && curr <= kScrollbarHidden) ? curr : -1;
     gChangeScrollbar.visible = true;
+    DialogsTrackFrameDialog(
+        IsChangeScrollbarDialogVisible, [] { return gChangeScrollbar.win; }, CloseChangeScrollbarDialog);
     DlgWindowSpec spec;
     spec.name = "changescrollbar";
     spec.title = ChangeScrollbarDlgTitle;

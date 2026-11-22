@@ -950,6 +950,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     SetDestPath(dest);
 
     gImgEdit.visible = true;
+    DialogsTrackFrameDialog(IsImageEditWindowVisible, [] { return gImgEdit.win; }, CloseImageEditWindow);
     ImageEditOpenToolWindow(win);
     logf("%s\n", ImageEditStateTemp());
     AppShellInvalidate(win);

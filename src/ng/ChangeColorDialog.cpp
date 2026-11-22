@@ -381,6 +381,7 @@ static void OpenColorDialog(MainWindow* win, bool reuse) {
     SyncOpacityFromColor();
     UpdateEditFromColor();
     gColor.visible = true;
+    DialogsTrackFrameDialog(IsChangeColorDialogVisible, [] { return gColor.win; }, CloseChangeColorDialog);
     gColor.wantFocus = true;
     if (reuse) {
         ToolWindowActivate(gColorTw);

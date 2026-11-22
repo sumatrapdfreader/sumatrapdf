@@ -543,6 +543,7 @@ void ShowPageGridDialog(MainWindow* win) {
     gPageGrid.ddStyle.Init(app);
     LoadFromPrefs();
     gPageGrid.visible = true;
+    DialogsTrackFrameDialog(IsPageGridDialogVisible, [] { return gPageGrid.win; }, ClosePageGridDialog);
     DlgWindowSpec spec;
     spec.name = "pagegrid";
     spec.title = PageGridDlgTitle;

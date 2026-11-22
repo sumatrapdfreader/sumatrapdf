@@ -48,6 +48,7 @@
 #include "shared/PdfToolsCommon.h"
 #include "gui/PlatformFont.h"
 #include "gui/ToolWindow.h"
+#include "SumatraDialogs.h"
 #include "SelectionTranslate.h"
 #include "SelectionTranslateCommon.h"
 
@@ -439,6 +440,8 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
     FillLanguageSelect(gTranslate.ddDstLang, DefaultDestinationLanguageTemp(), false);
 
     gTranslate.visible = true;
+    DialogsTrackFrameDialog(
+        IsSelectionTranslateDialogVisible, [] { return gTranslate.win; }, CloseSelectionTranslateDialog);
     TranslateOpenToolWindow(win, selText);
     logf("ShowSelectionTranslateDialog: engine '%s', %d bytes selected\n", EngineDisplayName(gTranslate.engine),
          len(selText));

@@ -201,6 +201,7 @@ void ShowSettingsDialog(MainWindow* win) {
     gSettingsDlg.rememberOpened = gSettings->rememberOpenedFiles;
     gSettingsDlg.scrollY = 0;
     gSettingsDlg.visible = true;
+    DialogsTrackFrameDialog(IsSettingsDialogVisible, [] { return gSettingsDlg.win; }, CloseSettingsDialog);
     DlgWindowSpec spec;
     spec.name = "options";
     spec.title = SettingsDlgTitle;

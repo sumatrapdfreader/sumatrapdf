@@ -467,6 +467,7 @@ void ShowSumatraPDFWebDialog(MainWindow* win) {
     gp::InputSetValue(edit, ToGpui(saved));
     gWeb.editKey = edit;
     gWeb.visible = true;
+    DialogsTrackFrameDialog(IsSumatraPDFWebDialogVisible, [] { return gWeb.win; }, CloseSumatraPDFWebDialog);
 
     DlgWindowSpec spec;
     spec.name = "sumatrapdfweb";

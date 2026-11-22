@@ -112,6 +112,7 @@ void ShowInverseSearchDialog(MainWindow* win) {
     gInverseSearch.ddCommands.Init(win->gpuiWin ? win->gpuiWin->app : nullptr);
     FillCommands();
     gInverseSearch.visible = true;
+    DialogsTrackFrameDialog(IsInverseSearchDialogVisible, [] { return gInverseSearch.win; }, CloseInverseSearchDialog);
     DlgWindowSpec spec;
     spec.name = "inversesearch";
     spec.title = InverseSearchDlgTitle;

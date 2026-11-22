@@ -277,6 +277,7 @@ import { testit as fullscreenDisplayChange } from "./fullscreen-display-change.t
 import { testit as dpiDisplayChange } from "./dpi-display-change.ts";
 import { testit as presentationActivatingClick } from "./presentation-activating-click.ts";
 import { testit as closeWindowWithDialog } from "./close-window-with-dialog.ts";
+import { testit as closeWindowWithFrameDialog } from "./close-window-with-frame-dialog.ts";
 import { testit as captionCaptureLoss } from "./caption-capture-loss.ts";
 import { testit as menuBarArmedDeactivate } from "./menu-bar-armed-deactivate.ts";
 import { testit as issue6509 } from "./issue-6509.ts";
@@ -1253,6 +1254,7 @@ export const tests: NamedTest[] = [
   ["dpi-display-change", dpiDisplayChange],
   ["presentation-activating-click", presentationActivatingClick],
   ["close-window-with-dialog", closeWindowWithDialog],
+  ["close-window-with-frame-dialog", closeWindowWithFrameDialog],
   ["caption-capture-loss", captionCaptureLoss],
   ["menu-bar-armed-deactivate", menuBarArmedDeactivate],
   ["issue-6509", issue6509],

@@ -4382,6 +4382,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
     // only after it's deleted
     CloseSavePathDialogFor(win);
     DlgWindowsCloseFor(win);
+    DialogsCloseFrameDialogsFor(win);
     VecRemove(gWindows, win);
     AppShellCloseWindow(win);
     HexViewDelete(win);

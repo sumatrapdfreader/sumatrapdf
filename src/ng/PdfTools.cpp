@@ -2976,6 +2976,7 @@ static bool StartToolDialog(MainWindow* win, PdfToolKind kind, Str destPath, Str
     gTool.pagesEdit = nullptr;
     gTool.passwordEdit = nullptr;
     gTool.visible = true;
+    DialogsTrackFrameDialog(IsPdfToolDialogVisible, [] { return gTool.win; }, ClosePdfToolDialog);
     gTool.wantFocus = true;
     gTool.focusPages = false;
     if (!ownWindow) {
