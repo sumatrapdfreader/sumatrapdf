@@ -34,11 +34,12 @@
 #include "Tabs.h"
 #include "Theme.h"
 #include "PagePosition.h"
-#include "SumatraLog.h"
 #include "gui/AppShell.h"
 #include "gui/Sidebar.h"
-#include "Favorites.h"
 #include "MenuDefs.h"
+#include "Favorites.h"
+
+#include "SumatraLog.h"
 
 // For easy access, we try to show favorites in the menu, similar to a list of
 // recently opened files.
