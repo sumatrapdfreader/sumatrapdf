@@ -26847,6 +26847,92 @@ float TouchZoomDelta(TouchZoom* z, float distance, TouchPhase phase) {
     return delta;
 }
 
+static bool DeviceNameAlnum(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z');
+}
+
+static char DeviceNameLower(char c) {
+    return (c >= 'A' && c <= 'Z') ? (char)(c - 'A' + 'a') : c;
+}
+
+static bool HasWordNoCase(Str s, const char* word) {
+    int n = (int)strlen(word);
+    int i = 0;
+    while (i < len(s)) {
+        while (i < len(s) && !DeviceNameAlnum(s.s[i])) {
+            i++;
+        }
+        int start = i;
+        while (i < len(s) && DeviceNameAlnum(s.s[i])) {
+            i++;
+        }
+        if (i - start != n) {
+            continue;
+        }
+        bool same = true;
+        for (int k = 0; k < n && same; k++) {
+            same = DeviceNameLower(s.s[start + k]) == word[k];
+        }
+        if (same) {
+            return true;
+        }
+    }
+    return false;
+}
+
+PenTool PenToolOf(Str deviceName, bool hasTouch, bool hasPressure) {
+    if (hasTouch) {
+        return PenTool::NotPen;
+    }
+    bool eraser = HasWordNoCase(deviceName, "eraser");
+
+    if (!hasPressure && !eraser && !HasWordNoCase(deviceName, "stylus")) {
+        return PenTool::NotPen;
+    }
+    return eraser ? PenTool::Eraser : PenTool::Pen;
+}
+
+void PenContactTip(PenContact* pc, uint32_t pointerId, bool eraser,
+                   uint32_t time) {
+    pc->pending = true;
+    pc->pointerId = pointerId;
+    pc->eraser = eraser;
+    pc->time = time;
+}
+
+bool PenContactCore(Window* win, PenContact* pc, TouchPhase phase,
+                    uint32_t time, float x, float y, Modifiers mods) {
+    if (phase == TouchPhase::Started) {
+
+        bool pen = pc->pending && pc->time == time;
+        pc->pending = false;
+        if (!pen) {
+            return false;
+        }
+    } else if (!pc->down) {
+        return false;
+    }
+    TouchEvent ev = {};
+    ev.phase = phase;
+    ev.pointerId = pc->pointerId;
+    ev.x = x;
+    ev.y = y;
+    ev.pen = true;
+    ev.eraser = pc->eraser;
+    ev.modifiers = mods;
+    PlatformInput in = InputTouch(ev);
+    WindowDispatchInput(win, &in);
+    if (phase == TouchPhase::Started) {
+        pc->down = WindowTouchKept(win, pc->pointerId);
+        return pc->down;
+    }
+    if (phase == TouchPhase::Ended || phase == TouchPhase::Cancelled) {
+        pc->down = false;
+    }
+    return true;
+}
+
 void WindowDispatchInput(Window* win, const PlatformInput* input) {
     if (!win || !input) {
         return;
@@ -236153,6 +236239,7 @@ struct LinuxAccessible {
     Window* win = nullptr;
     int windowIndex = -1;
     int nodeIndex = -1;
+    int part = -1;
     bool root = false;
 };
 
@@ -236165,10 +236252,11 @@ static LinuxAccessible AccessibleForPath(Str path) {
     TempStr value = StrDupTemp(Str(path.s, std::min(len(path), 127)));
     int windowIndex = -1;
     unsigned nodeId = 0;
-    if (sscanf(value.s, "/org/a11y/atspi/accessible/w%d/n%u", &windowIndex,
-               &nodeId) != 2 ||
-        !gA11y.app || windowIndex < 0 ||
-        windowIndex >= gA11y.app->windows.len) {
+    int part = -1;
+    int fields = sscanf(value.s, "/org/a11y/atspi/accessible/w%d/n%u/p%d",
+                        &windowIndex, &nodeId, &part);
+    if (fields < 2 || (fields == 3 && part < 0) || !gA11y.app ||
+        windowIndex < 0 || windowIndex >= gA11y.app->windows.len) {
         return result;
     }
     Window* win = gA11y.app->windows[windowIndex];
@@ -236176,18 +236264,36 @@ static LinuxAccessible AccessibleForPath(Str path) {
         return result;
     }
     for (int i = 0; i < win->accessibility.len; i++) {
-        if (win->accessibility[i].id == nodeId) {
-            result.win = win;
-            result.windowIndex = windowIndex;
-            result.nodeIndex = i;
+        if (win->accessibility[i].id != nodeId) continue;
+        if (part >= WindowAccessibilityPartCount(win->accessibility[i])) {
             break;
         }
+        result.win = win;
+        result.windowIndex = windowIndex;
+        result.nodeIndex = i;
+        result.part = part;
+        break;
     }
     return result;
 }
 
 static TempStr PathForTemp(int windowIndex, uint32_t nodeId) {
     return fmt("/org/a11y/atspi/accessible/w%d/n%u", windowIndex, nodeId);
+}
+
+static TempStr PartPathForTemp(int windowIndex, uint32_t nodeId, int part) {
+    return fmt("/org/a11y/atspi/accessible/w%d/n%u/p%d", windowIndex, nodeId,
+               part);
+}
+
+static const AccessibilityNode* ElementNode(const LinuxAccessible& object) {
+    if (object.root || !object.win || object.nodeIndex < 0 || object.part >= 0)
+        return nullptr;
+    return &object.win->accessibility[object.nodeIndex];
+}
+
+static const AccessibilityNode& PartOwner(const LinuxAccessible& object) {
+    return object.win->accessibility[object.nodeIndex];
 }
 
 static void PutObjectRef(DbusWriter* body, Str path) {
@@ -236216,12 +236322,20 @@ static int ChildCount(const LinuxAccessible& object) {
         }
         return n;
     }
-    if (!object.win || object.nodeIndex < 0) {
+    if (!object.win || object.nodeIndex < 0 || object.part >= 0) {
         return 0;
     }
     int n = 0;
     for (int i = 0; i < object.win->accessibility.len; i++) {
         n += object.win->accessibility[i].parent == object.nodeIndex ? 1 : 0;
+    }
+    return n;
+}
+
+static int AllChildCount(const LinuxAccessible& object) {
+    int n = ChildCount(object);
+    if (const AccessibilityNode* node = ElementNode(object)) {
+        n += WindowAccessibilityPartCount(*node);
     }
     return n;
 }
@@ -236246,7 +236360,8 @@ static bool ChildAt(const LinuxAccessible& object, int wanted, int* windowIndex,
         }
         return false;
     }
-    for (int i = 0; object.win && i < object.win->accessibility.len; i++) {
+    for (int i = 0; ElementNode(object) && i < object.win->accessibility.len;
+         i++) {
         if (object.win->accessibility[i].parent == object.nodeIndex &&
             wanted-- == 0) {
             *windowIndex = object.windowIndex;
@@ -236257,12 +236372,28 @@ static bool ChildAt(const LinuxAccessible& object, int wanted, int* windowIndex,
     return false;
 }
 
+static Str ChildPathTemp(const LinuxAccessible& object, int wanted) {
+    int wi = -1;
+    int ni = -1;
+    if (ChildAt(object, wanted, &wi, &ni)) {
+        return PathForTemp(wi, gA11y.app->windows[wi]->accessibility[ni].id);
+    }
+    const AccessibilityNode* node = ElementNode(object);
+    int part = wanted - ChildCount(object);
+    if (!node || part < 0 || part >= WindowAccessibilityPartCount(*node)) {
+        return {};
+    }
+    return PartPathForTemp(object.windowIndex, node->id, part);
+}
+
 static bool IsSelectionRole(AccessibilityRole role) {
     return role == AccessibilityRole::ListBox ||
            role == AccessibilityRole::RadioGroup ||
            role == AccessibilityRole::TabList ||
            role == AccessibilityRole::Tree;
 }
+
+static constexpr uint32_t kRolePage = 84;
 
 static uint32_t AtspiRole(AccessibilityRole role) {
     switch (role) {
@@ -236455,12 +236586,16 @@ static const char* AtspiRoleName(uint32_t role) {
             return "entry";
         case 83:
             return "heading";
+        case kRolePage:
+            return "page";
         case 88:
             return "link";
         case 90:
             return "table row";
         case 91:
             return "tree item";
+        case 94:
+            return "document text";
         case 98:
             return "list box";
         default:
@@ -236575,6 +236710,9 @@ static void PutInterfaces(DbusWriter* body, const LinuxAccessible& object) {
     PutString(body, kAccessible);
     if (object.root) {
         PutString(body, kApplication);
+    } else if (object.part >= 0) {
+        PutString(body, kComponent);
+        PutString(body, gpui_accessibility_linux_kText);
     } else if (object.win && object.nodeIndex >= 0) {
         PutString(body, kComponent);
         const AccessibilityNode& node = object.win
@@ -236594,12 +236732,30 @@ static void SetStateBit(uint32_t state[2], int bit) {
     state[bit / 32] |= 1u << (bit % 32);
 }
 
+static bool PartBounds(const LinuxAccessible& object, Bounds* out) {
+    return WindowAccessibilityPartBounds(PartOwner(object), object.part, out);
+}
+
+static bool PartShowing(const LinuxAccessible& object) {
+    Bounds b;
+    if (!PartBounds(object, &b)) return false;
+    const Bounds& doc = PartOwner(object).bounds;
+    return b.x < doc.Right() && b.Right() > doc.x && b.y < doc.Bottom() &&
+           b.Bottom() > doc.y;
+}
+
 static void PutStates(DbusWriter* body, const LinuxAccessible& object) {
     uint32_t state[2] = {};
-    SetStateBit(state, 25);
     SetStateBit(state, 34);
+    if (object.part < 0 || PartShowing(object)) {
+        SetStateBit(state, 25);
+    }
     if (object.root) {
         SetStateBit(state, 8);
+    } else if (object.part >= 0) {
+        SetStateBit(state, 8);
+        SetStateBit(state, 24);
+        SetStateBit(state, 43);
     } else if (object.win && object.nodeIndex >= 0) {
         const AccessibilityNode& node = object.win
                                             ->accessibility[object.nodeIndex];
@@ -236671,7 +236827,9 @@ static void PutParent(DbusWriter* body, const LinuxAccessible& object) {
         return;
     }
     const AccessibilityNode& node = object.win->accessibility[object.nodeIndex];
-    if (node.parent < 0) {
+    if (object.part >= 0) {
+        PutObjectRef(body, PathForTemp(object.windowIndex, node.id));
+    } else if (node.parent < 0) {
         PutObjectRef(body, Str(kRootPath));
     } else {
         PutObjectRef(body,
@@ -236682,6 +236840,12 @@ static void PutParent(DbusWriter* body, const LinuxAccessible& object) {
 
 static int IndexInParent(const LinuxAccessible& object) {
     if (object.root || !object.win || object.nodeIndex < 0) return -1;
+    if (object.part >= 0) {
+
+        LinuxAccessible owner = object;
+        owner.part = -1;
+        return ChildCount(owner) + object.part;
+    }
     int parent = object.win->accessibility[object.nodeIndex].parent;
     int index = 0;
     if (parent < 0) {
@@ -236709,7 +236873,18 @@ static int IndexInParent(const LinuxAccessible& object) {
 
 static Str ObjectName(const LinuxAccessible& object) {
     if (object.root) return Str("gpui application");
+    if (object.part >= 0) {
+        return WindowAccessibilityPartName(PartOwner(object), object.part);
+    }
     return object.win->accessibility[object.nodeIndex].info.PlatformName();
+}
+
+static Str ObjectText(const LinuxAccessible& object) {
+    if (object.part >= 0) {
+        return WindowAccessibilityPartText(PartOwner(object), object.part);
+    }
+    const AccessibilityNode* node = ElementNode(object);
+    return node ? WindowAccessibilityTextValue(*node) : Str{};
 }
 
 static int Utf8CharacterForByte(Str text, int byte);
@@ -236717,10 +236892,7 @@ static int SelectedAt(const LinuxAccessible& object, int wanted);
 
 static bool PutPropertyVariant(DbusWriter* body, const LinuxAccessible& object,
                                Str interfaceName, Str property) {
-    const AccessibilityNode* node = object.win && object.nodeIndex >= 0
-                                        ? &object.win
-                                               ->accessibility[object.nodeIndex]
-                                        : nullptr;
+    const AccessibilityNode* node = ElementNode(object);
     if (StrIs(interfaceName, kAccessible)) {
         if (StrIs(property, "version")) {
             PutVariantU32(body, 1);
@@ -236739,7 +236911,7 @@ static bool PutPropertyVariant(DbusWriter* body, const LinuxAccessible& object,
             const char* locale = setlocale(LC_MESSAGES, nullptr);
             PutVariantString(body, "s", Str(locale ? locale : ""));
         } else if (StrIs(property, "ChildCount")) {
-            PutVariantI32(body, ChildCount(object));
+            PutVariantI32(body, AllChildCount(object));
         } else if (StrIs(property, "Parent")) {
             PutSignature(body, "(so)");
             PutParent(body, object);
@@ -236799,16 +236971,18 @@ static bool PutPropertyVariant(DbusWriter* body, const LinuxAccessible& object,
         } else {
             return false;
         }
-    } else if (StrIs(interfaceName, gpui_accessibility_linux_kText) && node) {
-        Str text = WindowAccessibilityTextValue(*node);
+    } else if (StrIs(interfaceName, gpui_accessibility_linux_kText) && (node || object.part >= 0)) {
+        Str text = ObjectText(object);
         if (!text.s) return false;
         if (StrIs(property, "version"))
             PutVariantU32(body, 1);
         else if (StrIs(property, "CharacterCount"))
             PutVariantI32(body, Utf8CharCount(text));
         else if (StrIs(property, "CaretOffset"))
-            PutVariantI32(body, Utf8CharacterForByte(
-                                    text, WindowAccessibilityTextCaret(*node)));
+            PutVariantI32(body,
+                          node ? Utf8CharacterForByte(
+                                     text, WindowAccessibilityTextCaret(*node))
+                               : 0);
         else
             return false;
     } else if (StrIs(interfaceName, kEditableText) && node && node->input) {
@@ -236844,6 +237018,7 @@ static void PutPropertyEntry(DbusWriter* body, const LinuxAccessible& object,
 
 static bool PutAllProperties(DbusWriter* body, const LinuxAccessible& object,
                              Str interfaceName) {
+    const AccessibilityNode* node = ElementNode(object);
     int lengthAt = 0;
     int contentsAt = 0;
     ArrayBegin(body, 8, &lengthAt, &contentsAt);
@@ -236867,35 +237042,28 @@ static bool PutAllProperties(DbusWriter* body, const LinuxAccessible& object,
         GPUI_ATSPI_PROPERTY("Id");
     } else if (StrIs(interfaceName, kComponent) && object.nodeIndex >= 0) {
         GPUI_ATSPI_PROPERTY("version");
-    } else if (StrIs(interfaceName, kAction) && object.nodeIndex >= 0 &&
-               ActionCount(object.win->accessibility[object.nodeIndex])) {
+    } else if (StrIs(interfaceName, kAction) && node && ActionCount(*node)) {
         GPUI_ATSPI_PROPERTY("version");
         GPUI_ATSPI_PROPERTY("NActions");
-    } else if (StrIs(interfaceName, kValue) && object.nodeIndex >= 0 &&
-               object.win->accessibility[object.nodeIndex]
-                   .info.hasNumericValue) {
+    } else if (StrIs(interfaceName, kValue) && node &&
+               node->info.hasNumericValue) {
         GPUI_ATSPI_PROPERTY("version");
         GPUI_ATSPI_PROPERTY("MinimumValue");
         GPUI_ATSPI_PROPERTY("MaximumValue");
         GPUI_ATSPI_PROPERTY("MinimumIncrement");
         GPUI_ATSPI_PROPERTY("CurrentValue");
         GPUI_ATSPI_PROPERTY("Text");
-    } else if (StrIs(interfaceName, kSelection) && object.nodeIndex >= 0 &&
-               IsSelectionRole(object.win->accessibility[object.nodeIndex]
-                                   .info.role)) {
+    } else if (StrIs(interfaceName, kSelection) && node &&
+               IsSelectionRole(node->info.role)) {
         GPUI_ATSPI_PROPERTY("version");
         GPUI_ATSPI_PROPERTY("NSelectedChildren");
     } else if (StrIs(interfaceName, gpui_accessibility_linux_kText) && object.nodeIndex >= 0 &&
-               WindowAccessibilityTextValue(
-                   object.win->accessibility[object.nodeIndex])
-                   .s) {
+               ObjectText(object).s) {
         GPUI_ATSPI_PROPERTY("version");
         GPUI_ATSPI_PROPERTY("CharacterCount");
         GPUI_ATSPI_PROPERTY("CaretOffset");
-    } else if (StrIs(interfaceName, kEditableText) && object.nodeIndex >= 0 &&
-               object.win->accessibility[object.nodeIndex].input &&
-               (object.win->accessibility[object.nodeIndex].actions &
-                AccessibilityActionSetValue)) {
+    } else if (StrIs(interfaceName, kEditableText) && node && node->input &&
+               (node->actions & AccessibilityActionSetValue)) {
         GPUI_ATSPI_PROPERTY("version");
     } else {
         VecReset(body->bytes);
@@ -236964,15 +237132,15 @@ static bool HandleAccessible(const Incoming& in,
                                                ->accessibility[object.nodeIndex]
                                         : nullptr;
     const char* signature = "";
+    uint32_t role = object.root        ? 75
+                    : object.part >= 0 ? kRolePage
+                                       : AtspiRole(node->info.role);
     if (StrIs(in.member, "GetChildAtIndex")) {
         int at = 0;
         int wanted = (int)ReadU32(in.body, in.bodyLen, &at);
-        int wi = -1;
-        int ni = -1;
-        if (ChildAt(object, wanted, &wi, &ni)) {
-            PutObjectRef(
-                &body,
-                PathForTemp(wi, gA11y.app->windows[wi]->accessibility[ni].id));
+        Str path = ChildPathTemp(object, wanted);
+        if (path.s) {
+            PutObjectRef(&body, path);
         } else {
             PutNullObjectRef(&body);
         }
@@ -236981,14 +237149,10 @@ static bool HandleAccessible(const Incoming& in,
         int lengthAt = 0;
         int contentsAt = 0;
         ArrayBegin(&body, 8, &lengthAt, &contentsAt);
-        for (int i = 0; i < ChildCount(object); i++) {
-            int wi = -1;
-            int ni = -1;
-            if (ChildAt(object, i, &wi, &ni)) {
-                PutObjectRef(&body, PathForTemp(wi, gA11y.app->windows[wi]
-                                                        ->accessibility[ni]
-                                                        .id));
-            }
+        int n = AllChildCount(object);
+        for (int i = 0; i < n; i++) {
+            Str path = ChildPathTemp(object, i);
+            if (path.s) PutObjectRef(&body, path);
         }
         ArrayEnd(&body, lengthAt, contentsAt);
         signature = "a(so)";
@@ -236996,12 +237160,11 @@ static bool HandleAccessible(const Incoming& in,
         PutI32(&body, IndexInParent(object));
         signature = "i";
     } else if (StrIs(in.member, "GetRole")) {
-        PutU32(&body, object.root ? 75 : AtspiRole(node->info.role));
+        PutU32(&body, role);
         signature = "u";
     } else if (StrIs(in.member, "GetRoleName") ||
                StrIs(in.member, "GetLocalizedRoleName")) {
-        PutString(&body,
-                  AtspiRoleName(object.root ? 75 : AtspiRole(node->info.role)));
+        PutString(&body, AtspiRoleName(role));
         signature = "s";
     } else if (StrIs(in.member, "GetState")) {
         PutStates(&body, object);
@@ -237077,7 +237240,10 @@ static Point ComponentCoordOrigin(const LinuxAccessible& object,
     if (coordType == 0) {
         return AccessibilityLinuxWindowOrigin(object.win);
     }
-    if (coordType == 2 && object.nodeIndex >= 0) {
+    if (coordType == 2 && object.part >= 0) {
+        origin.x = PartOwner(object).bounds.x;
+        origin.y = PartOwner(object).bounds.y;
+    } else if (coordType == 2 && object.nodeIndex >= 0) {
         int parent = object.win->accessibility[object.nodeIndex].parent;
         if (parent >= 0 && parent < object.win->accessibility.len) {
             origin.x = object.win->accessibility[parent].bounds.x;
@@ -237103,8 +237269,29 @@ static Bounds BoundsInComponentCoordinates(const LinuxAccessible& object,
 static Bounds ComponentBounds(const LinuxAccessible& object,
                               uint32_t coordType) {
     if (!object.win || object.nodeIndex < 0) return {};
-    return BoundsInComponentCoordinates(
-        object, object.win->accessibility[object.nodeIndex].bounds, coordType);
+    Bounds bounds = object.win->accessibility[object.nodeIndex].bounds;
+    if (object.part >= 0 && !PartBounds(object, &bounds)) return {};
+    return BoundsInComponentCoordinates(object, bounds, coordType);
+}
+
+static void PutHitRef(DbusWriter* body, const LinuxAccessible& object,
+                      int found, Point point) {
+    if (found < 0) {
+        PutNullObjectRef(body);
+        return;
+    }
+    const AccessibilityNode& node = object.win->accessibility[found];
+    int parts = WindowAccessibilityPartCount(node);
+    for (int part = 0; part < parts; part++) {
+        Bounds b;
+        if (WindowAccessibilityPartBounds(node, part, &b) && point.x >= b.x &&
+            point.x <= b.Right() && point.y >= b.y && point.y <= b.Bottom()) {
+            PutObjectRef(body,
+                         PartPathForTemp(object.windowIndex, node.id, part));
+            return;
+        }
+    }
+    PutObjectRef(body, PathForTemp(object.windowIndex, node.id));
 }
 
 static Point ComponentPointInWindow(const LinuxAccessible& object, int x, int y,
@@ -237139,15 +237326,10 @@ static bool HandleComponent(const Incoming& in, const LinuxAccessible& object) {
         int y = ReadI32(in.body, in.bodyLen, &at);
         uint32_t coordType = ReadU32(in.body, in.bodyLen, &at);
         Point point = ComponentPointInWindow(object, x, y, coordType);
-        int found = NodeAtPoint(object.win, object.nodeIndex, (int)point.x,
-                                (int)point.y);
-        if (found >= 0) {
-            PutObjectRef(&body,
-                         PathForTemp(object.windowIndex,
-                                     object.win->accessibility[found].id));
-        } else {
-            PutNullObjectRef(&body);
-        }
+        int found = object.part >= 0 ? -1
+                                     : NodeAtPoint(object.win, object.nodeIndex,
+                                                   (int)point.x, (int)point.y);
+        PutHitRef(&body, object, found, point);
         signature = "(so)";
     } else if (StrIs(in.member, "GetExtents")) {
         uint32_t coordType = ReadU32(in.body, in.bodyLen, &at);
@@ -237177,7 +237359,7 @@ static bool HandleComponent(const Incoming& in, const LinuxAccessible& object) {
         signature = "d";
     } else if (StrIs(in.member, "GrabFocus")) {
         bool focused =
-            !object.root && object.win &&
+            ElementNode(object) &&
             WindowAccessibilityPerform(
                 object.win, object.win->accessibility[object.nodeIndex].id,
                 AccessibilityAction::Focus);
@@ -237404,6 +237586,7 @@ static Str TextSlice(Str text, int lo, int hi) {
 static Bounds TextBounds(const LinuxAccessible& object,
                          const AccessibilityNode& node, Selection bytes,
                          uint32_t coordType) {
+    if (object.part >= 0) return ComponentBounds(object, coordType);
     if (!node.input) return {};
     if (!InputIsSingleLine(node.input)) {
         return ComponentBounds(object, coordType);
@@ -237421,8 +237604,12 @@ static bool HandleText(const Incoming& in, const LinuxAccessible& object) {
         object.nodeIndex < 0) {
         return false;
     }
-    const AccessibilityNode& node = object.win->accessibility[object.nodeIndex];
-    Str text = WindowAccessibilityTextValue(node);
+
+    static const AccessibilityNode kPartNode{};
+    const AccessibilityNode& node =
+        object.part >= 0 ? kPartNode
+                         : object.win->accessibility[object.nodeIndex];
+    Str text = ObjectText(object);
     if ((textInterface && !text.s) || (editableInterface && !node.input)) {
         return false;
     }
@@ -237720,8 +237907,13 @@ static void HandleMethod(const Incoming& in) {
     }
     if (HandleProperties(in, object) || HandleAccessible(in, object) ||
         HandleApplication(in, object) || HandleComponent(in, object) ||
-        HandleAction(in, object) || HandleValue(in, object) ||
-        HandleText(in, object) || HandleSelection(in, object)) {
+        HandleText(in, object)) {
+        return;
+    }
+
+    if (object.part < 0 &&
+        (HandleAction(in, object) || HandleValue(in, object) ||
+         HandleSelection(in, object))) {
         return;
     }
     if (StrIs(in.interfaceName, "org.freedesktop.DBus.Introspectable") &&
@@ -237868,6 +238060,203 @@ void AccessibilityLinuxFocusChanged(Window* win, int focusId) {
             break;
         }
     }
+}
+
+struct SmokeClient {
+    int fd = -1;
+    int serverFd = -1;
+    Vec<uint8_t> rx;
+};
+
+static bool SmokeCall(SmokeClient* c, Str path, const char* interfaceName,
+                      const char* member, const char* signature,
+                      DbusWriter* body, Incoming* reply) {
+    gA11y.fd = c->fd;
+    SendCall("", StrDupTemp(path).s, interfaceName, member, signature, body);
+    gA11y.fd = c->serverFd;
+    if (body) VecReset(body->bytes);
+    AccessibilityLinuxPump();
+    VecReset(c->rx);
+    uint8_t block[4096];
+    int messageLen = 0;
+    for (;;) {
+        ssize_t n = recv(c->fd, block, sizeof(block), MSG_DONTWAIT);
+        if (n <= 0) break;
+        memcpy(VecAppendBlanks(c->rx, (int)n), block, (size_t)n);
+    }
+    *reply = {};
+    return ParseIncoming(c->rx.els, c->rx.len, reply, &messageLen) &&
+           reply->type == 2;
+}
+
+static Str SmokeStringProperty(SmokeClient* c, Str path, const char* property) {
+    DbusWriter body;
+    PutString(&body, kAccessible);
+    PutString(&body, property);
+    Incoming reply;
+    if (!SmokeCall(c, path, "org.freedesktop.DBus.Properties", "Get", "ss",
+                   &body, &reply)) {
+        return {};
+    }
+    int at = 0;
+    ReadSignature(reply.body, reply.bodyLen, &at);
+    return StrDupTemp(ReadString(reply.body, reply.bodyLen, &at));
+}
+
+static Str SmokeRefCall(SmokeClient* c, Str path, const char* interfaceName,
+                        const char* member, const char* signature,
+                        DbusWriter* body) {
+    Incoming reply;
+    if (!SmokeCall(c, path, interfaceName, member, signature, body, &reply)) {
+        return {};
+    }
+    int at = 0;
+    ReadString(reply.body, reply.bodyLen, &at);
+    return StrDupTemp(ReadString(reply.body, reply.bodyLen, &at));
+}
+
+static int SmokeIntCall(SmokeClient* c, Str path, const char* interfaceName,
+                        const char* member) {
+    Incoming reply;
+    if (!SmokeCall(c, path, interfaceName, member, "", nullptr, &reply)) {
+        return -1;
+    }
+    int at = 0;
+    return ReadI32(reply.body, reply.bodyLen, &at);
+}
+
+static bool SmokeCheckPart(SmokeClient* c, int windowIndex,
+                           const AccessibilityNode& node, int elements,
+                           int part) {
+    Str docPath = StrDupTemp(PathForTemp(windowIndex, node.id));
+    DbusWriter body;
+    PutU32(&body, (uint32_t)(elements + part));
+    Str path =
+        SmokeRefCall(c, docPath, kAccessible, "GetChildAtIndex", "i", &body);
+    if (!StrEq(path, PartPathForTemp(windowIndex, node.id, part))) return false;
+
+    bool ok = SmokeIntCall(c, path, kAccessible, "GetRole") == (int)kRolePage;
+    ok = ok && SmokeIntCall(c, path, kAccessible, "GetIndexInParent") ==
+                   elements + part;
+    ok = ok && StrEq(SmokeStringProperty(c, path, "Name"),
+                     WindowAccessibilityPartName(node, part));
+
+    DbusWriter get;
+    PutString(&get, kAccessible);
+    PutString(&get, "Parent");
+    Incoming reply;
+    ok = ok && SmokeCall(c, path, "org.freedesktop.DBus.Properties", "Get",
+                         "ss", &get, &reply);
+    if (ok) {
+        int at = 0;
+        ReadSignature(reply.body, reply.bodyLen, &at);
+        at = gpui_accessibility_linux_AlignAt(at, 8);
+        ReadString(reply.body, reply.bodyLen, &at);
+        ok = StrEq(ReadString(reply.body, reply.bodyLen, &at), docPath);
+    }
+
+    PutI32(&body, 0);
+    PutI32(&body, -1);
+    ok = ok && SmokeCall(c, path, gpui_accessibility_linux_kText, "GetText", "ii", &body, &reply);
+    if (ok) {
+        int at = 0;
+        Str text = ReadString(reply.body, reply.bodyLen, &at);
+        ok = StrEq(text, WindowAccessibilityPartText(node, part));
+    }
+
+    Bounds b;
+    PutU32(&body, 1);
+    ok = ok && WindowAccessibilityPartBounds(node, part, &b) &&
+         SmokeCall(c, path, kComponent, "GetExtents", "u", &body, &reply);
+    if (ok) {
+        int at = 0;
+        int x = ReadI32(reply.body, reply.bodyLen, &at);
+        int y = ReadI32(reply.body, reply.bodyLen, &at);
+        int w = ReadI32(reply.body, reply.bodyLen, &at);
+        int h = ReadI32(reply.body, reply.bodyLen, &at);
+        ok = x == (int)b.x && y == (int)b.y && w == (int)b.w && h == (int)b.h;
+    }
+
+    PutI32(&body, (int)b.CenterX());
+    PutI32(&body, (int)b.CenterY());
+    PutU32(&body, 1);
+    ok = ok && StrEq(SmokeRefCall(c, docPath, kComponent,
+                                  "GetAccessibleAtPoint", "iiu", &body),
+                     path);
+    return ok;
+}
+
+bool AccessibilityLinuxPartsSmokeTest(Window* win, uint32_t nodeId) {
+    const AccessibilityNode* node = WindowAccessibilityNode(win, nodeId);
+    int fds[2] = {-1, -1};
+    if (!node || !win->app || socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
+        return false;
+    }
+
+    AccessibilityLinuxState saved = gA11y;
+    gA11y = AccessibilityLinuxState();
+    gA11y.app = win->app;
+    gA11y.busName = StrL(":1.0");
+    PlatWindow* plat = win->plat;
+    if (!plat) win->plat = (PlatWindow*)win;
+    int windowIndex = win->app->windows.len;
+    VecAppend(win->app->windows, win);
+
+    SmokeClient c;
+    c.fd = fds[0];
+    c.serverFd = fds[1];
+    LinuxAccessible doc = AccessibleForPath(PathForTemp(windowIndex, nodeId));
+    int elements = ChildCount(doc);
+    int parts = WindowAccessibilityPartCount(*node);
+    Str docPath = StrDupTemp(PathForTemp(windowIndex, nodeId));
+
+    DbusWriter get;
+    PutString(&get, kAccessible);
+    PutString(&get, "ChildCount");
+    Incoming reply;
+    bool ok =
+        parts > 0 && SmokeCall(&c, docPath, "org.freedesktop.DBus.Properties",
+                               "Get", "ss", &get, &reply);
+    if (ok) {
+        int at = 0;
+        ReadSignature(reply.body, reply.bodyLen, &at);
+        ok = ReadI32(reply.body, reply.bodyLen, &at) == elements + parts;
+    }
+    for (int part = 0; ok && part < parts; part++) {
+        ok = SmokeCheckPart(&c, windowIndex, *node, elements, part);
+    }
+
+    ok = ok && SmokeCall(&c, docPath, kAccessible, "GetChildren", "", nullptr,
+                         &reply);
+    if (ok) {
+        int at = 0;
+        uint32_t bytes = ReadU32(reply.body, reply.bodyLen, &at);
+        int end = gpui_accessibility_linux_AlignAt(at, 8) + (int)bytes;
+        int n = 0;
+        Str last;
+        while (ok && gpui_accessibility_linux_AlignAt(at, 8) < end) {
+            at = gpui_accessibility_linux_AlignAt(at, 8);
+            ReadString(reply.body, reply.bodyLen, &at);
+            last = ReadString(reply.body, reply.bodyLen, &at);
+            n++;
+        }
+        ok = n == elements + parts &&
+             StrEq(last, PartPathForTemp(windowIndex, nodeId, parts - 1));
+    }
+
+    ok = ok &&
+         !SmokeCall(&c, PartPathForTemp(windowIndex, nodeId, parts),
+                    kAccessible, "GetRole", "", nullptr, &reply) &&
+         reply.type == 3;
+
+    VecReset(c.rx);
+    close(fds[0]);
+    close(fds[1]);
+    VecRemoveLast(win->app->windows);
+    win->plat = plat;
+    VecReset(gA11y.rx);
+    gA11y = saved;
+    return ok;
 }
 
 }
@@ -246482,6 +246871,10 @@ bool PlatAutoHideScrollbars() {
 #include <X11/Xcursor/Xcursor.h>
 #endif
 
+#if defined(GPUI_HAVE_XI) && GPUI_HAVE_XI
+#include <X11/extensions/XInput2.h>
+#endif
+
 namespace gpui {
 
 using XWindow = ::Window;
@@ -246536,6 +246929,10 @@ static Str gClipboardPng = {};
 
 static Str gClipboardPaths = {};
 static bool gClipboardCut = false;
+
+static PenContact gPen;
+
+static bool gTouchEmulating = false;
 
 static Atom aWmDeleteWindow, aWmProtocols, aNetWmName, aUtf8String;
 static Atom aNetWmState, aNetWmStateMaxVert, aNetWmStateMaxHorz;
@@ -247266,6 +247663,10 @@ void PlatSetMouseCapture(Window* win, bool capture) {
     if (!capture) {
         XUngrabPointer(gDpy, CurrentTime);
         XFlush(gDpy);
+        return;
+    }
+
+    if (gTouchEmulating) {
         return;
     }
 
@@ -248559,7 +248960,230 @@ static bool PollMoveEnds(App* app) {
 
 constexpr int kMoveEndPollMs = 50;
 
+static void HandleEvent(App* app, XEvent* ev);
+
+#if defined(GPUI_HAVE_XI) && GPUI_HAVE_XI
+
+constexpr uint32_t kPenPointerIdBase = 0x80000000u;
+constexpr int kMaxPens = 16;
+
+struct XiPen {
+    int deviceId = 0;
+    bool eraser = false;
+};
+
+static int gXiOpcode = -1;
+static bool gXiTouch = false;
+static XiPen gXiPens[kMaxPens];
+static int gXiPenCount = 0;
+
+static void XiScanPens() {
+    gXiPenCount = 0;
+    Atom pressure = XInternAtom(gDpy, "Abs Pressure", True);
+    int n = 0;
+    XIDeviceInfo* devs = XIQueryDevice(gDpy, XIAllDevices, &n);
+    for (int i = 0; devs && i < n && gXiPenCount < kMaxPens; i++) {
+        XIDeviceInfo* d = &devs[i];
+        if (d->use != XISlavePointer || !d->enabled) {
+            continue;
+        }
+        bool hasTouch = false;
+        bool hasPressure = false;
+        for (int k = 0; k < d->num_classes; k++) {
+            XIAnyClassInfo* c = d->classes[k];
+            if (c->type == XITouchClass) {
+                hasTouch = true;
+            }
+            if (c->type == XIValuatorClass && pressure != None &&
+                ((XIValuatorClassInfo*)c)->label == pressure) {
+                hasPressure = true;
+            }
+        }
+        PenTool tool = PenToolOf(Str(d->name), hasTouch, hasPressure);
+        if (tool == PenTool::NotPen) {
+            continue;
+        }
+        gXiPens[gXiPenCount++] = {d->deviceid, tool == PenTool::Eraser};
+    }
+    if (devs) {
+        XIFreeDeviceInfo(devs);
+    }
+}
+
+static void XiSelect(XWindow xwin, const XiPen* old, int nOld) {
+    if (gXiOpcode < 0) {
+        return;
+    }
+    unsigned char bits[1 + kMaxPens * 2][XIMaskLen(XI_LASTEVENT)] = {};
+    XIEventMask masks[1 + kMaxPens * 2] = {};
+    int n = 0;
+    if (gXiTouch) {
+        XISetMask(bits[n], XI_TouchBegin);
+        XISetMask(bits[n], XI_TouchUpdate);
+        XISetMask(bits[n], XI_TouchEnd);
+        masks[n] = {XIAllMasterDevices, (int)sizeof(bits[n]), bits[n]};
+        n++;
+    }
+    for (int i = 0; i < nOld; i++) {
+        bool kept = false;
+        for (int k = 0; k < gXiPenCount; k++) {
+            kept = kept || gXiPens[k].deviceId == old[i].deviceId;
+        }
+        if (!kept) {
+            masks[n] = {old[i].deviceId, (int)sizeof(bits[n]), bits[n]};
+            n++;
+        }
+    }
+    for (int i = 0; i < gXiPenCount; i++) {
+        XISetMask(bits[n], XI_ButtonPress);
+        masks[n] = {gXiPens[i].deviceId, (int)sizeof(bits[n]), bits[n]};
+        n++;
+    }
+    if (n > 0) {
+        XISelectEvents(gDpy, xwin, masks, n);
+    }
+}
+
+static void XiInit() {
+    int event = 0;
+    int error = 0;
+    if (!XQueryExtension(gDpy, "XInputExtension", &gXiOpcode, &event, &error)) {
+        gXiOpcode = -1;
+        return;
+    }
+    int major = 2;
+    int minor = 2;
+    if (XIQueryVersion(gDpy, &major, &minor) != Success) {
+        gXiOpcode = -1;
+        return;
+    }
+    gXiTouch = major > 2 || minor >= 2;
+
+    unsigned char bits[XIMaskLen(XI_LASTEVENT)] = {};
+    XISetMask(bits, XI_HierarchyChanged);
+    XIEventMask mask = {XIAllDevices, (int)sizeof(bits), bits};
+    XISelectEvents(gDpy, gRoot, &mask, 1);
+    XiScanPens();
+}
+
+static void XiRescan(App* app) {
+    XiPen old[kMaxPens];
+    int nOld = gXiPenCount;
+    memcpy(old, gXiPens, sizeof(old));
+    XiScanPens();
+    for (int i = 0; i < len(app->windows); i++) {
+        Window* w = app->windows[i];
+        if (w->plat) {
+            XiSelect(w->plat->xwin, old, nOld);
+        }
+    }
+}
+
+static void XiCoreEvent(App* app, const XIDeviceEvent* de, int type,
+                        unsigned state) {
+    XEvent e = {};
+    XButtonEvent* b = &e.xbutton;
+    b->type = type;
+    b->display = gDpy;
+    b->window = de->event;
+    b->root = de->root;
+    b->subwindow = de->child;
+    b->time = de->time;
+    b->x = (int)de->event_x;
+    b->y = (int)de->event_y;
+    b->x_root = (int)de->root_x;
+    b->y_root = (int)de->root_y;
+    b->state = state;
+    b->same_screen = True;
+    if (type == MotionNotify) {
+        e.xmotion.is_hint = NotifyNormal;
+        e.xmotion.same_screen = True;
+    } else {
+        b->button = Button1;
+    }
+    HandleEvent(app, &e);
+}
+
+static void XiEmulatePointer(App* app, const XIDeviceEvent* de) {
+    unsigned state = (unsigned)de->mods.effective;
+    if (de->evtype == XI_TouchEnd) {
+        gTouchEmulating = false;
+        XiCoreEvent(app, de, ButtonRelease, state | Button1Mask);
+        return;
+    }
+    if (de->evtype == XI_TouchUpdate) {
+        XiCoreEvent(app, de, MotionNotify, state | Button1Mask);
+        return;
+    }
+    XiCoreEvent(app, de, MotionNotify, state);
+    gTouchEmulating = true;
+    XiCoreEvent(app, de, ButtonPress, state);
+}
+
+static void XiTouch(App* app, const XIDeviceEvent* de) {
+    Window* win = FindWindow(app, de->event);
+    bool emulating = (de->flags & XITouchEmulatingPointer) != 0;
+    if (win) {
+        TouchEvent t = {};
+        t.phase = de->evtype == XI_TouchBegin ? TouchPhase::Started
+                  : de->evtype == XI_TouchEnd ? TouchPhase::Ended
+                                              : TouchPhase::Moved;
+        t.pointerId = (uint32_t)de->detail;
+        t.x = (float)de->event_x;
+        t.y = (float)de->event_y;
+
+        t.primary = emulating;
+        t.modifiers = ModsOf((unsigned)de->mods.effective);
+        PlatformInput in = InputTouch(t);
+        WindowDispatchInput(win, &in);
+    }
+    if (emulating) {
+        XiEmulatePointer(app, de);
+    }
+}
+
+static void HandleXi(App* app, XEvent* ev) {
+    XGenericEventCookie* cookie = &ev->xcookie;
+    if (cookie->extension != gXiOpcode || !XGetEventData(gDpy, cookie)) {
+        return;
+    }
+    auto* de = (XIDeviceEvent*)cookie->data;
+    switch (cookie->evtype) {
+        case XI_HierarchyChanged:
+            XiRescan(app);
+            break;
+        case XI_ButtonPress:
+            for (int i = 0; i < gXiPenCount && de->detail == Button1; i++) {
+                if (gXiPens[i].deviceId == de->deviceid) {
+                    PenContactTip(&gPen, kPenPointerIdBase + de->deviceid,
+                                  gXiPens[i].eraser, (uint32_t)de->time);
+                }
+            }
+            break;
+        case XI_TouchBegin:
+        case XI_TouchUpdate:
+        case XI_TouchEnd:
+            XiTouch(app, de);
+            break;
+        default:
+            break;
+    }
+    XFreeEventData(gDpy, cookie);
+}
+
+#else
+
+static void XiInit() {}
+static void XiSelect(XWindow, const void*, int) {}
+static void HandleXi(App*, XEvent*) {}
+
+#endif
+
 static void HandleEvent(App* app, XEvent* ev) {
+    if (ev->type == GenericEvent) {
+        HandleXi(app, ev);
+        return;
+    }
     if (ev->type == SelectionRequest) {
         OnSelectionRequest(&ev->xselectionrequest);
         return;
@@ -248612,6 +249236,12 @@ static void HandleEvent(App* app, XEvent* ev) {
             OnKeyRelease(win, &ev->xkey);
             break;
         case MotionNotify: {
+            if (PenContactCore(win, &gPen, TouchPhase::Moved,
+                               (uint32_t)ev->xmotion.time, (float)ev->xmotion.x,
+                               (float)ev->xmotion.y,
+                               ModsOf(ev->xmotion.state))) {
+                break;
+            }
             MouseButton held = MouseButton::Left;
             bool any = PressedButton(ev->xmotion.state, &held);
             PlatformInput in =
@@ -248671,6 +249301,10 @@ static void HandleEvent(App* app, XEvent* ev) {
             if (b != Button1) {
                 break;
             }
+            if (PenContactCore(win, &gPen, TouchPhase::Started,
+                               (uint32_t)ev->xbutton.time, x, y, mods)) {
+                break;
+            }
 
             int clicks = WindowClickCount(win, x, y, MouseButton::Left);
 
@@ -248709,6 +249343,13 @@ static void HandleEvent(App* app, XEvent* ev) {
         case ButtonRelease: {
             MouseButton button = MouseButton::Left;
             if (!ButtonOf(ev->xbutton.button, &button)) {
+                break;
+            }
+            if (button == MouseButton::Left &&
+                PenContactCore(win, &gPen, TouchPhase::Ended,
+                               (uint32_t)ev->xbutton.time, (float)ev->xbutton.x,
+                               (float)ev->xbutton.y,
+                               ModsOf(ev->xbutton.state))) {
                 break;
             }
             PlatformInput in = InputMouseUp(
@@ -249396,6 +250037,7 @@ bool PlatInit(App* app) {
     aImageTiff = XInternAtom(gDpy, "image/tiff", False);
     aGnomeCopiedFiles =
         XInternAtom(gDpy, "x-special/gnome-copied-files", False);
+    XiInit();
     const char* accessibilityBus = getenv("AT_SPI_BUS_ADDRESS");
     if (accessibilityBus && *accessibilityBus) {
         AccessibilityLinuxInit(app, Str(accessibilityBus));
@@ -249536,6 +250178,7 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
         return nullptr;
     }
     win->plat = pw;
+    XiSelect(pw->xwin, nullptr, 0);
 
     XSetWMProtocols(gDpy, pw->xwin, &aWmDeleteWindow, 1);
 

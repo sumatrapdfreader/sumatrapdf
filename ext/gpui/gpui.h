@@ -39540,6 +39540,27 @@ struct TouchZoom {
 
 float TouchZoomDelta(TouchZoom* z, float distance, TouchPhase phase);
 
+enum class PenTool : uint8_t {
+    NotPen,
+    Pen,
+    Eraser
+};
+PenTool PenToolOf(Str deviceName, bool hasTouch, bool hasPressure);
+
+struct PenContact {
+    bool pending = false;
+    bool eraser = false;
+
+    bool down = false;
+    uint32_t pointerId = 0;
+    uint32_t time = 0;
+};
+void PenContactTip(PenContact* pc, uint32_t pointerId, bool eraser,
+                   uint32_t time);
+
+bool PenContactCore(Window* win, PenContact* pc, TouchPhase phase,
+                    uint32_t time, float x, float y, Modifiers mods);
+
 Str FileUriListToPaths(Arena* a, Str list);
 
 void WindowTouchBegin(Window* win, float x, float y);
