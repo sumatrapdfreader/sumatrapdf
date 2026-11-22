@@ -371,15 +371,33 @@ Try [Sumatra File Manager Web](https://web.sumatrafilemanager.com): file manager
 // promotions from the update-check file, shown with the built-in ones
 static Str promoFromServer;
 
+// built-in promos, then the server's except those linking to a built-in's url
+static void CollectPromoLines() {
+    gPromoLines.Reset();
+    CollectTipsFromString(sumatraPromos, &gPromoLines);
+    int nBuiltIn = len(gPromoLines);
+    StrVec server;
+    CollectTipsFromString(promoFromServer, &server);
+    for (Str line : server) {
+        Str url = str::SliceFromChar(line, '(');
+        int end = str::IndexOfChar(url, ')');
+        url = end < 0 ? Str{} : Str(url.s, end + 1);
+        bool dup = false;
+        for (int i = 0; i < nBuiltIn && len(url) > 0; i++) {
+            dup = dup || str::Contains(gPromoLines[i], url);
+        }
+        if (!dup) {
+            gPromoLines.Append(line);
+        }
+    }
+}
+
 void EnsureTipsParsed() {
     if (gTipsParsed) {
         return;
     }
     CollectTipsFromString(sumatraTips, &gTipLines);
-    CollectTipsFromString(sumatraPromos, &gPromoLines);
-    if (len(promoFromServer) > 0) {
-        CollectTipsFromString(promoFromServer, &gPromoLines);
-    }
+    CollectPromoLines();
     gTipsParsed = true;
     PickRandomTipOrPromo();
 }
@@ -400,6 +418,10 @@ void SetPromoString(Str s) {
         return;
     }
     str::ReplaceWithCopy(&promoFromServer, s);
+    // the update check usually ends after the home page parsed its tips
+    if (gTipsParsed) {
+        CollectPromoLines();
+    }
 }
 
 static Str BitnessStr() {

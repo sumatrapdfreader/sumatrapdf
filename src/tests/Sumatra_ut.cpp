@@ -42,6 +42,11 @@
 #include "Theme.h"
 #include "PDFScript.h"
 #include "RegistryPreview.h"
+#include "MainWindow.h"
+#include "HomePage.h"
+#include "HomePageCommon.h"
+#include "UpdateCheck.h"
+#include "UpdateCheckCommon.h"
 
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
@@ -145,6 +150,19 @@ bool RenderCache_UnitTestFullOfOldZoom();
 bool DocController_UnitTestDestroyHook();
 bool Commands_UnitTestIdLimit();
 bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut);
+// promos from the update check arrive after the home page parsed its tips
+static void ServerPromoTest() {
+    EnsureTipsParsed();
+    int n = len(gPromoLines);
+    Str d = StrL(
+        "[SumatraPDF]\nLatest: 3.6\n[Promo]\n"
+        "[\n  Name = Foo\n  URL = https://foo.example\n  Info = Bar\n]\n"
+        "[\n  Name = Edna\n  URL = https://edna.arslexis.io\n  Info = Notes\n]\n");
+    delete ParseUpdateInfo(d);
+    utassert(len(gPromoLines) == n + 1 && str::Eq(gPromoLines[n], StrL("Try [Foo](https://foo.example): Bar")));
+    FreeHomePageTips();
+}
+
 static void FileUriTest() {
     struct {
         Str uri;
@@ -465,6 +483,7 @@ static void SumatraPDF_UnitTests() {
     PaletteRowColorTest();
     SidebarViewSettingTest();
     FileUriTest();
+    ServerPromoTest();
     GhostButtonDisabledTest();
     DocPropertiesTest();
     JsMenuTest();

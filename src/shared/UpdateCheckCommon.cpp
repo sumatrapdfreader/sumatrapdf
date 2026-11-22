@@ -73,6 +73,30 @@ void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType)
     }
 }
 
+// each [Name, URL, Info] node of the Promo list as a home page promo line:
+// "Try [Edna](https://edna.arslexis.io): Note taking web app"
+static TempStr PromoMarkupTemp(SquareTreeNode* promo) {
+    if (!promo) {
+        return {};
+    }
+    str::Builder s;
+    for (SquareTreeNode::DataItem* item : promo->data) {
+        SquareTreeNode* n = item->child;
+        Str name = n ? n->GetValue(StrL("Name")) : Str{};
+        Str url = n ? n->GetValue(StrL("URL")) : Str{};
+        if (len(name) == 0 || len(url) == 0) {
+            continue;
+        }
+        s.Append(fmt("Try [%s](%s)", name, url));
+        Str info = n->GetValue(StrL("Info"));
+        if (len(info) > 0) {
+            s.Append(fmt(": %s", info));
+        }
+        s.AppendChar('\n');
+    }
+    return ToStrTemp(s);
+}
+
 UpdateInfo* ParseUpdateInfo(Str d) {
     // if a user configures os-wide proxy that is not a regular ie proxy
     // (which we pick up) we might get garbage http response
@@ -91,7 +115,7 @@ UpdateInfo* ParseUpdateInfo(Str d) {
     }
     AutoDelete delRoot(root);
 
-    SetPromoString(SerializeSquareTreeNodeTemp(root->GetChild(StrL("Promo"))));
+    SetPromoString(PromoMarkupTemp(root->GetChild(StrL("Promo"))));
 
     SquareTreeNode* node = root->GetChild(StrL("SumatraPDF"));
     if (!node) {
