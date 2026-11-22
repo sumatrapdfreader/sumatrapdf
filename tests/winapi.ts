@@ -441,6 +441,45 @@ const SPI_GETWORKAREA = 0x0030;
 const SM_CXSCREEN = 0;
 const SM_CYSCREEN = 1;
 
+// NSScreen.visibleFrame in the same top-left space as the app's window rects.
+// A fixed menu and dock guess is wrong when the dock hides or the bar is taller.
+function macVisibleWorkArea(): Rect | null {
+  const script = `ObjC.import("AppKit");
+function rect(r) { return [r.origin.x, r.origin.y, r.size.width, r.size.height].join(","); }
+var screens = $.NSScreen.screens;
+var n = screens.count;
+var lines = [];
+for (var i = 0; i < n; i++) {
+  var s = screens.objectAtIndex(i);
+  lines.push(rect(s.frame) + ";" + rect(s.visibleFrame));
+}
+lines.join("\\n");`;
+  const r = Bun.spawnSync(["osascript", "-l", "JavaScript", "-e", script], { stdout: "pipe", stderr: "pipe" });
+  if (r.exitCode !== 0) {
+    return null;
+  }
+  const rows = r.stdout
+    .toString()
+    .trim()
+    .split("\n")
+    .map((line) => line.split(";").map((part) => part.split(",").map(Number)));
+  const frames = rows.filter(
+    (row) => row.length === 2 && row[0]!.length === 4 && row[1]!.every((n) => Number.isFinite(n)),
+  );
+  if (frames.length === 0) {
+    return null;
+  }
+  const primary = frames.find((row) => row[0]![0] === 0 && row[0]![1] === 0) ?? frames[0]!;
+  const flipH = primary[0]![3]!;
+  const vis = (frames[0] ?? primary)[1]!;
+  const x = vis[0]!;
+  const y = vis[1]!;
+  const w = vis[2]!;
+  const h = vis[3]!;
+  const top = flipH - (y + h);
+  return { left: x, top, right: x + w, bottom: top + h };
+}
+
 function macDisplaySize(): { w: number; h: number } {
   try {
     const cg = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", {
@@ -461,10 +500,17 @@ function macDisplaySize(): { w: number; h: number } {
 }
 
 // the desktop minus the taskbar (and any other appbar)
+let macWorkArea: Rect | null = null;
+
 export function getWorkArea(): Rect {
   if (IS_MAC) {
+    if (!macWorkArea) {
+      macWorkArea = macVisibleWorkArea();
+    }
+    if (macWorkArea) {
+      return macWorkArea;
+    }
     const s = macDisplaySize();
-    // menu bar on top, dock along the bottom
     return { left: 0, top: 25, right: s.w, bottom: Math.max(s.h - 70, 25) };
   }
   const buf = new Int32Array(4);
