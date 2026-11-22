@@ -1,0 +1,115 @@
+pdf: an auto-size single-line field shrinks rich text to fit
+
+Text the base 14 fonts can't show (Thai, Hindi, Arabic) takes the rich
+(HTML) layout path, which used the field's full height as the font size
+where mupdf left a TODO to measure. A long value wrapped and all but the
+first few words were cut off. The line is now measured unwrapped and
+the size shrunk to fit, as write_variable_text does for Latin text.
+---
+diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
+index 239dc6e0d..75fe225c5 100644
+--- a/source/pdf/pdf-appearance.c
++++ b/source/pdf/pdf-appearance.c
+@@ -2463,6 +2463,66 @@ escape_text(fz_context *ctx, const char *s)
+ 	return d2;
+ }
+ 
++/* SumatraPDF: the width of rich text laid out on one line, by advance widths,
++ * so an auto-size single-line field can shrink it to fit */
++static float
++measure_rich_line(fz_context *ctx, const char *rc, const char *ds, float size)
++{
++	fz_rect frame = { 0, 0, 100000, 1000 };
++	fz_buffer *inbuf = fz_new_buffer_from_copied_data(ctx, (const unsigned char *)rc, strlen(rc)+1);
++	fz_story *story = NULL;
++	fz_display_list *list = NULL;
++	fz_device *dev = NULL;
++	fz_stext_page *stext = NULL;
++	char *css = NULL;
++	float x0 = 1e9f, x1 = -1e9f;
++	fz_stext_options opts = { 0 };
++	fz_stext_block *blk;
++	fz_stext_line *line;
++	fz_stext_char *ch;
++
++	fz_var(story);
++	fz_var(list);
++	fz_var(dev);
++	fz_var(stext);
++	fz_var(css);
++
++	fz_try(ctx)
++	{
++		css = fz_asprintf(ctx, "@page{margin:0} body{margin:0} p{margin:0} body{%s} body{white-space:pre}", ds);
++		story = fz_new_story(ctx, inbuf, css, size, NULL);
++		fz_place_story(ctx, story, frame, NULL);
++		list = fz_new_display_list(ctx, frame);
++		dev = fz_new_list_device(ctx, list);
++		fz_draw_story(ctx, story, dev, fz_identity);
++		fz_close_device(ctx, dev);
++		stext = fz_new_stext_page_from_display_list(ctx, list, &opts);
++		for (blk = stext->first_block; blk; blk = blk->next)
++		{
++			if (blk->type != FZ_STEXT_BLOCK_TEXT)
++				continue;
++			for (line = blk->u.t.first_line; line; line = line->next)
++				for (ch = line->first_char; ch; ch = ch->next)
++				{
++					x0 = fz_min(x0, fz_min(ch->quad.ll.x, ch->quad.ul.x));
++					x1 = fz_max(x1, fz_max(ch->quad.lr.x, ch->quad.ur.x));
++				}
++		}
++	}
++	fz_always(ctx)
++	{
++		fz_drop_stext_page(ctx, stext);
++		fz_drop_device(ctx, dev);
++		fz_drop_display_list(ctx, list);
++		fz_drop_story(ctx, story);
++		fz_drop_buffer(ctx, inbuf);
++		fz_free(ctx, css);
++	}
++	fz_catch(ctx)
++		fz_rethrow(ctx);
++	return x1 > x0 ? x1 - x0 : 0;
++}
++
+ static int text_needs_rich_layout(fz_context *ctx, const char *s)
+ {
+ 	int c, script;
+@@ -2851,7 +2911,9 @@ pdf_write_tx_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
+ 		rc = free_rc = escape_text(ctx, text);
+ 		if (!ds)
+ 		{
+-			// TODO: measure accurate width to fit box if single-line!
++			/* SumatraPDF: an auto-size single-line field shrinks the text to fit,
++			 * as write_variable_text does; it wrapped and the rest was cut off */
++			int fit = size <= 0 && !(ff & PDF_TX_FIELD_IS_MULTILINE);
+ 			if (size <= 0)
+ 				size = (ff & PDF_TX_FIELD_IS_MULTILINE) ? 12 : h - b*2;
+ 			fz_snprintf(ds_buf, sizeof ds_buf,
+@@ -2861,6 +2923,24 @@ pdf_write_tx_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
+ 				hex_from_color(ctx, n, color),
+ 				(q == 0 ? "left" : q == 1 ? "center" : "right")
+ 			);
++			if (fit)
++			{
++				/* write_rich_content pads by b*2 on each side; a little to
++				 * spare, or the layout's own sums can wrap a line that fits */
++				float room = (w - b * 4) * 0.98f;
++				float tw = measure_rich_line(ctx, rc, ds_buf, size);
++				if (tw > room && room > 0)
++				{
++					size = size * room / tw;
++					fz_snprintf(ds_buf, sizeof ds_buf,
++						"font-family:%s;font-size:%gpt;color:#%06x;text-align:%s",
++						full_font_name(&font),
++						size,
++						hex_from_color(ctx, n, color),
++						(q == 0 ? "left" : q == 1 ? "center" : "right")
++					);
++				}
++			}
+ 			ds = ds_buf;
+ 		}
+ 	}
