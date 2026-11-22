@@ -801,12 +801,12 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& argsIn) {
     } else if (wnd->delayTimerId == 0) {
         BringWindowToTop(wnd->hwnd);
     }
+    // NotifsAdd also relayouts
     bool ok = NotifsAdd(wnd, args.groupId);
     if (!ok) {
         delete wnd;
         return nullptr;
     }
-    RelayoutNotifications(args.hwndParent);
     return wnd;
 }
 
