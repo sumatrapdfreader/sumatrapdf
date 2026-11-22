@@ -3351,18 +3351,6 @@ bool StartsWithI(WStr str, WStr prefix) {
     return EqNI(str, prefix, prefix.len);
 }
 
-WStr FindFrom(WStr str, WStr find) {
-    if (len(str) == 0 || len(find) == 0 || find.len > str.len) {
-        return {};
-    }
-    for (int i = 0; i <= str.len - find.len; i++) {
-        if (0 == wcsncmp(str.s + i, find.s, (size_t)find.len)) {
-            return WStr(str.s + i, str.len - i);
-        }
-    }
-    return {};
-}
-
 } // namespace wstr
 namespace str {
 
@@ -3374,41 +3362,6 @@ Str ToUpperInPlace(Str s) {
 }
 
 } // namespace str
-namespace wstr {
-
-WStr ToLowerInPlace(WStr s) {
-    for (int i = 0; i < s.len; i++) {
-        s.s[i] = towlower(s.s[i]);
-    }
-    return s;
-}
-
-// free() the result via str::Free(s) or str::FreePtr(&s)
-WStr Replace(WStr s, WStr toReplace, WStr replaceWith) {
-    if (len(s) == 0 || len(toReplace) == 0 || len(replaceWith) == 0) {
-        return {};
-    }
-
-    wstr::Builder result;
-    result.Reserve(s.len);
-    int findLen = toReplace.len;
-    int start = 0;
-    while (start < s.len) {
-        WStr rest(s.s + start, s.len - start);
-        WStr match = wstr::FindFrom(rest, toReplace);
-        if (len(match) == 0) {
-            result.Append(WStr(s.s + start, s.len - start));
-            break;
-        }
-        int matchOff = (int)(match.s - s.s);
-        result.Append(WStr(s.s + start, matchOff - start));
-        result.Append(replaceWith);
-        start = matchOff + findLen;
-    }
-    return result.TakeStr();
-}
-
-} // namespace wstr
 namespace str {
 
 // Bounded null-terminated copy into a fixed buffer (replaces lstrcpyn / strcpy_s /

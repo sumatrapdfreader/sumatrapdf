@@ -599,10 +599,6 @@ inline float ClampF(float x, float min, float max) {
     return ClampT(x, min, max);
 }
 
-inline double ClampD(double x, double min, double max) {
-    return ClampT(x, min, max);
-}
-
 // return true if adding n to val overflows. Only valid for n >= 0, val >= 0
 template <typename T>
 inline bool addOverflows(T val, T n) {
@@ -611,12 +607,6 @@ inline bool addOverflows(T val, T n) {
     T res = val + n;
     return val > res;
 }
-
-struct VecStr {
-    int len;
-    int cap;
-    Str* els;
-};
 
 bool MemEq(const void* s1, const void* s2, int n);
 
@@ -1774,7 +1764,7 @@ VecNonTemplated* VecNT(Vec<T>& v) {
 
 //--- storage ----------------------------------------------------------------
 
-// v is a Vec<T> or another vec-shaped struct (VecStr, str::Builder); they all
+// v is a Vec<T> or another vec-shaped struct (str::Builder); they all
 // lead with {len, cap, els}, which the static_asserts hold them to, so the
 // erased view is a cast and this compiles to just the call
 template <typename T>
@@ -2185,19 +2175,16 @@ bool StartsWith(WStr str, WStr prefix);
 bool StartsWithI(WStr str, WStr prefix);
 bool EndsWith(WStr txt, WStr end);
 bool EndsWithI(WStr txt, WStr end);
-WStr ToLowerInPlace(WStr s);
 int BufSet(WStr dst, WStr src);
 int NormalizeWSInPlace(WStr str);
 int RemoveCharsInPlace(WStr str, WStr toRemove);
 int IndexOfChar(WStr s, WCHAR c);
 bool ContainsChar(WStr s, WCHAR c);
 WStr SliceFromChar(WStr str, WCHAR c);
-WStr FindFrom(WStr str, WStr find);
 bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
 void TransCharsInPlace(WStr& str, WStr oldChars, WStr newChars);
-WStr Replace(WStr s, WStr toReplace, WStr replaceWith);
 
 } // namespace wstr
 
@@ -2845,7 +2832,6 @@ constexpr Color MkGray(u8 x) {
 constexpr Color kColWhite = MkRgb(0xff, 0xff, 0xff);
 constexpr Color kColBlack = MkRgb(0, 0, 0);
 constexpr Color kColRed = MkRgb(0xff, 0, 0);
-constexpr Color kColGreen = MkRgb(0, 0xff, 0);
 constexpr Color kColBlue = MkRgb(0, 0, 0xff);
 constexpr Color kColYellow = MkRgb(0xff, 0xff, 0);
 constexpr Color kColGray = MkGray(0xdd);
