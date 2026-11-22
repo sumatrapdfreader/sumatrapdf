@@ -59,9 +59,17 @@ int NextVAlignStyle(int style);
 Str FontFamilyLabel(Str family);
 void AppendStyleToggle(Vec<AnnotEditItem>& out, AnnotEditKind kind, int style, Str tooltip);
 const char* MupdfIconStream(Str name);
-bool IsPdfPathOpChar(char c);
-void SkipPdfPathWs(const char*& p);
-float PdfPathPop(float* stk, int& top);
+// receives an icon glyph's path; points are already transformed
+struct MupdfIconPathSink {
+    virtual void MoveTo(PointF p) = 0;
+    virtual void LineTo(PointF p) = 0;
+    virtual void CurveTo(PointF p1, PointF p2, PointF p3) = 0;
+    // corners in order: (x,y), (x+w,y), (x+w,y+h), (x,y+h)
+    virtual void AddRect(PointF a, PointF b, PointF c, PointF d) = 0;
+    virtual void Close() = 0;
+    virtual ~MupdfIconPathSink() = default;
+};
+void ParseMupdfIconPath(MupdfIconPathSink& sink, const char* s);
 Color BarActiveBg();
 void AnnotChanged(WindowTab* tab);
 extern SeqStrings gLineEndingStyles;

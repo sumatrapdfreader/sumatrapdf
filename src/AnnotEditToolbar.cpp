@@ -328,98 +328,38 @@ static fz_context* IconFzCtx() {
     return gIconFzCtx;
 }
 
-static fz_point XfPoint(fz_matrix m, float x, float y) {
-    return fz_transform_point(fz_make_point(x, y), m);
-}
+struct FzIconPathSink : MupdfIconPathSink {
+    fz_context* ctx = nullptr;
+    fz_path* path = nullptr;
 
-static fz_path* ParseMupdfIconPath(fz_context* ctx, const char* s) {
-    fz_path* path = fz_new_path(ctx);
-    float stk[32];
-    int top = 0;
-    fz_matrix ctm = fz_identity;
+    void MoveTo(PointF p) override { fz_moveto(ctx, path, p.x, p.y); }
+    void LineTo(PointF p) override { fz_lineto(ctx, path, p.x, p.y); }
+    void CurveTo(PointF p1, PointF p2, PointF p3) override {
+        fz_curveto(ctx, path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+    }
+    void AddRect(PointF a, PointF b, PointF c, PointF d) override {
+        fz_moveto(ctx, path, a.x, a.y);
+        fz_lineto(ctx, path, b.x, b.y);
+        fz_lineto(ctx, path, c.x, c.y);
+        fz_lineto(ctx, path, d.x, d.y);
+        fz_closepath(ctx, path);
+    }
+    void Close() override { fz_closepath(ctx, path); }
+};
+
+static fz_path* NewMupdfIconPath(fz_context* ctx, const char* s) {
+    FzIconPathSink sink;
+    sink.ctx = ctx;
+    sink.path = fz_new_path(ctx);
     fz_try(ctx) {
-        const char* p = s;
-        for (;;) {
-            SkipPdfPathWs(p);
-            if (*p == 0) {
-                break;
-            }
-            if (*p == '.' || *p == '-' || *p == '+' || (*p >= '0' && *p <= '9')) {
-                char* end = nullptr;
-                float v = strtof(p, &end);
-                if (end == p || top >= dimofi(stk)) {
-                    break;
-                }
-                stk[top++] = v;
-                p = end;
-                continue;
-            }
-            if (!IsPdfPathOpChar(*p)) {
-                p++;
-                continue;
-            }
-            const char* op = p;
-            while (IsPdfPathOpChar(*p)) {
-                p++;
-            }
-            int nOp = (int)(p - op);
-            if (nOp == 1 && op[0] == 'm' && top >= 2) {
-                float y = PdfPathPop(stk, top);
-                float x = PdfPathPop(stk, top);
-                fz_point pt = XfPoint(ctm, x, y);
-                fz_moveto(ctx, path, pt.x, pt.y);
-            } else if (nOp == 1 && op[0] == 'l' && top >= 2) {
-                float y = PdfPathPop(stk, top);
-                float x = PdfPathPop(stk, top);
-                fz_point pt = XfPoint(ctm, x, y);
-                fz_lineto(ctx, path, pt.x, pt.y);
-            } else if (nOp == 1 && op[0] == 'c' && top >= 6) {
-                float y3 = PdfPathPop(stk, top);
-                float x3 = PdfPathPop(stk, top);
-                float y2 = PdfPathPop(stk, top);
-                float x2 = PdfPathPop(stk, top);
-                float y1 = PdfPathPop(stk, top);
-                float x1 = PdfPathPop(stk, top);
-                fz_point p1 = XfPoint(ctm, x1, y1);
-                fz_point p2 = XfPoint(ctm, x2, y2);
-                fz_point p3 = XfPoint(ctm, x3, y3);
-                fz_curveto(ctx, path, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-            } else if (nOp == 2 && op[0] == 'r' && op[1] == 'e' && top >= 4) {
-                float h = PdfPathPop(stk, top);
-                float w = PdfPathPop(stk, top);
-                float y = PdfPathPop(stk, top);
-                float x = PdfPathPop(stk, top);
-                fz_point a = XfPoint(ctm, x, y);
-                fz_point b = XfPoint(ctm, x + w, y);
-                fz_point c = XfPoint(ctm, x + w, y + h);
-                fz_point d = XfPoint(ctm, x, y + h);
-                fz_moveto(ctx, path, a.x, a.y);
-                fz_lineto(ctx, path, b.x, b.y);
-                fz_lineto(ctx, path, c.x, c.y);
-                fz_lineto(ctx, path, d.x, d.y);
-                fz_closepath(ctx, path);
-            } else if (nOp == 1 && op[0] == 'h') {
-                fz_closepath(ctx, path);
-            } else if (nOp == 2 && op[0] == 'c' && op[1] == 'm' && top >= 6) {
-                float f = PdfPathPop(stk, top);
-                float e = PdfPathPop(stk, top);
-                float d = PdfPathPop(stk, top);
-                float c = PdfPathPop(stk, top);
-                float b = PdfPathPop(stk, top);
-                float a = PdfPathPop(stk, top);
-                ctm = fz_concat(fz_make_matrix(a, b, c, d, e, f), ctm);
-            } else {
-                // 'f' and unknown ops: drop the operands, keep the path
-                top = 0;
-            }
-        }
+        ParseMupdfIconPath(sink, s);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
-        fz_drop_path(ctx, path);
+        fz_drop_path(ctx, sink.path);
         return nullptr;
     }
-    return path;
+    return sink.path;
 }
 
 static Pixmap* PixmapFromAnnotIconFz(fz_pixmap* src) {
@@ -470,7 +410,7 @@ static Pixmap* RenderMupdfAnnotIcon(Str name, Color fg, int dx, int dy) {
     fz_var(fzpx);
     fz_var(dev);
     fz_try(ctx) {
-        path = ParseMupdfIconPath(ctx, MupdfIconStream(name));
+        path = NewMupdfIconPath(ctx, MupdfIconStream(name));
         if (!path) {
             break;
         }

@@ -279,22 +279,96 @@ const char* MupdfIconStream(Str name) {
     return icon_star;
 }
 
-bool IsPdfPathOpChar(char c) {
+static bool IsPdfPathOpChar(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '*';
 }
 
-void SkipPdfPathWs(const char*& p) {
+static void SkipPdfPathWs(const char*& p) {
     while (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') {
         p++;
     }
 }
 
-// Build an fz_path from a pdf_write_icon_appearance glyph stream (m/l/c/re/h/cm/f).
-float PdfPathPop(float* stk, int& top) {
+static float PdfPathPop(float* stk, int& top) {
     if (top <= 0) {
         return 0;
     }
     return stk[--top];
+}
+
+// Feeds a pdf_write_icon_appearance glyph stream (m/l/c/re/h/cm/f) to sink, points transformed by its cm.
+void ParseMupdfIconPath(MupdfIconPathSink& sink, const char* s) {
+    float stk[32];
+    int top = 0;
+    // the current transform (a b c d e f), as a PDF `cm` leaves it
+    float m[6] = {1, 0, 0, 1, 0, 0};
+    auto xf = [&m](float x, float y) -> PointF { return {x * m[0] + y * m[2] + m[4], x * m[1] + y * m[3] + m[5]}; };
+
+    const char* p = s;
+    for (;;) {
+        SkipPdfPathWs(p);
+        if (*p == 0) {
+            break;
+        }
+        if (*p == '.' || *p == '-' || *p == '+' || (*p >= '0' && *p <= '9')) {
+            char* end = nullptr;
+            float v = strtof(p, &end);
+            if (end == p || top >= dimofi(stk)) {
+                break;
+            }
+            stk[top++] = v;
+            p = end;
+            continue;
+        }
+        if (!IsPdfPathOpChar(*p)) {
+            p++;
+            continue;
+        }
+        const char* op = p;
+        while (IsPdfPathOpChar(*p)) {
+            p++;
+        }
+        int nOp = (int)(p - op);
+        if (nOp == 1 && (op[0] == 'm' || op[0] == 'l') && top >= 2) {
+            float y = PdfPathPop(stk, top);
+            float x = PdfPathPop(stk, top);
+            if (op[0] == 'm') {
+                sink.MoveTo(xf(x, y));
+            } else {
+                sink.LineTo(xf(x, y));
+            }
+        } else if (nOp == 1 && op[0] == 'c' && top >= 6) {
+            float y3 = PdfPathPop(stk, top);
+            float x3 = PdfPathPop(stk, top);
+            float y2 = PdfPathPop(stk, top);
+            float x2 = PdfPathPop(stk, top);
+            float y1 = PdfPathPop(stk, top);
+            float x1 = PdfPathPop(stk, top);
+            sink.CurveTo(xf(x1, y1), xf(x2, y2), xf(x3, y3));
+        } else if (nOp == 2 && op[0] == 'r' && op[1] == 'e' && top >= 4) {
+            float h = PdfPathPop(stk, top);
+            float w = PdfPathPop(stk, top);
+            float y = PdfPathPop(stk, top);
+            float x = PdfPathPop(stk, top);
+            sink.AddRect(xf(x, y), xf(x + w, y), xf(x + w, y + h), xf(x, y + h));
+        } else if (nOp == 1 && op[0] == 'h') {
+            sink.Close();
+        } else if (nOp == 2 && op[0] == 'c' && op[1] == 'm' && top >= 6) {
+            float f = PdfPathPop(stk, top);
+            float e = PdfPathPop(stk, top);
+            float d = PdfPathPop(stk, top);
+            float c = PdfPathPop(stk, top);
+            float b = PdfPathPop(stk, top);
+            float a = PdfPathPop(stk, top);
+            // the new matrix applies first, then the one in force
+            float r[6] = {a * m[0] + b * m[2], a * m[1] + b * m[3],        c * m[0] + d * m[2],
+                          c * m[1] + d * m[3], e * m[0] + f * m[2] + m[4], e * m[1] + f * m[3] + m[5]};
+            memcpy(m, r, sizeof(r));
+        } else {
+            // 'f' and unknown ops: drop the operands, keep the path
+            top = 0;
+        }
+    }
 }
 
 Color BarActiveBg() {

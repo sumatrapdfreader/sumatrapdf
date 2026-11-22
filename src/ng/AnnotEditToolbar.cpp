@@ -1140,125 +1140,56 @@ static void PaintLineEnding(gp::PaintCtx* ctx, gp::Bounds r, int style, bool isS
     }
 }
 
-// a path being turned into an SVG `d` attribute, and the box around it
-struct IconSvgPath {
+// ng: orig has mupdf fill the parsed glyph path into a pixmap
+// (RenderMupdfAnnotIcon). gpui draws an SVG at any size, so the same parse
+// writes an SVG `d` attribute here, and the box around it
+struct IconSvgPath : MupdfIconPathSink {
     str::Builder d;
-    // the current transform (a b c d e f), as a PDF `cm` leaves it
-    float m[6] = {1, 0, 0, 1, 0, 0};
     float x0 = 1e9f;
     float y0 = 1e9f;
     float x1 = -1e9f;
     float y1 = -1e9f;
     PointF cur{};
 
-    PointF Xf(float x, float y) const { return {x * m[0] + y * m[2] + m[4], x * m[1] + y * m[3] + m[5]}; }
     void Grow(PointF p) {
         x0 = std::min(x0, p.x);
         y0 = std::min(y0, p.y);
         x1 = std::max(x1, p.x);
         y1 = std::max(y1, p.y);
     }
-};
-
-// ng: orig parses a pdf_write_icon_appearance glyph stream (m/l/c/re/h/cm/f)
-// into an fz_path and has mupdf fill it into a pixmap (ParseMupdfIconPath,
-// RenderMupdfAnnotIcon). gpui draws an SVG at any size, so the same parse
-// writes an SVG path here
-static void ParseMupdfIconPath(IconSvgPath& out, const char* s) {
-    float stk[32];
-    int top = 0;
-    const char* p = s;
-    for (;;) {
-        SkipPdfPathWs(p);
-        if (*p == 0) {
-            break;
-        }
-        if (*p == '.' || *p == '-' || *p == '+' || (*p >= '0' && *p <= '9')) {
-            char* end = nullptr;
-            float v = strtof(p, &end);
-            if (end == p || top >= dimofi(stk)) {
-                break;
-            }
-            stk[top++] = v;
-            p = end;
-            continue;
-        }
-        if (!IsPdfPathOpChar(*p)) {
-            p++;
-            continue;
-        }
-        const char* op = p;
-        while (IsPdfPathOpChar(*p)) {
-            p++;
-        }
-        int nOp = (int)(p - op);
-        if (nOp == 1 && (op[0] == 'm' || op[0] == 'l') && top >= 2) {
-            float y = PdfPathPop(stk, top);
-            float x = PdfPathPop(stk, top);
-            PointF pt = out.Xf(x, y);
-            out.d.Append(fmt("%c%g %g", op[0] == 'm' ? 'M' : 'L', pt.x, pt.y));
-            out.Grow(pt);
-            out.cur = pt;
-        } else if (nOp == 1 && op[0] == 'c' && top >= 6) {
-            float y3 = PdfPathPop(stk, top);
-            float x3 = PdfPathPop(stk, top);
-            float y2 = PdfPathPop(stk, top);
-            float x2 = PdfPathPop(stk, top);
-            float y1 = PdfPathPop(stk, top);
-            float x1 = PdfPathPop(stk, top);
-            PointF p0 = out.cur;
-            PointF p1 = out.Xf(x1, y1);
-            PointF p2 = out.Xf(x2, y2);
-            PointF p3 = out.Xf(x3, y3);
-            out.d.Append(fmt("C%g %g %g %g %g %g", p1.x, p1.y, p2.x, p2.y, p3.x, p3.y));
-            // the box of the curve itself, not of its control points
-            constexpr int kSteps = 8;
-            for (int i = 1; i <= kSteps; i++) {
-                float t = (float)i / (float)kSteps;
-                float u = 1 - t;
-                float b0 = u * u * u;
-                float b1 = 3 * u * u * t;
-                float b2 = 3 * u * t * t;
-                float b3 = t * t * t;
-                out.Grow(
-                    {b0 * p0.x + b1 * p1.x + b2 * p2.x + b3 * p3.x, b0 * p0.y + b1 * p1.y + b2 * p2.y + b3 * p3.y});
-            }
-            out.cur = p3;
-        } else if (nOp == 2 && op[0] == 'r' && op[1] == 'e' && top >= 4) {
-            float h = PdfPathPop(stk, top);
-            float w = PdfPathPop(stk, top);
-            float y = PdfPathPop(stk, top);
-            float x = PdfPathPop(stk, top);
-            PointF a = out.Xf(x, y);
-            PointF b = out.Xf(x + w, y);
-            PointF c = out.Xf(x + w, y + h);
-            PointF e = out.Xf(x, y + h);
-            out.d.Append(fmt("M%g %g L%g %g L%g %g L%g %gZ", a.x, a.y, b.x, b.y, c.x, c.y, e.x, e.y));
-            out.Grow(a);
-            out.Grow(b);
-            out.Grow(c);
-            out.Grow(e);
-            out.cur = a;
-        } else if (nOp == 1 && op[0] == 'h') {
-            out.d.Append(StrL("Z"));
-        } else if (nOp == 2 && op[0] == 'c' && op[1] == 'm' && top >= 6) {
-            float f = PdfPathPop(stk, top);
-            float e = PdfPathPop(stk, top);
-            float d = PdfPathPop(stk, top);
-            float c = PdfPathPop(stk, top);
-            float b = PdfPathPop(stk, top);
-            float a = PdfPathPop(stk, top);
-            // the new matrix applies first, then the one in force
-            float* m = out.m;
-            float r[6] = {a * m[0] + b * m[2], a * m[1] + b * m[3],        c * m[0] + d * m[2],
-                          c * m[1] + d * m[3], e * m[0] + f * m[2] + m[4], e * m[1] + f * m[3] + m[5]};
-            memcpy(m, r, sizeof(r));
-        } else {
-            // 'f' and unknown ops: drop the operands, keep the path
-            top = 0;
-        }
+    void MoveOrLine(char op, PointF pt) {
+        d.Append(fmt("%c%g %g", op, pt.x, pt.y));
+        Grow(pt);
+        cur = pt;
     }
-}
+    void MoveTo(PointF p) override { MoveOrLine('M', p); }
+    void LineTo(PointF p) override { MoveOrLine('L', p); }
+    void CurveTo(PointF p1, PointF p2, PointF p3) override {
+        PointF p0 = cur;
+        d.Append(fmt("C%g %g %g %g %g %g", p1.x, p1.y, p2.x, p2.y, p3.x, p3.y));
+        // the box of the curve itself, not of its control points
+        constexpr int kSteps = 8;
+        for (int i = 1; i <= kSteps; i++) {
+            float t = (float)i / (float)kSteps;
+            float u = 1 - t;
+            float b0 = u * u * u;
+            float b1 = 3 * u * u * t;
+            float b2 = 3 * u * t * t;
+            float b3 = t * t * t;
+            Grow({b0 * p0.x + b1 * p1.x + b2 * p2.x + b3 * p3.x, b0 * p0.y + b1 * p1.y + b2 * p2.y + b3 * p3.y});
+        }
+        cur = p3;
+    }
+    void AddRect(PointF a, PointF b, PointF c, PointF e) override {
+        d.Append(fmt("M%g %g L%g %g L%g %g L%g %gZ", a.x, a.y, b.x, b.y, c.x, c.y, e.x, e.y));
+        Grow(a);
+        Grow(b);
+        Grow(c);
+        Grow(e);
+        cur = a;
+    }
+    void Close() override { d.Append(StrL("Z")); }
+};
 
 struct IconSvgEntry {
     const char* stream = nullptr;
