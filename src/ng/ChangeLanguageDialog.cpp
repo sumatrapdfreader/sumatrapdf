@@ -94,11 +94,11 @@ static void FilterList() {
     int itemToSelect = 0;
     Str currLangCode = trans::GetCurrentLangCode();
     for (int i = 0; i < trans::GetLangsCount(); i++) {
-        TempStr name = trans::GetLangNameByIdxTemp(i);
+        Str name = trans::GetLangNameByIdx(i);
         if (len(filter) > 0 && !str::ContainsI(name, filter)) {
             continue;
         }
-        if (str::Eq(trans::GetLangCodeByIdxTemp(i), currLangCode)) {
+        if (str::Eq(trans::GetLangCodeByIdx(i), currLangCode)) {
             itemToSelect = len(gChangeLanguage.langIdxByListIdx);
         }
         VecAppend(gChangeLanguage.langIdxByListIdx, i);
@@ -149,7 +149,7 @@ void ChangeLanguageOk() {
     int idx = gChangeLanguage.sel;
     TempStr code;
     if (idx >= 0 && idx < len(gChangeLanguage.langIdxByListIdx)) {
-        code = trans::GetLangCodeByIdxTemp(gChangeLanguage.langIdxByListIdx[idx]);
+        code = trans::GetLangCodeByIdx(gChangeLanguage.langIdxByListIdx[idx]);
     }
     CloseChangeLanguageDialog();
     if (len(code) == 0) {
@@ -246,7 +246,7 @@ gp::El* ChangeLanguageDialogBuild(MainWindow* win, gp::Ctx* cx) {
                        ->ScrollFromPath()
                        ->OnScroll(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnScroll));
     for (int i = 0; i < len(gChangeLanguage.langIdxByListIdx); i++) {
-        TempStr name = trans::GetLangNameByIdxTemp(gChangeLanguage.langIdxByListIdx[i]);
+        Str name = trans::GetLangNameByIdx(gChangeLanguage.langIdxByListIdx[i]);
         list->Child(DlgListRow(cx, fmt("language-row-%d", i), name, i == gChangeLanguage.sel,
                                gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnRowClick, (intptr_t)i)));
     }

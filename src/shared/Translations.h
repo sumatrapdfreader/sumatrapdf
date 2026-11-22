@@ -11,8 +11,8 @@ void SetCurrentLangByCode(Str langCode);
 Str ValidateLangCode(Str langCode);
 
 Str GetTranslation(Str s);
-TempStr GetLangCodeByIdxTemp(int idx);
-TempStr GetLangNameByIdxTemp(int idx);
+Str GetLangCodeByIdx(int idx);
+Str GetLangNameByIdx(int idx);
 bool IsCurrLangRtl();
 Str DetectUserLang();
 Str LangCodeFromLocale(Str locale);

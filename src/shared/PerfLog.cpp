@@ -286,7 +286,7 @@ static Str RawLog() {
     return Str(gRaw, (int)n);
 }
 
-static Str RewriteLogTemp() {
+static Str RewriteLog() {
     Str src = RawLog();
     str::Builder dst(gPerfArena);
     dst.Reserve(src.len + 16);
@@ -330,7 +330,7 @@ void SavePerfLog() {
         gSymMutex.Lock();
         IndexLogAddrs(raw);
         FillSymNames();
-        Str named = RewriteLogTemp();
+        Str named = RewriteLog();
         gSymMutex.Unlock();
         file::WriteFile(path, named);
     }

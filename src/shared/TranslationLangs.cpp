@@ -128,12 +128,12 @@ static const LangInfo* GetLang(int idx) {
     return idx < GetLangsCount() ? &langs[idx] : nullptr;
 }
 
-TempStr GetLangCodeByIdxTemp(int idx) {
+Str GetLangCodeByIdx(int idx) {
     const LangInfo* lang = GetLang(idx);
     return lang ? lang->code : Str{};
 }
 
-TempStr GetLangNameByIdxTemp(int idx) {
+Str GetLangNameByIdx(int idx) {
     const LangInfo* lang = GetLang(idx);
     return lang ? lang->name : Str{};
 }

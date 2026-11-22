@@ -68,12 +68,12 @@ void ChangeLanguageWnd::FilterList() {
     int itemToSelect = 0;
     Str currLangCode = trans::GetCurrentLangCode();
     for (int i = 0; i < trans::GetLangsCount(); i++) {
-        TempStr name = trans::GetLangNameByIdxTemp(i);
+        Str name = trans::GetLangNameByIdx(i);
         if (filter && !str::ContainsI(name, filter)) {
             continue;
         }
         model->strings.Append(name);
-        if (str::Eq(trans::GetLangCodeByIdxTemp(i), currLangCode)) {
+        if (str::Eq(trans::GetLangCodeByIdx(i), currLangCode)) {
             itemToSelect = len(langIdxByListIdx);
         }
         VecAppend(langIdxByListIdx, i);
@@ -96,7 +96,7 @@ void ChangeLanguageWnd::OnOk(VirtMouseEvent*) {
     int idx = listBox ? listBox->GetCurrentSelection() : -1;
     if (idx >= 0 && idx < len(langIdxByListIdx)) {
         int langIdx = langIdxByListIdx[idx];
-        SetCurrentLanguageAndRefreshUI(trans::GetLangCodeByIdxTemp(langIdx));
+        SetCurrentLanguageAndRefreshUI(trans::GetLangCodeByIdx(langIdx));
     }
     ScheduleDelete();
 }
