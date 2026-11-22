@@ -72,8 +72,8 @@ void AppShellClearEatChar(MainWindow* win);
 // caller (CloseWindow)
 void AppShellCloseWindow(MainWindow* win);
 void AppShellDeleteWindow(MainWindow* win);
-// gpui has no "window closed" callback, so the shell's tick notices a window
-// the user closed with the title bar and runs CloseWindow for it
+// gpui's AppOnWindowClosed has one slot, which ToolWindow takes, so the
+// shell's tick notices a window closed from its title bar and runs CloseWindow
 void AppShellReapClosedWindows();
 // the open-file dialog; empty when cancelled
 TempStr AppShellPromptForFileTemp(MainWindow* win);

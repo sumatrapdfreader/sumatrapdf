@@ -74,8 +74,7 @@ TempStr ImageEditStateTemp();
 TempStr ImageResizeEdgesResultTemp(Str imagePath, int newW, int newH, int* exitCodeOut = nullptr);
 TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut = nullptr);
 
-// ng: gpui's clipboard is text only (see "gpui gaps"), so an image goes
-// through the platform's clipboard; false everywhere but Windows
+// false on wasm, whose clipboard gpui can't write an image to
 bool ImageEditCopyToClipboard(Pixmap* px);
 Pixmap* ImageEditGetClipboard(MainWindow* win);
 bool ImageEditHasClipboard(MainWindow* win);
