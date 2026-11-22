@@ -12577,7 +12577,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 }
                 ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             }
-            pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, pt);
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
         } break;
 
@@ -12815,12 +12814,7 @@ static void RepaintButton(HWND hwnd, int btnIdx, MainWindow* win) {
     if (win->captionOverlayShown) {
         HwndInvalidate(win->hwndCaptionOverlay);
     }
-    if (false) {
-        HwndInvalidateRect(hwnd, win->captionBtn[btnIdx].rect, false);
-        UpdateWindow(hwnd);
-    } else {
-        HwndInvalidate(hwnd);
-    }
+    HwndInvalidate(hwnd);
 }
 
 static void ClearAllHighlights(MainWindow* win) {
@@ -16154,7 +16148,6 @@ int fz_redirect_io_to_existing_console();
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1
 #define FZ_ENABLE_BARCODE 1
-#define FZ_VERSION "1.28.5"
 
 using MutoolFunc = int (*)(int argc, char* argv[]);
 
@@ -16198,34 +16191,6 @@ static SeqStrings gToolNames =
     "trace\0"
 #if FZ_ENABLE_BARCODE
     "barcode\0"
-#endif
-    "\0";
-
-static SeqStrings gToolDescs =
-#if FZ_ENABLE_JS
-    "run javascript\0"
-#endif
-    "convert document\0"
-    "convert document (with simpler options)\0"
-#if FZ_ENABLE_PDF
-    "produce usage stats from PDF files\0"
-    "bake PDF form into static content\0"
-    "rewrite PDF file\0"
-    "create PDF document\0"
-    "extract font and image resources\0"
-    "show information about PDF resources\0"
-    "merge pages from multiple PDF sources into a new PDF\0"
-    "show information about PDF pages\0"
-    "split large PDF page into many tiles\0"
-    "change colorspace of PDF document\0"
-    "show internal PDF objects\0"
-    "manipulate PDF digital signatures\0"
-    "trim PDF page contents\0"
-#endif
-    "search for text\0"
-    "trace device calls\0"
-#if FZ_ENABLE_BARCODE
-    "encode/decode barcodes\0"
 #endif
     "\0";
 
