@@ -85,8 +85,7 @@ static TempStr GetInstallDateTemp() {
     return fmt("%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
 }
 
-// Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(Str dir) {
+static i64 GetDirSize(Str dir) {
     logf("GetDirSize(%s)\n", dir);
     i64 totalSize = 0;
     DirIter di{dir};
@@ -94,7 +93,7 @@ static DWORD GetDirSize(Str dir) {
         i64 fileSize = GetFileSize(de);
         totalSize += fileSize;
     }
-    return (DWORD)totalSize;
+    return totalSize;
 }
 
 bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
@@ -118,7 +117,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayVersion"), currentVersion);
     // non-recursive because we don't want to count space used for thumbnails
     // which is in installDir for local install
-    DWORD size = GetDirSize(installDir) / 1024;
+    DWORD size = (DWORD)(GetDirSize(installDir) / 1024);
     // size of installed directory after copying files
     ok &= LoggedWriteRegDWORD(hkey, regPathUninst, StrL("EstimatedSize"), size);
     // current date as YYYYMMDD
