@@ -290,6 +290,18 @@ EXPORTS
 
 	fz_drop_stext_page
 
+	fz_new_stext_page_from_display_list
+
+	fz_new_story
+
+	fz_place_story
+
+	fz_draw_story
+
+	fz_drop_story
+
+	pdf_subset_fonts
+
 	fz_new_stext_device
 
 	fz_rect_from_quad
