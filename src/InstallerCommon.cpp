@@ -66,7 +66,6 @@ Gdiplus::Color kColorMsgInstallation(gCol5);
 Gdiplus::Color kColorMsgFailed(gCol1);
 
 HWND gHwndFrame = nullptr;
-__unused static bool gForceCrash = false;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
 

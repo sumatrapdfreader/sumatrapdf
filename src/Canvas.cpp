@@ -4230,7 +4230,6 @@ constexpr int kSumatraPtPen = 3;
 
 // pointer message flags (in HIWORD of wParam)
 constexpr int kSumatraPointerMessageFlagInContact = 0x0004;
-constexpr int kSumatraPointerMessageFlagFirstButton = 0x0010;
 
 // dynamically loaded pointer API (Windows 8+)
 // Local ABI declarations keep the Windows 7 build target while using Win8 APIs.

@@ -43,7 +43,6 @@
 #include "AnnotFilterToolbarCommon.h"
 #include "AppHelpersCommon.h"
 
-constexpr const WCHAR* kAnnotFilterListClassName = L"SumatraAnnotFilterList";
 constexpr const WCHAR* kAnnotFilterFloatClassName = L"SUMATRA_ANNOT_FILTER_WND";
 constexpr int kSelectionDebounceTimerId = 1;
 struct AnnotFilterToolbar;
