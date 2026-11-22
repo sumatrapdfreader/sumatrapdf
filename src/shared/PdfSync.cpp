@@ -616,8 +616,8 @@ static TempStr ungzipToTempSync(Str gzPath) {
     constexpr int kMaxSyncTexSize = 256 * 1024 * 1024;
     int expansionLimit = (int)std::min((i64)kMaxSyncTexSize, (i64)len(compr) * 1000);
     Str uncompr = Ungzip(compr, expansionLimit);
+    str::Free(compr);
     if (len(uncompr) == 0) {
-        str::Free(compr);
         return {};
     }
 
@@ -795,7 +795,7 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     TempStr srcfilepath = srcfilename;
     // convert the source file to an absolute path
     if (!path::IsAbsolute(srcfilename)) {
-        srcfilepath = PrependDir(srcfilename);
+        srcfilepath = PrependDirTemp(srcfilename);
     }
     if (len(srcfilepath) == 0) {
         return PDFSYNCERR_OUTOFMEMORY;
