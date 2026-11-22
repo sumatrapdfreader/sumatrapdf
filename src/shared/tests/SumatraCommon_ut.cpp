@@ -579,6 +579,14 @@ void PngSizeTest() {
 }
 
 void HexViewTest() {
+    {
+        // the range ends at the last byte shown
+        HexView hex;
+        hex.size = 0x1000;
+        hex.top = 0x100;
+        TempStr want = fmt("%s - %s of", HexOffsetTemp(0x100, hex.size), HexOffsetTemp(0x1FF, hex.size));
+        utassert(str::StartsWith(HexPositionTemp(&hex, 0x100), want));
+    }
     u64 v = 0;
     utassert(HexParseOffset(StrL("31"), &v) && v == 31);
     utassert(HexParseOffset(StrL("0x1F"), &v) && v == 31);
