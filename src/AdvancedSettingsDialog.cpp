@@ -121,6 +121,7 @@ struct AdvancedSettingsWnd : WindowBase {
     VirtFixedLinesText* commentText = nullptr;
     // the footer: the key hints for the edit state, "Unsaved changes: n" (collapsed at 0)
     HBox* hintRow = nullptr;
+    ILayout* footer = nullptr;
     int hintState = -1;
     ILayout* unsavedRow = nullptr;
     VirtCustom* unsavedDot = nullptr;
@@ -161,6 +162,8 @@ struct AdvancedSettingsWnd : WindowBase {
     void QueryChanged();
     int CountChangedSettings() const;
     void UpdateUnsavedRow();
+    int FooterMinDx(bool withHints);
+    void FitFooter(int clientDx);
     void UpdateHints();
     void NoteItemEdited(SettingItem* item);
     void DrawListBoxItem(VirtListBox::DrawItemEvent* ev);
@@ -979,6 +982,7 @@ void AdvancedSettingsWnd::OnSize(WindowBase::SizeEvent* ev) {
     }
     gAdvSettingsLastClientDx = dx;
     gAdvSettingsLastClientDy = dy;
+    FitFooter(dx);
     DoLayout({dx, dy});
     RelayoutInPlaceEditor();
     HwndInvalidate(hwnd);
@@ -989,6 +993,9 @@ void AdvancedSettingsWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
         return;
     }
     int minClient = DpiScale(kAdvSettingsMinClientDx);
+    if (footer) {
+        minClient = std::max(minClient, FooterMinDx(false));
+    }
     int chromeX = 0;
     if (hwnd) {
         Rect wr = HwndWindowRect(hwnd);
@@ -1025,6 +1032,7 @@ void AdvancedSettingsWnd::UpdateUnsavedRow() {
     unsavedText->SetIsVisible(show);
     unsavedDot->SetIsVisible(show);
     if (hwnd && layout) {
+        FitFooter(HwndClientRect(hwnd).dx);
         DoLayout();
         HwndRepaintNow(hwnd);
     }
@@ -1053,9 +1061,47 @@ void AdvancedSettingsWnd::UpdateHints() {
         hintRow->AddChild(NewKeyHint(DlgUiFont(kAdvHintFontPx), hints[i].key, hints[i].desc, colMuted, colBg));
     }
     if (hwnd && layout) {
+        FitFooter(HwndClientRect(hwnd).dx);
         DoLayout();
         HwndInvalidate(hwnd);
     }
+}
+
+// shows or collapses a footer group with its controls: a hidden control
+// measures as collapsed, and a collapsed layout's controls would still paint
+static void ShowFooterGroup(ILayout* group, bool show) {
+    group->SetVisibility(show ? Visibility::Visible : Visibility::Collapse);
+    Vec<VirtCtrl*> ctrls;
+    CollectVirtCtrls(group, ctrls);
+    for (VirtCtrl* c : ctrls) {
+        c->SetIsVisible(show);
+    }
+}
+
+// narrowest footer with the widest unsaved count ("Nicht gespeicherte
+// Änderungen: 99" in German), with or without the key hints
+int AdvancedSettingsWnd::FooterMinDx(bool withHints) {
+    bool hintsShown = !IsCollapsed(hintRow);
+    bool unsavedShown = !IsCollapsed(unsavedRow);
+    TempStr prevText = str::DupTemp(unsavedText->s);
+    ShowFooterGroup(hintRow, withHints);
+    ShowFooterGroup(unsavedRow, true);
+    unsavedText->SetText(fmt(Tr("Unsaved changes: %d").s, 99));
+    int dx = footer->MinIntrinsicWidth(0);
+    unsavedText->SetText(prevText);
+    ShowFooterGroup(unsavedRow, unsavedShown);
+    ShowFooterGroup(hintRow, hintsShown);
+    return dx;
+}
+
+// the key hints go first when the footer is too narrow: Cancel and Save must stay
+void AdvancedSettingsWnd::FitFooter(int clientDx) {
+    if (!footer || !hintRow) {
+        return;
+    }
+    ShowFooterGroup(hintRow, true);
+    bool fits = footer->MinIntrinsicWidth(0) <= clientDx;
+    ShowFooterGroup(hintRow, fits);
 }
 
 void AdvancedSettingsWnd::NoteItemEdited(SettingItem* item) {
@@ -1242,7 +1288,8 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         row->AddChild(new Padding(btnSave, DpiScaledInsets(0, kAdvGapDx, 0, 0)));
         // the hints pad themselves by 8, so the row starts 8 in and the
         // padding on Save evens the right side out
-        vbox->AddChild(new Padding(row, DpiScaledInsets(kAdvFootPadDy, kAdvInsetDx)));
+        footer = new Padding(row, DpiScaledInsets(kAdvFootPadDy, kAdvInsetDx));
+        vbox->AddChild(footer);
     }
 
     DarkModeApplyToPopupWindow(hwnd);
@@ -1254,9 +1301,13 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     // and long values don't crowd each other; reuse last size if the user
     // resized earlier this session (#5804), but never below kAdvSettingsMinClientDx.
     int minDx = DpiScale(kAdvSettingsMinClientDx);
-    int dy = gAdvSettingsLastClientDy > 0 ? gAdvSettingsLastClientDy : limitValue(rc.dy - 72, 480, 900);
-    int dx = gAdvSettingsLastClientDx > 0 ? gAdvSettingsLastClientDx : limitValue(rc.dx - 128, 760, 1100);
-    dx = std::max(dx, minDx);
+    int dy =
+        gAdvSettingsLastClientDy > 0 ? gAdvSettingsLastClientDy : limitValue(rc.dy - 72, DpiScale(480), DpiScale(900));
+    int dx = gAdvSettingsLastClientDx > 0 ? gAdvSettingsLastClientDx
+                                          : limitValue(rc.dx - 128, DpiScale(760), DpiScale(1100));
+    // wide enough for the whole footer: a long translation of "Unsaved changes" (#6581)
+    dx = std::max({dx, minDx, FooterMinDx(true)});
+    FitFooter(dx);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
     // pick up the virtual controls so we paint them and they get their input
     DoLayout();
@@ -1341,6 +1392,23 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     if (!wnd || !wnd->hwnd) {
         out.Append(StrL("NOTREADY no-dialog\n"));
         return finish(2);
+    }
+    // where Cancel and Save are, against the client width; arg > 0 first
+    // resizes the client to arg px wide (the window's minimum still applies)
+    if (str::Eq(action, StrL("footer"))) {
+        if (arg > 0) {
+            Rect wr = HwndWindowRect(wnd->hwnd);
+            Rect cr = HwndClientRect(wnd->hwnd);
+            uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE;
+            SetWindowPos(wnd->hwnd, nullptr, 0, 0, arg + (wr.dx - cr.dx), wr.dy, flags);
+        }
+        int clientDx = HwndClientRect(wnd->hwnd).dx;
+        Rect cancel = wnd->btnCancel->lastBounds;
+        Rect save = wnd->btnSave->lastBounds;
+        bool hints = !IsCollapsed(wnd->hintRow);
+        out.Append(fmt("clientDx=%d cancel=%d,%d save=%d,%d hints=%d\n", clientDx, cancel.x, cancel.x + cancel.dx,
+                       save.x, save.x + save.dx, hints ? 1 : 0));
+        return finish(0);
     }
     if (str::Eq(action, StrL("names"))) {
         for (SettingItem* item : wnd->items) {

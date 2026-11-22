@@ -94,6 +94,21 @@ struct AdvancedSettingsDlg {
     ToolWindow* tw = nullptr;
     // the list as laid out last frame in that window: it takes what is left
     gpui::Bounds listBounds{};
+    // the footer as laid out last frame, and what that frame showed
+    gpui::Bounds footRow{};
+    gpui::Bounds footHints{};
+    gpui::Bounds footSpacer{};
+    gpui::Bounds footUnsaved{};
+    gpui::Bounds footCancel{};
+    gpui::Bounds footSave{};
+    bool footHadHints = false;
+    bool footHadUnsaved = false;
+    // the key hints are dropped when the footer is too narrow (#6581)
+    bool hideHints = false;
+    float hintsDx = 0;
+    // the window's minimum client width (dips): grows to fit the footer
+    int minClientDx = 0;
+    bool sizedToFooter = false;
 };
 
 static AdvancedSettingsDlg gAdv;
@@ -225,6 +240,25 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     if (!gAdv.visible) {
         out.Append(StrL("NOTREADY no-dialog\n"));
         return finish(2);
+    }
+    // where Cancel and Save are, against the client width, as of the last frame;
+    // arg > 0 first resizes the client to arg dips wide (the minimum still applies)
+    if (str::Eq(action, StrL("footer"))) {
+        if (!gAdv.tw) {
+            out.Append(StrL("NOTREADY no-window\n"));
+            return finish(2);
+        }
+        int minDx = std::max(gAdv.minClientDx, kAdvSettingsMinClientDx);
+        gp::WinSize ws = gp::WindowSize(ToolWindowGpui(gAdv.tw));
+        if (arg > 0) {
+            ToolWindowSetClientSize(gAdv.tw, Size(std::max(arg, minDx), (int)ws.dipH));
+            ws = gp::WindowSize(ToolWindowGpui(gAdv.tw));
+        }
+        gp::Bounds c = gAdv.footCancel;
+        gp::Bounds sv = gAdv.footSave;
+        out.Append(fmt("clientDx=%d cancel=%d,%d save=%d,%d hints=%d\n", (int)ws.dipW, (int)c.x, (int)(c.x + c.w),
+                       (int)sv.x, (int)(sv.x + sv.w), gAdv.footHadHints ? 1 : 0));
+        return finish(0);
     }
     if (str::Eq(action, StrL("names"))) {
         for (SettingItem* item : gAdv.items) {
@@ -396,6 +430,11 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     gAdv.sel = NextSettingRow(gAdv.rows, -1, 1);
     gAdv.scrollY = 0;
     gAdv.visible = true;
+    // the footer is measured again from its first frame
+    gAdv.footRow = {};
+    gAdv.hideHints = false;
+    gAdv.minClientDx = 0;
+    gAdv.sizedToFooter = false;
     DialogsTrackFrameDialog(IsAdvancedSettingsDialogVisible, [] { return gAdv.win; }, CloseAdvancedSettingsDialog);
     gAdv.wantFocus = true;
     AdvOpenToolWindow(win);
@@ -878,9 +917,66 @@ static gp::El* AdvHelpStrip(gp::Ctx* cx) {
                     ->W(gp::kFill));
 }
 
+// the footer's width without the stretch between its halves, as laid out last frame
+static float AdvFooterContentDx() {
+    return gAdv.footSave.Right() + kAdvPadDx - gAdv.footRow.x - gAdv.footSpacer.w;
+}
+
+// the key hints go first when the footer is too narrow: Cancel and Save must
+// stay (#6581). A flex row knows its children's widths only after layout, so
+// this works from the last frame and asks for another when the choice changes
+static void AdvFitFooter(gp::Ctx* cx) {
+    if (gAdv.footRow.w <= 0) {
+        return;
+    }
+    bool hide = gAdv.hideHints;
+    if (gAdv.footHadHints && gAdv.footSave.Right() > gAdv.footRow.Right() - kAdvPadDx + 0.5f) {
+        hide = true;
+        gAdv.hintsDx = gAdv.footHints.w + kAdvGapDx;
+    } else if (!gAdv.footHadHints && gAdv.footSpacer.w >= gAdv.hintsDx) {
+        hide = false;
+    }
+    if (hide != gAdv.hideHints) {
+        gAdv.hideHints = hide;
+        gp::WindowRequestAnimationFrame(cx->win);
+    }
+    if (!gAdv.tw) {
+        return;
+    }
+
+    // the narrowest window: no hints, the widest unsaved count
+    TempStr widest = fmt(Tr("Unsaved changes: %d").s, 99);
+    float unsavedDx = gp::MeasureText(&cx->win->paint, ToGpui(widest), kAdvMetaFontPx, 0).w + kAdvDotDx + 3 * kAdvGapDx;
+    float noHintsDx = AdvFooterContentDx() + unsavedDx + kAdvGapDx;
+    if (gAdv.footHadHints) {
+        noHintsDx -= gAdv.footHints.w + kAdvGapDx;
+    }
+    if (gAdv.footHadUnsaved) {
+        noHintsDx -= gAdv.footUnsaved.w + kAdvGapDx;
+    }
+    int minDx = std::max(kAdvSettingsMinClientDx, (int)ceilf(noHintsDx));
+    if (minDx != gAdv.minClientDx) {
+        gAdv.minClientDx = minDx;
+        ToolWindowSetMinClient(gAdv.tw, Size(minDx, kAdvSettingsMinClientDy));
+    }
+
+    // opened wide enough for the whole footer, like orig
+    gp::WinSize ws = gp::WindowSize(cx->win);
+    if (!gAdv.sizedToFooter && gAdv.footHadHints) {
+        gAdv.sizedToFooter = true;
+        int fullDx = (int)ceilf(noHintsDx + gAdv.footHints.w + kAdvGapDx);
+        if ((int)ws.dipW < fullDx) {
+            ToolWindowSetClientSize(gAdv.tw, Size(fullDx, (int)ws.dipH));
+        }
+    } else if ((int)ws.dipW < minDx) {
+        ToolWindowSetClientSize(gAdv.tw, Size(minDx, (int)ws.dipH));
+    }
+}
+
 // the footer: the key hints and the quiet actions on the left, the unsaved
 // count, Cancel and Save on the right
 static gp::El* AdvFooter(gp::Ctx* cx) {
+    AdvFitFooter(cx);
     Color colText = ThemeWindowTextColor();
     Color colMuted = ThemeWindowTextDisabledColor();
     gp::El* row = gp::Div(cx->a)
@@ -890,17 +986,22 @@ static gp::El* AdvFooter(gp::Ctx* cx) {
                       ->Shrink0()
                       ->ItemsCenter()
                       ->PadX(kAdvPadDx)
-                      ->Gap(kAdvGapDx);
+                      ->Gap(kAdvGapDx)
+                      ->BoundsOut(&gAdv.footRow);
     AdvHint hints[kAdvMaxHints];
     int nHints = AdvSettingsHints(AdvEditState(), hints);
-    gp::El* hintRow = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(kAdvHintGapDx)->Shrink0();
+    gp::El* hintRow =
+        gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(kAdvHintGapDx)->Shrink0()->BoundsOut(&gAdv.footHints);
     for (int i = 0; i < nHints; i++) {
         gp::El* hint = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6);
         hint->Child(DlgKeyCap(cx, hints[i].key));
         hint->Child(gp::TextEl(cx->a, GpuiDup(cx->a, hints[i].desc))->Font(kAdvMetaFontPx)->Fg(ToGpui(colMuted)));
         hintRow->Child(hint);
     }
-    row->Child(hintRow);
+    gAdv.footHadHints = !gAdv.hideHints;
+    if (gAdv.footHadHints) {
+        row->Child(hintRow);
+    }
     row->Child(gpc::Button::New(cx, GStrL("adv-openfile"))
                    ->Label(ToGpui(Tr("Open Settings File")))
                    ->Ghost()
@@ -913,10 +1014,12 @@ static gp::El* AdvFooter(gp::Ctx* cx) {
                    ->WithSize(gp::UiSize::Small)
                    ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnHelp))
                    ->IntoEl());
-    row->Child(gp::Div(cx->a)->Flex1());
+    row->Child(gp::Div(cx->a)->Flex1()->BoundsOut(&gAdv.footSpacer));
     int nChanged = CountChangedSettings();
+    gAdv.footHadUnsaved = nChanged > 0;
     if (nChanged > 0) {
         row->Child(gp::Div(cx->a)
+                       ->BoundsOut(&gAdv.footUnsaved)
                        ->FlexRow()
                        ->ItemsCenter()
                        ->Gap(kAdvGapDx)
@@ -937,9 +1040,10 @@ static gp::El* AdvFooter(gp::Ctx* cx) {
                    ->Outline()
                    ->WithSize(gp::UiSize::Small)
                    ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel))
-                   ->IntoEl());
-    row->Child(
-        DlgFilledButton(cx, GStrL("adv-save"), Tr("Save"), gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave)));
+                   ->IntoEl()
+                   ->BoundsOut(&gAdv.footCancel));
+    row->Child(DlgFilledButton(cx, GStrL("adv-save"), Tr("Save"), gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave))
+                   ->BoundsOut(&gAdv.footSave));
     return row;
 }
 
