@@ -164,7 +164,6 @@ struct PrintData {
     bool mirror = false;
     ProgressUpdateCb progressCb;
     AbortCookieManager* abortCookie = nullptr;
-    bool failedEngineClone = false;
 
     PrintData(EngineBase* engine, Printer* printer, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advData,
               int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
@@ -193,11 +192,6 @@ struct PrintData {
             this->engine = engine;
             this->engine->AddRef();
         }
-        if (!this->engine) {
-            logf("PrintData: failed to create engine for printing\n");
-            this->failedEngineClone = true;
-        }
-
         if (!sel) {
             this->ranges = ranges;
         } else {
@@ -934,11 +928,6 @@ static bool PrintToDevice(const PrintData& pd) {
 
     EngineBase& engine = *pd.engine;
     EnsureFullLayout(pd.engine);
-
-    pd.engine->AddRef();
-    defer {
-        pd.engine->Release();
-    };
 
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
@@ -1921,11 +1910,6 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     pd->mirror = dm->GetMirror();
     SafeEngineRelease(&pinnedEngine);
 
-    if (pd->failedEngineClone) {
-        logf("PrintCurrentFile: failed to create engine for printing\n");
-        delete pd;
-        goto Exit;
-    }
     if (!waitForCompletion) {
         PrintToDeviceOnThread(win, pd);
     } else {
@@ -2424,7 +2408,7 @@ PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str set
     }
     PrintResult res = PrintFile2(engine, printerName, displayErrors, settings);
     SafeEngineRelease(&engine);
-    logf("PrintFile: finished ok\n");
+    logf("PrintFile: finished, result: %d\n", (int)res);
     return res;
 }
 
