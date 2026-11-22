@@ -286,12 +286,12 @@ ContinueParsing:
             {
                 int cmdLen = (int)(end - start);
                 WStr cmd(start, cmdLen);
-                if (wstr::EqN(cmd, WStrL(L"author"), cmdLen) || wstr::EqN(cmd, WStrL(L"title"), cmdLen)) {
+                if (wstr::Eq(cmd, WStrL(L"author")) || wstr::Eq(cmd, WStrL(L"title"))) {
                     chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
                     return S_OK;
                 }
 
-                if (wstr::EqN(cmd, WStrL(L"begin"), cmdLen) && wstr::Eq(ExtractBracedBlock(), WStrL(L"document"))) {
+                if (wstr::Eq(cmd, WStrL(L"begin")) && wstr::Eq(ExtractBracedBlock(), WStrL(L"document"))) {
                     m_state = STATE_TEX_CONTENT;
                 }
             }
