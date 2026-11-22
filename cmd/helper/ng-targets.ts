@@ -1374,6 +1374,7 @@ export const targets: Target[] = [
       "src/ng/TipMarkup.cpp",
       "src/ng/HexViewCommon.cpp",
       "src/ng/SumatraPDFWebCommon.cpp",
+      "src/ng/ContentHash.cpp",
       // ReadAloudHighlight_ut needs the text half of read aloud (step 14c)
       "src/ng/ReadAloudHighlight.cpp",
       "src/ng/SumatraLog.cpp",
@@ -1626,6 +1627,7 @@ export const targets: Target[] = [
       "src/ng/SumatraPDFWebCommon.cpp",
       "src/ng/SumatraPDFWebDialog.cpp",
       "src/ng/ServerFiles.cpp",
+      "src/ng/ContentHash.cpp",
       "src/ng/AppHelpersCommon.cpp",
       "src/ng/AddFavoriteDialog.cpp",
       "src/ng/Favorites.cpp",

@@ -1991,6 +1991,8 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
         out.Append(fmt("pathRect=%d,%d,%d,%d\n", pathRc.x, pathRc.y, pathRc.dx, pathRc.dy));
         // 0: not on the server, 1: same size, 2: different size
         out.Append(fmt("server=%d\n", (int)GetServerFileState(fs->filePath, size)));
+        // the stored content hash: "<sha1> <size> <mtime>", empty if none
+        out.Append(fmt("hash=%s\n", len(fs->contentSha1) > 0 ? fs->contentSha1 : StrL("")));
     }
     return finish(0);
 }

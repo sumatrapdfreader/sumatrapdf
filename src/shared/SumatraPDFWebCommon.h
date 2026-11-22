@@ -21,6 +21,11 @@ enum class OnlineJob : int {
 struct OnlineListedFile {
     Str name;
     i64 size = 0;
+    // sha1 of the content, if the server sent it
+    u8 sha1[20]{};
+    bool hasSha1 = false;
+    // ms since the Unix epoch
+    i64 uploadedAt = 0;
 };
 
 struct OnlineJobResult {
@@ -32,6 +37,12 @@ struct OnlineJobResult {
     Str body;
     Str cachePath;
     Str displayName;
+    // upload / download: the local file and its content hash, when it was read
+    Str filePath;
+    u8 sha1[20]{};
+    bool hashed = false;
+    i64 hashedSize = -1;
+    u64 hashedMtime = 0;
     bool urlRejected = false;
     bool tooBig = false;
     Func1<OnlineJobResult*> onDone;
@@ -40,6 +51,7 @@ struct OnlineJobResult {
         str::Free(body);
         str::Free(cachePath);
         str::Free(displayName);
+        str::Free(filePath);
     }
 };
 
@@ -82,6 +94,7 @@ bool ParseOnlineFiles(Str body, Vec<OnlineListedFile>& out);
 TempStr OnlineLoginUrlTemp();
 TempStr OnlineVerifyMsgTemp(const OnlineVerifyResult* res);
 bool OnlineJobFailed(const OnlineJobResult* res, DWORD* lastHttpStatus, TempStr* msg);
+void RememberOnlineJobHash(const OnlineJobResult* res);
 TempStr CheckOnlineUploadTemp(Str path);
 bool StartOnlineVerify(Str token, u32* idOut, Func1<OnlineVerifyResult*> onDone, TempStr* err);
 bool StartOnlineList(Str token, u32* idOut, Func1<OnlineJobResult*> onDone, TempStr* err);

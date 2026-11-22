@@ -221,6 +221,7 @@ static void StartList() {
 }
 
 static void FinishUpload(OnlineJobResult* res) {
+    RememberOnlineJobHash(res);
     TempStr msg;
     if (OnlineJobFailed(res, &gWeb.lastHttpStatus, &msg)) {
         SetStatus(msg);
@@ -232,6 +233,7 @@ static void FinishUpload(OnlineJobResult* res) {
 }
 
 static void FinishDownload(OnlineJobResult* res) {
+    RememberOnlineJobHash(res);
     TempStr msg;
     if (OnlineJobFailed(res, &gWeb.lastHttpStatus, &msg)) {
         SetStatus(msg);

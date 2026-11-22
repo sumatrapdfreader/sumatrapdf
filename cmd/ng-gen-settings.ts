@@ -1328,6 +1328,15 @@ const fileState: Field[] = [
   ).ver("3.7"),
   field("MeasurementScale", Float, 0, "calibrated measurement units per document coordinate; 0 uses points"),
   field("MeasurementUnit", Str, null, "unit name for calibrated measurements"),
+  field(
+    "ContentSha1",
+    Str,
+    null,
+    "sha1 of the file's content, then its size and modification time when hashed, to match SumatraPDF Web files",
+  )
+    .ver("3.7")
+    .internal()
+    .omitFromDocs(),
   compactArray(
     "TocState",
     Int,
@@ -1366,6 +1375,7 @@ const fileStateLayout = [
   "TabCol",
   "LayerStates",
   "MeasurementUnit",
+  "ContentSha1",
   "MeasurementScale",
   "OpenCount",
   "PageNo",

@@ -390,6 +390,7 @@ function sumatrapdf_files()
     "OpenFromUrlCommon.*",
     "SumatraPDFWebCommon.*",
     "ServerFiles.*",
+    "ContentHash.*",
     "AppHelpersCommon.*",
     "BrowserViewCommon.*",
     "Installer.*",

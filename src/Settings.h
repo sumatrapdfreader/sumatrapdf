@@ -307,6 +307,9 @@ struct FileState {
     Str layerStates;
     // unit name for calibrated measurements
     Str measurementUnit;
+    // sha1 of the file's content, then its size and modification time when
+    // hashed, to match SumatraPDF Web files
+    Str contentSha1;
     // calibrated measurement units per document coordinate; 0 uses points
     float measurementScale;
     // how often the document was opened, halved every week so that the
@@ -1512,7 +1515,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[36];
+extern const FieldInfo gFileStateFields[37];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;

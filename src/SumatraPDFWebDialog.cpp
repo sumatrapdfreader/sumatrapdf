@@ -326,6 +326,7 @@ void SumatraPDFWebWnd::FinishList(OnlineJobResult* res) {
 }
 
 void SumatraPDFWebWnd::FinishUpload(OnlineJobResult* res) {
+    RememberOnlineJobHash(res);
     if (ShowTransportError(res)) {
         UpdateFileButtons();
         return;
@@ -337,6 +338,7 @@ void SumatraPDFWebWnd::FinishUpload(OnlineJobResult* res) {
 }
 
 void SumatraPDFWebWnd::FinishDownload(OnlineJobResult* res) {
+    RememberOnlineJobHash(res);
     if (ShowTransportError(res)) {
         UpdateFileButtons();
         return;

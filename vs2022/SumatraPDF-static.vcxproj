@@ -1472,6 +1472,7 @@
     <ClInclude Include="..\src\shared\CommandPalette.h" />
     <ClInclude Include="..\src\shared\CommandPaletteCommon.h" />
     <ClInclude Include="..\src\shared\Commands.h" />
+    <ClInclude Include="..\src\shared\ContentHash.h" />
     <ClInclude Include="..\src\shared\DisplayMode.h" />
     <ClInclude Include="..\src\shared\DisplayModel.h" />
     <ClInclude Include="..\src\shared\DocController.h" />
@@ -2125,6 +2126,7 @@
     <ClCompile Include="..\src\shared\CommandAvailability.cpp" />
     <ClCompile Include="..\src\shared\CommandPaletteCommon.cpp" />
     <ClCompile Include="..\src\shared\Commands.cpp" />
+    <ClCompile Include="..\src\shared\ContentHash.cpp" />
     <ClCompile Include="..\src\shared\DisplayMode.cpp" />
     <ClCompile Include="..\src\shared\DisplayModel.cpp" />
     <ClCompile Include="..\src\shared\DocController.cpp" />

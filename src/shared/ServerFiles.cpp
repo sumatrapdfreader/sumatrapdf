@@ -30,6 +30,7 @@
 #include "Notifications.h"
 #include "Translations.h"
 #include "SumatraPDFWebCommon.h"
+#include "ContentHash.h"
 #include "ServerFiles.h"
 #if OS_WASM
 #include "gui/WasmBridge.h"
@@ -119,6 +120,7 @@ static void FinishTransfer(OnlineJobResult* res) {
     str::FreePtr(&gSrv.transferName);
     MainWindow* win = gSrv.transferWin;
     gSrv.transferWin = nullptr;
+    RememberOnlineJobHash(res);
     DWORD lastStatus = 0;
     TempStr msg;
     if (OnlineJobFailed(res, &lastStatus, &msg)) {
@@ -159,6 +161,7 @@ static void StartListAsync(void*) {
 // Called while the home page is built: starts the list from the message loop,
 // not the build (wasm runs the request inline).
 void ServerFilesEnsureListed() {
+    SaveKnownContentHashes();
     if (gSrv.tried || !CanUseServer()) {
         return;
     }

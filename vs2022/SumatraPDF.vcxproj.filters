@@ -342,6 +342,9 @@
     <ClInclude Include="..\src\shared\Commands.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\ContentHash.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\DisplayMode.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1272,6 +1275,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\Commands.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ContentHash.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\DisplayMode.cpp">

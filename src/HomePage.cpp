@@ -2224,6 +2224,8 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
                        FileSizeForHomeListTemp(t.fileSize), r.x, r.y, r.dx, r.dy, progress, path));
         // 0: not on the server, 1: same size, 2: different size
         out.Append(fmt("server=%d\n", (int)HomeServerState(t)));
+        // the stored content hash: "<sha1> <size> <mtime>", empty if none
+        out.Append(fmt("hash=%s\n", len(t.fs->contentSha1) > 0 ? t.fs->contentSha1 : StrL("")));
     }
     return finish(0);
 }

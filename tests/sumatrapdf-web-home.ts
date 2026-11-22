@@ -6,6 +6,7 @@
 //
 // Run: bun tests/sumatrapdf-web-home.ts [-ng] [--no-build]   (or via tests/run-almost-all.ts)
 
+import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
@@ -26,7 +27,7 @@ enum ServerState {
   Differs = 2,
 }
 
-type Row = { path: string; server: ServerState };
+type Row = { path: string; server: ServerState; hash: string };
 
 async function homeRows(client: ControlClient): Promise<Row[] | null> {
   const res = await client.request(ControlCommand.TestHomeListRows, []);
@@ -38,8 +39,12 @@ async function homeRows(client: ControlClient): Promise<Row[] | null> {
   for (const line of out.split("\n")) {
     const row = /^row=\d+ .* path=(.*)$/.exec(line);
     if (row) {
-      rows.push({ path: row[1]!, server: ServerState.None });
+      rows.push({ path: row[1]!, server: ServerState.None, hash: "" });
       continue;
+    }
+    const hash = /^hash=(.*)$/.exec(line);
+    if (hash && rows.length > 0) {
+      rows[rows.length - 1]!.hash = hash[1]!;
     }
     const srv = /^server=(\d)$/.exec(line);
     if (srv && rows.length > 0) {
@@ -97,11 +102,16 @@ export async function testit(): Promise<void> {
   copyFileSync(src, onServer);
   copyFileSync(src, localOnly);
 
-  // name -> size; the server copy starts out with a different size
+  // name -> size and sha1; the server copy starts out with a different size
   const srcBytes = readFileSync(src);
+  const sha1 = (b: Uint8Array) => createHash("sha1").update(b).digest("hex");
   const files = new Map<string, number>([
     [kOnServer, statSync(onServer).size - 1],
     [kServerOnly, srcBytes.length],
+  ]);
+  const sha1s = new Map<string, string>([
+    [kOnServer, sha1(srcBytes.subarray(0, srcBytes.length - 1))],
+    [kServerOnly, sha1(srcBytes)],
   ]);
   const server = Bun.serve({
     port: kPort,
@@ -110,7 +120,7 @@ export async function testit(): Promise<void> {
       const url = new URL(req.url);
       const name = url.searchParams.get("name") ?? "";
       if (url.pathname === "/api/files" && req.method === "GET") {
-        return Response.json({ files: [...files].map(([n, size]) => ({ name: n, size })) });
+        return Response.json({ files: [...files].map(([n, size]) => ({ name: n, size, sha1: sha1s.get(n) })) });
       }
       if (url.pathname === "/api/files" && req.method === "POST") {
         const body = await req.arrayBuffer();
@@ -118,6 +128,7 @@ export async function testit(): Promise<void> {
           return new Response("unknown content", { status: 404 });
         }
         files.set(name, body.byteLength);
+        sha1s.set(name, sha1(new Uint8Array(body)));
         return Response.json({ ok: true });
       }
       if (url.pathname === "/api/file" && req.method === "GET") {
@@ -190,6 +201,12 @@ export async function testit(): Promise<void> {
         await waitState(ServerState.Same, "no Server badge after upload");
         if (files.get(kOnServer) !== statSync(onServer).size) {
           throw new Error("sumatrapdf-web-home: server did not get the upload");
+        }
+        // the upload stored the file's hash in its history entry
+        const want = `${sha1(srcBytes)} ${srcBytes.length} `;
+        const uploaded = (await homeRows(client))?.find((r) => r.path.endsWith(kOnServer));
+        if (!uploaded?.hash.startsWith(want)) {
+          throw new Error(`sumatrapdf-web-home: no content hash after upload: '${uploaded?.hash}'`);
         }
         await menuIs(false, true);
 
