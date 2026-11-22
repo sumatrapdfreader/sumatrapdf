@@ -28,6 +28,7 @@
 #include "MainWindow.h"
 #include "SumatraPDF.h"
 #include "Notifications.h"
+#include "SumatraDialogs.h"
 #include "Translations.h"
 #include "SumatraPDFWebCommon.h"
 #include "ServerFiles.h"
@@ -69,12 +70,6 @@ static bool CanUseServer() {
         return false;
     }
     return OS_WASM || (gSettings && IsOnlineApiKey(gSettings->onlineApiKey));
-}
-
-static void RedrawAllWindows() {
-    for (MainWindow* win : gWindows) {
-        win->RedrawAll(true);
-    }
 }
 
 static void Notify(MainWindow* win, Str msg) {
@@ -296,13 +291,8 @@ static void TransferStarted(MainWindow* win, Str name) {
     str::ReplaceWithCopy(&gSrv.transferName, name);
 }
 
-void UploadFileToServer(MainWindow* win, Str path) {
+static void StartUpload(MainWindow* win, Str path) {
     if (!CanStartTransfer(win)) {
-        return;
-    }
-    TempStr why = CheckOnlineUploadTemp(path);
-    if (len(why) > 0) {
-        Notify(win, why);
         return;
     }
     TempStr err;
@@ -313,6 +303,45 @@ void UploadFileToServer(MainWindow* win, Str path) {
         return;
     }
     TransferStarted(win, path::GetBaseNameTemp(path));
+}
+
+struct UploadAsk {
+    MainWindow* win = nullptr;
+    Str path;
+};
+
+static void UploadAnswered(UploadAsk* ask, int answer) {
+    MainWindow* win = ask->win;
+    Str path = ask->path;
+    AutoFree<char> pathFree(path.s);
+    delete ask;
+    if (answer != MbRetYes || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    StartUpload(win, path);
+}
+
+// The server keeps one file per name: uploading another file of that name
+// (e.g. from a different folder) replaces it, so ask first (#6577).
+void UploadFileToServer(MainWindow* win, Str path) {
+    if (!CanStartTransfer(win)) {
+        return;
+    }
+    TempStr why = CheckOnlineUploadTemp(path);
+    if (len(why) > 0) {
+        Notify(win, why);
+        return;
+    }
+    Str name = path::GetBaseNameTemp(path);
+    if (!gSrv.names.Contains(name)) {
+        StartUpload(win, path);
+        return;
+    }
+    auto* ask = new UploadAsk();
+    ask->win = win;
+    ask->path = str::Dup(path);
+    TempStr question = fmt(Tr("Replace %s on SumatraPDF Web?").s, name);
+    MsgBox(win, question, Tr("Upload to server"), MbYesNo | MbIconQuestion, MkFunc1(UploadAnswered, ask));
 }
 
 void DeleteFileFromServer(MainWindow* win, Str path) {

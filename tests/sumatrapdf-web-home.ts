@@ -10,8 +10,8 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from "nod
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { EXE, ROOT, USE_NG, cmdId, pollUntil, runStandalone, tmpPath, writeAppdata } from "./util.ts";
-import { pressEnter, pressKey, sendCommand, waitForFrame } from "./win-automation.ts";
-import { VK_DOWN, getWindowText } from "./winapi.ts";
+import { pressEnter, pressEscape, pressKey, sendCommand, waitForFrame } from "./win-automation.ts";
+import { VK_DOWN, getWindowText, sleep } from "./winapi.ts";
 
 const kPort = 9332;
 const kKey = "so_abcdefghij_0123456789abcdef0123456789abcdef";
@@ -162,8 +162,18 @@ export async function testit(): Promise<void> {
         await waitState(ServerState.Differs, "no Server ≠ badge");
         await menuIs(true, true);
 
-        // Upload to server replaces it
+        // Upload to server asks before replacing it (#6577): No keeps the server copy
+        const serverSize = files.get(kOnServer);
         sendCommand(frame, cmdId("CmdUploadToServer"));
+        await pressEscape(frame);
+        await sleep(500);
+        if (files.get(kOnServer) !== serverSize) {
+          throw new Error("sumatrapdf-web-home: replaced the server copy without asking");
+        }
+
+        // Yes replaces it
+        sendCommand(frame, cmdId("CmdUploadToServer"));
+        await pressEnter(frame);
         await waitState(ServerState.Same, "no Server badge after upload");
         if (files.get(kOnServer) !== statSync(onServer).size) {
           throw new Error("sumatrapdf-web-home: server did not get the upload");
