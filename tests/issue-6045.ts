@@ -7,6 +7,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
@@ -44,6 +45,10 @@ function findHelpWindow(pid: number): number {
 }
 
 function findWebViewHost(help: number): number {
+  // the manual is the tool window; its web view is not a child HWND
+  if (IS_MAC) {
+    return help;
+  }
   let found = 0;
   enumChildWindows(help, (hwnd) => {
     const cls = getClassName(hwnd);

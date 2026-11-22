@@ -883,10 +883,19 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
     if (!tw->gw) {
         return StrL("NOTREADY");
     }
-    // a, b: the new top left corner in screen pixels
+    // a, b: the new top left in screen pixels. c, d: the new size, or 0 to keep it.
     if (str::Eq(action, StrL("move"))) {
         Rect r = ToolWindowRect(tw);
+        if (c > 0 && d > 0) {
+            r.dx = c;
+            r.dy = d;
+        }
         ToolWindowMove(tw, Rect(a, b, r.dx, r.dy));
+        // SetWindowPos reports the new rect before it returns. AppKit may
+        // deliver the move later, so tell the owner now.
+        if (tw->desc.onMoved && IsMainWindowValid(tw->owner)) {
+            tw->desc.onMoved(tw->owner, ToolWindowRect(tw));
+        }
         return StrL("OK");
     }
     if (str::Eq(action, StrL("input"))) {
@@ -899,6 +908,14 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
         TempStr res = AppShellTestInputGpui(tw->gw, kind, a, b, c, d);
         ToolWindowInvalidate(tw);
         return res;
+    }
+    if (str::Eq(action, StrL("activate"))) {
+        ToolWindowActivate(tw);
+        return StrL("OK");
+    }
+    // kind is the PNG path. Same capture as TestCaptureWindow, this window.
+    if (str::Eq(action, StrL("capture"))) {
+        return FromGpui(gp::WindowCapturePngTemp(tw->gw, ToGpui(kind), false));
     }
     if (str::Eq(action, StrL("layout"))) {
         return ToolWindowLayoutTemp(tw);

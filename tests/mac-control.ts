@@ -530,6 +530,48 @@ export function macWindow(hwnd: number): MacWindow | undefined {
   return macWindows().find((w) => w.hwnd === hwnd);
 }
 
+// SetWindowPos for a tool window. c and d are the new size; 0 keeps the current one.
+export function macPlaceToolWindow(name: string, x: number, y: number, w: number, h: number): boolean {
+  const res = macControlRequest(TestToolWindow, ["move", name, "", x, y, w, h]);
+  const raw = String(res[1] ?? "");
+  return res[0] === 0 && !raw.startsWith("ERR") && !raw.startsWith("NOTREADY");
+}
+
+export function macActivateToolWindow(name: string): boolean {
+  const res = macControlRequest(TestToolWindow, ["activate", name]);
+  const raw = String(res[1] ?? "");
+  return res[0] === 0 && !raw.startsWith("ERR") && !raw.startsWith("NOTREADY");
+}
+
+// Client size in dips, from the tool window's layout line.
+export function macToolClientRect(hwnd: number): { left: number; top: number; right: number; bottom: number } | null {
+  const name = macWindow(hwnd)?.toolName;
+  if (!name) {
+    return null;
+  }
+  const text = String(macControlRequest(TestToolWindow, ["layout", name])[1] ?? "");
+  const m = /client=(-?\d+),(-?\d+)/.exec(text);
+  if (!m) {
+    return null;
+  }
+  return { left: 0, top: 0, right: Number(m[1]), bottom: Number(m[2]) };
+}
+
+// Title bar and borders: frame size minus the client. The bar is at the top.
+export function macToolInset(hwnd: number): { x: number; y: number } {
+  const w = macWindow(hwnd);
+  const client = macToolClientRect(hwnd);
+  if (!w?.toolName || !client) {
+    return { x: 0, y: 0 };
+  }
+  const fw = w.rect.right - w.rect.left;
+  const fh = w.rect.bottom - w.rect.top;
+  return {
+    x: Math.max(0, fw - (client.right - client.left)),
+    y: Math.max(0, fh - (client.bottom - client.top)),
+  };
+}
+
 // Runs fn with the app's requests aimed at frame hwnd. 1 (and 0) is the first
 // frame, which they go to anyway.
 export function macWithTarget<T>(hwnd: number, fn: () => T): T {
@@ -725,10 +767,11 @@ d.isNil() ? "none" : d.writeToFileAtomically(${JSON.stringify(path)}, true) ? "o
 // captureWindowPixels on macOS: the first window as drawn, as BGRA (4 bytes a
 // pixel, top-down) in client coordinates, which are points: the capture is in
 // device pixels, sampled at each point's center
-export function macCaptureClientPixels(): { w: number; h: number; data: Uint8Array } | null {
-  const rc = macFrameClientRect();
-  const w = rc.right - rc.left;
-  const h = rc.bottom - rc.top;
+export function macCaptureClientPixels(hwnd = 0): { w: number; h: number; data: Uint8Array } | null {
+  const tool = hwnd > 1 ? macWindow(hwnd)?.toolName : undefined;
+  const rc = tool ? macToolClientRect(hwnd) : hwnd > 1 ? macWithTarget(hwnd, macFrameClientRect) : macFrameClientRect();
+  const w = rc ? rc.right - rc.left : 0;
+  const h = rc ? rc.bottom - rc.top : 0;
   if (w <= 0 || h <= 0) {
     return null;
   }
@@ -736,8 +779,11 @@ export function macCaptureClientPixels(): { w: number; h: number; data: Uint8Arr
   const dir = join(import.meta.dir, "..", ".work", "tests-tmp", "tmp");
   mkdirSync(dir, { recursive: true });
   const path = join(dir, `capture-${process.pid}.png`);
-  const res = macControlRequest(TestCaptureWindow, [path]);
-  if (res[0] !== 0) {
+  const res = tool
+    ? macControlRequest(TestToolWindow, ["capture", tool, path])
+    : macControlRequest(TestCaptureWindow, [path]);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0 || raw.startsWith("ERR") || raw.startsWith("NOTREADY")) {
     return null;
   }
   // with web views in the window the PNG is written once their snapshots

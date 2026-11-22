@@ -29,6 +29,10 @@ import {
   macSendText,
   macShowWindow,
   macToolWindowMessage,
+  macActivateToolWindow,
+  macPlaceToolWindow,
+  macToolClientRect,
+  macToolInset,
   macWindow,
   macWindows,
   macWithTarget,
@@ -725,7 +729,7 @@ export async function waitForChildWindow(parent: number, className: string, time
 
 export function getClientRect(hwnd: number): Rect {
   if (IS_MAC) {
-    return macWithTarget(hwnd, macFrameClientRect);
+    return macToolClientRect(hwnd) ?? macWithTarget(hwnd, macFrameClientRect);
   }
   const buf = new Int32Array(4);
   user32.symbols.GetClientRect(hwnd, ptr(buf));
@@ -734,6 +738,11 @@ export function getClientRect(hwnd: number): Rect {
 
 export function clientToScreen(hwnd: number, x: number, y: number): { x: number; y: number } {
   if (IS_MAC) {
+    const w = macWindow(hwnd);
+    if (w?.toolName) {
+      const inset = macToolInset(hwnd);
+      return { x: w.rect.left + inset.x + x, y: w.rect.top + inset.y + y };
+    }
     return macWithTarget(hwnd, () => macClientToScreen(x, y));
   }
   const buf = new Int32Array([x, y]);
@@ -1030,8 +1039,7 @@ export function repaintWindow(hwnd: number): void {
 
 export function moveWindow(hwnd: number, x: number, y: number, w: number, h: number, repaint = true): boolean {
   if (IS_MAC) {
-    const res = macControlRequest(122, ["place", x, y, w, h, 0]);
-    return res[0] === 0;
+    return setWindowPos(hwnd, x, y, w, h);
   }
   return user32.symbols.MoveWindow(hwnd, x, y, w, h, repaint);
 }
@@ -1076,8 +1084,12 @@ export function setWindowPos(
   flags = SWP_NOZORDER | SWP_NOACTIVATE,
   insertAfter = 0,
 ): boolean {
-  // macOS: "place" takes the frame's index. HWND_TOPMOST raises it.
+  // macOS: a tool window is moved by name. A frame's "place" takes its index.
   if (IS_MAC) {
+    const listed = macWindow(hwnd);
+    if (listed?.toolName) {
+      return macPlaceToolWindow(listed.toolName, x, y, w, h);
+    }
     const idx = macWindows()
       .filter((m) => !m.toolName)
       .findIndex((m) => m.hwnd === hwnd);
@@ -1098,6 +1110,10 @@ export function showWindow(hwnd: number, cmd: number): boolean {
     }
     if (cmd === SW_RESTORE && isZoomed(hwnd)) {
       return moveWindow(hwnd, 80, 80, 1200, 900);
+    }
+    if (cmd === SW_MAXIMIZE) {
+      const wa = getWorkArea();
+      return setWindowPos(hwnd, wa.left, wa.top, wa.right - wa.left, wa.bottom - wa.top);
     }
     return true;
   }
@@ -1597,7 +1613,14 @@ export function getWindowTextFull(hwnd: number, maxChars = 16384): string {
 // window rectangle in screen coordinates (vs getClientRect's client-relative one)
 export function getWindowRect(hwnd: number): Rect {
   if (IS_MAC) {
-    const text = String(macWithTarget(hwnd, () => macControlRequest(TestLayout, []))[1] ?? "");
+    // TestWindows already has every frame and tool window. Aiming TestLayout
+    // at a tool window's id finds no frame and reports an empty rect.
+    const id = hwnd > 0 ? hwnd : (macWindows().find((m) => !m.toolName)?.hwnd ?? 0);
+    const listed = macWindow(id);
+    if (listed) {
+      return listed.rect;
+    }
+    const text = String(macControlRequest(TestLayout, [])[1] ?? "");
     const m = /window rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(text);
     if (!m) {
       return { left: 0, top: 0, right: 0, bottom: 0 };
@@ -1707,6 +1730,10 @@ export function getParentWindow(hwnd: number): number {
 }
 
 export function setForegroundWindow(hwnd: number): boolean {
+  if (IS_MAC) {
+    const name = macWindow(hwnd)?.toolName;
+    return name ? macActivateToolWindow(name) : true;
+  }
   return user32.symbols.SetForegroundWindow(hwnd);
 }
 
@@ -2018,7 +2045,7 @@ export function captureWindowPixels(
 ): { w: number; h: number; data: Uint8Array } | null {
   // the app draws the window into a PNG; there is no non-client area
   if (IS_MAC) {
-    return macCaptureClientPixels();
+    return macCaptureClientPixels(hwnd);
   }
   const rc = area === "client" ? getClientRect(hwnd) : getWindowRect(hwnd);
   const w = rc.right - rc.left;
@@ -2073,20 +2100,22 @@ export function captureWindowDCRegionPixels(
   if (w <= 0 || h <= 0) {
     return null;
   }
-  // macOS: that region of the window's capture
+  // macOS: that region of the window's capture. A tool window's capture is
+  // the client; window-DC coords include the title bar.
   if (IS_MAC) {
-    const cap = macCaptureClientPixels();
+    const cap = macCaptureClientPixels(hwnd);
     if (!cap) {
       return null;
     }
+    const inset = macWindow(hwnd)?.toolName ? macToolInset(hwnd) : { x: 0, y: 0 };
     const out = new Uint8Array(w * h * 4);
     for (let row = 0; row < h; row++) {
-      const sy = y + row;
+      const sy = y + row - inset.y;
       if (sy < 0 || sy >= cap.h) {
         continue;
       }
       for (let col = 0; col < w; col++) {
-        const sx = x + col;
+        const sx = x + col - inset.x;
         if (sx < 0 || sx >= cap.w) {
           continue;
         }
