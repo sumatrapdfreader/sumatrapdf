@@ -13855,7 +13855,7 @@ TempStr EngineMupdfGetPdfInfo(Str path, Str password) {
     TempStr res;
     fz_buffer* buf = nullptr;
     fz_try(ctx) {
-        buf = pdfinfo_to_buffer(ctx, path.s, CStrTemp(password));
+        buf = pdfinfo_to_buffer(ctx, CStrTemp(path), CStrTemp(password));
         unsigned char* data;
         size_t n = fz_buffer_storage(ctx, buf, &data);
         res = str::DupTemp(Str((char*)data, (int)n));
