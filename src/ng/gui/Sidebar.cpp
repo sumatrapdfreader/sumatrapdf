@@ -1629,7 +1629,7 @@ bool SidebarContextMenuFromKey(MainWindow* win, gp::Ctx* cx) {
 // is estimated from its length (13 px UI font, about 6.5 px a character)
 static bool RowLabelTruncated(Str text, int depth, float viewDx, float extraDx) {
     float avail = viewDx - (kRowPadL + (float)depth * kIndentDx + kChevronDx) - 6 - extraDx;
-    return (float)len(text) * 6.5f > avail;
+    return (float)Utf8CodepointCount(text) * 6.5f > avail;
 }
 
 static gp::Bounds RowBounds(const gp::Bounds& view, float scrollY, int idx) {
