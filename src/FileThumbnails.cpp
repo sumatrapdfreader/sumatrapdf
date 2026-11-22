@@ -196,6 +196,7 @@ void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendered* save
         CreateWindowExW(0, WC_STATICW, L"BrowserCapture", WS_POPUP, 0, 0, dx, dy, nullptr, nullptr, nullptr, nullptr);
     if (!hwnd) {
         delete doc;
+        delete saveThumbnail;
         return;
     }
 #if 0 // when debugging set to 1 to see the window
