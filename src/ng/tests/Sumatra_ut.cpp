@@ -67,6 +67,7 @@ bool RenderCache_UnitTestFullOfOneVisiblePage();
 bool RenderCache_UnitTestFullOfOldZoom();
 bool DisplayModel_UnitTestZoomFallback();
 bool EngineEbook_UnitTestUrlLink();
+bool DisplayModel_UnitTestFreePanFirstPage();
 
 #if OS_POSIX && !OS_WASM
 static void AIChatProcessTest() {
@@ -279,6 +280,7 @@ void SumatraPDF_UnitTests() {
     // test_util has no GDI+ for the ebook formatter on Windows
     utassert(EngineEbook_UnitTestUrlLink());
 #endif
+    utassert(DisplayModel_UnitTestFreePanFirstPage());
 #if OS_POSIX && !OS_WASM
     AIChatProcessTest();
 #endif

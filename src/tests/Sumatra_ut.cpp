@@ -149,9 +149,11 @@ bool RenderCache_UnitTestFullOfOneVisiblePage();
 bool RenderCache_UnitTestFullOfOldZoom();
 bool DisplayModel_UnitTestZoomFallback();
 bool EngineEbook_UnitTestUrlLink();
+bool DisplayModel_UnitTestFreePanFirstPage();
 bool DocController_UnitTestDestroyHook();
 bool Commands_UnitTestIdLimit();
 bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut);
+
 // promos from the update check arrive after the home page parsed its tips
 static void ServerPromoTest() {
     EnsureTipsParsed();
@@ -799,6 +801,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(RenderCache_UnitTestFullOfOldZoom());
     utassert(DisplayModel_UnitTestZoomFallback());
     utassert(EngineEbook_UnitTestUrlLink());
+    utassert(DisplayModel_UnitTestFreePanFirstPage());
     utassert(DocController_UnitTestDestroyHook());
     utassert(Commands_UnitTestIdLimit());
     ReadAloudHighlight_UnitTests();

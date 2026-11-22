@@ -3333,7 +3333,8 @@ bool DisplayModel::GoToFirstPage() {
             if (AtContentEdge(-1)) {
                 return false;
             }
-        } else if (0 == viewPort.y) {
+        } else if (viewPort.y <= PanSlack().dy) {
+            // free pan lands the first page below its slack, not at 0
             return false;
         }
     } else {

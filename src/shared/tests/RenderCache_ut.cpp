@@ -273,3 +273,30 @@ bool DisplayModel_UnitTestZoomFallback() {
     }
     return ok;
 }
+
+// with free pan, the first page lands below the slack; already there, First
+// Page has nothing to do
+bool DisplayModel_UnitTestFreePanFirstPage() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    EngineBase* engine = CreateEngineMupdfFromData(Str(kOnePagePdf), StrL("one-page.pdf"), nullptr);
+    if (!engine) {
+        return false;
+    }
+    NoopDocCb cb;
+    auto* dm = new DisplayModel(engine, &cb);
+    dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
+    dm->Relayout(200, 0);
+    dm->SetFreePan(true);
+    dm->GoToPage(1, 0, false);
+    bool ok = !dm->GoToFirstPage();
+
+    delete dm;
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+    return ok;
+}
