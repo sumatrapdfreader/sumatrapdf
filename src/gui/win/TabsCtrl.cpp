@@ -1183,7 +1183,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 ImageList_Add(himl, hbmp, nullptr);
                 ImageList_BeginDrag(himl, 0, grabLocation.x, grabLocation.y);
                 DeleteObject(hbmp);
-                DeleteObject(himl);
+                ImageList_Destroy(himl);
                 Point p = HwndMapWindowPoint(hwnd, nullptr, mousePos);
                 ImageList_DragEnter(nullptr, p.x, p.y);
                 return 0;
