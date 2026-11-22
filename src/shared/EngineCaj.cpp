@@ -318,8 +318,9 @@ static bool RunCaj2pdf(Str exe, Str src, Str dst) {
                           QuoteCmdLineArgTemp(dst));
     HANDLE process = LaunchProcessInDir(cmdLine, {}, CREATE_NO_WINDOW);
     if (!process) {
+        DWORD err = GetLastError(); // before logf, which can change it
         logf("caj2pdf: CreateProcess failed: %s\n", cmdLine);
-        SetCajError(src, CajError::ConverterDidNotRun, GetLastError());
+        SetCajError(src, CajError::ConverterDidNotRun, err);
         return false;
     }
     DWORD wait = WaitForSingleObject(process, kConvertTimeoutMs);
