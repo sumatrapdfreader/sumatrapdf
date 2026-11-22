@@ -139,7 +139,6 @@ bool RenderCache_UnitTestFullOfOldZoom();
 bool DocController_UnitTestDestroyHook();
 bool Commands_UnitTestIdLimit();
 
-// a color setting's row gets a swatch of its value, or of the value being typed
 // every SidebarView the app saves must survive loading; the settings enum used
 // to drop signatures / layers, which came back as bookmarks
 static void SidebarViewSettingTest() {
@@ -155,6 +154,7 @@ static void SidebarViewSettingTest() {
     }
 }
 
+// a color setting's row gets a swatch of its value, or of the value being typed
 static void PaletteRowColorTest() {
     Settings* prevSettings = gSettings;
     if (!gSettings) {

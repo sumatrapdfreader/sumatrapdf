@@ -285,7 +285,6 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
         return E_OUTOFMEMORY;
     }
 
-    // TODO: this selection is leaked - why?
     SumatraUIAutomationTextRange* selection = new SumatraUIAutomationTextRange(this, dm->textSelection);
 
     LONG index = 0;
