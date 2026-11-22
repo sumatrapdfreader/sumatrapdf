@@ -706,7 +706,8 @@ void NavFilesInFolderWnd::ExecuteCurrentSelection(bool inNewTab) {
         GoUp();
         return;
     }
-    TempStr path = NavEntryPathTemp(this, e);
+    // own the path: the modal MaybeSaveAnnotations can re-fill the model, which frees the entry
+    TempStr path = str::DupTemp(NavEntryPathTemp(this, e));
     if (e.isDir) {
         Navigate(path);
         return;
