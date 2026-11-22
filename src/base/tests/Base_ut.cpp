@@ -510,9 +510,27 @@ static void ReplaceNoCaseTest() {
     utassert(str::Eq(str::ReplaceNoCaseTemp(StrL("abc"), StrL("x"), StrL("y")), StrL("abc")));
 }
 
+// in-place helpers must not read past len
+static void InPlacePastLenTest() {
+    char buf[] = "abc";
+    char newBuf[] = "XY";
+    Str s(buf, 3);
+    str::TransCharsInPlace(s, StrL("ab"), Str(newBuf, 1));
+    utassert(buf[0] == 'X' && buf[1] == 0 && buf[2] == 'c');
+
+    char ws[] = {' ', 'a', 'b', 'X'};
+    Str t(ws, 3);
+    utassert(str::TrimWSInPlace(t, str::TrimOpt::Both) == 1);
+    utassert(len(t) == 2 && ws[0] == 'a' && ws[1] == 'b' && ws[2] == 0);
+
+    char cp[] = "a\x80";
+    utassert(Utf8CodepointStartByte(Str(cp, 1), 1) == 1);
+}
+
 void BaseUtilTest() {
     StrEqLenTest();
     ReplaceNoCaseTest();
+    InPlacePastLenTest();
     FlipPixmapTest();
 #if !OS_WASM
     WaitThreadTest();

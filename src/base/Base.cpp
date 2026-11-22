@@ -1474,7 +1474,8 @@ static void TransCharsInPlaceT(S& s, S oldChars, S newChars) {
     for (int i = 0; i < s.len; i++) {
         int idx = IndexOfCharT(oldChars, s.s[i]);
         if (idx >= 0) {
-            s.s[i] = newChars.s[idx];
+            // oldChars past the end of newChars map to NUL
+            s.s[i] = idx < len(newChars) ? newChars.s[idx] : 0;
             nChanged++;
         }
     }
@@ -2383,7 +2384,8 @@ int TrimWSInPlace(Str& s, TrimOpt opt) {
     }
     int trimmed = start + (s.len - end);
     if (start != 0) {
-        memmove(s.s, s.s + start, (size_t)(end - start) + 1);
+        memmove(s.s, s.s + start, (size_t)(end - start));
+        s.s[end - start] = 0;
     }
     s.len = end - start;
     return trimmed;
@@ -4041,7 +4043,9 @@ int Utf8CodepointStartByte(Str s, int byteIdx) {
     if (byteIdx <= 0) {
         return 0;
     }
-    byteIdx = std::min(byteIdx, len(s));
+    if (byteIdx >= len(s)) {
+        return len(s);
+    }
     while (byteIdx > 0 && Utf8IsContinuationByte(s.s[byteIdx])) {
         byteIdx--;
     }
