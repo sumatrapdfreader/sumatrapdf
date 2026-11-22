@@ -174,6 +174,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     }
 
     IFACEMETHODIMP GetChunk(STAT_CHUNK* pStat) {
+        if (!pStat) return E_INVALIDARG;
         m_currentChunk.Clear();
         HRESULT hr = GetNextChunkValue(m_currentChunk);
         if (hr != S_OK) return hr;
