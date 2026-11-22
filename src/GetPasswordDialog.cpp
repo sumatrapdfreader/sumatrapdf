@@ -208,8 +208,13 @@ bool ShowPasswordDialog(const PasswordDialogArgs& args, PasswordDialogResult* re
     }
 
     MSG msg;
-    while (!wnd->done && GetMessageW(&msg, nullptr, 0, 0)) {
-        if (msg.message == WM_QUIT) {
+    while (!wnd->done) {
+        BOOL got = GetMessageW(&msg, nullptr, 0, 0);
+        if (got == -1) {
+            break;
+        }
+        if (got == 0) {
+            // GetMessage returns 0 for WM_QUIT; re-post it for the main loop
             PostQuitMessage((int)msg.wParam);
             break;
         }
