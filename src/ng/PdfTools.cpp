@@ -4479,7 +4479,7 @@ static void ImagesToPdfPromptNow(MainWindow* win) {
 // orig's MakePdfFromImages: picks images, then where the PDF goes, makes it
 // with a page per image and opens it
 void MakePdfFromImages(MainWindow* win) {
-    uitask::Post(MkFunc0(ImagesToPdfPromptNow, win), "ImagesToPdf");
+    PostForWindow(win, ImagesToPdfPromptNow, "ImagesToPdf");
 }
 
 // --- Export Annotations (CmdExportAnnotations) -------------------------------
