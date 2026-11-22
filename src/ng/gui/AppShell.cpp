@@ -3959,6 +3959,7 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH, bool hiddenUn
     // wasm has one window: a browser tab has one canvas
     if (!gw) {
         logf("AppShellCreateWindow: gpui didn't open a window\n");
+        gp::EntityDrop(app, ui->view.id);
         delete ui;
         return nullptr;
     }
