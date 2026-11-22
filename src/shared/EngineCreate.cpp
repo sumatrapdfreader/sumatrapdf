@@ -225,7 +225,7 @@ TempStr MaybeCopyEphemeralHostFile(Str path) {
     TempStr copyDir;
     do {
         int seq = AtomicIntInc(&gOpenCacheSeq);
-        copyDir = path::JoinTemp(dir, fmt("%d-%d", UnixTimeMsNow(), seq));
+        copyDir = path::JoinTemp(dir, fmt("%lld-%d", UnixTimeMsNow(), seq));
     } while (dir::Exists(copyDir));
     if (!dir::Create(copyDir)) {
         logf("MaybeCopyEphemeralHostFile: dir::Create('%s') failed\n", copyDir);

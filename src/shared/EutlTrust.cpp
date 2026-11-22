@@ -339,8 +339,8 @@ static void* EutlListOpen() {
             ListPeriod p;
             p.hash = str::Dup(f[1]);
             p.kind = str::Eq(f[2], StrL("TSA")) ? EutlKind::TSA : EutlKind::CA;
-            p.start = ParseInt(f[3]);
-            p.end = ParseInt(f[4]);
+            p.start = ParseInt64(f[3]);
+            p.end = ParseInt64(f[4]);
             p.eSig = str::Eq(f[5], StrL("1"));
             p.eSeal = str::Eq(f[6], StrL("1"));
             VecAppend(list->periods, p);
@@ -514,7 +514,7 @@ bool EutlUpdate(Str* errOut) {
             nCerts++;
         }
         if (p.granted) {
-            cache.Append(fmt("S %s %s %d %d %d %d\n", hex, p.isTsa ? StrL("TSA") : StrL("CA"), p.start, p.end,
+            cache.Append(fmt("S %s %s %lld %lld %d %d\n", hex, p.isTsa ? StrL("TSA") : StrL("CA"), p.start, p.end,
                              p.eSig ? 1 : 0, p.eSeal ? 1 : 0));
         }
     }
