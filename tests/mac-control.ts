@@ -17,6 +17,7 @@ const TestWindows = 172;
 const TestToolWindow = 125;
 const kCopyDataDdeW = 0x44646557;
 
+const WM_ACTIVATE = 0x0006;
 const WM_KILLFOCUS = 0x0008;
 const WM_CLOSE = 0x0010;
 const WM_KEYDOWN = 0x0100;
@@ -937,6 +938,11 @@ export function macSendMessage(
   }
   if (msg === WM_CLOSE) {
     invoke("WM_CLOSE");
+    return 0n;
+  }
+  // WA_INACTIVE is 0. The frame re-lists a stale SumatraPDF Web cache.
+  if (msg === WM_ACTIVATE) {
+    invoke("WM_ACTIVATE", Number(wp & 0xffffn), 0);
     return 0n;
   }
   // The caption close button. DefWindowProc turns it into WM_CLOSE.

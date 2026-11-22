@@ -3474,11 +3474,14 @@ static void CheckMinimized(MainWindow* win) {
 }
 
 // orig's HomePageOnWindowActivate: a stale SumatraPDF Web list is fetched again
-static void OnWindowActivation(void* data, gp::Window*, bool active) {
-    auto* win = (MainWindow*)data;
+void AppShellNoteActivation(MainWindow* win, bool active) {
     if (active && IsMainWindowValidAndNotClosing(win) && win->IsCurrentTabAbout()) {
         ServerFilesEnsureListed();
     }
+}
+
+static void OnWindowActivation(void* data, gp::Window*, bool active) {
+    AppShellNoteActivation((MainWindow*)data, active);
 }
 
 static void OnWindowBounds(void* data, gp::Window*, gp::WindowBoundsEvent ev) {

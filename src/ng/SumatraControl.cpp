@@ -2837,6 +2837,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
+            // orig's WM_ACTIVATE. wParam is WA_INACTIVE (0) or WA_ACTIVE (1).
+            if (str::EqI(name, StrL("WM_ACTIVATE"))) {
+                i32 state = 1;
+                IntArg(req, 1, state);
+                AppShellNoteActivation(win, state != 0);
+                AppendTestResult(req, 0, StrL("OK"));
+                break;
+            }
             // macOS: what a test's WM_SYSCOMMAND or ShowWindow does to the frame
             if (str::EqI(name, StrL("SC_MINIMIZE")) || str::EqI(name, StrL("SC_RESTORE"))) {
                 if (win->gpuiWin) {

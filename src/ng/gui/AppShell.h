@@ -63,6 +63,7 @@ void AppShellSuppressAltMenu(MainWindow* win);
 void AppShellQuit();
 // brings the window to the foreground (orig's MainWindow::Focus())
 void AppShellActivateWindow(MainWindow* win);
+void AppShellNoteActivation(MainWindow* win, bool active);
 void AppShellMinimizeWindow(MainWindow* win);
 void AppShellRequestCloseWindow(MainWindow* win);
 bool AppShellIsFrameFocused(MainWindow* win);
