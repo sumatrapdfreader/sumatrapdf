@@ -17355,13 +17355,18 @@ ContinueOpenWindow:
             auto* tab = FindTabByFilePath(path);
             if (tab) {
                 tabToSelect = tab;
-                if (flags.forwardSearchOrigin && flags.forwardSearchLine && win && win->AsFixed() &&
-                    win->AsFixed()->pdfSync) {
+                if (len(flags.forwardSearchOrigin) == 0 || !flags.forwardSearchLine) {
+                    continue;
+                }
+                // the result shows in the window's current tab, which may be another file
+                SelectTabInWindow(tab);
+                DisplayModel* dm = tab->win ? tab->win->AsFixed() : nullptr;
+                if (dm && dm->pdfSync) {
                     int page;
                     Vec<Rect> rects;
                     TempStr srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);
-                    int ret = win->AsFixed()->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
-                    ShowForwardSearchResult(win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
+                    int ret = dm->pdfSync->SourceToDoc(srcPath, flags.forwardSearchLine, 0, &page, rects);
+                    ShowForwardSearchResult(tab->win, srcPath, flags.forwardSearchLine, 0, ret, page, rects);
                 }
                 continue;
             }
@@ -17390,7 +17395,7 @@ ContinueOpenWindow:
     if (tabToSelect) {
         SelectTabInWindow(tabToSelect);
         MaybeStartSearch(tabToSelect->win, flags.search);
-        MaybeGoTo(win, flags.namedDest, flags.pageNumber);
+        MaybeGoTo(tabToSelect->win, flags.namedDest, flags.pageNumber);
     }
 
     nWithDde = len(gDdeOpenOnStartup);
