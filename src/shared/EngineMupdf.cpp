@@ -8379,7 +8379,7 @@ static fz_pixmap* FzLoadOrientedImage(EngineMupdf* engine, int pageNo, RectF rec
     auto* ctx = engine->Ctx();
 
     FzPageInfo* pageInfo = engine->GetFzPageInfo(pageNo, false);
-    if (!pageInfo->page) {
+    if (!pageInfo || !pageInfo->page) {
         return nullptr;
     }
     const auto& images = pageInfo->images;
@@ -8450,6 +8450,7 @@ static fz_pixmap* FzLoadOrientedImage(EngineMupdf* engine, int pageNo, RectF rec
     }
     fz_always(ctx) {
         fz_drop_pixmap(ctx, mask);
+        fz_drop_image(ctx, image);
         if (oriented) {
             fz_drop_pixmap(ctx, pixmap);
             pixmap = nullptr;
