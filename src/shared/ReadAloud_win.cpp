@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
+#include "base/WinDynCalls.h"
 
 #include <roapi.h>
 #include <windows.media.speechsynthesis.h>
@@ -750,8 +751,8 @@ static bool WinTtsInit() {
     }
     gWinInitFailed = true;
 
-    HMODULE combase = LoadLibraryW(L"combase.dll");
-    HMODULE shcore = LoadLibraryW(L"shcore.dll");
+    HMODULE combase = SafeLoadLibrary(StrL("combase.dll"));
+    HMODULE shcore = SafeLoadLibrary(StrL("shcore.dll"));
     if (!combase || !shcore) {
         return false;
     }

@@ -5,6 +5,7 @@
 #include "gui/Dpi.h"
 #include "base/AutoWin.h"
 #include "base/Win.h"
+#include "base/WinDynCalls.h"
 #include "base/GuessFileType.h"
 
 #include <mshtml.h>
@@ -1349,7 +1350,7 @@ bool HtmlWindow::CreateBrowser() {
 static bool IsUrlmonUsable() {
     static int cached = -1; // -1 unknown, 0 no, 1 yes
     if (cached < 0) {
-        HMODULE h = LoadLibraryW(L"urlmon.dll");
+        HMODULE h = SafeLoadLibrary(StrL("urlmon.dll"));
         cached = (h && GetProcAddress(h, "CoInternetGetSession")) ? 1 : 0;
     }
     return cached == 1;

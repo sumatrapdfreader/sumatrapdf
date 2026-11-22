@@ -8,6 +8,7 @@
 #include "base/ScopedWin.h"
 #include "base/UITask.h"
 #include "base/Win.h"
+#include "base/WinDynCalls.h"
 #include "gui/UIModels.h"
 
 #include "Settings.h"
@@ -145,7 +146,7 @@ struct WinRtApi {
         // handle we can take without adding a reference on every print
         HMODULE combase = GetModuleHandleW(L"combase.dll");
         if (!combase) {
-            combase = LoadLibraryW(L"combase.dll");
+            combase = SafeLoadLibrary(StrL("combase.dll"));
         }
         if (!combase) {
             return false;
@@ -347,8 +348,8 @@ class PrintGraphics {
             return S_OK;
         }
 
-        HMODULE d2dModule = LoadLibraryW(L"d2d1.dll");
-        HMODULE d3dModule = LoadLibraryW(L"d3d11.dll");
+        HMODULE d2dModule = SafeLoadLibrary(StrL("d2d1.dll"));
+        HMODULE d3dModule = SafeLoadLibrary(StrL("d3d11.dll"));
         if (!d2dModule || !d3dModule) {
             return HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND);
         }

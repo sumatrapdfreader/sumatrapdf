@@ -22,6 +22,7 @@
 #include "base/Pixmap.h"
 #include "base/AutoWin.h"
 #include "base/Win.h"
+#include "base/WinDynCalls.h"
 
 // windows.h has DrawText as a macro and d2d1.h declares a DrawText method
 #ifdef DrawText
@@ -52,8 +53,8 @@ static void InitDirect2D() {
     }
     gTriedInit = true;
 
-    HMODULE d2d = LoadLibraryW(L"d2d1.dll");
-    HMODULE dw = LoadLibraryW(L"dwrite.dll");
+    HMODULE d2d = SafeLoadLibrary(StrL("d2d1.dll"));
+    HMODULE dw = SafeLoadLibrary(StrL("dwrite.dll"));
     if (!d2d || !dw) {
         logf("InitDirect2D: d2d1.dll=%p dwrite.dll=%p\n", (const void*)d2d, (const void*)dw);
         return;

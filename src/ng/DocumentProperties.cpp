@@ -9,6 +9,7 @@
 #include "gui/GpuiBridge.h"
 #if OS_WIN
 #include "base/Win.h"
+#include "base/WinDynCalls.h"
 #endif
 #include "VirtKeys.h"
 #include "base/File.h"
@@ -107,7 +108,7 @@ void ViewCertDer(HWND parent, Str der) {
         return;
     }
     using Fn = BOOL(WINAPI*)(DWORD, const void*, HWND, LPCWSTR, DWORD, void*);
-    HMODULE dll = LoadLibraryW(L"cryptui.dll");
+    HMODULE dll = SafeLoadLibrary(StrL("cryptui.dll"));
     Fn view = dll ? (Fn)GetProcAddress(dll, "CryptUIDlgViewContext") : nullptr;
     if (view) {
         view(CERT_STORE_CERTIFICATE_CONTEXT, cert, parent, L"Certificate", 0, nullptr);
