@@ -21,7 +21,6 @@ struct Printer {
     Str output;
     Str docName;
     DEVMODEW* devMode = nullptr;
-    PRINTER_INFO_2* info = nullptr;
 
     // number of paper sizes supported by the printer
     int nPaperSizes = 0;
@@ -33,12 +32,6 @@ struct Printer {
     int nBins = 0;
     WORD* bins = nullptr; // DC_BINS
     StrVec binNames;      // DC_BINNAMES
-
-    bool isColor = false;    // DC_COLORDEVICE
-    bool isDuplex = false;   // DC_DUPLEX
-    bool canStaple = false;  // DC_STAPLE
-    bool canCallate = false; // DC_COLLATE
-    int orientation = 0;     // DC_ORIENTATION
 
     Printer() = default;
     ~Printer();

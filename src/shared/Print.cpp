@@ -572,7 +572,7 @@ Printer* NewPrinter(Str printerName) {
     printer = new Printer();
     printer->name = str::Dup(printerName);
     printer->devMode = devMode;
-    printer->info = info;
+    devMode = nullptr;
 
     {
         DWORD n = DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, nullptr, nullptr);
@@ -580,7 +580,8 @@ Printer* NewPrinter(Str printerName) {
         DWORD n3 = DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, nullptr, nullptr);
         if (n != n2 || n != n3 || 0 == n || ((DWORD)-1 == n)) {
             delete printer;
-            return nullptr;
+            printer = nullptr;
+            goto Exit;
         }
         printer->nPaperSizes = (int)n;
         int paperNameSize = 64;
@@ -603,7 +604,8 @@ Printer* NewPrinter(Str printerName) {
         DWORD n2 = DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, nullptr, nullptr);
         if (n != n2 || ((DWORD)-1 == n)) {
             delete printer;
-            return nullptr;
+            printer = nullptr;
+            goto Exit;
         }
         printer->nBins = (int)n;
         // it's ok for nBins to be 0, it means there's only one, default bin
@@ -620,27 +622,10 @@ Printer* NewPrinter(Str printerName) {
         }
     }
 
-    {
-        DWORD n;
-
-        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_COLLATE, nullptr, nullptr);
-        printer->canCallate = (n > 0);
-
-        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_COLORDEVICE, nullptr, nullptr);
-        printer->isColor = (n > 0);
-
-        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_DUPLEX, nullptr, nullptr);
-        printer->isDuplex = (n > 0);
-
-        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_STAPLE, nullptr, nullptr);
-        printer->canStaple = (n > 0);
-
-        n = DeviceCapabilitiesW(printerNameW, nullptr, DC_ORIENTATION, nullptr, nullptr);
-        printer->orientation = (int)n;
-    }
-
 Exit:
     ClosePrinter(hPrinter);
+    free(info);
+    free(devMode);
     return printer;
 }
 
