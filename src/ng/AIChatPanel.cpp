@@ -1052,15 +1052,13 @@ gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
     gp::El* inputRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->Gap(4);
     inputRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
         gpc::Textarea::New(cx, GStrL("aichat-input"), p->input)->Rows(3)->Disabled(!enableInput)->IntoEl()));
-    gp::El* buttons = gp::Div(cx->a)->FlexCol()->Gap(4);
     if (working) {
+        gp::El* buttons = gp::Div(cx->a)->FlexCol()->Gap(4);
         buttons->Child(gpc::Button::New(cx, GStrL("aichat-stop"))
                            ->Label(ToGpui(Tr("Stop")))
                            ->WithSize(gp::UiSize::Small)
                            ->OnClick(gp::ListenTo(gAIChatView, &AIChatView::OnStop))
                            ->IntoEl());
-    }
-    if (working) {
         inputRow->Child(buttons);
     }
     col->Child(inputRow);
