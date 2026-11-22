@@ -109,7 +109,6 @@ void UpdateTabWidth(MainWindow* win) {
     // settings; convert to physical pixels so HiDPI monitors honor the value
     // (issue #3850). Height already uses DpiScale via GetTabbarHeight.
     if (win->tabsCtrl) {
-        HWND hwnd = win->tabsCtrl->hwnd ? win->tabsCtrl->hwnd : win->hwndFrame;
         win->tabsCtrl->tabDefaultDx = DpiScale(gSettings->tabWidth);
         win->tabsCtrl->equalWidth = gSettings->tabsEqualWidth;
     }
