@@ -81,6 +81,8 @@
 
 #define GPUI_OS_POSIX (!GPUI_OS_WINDOWS)
 
+#define GPUI_HAVE_MACH_TASK_INFO (GPUI_OS_MAC || GPUI_OS_IOS)
+
 #if GPUI_OS_WINDOWS
 #define NOMINMAX
 #include <windows.h>
@@ -130,6 +132,10 @@ constexpr int len(Str s) noexcept {
     return s.len;
 }
 
+constexpr int len(const Str* s) noexcept {
+    return s->len;
+}
+
 float StrToFloatUnchecked(Str s);
 
 void log(Str s);
@@ -146,6 +152,11 @@ using TempStr = Str;
 TempStr AllocStrTemp(int size);
 TempStr StrDupTemp(Str s);
 TempStr ReadBoundedFileTemp(Str path, int limit);
+
+FILE* PlatFileOpen(Str path, const char* mode);
+bool PlatFileRemove(Str path);
+
+bool PlatFileRename(Str from, Str to);
 
 #if GPUI_OS_WINDOWS
 WCHAR* ToCWstrTemp(Str s);
@@ -724,6 +735,10 @@ template <typename T>
 inline int len(const Vec<T>& v) {
     return v.len;
 }
+template <typename T>
+inline int len(const Vec<T>* v) {
+    return v->len;
+}
 
 template <typename T>
 auto VecReserve(Arena* arena, T& v, int n) -> decltype(v.els) {
@@ -1138,6 +1153,10 @@ struct ArenaVec {
 template <typename T>
 inline int len(const ArenaVec<T>& v) {
     return v.len;
+}
+template <typename T>
+inline int len(const ArenaVec<T>* v) {
+    return v->len;
 }
 
 struct PointF {
@@ -3556,7 +3575,7 @@ struct OofCandRange {
 
 inline void OofAppendRange(Vec<OofCandidate>* pool, OofCandRange* range,
                            const OofCandidates& src) {
-    range->start = len(*pool);
+    range->start = len(pool);
     range->count = len(src.inner);
     for (int i = 0; i < range->count; i++) {
         VecAppend(*pool, src.inner[i]);
@@ -4616,6 +4635,10 @@ struct HoverEvent {
     bool hovered = false;
 };
 
+struct ModifiersChangedEvent {
+    Modifiers modifiers = {};
+};
+
 struct LineClampEvent {
     bool clamped = false;
 };
@@ -4872,14 +4895,16 @@ struct ScrollbarVisibility {
     bool running = false;
 };
 
-void ScrollbarVisibilitySet(int scrollId, bool visible,
+void ScrollbarVisibilitySet(Window* win, int scrollId, bool visible,
                             ScrollbarEntrance entrance, float enter, float exit,
                             double now);
-ScrollbarVisibility ScrollbarVisibilityAt(int scrollId, double now);
+ScrollbarVisibility ScrollbarVisibilityAt(Window* win, int scrollId,
+                                          double now);
 
 float ScrollbarSlideOffset(float trackWidth, float position);
 
-void ScrollFadeClear();
+void WindowScrollFadeSweep(Window* win);
+void WindowScrollFadeFree(Window* win);
 
 enum class IconName : uint8_t {
     None = 0,
@@ -6573,6 +6598,8 @@ struct El {
 
     El* OnKeyUp(Listener fn);
 
+    El* OnModifiersChanged(Listener fn);
+
     El* OnScrollWheel(Listener fn);
 
     El* OnPinch(Listener fn);
@@ -7331,9 +7358,13 @@ struct LayoutMode {
     bool lineNumber = true;
 
     bool folding = false;
+
+    bool activeLineOnlyWhenFocused = false;
 };
 
 bool LayoutModeIsFolding(const LayoutMode& m);
+
+bool LayoutModeIsActiveLineOnlyWhenFocused(const LayoutMode& m);
 
 void LayoutModeSetRows(LayoutMode* m, int rows);
 int LayoutModeRows(const LayoutMode& m);
@@ -7399,17 +7430,17 @@ void SearchMatcherReset(SearchMatcher* m);
 void SearchMatcherUpdate(SearchMatcher* m, Str text);
 void SearchMatcherUpdateQuery(SearchMatcher* m, Str query, bool insensitive);
 inline int SearchMatcherLen(const SearchMatcher* m) {
-    return m->ranges.len;
+    return len(m->ranges);
 }
 inline bool SearchMatcherIsEmpty(const SearchMatcher* m) {
-    return m->ranges.len == 0;
+    return len(m->ranges) == 0;
 }
 inline int SearchMatcherIndex(const SearchMatcher* m) {
     return m->current;
 }
 
 inline int SearchMatcherCurrentIndex(const SearchMatcher* m) {
-    return m->ranges.len == 0 ? -1 : m->current;
+    return len(m->ranges) == 0 ? -1 : m->current;
 }
 
 Str SearchMatcherLabel(Arena* a, const SearchMatcher* m);
@@ -8476,6 +8507,12 @@ void InputSetSelectedRangeWithDirection(InputState* s, App* app, Window* win,
 void InputSetSelectedTextRangeUtf16(InputState* s, App* app, Window* win,
                                     int startUtf16, int endUtf16);
 
+TempStr InputTextForRangeUtf16Temp(const InputState* s, int startUtf16,
+                                   int endUtf16, int* adjustedStart,
+                                   int* adjustedEnd);
+
+int InputTextLengthUtf16(const InputState* s);
+
 void InputSelectWord(InputState* s, App* app, Window* win, int offset);
 void InputSelectLine(InputState* s, App* app, Window* win, int offset);
 
@@ -8655,6 +8692,9 @@ void InputSetSmartIndent(InputState* s, bool enabled, App* app,
 
 void InputSetLineNumber(InputState* s, bool lineNumber, App* app,
                         Window* win = nullptr);
+
+void InputSetActiveLineOnlyWhenFocused(InputState* s, bool enabled, App* app,
+                                       Window* win = nullptr);
 
 int Utf8OffsetToUtf16(Str s, int u8);
 int Utf16OffsetToUtf8(Str s, int u16);
@@ -8960,7 +9000,6 @@ const HitRect* HitTestRect(PaintCtx* ctx, float x, float y);
 const ScrollRect* WindowLastScrollRect(const Window* win, int id);
 
 const HitRect* HitTestDrop(PaintCtx* ctx, float x, float y, Str kind);
-const ScrollRect* HitScrollRect(PaintCtx* ctx, float x, float y);
 int TextHitOffsetAt(PaintCtx* ctx, float x, float y, bool nearest);
 
 int TextHitOffsetIn(PaintCtx* ctx, float x, float y, bool nearest, int scope,
@@ -9232,6 +9271,8 @@ struct WindowBlurSub {
     Listener handler = {};
 };
 
+struct ScrollFade;
+
 struct Window {
     App* app = nullptr;
     PlatWindow* plat = nullptr;
@@ -9488,10 +9529,18 @@ struct Window {
     Vec<TimerSub> timers;
     int nextTimerId = 1;
 
+    bool timersTicking = false;
+
+    bool closed = false;
+
+    bool closeReapPending = false;
+
     InputState* prevInput = nullptr;
 
     FrameTiming frameTrace[kFrameTraceCap] = {};
     uint64_t frameSeq = 0;
+
+    Vec<ScrollFade>* scrollFades = nullptr;
 
     uint64_t invalidations = 0;
 
@@ -10001,6 +10050,8 @@ bool TestPlatformClipboardRead(Arena* a, ClipboardItem* out);
 App* AppNew();
 void AppFree(App* app);
 
+Window* AppFirstOpenWindow(App* app);
+
 void ClipboardSetText(Window* win, Str text);
 
 bool ClipboardSetImage(Window* win, const uint8_t* png, int pngLen);
@@ -10277,6 +10328,9 @@ bool WindowDispatchActionAtFocus(Window* win, FocusHandle focus,
 bool WindowDispatchKeyEvent(Window* win, KeyEvent* ev);
 
 bool WindowDispatchKeyUpEvent(Window* win, KeyEvent* ev);
+
+void WindowDispatchModifiersChanged(Window* win,
+                                    const ModifiersChangedEvent* ev);
 
 bool WindowDispatchKeyCaptureEvent(Window* win, KeyEvent* ev);
 
@@ -10572,8 +10626,6 @@ struct DrawOpsBuilder {
 #line 1 "src/gpui/svg.h"
 
 namespace gpui {
-
-bool SvgViewBox(Str assetPath, Size* out);
 
 bool SvgDraw(PaintCtx* ctx, Str assetPath, float x, float y, float size,
              Rgba color, float turns = 0);
@@ -12668,11 +12720,13 @@ const float PANEL_MIN_SIZE = 100.f;
 const float kResizablePanelMinSize = PANEL_MIN_SIZE;
 
 bool ResizablePanelResize(float* sizes, const float* mins, const float* maxs,
-                          int n, int ix, float size, float containerSize,
-                          const bool* fixed = nullptr);
+                          int n, int ix, float size,
+                          const bool* fixed = nullptr,
+                          const bool* shown = nullptr);
 
 void ResizableAdjustToContainer(float* sizes, int n, float containerSize,
-                                const bool* fixed = nullptr);
+                                const bool* fixed = nullptr,
+                                const bool* shown = nullptr);
 
 const float kResizeHandleSize = 1.f;
 const float kResizeHandlePadding = 4.f;
@@ -12817,6 +12871,8 @@ struct ResizableState {
 
     Vec<bool> shown;
 
+    Vec<float> preferred;
+
     Vec<bool> fixed;
 
     Vec<Bounds> laid;
@@ -12834,6 +12890,7 @@ struct ResizableState {
         VecReset(maxs);
         VecReset(grows);
         VecReset(shown);
+        VecReset(preferred);
         VecReset(fixed);
         VecReset(laid);
     }
@@ -12852,7 +12909,13 @@ struct ResizableState {
     float ContainerSize() const {
         return AxisIsHorizontal(axis) ? bounds.w : bounds.h;
     }
+
     bool ResizePanel(Ctx* cx, int ix, float size);
+
+    bool SyncPanelVisibility(const bool* visible, int n);
+
+    int PreviousVisiblePanel(int ix) const;
+    int NextVisiblePanel(int ix) const;
     bool InsertPanel(Ctx* cx, float size = PANEL_MIN_SIZE, int ix = -1);
     bool RemovePanel(Ctx* cx, int ix);
     bool ResetPanel(Ctx* cx, int ix);
@@ -14482,9 +14545,9 @@ struct UndoHistory {
         if (!len(from)) return result;
         Vec<T>* transaction = from[len(from) - 1];
         from.len--;
-        for (int i = 0; i < transaction->len; i++) {
+        for (int i = 0; i < len(transaction); i++) {
             VecAppend(result,
-                      (*transaction)[reverse ? transaction->len - 1 - i : i]);
+                      (*transaction)[reverse ? len(transaction) - 1 - i : i]);
         }
         VecAppend(to, transaction);
         hasLastChangedAt = false;
@@ -20037,7 +20100,7 @@ struct MarkdownExtensions {
     MarkdownExtensions& BlockSurface(Arena* a, Str name,
                                      MarkdownBlockSurfaceFn fn,
                                      void* data = nullptr);
-    bool HasBlockSurfaces() const { return blockSurfaces.len > 0; }
+    bool HasBlockSurfaces() const { return len(blockSurfaces) > 0; }
 
     Str BlockSurfaceName(Str written) const;
     const MarkdownBlockSurface* BlockSurfaceOf(Str name) const;
@@ -23184,21 +23247,6 @@ inline UiSize UiSizeMin(UiSize a, UiSize b) {
     return UiSizeAsF32(a) > UiSizeAsF32(b) ? a : b;
 }
 
-inline float UiSizePx(UiSize s) {
-    switch (s) {
-        case UiSize::Size:
-            return s.pixels;
-        case UiSize::XSmall:
-            return 20;
-        case UiSize::Small:
-            return 24;
-        case UiSize::Large:
-            return 36;
-        default:
-            return 28;
-    }
-}
-
 inline float UiIconPx(const Ctx* cx, UiSize s) {
     switch (s) {
         case UiSize::Size:
@@ -24855,7 +24903,8 @@ struct Carousel {
     Ctx* cx = nullptr;
     Str id = {};
     Entity<CarouselState> state = {};
-    Str accessibilityLabel = StrL("Carousel");
+
+    Str accessibilityLabel = {};
     bool focusRingEnabled = true;
     ArenaVec<El*> children;
     Style style = {};
@@ -24942,7 +24991,8 @@ struct CarouselNext : CarouselControl {
 struct CarouselPagination {
     Arena* a = nullptr;
     Ctx* cx = nullptr;
-    Str accessibilityLabel = StrL("Carousel pagination");
+
+    Str accessibilityLabel = {};
     ArenaVec<El*> children;
     Style style = {};
     uint32_t styleSet = 0;
@@ -26392,6 +26442,8 @@ struct SearchableListState {
 
     const SearchableItem* items = nullptr;
     int nItems = 0;
+
+    Vec<SearchableListItem> delegateItems;
 
     int maxSelected = 0;
 
@@ -27926,6 +27978,18 @@ struct DiffLinePosition {
     int Line() const { return line; }
 };
 
+struct DiffTextPosition {
+    DiffLinePosition position = {};
+    int offset = 0;
+    Str text = {};
+
+    const DiffLinePosition& Position() const { return position; }
+
+    int Offset() const { return offset; }
+
+    Str Text() const { return text; }
+};
+
 struct DiffLineRange {
     Str path = {};
     DiffSide side = DiffSide::Original;
@@ -27973,11 +28037,15 @@ struct DiffSpanHighlight {
     ByteRange span = {};
     bool hasBackground = false;
     bool hasForeground = false;
+    bool underlined = false;
     Rgba background = {};
     Rgba foreground = {};
     static DiffSpanHighlight New(DiffLinePosition position, ByteRange span);
+
+    DiffSpanHighlight WithUnderline() const;
     DiffSpanHighlight WithBackground(Rgba fill) const;
     DiffSpanHighlight WithForeground(Rgba color) const;
+    bool IsUnderlined() const { return underlined; }
     const DiffLinePosition& Position() const { return position; }
     ByteRange Span() const { return span; }
     const Rgba* Background() const {
@@ -28114,6 +28182,11 @@ struct DiffRun {
     int end = 0;
 };
 
+struct DiffExcerpt {
+    int first = 1;
+    Str text = {};
+};
+
 struct DiffFile {
     Arena* arena = nullptr;
     DiffFileStatus status = DiffFileStatus::Modified;
@@ -28144,7 +28217,10 @@ struct DiffFile {
     static bool ParseWith(Str patch, DiffParseOptions options,
                           Vec<DiffFile*>* out, DiffParseError* error);
     bool IsTruncated() const;
+
     static DiffFile* Unchanged(Str path, Str text);
+
+    static DiffFile* Excerpts(Str path, const DiffExcerpt* parts, int count);
     static DiffFile* ParseConflicts(Str path, Str text, DiffParseError* error);
     DiffFile* WithLanguage(Str language);
     Str Language() const;
@@ -28279,6 +28355,11 @@ struct DiffState {
     bool syntaxPrepared = false;
     Vec<DiffSyntaxSpan> syntaxSpans;
 
+    bool textHoverHeard = false;
+    bool textHoverHasHit = false;
+    DiffTextPosition textHover = {};
+    Modifiers textHoverModifiers = {};
+
     DiffState() = default;
     ~DiffState();
     DiffState(const DiffState&) = delete;
@@ -28338,6 +28419,8 @@ struct DiffState {
     bool ResolvedText(Arena* a, Str path, Str* out) const;
     void SetSelectedLines(bool has, DiffLineRange range, Ctx* cx);
     Str SelectedText(Arena* a) const;
+
+    bool HasLine(DiffLinePosition position) const;
     void ScrollToLine(DiffLinePosition position, Ctx* cx);
     void ScrollToFile(Str path, Ctx* cx);
     void NextChange(Ctx* cx);
@@ -28401,6 +28484,14 @@ struct Diff {
     void* clickUser = nullptr;
     void (*onLineHover)(Ctx*, const DiffLinePosition*, bool, void*) = nullptr;
     void* hoverUser = nullptr;
+    void (*onTextHover)(Ctx*, const DiffTextPosition*, Modifiers,
+                        void*) = nullptr;
+    void* textHoverUser = nullptr;
+    bool (*onTextClick)(Ctx*, const DiffTextPosition*, const ClickEvent*,
+                        void*) = nullptr;
+    void* textClickUser = nullptr;
+    bool hasTextCursor = false;
+    CursorKind textCursor = CursorKind::Arrow;
     static Diff* New(Ctx* cx, Entity<DiffState> state);
     Diff* LineNumber(bool v);
     Diff* SyntaxHighlight(bool v);
@@ -28437,15 +28528,28 @@ struct Diff {
     Diff* HeaderSuffix(El* (*fn)(Ctx*, const DiffFile*, void*), void* user);
     Diff* OnAddAnnotation(void (*fn)(Ctx*, const DiffLineRange*, void*),
                           void* user);
+
     Diff* OnLineClick(void (*fn)(Ctx*, const DiffLinePosition*,
                                  const ClickEvent*, void*),
                       void* user);
+
+    Diff* OnTextHover(void (*fn)(Ctx*, const DiffTextPosition*, Modifiers,
+                                 void*),
+                      void* user);
+
+    Diff* OnTextClick(bool (*fn)(Ctx*, const DiffTextPosition*,
+                                 const ClickEvent*, void*),
+                      void* user);
+
+    Diff* TextCursor(CursorKind cursor);
     Diff* OnLineHover(void (*fn)(Ctx*, const DiffLinePosition*, bool, void*),
                       void* user);
     El* IntoEl();
 };
 
 void DiffInitKeys();
+
+bool DiffRunBounds(Window* win, DiffSide side, int lineIx, Bounds* out);
 
 bool DiffHasLineEndingChange(const DiffFile* file, DiffSide side, int ix,
                              int counterpart);
@@ -29052,6 +29156,12 @@ struct LocaleRow {
 
 Str Tr(const char* key);
 
+struct TrArg {
+    const char* name;
+    Str value;
+};
+TempStr TrFmtTemp(const char* key, const TrArg* args, int nArgs);
+
 bool LocaleSet(Str name);
 
 Str LocaleNow();
@@ -29125,6 +29235,8 @@ struct Icon {
 void SetIconResolver(App* app, IconPathResolveFn fn, void* user);
 
 Str ResolveIconPath(Str path, const App* app, Arena* a);
+
+bool WarnMissingIcon(Str path, App* app);
 
 }
 }
@@ -36765,8 +36877,8 @@ class SpecArena {
     ~SpecArena();
 
     void Reset();
-    int Len() const { return nodes.len; }
-    bool IsEmpty() const { return nodes.len == 0; }
+    int Len() const { return len(nodes); }
+    bool IsEmpty() const { return len(nodes) == 0; }
     SpecId Push(const Component& component);
     bool PushChildView(const Component& component, SpecId* out,
                        SpecError* error = nullptr);
@@ -36795,10 +36907,10 @@ class SpecArena {
 
     static constexpr SpecId kNoHolder = 0xffffffffu;
     uint8_t Height(SpecId id) const {
-        return id < (SpecId)heights.len ? heights[(int)id] : 0;
+        return id < (SpecId)len(heights) ? heights[(int)id] : 0;
     }
     SpecId Holder(SpecId id) const {
-        return id < (SpecId)holders.len ? holders[(int)id] : kNoHolder;
+        return id < (SpecId)len(holders) ? holders[(int)id] : kNoHolder;
     }
     bool ClaimVirtualItems(uint64_t count, uint64_t limit);
     Str DebugTree(Arena* into, SpecId root) const;
@@ -36810,7 +36922,7 @@ class SpecArena {
     bool WriteSlot(SpecId base, const Slot& slot, const SlotValue& value,
                    SpecError* error = nullptr);
 
-    bool MountsAnEntity() const { return mountedViews.len > 0; }
+    bool MountsAnEntity() const { return len(mountedViews) > 0; }
 
     Arena* Storage() const { return arena; }
     RenderSnapshot* snapshot = nullptr;
@@ -39498,6 +39610,8 @@ bool WindowKeyDown(Window* win, int key, bool shift, bool ctrl, bool alt,
 void WindowKeyUp(Window* win, int key, bool shift, bool ctrl, bool alt,
                  bool platform = false, bool function = false);
 
+void WindowModifiersChanged(Window* win, Modifiers modifiers);
+
 void WindowChar(Window* win, uint32_t ch, bool ctrl, bool alt);
 
 void WindowDispatchInput(Window* win, const PlatformInput* input);
@@ -39959,6 +40073,8 @@ void TestSimulateMouseUp(Window* win, Point position,
 
 void TestSimulateClick(Window* win, Point position, Modifiers modifiers = {});
 
+void TestSimulateModifiersChange(Window* win, Modifiers modifiers);
+
 void TestSimulateScrollWheel(Window* win, Point position, Point delta,
                              Modifiers modifiers = {});
 
@@ -39998,7 +40114,7 @@ namespace gpui {
 
 template <typename Plat>
 void RunLoopRedrawDirty(App* app, void (*redraw)(Window*)) {
-    for (int i = 0; i < app->windows.len; i++) {
+    for (int i = 0; i < len(app->windows); i++) {
         Window* w = app->windows[i];
         if (w->plat && w->dirty) {
             redraw(w);
@@ -40011,7 +40127,7 @@ double RunLoopWaitFor(App* app, bool* anyDirty) {
     double now = TimeNow();
     double waitS = 1.0;
     *anyDirty = false;
-    for (int i = 0; i < app->windows.len; i++) {
+    for (int i = 0; i < len(app->windows); i++) {
         Window* w = app->windows[i];
         Plat* plat = w->plat;
         if (!plat) {
@@ -40033,7 +40149,7 @@ double RunLoopWaitFor(App* app, bool* anyDirty) {
 template <typename Plat>
 void RunLoopTickDue(App* app) {
     double now = TimeNow();
-    for (int i = 0; i < app->windows.len; i++) {
+    for (int i = 0; i < len(app->windows); i++) {
         Window* w = app->windows[i];
         Plat* plat = w->plat;
         if (!plat || plat->nextTick <= 0) {
@@ -41029,7 +41145,7 @@ void EditMapAdd(EditMap& map, int32_t index, int32_t remove, const Event* add,
 void EditMapAddBefore(EditMap& map, int32_t index, int32_t remove,
                       const Event* add, int32_t addLen);
 inline bool EditMapEmpty(const EditMap& map) {
-    return map.map.len == 0;
+    return len(map.map) == 0;
 }
 void EditMapConsume(EditMap& map, Vec<Event>& events);
 
@@ -42093,7 +42209,7 @@ class HostModule {
 
     Str Name() const { return name; }
     Str Declared() const { return declarations; }
-    int FunctionCount() const { return functions.len; }
+    int FunctionCount() const { return len(functions); }
     Str FunctionName(int index) const;
     bool Has(Str function) const;
     bool IsAsync(Str function) const;
@@ -42183,7 +42299,7 @@ class Storage {
     bool Set(Str key, Str value, Str* error = nullptr);
     bool Remove(Str key, Str* error = nullptr);
     bool Clear(Str* error = nullptr);
-    int Len() const { return entries.len; }
+    int Len() const { return len(entries); }
     Str Key(int index) const;
     bool HasPath() const { return path.s != nullptr; }
 
@@ -42546,7 +42662,7 @@ class RetainedStore {
     RetainedStore& operator=(const RetainedStore&) = delete;
     ~RetainedStore();
 
-    int Len() const { return entries.len; }
+    int Len() const { return len(entries); }
     uint32_t Checkpoint() const { return nextId; }
 
     EntityHandle CreateInput(bool textarea, Str placeholder, Str value,
@@ -43340,6 +43456,8 @@ class PluginManager {
 
     PluginManager& AddDirectory(Str directory);
     PluginManager& DataHome(Str directory);
+
+    bool WithHostModule(HostModule* module, HostError* error = nullptr);
     const Vec<PluginDiscovery>& Discover();
     bool Load(ShellRuntime* runtime, Str id, PluginAuthorizeFn authorize,
               void* authorizeData, Window* window, App* app,
@@ -43353,6 +43471,8 @@ class PluginManager {
     Str dataHome;
     Vec<PluginDiscovery> catalog;
     Vec<Plugin*> loaded;
+
+    Vec<HostModule*> hostModules;
     bool discovered = false;
 
     void ClearCatalog();
@@ -43502,8 +43622,6 @@ DockPanelDef ScriptPanelNew(App* app, Str name, Entity<ScriptView> view,
 Str ShellRegisterPanel(App* app, Str application, Str panel,
                        const ShellPanelScript& script);
 
-bool ShellIsScriptPanel(const DockPanelDef& def);
-
 struct ShellDockChrome {
     void* data = nullptr;
     El* (*tabBar)(Ctx* cx, void* data, const DockTabGroup* group) = nullptr;
@@ -43572,8 +43690,6 @@ struct HttpRsp {
 
 void HttpRspFree(HttpRsp* r);
 
-Str HttpLastError();
-
 Str HttpRspHeader(const HttpRsp& r, Str name);
 
 Str HttpHeadersFromRaw(Str raw);
@@ -43609,6 +43725,8 @@ struct HttpReq {
 int HttpWaitMs(const HttpReq& req);
 
 bool HttpSend(const HttpReq& req, HttpRsp* out);
+
+bool HttpSendPlatform(const HttpReq& req, HttpRsp* out);
 
 void HttpSetProxy(Str proxy, Str direct = {});
 
@@ -43695,6 +43813,8 @@ struct FetchResult {
 bool FetchIsHttpMethod(Str method);
 
 bool FetchHeaderIsProhibited(Str name);
+
+bool FetchHeaderIsValid(Str name, Str value);
 
 struct FetchHeader {
     Str name;
@@ -47096,7 +47216,12 @@ struct WebView {
     Bounds bounds = {};
 
     Bounds applied = {};
+    Bounds appliedVisible = {};
+    float appliedScale = 0;
     bool hasApplied = false;
+
+    int32_t clip[4] = {};
+    bool hasClip = false;
 
     float pageScale = 0;
     bool hasPageScale = false;
@@ -47142,6 +47267,31 @@ wry::WebView* WebViewRaw(const WebView* self);
 WebViewHandle WebViewGetHandle(const WebView* self);
 
 El* WebViewEl(Entity<WebView> view, Ctx* cx);
+
+#if GPUI_OS_MAC
+#define GPUI_WEBVIEW_WHOLE_POINT_FRAME 1
+#else
+#define GPUI_WEBVIEW_WHOLE_POINT_FRAME 0
+#endif
+
+Bounds WebViewDocumentFrame(Bounds document);
+
+#if GPUI_OS_WINDOWS
+#define GPUI_WEBVIEW_NATIVE_CLIP 1
+#else
+#define GPUI_WEBVIEW_NATIVE_CLIP 0
+#endif
+
+bool WebViewWindowGeometry(Bounds document, Bounds visible, double scale,
+                           wry::Rect* bounds, int32_t clip[4]);
+
+#if GPUI_WEBVIEW_NATIVE_CLIP
+
+bool WebViewNativeClipSet(WebView* self, wry::WebView* raw, Bounds document,
+                          Bounds visible);
+
+bool WebViewNativeClipClear(WebView* self, wry::WebView* raw);
+#endif
 
 }
 
