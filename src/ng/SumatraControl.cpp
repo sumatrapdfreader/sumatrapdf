@@ -2363,9 +2363,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestOpenFileNames: {
-#if OS_WIN
             SetTestOpenFileNames(StringArg(req, 0));
-#endif
             AppendTestResult(req, 0, StrL("OK"));
             break;
         }

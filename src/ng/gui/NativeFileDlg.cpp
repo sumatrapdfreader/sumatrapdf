@@ -164,7 +164,6 @@ static bool OpenFileDlg(MainWindow* win, Str title, const Vec<gp::PathFilter>& f
     if (!win || !win->gpuiWin) {
         return false;
     }
-#if OS_WIN
     // a test's paths instead of the dialog (the first, for one file)
     StrVec testPaths;
     if (TakeTestOpenFileNames(testPaths)) {
@@ -173,7 +172,6 @@ static bool OpenFileDlg(MainWindow* win, Str title, const Vec<gp::PathFilter>& f
         }
         return true;
     }
-#endif
     Str dir, name;
     SplitDirName(initialPath, {}, &dir, &name);
     gp::PathPrompt prompt;

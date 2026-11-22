@@ -199,6 +199,24 @@ void SetTestSavePath(Str path) {
     str::ReplaceWithCopy(&gTestSavePath, path);
 }
 
+#if !OS_WIN
+// orig's live in base/Win.cpp, which this build does not link. A line each.
+static Str gTestOpenFileNames;
+
+void SetTestOpenFileNames(Str paths) {
+    str::ReplaceWithCopy(&gTestOpenFileNames, paths);
+}
+
+bool TakeTestOpenFileNames(StrVec& out) {
+    if (len(gTestOpenFileNames) == 0) {
+        return false;
+    }
+    Split(&out, gTestOpenFileNames, StrL("\n"), true);
+    SetTestOpenFileNames({});
+    return len(out) > 0;
+}
+#endif
+
 void ShowSavePathDialog(SavePathArgs* args) {
     if (!args) {
         return;
