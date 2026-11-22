@@ -3334,6 +3334,10 @@ static void ExecuteControlRequest(ControlRequest* req) {
                     AppendTestResult(req, 0, fmt("OK lookups=%d", gTabTooltipSizeLookups));
                     break;
                 }
+                if (str::Eq(op, StrL("toclayouts"))) {
+                    AppendTestResult(req, 0, fmt("OK layouts=%d", gTocLayoutCount));
+                    break;
+                }
                 if (str::Eq(op, StrL("ctxcmd"))) {
                     WindowContextMenuCommand(FirstWindow(), arg);
                     AppendTestResult(req, 0, StrL("ok"));

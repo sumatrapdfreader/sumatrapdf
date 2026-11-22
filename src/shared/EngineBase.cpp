@@ -723,10 +723,19 @@ TocItem* AllocTocItem(Arena* arena, Str title, int pageNo) {
     return item;
 }
 
+static AtomicInt gTocItemsFreed = 0;
+
+// changes whenever ToC items are freed, so a cache keyed on TocItem pointers
+// can't mistake a new item at a freed one's address for it
+int TocItemsFreedGeneration() {
+    return AtomicIntGet(&gTocItemsFreed);
+}
+
 void FreeTocItemRec(Arena* arena, TocItem* item) {
     if (!item) {
         return;
     }
+    AtomicIntInc(&gTocItemsFreed);
     FreeTocItemRec(arena, item->child);
     // arena dests: destructor only; heap dests: delete
     if (!item->destNotOwned && item->dest) {

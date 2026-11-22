@@ -89,6 +89,15 @@ struct TocRow {
     float dy = kRowDy;
 };
 
+// what the ToC rows' heights depend on, besides the rows themselves
+struct TocLayoutKey {
+    int itemsFreedGen = -1;
+    DocController* ctrl = nullptr;
+    float viewDx = -1;
+    bool wrap = false;
+    bool pageNumbers = false;
+};
+
 struct FavRow {
     FavTreeItem* item;
     int depth;
@@ -130,6 +139,10 @@ struct SidebarUI {
     TocItem* tocReveal = nullptr;
     bool tocRtl = false;
     Vec<TocRow> tocRows;
+    // this frame's flattened rows, laid out only when they or the key changed
+    Vec<TocRow> tocRowsNext;
+    TocLayoutKey tocLayoutKey;
+    float tocListDy = 0;
     MenuModel* tocMenu = nullptr;
     TocItem* tocMenuFor = nullptr;
     bool tocMenuValid = false;
@@ -321,6 +334,7 @@ void SidebarDelete(MainWindow* win) {
     DeleteMenuModel(ui->favMenu);
     DetachThumbCache(ui);
     VecReset(ui->tocRows);
+    VecReset(ui->tocRowsNext);
     VecReset(ui->favRows);
     DeleteVecMembers(ui->layerRows);
     VecReset(ui->layerRows);
@@ -1469,6 +1483,51 @@ static int TocRowAtY(const Vec<TocRow>& rows, float y) {
     return std::max(lo, 0);
 }
 
+static bool TocRowsSame(const Vec<TocRow>& a, const Vec<TocRow>& b) {
+    if (len(a) != len(b)) {
+        return false;
+    }
+    for (int i = 0; i < len(a); i++) {
+        if (a[i].item != b[i].item || a[i].depth != b[i].depth) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool TocLayoutKeySame(const TocLayoutKey& a, const TocLayoutKey& b) {
+    return a.itemsFreedGen == b.itemsFreedGen && a.ctrl == b.ctrl && a.viewDx == b.viewDx && a.wrap == b.wrap &&
+           a.pageNumbers == b.pageNumbers;
+}
+
+int gTocLayoutCount = 0;
+
+// flattens the expanded ToC every frame (cheap) but lays the rows out only
+// when they or what their heights depend on changed: a big ToC is slow to lay out
+static float UpdateTocRows(MainWindow* win, SidebarUI* ui) {
+    VecReset(ui->tocRowsNext);
+    TocTree* tree = CurrentTocTree(win);
+    if (tree && tree->root) {
+        FlattenToc(tree->root->child, 0, ui->tocRowsNext);
+    }
+    TocLayoutKey key;
+    key.itemsFreedGen = TocItemsFreedGeneration();
+    key.ctrl = win->ctrl;
+    key.viewDx = ui->tocView.w;
+    key.wrap = gSettings->tocWrapText;
+    key.pageNumbers = gSettings->showTocPageNumbers;
+    if (TocRowsSame(ui->tocRows, ui->tocRowsNext) && TocLayoutKeySame(key, ui->tocLayoutKey)) {
+        return ui->tocListDy;
+    }
+    std::swap(ui->tocRows.len, ui->tocRowsNext.len);
+    std::swap(ui->tocRows.cap, ui->tocRowsNext.cap);
+    std::swap(ui->tocRows.els, ui->tocRowsNext.els);
+    ui->tocListDy = LayoutTocRows(win, ui->tocRows, ui->tocView.w);
+    ui->tocLayoutKey = key;
+    gTocLayoutCount++;
+    return ui->tocListDy;
+}
+
 static void FlattenFav(FavTreeItem* item, int depth, Vec<FavRow>& out) {
     VecAppend(out, FavRow{item, depth});
     if (!item->isExpanded) {
@@ -2394,13 +2453,8 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     SidebarUI* ui = Ui(win);
     const gp::Theme& th = gp::ThemeNow(cx->app);
 
-    VecReset(ui->tocRows);
-    TocTree* tree = CurrentTocTree(win);
-    if (tree && tree->root) {
-        FlattenToc(tree->root->child, 0, ui->tocRows);
-    }
-    int nRows = ui->tocRows.len;
-    float listDy = LayoutTocRows(win, ui->tocRows, ui->tocView.w);
+    float listDy = UpdateTocRows(win, ui);
+    int nRows = len(ui->tocRows);
 
     if (ui->tocReveal) {
         int idx = -1;

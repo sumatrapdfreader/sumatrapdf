@@ -396,6 +396,7 @@ struct TocItem {
 
 TocItem* AllocTocItem(Arena* arena, Str title, int pageNo);
 void FreeTocItemRec(Arena* arena, TocItem* item);
+int TocItemsFreedGeneration();
 
 struct TocTree : TreeModel {
     TocItem* root = nullptr;
