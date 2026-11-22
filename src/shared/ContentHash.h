@@ -15,7 +15,6 @@ bool ParseSha1Hex(Str hex, u8 out[kSha1Len]);
 TempStr Sha1HexTemp(const u8 sha1[kSha1Len]);
 bool ParseContentHash(Str s, ContentHash& out);
 TempStr FormatContentHashTemp(const ContentHash& h);
-bool StoredContentHash(Str path, ContentHash& out);
 void RememberContentHash(Str path, const ContentHash& h);
 bool KnownContentHash(Str path, ContentHash& out);
 void SaveKnownContentHashes();

@@ -333,7 +333,7 @@ void AboutCtrl::Sync() {
             label->align = VirtTextAlign::Right;
             AddChild(label);
             VecAppend(labels, label);
-            auto* link = new VirtLink(TrimGitTemp(el->rightTxt));
+            auto* link = new VirtLink(el->rightTxt);
             link->SetTarget(el->url);
             link->SetTooltip(el->url);
             link->underlineOffsetY = -3;

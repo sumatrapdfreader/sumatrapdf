@@ -922,7 +922,7 @@ static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withBorder) {
                           ->Font((float)kAboutTextFontPx)
                           ->Fg(ToGpui(colMuted))
                           ->H((float)kAboutRowDy));
-        values->Child(AboutLinkEl(win, cx, TrimGitTemp(el->rightTxt), el->url, fmt("about-row-%d", i), i));
+        values->Child(AboutLinkEl(win, cx, el->rightTxt, el->url, fmt("about-row-%d", i), i));
     }
     box->Child(gp::Div(cx->a)->FlexRow()->Gap((float)kAboutColGap)->Child(labels)->Child(values));
 

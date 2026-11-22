@@ -620,8 +620,6 @@ static bool HandlePolyLineClick(MainWindow* win, Point pt, bool isShift, bool is
     if (close) {
         // by value: VecAppend takes a reference, and growing the vec frees the
         // buffer that reference would point into
-        // by value: VecAppend takes a reference, and growing the vec frees the
-        // buffer that reference would point into
         PointF first = p.points[0];
         VecAppend(p.points, first);
         CommitPlacementCommand(win, dm->CvtToScreen(pageNo, first));

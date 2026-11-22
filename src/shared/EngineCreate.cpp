@@ -24,8 +24,6 @@ TempStr GetSumatraDataDirTemp();
 bool IsStressTesting();
 bool AnnotationsAreDisabled();
 
-static bool gEnableEpubWithPdfEngine = true;
-
 // Deterministic cache path for a cbx file on a slow drive. Uses
 // md5(path + size) so it stays stable across opens of the same file, and
 // reuses the file's own extension (.cbr/.cbz/.cb7/.cbt) so tooling that
@@ -359,8 +357,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     }
     int dpi = DpiGet();
     EngineBase* engine = nullptr;
-    // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm),
-    // regardless of gEnableEpubWithPdfEngine.
+    // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm)
     if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Ofd || kind == FileType::Markdown ||
         IsOfficeFileType(kind)) {
         return CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
@@ -407,7 +404,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     if (enableChmEngine && (kind == FileType::Chm)) {
         return CreateEngineChmFromFile(path);
     }
-    if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
+    if (IsEngineMupdfSupportedFileType(kind)) {
         engine = CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/2212
         // if failed to open with EngineMupdf, will also try to open
@@ -532,7 +529,7 @@ static EngineBase* CreateEngineForKindFromData(FileType kind, Str data, Str name
     if (IsEngineCbxSupportedFileType(kind)) {
         return CreateEngineCbxFromData(data);
     }
-    if (gEnableEpubWithPdfEngine && IsEngineMupdfSupportedFileType(kind)) {
+    if (IsEngineMupdfSupportedFileType(kind)) {
         EngineBase* engine = CreateEngineMupdfFromData(data, nameHint, pwdUI);
         if (engine) {
             return engine;

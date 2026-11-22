@@ -371,8 +371,6 @@ static PdfColor gColorsValues[] = {
 };
 // clang-format on
 
-static bool gShowRect = true;
-
 static TempStr GetKnownColorNameTemp(PdfColor c) {
     int n = dimofi(gColorsValues);
     for (int i = 0; i < n; i++) {
@@ -518,10 +516,8 @@ void CollectAnnotationHoverRows(Annotation* annot, AnnotationHoverRows& rows) {
     if (popupId >= 0) {
         rows.Add(StrL("popup"), Tr("Popup:"), fmt("%d 0 R", popupId));
     }
-    if (gShowRect) {
-        RectF rect = GetBounds(annot);
-        rows.Add(StrL("rect"), Tr("Rect:"), fmt("%d-%d@%d-%d", (int)rect.dx, (int)rect.dy, (int)rect.x, (int)rect.y));
-    }
+    RectF rect = GetBounds(annot);
+    rows.Add(StrL("rect"), Tr("Rect:"), fmt("%d-%d@%d-%d", (int)rect.dx, (int)rect.dy, (int)rect.x, (int)rect.y));
 }
 
 Color AnnotationHoverBg() {
@@ -1030,7 +1026,7 @@ void RefreshEditAnnotationsAfterEngineChange(WindowTab* tab) {
     RefreshAnnotFilterAnnotations(tab->win);
 }
 
-TempStr AnnotEditorLayoutResultTemp(int, int, int* exitCodeOut, int) {
+TempStr AnnotEditorLayoutResultTemp(int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](Str msg, int code) -> TempStr {
         out.Append(msg);

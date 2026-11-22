@@ -128,8 +128,7 @@ UpdateCheckChoice DecideUpdateCheck(const UpdateCheckFacts& f) {
     }
 
     constexpr int kSecondsInDay = 60 * 60 * 24;
-    constexpr int kSecondsInWeek = 7 * 60 * 60 * 24;
-    int secsBetweenChecks = f.isPreRelease ? kSecondsInWeek : kSecondsInDay;
+    int secsBetweenChecks = kSecondsInDay;
     bool checkUpdate = f.secsSinceLast > secsBetweenChecks;
     logf("CheckForUpdate: %s auto check, %d secs since the last one, %d secs between checks\n",
          checkUpdate ? StrL("doing") : StrL("skipping"), f.secsSinceLast, secsBetweenChecks);

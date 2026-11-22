@@ -128,8 +128,6 @@ TempStr FormatSettingDefaultTemp(SettingItem* item) {
 // are rendered, and picking a value from a list is guesswork without seeing it.
 // The value is previewed without touching gSettings, so Cancel (or closing
 // the dialog) puts the saved value back - see EndPreviewSettingChange().
-void SetItemChanged(SettingItem* item);
-
 void PreviewSettingChange(SettingItem* item) {
     if (!str::EqI(item->name, StrL("DocumentColorsFollowTheme"))) {
         return;

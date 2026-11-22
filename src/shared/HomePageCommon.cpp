@@ -98,15 +98,6 @@ void PickAnotherRandomTip() {
     }
 }
 
-TempStr TrimGitTemp(Str s) {
-    if (gitCommidId && str::EndsWith(s, gitCommidId)) {
-        int sLen = len(s);
-        int gitLen = len(gitCommidId);
-        return str::DupTemp(Str(s.s, sLen - gitLen - 7));
-    }
-    return s;
-}
-
 // how many digits of the commit the About box shows
 constexpr int kAboutCommitDigits = 6;
 

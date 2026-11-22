@@ -3400,14 +3400,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestAnnotEditorLayout: {
-            i32 clientDy = 0;
-            i32 selectItem = 0;
-            i32 selectLast = 0;
-            IntArg(req, 0, clientDy);
-            IntArg(req, 1, selectItem);
-            IntArg(req, 2, selectLast);
             int exitCode = 0;
-            Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode, selectLast);
+            Str res = AnnotEditorLayoutResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

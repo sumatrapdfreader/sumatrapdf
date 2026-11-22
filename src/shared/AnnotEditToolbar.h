@@ -71,4 +71,4 @@ void DrawAnnotationListRow(Gfx*, PlatformFont*, Rect, Annotation*, const StrVec&
 void UpdateAnnotationHoverOverlay(MainWindow*);
 void RepositionAnnotationHoverOverlay(MainWindow*);
 #endif
-TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut = nullptr, int selectLast = 0);
+TempStr AnnotEditorLayoutResultTemp(int* exitCodeOut = nullptr);

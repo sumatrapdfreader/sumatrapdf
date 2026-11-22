@@ -1435,14 +1435,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestAnnotEditorLayout: {
-            i32 clientDy = 0;
-            i32 selectItem = 0;
-            i32 selectLast = 0;
-            IntArg(req, 0, clientDy);   // optional
-            IntArg(req, 1, selectItem); // optional, 1-based; -1 = select all
-            IntArg(req, 2, selectLast); // optional, 1-based range end
             int exitCode = 0;
-            Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode, selectLast);
+            Str res = AnnotEditorLayoutResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

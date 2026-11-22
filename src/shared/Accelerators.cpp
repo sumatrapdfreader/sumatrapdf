@@ -572,8 +572,6 @@ int AsciiAcceleratorCmd(u32 ch) {
 }
 
 namespace {
-// ng: orig fills three win32 tables here (all / edit / tree view). We keep one
-// and classify at lookup time; gpui decides per key context (step 6).
 struct AccelTablesBuilder {
     Accel* accels = nullptr;
     int nAccels = 0;

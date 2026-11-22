@@ -101,12 +101,6 @@ TempStr FormatContentHashTemp(const ContentHash& h) {
     return fmt("%s %lld %llu", Sha1HexTemp(h.sha1), h.size, h.mtime);
 }
 
-// the hash saved in path's history entry, not checked against the file
-bool StoredContentHash(Str path, ContentHash& out) {
-    FileState* fs = FileHistoryFindByPath(path);
-    return fs && len(fs->contentSha1) > 0 && ParseContentHash(fs->contentSha1, out);
-}
-
 static PathHash* FindPathHash(Str path) {
     for (PathHash& p : gPathHashes) {
         if (str::EqI(p.path, path)) {
