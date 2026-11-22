@@ -603,12 +603,9 @@ inline double ClampD(double x, double min, double max) {
     return ClampT(x, min, max);
 }
 
-// return true if adding n to val overflows. Only valid for n > 0
+// return true if adding n to val overflows. Only valid for n >= 0, val >= 0
 template <typename T>
 inline bool addOverflows(T val, T n) {
-    if (n == 0 || val == 0) {
-        return true;
-    }
     ReportIf(n < 0);
     ReportIf(val < 0);
     T res = val + n;

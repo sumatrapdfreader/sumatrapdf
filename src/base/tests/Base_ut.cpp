@@ -561,6 +561,9 @@ void BaseUtilTest() {
     utassert(!addOverflows<u8>(127, 1));
     utassert(!addOverflows<u8>(127, 127));
     utassert(!addOverflows<u8>(127, 128));
+    // an empty archive entry: nothing to add is no overflow
+    utassert(!addOverflows<u8>(0, 3));
+    utassert(!addOverflows<u8>(5, 0));
     utassert(addOverflows<u8>(127, 129));
     utassert(addOverflows<u8>(127, 255));
 
