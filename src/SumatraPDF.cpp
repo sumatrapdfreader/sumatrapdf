@@ -13680,8 +13680,9 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 if (' ' == gMenuAccelPressed) {
                     Str after;
                     if (str::CutChar(Tr("&Window"), '&', nullptr, &after) && after.len > 0) {
-                        char c = after.s[0];
-                        gMenuAccelPressed = (WCHAR)c;
+                        // decode so a non-ASCII accelerator isn't truncated to its first UTF-8 byte
+                        WStr ws = ToWStrTemp(after);
+                        gMenuAccelPressed = len(ws) > 0 ? ws.s[0] : 0;
                     }
                 }
                 HandleCaptionClick(win, CB_MENU);
