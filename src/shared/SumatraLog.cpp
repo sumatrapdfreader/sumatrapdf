@@ -132,15 +132,11 @@ void log(Str s) {
     if (gReducedLogging) {
         // in reduced logging mode, we do want to log to at least the debugger
 #if OS_WIN
-        if (gLogToDebugger || IsDebuggerPresent() || gReducedLogging) {
-            OutputDebugStringA(s.s);
-        }
+        OutputDebugStringA(s.s);
 #else
         // ng: no debugger output channel on POSIX; stderr is the equivalent
-        if (gLogToDebugger || gReducedLogging) {
-            fwrite(s.s, 1, (size_t)s.len, stderr);
-            fflush(stderr);
-        }
+        fwrite(s.s, 1, (size_t)s.len, stderr);
+        fflush(stderr);
 #endif
         // if the pipe already connected, do log to it even if disabled
         // we do want easy logging, just want to reduce doing stuff
