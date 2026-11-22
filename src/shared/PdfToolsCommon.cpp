@@ -964,11 +964,8 @@ TempStr SaveSelectionAsImageResultTemp(Str destPath, int dpi, int pageNo, int x,
     return finish(0, fmt("OK w=%d h=%d path=%s", w, h, withExt));
 }
 
-bool ExtractTextViaEngine(MainWindow* win, Str destPath, Str pages) {
-    if (!win || !win->ctrl) {
-        return false;
-    }
-    DisplayModel* dm = win->ctrl->AsFixed();
+bool ExtractTextViaEngine(WindowTab* tab, Str destPath, Str pages) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     if (!dm) {
         return false;
     }

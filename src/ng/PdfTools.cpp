@@ -704,6 +704,16 @@ static void CloseAndLoad(Str destPath) {
     }
 }
 
+// the tab the dialog was opened for; the user may have switched tabs since
+static WindowTab* ToolSrcTab() {
+    return gTool.win ? FindTabByFilePath(gTool.srcPath, gTool.win) : nullptr;
+}
+
+static DisplayModel* ToolSrcDm() {
+    WindowTab* tab = ToolSrcTab();
+    return tab ? tab->AsFixed() : nullptr;
+}
+
 static void PdfBakeDoIt() {
     TempStr destPath = DestPathTemp();
     if (len(destPath) == 0) {
@@ -712,7 +722,7 @@ static void PdfBakeDoIt() {
     MainWindow* win = gTool.win;
     Str inputPath = gTool.srcPath;
     TempStr tmpPath;
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    WindowTab* tab = ToolSrcTab();
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
     // pdfbake_main re-opens the file from disk, so unsaved session
     // annotations would be missing unless we write them out first (issue #5977).
@@ -761,7 +771,7 @@ static void PdfExtractTextDoIt() {
     logf("PdfExtractTextDoIt: extracting text from '%s' to '%s', pages: %s\n", gTool.srcPath, destPath, pages);
 
     bool ok = false;
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    WindowTab* tab = ToolSrcTab();
     bool isPdf = tab && IsPdfDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
@@ -773,7 +783,7 @@ static void PdfExtractTextDoIt() {
         ok = muconvert_main(argc, argv) == 0;
     } else {
         // use engine text extraction for other formats (DjVu, etc.)
-        ok = ExtractTextViaEngine(gTool.win, destPath, pages);
+        ok = ExtractTextViaEngine(tab, destPath, pages);
     }
 
     if (ok) {
@@ -965,7 +975,7 @@ static void PdfEncryptDoIt() {
 static void PdfStampDoIt() {
     TempStr destPath = DestPathTemp();
     MainWindow* win = gTool.win;
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    WindowTab* tab = ToolSrcTab();
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
     Vec<int> pages;
     if (len(destPath) == 0 || !engine || !ParseDeletePages(InputTextTemp(gTool.pagesEdit), gTool.pageCount, pages)) {
@@ -1056,11 +1066,11 @@ static void ConvertToPdfDoIt() {
         return;
     }
     MainWindow* win = gTool.win;
-    if (!win || !win->IsDocLoaded()) {
+    DisplayModel* dm = ToolSrcDm();
+    if (!dm) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    EngineBase* engine = dm->GetEngine();
     bool isOfd = engine && EngineMupdfIsOfd(engine);
     if (!engine || !(engine->isImageCollection || isOfd)) {
         MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Convert to PDF"));
@@ -1083,7 +1093,7 @@ static void ConvertToPdfDoIt() {
 static bool SelectedImagePages(Vec<int>& pages) {
     VecReset(pages);
     if (gTool.pagesMode == PagesMode::Current) {
-        DisplayModel* dm = gTool.win ? gTool.win->AsFixed() : nullptr;
+        DisplayModel* dm = ToolSrcDm();
         int cur = dm ? dm->CurrentPageNo() : 0;
         if (cur < 1 || cur > gTool.pageCount) {
             return false;
@@ -1103,7 +1113,7 @@ static int ExistingImageCount() {
     if (gTool.kind != PdfToolKind::ConvertToImages) {
         return 0;
     }
-    DisplayModel* dm = gTool.win ? gTool.win->AsFixed() : nullptr;
+    DisplayModel* dm = ToolSrcDm();
     int cur = dm ? dm->CurrentPageNo() : 0;
     TempStr key = fmt("%d %d %s|%s", (int)gTool.pagesMode, cur, InputTextTemp(gTool.pagesEdit), DestPathTemp());
     if (str::Eq(key, gTool.existKey)) {
@@ -1121,7 +1131,7 @@ static void ConvertPdfToImagesDoIt() {
         return;
     }
     MainWindow* win = gTool.win;
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    DisplayModel* dm = ToolSrcDm();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
         MessageBoxWarning(win, StrL("Failed to convert to images."), Tr("Convert to Images"));
@@ -1165,7 +1175,7 @@ static void SaveSelectionAsImageDoIt() {
         return;
     }
     MainWindow* win = gTool.win;
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    DisplayModel* dm = ToolSrcDm();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
         return;
@@ -2210,7 +2220,7 @@ static bool ActionEnabled() {
         return ParseDeletePages(InputTextTemp(gTool.pagesEdit), gTool.pageCount, parsed);
     }
     if (gTool.kind == PdfToolKind::SaveSelectionAsImage) {
-        DisplayModel* dm = gTool.win ? gTool.win->AsFixed() : nullptr;
+        DisplayModel* dm = ToolSrcDm();
         EngineBase* engine = dm ? dm->GetEngine() : nullptr;
         if (!engine) {
             return false;

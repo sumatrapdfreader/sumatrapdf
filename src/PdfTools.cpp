@@ -151,6 +151,7 @@ struct PdfToolDialog : WindowBase {
     ~PdfToolDialog() override;
 
     bool CreateToolDialog(MainWindow*, WindowTab*, Str title);
+    WindowTab* SrcTab() const;
     HBox* NewRow();
     VirtText* NewLabel(Str s, PlatformFont* font, Color col, int dy = 0, int dx = 0);
     Edit* NewEdit(Str text, PlatformFont* font, bool isPassword = false);
@@ -174,6 +175,11 @@ struct PdfToolDialog : WindowBase {
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
 };
+
+// the tab the dialog was opened for; the user may have switched tabs since
+WindowTab* PdfToolDialog::SrcTab() const {
+    return win ? FindTabByFilePath(srcPath, win) : nullptr;
+}
 
 PdfToolDialog::~PdfToolDialog() {
     str::FreePtr(&srcPath);
@@ -539,7 +545,7 @@ void PdfBakeDialog::DoIt(VirtMouseEvent*) {
 
     Str inputPath = srcPath;
     TempStr tmpPath;
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    WindowTab* tab = SrcTab();
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
     // pdfbake_main re-opens the file from disk, so unsaved session
     // annotations would be missing unless we write them out first (issue #5977).
@@ -629,7 +635,7 @@ void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
     logf("PdfExtractTextDoIt: extracting text from '%s' to '%s', pages: %s\n", srcPath, destPath, pages);
 
     bool ok = false;
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    WindowTab* tab = SrcTab();
     bool isPdf = tab && IsPdfDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
@@ -641,7 +647,7 @@ void PdfExtractTextDialog::DoIt(VirtMouseEvent*) {
         ok = muconvert_main(argc, argv) == 0;
     } else {
         // use engine text extraction for other formats (DjVu, etc.)
-        ok = ExtractTextViaEngine(win, destPath, pages);
+        ok = ExtractTextViaEngine(tab, destPath, pages);
     }
 
     if (ok) {
@@ -702,7 +708,7 @@ void PdfExportMarkdownDialog::DoIt(VirtMouseEvent*) {
     if (len(destPath) == 0 || !PageRangeOk(pagesEdit->GetTextTemp(), pageCount, true, pages)) {
         return;
     }
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    WindowTab* tab = SrcTab();
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
     if (!engine) {
         return;
@@ -1193,7 +1199,7 @@ void PdfStampDialog::DoIt(VirtMouseEvent*) {
     if (len(destPath) == 0 || !ParseDeletePages(pagesEdit->GetTextTemp(), pageCount, pages)) {
         return;
     }
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    WindowTab* tab = SrcTab();
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
     if (!engine) {
         return;
@@ -1359,11 +1365,12 @@ void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
     if (len(destPath) == 0) {
         return;
     }
-    if (!win || !win->IsDocLoaded()) {
+    WindowTab* tab = SrcTab();
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!dm) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    EngineBase* engine = dm->GetEngine();
     bool isOfd = EngineMupdfIsOfd(engine);
     if (!engine || !(engine->isImageCollection || isOfd)) {
         MessageBoxWarning(hwnd, Tr("Failed to save a file"), Tr("Convert to PDF"));
@@ -1759,7 +1766,8 @@ void ConvertPdfToImagesDialog::UpdateButton() {
 bool ConvertPdfToImagesDialog::SelectedPages(Vec<int>& pages) {
     VecReset(pages);
     if (radioCurrent && radioCurrent->IsChecked()) {
-        DisplayModel* dm = win ? win->AsFixed() : nullptr;
+        WindowTab* tab = SrcTab();
+        DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
         int cur = dm ? dm->CurrentPageNo() : 0;
         if (cur < 1 || cur > pageCount) {
             return false;
@@ -1855,7 +1863,8 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
     if (len(destPath) == 0) {
         return;
     }
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    WindowTab* tab = SrcTab();
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
         MessageBoxWarning(hwnd, StrL("Failed to convert to images."), Tr("Convert to Images"));
@@ -2000,10 +2009,8 @@ struct SaveSelectionAsImageDialog : PdfToolDialog {
 
 // the line's right end: the image's size at this DPI
 void SaveSelectionAsImageDialog::UpdateSizeLabel() {
-    if (!win) {
-        return;
-    }
-    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = SrcTab();
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
         return;
@@ -2073,7 +2080,8 @@ void SaveSelectionAsImageDialog::DoIt(VirtMouseEvent*) {
     if (len(destPath) == 0) {
         return;
     }
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    WindowTab* tab = SrcTab();
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (!engine) {
         return;

@@ -92,7 +92,7 @@ bool WriteSelectionPixmap(Pixmap* px, Str destPath);
 bool SavePixmapAsImageFile(Pixmap* px, Str path);
 void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract);
 
-bool ExtractTextViaEngine(MainWindow* win, Str destPath, Str pages);
+bool ExtractTextViaEngine(WindowTab* tab, Str destPath, Str pages);
 
 struct SaveSelImgWork {
     Pixmap* px = nullptr;
