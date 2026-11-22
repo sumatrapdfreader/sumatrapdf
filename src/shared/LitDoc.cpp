@@ -680,15 +680,18 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
     }
     int interval = (int)LitU32(resetTable, 32);
     int bytesRemaining = (int)LitU32(resetTable, 16);
-    if (interval <= 0) {
+    // Decode reset-table intervals, resetting LZX only at window boundaries.
+    // interval comes from the file: bound it before allocating
+    int windowBytes = 1 << windowSize;
+    if (interval <= 0 || interval > windowBytes) {
         return {};
     }
-
-    // Decode reset-table intervals, resetting LZX only at window boundaries.
-    int windowBytes = 1 << windowSize;
-    int intervalsPerWindow = (windowBytes >= interval) ? (windowBytes / interval) : 1;
+    int intervalsPerWindow = windowBytes / interval;
     str::Builder out;
     AutoFree<u8> obuf(AllocArray<u8>(interval));
+    if (!obuf) {
+        return {};
+    }
     int base = 0;
     int idx = 0;
     // Without a table entry, only one final interval may remain.
