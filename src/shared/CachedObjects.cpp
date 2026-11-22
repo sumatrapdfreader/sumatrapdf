@@ -20,7 +20,7 @@ WindowTab* (*gCurrentTabForCache)() = nullptr;
 void (*gOnCachedObjectsChanged)() = nullptr;
 
 static RecursiveMutex gCachedObjectsLock;
-static AtomicInt gFreeCachedObjectsReenter;
+static AtomicBool gFreeCachedObjectsReenter;
 static thread_local uintptr_t gSkipFreeId = 0;
 
 static void EnsureCachedObjectHooks();
@@ -123,10 +123,10 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
     if (wantBytes == 0) {
         return 0;
     }
-    if (AtomicIntGet(&gFreeCachedObjectsReenter) != 0) {
+    // swap, not get + set: two threads could both see it clear and free the same objects
+    if (AtomicBoolSwap(&gFreeCachedObjectsReenter, true)) {
         return 0;
     }
-    AtomicIntInc(&gFreeCachedObjectsReenter);
 
     WindowTab* currTab = CurrTab();
     u64 freed = 0;
@@ -165,7 +165,7 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
         }
     }
 
-    AtomicIntDec(&gFreeCachedObjectsReenter);
+    AtomicBoolSet(&gFreeCachedObjectsReenter, false);
     return freed;
 }
 
