@@ -234,19 +234,6 @@ void CancelPendingFind(MainWindow* win) {
     }
 }
 
-// TODO: for https://github.com/sumatrapdfreader/sumatrapdf/issues/2655
-__unused static TempStr ReverseTextTemp(Str s) {
-    TempWStr ws = ToWStrTemp(s);
-    int n = len(ws);
-    for (int i = 0; i < n / 2; i++) {
-        WCHAR c1 = ws.s[i];
-        WCHAR c2 = ws.s[n - 1 - i];
-        ws.s[i] = c2;
-        ws.s[n - 1 - i] = c1;
-    }
-    return ToUtf8Temp(ws);
-}
-
 // the canvas area find marks are clipped to
 Rect FindPaintClipRc(MainWindow* win, DisplayModel*) {
     return win->canvasRc;
