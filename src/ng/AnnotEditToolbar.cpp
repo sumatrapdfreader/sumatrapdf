@@ -926,7 +926,12 @@ static void OnChipClick(AnnotEditToolbar* tb, int chipIdx) {
         case AnnotEditKind::Bold:
         case AnnotEditKind::Italic:
         case AnnotEditKind::Underline:
+        case AnnotEditKind::Strikeout:
             SetFreeTextFont(annot, FreeTextFontFamily(annot), FreeTextFontStyle(annot) ^ StyleBitForKind(kind));
+            AnnotChanged(tab);
+            break;
+        case AnnotEditKind::VAlign:
+            SetFreeTextFont(annot, FreeTextFontFamily(annot), NextVAlignStyle(FreeTextFontStyle(annot)));
             AnnotChanged(tab);
             break;
         case AnnotEditKind::Alignment:
@@ -1042,6 +1047,26 @@ static void PaintAlignment(gp::PaintCtx* ctx, gp::Bounds r, int quadding, Color 
         gp::CanvasFillRect(ctx, x, y, dx, lineH, c);
         y += lineH + gap;
     }
+}
+
+// the box's top and bottom edges and a text line at the top, middle or bottom
+static void PaintVAlign(gp::PaintCtx* ctx, gp::Bounds r, int valign, Color col) {
+    float pad = (float)DpiScale(6);
+    gp::Bounds inner{r.x + pad, r.y + pad, r.w - 2 * pad, r.h - 2 * pad};
+    if (inner.w < 6 || inner.h < 8) {
+        inner = gp::Bounds{r.x + 2, r.y + 2, r.w - 4, r.h - 4};
+    }
+    float edge = 1;
+    float lineH = (float)std::max(DpiScale(2), 1);
+    gp::Rgba c = ToGpui(col);
+    gp::CanvasFillRect(ctx, inner.x, inner.y, inner.w, edge, c);
+    gp::CanvasFillRect(ctx, inner.x, inner.y + inner.h - edge, inner.w, edge, c);
+    float gap = lineH;
+    float top = inner.y + edge + gap;
+    float bottom = inner.y + inner.h - edge - gap - lineH;
+    float y = valign == 1 ? (top + bottom) / 2 : valign == 2 ? bottom : top;
+    float inset = inner.w / 5;
+    gp::CanvasFillRect(ctx, inner.x + inset, y, inner.w - 2 * inset, lineH, c);
 }
 
 // a point in canvas dips; gpui's Point is a text cursor position
@@ -1308,6 +1333,9 @@ static void PaintChip(gp::PaintCtx* ctx, gp::El* e, void* user) {
         case AnnotEditKind::Alignment:
             PaintAlignment(ctx, b, p->number, p->fg);
             break;
+        case AnnotEditKind::VAlign:
+            PaintVAlign(ctx, b, p->number, p->fg);
+            break;
         case AnnotEditKind::LineStart:
         case AnnotEditKind::LineEnd:
             PaintLineEnding(ctx, b, p->number, p->lineIsStart, p->fg);
@@ -1537,6 +1565,7 @@ static bool ChipIsCustomPainted(AnnotEditKind kind) {
         case AnnotEditKind::InteriorColor:
         case AnnotEditKind::TextColor:
         case AnnotEditKind::Alignment:
+        case AnnotEditKind::VAlign:
         case AnnotEditKind::LineStart:
         case AnnotEditKind::LineEnd:
             return true;
@@ -1583,8 +1612,8 @@ static gp::El* BuildChip(AnnotEditToolbar* tb, gp::Ctx* cx, int idx, int rowDy) 
                        ->PathClick(GpuiDup(cx->a, id))
                        ->OnHover(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnChipHover, (intptr_t)idx))
                        ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnChip, (intptr_t)idx));
-    bool isStyleToggle =
-        item.kind == AnnotEditKind::Bold || item.kind == AnnotEditKind::Italic || item.kind == AnnotEditKind::Underline;
+    bool isStyleToggle = item.kind == AnnotEditKind::Bold || item.kind == AnnotEditKind::Italic ||
+                         item.kind == AnnotEditKind::Underline || item.kind == AnnotEditKind::Strikeout;
     if (isStyleToggle && item.number != 0) {
         chip->Bg(ToGpui(BarActiveBg()));
     }
@@ -1592,7 +1621,8 @@ static gp::El* BuildChip(AnnotEditToolbar* tb, gp::Ctx* cx, int idx, int rowDy) 
         AnnotChipPaint* p = &tb->chipPaint[idx];
         p->kind = item.kind;
         p->color = item.color;
-        p->number = item.kind == AnnotEditKind::Alignment ? item.number : item.lineEnding;
+        bool numbered = item.kind == AnnotEditKind::Alignment || item.kind == AnnotEditKind::VAlign;
+        p->number = numbered ? item.number : item.lineEnding;
         p->lineIsStart = item.lineIsStart;
         p->fg = fg;
         chip->customPaint = &PaintChip;

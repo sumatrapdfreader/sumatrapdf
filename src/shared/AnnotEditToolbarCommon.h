@@ -19,9 +19,11 @@ enum class AnnotEditKind {
     Bold,
     Italic,
     Underline,
+    Strikeout,
     TextColor,
     TextSize,
     Alignment,
+    VAlign,
     Icon,
     Contents,
     LineStart,
@@ -52,6 +54,8 @@ bool AnnotationBorderInColorChip(AnnotationType tp);
 Str ResolvedAnnotIconName(Annotation* annot);
 extern SeqStrings gBase14ReadableNames;
 int StyleBitForKind(AnnotEditKind kind);
+int VAlignOfStyle(int style);
+int NextVAlignStyle(int style);
 Str FontFamilyLabel(Str family);
 void AppendStyleToggle(Vec<AnnotEditItem>& out, AnnotEditKind kind, int style, Str tooltip);
 const char* MupdfIconStream(Str name);

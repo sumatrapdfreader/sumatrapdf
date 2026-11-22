@@ -201,18 +201,47 @@ export async function testit(): Promise<void> {
       throw new Error("free-text-edit-toolbar: expected one annotation before deleting");
     }
 
-    const placed = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(dump));
-    const del = chipRect(dump, "delete");
     // ng draws the property row in the frame. Chip rects are frame client pixels.
-    if (USE_NG) {
-      await clickAt(frame, del.x + Math.floor(del.dx / 2), del.y + Math.floor(del.dy / 2), 0);
-    } else {
+    const clickChip = async (chipName: string) => {
+      const d = await toolbarDump(client);
+      const placed = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(d));
+      const c = chipRect(d, chipName);
+      if (USE_NG) {
+        await clickAt(frame, c.x + Math.floor(c.dx / 2), c.y + Math.floor(c.dy / 2), 0);
+        return;
+      }
       const tbHwnd = findTopWindow(proc.pid!, "SumatraAnnotEditToolbar");
       if (!tbHwnd) {
         throw new Error("free-text-edit-toolbar: property row window not found");
       }
-      await clickAt(tbHwnd, del.x - placed.x + Math.floor(del.dx / 2), del.y - placed.y + Math.floor(del.dy / 2), 0);
+      await clickAt(tbHwnd, c.x - placed.x + Math.floor(c.dx / 2), c.y - placed.y + Math.floor(c.dy / 2), 0);
+    };
+    const fontStyle = async () => +(/ fontStyle=(\d+)/.exec(await toolbarDump(client))?.[1] ?? -1);
+    const waitStyle = async (want: number, what: string) => {
+      const by = Date.now() + 5_000;
+      let got = await fontStyle();
+      while (got !== want && Date.now() < by) {
+        await sleep(50);
+        got = await fontStyle();
+      }
+      if (got !== want) {
+        throw new Error(`free-text-edit-toolbar: ${what}: fontStyle=${got}, want ${want}`);
+      }
+    };
+
+    // Strikethrough after Underline, Vertical Alignment after Alignment: the
+    // chip goes top, middle, bottom (style bits 8, 16, 32)
+    if (!/items=.*,underline,strikeout,.*,alignment,valign,/.test(dump)) {
+      throw new Error(`free-text-edit-toolbar: no strikeout / valign chips where expected: ${dump}`);
     }
+    await clickChip("strikeout");
+    await waitStyle(8, "Strikethrough");
+    await clickChip("valign");
+    await waitStyle(8 | 16, "Vertical Alignment middle");
+    await clickChip("valign");
+    await waitStyle(8 | 32, "Vertical Alignment bottom");
+
+    await clickChip("delete");
     const deadline = Date.now() + 5_000;
     let n = await annotCount(client);
     while (n !== 0 && Date.now() < deadline) {

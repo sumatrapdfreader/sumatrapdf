@@ -205,6 +205,25 @@ static void PaintAlignment(Gfx* gfx, Rect r, int quadding, Color col) {
     }
 }
 
+// the box's top and bottom edges and a text line at the top, middle or bottom
+static void PaintVAlign(Gfx* gfx, Rect r, int valign, Color col) {
+    int pad = DpiScale(6);
+    Rect inner = r;
+    inner.Inflate(-pad, -pad);
+    if (inner.dx < 6 || inner.dy < 8) {
+        inner = r;
+        inner.Inflate(-2, -2);
+    }
+    int lineH = std::max(DpiScale(2), 1);
+    gfx->FillRect({inner.x, inner.y, inner.dx, 1}, col);
+    gfx->FillRect({inner.x, inner.y + inner.dy - 1, inner.dx, 1}, col);
+    int top = inner.y + 1 + lineH;
+    int bottom = inner.y + inner.dy - 1 - (2 * lineH);
+    int y = valign == 1 ? (top + bottom) / 2 : valign == 2 ? bottom : top;
+    int inset = inner.dx / 5;
+    gfx->FillRect({inner.x + inset, y, inner.dx - (2 * inset), lineH}, col);
+}
+
 static void PaintSvgChip(Gfx* gfx, Rect r, const char* svg, Color fg, Color bg) {
     int pad = DpiScale(3);
     int sz = std::min(r.dx, r.dy) - (2 * pad);
@@ -550,7 +569,7 @@ static void PaintIconGlyph(Gfx* gfx, Rect r, Str name, Color col, PlatformFont* 
     gfx->DrawText(name, r, gfxTextCenter | gfxTextVCenter | gfxTextEllipsis, font, col);
 }
 
-// "B" in bold, "I" in italic, "U" underlined
+// "B" in bold, "I" in italic, "U" underlined, "S" struck through
 static void PaintStyleToggle(Gfx* gfx, Rect r, AnnotEditKind kind, Color col, PlatformFont* font) {
     if (!font) {
         return;
@@ -563,6 +582,9 @@ static void PaintStyleToggle(Gfx* gfx, Rect r, AnnotEditKind kind, Color col, Pl
     } else if (kind == AnnotEditKind::Underline) {
         style = PlatformFontStyle::Underline;
         label = StrL("U");
+    } else if (kind == AnnotEditKind::Strikeout) {
+        style = PlatformFontStyle::Strikeout;
+        label = StrL("S");
     }
     PlatformFont* styled = GetPlatformFont(font->name, font->sizePt, style);
     gfx->DrawText(label, r, gfxTextCenter | gfxTextVCenter, styled ? styled : font, col);
@@ -584,9 +606,13 @@ void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
         case AnnotEditKind::Alignment:
             PaintAlignment(ctx.gfx, r, item.number, textCol);
             break;
+        case AnnotEditKind::VAlign:
+            PaintVAlign(ctx.gfx, r, item.number, textCol);
+            break;
         case AnnotEditKind::Bold:
         case AnnotEditKind::Italic:
         case AnnotEditKind::Underline:
+        case AnnotEditKind::Strikeout:
             if (item.number != 0) {
                 ctx.gfx->FillRoundedRect(r, DpiScale(kButtonRadius), BarActiveBg());
             }
@@ -843,7 +869,8 @@ static bool ChooseSystemFont(HWND hwnd, Str& family, int& style) {
         return false;
     }
     family = ToUtf8Temp(WStr(lf.lfFaceName));
-    style &= kFreeTextUnderline;
+    // the font dialog picks the family, bold and italic; the rest stays
+    style &= kFreeTextUnderline | kFreeTextStrikeout | kFreeTextVAlignMask;
     if (lf.lfWeight >= FW_SEMIBOLD) {
         style |= kFreeTextBold;
     }
@@ -1002,7 +1029,12 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
         case AnnotEditKind::Bold:
         case AnnotEditKind::Italic:
         case AnnotEditKind::Underline:
+        case AnnotEditKind::Strikeout:
             SetFreeTextFont(annot, FreeTextFontFamily(annot), FreeTextFontStyle(annot) ^ StyleBitForKind(kind));
+            AnnotChanged(tab);
+            break;
+        case AnnotEditKind::VAlign:
+            SetFreeTextFont(annot, FreeTextFontFamily(annot), NextVAlignStyle(FreeTextFontStyle(annot)));
             AnnotChanged(tab);
             break;
         case AnnotEditKind::Alignment: {
@@ -1104,9 +1136,11 @@ static Size ChipSizeFor(const AnnotEditItem& item, PlatformFont* font, int rowDy
         case AnnotEditKind::InteriorColor:
         case AnnotEditKind::TextColor:
         case AnnotEditKind::Alignment:
+        case AnnotEditKind::VAlign:
         case AnnotEditKind::Bold:
         case AnnotEditKind::Italic:
         case AnnotEditKind::Underline:
+        case AnnotEditKind::Strikeout:
         case AnnotEditKind::Contents:
         case AnnotEditKind::AttachFile:
         case AnnotEditKind::SaveAttachment:
@@ -1737,8 +1771,9 @@ static bool SetInPlaceEditScale(Annotation* annot, RectF pageRect, Rect rc) {
     int weight = (fontStyle & kFreeTextBold) ? FW_BOLD : FW_NORMAL;
     BOOL italic = (fontStyle & kFreeTextItalic) ? TRUE : FALSE;
     BOOL underline = (fontStyle & kFreeTextUnderline) ? TRUE : FALSE;
-    HFONT font = CreateFontW(-fontPx, 0, 0, 0, weight, italic, underline, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                             CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH,
+    BOOL strikeout = (fontStyle & kFreeTextStrikeout) ? TRUE : FALSE;
+    HFONT font = CreateFontW(-fontPx, 0, 0, 0, weight, italic, underline, strikeout, DEFAULT_CHARSET,
+                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH,
                              WinFontFamilyTemp(FreeTextFontFamily(annot)).s);
     if (!font) {
         return false;

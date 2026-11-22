@@ -91,6 +91,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0088-svg-clip-path` | SVG `clip-path` referencing a `<clipPath>` clips the element, so plots stay inside their axes (#6544) |
 | `0089-pdf-undo-purge-resource-cache` | undo / redo drop cached font / colorspace / image resources for the objects they swap, so a free text edited after an undo doesn't use a missing font (#6549) |
 | `0090-pdf-fit-rich-text-in-autosize-field` | an auto-size single-line text field shrinks Thai / Hindi / Arabic text to fit instead of wrapping it out of sight |
+| `0091-pdf-free-text-vertical-align` | a free text's `/DS` `vertical-align:middle\|bottom` puts its text in the middle or at the bottom of the box (text box Vertical Alignment) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these
 patches, and nothing else.

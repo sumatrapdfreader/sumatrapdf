@@ -85,12 +85,16 @@ Str KindName(AnnotEditKind kind) {
             return StrL("italic");
         case AnnotEditKind::Underline:
             return StrL("underline");
+        case AnnotEditKind::Strikeout:
+            return StrL("strikeout");
         case AnnotEditKind::TextColor:
             return StrL("textColor");
         case AnnotEditKind::TextSize:
             return StrL("textSize");
         case AnnotEditKind::Alignment:
             return StrL("alignment");
+        case AnnotEditKind::VAlign:
+            return StrL("valign");
         case AnnotEditKind::Icon:
             return StrL("icon");
         case AnnotEditKind::Contents:
@@ -163,9 +167,25 @@ int StyleBitForKind(AnnotEditKind kind) {
             return kFreeTextItalic;
         case AnnotEditKind::Underline:
             return kFreeTextUnderline;
+        case AnnotEditKind::Strikeout:
+            return kFreeTextStrikeout;
         default:
             return 0;
     }
+}
+
+// a text box's vertical alignment: 0 top, 1 middle, 2 bottom
+int VAlignOfStyle(int style) {
+    if (style & kFreeTextVMiddle) {
+        return 1;
+    }
+    return (style & kFreeTextVBottom) ? 2 : 0;
+}
+
+// the Vertical Alignment chip goes top, middle, bottom, top
+int NextVAlignStyle(int style) {
+    static const int bits[] = {kFreeTextVMiddle, kFreeTextVBottom, 0};
+    return (style & ~kFreeTextVAlignMask) | bits[VAlignOfStyle(style)];
 }
 
 // chips paint after the temp arena resets, so a family they show must outlive it
@@ -200,6 +220,9 @@ static TempStr FontDescriptionTemp(Str family, int style) {
     }
     if (style & kFreeTextUnderline) {
         s.Append(fmt(" %s", Tr("Underline")));
+    }
+    if (style & kFreeTextStrikeout) {
+        s.Append(fmt(" %s", Tr("Strikethrough")));
     }
     return ToStrTemp(s);
 }
@@ -609,6 +632,8 @@ TempStr ChipLabelTemp(const AnnotEditItem& item) {
             return str::DupTemp(StrL("I"));
         case AnnotEditKind::Underline:
             return str::DupTemp(StrL("U"));
+        case AnnotEditKind::Strikeout:
+            return str::DupTemp(StrL("S"));
         case AnnotEditKind::Icon:
             return str::DupTemp(item.iconName);
         default:
@@ -707,6 +732,7 @@ void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
         AppendStyleToggle(out, AnnotEditKind::Bold, style, Tr("Bold"));
         AppendStyleToggle(out, AnnotEditKind::Italic, style, Tr("Italic"));
         AppendStyleToggle(out, AnnotEditKind::Underline, style, Tr("Underline"));
+        AppendStyleToggle(out, AnnotEditKind::Strikeout, style, Tr("Strikethrough"));
         {
             AnnotEditItem it;
             it.kind = AnnotEditKind::TextSize;
@@ -719,6 +745,13 @@ void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
             it.kind = AnnotEditKind::Alignment;
             it.number = Quadding(annot);
             it.tooltip = Tr("Text Alignment");
+            VecAppend(out, it);
+        }
+        {
+            AnnotEditItem it;
+            it.kind = AnnotEditKind::VAlign;
+            it.number = VAlignOfStyle(style);
+            it.tooltip = Tr("Vertical Alignment");
             VecAppend(out, it);
         }
     }

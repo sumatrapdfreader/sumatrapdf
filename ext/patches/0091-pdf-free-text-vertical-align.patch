@@ -1,0 +1,62 @@
+pdf: free text honors vertical-align in /DS
+
+SumatraPDF's text box Vertical Alignment is written into /DS as
+vertical-align:middle or bottom, where its bold, italic and underline
+are. The HTML layout doesn't apply vertical-align to a block, so the rich
+appearance measures the text it placed and draws it lower by all or half
+of the room left in the box.
+---
+diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
+index 75fe225c5..0eebcd806 100644
+--- a/source/pdf/pdf-appearance.c
++++ b/source/pdf/pdf-appearance.c
+@@ -2338,6 +2338,30 @@ layout_variable_text(fz_context *ctx, fz_layout_block *out,
+ }
+ 
+ #if FZ_ENABLE_HTML_ENGINE
++/* SumatraPDF: how far down to draw the text so it sits in the middle or at the
++ * bottom of the box: the vertical-align of /DS, which SumatraPDF writes for a
++ * text box's Vertical Alignment (the HTML layout doesn't apply it to a block).
++ * `filled` is the story's used area, `bottom` the box's bottom edge */
++static float
++rich_valign_offset(const char *ds, fz_rect filled, float bottom)
++{
++	const char *v = ds ? strstr(ds, "vertical-align") : NULL;
++	float room;
++	if (!v || fz_is_empty_rect(filled))
++		return 0;
++	v += strlen("vertical-align");
++	while (*v == ' ' || *v == ':')
++		v++;
++	room = bottom - filled.y1;
++	if (room <= 0)
++		return 0;
++	if (!strncmp(v, "middle", 6))
++		return room / 2;
++	if (!strncmp(v, "bottom", 6))
++		return room;
++	return 0;
++}
++
+ static void
+ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **res, const char *rc, const char *ds, float size, float w, float h, float b, int multiline)
+ {
+@@ -2355,6 +2379,7 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
+ 	fz_story *story = NULL;
+ 	fz_device *dev = NULL;
+ 	fz_buffer *buf2 = NULL;
++	fz_rect filled = fz_empty_rect;
+ 	const char *default_css = "@page{margin:0} body{margin:0;line-height:1.2;white-space:pre-wrap;} p{margin:0}";
+ 	char *css = NULL;
+ 
+@@ -2378,8 +2403,8 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
+ 			css = fz_asprintf(ctx, "%s body{%s}", default_css, ds);
+ 		story = fz_new_story(ctx, inbuf, css ? css : default_css, size, NULL);
+ 		dev = pdf_page_write(ctx, annot->page->doc, border_box, res, &buf2);
+-		fz_place_story(ctx, story, content_box, NULL);
+-		fz_draw_story(ctx, story, dev, fz_identity);
++		fz_place_story(ctx, story, content_box, &filled);
++		fz_draw_story(ctx, story, dev, fz_translate(0, rich_valign_offset(ds, filled, h - b)));
+ 		fz_close_device(ctx, dev);
+ 
+ 		fz_append_buffer(ctx, buf, buf2);

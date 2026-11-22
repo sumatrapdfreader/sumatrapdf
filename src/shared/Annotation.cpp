@@ -1216,6 +1216,26 @@ static void ParseCssFontShorthand(Str v, Str& family, int& style) {
     }
 }
 
+// the vertical-align SumatraPDF writes into /DS for a text box's Vertical
+// Alignment, as style bits (our CSS parser doesn't know the property)
+static int FreeTextVAlignFromDs(Str ds) {
+    int i = str::IndexOf(ds, StrL("vertical-align"));
+    if (i < 0) {
+        return 0;
+    }
+    Str v = TrimWS(Str(ds.s + i + 14, len(ds) - i - 14));
+    if (len(v) > 0 && v.s[0] == ':') {
+        v = TrimWS(Str(v.s + 1, len(v) - 1));
+    }
+    if (str::StartsWith(v, StrL("middle"))) {
+        return kFreeTextVMiddle;
+    }
+    if (str::StartsWith(v, StrL("bottom"))) {
+        return kFreeTextVBottom;
+    }
+    return 0;
+}
+
 // The font of a free text: its /DS style if it has one, else its /DA base-14 font.
 static void ReadFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str& family, int& style) {
     const char* daFont = nullptr;
@@ -1227,7 +1247,9 @@ static void ReadFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str& family, i
     family = SeqStrByIndex(gBase14FontFamilies, idx >= 0 ? idx : 1);
     style = 0;
 
-    CssPullParser parser(Str(pdf_annot_rich_defaults(ctx, a)));
+    Str ds(pdf_annot_rich_defaults(ctx, a));
+    style |= FreeTextVAlignFromDs(ds);
+    CssPullParser parser(ds);
     for (const CssProperty* prop = parser.NextProperty(); prop; prop = parser.NextProperty()) {
         switch (prop->type) {
             case Css_Font_Family:
@@ -1241,6 +1263,7 @@ static void ReadFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str& family, i
                 break;
             case Css_Text_Decoration:
                 style |= str::ContainsI(prop->s, StrL("underline")) ? kFreeTextUnderline : 0;
+                style |= str::ContainsI(prop->s, StrL("line-through")) ? kFreeTextStrikeout : 0;
                 break;
             case Css_Font:
                 ParseCssFontShorthand(prop->s, family, style);
@@ -1284,8 +1307,18 @@ static void WriteFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str family, i
     if (style & kFreeTextItalic) {
         ds.Append(StrL(";font-style:italic"));
     }
-    if (style & kFreeTextUnderline) {
-        ds.Append(StrL(";text-decoration:underline"));
+    if (style & (kFreeTextUnderline | kFreeTextStrikeout)) {
+        bool both = (style & kFreeTextUnderline) && (style & kFreeTextStrikeout);
+        ds.Append(StrL(";text-decoration:"));
+        ds.Append((style & kFreeTextUnderline) ? StrL("underline") : StrL(""));
+        ds.Append(both ? StrL(" ") : StrL(""));
+        ds.Append((style & kFreeTextStrikeout) ? StrL("line-through") : StrL(""));
+    }
+    // mupdf's appearance reads it (pdf-appearance.c rich_valign_offset)
+    if (style & kFreeTextVMiddle) {
+        ds.Append(StrL(";vertical-align:middle"));
+    } else if (style & kFreeTextVBottom) {
+        ds.Append(StrL(";vertical-align:bottom"));
     }
     pdf_set_annot_rich_defaults(ctx, a, CStrTemp(ToStrTemp(ds)));
 }

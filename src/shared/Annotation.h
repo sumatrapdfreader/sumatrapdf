@@ -138,6 +138,11 @@ AnnotationType Type(Annotation*);
 constexpr int kFreeTextBold = 1;
 constexpr int kFreeTextItalic = 2;
 constexpr int kFreeTextUnderline = 4;
+constexpr int kFreeTextStrikeout = 8;
+// vertical alignment in the box; neither bit: top
+constexpr int kFreeTextVMiddle = 16;
+constexpr int kFreeTextVBottom = 32;
+constexpr int kFreeTextVAlignMask = kFreeTextVMiddle | kFreeTextVBottom;
 extern SeqStrings gBase14FontFamilies; // "Courier\0Helvetica\0Times\0"
 
 bool IsBase14FontFamily(Str);
