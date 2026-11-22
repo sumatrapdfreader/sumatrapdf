@@ -250873,6 +250873,8 @@ static gpui::Str TextInputString(id string) {
     (void)note;
     if (win) {
         win->minimized = true;
+        gpui::WindowBoundsNotify(win,
+                                 gpui::WindowBoundsEvent::MinimizedChanged);
     }
 }
 
@@ -250880,7 +250882,16 @@ static gpui::Str TextInputString(id string) {
     (void)note;
     if (win) {
         win->minimized = false;
+        gpui::WindowBoundsNotify(win,
+                                 gpui::WindowBoundsEvent::MinimizedChanged);
         gpui::AppInvalidate(win);
+
+        for (int i = 0; win->app && i < win->app->windows.len; i++) {
+            gpui::Window* w = win->app->windows[i];
+            if (w && w->opts.parent == win) {
+                gpui::AppInvalidate(w);
+            }
+        }
     }
 }
 
@@ -251167,9 +251178,14 @@ static void OrderFront(Window* win, bool activate) {
     [pw->window makeKeyAndOrderFront:nil];
 }
 
+static bool ParentMinimized(Window* win) {
+    Window* parent = win->opts.parent;
+    return parent && parent->plat && [parent->plat->window isMiniaturized];
+}
+
 static void OrderFrontOnce(Window* win) {
     PlatWindow* pw = win->plat;
-    if (!pw || pw->ordered || pw->hidden) {
+    if (!pw || pw->ordered || pw->hidden || ParentMinimized(win)) {
         return;
     }
     pw->ordered = true;
@@ -251569,6 +251585,10 @@ void PlatWindowShow(Window* win, bool visible, bool activate) {
     if (!visible) {
         [pw->window orderOut:nil];
         return;
+    }
+    if (pw->ordered && ParentMinimized(win)) {
+
+        pw->ordered = false;
     }
     if (!pw->ordered) {
         pw->activateOnShow = activate;

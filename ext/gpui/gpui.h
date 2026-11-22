@@ -9059,6 +9059,8 @@ enum class WindowBoundsEvent : uint8_t {
     Changed,
 
     MoveResizeEnded,
+
+    MinimizedChanged,
 };
 using WindowBoundsFn = void (*)(void* data, Window* win, WindowBoundsEvent ev);
 using WindowActivationFn = void (*)(void* data, Window* win, bool active);

@@ -652,6 +652,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["auto-scroll-extras", autoScrollExtras],
   ["custom-zoom-dialog", customZoomDialog],
   ["sumatrapdf-web-dialog", sumatrapdfWebDialog],
   ["sumatrapdf-web-home", sumatrapdfWebHome],
@@ -659,7 +660,6 @@ export const tests: NamedTest[] = [
   ["cli-images", cliImages],
   ["issue-1139", issue1139],
   ["issue-6113", issue6113],
-  ["auto-scroll-extras", autoScrollExtras],
   ["open-slow-drive", openSlowDrive],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-6412", issue6412],

@@ -3404,6 +3404,24 @@ static void LoadingMessageTick(ShellView* self) {
     AppShellInvalidate(self->win);
 }
 
+// orig pauses auto-scroll from WM_SIZE. The tick watches for a minimize where
+// gpui reports none; macOS reports it (OnWindowBounds), as a minimized
+// window's timers run a second or more late
+static void CheckMinimized(MainWindow* win) {
+    bool minimized = gp::AppIsMinimized(win->gpuiWin);
+    if (minimized != win->wasMinimized) {
+        win->wasMinimized = minimized;
+        ReadingAutoScrollOnMinimize(win, minimized);
+    }
+}
+
+static void OnWindowBounds(void* data, gp::Window*, gp::WindowBoundsEvent ev) {
+    auto* win = (MainWindow*)data;
+    if (ev == gp::WindowBoundsEvent::MinimizedChanged && IsMainWindowValidAndNotClosing(win)) {
+        CheckMinimized(win);
+    }
+}
+
 void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     uitask::DrainQueue();
     AppShellReapClosedWindows();
@@ -3455,12 +3473,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
             gp::Notify(cx);
         }
     }
-    // orig pauses auto-scroll from WM_SIZE; ng has no minimize event, so watch for one
-    bool minimized = gp::AppIsMinimized(win->gpuiWin);
-    if (minimized != win->wasMinimized) {
-        win->wasMinimized = minimized;
-        ReadingAutoScrollOnMinimize(win, minimized);
-    }
+    CheckMinimized(win);
     ToolbarTick(win, ms);
     LoadingMessageTick(self);
     AutoReloadTick(win, ms);
@@ -3933,6 +3946,7 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH, bool hiddenUn
     win->isMenuBarVisible = SettingsUseTabs() ? gSettings->showMenubarWithTabs : gSettings->showMenubar;
     VecAppend(gWindows, win);
     gp::WindowOnShouldClose(gw, OnWindowShouldClose, win);
+    gp::WindowOnBoundsChanged(gw, OnWindowBounds, win);
     view->win = win;
     view->menuBarState = gp::EntityNewState<gpc::AppMenuBarState>(app);
 
