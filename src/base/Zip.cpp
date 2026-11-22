@@ -203,10 +203,13 @@ bool ZipCreator::AddFileFromDir(Str filePath, Str dir) {
     if (len(dir) == 0 || !str::TrimPrefix(nameInZip, dir)) {
         return false;
     }
-    if (!path::IsSep(nameInZip.s[0])) {
-        return false;
+    bool dirEndsWithSep = path::IsSep(dir.s[dir.len - 1]);
+    if (!dirEndsWithSep) {
+        if (len(nameInZip) == 0 || !path::IsSep(nameInZip.s[0])) {
+            return false;
+        }
+        nameInZip = Str(nameInZip.s + 1, nameInZip.len - 1);
     }
-    nameInZip = Str(nameInZip.s + 1, nameInZip.len - 1);
     return AddFile(filePath, nameInZip);
 }
 

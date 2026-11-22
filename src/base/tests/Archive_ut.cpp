@@ -58,6 +58,14 @@ void ZipDirTest() {
     utassert(fi && str::Eq(Str(fi->data, fi->fileSizeUncompressed), StrL("hello")));
     str::Free(zip);
 
+    // a trailing separator on the dir must not reject its files
+    zip = ZipDirToData(str::JoinTemp(dir, StrL(kPathSep)), false);
+    utassert(len(zip) > 0);
+    Archive archive2;
+    utassert(archive2.OpenFromData(zip));
+    utassert(archive2.GetFileDataByName(StrL("data.txt")));
+    str::Free(zip);
+
     dir::RemoveAll(dir);
 #endif
 }
