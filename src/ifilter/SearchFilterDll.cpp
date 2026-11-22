@@ -19,6 +19,35 @@
 
 static AtomicInt g_lRefCount = 0;
 
+enum class FilterKind {
+    None,
+    Pdf,
+    Tex,
+    Epub
+};
+
+static bool IsClsid(REFCLSID clsid, Str s) {
+    CLSID c;
+    return SUCCEEDED(CLSIDFromString(s, &c)) && IsEqualCLSID(clsid, c);
+}
+
+static FilterKind FilterKindFromClsid(REFCLSID clsid) {
+    if (IsClsid(clsid, StrL(kPdfFilterClsid))) {
+        return FilterKind::Pdf;
+    }
+#ifdef BUILD_TEX_IFILTER
+    if (IsClsid(clsid, StrL(kTexFilterClsid))) {
+        return FilterKind::Tex;
+    }
+#endif
+#ifdef BUILD_EPUB_IFILTER
+    if (IsClsid(clsid, StrL(kEpubFilterClsid))) {
+        return FilterKind::Epub;
+    }
+#endif
+    return FilterKind::None;
+}
+
 class FilterClassFactory : public IClassFactory {
   public:
     explicit FilterClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { AtomicIntInc(&g_lRefCount); }
@@ -52,19 +81,22 @@ class FilterClassFactory : public IClassFactory {
 
         AutoReleaseComPtr<IFilter> pFilter;
 
-        CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(StrL(kPdfFilterClsid), &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
-            pFilter = new PdfFilter(&g_lRefCount);
+        switch (FilterKindFromClsid(m_clsid)) {
+            case FilterKind::Pdf:
+                pFilter = new PdfFilter(&g_lRefCount);
+                break;
 #ifdef BUILD_TEX_IFILTER
-        } else if (SUCCEEDED(CLSIDFromString(StrL(kTexFilterClsid), &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
-            pFilter = new TeXFilter(&g_lRefCount);
+            case FilterKind::Tex:
+                pFilter = new TeXFilter(&g_lRefCount);
+                break;
 #endif
 #ifdef BUILD_EPUB_IFILTER
-        } else if (SUCCEEDED(CLSIDFromString(StrL(kEpubFilterClsid), &clsid)) && IsEqualCLSID(m_clsid, clsid)) {
-            pFilter = new EpubFilter(&g_lRefCount);
+            case FilterKind::Epub:
+                pFilter = new EpubFilter(&g_lRefCount);
+                break;
 #endif
-        } else {
-            return E_NOINTERFACE;
+            default:
+                return E_NOINTERFACE;
         }
         if (!pFilter) {
             return E_OUTOFMEMORY;
@@ -113,6 +145,9 @@ STDAPI DllCanUnloadNow(VOID) {
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     *ppv = nullptr;
+    if (FilterKindFromClsid(rclsid) == FilterKind::None) {
+        return CLASS_E_CLASSNOTAVAILABLE;
+    }
     AutoReleaseComPtr<FilterClassFactory> pClassFactory(new FilterClassFactory(rclsid));
     if (!pClassFactory) {
         return E_OUTOFMEMORY;

@@ -603,6 +603,7 @@ import { testit as issue6080 } from "./issue-6080.ts";
 import { testit as issue6203 } from "./issue-6203.ts";
 import { testit as issue6205 } from "./issue-6205.ts";
 import { testit as advSettingsEnter } from "./adv-settings-enter.ts";
+import { testit as comClassObject } from "./com-class-object.ts";
 import { testit as aichatCloseHidesWebview } from "./aichat-close-hides-webview.ts";
 import { testit as trackpadDiagonalScroll } from "./trackpad-diagonal-scroll.ts";
 import { testit as trackpadPinchZoom } from "./trackpad-pinch-zoom.ts";
@@ -1173,6 +1174,7 @@ export const tests: NamedTest[] = [
   ["toc-title-fallback", tocTitleFallback],
   ["toc-show-on-open", tocShowOnOpen],
   ["toc-selection-visible", tocSelectionVisible],
+  ["com-class-object", comClassObject],
   ["issue-6132", issue6132],
   ["toolbar-tab-switch-pos", toolbarTabSwitchPos],
   ["facing-fit-tiny-viewport", facingFitTinyViewport],
