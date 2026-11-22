@@ -158,6 +158,7 @@ Str ResolvedAnnotIconName(Annotation* annot) {
 // clang-format off
 // in gBase14FontFamilies order
 SeqStrings gBase14ReadableNames = "Courier\0Helvetica\0TimesRoman\0";
+// clang-format on
 
 int StyleBitForKind(AnnotEditKind kind) {
     switch (kind) {
@@ -368,6 +369,7 @@ static PdfColor gColorsValues[] = {
 	0xffffffff, /* white */
 	0xffffff00, /* yellow */
 };
+// clang-format on
 
 static bool gShowRect = true;
 
@@ -1056,8 +1058,7 @@ TempStr AnnotEditorLayoutResultTemp(int, int, int* exitCodeOut, int) {
     EngineMupdfGetLoadedAnnotations(tab->GetEngine(), annots);
     int n = len(annots);
     out.Append(fmt("OK n=%d ignoreReload=%d reloadOnFocus=%d resizeRerenderPending=%d", n,
-                   (int)tab->ignoreNextAutoReload, (int)tab->reloadOnFocus,
-                   (int)AnnotResizeRerenderPending(win)));
+                   (int)tab->ignoreNextAutoReload, (int)tab->reloadOnFocus, (int)AnnotResizeRerenderPending(win)));
     Annotation* annot = tab->selectedAnnotation;
     DisplayModel* dm = tab->AsFixed();
     if (annot && dm) {
