@@ -268,6 +268,11 @@ static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
     RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
     gUpdateCheckInProgress = false;
     delete data;
+    // the window that asked may have closed during the download: without one
+    // MsgBox answers Cancel and the downloaded installer is deleted
+    if (!IsMainWindowValidAndNotClosing(updateInfo->win)) {
+        updateInfo->win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    }
     NotifyUserOfUpdate(updateInfo);
 }
 

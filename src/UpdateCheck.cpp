@@ -230,6 +230,11 @@ static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
     auto* updateInfo = data->updateInfo;
     data->updateInfo = nullptr;
     RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
+    // the window that asked may have closed during the download: the dialog
+    // would fail and the downloaded installer be deleted
+    if (!IsWindow(updateInfo->hwndParent) && len(gWindows) > 0) {
+        updateInfo->hwndParent = gWindows[0]->hwndFrame;
+    }
     NotifyUserOfUpdate(updateInfo);
     delete updateInfo;
     gUpdateCheckInProgress = false;
