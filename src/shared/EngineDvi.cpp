@@ -41,6 +41,7 @@ struct DviTools {
 
 static DviTools gDviTools;
 static bool gDviToolsInited = false;
+static Mutex gDviToolsLock;
 // points at gDviTools.pdfmx or gDviTools.dvips; not owned
 static Str gDviConvertTool;
 
@@ -108,7 +109,9 @@ static TempStr FindTexExeTemp(Str exeName) {
     return {};
 }
 
+// called from loading threads and the UI thread
 static void InitDviTools() {
+    ScopedMutex scope(&gDviToolsLock);
     if (gDviToolsInited) {
         return;
     }
