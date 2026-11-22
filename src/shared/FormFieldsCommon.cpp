@@ -23,8 +23,6 @@
 #include "FormFields.h"
 #include "AppHelpersCommon.h"
 
-// Start editing a text form field in place (floats an edit box over the field).
-// Returns false if `widget` isn't an editable (non-read-only) text widget.
 // Clicking a signature field the document's author left unsigned opens Sign
 // Document with that field selected. Signed fields are left alone (clicking one
 // shouldn't offer to overwrite it), and so is everything else (issue #5964).

@@ -66,7 +66,7 @@ void SetFileHistoryCmdIds(Vec<FileHistoryEntry>& files) {
     }
 }
 
-// s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"
+// s could be in format "file:path.pdf" or "mailto:foo@bar.com"
 // We only want the "path.pdf" / "foo@bar.com"
 TempStr CleanupURLForClipbardCopyTemp(Str s) {
     Str slice = s;
