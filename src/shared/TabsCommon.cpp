@@ -190,7 +190,6 @@ void SetTabCloseFlags(AppCommandCtx& ctx) {
     StripGroupSetFlags(ctx);
 }
 
-// create a new window if win==nullptr
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft) {
     int nTabs = win->TabCount();

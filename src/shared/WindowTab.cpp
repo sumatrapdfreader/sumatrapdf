@@ -61,8 +61,6 @@ void WindowTab::SetFilePath(Str path) {
     if (changed) {
         DeleteOpenCacheCopyOf(this, filePath);
         temporaryFileNotified = false;
-    }
-    if (changed) {
         str::FreePtr(&pendingFindText);
     }
     str::ReplaceWithCopy(&filePath, path);

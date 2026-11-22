@@ -80,9 +80,7 @@ static void SetHeightPx(int px, bool save) {
     int dpi = DpiGet();
     int unscaled = (dpi > 0) ? (px * 96) / dpi : px;
     unscaled = limitValue(unscaled, kMinHeight96, 400);
-    if (gSettings->readingBar.height != unscaled) {
-        gSettings->readingBar.height = unscaled;
-    }
+    gSettings->readingBar.height = unscaled;
     if (save) {
         ScheduleSaveSettings();
     }
