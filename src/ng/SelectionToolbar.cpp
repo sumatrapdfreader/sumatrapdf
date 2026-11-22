@@ -298,7 +298,7 @@ gp::El* SelectionToolbarBuild(MainWindow* win, gp::Ctx* cx) {
                            ->Compact()
                            ->WithSize(gp::UiSize::Small)
                            ->Disabled(!b.enabled)
-                           ->OnClick(gp::Listen(cx, &SelToolbarView::OnClick, (intptr_t)b.cmdId));
+                           ->OnClick(gp::ListenTo(gSelToolbarView, &SelToolbarView::OnClick, (intptr_t)b.cmdId));
         if (len(b.svgIcon) > 0) {
             auto* icon = gpc::Icon::Empty(cx)->Data(ToGpui(b.svgIcon));
             button->Icon(gpc::ButtonIcon::New(cx, icon));
