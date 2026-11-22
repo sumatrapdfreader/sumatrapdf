@@ -112,6 +112,7 @@ NotificationWnd* ShowPlainWarningNotification(HWND hwndParent, Str msg, int time
 // as in ng: address the notifications of win's canvas
 bool RemoveNotificationsForGroup(MainWindow*, Kind);
 NotificationWnd* GetNotificationForGroup(MainWindow*, Kind);
+WindowTab* NotificationTab(NotificationWnd*);
 NotificationWnd* ShowTemporaryNotification(MainWindow* win, Str msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowWarningNotification(MainWindow* win, Str msg, int timeoutMs);
 NotificationWnd* ShowPlainNotification(MainWindow* win, Str msg, int timeoutMs = kNotifDefaultTimeOut);

@@ -116,6 +116,7 @@ bool RemoveNotificationsForGroup(MainWindow*, Kind);
 void RemoveNotificationsForWindow(MainWindow*);
 void RemoveNotificationsForTab(WindowTab*);
 NotificationWnd* GetNotificationForGroup(MainWindow*, Kind);
+WindowTab* NotificationTab(NotificationWnd*);
 NotificationWnd* GetNotificationByKey(u32 key);
 // closes this window's notifications whose timeout elapsed; the shell's tick
 // calls it with the ms since the last one

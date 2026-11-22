@@ -952,6 +952,11 @@ NotificationWnd* GetNotificationForGroup(MainWindow* win, Kind kind) {
     return GetNotificationForGroup(CanvasOf(win), kind);
 }
 
+// the tab a notification is shown for, nullptr if any
+WindowTab* NotificationTab(NotificationWnd* wnd) {
+    return wnd ? wnd->tab : nullptr;
+}
+
 NotificationWnd* ShowTemporaryNotification(MainWindow* win, Str msg, int timeoutMs) {
     return ShowTemporaryNotification(CanvasOf(win), msg, timeoutMs);
 }

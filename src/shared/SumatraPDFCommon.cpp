@@ -1138,7 +1138,7 @@ bool GoOnToNextFile(MainWindow* win, int cmdId) {
         return false;
     }
     NotificationWnd* hint = GetNotificationForGroup(win, kNotifNextFileHint);
-    if (!hint || hint->tab != win->CurrentTab() || !IsAtDocumentBottom(win)) {
+    if (!hint || NotificationTab(hint) != win->CurrentTab() || !IsAtDocumentBottom(win)) {
         return false;
     }
     DismissNextFileScrollHint(win);

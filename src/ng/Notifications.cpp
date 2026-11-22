@@ -107,6 +107,11 @@ void ExpireNotifications(MainWindow* win, int elapsedMs) {
     }
 }
 
+// the tab a notification is shown for, nullptr if any
+WindowTab* NotificationTab(NotificationWnd* wnd) {
+    return wnd ? wnd->tab : nullptr;
+}
+
 NotificationWnd* GetNotificationForGroup(MainWindow* win, Kind kind) {
     for (NotificationWnd* wnd : gNotifications) {
         if (wnd->win == win && wnd->groupId == kind) {
