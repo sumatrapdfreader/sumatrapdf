@@ -180,8 +180,17 @@ export async function testit(): Promise<void> {
         }
         await menuIs(false, true);
 
-        // Delete from server drops the badge
+        // Delete from server asks first: No keeps the file
         sendCommand(frame, cmdId("CmdDeleteFromServer"));
+        await pressEscape(frame);
+        await sleep(500);
+        if (!files.has(kOnServer)) {
+          throw new Error("sumatrapdf-web-home: deleted from the server without asking");
+        }
+
+        // Yes deletes it and drops the badge
+        sendCommand(frame, cmdId("CmdDeleteFromServer"));
+        await pressEnter(frame);
         await waitState(ServerState.None, "badge stayed after delete");
         if (files.has(kOnServer)) {
           throw new Error("sumatrapdf-web-home: server still has the file");

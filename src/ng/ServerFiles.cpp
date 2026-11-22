@@ -305,12 +305,20 @@ static void StartUpload(MainWindow* win, Str path) {
     TransferStarted(win, path::GetBaseNameTemp(path));
 }
 
-struct UploadAsk {
+// Upload / Delete waiting for the user's Yes
+struct ServerAsk {
     MainWindow* win = nullptr;
     Str path;
 };
 
-static void UploadAnswered(UploadAsk* ask, int answer) {
+static ServerAsk* NewServerAsk(MainWindow* win, Str path) {
+    auto* ask = new ServerAsk();
+    ask->win = win;
+    ask->path = str::Dup(path);
+    return ask;
+}
+
+static void UploadAnswered(ServerAsk* ask, int answer) {
     MainWindow* win = ask->win;
     Str path = ask->path;
     AutoFree<char> pathFree(path.s);
@@ -337,14 +345,12 @@ void UploadFileToServer(MainWindow* win, Str path) {
         StartUpload(win, path);
         return;
     }
-    auto* ask = new UploadAsk();
-    ask->win = win;
-    ask->path = str::Dup(path);
+    auto* ask = NewServerAsk(win, path);
     TempStr question = fmt(Tr("Replace %s on SumatraPDF Web?").s, name);
     MsgBox(win, question, Tr("Upload to server"), MbYesNo | MbIconQuestion, MkFunc1(UploadAnswered, ask));
 }
 
-void DeleteFileFromServer(MainWindow* win, Str path) {
+static void StartDelete(MainWindow* win, Str path) {
     if (!CanStartTransfer(win)) {
         return;
     }
@@ -360,4 +366,29 @@ void DeleteFileFromServer(MainWindow* win, Str path) {
         return;
     }
     TransferStarted(win, name);
+}
+
+static void DeleteAnswered(ServerAsk* ask, int answer) {
+    MainWindow* win = ask->win;
+    Str path = ask->path;
+    AutoFree<char> pathFree(path.s);
+    delete ask;
+    if (answer != MbRetYes || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    StartDelete(win, path);
+}
+
+// a server delete can't be undone (a local one goes to the trash), so ask first
+void DeleteFileFromServer(MainWindow* win, Str path) {
+    if (!CanStartTransfer(win)) {
+        return;
+    }
+    Str name = path::GetBaseNameTemp(path);
+    if (!gSrv.names.Contains(name)) {
+        return;
+    }
+    auto* ask = NewServerAsk(win, path);
+    TempStr question = fmt(Tr("Delete %s from SumatraPDF Web?").s, name);
+    MsgBox(win, question, Tr("Delete from server"), MbYesNo | MbIconQuestion, MkFunc1(DeleteAnswered, ask));
 }
