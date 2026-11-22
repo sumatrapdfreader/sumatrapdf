@@ -372,4 +372,12 @@ void DirRemoveAllTest() {
         str::Free(workers[i].root);
     }
 #endif
+
+#if !OS_WASM
+    // a missing dir fails on every platform
+    TempStr missing = GetTempFilePathTemp(StrL("rmmissing"));
+    file::Delete(missing);
+    utassert(!dir::RemoveAll(missing));
+    utassert(!dir::Empty(missing));
+#endif
 }

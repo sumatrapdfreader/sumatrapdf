@@ -712,12 +712,18 @@ static bool RemoveDirContentsZ(const char* dir, bool removeDir) {
 }
 
 bool RemoveAll(Str dir) {
+    if (!Exists(dir)) {
+        return false;
+    }
     return RemoveDirContentsZ(CStrTemp(dir), true);
 }
 
 // Delete everything inside dir but keep dir itself, so code that races with us
 // still finds the directory there (see SaveThumbnail / dir::CreateAll).
 bool Empty(Str dir) {
+    if (!Exists(dir)) {
+        return false;
+    }
     return RemoveDirContentsZ(CStrTemp(dir), false);
 }
 
