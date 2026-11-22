@@ -1687,10 +1687,10 @@ static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam,
     if (WM_ERASEBKGND == uMsg) {
         // always paint background with theme color to avoid gray strips in light theme
         HDC hdc = (HDC)wParam;
-        Color bgCol = ThemeControlBackgroundColor();
-        auto* bgBrush = CreateSolidBrush(bgCol);
-        HdcFillRect(hdc, HwndClientRect(hWnd), bgBrush);
-        DeleteObject(bgBrush);
+        // DC_BRUSH: no brush allocation per erase
+        COLORREF prevCol = SetDCBrushColor(hdc, ThemeControlBackgroundColor());
+        HdcFillRect(hdc, HwndClientRect(hWnd), (HBRUSH)GetStockObject(DC_BRUSH));
+        SetDCBrushColor(hdc, prevCol);
         return 1;
     }
     if (WM_NOTIFY == uMsg) {
