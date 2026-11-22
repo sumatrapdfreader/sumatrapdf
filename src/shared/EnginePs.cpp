@@ -85,7 +85,12 @@ TryAgain64Bit:
     if (size == 0) {
         return {};
     }
-    GetEnvironmentVariableW(L"PATH", envpathW.s, size);
+    // the returned length excludes the NUL; with it the last entry never matched
+    DWORD n = GetEnvironmentVariableW(L"PATH", envpathW.s, size);
+    if (n == 0 || n >= size) {
+        return {};
+    }
+    envpathW.len = (int)n;
     TempStr envPath = ToUtf8Temp(envpathW);
     StrVec paths;
     Split(&paths, envPath, StrL(";"), true);
