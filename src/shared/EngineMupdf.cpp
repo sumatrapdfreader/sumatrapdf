@@ -4246,7 +4246,7 @@ Str EngineMupdf::LoadStreamFromPDFFile(Str filePath) {
         return {};
     }
 
-    if (!pdf_obj_num_is_stream(ctx, pdfdoc, streamNo)) {
+    if (!pdfdoc || !pdf_obj_num_is_stream(ctx, pdfdoc, streamNo)) {
         return {};
     }
 
@@ -4259,13 +4259,11 @@ Str EngineMupdf::LoadStreamFromPDFFile(Str filePath) {
         fz_report_error(ctx);
         return {};
     }
-    auto dataSize = buffer->len;
-    if (dataSize == 0) {
-        return {};
+    Str res;
+    if (buffer->len > 0) {
+        res = str::Dup(Str((char*)buffer->data, (int)buffer->len));
     }
-    Str res = str::Dup(Str((char*)buffer->data, (int)dataSize));
     fz_drop_buffer(ctx, buffer);
-
     return res;
 }
 
