@@ -3464,16 +3464,16 @@ int ParseInt(Str s) {
     if (negative) {
         off = 1;
     }
-    int value = 0;
-    int overflowCheck = negative ? 1 : 0;
+    // return 0 on overflow; INT_MIN is representable
+    i64 limit = negative ? -(i64)INT_MIN : INT_MAX;
+    i64 value = 0;
     for (; off < s.len && str::IsDigit(s.s[off]); off++) {
         value = (value * 10) + (s.s[off] - '0');
-        // return 0 on overflow
-        if (value - overflowCheck < 0) {
+        if (value > limit) {
             return 0;
         }
     }
-    return negative ? -value : value;
+    return (int)(negative ? -value : value);
 }
 
 i64 ParseInt64(Str s) {
@@ -3485,11 +3485,17 @@ i64 ParseInt64(Str s) {
     if (negative) {
         off = 1;
     }
-    i64 value = 0;
+    // return 0 on overflow; INT64_MIN is representable
+    u64 limit = negative ? (u64)INT64_MAX + 1 : (u64)INT64_MAX;
+    u64 value = 0;
     for (; off < s.len && str::IsDigit(s.s[off]); off++) {
-        value = (value * 10) + (s.s[off] - '0');
+        u64 digit = (u64)(s.s[off] - '0');
+        if (value > (limit - digit) / 10) {
+            return 0;
+        }
+        value = (value * 10) + digit;
     }
-    return negative ? -value : value;
+    return negative ? (i64)(0 - value) : (i64)value;
 }
 
 // the only valid chars are 0-9, . and newlines.

@@ -567,5 +567,18 @@ void BaseUtilTest() {
     utassert(addOverflows<u8>(127, 129));
     utassert(addOverflows<u8>(127, 255));
 
+    utassert(ParseInt(StrL("123x")) == 123);
+    utassert(ParseInt(StrL("-45")) == -45);
+    utassert(ParseInt(StrL("2147483647")) == INT_MAX);
+    utassert(ParseInt(StrL("-2147483648")) == INT_MIN);
+    utassert(ParseInt(StrL("2147483648")) == 0);
+    utassert(ParseInt(StrL("-2147483649")) == 0);
+    utassert(ParseInt(StrL("99999999999")) == 0);
+    utassert(ParseInt64(StrL("9223372036854775807")) == INT64_MAX);
+    utassert(ParseInt64(StrL("-9223372036854775808")) == INT64_MIN);
+    utassert(ParseInt64(StrL("9223372036854775808")) == 0);
+    utassert(ParseInt64(StrL("-9223372036854775809")) == 0);
+    utassert(ParseInt64(StrL("-17")) == -17);
+
     GeomTest();
 }
