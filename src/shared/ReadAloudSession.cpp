@@ -400,7 +400,6 @@ static void ReadAloudOnQueuedStarted(WindowTab* tab) {
     dbgtts("queued-now %d..%d of %d\n", tab->readAloudChunkStart, tab->readAloudChunkEnd, tab->readAloudText.len);
 }
 
-// Promote a prefetched chunk and start the next prefetch.
 // a voice engine thread crashed and was ended: stop reading, forget that voice
 static void ReadAloudOnEngineCrash() {
     if (!TtsTakeEngineCrash()) {
@@ -418,6 +417,7 @@ static void ReadAloudOnEngineCrash() {
     }
 }
 
+// Promote a prefetched chunk and start the next prefetch.
 void ReadAloudAfterTtsEvents() {
     ReadAloudOnEngineCrash();
     WindowTab* tab = GetReadAloudSourceTab();
@@ -766,7 +766,7 @@ int ReadAloudClosestSpeedIdx() {
     return idx;
 }
 
-// dir is +1 (next speed) or -1 (previous speed), wraps around
+// idx into the speed list
 void ReadAloudSetSpeedIdx(int idx) {
     ReadAloudSetSpeed(ReadAloudSpeedAt(idx));
 }
@@ -906,13 +906,12 @@ void ReadAloudInTab(WindowTab* tab) {
     bool isTextOnlySelection = false;
     TempStr text = GetSelectedTextTemp(tab, StrL("\r\n"), isTextOnlySelection);
 
+    tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
     if (len(text) > 0 && isTextOnlySelection) {
         dbgtts("InTab: using selection path (len=%d)\n", len(text));
-        tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromSelection(tab, Tr("No text available to read aloud"));
     } else {
         dbgtts("InTab: using viewport-top path (hasSelection=%d isTextOnly=%d)\n", len(text) > 0, isTextOnlySelection);
-        tab->readAloudScope = WindowTab::ReadAloudScopeSmart;
         ReadAloudStartFromViewportTop(tab, Tr("No text available to read aloud"));
     }
 }

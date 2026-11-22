@@ -1104,7 +1104,7 @@ static void WinTtsExtractCues(WMSS::ISpeechSynthesisStream* stream, Vec<WinTtsCu
     }
 }
 
-// reads the whole synthesized WAV file into gWinWavData
+// reads the whole synthesized WAV stream into *dataOut
 static bool WinTtsReadStreamBytes(WMSS::ISpeechSynthesisStream* stream, u8** dataOut, DWORD* sizeOut) {
     IStream* istm = nullptr;
     HRESULT hr = pCreateStreamOverRandomAccessStream((IUnknown*)stream, IID_PPV_ARGS(&istm));
@@ -1352,8 +1352,7 @@ static void WinTtsProcessEvents() {
     }
 }
 
-// position (in WCHARs) in the spoken text of the word being played;
-// -1 if playback has not started yet (still synthesizing)
+// ms since playback started, capped at the clip's duration
 static DWORD WinTtsClockMs() {
     if (gWinPlayQpcStart.QuadPart == 0) {
         return 0;
@@ -1371,6 +1370,8 @@ static DWORD WinTtsClockMs() {
     return (DWORD)ms;
 }
 
+// position (in WCHARs) in the spoken text of the word being played;
+// -1 if playback has not started yet (still synthesizing)
 static int WinTtsLastWordPosWide() {
     if (!gWinWaveOut && !gWinVirtualPlay) {
         return -1;
@@ -1519,9 +1520,7 @@ bool TtsQueueUtf8(Str text) {
 
 // One-shot: the queued utterance just became the playing one.
 bool TtsDidStartQueued() {
-    bool v = gTtsQueuedStarted;
-    gTtsQueuedStarted = false;
-    return v;
+    return TtsTakeFlag(&gTtsQueuedStarted);
 }
 
 bool TtsIsSpeaking() {

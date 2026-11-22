@@ -60,12 +60,11 @@ static bool ReadAloudHighlightAppend(ReadAloudHighlightMap* map, const ReadAloud
     return true;
 }
 
-static bool ReadAloudHighlightAppendRaw(Vec<ReadAloudRawByte>& raw, char c, const ReadAloudByteLoc& loc) {
+static void ReadAloudHighlightAppendRaw(Vec<ReadAloudRawByte>& raw, char c, const ReadAloudByteLoc& loc) {
     ReadAloudRawByte rb;
     rb.c = c;
     rb.loc = loc;
     VecAppend(raw, rb);
-    return true;
 }
 
 static void ReadAloudByteLocSetFromRect(ReadAloudByteLoc& loc, Location pageLoc, const Rect& r) {
