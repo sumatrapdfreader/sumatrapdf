@@ -778,9 +778,9 @@ Str AIChatStyleSnapshot() {
         return {};
     }
     AIChat* s = &gSettings->aiChat;
-    TempStr res = fmt("%s|%d|%g|%d|%d|%s|%s|%s|%s", s->fontName, s->fontSize, s->lineSpacing, s->messagePadding,
+    TempStr res = fmt("%s|%d|%g|%d|%d|%s|%s|%s|%s|%s", s->fontName, s->fontSize, s->lineSpacing, s->messagePadding,
                       s->bubbles ? 1 : 0, gSettings->claudeCode.bgColor.s, gSettings->grokBuild.bgColor.s,
-                      gSettings->codexBuild.bgColor.s, gSettings->antiGravity.bgColor.s);
+                      gSettings->codexBuild.bgColor.s, gSettings->antiGravity.bgColor.s, gSettings->customAI.bgColor.s);
     return str::Dup(res);
 }
 
