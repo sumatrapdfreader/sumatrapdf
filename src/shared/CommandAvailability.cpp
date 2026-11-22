@@ -633,6 +633,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    // on the whitelist too, so checked before it
+    if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
+        return CommandVisibility::Hide;
+    }
+
     // works on a failed load too: that is when looking at the bytes helps
     if (cmdId == CmdViewAsHex) {
         bool canView = !ctx.isHexTab && len(ctx.filePath) > 0 && CanAccessDisk();
@@ -970,10 +975,6 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
             return CommandVisibility::Hide;
         }
         return CommandVisibility::Disable;
-    }
-
-    if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
-        return CommandVisibility::Hide;
     }
 
     if (!HasPermission(Perm::InternetAccess) && CmdIdInList(cmdId, removeIfNoInternetPerms)) {
