@@ -312,7 +312,6 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
-    // whether the ToC sidebar is currently visible
     // set to temporarily disable UpdateTocSelection
     bool tocKeepSelection = false;
     // Non-owning TOC items that match the current page (same page as best match

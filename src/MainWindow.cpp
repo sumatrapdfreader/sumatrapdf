@@ -608,10 +608,6 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
 
-    if (kindDestinationLaunchURL == kind) {
-        return;
-    }
-
     logf("LinkHandler::GotoLink: unhandled kind %s\n", Str(kind));
     ReportIf(true);
 }
