@@ -416,8 +416,8 @@ void AIChatShowNotInstalledDialog(MainWindow* win, const AIChatNotInstalledDialo
     gNotInstalled.instruction = str::Dup(args.mainInstruction);
     gNotInstalled.docUri = str::Dup(args.docUri);
     gNotInstalled.visible = true;
-    DialogsTrackFrameDialog(IsAIChatNotInstalledDialogVisible, [] { return gNotInstalled.win; },
-                            CloseAIChatNotInstalledDialog);
+    DialogsTrackFrameDialog(
+        IsAIChatNotInstalledDialogVisible, [] { return gNotInstalled.win; }, CloseAIChatNotInstalledDialog);
     logf("AIChatShowNotInstalledDialog: '%s'\n", gNotInstalled.instruction);
     AppShellInvalidate(win);
 }
