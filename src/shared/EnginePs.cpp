@@ -285,7 +285,7 @@ class EnginePs : public EnginePdfProxy {
             return false;
         }
         if (str::EndsWithI(FilePath(), StrL(".eps"))) {
-            defaultExt = str::Dup(StrL(".eps"));
+            str::ReplaceWithCopy(&defaultExt, StrL(".eps"));
         }
         CopyStateFromPdfEngine();
         return true;
