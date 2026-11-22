@@ -167,28 +167,6 @@ static void ExecuteCurrentSelection();
 static void StartThumbnailRendering();
 static void ThumbSelectPage(int pageNo);
 
-// clang-format off
-static i32 gCommandsNoActivate[] = {
-    CmdOptions,
-    CmdSetInverseSearch,
-    CmdChangeLanguage,
-    CmdHelpAbout,
-    CmdHelpOpenManual,
-    CmdHelpOpenManualOnWebsite,
-    CmdHelpOpenKeyboardShortcuts,
-    CmdHelpVisitWebsite,
-    CmdOpenFile,
-    CmdOpenFileNoHistory,
-    CmdProperties,
-    CmdNewWindow,
-    CmdDuplicateInNewWindow,
-    CmdListPrinters,
-    CmdTabGroupSave,
-    CmdTabGroupRestore,
-    0,
-};
-// clang-format on
-
 static TempStr QueryTemp() {
     CommandPaletteWnd* wnd = gCommandPaletteWnd;
     if (!wnd || !wnd->editQuery) {
@@ -745,9 +723,8 @@ static void ExecuteCurrentSelection() {
         return;
     }
     if (cmdId != 0) {
-        // ng: orig also decides which window to re-activate; the palette is
-        // inside the window here, so gCommandsNoActivate only documents that
-        IsCmdInList(cmdId, gCommandsNoActivate);
+        // ng: orig also re-activates a window (gCommandsNoActivate); the
+        // palette is inside the window here
         ScheduleDeleteAndExecCommand(cmdId);
         return;
     }
@@ -1537,7 +1514,6 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
     Color colText = ThemeWindowTextColor();
     Color colMuted = ThemeWindowTextDisabledColor();
     // keep the selected row visible; gpui has no EnsureVisible for a plain box
-    int visibleRows = std::max((int)(listDy / kPaletteRowDy), 1);
     if (wnd->sel >= 0) {
         float selTop = (float)wnd->sel * kPaletteRowDy;
         float selBottom = selTop + kPaletteRowDy;
@@ -1549,7 +1525,6 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
     }
     float maxOff = std::max(0.f, (float)len(wnd->items) * kPaletteRowDy - listDy);
     wnd->scrollOff = limitValue(wnd->scrollOff, 0.f, maxOff);
-    (void)visibleRows;
 
     gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H(listDy)->PadX(kPaletteInsetDx)->ScrollY(wnd->scrollOff);
     int n = len(wnd->items);
@@ -1827,13 +1802,11 @@ static bool ShowsSettingHelp(CommandPaletteWnd* wnd) {
 
 // the doc comment of the selected setting, like the advanced settings dialog
 static gp::El* BuildSettingHelp(CommandPaletteWnd* wnd, gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     Str comment;
     int idx = wnd->sel;
     if (idx >= 0 && idx < len(wnd->items)) {
         comment = wnd->items.AtData(idx)->settingComment;
     }
-    (void)th;
     return gp::Div(cx->a)
         ->W(gp::kFill)
         ->H(kSettingHelpDy)
@@ -1849,8 +1822,8 @@ static gp::El* BuildSettingHelp(CommandPaletteWnd* wnd, gp::Ctx* cx) {
 }
 
 static RectF PaletteBounds(MainWindow* win, CommandPaletteWnd* wnd) {
-    // orig sizes the palette to the frame: 640..1024 wide, at least 480 tall,
-    // and puts it 42 px below the frame's top edge
+    // orig sizes the palette to the frame: 640..1024 wide, at least 480 tall
+    // (160 here, inside the frame), and puts it 42 px below the frame's top edge
     float dx = (float)limitValue(win->frameRc.dx - 256, kPaletteMinDx, kPaletteMaxDx);
     dx = std::min(dx, (float)win->frameRc.dx - 32);
     float dy = std::max((float)win->frameRc.dy - kPaletteTopMargin - 24, 160.f);
@@ -1993,10 +1966,8 @@ static gp::El* PaletteCard(CommandPaletteWnd* wnd, gp::Ctx* cx, RectF bounds) {
     if (!gPaletteView.IsValid()) {
         gPaletteView = gp::EntityNewState<PaletteView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     wnd->editQuery->onChange = gp::ListenTo(gPaletteView, &PaletteView::OnInput);
 
-    (void)th;
     gp::El* card = gp::Div(cx->a)
                        ->FlexCol()
                        ->W(bounds.dx)
