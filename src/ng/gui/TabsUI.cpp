@@ -729,60 +729,6 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     return el;
 }
 
-// the same action the menu bar rows use, so a pick runs through the shell
-static uint32_t ActMenuCmd() {
-    static uint32_t id = gp::ActionOf(GStrL("sumatra::Cmd"));
-    return id;
-}
-
-static void SetMenuCue(gp::Ctx* cx, gpc::PopupMenu* menu, gp::Str label, const MenuAccelText& at, bool disabled) {
-    if (at.underlineOff < 0 || menu->items.len == 0) {
-        return;
-    }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gp::Rgba fg = disabled ? th.mutedFg : th.foreground;
-    auto* span = gp::ArenaNew<gp::TextSpan>(cx->a);
-    span->lo = at.underlineOff;
-    span->hi = at.underlineOff + at.underlineLen;
-    span->color = fg;
-    menu->items[menu->items.len - 1].element = gp::TextEl(cx->a, label)->Font(14)->Fg(fg)->Underlines(span, 1);
-}
-
-// one MenuModel level as a popup. A menu-bar entry is itself a submenu, so the
-// button's menu is File, View, ... each opening the menu it names.
-static gpc::PopupMenu* MenuPopupFromModel(gp::Ctx* cx, MenuModel* model, Str id, bool cues) {
-    gpc::PopupMenu* menu = gpc::PopupMenu::New(cx, GpuiDup(cx->a, id))->MinW(220);
-    if (!model) {
-        return menu;
-    }
-    int i = -1;
-    for (const MenuItemModel& it : model->items) {
-        i++;
-        if (it.separator) {
-            menu->Separator();
-            continue;
-        }
-        MenuAccelText at = ParseMenuAccelTextTemp(it.title);
-        gp::Str label = GpuiDup(cx->a, at.display);
-        if (it.submenu) {
-            TempStr subId = fmt("%s-%d", id, i);
-            menu->Submenu(label, MenuPopupFromModel(cx, it.submenu, subId, cues));
-            menu->Disabled(it.disabled);
-        } else {
-            menu->MenuWithAction(label, ActMenuCmd(), (intptr_t)it.cmdId);
-            // a row without a hint asks the keymap, which answers with some
-            // other command's shortcut (every command is one action)
-            menu->Kbd(len(it.accel) > 0 ? GpuiDup(cx->a, it.accel) : GStrL(""));
-            menu->Disabled(it.disabled);
-            menu->Checked(it.checked);
-        }
-        if (cues) {
-            SetMenuCue(cx, menu, label, at, it.disabled);
-        }
-    }
-    return menu;
-}
-
 // orig's CB_MENU caption button. The strip puts it before its tabs; a window
 // without tabs has no strip, so the caption asks for it alone. Null while the
 // menu bar is showing. A click opens the bar's menus as one drop-down.
@@ -790,7 +736,7 @@ gp::El* TabsUIMenuButton(MainWindow* win, gp::Ctx* cx) {
     if (win->isMenuBarVisible || AppShellNativeMenu() || !win->menu) {
         return nullptr;
     }
-    gpc::PopupMenu* popup = MenuPopupFromModel(cx, win->menu, StrL("sumatra-menu-btn"), MenuCuesAlways());
+    gpc::PopupMenu* popup = AppShellMenuPopup(cx, win->menu, StrL("sumatra-menu-btn"), MenuCuesAlways());
     popup->MinW(160);
     TrackPopup(cx, popup);
 

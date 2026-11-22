@@ -6,11 +6,16 @@
 
 namespace gpui {
 struct App;
+struct Ctx;
 struct Window;
 struct MouseMoveEvent;
+namespace component {
+struct PopupMenu;
+}
 } // namespace gpui
 
 struct MainWindow;
+struct MenuModel;
 
 // creates the gpui window, its root view and the MainWindow that owns them
 // hiddenUntilReady: the startup window, shown once it can show page 1
@@ -24,6 +29,7 @@ gpui::App* AppShellGetApp();
 void AppShellSetApp(gpui::App*);
 // a system setting changed (orig's WM_SETTINGCHANGE)
 void AppShellSettingChanged();
+gpui::component::PopupMenu* AppShellMenuPopup(gpui::Ctx* cx, MenuModel* model, Str id, bool cues);
 // runs the event loop until the last window closes
 int AppShellRun(gpui::App* app);
 // height of the menu bar row above the canvas, in dips. Zero where the

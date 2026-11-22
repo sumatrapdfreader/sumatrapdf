@@ -1726,8 +1726,12 @@ static void SetMenuRowCue(gp::Ctx* cx, gpc::PopupMenu* menu, gp::Str label, cons
     menu->items[menu->items.len - 1].element = MenuCueLabel(cx, label, at, fg);
 }
 
-static gpc::PopupMenu* BuildPopup(gp::Ctx* cx, MenuModel* model, Str id, bool cues) {
+// one MenuModel level as a popup, for the menu bar and the caption's menu button
+gpc::PopupMenu* AppShellMenuPopup(gp::Ctx* cx, MenuModel* model, Str id, bool cues) {
     gpc::PopupMenu* menu = gpc::PopupMenu::New(cx, GpuiDup(cx->a, id))->MinW(220);
+    if (!model) {
+        return menu;
+    }
     int i = -1;
     for (const MenuItemModel& it : model->items) {
         i++;
@@ -1739,7 +1743,7 @@ static gpc::PopupMenu* BuildPopup(gp::Ctx* cx, MenuModel* model, Str id, bool cu
         gp::Str label = GpuiDup(cx->a, at.display);
         if (it.submenu) {
             TempStr subId = fmt("%s-%d", id, i);
-            menu->Submenu(label, BuildPopup(cx, it.submenu, subId, cues));
+            menu->Submenu(label, AppShellMenuPopup(cx, it.submenu, subId, cues));
             menu->Disabled(it.disabled);
         } else {
             menu->MenuWithAction(label, ActSumatraCmd(), (intptr_t)it.cmdId);
@@ -2009,7 +2013,7 @@ static gp::El* BuildMenuBar(ShellView* self, gp::Ctx* cx) {
         if (isOpen && MenuContainsCmd(it.submenu, CmdTtsMenuReadCurrentPage) && ReadAloudLoadVoices()) {
             RebuildReadAloudMenu(win, it.submenu);
         }
-        gpc::PopupMenu* popup = BuildPopup(cx, it.submenu, id, cues);
+        gpc::PopupMenu* popup = AppShellMenuPopup(cx, it.submenu, id, cues);
         if (state && state->selected == barIdx && self->menuPopupIdx < 0) {
             gp::PopupMenuState* popupState = popup->state.Get(cx);
             if (popupState) {
