@@ -337,13 +337,13 @@ static void FinishNavDirScan(NavDirScanResult* r) {
          (int)uitask::IsMainUIThread());
 
     auto* m = (ListBoxModelNav*)wnd->listBox->model;
-    if (!m) {
-        m = new ListBoxModelNav();
-    }
     wnd->scanInFlight = false;
     // a re-read that found nothing new leaves the list alone: no repaint at all
-    if (r->isRefresh && SameNavEntries(m->all, r->entries)) {
+    if (r->isRefresh && m && SameNavEntries(m->all, r->entries)) {
         return;
+    }
+    if (!m) {
+        m = new ListBoxModelNav();
     }
     int scrollY = wnd->listBox->scrollY;
     StealNavEntries(m->all, r->entries);
