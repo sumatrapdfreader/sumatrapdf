@@ -65,11 +65,14 @@ export async function testit(): Promise<void> {
     }
     p = zoomed;
 
-    await send(WM_MOUSEHWHEEL, WHEEL_DELTA, 0);
-    p = await waitFor(client, "horizontal wheel on the popup did not scroll right", (q) => q.x > p.x);
-
+    // Zoom-to-center can land on the right edge when the popup is almost as
+    // wide as the page, so the first sideways notch goes left, where that
+    // zoom just opened a gap.
     await send(WM_MOUSEWHEEL, WHEEL_DELTA, MK_SHIFT);
     p = await waitFor(client, "Shift + wheel up on the popup did not scroll left", (q) => q.x < p.x);
+
+    await send(WM_MOUSEHWHEEL, WHEEL_DELTA, 0);
+    p = await waitFor(client, "horizontal wheel on the popup did not scroll right", (q) => q.x > p.x);
 
     await send(WM_MOUSEWHEEL, -WHEEL_DELTA, MK_SHIFT);
     await waitFor(client, "Shift + wheel down on the popup did not scroll right", (q) => q.x > p.x);
