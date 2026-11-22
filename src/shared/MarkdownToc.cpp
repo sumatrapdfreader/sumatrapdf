@@ -886,10 +886,11 @@ static void PreserveSafeEmptyAnchors(cmark_node* parent) {
 // Give headings anchors with the TOC's slugs so links like "#intr_state"
 // reach their headings through cmark's safe renderer (#5883).
 static void AddHeadingAnchors(cmark_node* doc) {
-    for (cmark_node* node = cmark_node_first_child(doc); node; node = cmark_node_next(node)) {
-        if (cmark_node_get_type(node) != CMARK_NODE_HEADING) {
-            continue;
-        }
+    // all headings, like the TOC (nested in lists and quotes too); collected
+    // first so inserting doesn't disturb the tree walk
+    Vec<cmark_node*> headings;
+    VisitMarkdownNodes(doc, CMARK_NODE_HEADING, [&](cmark_node* node) { VecAppend(headings, node); });
+    for (cmark_node* node : headings) {
         Str title = ExtractHeadingTitle(node);
         if (len(title) == 0) {
             continue;
@@ -1163,12 +1164,15 @@ bool MarkdownToc_UnitTestHighlightWikilinks() {
         return false;
     }
 
-    char* headed = MarkdownToHtmlBody(StrL("See [[#Hello World]]\n\n## Hello World\n"), CMARK_OPT_UNSAFE);
+    char* headed = MarkdownToHtmlBody(StrL("See [[#Hello World]]\n\n## Hello World\n\n> ## Quoted\n\n- ## Listed\n"),
+                                      CMARK_OPT_UNSAFE);
     if (!headed) {
         return false;
     }
     Str head(headed);
-    bool headOk = str::Contains(head, StrL("href=\"#hello-world\"")) && str::Contains(head, StrL("id=\"hello-world\""));
+    bool headOk = str::Contains(head, StrL("href=\"#hello-world\"")) &&
+                  str::Contains(head, StrL("id=\"hello-world\"")) && str::Contains(head, StrL("id=\"quoted\"")) &&
+                  str::Contains(head, StrL("id=\"listed\""));
     cmark_get_default_mem_allocator()->free(headed);
     return headOk;
 }
