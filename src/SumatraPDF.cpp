@@ -325,6 +325,12 @@ LoadArgs* LoadArgs::Clone() {
     res->targetTab = this->targetTab;
     res->forceReuse = this->forceReuse;
     res->forceNewWindow = this->forceNewWindow;
+    res->showWin = this->showWin;
+    res->noPlaceWindow = this->noPlaceWindow;
+    res->isNewWindow = this->isNewWindow;
+    res->placeWindow = this->placeWindow;
+    res->lazyLoad = this->lazyLoad;
+    res->activateExistingInWindow = this->activateExistingInWindow;
     res->noSavePrefs = this->noSavePrefs;
     res->onFinished = this->onFinished;
     res->hwndPwdParent = this->hwndPwdParent;
