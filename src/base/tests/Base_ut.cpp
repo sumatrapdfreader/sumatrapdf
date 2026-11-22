@@ -584,5 +584,11 @@ void BaseUtilTest() {
     utassert(str::EqIS(StrL("a \xC3\xA9"), StrL("A\xC3\xA9")));
     utassert(str::EqNI(StrL("\xC3\xA9X"), StrL("\xC3\xA9x"), 3));
     utassert(str::IndexOfI(StrL("\xC3\xA9x"), StrL("X")) == 2);
+
+    utassert(wstr::EqI(WStrL(L"École"), WStrL(L"éCOLE")));
+    utassert(wstr::EqI(WStrL(L"İx"), WStrL(L"iX")));
+    utassert(!wstr::EqI(WStrL(L"Аb"), WStrL(L"бb")));
+    utassert(wstr::StartsWithI(WStrL(L"АБc"), WStrL(L"аб")));
+    utassert(!wstr::EqNI(WStrL(L"ab"), WStrL(L"ac"), 2));
     GeomTest();
 }

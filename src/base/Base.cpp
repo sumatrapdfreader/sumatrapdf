@@ -3292,18 +3292,14 @@ bool EqNI(WStr s1, WStr s2, int n) {
     if (s1.len < n || s2.len < n) {
         return false;
     }
-    WCHAR* a = AllocArrayTemp<WCHAR>(n);
-    WCHAR* b = AllocArrayTemp<WCHAR>(n);
-    if (!a || !b) {
-        return false;
+    for (int i = 0; i < n; i++) {
+        WCHAR c1 = s1.s[i];
+        WCHAR c2 = s2.s[i];
+        if (c1 != c2 && FoldCaseRune(c1) != FoldCaseRune(c2)) {
+            return false;
+        }
     }
-    memcpy(a, s1.s, (size_t)n * sizeof(WCHAR));
-    memcpy(b, s2.s, (size_t)n * sizeof(WCHAR));
-    WStr wa(a, n);
-    WStr wb(b, n);
-    FoldCaseWInPlace(wa);
-    FoldCaseWInPlace(wb);
-    return EqN(wa, wb, n);
+    return true;
 }
 
 // return true if s1 == s2, case insensitive
