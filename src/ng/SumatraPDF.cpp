@@ -4389,6 +4389,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
     DlgWindowsCloseFor(win);
     VecRemove(gWindows, win);
     AppShellCloseWindow(win);
+    HexViewDelete(win);
     delete win;
     // the closed window is no longer part of the session
     if (!gDontSaveSettings && !lastWindow) {

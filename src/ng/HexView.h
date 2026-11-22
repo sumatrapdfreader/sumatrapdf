@@ -9,3 +9,4 @@ struct El;
 void ViewTabAsHex(WindowTab* tab);
 gpui::El* HexViewBuild(MainWindow* win, gpui::Ctx* cx);
 bool HexViewOnKeyDown(MainWindow* win, int vk);
+void HexViewDelete(MainWindow* win);

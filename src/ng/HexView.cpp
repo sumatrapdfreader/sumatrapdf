@@ -57,6 +57,18 @@ static HexGeom* GeomFor(MainWindow* win) {
     return g;
 }
 
+// a later window may get the same address
+void HexViewDelete(MainWindow* win) {
+    for (int i = len(gHexGeoms) - 1; i >= 0; i--) {
+        HexGeom* g = gHexGeoms[i];
+        if (g->win != win) {
+            continue;
+        }
+        VecRemoveAt(gHexGeoms, i);
+        delete g;
+    }
+}
+
 static void HexRelayout(MainWindow* win) {
     AppShellInvalidate(win);
 }
