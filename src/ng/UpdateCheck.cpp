@@ -275,7 +275,7 @@ static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
     TempStr size = FormatFileSizeShortTransTemp(data->nDownloaded);
     auto* wnd = GetNotificationForGroup(data->win, kNotifUpdateCheckInProgress);
     if (wnd) {
-        NotificationUpdateMessage(wnd, fmt("Downloading update: %s", size), 0);
+        NotificationUpdateMessage(wnd, fmt(Tr("Downloading update: %s").s, size), 0);
     }
     delete data;
 }

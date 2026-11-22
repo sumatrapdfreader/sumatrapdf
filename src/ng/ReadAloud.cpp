@@ -737,7 +737,7 @@ static void MenuAppendItem(MenuModel* menu, Str title, int cmdId, bool enabled, 
 static void BuildReadAloudVoiceMenuItems(MenuModel* voiceMenu) {
     Str currentVoiceId = TtsGetVoiceId();
 
-    MenuAppendItem(voiceMenu, StrL("System default"), CmdTtsVoiceDefault, true, len(currentVoiceId) == 0);
+    MenuAppendItem(voiceMenu, Tr("System default"), CmdTtsVoiceDefault, true, len(currentVoiceId) == 0);
     MenuAppendSeparator(voiceMenu);
 
     // a native menu bar (macOS) must hold the voices before it opens
