@@ -763,7 +763,8 @@ static TempStr XdgDownloadDirTemp(Str home) {
     for (int i = 0; i < len(lines); i++) {
         Str line = lines[i];
         Str prefix = StrL("XDG_DOWNLOAD_DIR=\"");
-        if (!str::StartsWith(line, prefix) || !str::EndsWith(line, StrL("\""))) {
+        // len check: the closing quote must not be the prefix's opening one
+        if (len(line) <= len(prefix) || !str::StartsWith(line, prefix) || !str::EndsWith(line, StrL("\""))) {
             continue;
         }
         Str val = Str(line.s + len(prefix), len(line) - len(prefix) - 1);
