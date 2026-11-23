@@ -196,13 +196,21 @@ export function ngDriver(client: ControlClient): Driver {
         await sleep(100);
       }
     },
-    // the list's rows are its click targets, in order
+    // the list's rows are its click targets, in order. The window reports OK
+    // before the first frame has painted them.
     async selectRow(idx) {
-      const row = parseBoxes(await layout(), "hit ")[idx];
-      if (!row) {
-        throw new Error(`edit-favorites: no row ${idx}`);
+      const deadline = Date.now() + kWaitMs;
+      for (;;) {
+        const row = parseBoxes(await layout(), "hit ")[idx];
+        if (row) {
+          await clickBox(row);
+          return;
+        }
+        if (Date.now() > deadline) {
+          throw new Error(`edit-favorites: no row ${idx}`);
+        }
+        await sleep(50);
       }
-      await clickBox(row);
     },
     async click(label) {
       const lines = (await layout()).split("\n").filter((l) => l.includes(`label='${label}'`));
