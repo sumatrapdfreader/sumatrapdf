@@ -472,6 +472,7 @@ function sumatrapdf_files()
     "VirtualDesktop.h",
     "SumatraPDF.h",
     "SumatraPDF.rc",
+    "ToolPipe.h",
     "DocumentProperties.*",
     "DocumentPropertiesCommon.*",
     "EutlTrust.*",
@@ -1785,9 +1786,7 @@ end
 
 function sumatrapdf_tool_files()
   files_in_dir("src", {
-    "CrashHandlerNoOp.cpp",
-    "EmbeddedResources.*",
-    "SumatraLog.*",
     "sumatrapdf-tool.cpp",
+    "ToolPipe.h",
   })
 end

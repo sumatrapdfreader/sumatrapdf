@@ -198,6 +198,7 @@ import { testit as issue6444 } from "./issue-6444.ts";
 import { testit as issue6361 } from "./issue-6361.ts";
 import { testit as issue6362 } from "./issue-6362.ts";
 import { testit as issue6276 } from "./issue-6276.ts";
+import { testit as sumatrapdfToolProxy } from "./sumatrapdf-tool-proxy.ts";
 import { testit as issue6402 } from "./issue-6402.ts";
 import { testit as issue6279 } from "./issue-6279.ts";
 import { testit as issue6280 } from "./issue-6280.ts";
@@ -788,6 +789,7 @@ export const tests: NamedTest[] = [
   ["uia-document-text", uiaDocumentText],
   ["jpeg-xl-pdf", jpegXlPdf],
   ["issue-6276", issue6276],
+  ["sumatrapdf-tool-proxy", sumatrapdfToolProxy],
   ["issue-6402", issue6402],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["session-restore-tab-state", sessionRestoreTabState],

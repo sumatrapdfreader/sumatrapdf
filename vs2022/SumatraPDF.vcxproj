@@ -1436,6 +1436,7 @@
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
+    <ClInclude Include="..\src\ToolPipe.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\CrashHandler.h" />

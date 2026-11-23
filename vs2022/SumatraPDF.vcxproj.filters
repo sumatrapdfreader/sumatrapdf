@@ -189,6 +189,9 @@
     <ClInclude Include="..\src\SumatraPDF.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ToolPipe.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>

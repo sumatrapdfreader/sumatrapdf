@@ -1261,10 +1261,11 @@ workspace "SumatraPDF"
     uses_zlib()
     links { "shlwapi", "version", "comctl32", "crypt32", "wintrust" }
 
-  -- small console app that runs the mupdf command-line tools (draw, convert,
-  -- info, ...). Console subsystem (so it works with cmd.exe / PowerShell) and
-  -- links libsumatrapdf.dll for everything, so the exe itself is tiny. It's embedded
-  -- in SumatraPDF.exe's IDR_EMBEDDED_PAK (see the embedded.lzsa prebuild).
+  -- small console app that runs SumatraPDF.exe's command line (the mupdf tools,
+  -- cli, ...) from cmd.exe / PowerShell: it sends the args to SumatraPDF.exe
+  -- over a named pipe and relays its stdout / stderr (src/ToolPipe.h). Plain
+  -- Win32, no libsumatrapdf.dll. It's embedded in SumatraPDF.exe's
+  -- IDR_EMBEDDED_PAK (see the embedded.lzsa prebuild).
   project "sumatrapdf-tool"
     build_defines()
     dll_app_objdir()
@@ -1275,10 +1276,7 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     includedirs { "src" }
     sumatrapdf_tool_files()
-    -- base: EmbeddedResources.cpp (mupdf's built-in fonts from SumatraPDF.exe's archive)
-    links { "base", "libsumatrapdf" }
-    links_base_win()
-    links { "shell32", "wintrust" }
+    links { "shell32" }
 
   project "PdfFilter"
     build_defines()

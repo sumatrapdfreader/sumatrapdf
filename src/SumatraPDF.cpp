@@ -3,6 +3,8 @@
 
 #include "base/Base.h"
 #include <locale.h>
+#include <io.h>
+#include <fcntl.h>
 #include "base/Pixmap.h"
 #include "base/WinDynCalls.h"
 #include "base/DirScan.h"
@@ -163,6 +165,7 @@
 #include "OpenFileFilters.h"
 #include "OpenFromUrlCommon.h"
 #include "AppHelpersCommon.h"
+#include "ToolPipe.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;
@@ -186,8 +189,13 @@ bool SettingsUseTabs() {
     return gSettings->useTabs && !gMyWindowWasEmbedded;
 }
 
+// -tool-pipe <name>: sumatrapdf-tool.exe drives us (ToolPipe.h). Our command
+// line is the args it sends; stdout / stderr go back to it. A fresh instance:
+// no single-instance reuse, no session restore, no settings save.
+static bool gDrivenByTool = false;
+
 static bool SettingsRestoreSession() {
-    return gSettings->restoreSession && !gMyWindowWasEmbedded && !gForTesting;
+    return gSettings->restoreSession && !gMyWindowWasEmbedded && !gForTesting && !gDrivenByTool;
 }
 
 // Page Up/Down decide "did it move" from the content axis when the stack follows rotation.
@@ -16120,6 +16128,113 @@ static void LayoutAndFocusOnStartup(MainWindow* win) {
     NotifySessionRestoreFinished();
 }
 
+static WCHAR* gToolCmdLine = nullptr;
+
+// the command line to act on: the tool's args when driven by it
+static WCHAR* AppCommandLine() {
+    return gToolCmdLine ? gToolCmdLine : GetCommandLineW();
+}
+
+static HANDLE OpenToolPipe(WStr base, const WCHAR* suffix, DWORD access) {
+    TempWStr name = ToWStrTemp(fmt("%s%s", base, WStr(suffix)));
+    return CreateFileW(name.s, access, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+}
+
+static bool ReadPipeExact(HANDLE h, void* buf, DWORD n) {
+    char* p = (char*)buf;
+    while (n > 0) {
+        DWORD got = 0;
+        if (!ReadFile(h, p, n, &got, nullptr) || got == 0) {
+            return false;
+        }
+        p += got;
+        n -= got;
+    }
+    return true;
+}
+
+// points the CRT stream and the std handle at h, so printf / fwrite / fgets and
+// the mupdf tools use the tool's streams. Text mode, as in a console app; mupdf
+// switches stdout to binary itself when it writes binary data.
+static bool BindStdStream(FILE* f, DWORD stdId, HANDLE h) {
+    bool isInput = stdId == STD_INPUT_HANDLE;
+    int fd = _open_osfhandle((intptr_t)h, _O_TEXT | (isInput ? _O_RDONLY : 0));
+    if (fd < 0) {
+        CloseHandle(h);
+        return false;
+    }
+    // a GUI app's std streams have no file descriptor until reopened
+    FILE* tmp = nullptr;
+    freopen_s(&tmp, "NUL", isInput ? "r" : "w", f);
+    bool ok = _dup2(fd, _fileno(f)) == 0;
+    _close(fd);
+    if (!ok) {
+        return false;
+    }
+    setvbuf(f, nullptr, _IONBF, 0);
+    SetStdHandle(stdId, (HANDLE)_get_osfhandle(_fileno(f)));
+    return true;
+}
+
+// Called first: with -tool-pipe <name>, reads the command line from the tool
+// and sends stdout / stderr to it; every other arg on our real command line is
+// ignored. False if driven but the pipes don't work.
+static bool ConnectToTool() {
+    int argc = 0;
+    WCHAR** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (!argv) {
+        return true;
+    }
+    defer {
+        LocalFree((void*)argv);
+    };
+    if (argc < 3 || !wstr::Eq(WStr(argv[1]), WStrL(kToolPipeFlag))) {
+        return true;
+    }
+    gDrivenByTool = true;
+    WStr base = WStr(argv[2]);
+
+    HANDLE hArgs = OpenToolPipe(base, kToolPipeArgsSuffix, GENERIC_READ);
+    if (hArgs == INVALID_HANDLE_VALUE) {
+        logf("ConnectToTool: can't open '%s'\n", base);
+        return false;
+    }
+    DWORD size = 0;
+    bool ok = ReadPipeExact(hArgs, &size, sizeof(size)) && size <= kToolPipeMaxArgsBytes;
+    char* payload = ok ? AllocArray<char>(size + 1) : nullptr;
+    ok = ok && payload && ReadPipeExact(hArgs, payload, size);
+    CloseHandle(hArgs);
+    if (!ok) {
+        logf("ConnectToTool: reading the args failed\n");
+        return false;
+    }
+
+    // "<our exe>" "arg1" "arg2"..., parsed by CommandLineToArgvW like a real one
+    str::Builder cmdLine;
+    cmdLine.Append(QuoteCmdLineArgTemp(GetSelfExePathTemp()));
+    for (DWORD i = 0; i < size;) {
+        Str arg = Str(payload + i);
+        cmdLine.AppendChar(' ');
+        cmdLine.Append(QuoteCmdLineArgTemp(arg));
+        i += (DWORD)len(arg) + 1;
+    }
+    free(payload);
+    gToolCmdLine = ToWStr(ToStr(cmdLine), GetPermArena()).s;
+
+    HANDLE hOut = OpenToolPipe(base, kToolPipeOutSuffix, GENERIC_WRITE);
+    HANDLE hErr = OpenToolPipe(base, kToolPipeErrSuffix, GENERIC_WRITE);
+    if (hOut == INVALID_HANDLE_VALUE || hErr == INVALID_HANDLE_VALUE) {
+        logf("ConnectToTool: can't open the output pipes\n");
+        return false;
+    }
+    if (!BindStdStream(stdout, STD_OUTPUT_HANDLE, hOut) || !BindStdStream(stderr, STD_ERROR_HANDLE, hErr)) {
+        return false;
+    }
+    // only when the tool's stdin is a file or a pipe; a console one we attach to
+    HANDLE hIn = OpenToolPipe(base, kToolPipeInSuffix, GENERIC_READ);
+    return hIn == INVALID_HANDLE_VALUE || BindStdStream(stdin, STD_INPUT_HANDLE, hIn);
+}
+
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
 
@@ -16211,7 +16326,7 @@ constexpr int kNoMutool = -1234321; // arbitrary negative value that won't colli
 // on the command line (absolute, relative, short, just the name via PATH).
 static int ToolIdxFromCmdLine() {
     int argc = 0;
-    WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    WCHAR** wargv = CommandLineToArgvW(AppCommandLine(), &argc);
     if (!wargv) {
         return -1;
     }
@@ -16232,7 +16347,7 @@ static bool IsRunningTool() {
     }
 
     int argc = 0;
-    WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    WCHAR** wargv = CommandLineToArgvW(AppCommandLine(), &argc);
     if (!wargv) {
         return false;
     }
@@ -16280,14 +16395,15 @@ static WStr SkipFirstArg(WStr cmdLine) {
 // When this is SumatraPDF-dll.exe (carries embedded installer resources) and is
 // properly installed - libsumatrapdf.dll and sumatrapdf-tool.exe sit next to it - run
 // the requested tool by launching the console sumatrapdf-tool.exe instead of
-// running it in-process. This is a GUI (Windows subsystem) exe and interacts
+// running it in-process; it runs us again, driven over a pipe. This is a GUI (Windows subsystem) exe and interacts
 // poorly with cmd.exe / PowerShell; the console exe doesn't. The child inherits
 // our standard handles, so console output and redirection (`> out.txt`, `| more`)
 // keep working. Returns the child's exit code, or kNoMutool when delegation
 // doesn't apply (the caller then runs the tool in-process). The static
 // SumatraPDF.exe (no embedded resources) always runs the tool in-process.
 static int MaybeDelegateToToolExe() {
-    if (!HasEmbeddedLibsumatrapdf()) {
+    // the tool runs us: delegating back to it would loop
+    if (gDrivenByTool || !HasEmbeddedLibsumatrapdf()) {
         return kNoMutool;
     }
     TempStr toolExe = GetPathInExeDirTemp(StrL("sumatrapdf-tool.exe"));
@@ -16316,7 +16432,7 @@ static int MaybeDelegateToToolExe() {
         hErr = GetStdHandle(STD_ERROR_HANDLE);
     }
 
-    WStr rest = SkipFirstArg(WStr(GetCommandLineW()));
+    WStr rest = SkipFirstArg(WStr(AppCommandLine()));
     TempStr cmd = fmt("\"%s\" %s", toolExe, ToUtf8Temp(rest));
     WCHAR* cmdW = CWStrTemp(cmd);
     WCHAR* toolExeW = CWStrTemp(toolExe);
@@ -16347,7 +16463,7 @@ static int MaybeRunMutool() {
     char** argv = nullptr;
     int res = kNoMutool;
 
-    WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    WCHAR** wargv = CommandLineToArgvW(AppCommandLine(), &argc);
     if (!wargv) {
         // Very rare – allocation failure or severely malformed command line
         log(StrL("CommandLineToArgvW() failed\n"));
@@ -16392,9 +16508,8 @@ Run the command from cmd.exe instead, e.g.:
                 goto Exit;
             }
             // in the installed dll build, hand off to the console
-            // sumatrapdf-tool.exe (which interacts properly with the console).
-            // Not cli: it needs the app's engines, which that exe doesn't link.
-            int delegated = isCli ? kNoMutool : MaybeDelegateToToolExe();
+            // sumatrapdf-tool.exe (which interacts properly with the console)
+            int delegated = MaybeDelegateToToolExe();
             if (delegated != kNoMutool) {
                 res = delegated;
                 goto Exit;
@@ -16428,7 +16543,7 @@ static void ApplyHtmlBackendFlag(Str name) {
 }
 
 static void LogCommandLine() {
-    TempStr s = ToUtf8Temp(GetCommandLineW());
+    TempStr s = ToUtf8Temp(AppCommandLine());
     logf("'%s'\n  ver %s\n", Str(s), StrL(UPDATE_CHECK_VERA));
     LogParentProcessChain();
 }
@@ -16690,6 +16805,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     bool logFileBecauseDebug = false;
 
     supressThrowFromNew();
+    if (!ConnectToTool()) {
+        return 1;
+    }
 
     InitDynCalls();
     InitPerfLog();
@@ -16734,9 +16852,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         return ret;
     }
 
-    ParseFlags(GetPermArena(), GetCommandLineW(), flags, Str(gToolNames));
+    ParseFlags(GetPermArena(), AppCommandLine(), flags, Str(gToolNames));
     gCli = &flags;
     gForTesting = flags.forTesting;
+    if (gDrivenByTool) {
+        gDontSaveSettings = true;
+    }
     if (flags.perfLogFile) {
         SetPerfLogPath(flags.perfLogFile);
     }
@@ -16762,7 +16883,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     // when running a command-line tool (e.g. `info file.pdf`), keep logging off
     // the console so it doesn't contaminate the tool's stdout (issue #5677)
     bool isTool = IsRunningTool();
-    if (!IsDebuggerPresent() && !isTool) {
+    // driven by sumatrapdf-tool, stdout is the tool's
+    if (!IsDebuggerPresent() && !isTool && !gDrivenByTool) {
         // VSCode shows both debugger output and console out which doubles the logging
         // TODO: only if AttachConsole() succeeds?
         gLogToConsole = true;
@@ -16984,7 +17106,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     if (flags.testPlugin) {
         // in TestPlugin.cpp
         extern void TestPlugin(WStr cmdLine);
-        TestPlugin(WStr(GetCommandLineW()));
+        TestPlugin(WStr(AppCommandLine()));
         return 0;
     }
 #endif
@@ -17105,7 +17227,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     }
 
     // only call FindExistingSumatraProcessHwnd() once
-    existingInstanceHwnd = FindExistingSumatraProcessHwnd(&hMutex, &openInNewWindow);
+    if (!gDrivenByTool) {
+        existingInstanceHwnd = FindExistingSumatraProcessHwnd(&hMutex, &openInNewWindow);
+    }
 
     if (flags.quickLook && existingInstanceHwnd && !gForTesting) {
         bool ok = false;
@@ -17119,7 +17243,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         }
     }
 
-    if (flags.printDialog || flags.stressTestPath || flags.configureRestrictedUse || gPluginMode || gForTesting) {
+    // driven by sumatrapdf-tool: a fresh instance, unless -dde asks for the running one
+    if (flags.printDialog || flags.stressTestPath || flags.configureRestrictedUse || gPluginMode || gForTesting ||
+        (gDrivenByTool && len(flags.dde) == 0)) {
         // TODO: pass print request through to previous instance?
     } else if (flags.reuseDdeInstance || flags.dde) {
         existingHwnd = FindWindowW(kFrameClassName, nullptr);
