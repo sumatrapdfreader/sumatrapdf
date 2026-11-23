@@ -3325,7 +3325,7 @@ static void OnSaveAnnotsPathPicked(SaveAnnotsCtx* ctx, SavePathArgs* args) {
         onDone.Call(false);
         return;
     }
-    if (str::Eq(dstFilePath, srcPath)) {
+    if (path::IsSame(dstFilePath, srcPath)) {
         onDone.Call(SaveAnnotationsToExistingFile(tab));
         return;
     }
