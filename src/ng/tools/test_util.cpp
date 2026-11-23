@@ -79,6 +79,7 @@ extern bool MeasurementSystem_UnitTests();
 extern bool DpiPosix_UnitTests();
 #if !OS_WASM
 extern bool AppToolsPosix_UnitTests();
+extern bool Launch_UnitTests();
 #endif
 #endif
 extern bool Accelerators_UnitTestTreeTakesLetters();
@@ -227,6 +228,7 @@ int main(int argc, char** argv) {
     utassert(DpiPosix_UnitTests());
 #if !OS_WASM
     utassert(AppToolsPosix_UnitTests());
+    utassert(Launch_UnitTests());
 #endif
 #endif
     utassert(Accelerators_UnitTestTreeTakesLetters());

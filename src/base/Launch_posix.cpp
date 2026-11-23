@@ -8,6 +8,7 @@
 #include "base/File.h"
 
 #include <spawn.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -117,22 +118,38 @@ bool LaunchFileShellArgs(const StrVec& args) {
     return SpawnDetached(args);
 }
 
-bool LaunchFileShell(Str path, Str params, Str, bool) {
+// even an executable is handed to the desktop: documents on vfat / smb mounts
+// or from archives often have the exec bit. Programs go through LaunchProgram
+static void ShellOpenArgs(Str path, StrVec& args) {
+    args.Append(Str(OpenerProgram()));
+    args.Append(path);
+}
+
+bool LaunchFileShell(Str path, Str, Str, bool) {
     if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return false;
     }
     StrVec args;
-    // an executable is run directly, anything else is handed to the desktop
-    if (access(CStrTemp(path), X_OK) == 0 && !dir::Exists(path)) {
-        args.Append(path);
-        if (len(params) > 0) {
-            SplitCmdLine(params, args);
-        }
-    } else {
-        args.Append(Str(OpenerProgram()));
-        args.Append(path);
-    }
+    ShellOpenArgs(path, args);
     return SpawnDetached(args);
+}
+
+// argv for exe + argsTemplate. The template is split before expand substitutes
+// into each argument, so substituted text (a file name with ") can't add arguments
+void ProgramArgs(Str exe, Str argsTemplate, const Func1<Str*>& expand, StrVec& args) {
+    args.Append(exe);
+    StrVec templ;
+    SplitCmdLine(argsTemplate, templ);
+    for (Str arg : templ) {
+        expand.Call(&arg);
+        args.Append(arg);
+    }
+}
+
+bool LaunchProgram(Str exe, Str cmdLine) {
+    StrVec args;
+    ProgramArgs(exe, cmdLine, {}, args);
+    return LaunchFileShellArgs(args);
 }
 
 bool LaunchBrowser(Str url) {
@@ -184,3 +201,16 @@ void OpenPathInDefaultFileManager(Str path) {
     args.Append(dir);
     SpawnDetached(args);
 }
+
+#if IS_DEBUG
+bool Launch_UnitTests() {
+    // a document with the exec bit (vfat / smb mounts, archives) is opened, not run
+    TempStr doc = GetTempFilePathTemp(StrL("launch-ut"));
+    bool ok = file::WriteFile(doc, StrL("#!/bin/sh\n")) && chmod(CStrTemp(doc), 0755) == 0;
+    StrVec args;
+    ShellOpenArgs(doc, args);
+    ok = ok && len(args) == 2 && str::Eq(args[0], Str(OpenerProgram())) && str::Eq(args[1], doc);
+    file::Delete(doc);
+    return ok;
+}
+#endif

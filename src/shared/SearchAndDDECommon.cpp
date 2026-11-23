@@ -2344,7 +2344,7 @@ static bool LaunchInverseSearchCmd(Str cmdLine) {
         }
     }
     str::TrimChar(rest, ' ');
-    return LaunchFileShell(exe, rest);
+    return LaunchProgram(exe, rest);
 #endif
 }
 

@@ -48,6 +48,11 @@ bool LaunchFileShell(Str path, Str, Str, bool) {
     return true;
 }
 
+bool LaunchProgram(Str exe, Str) {
+    logf("LaunchProgram: '%s' cannot run in a browser\n", exe);
+    return false;
+}
+
 bool LaunchBrowser(Str url) {
     if (len(url) == 0 || ExternalLaunchBlocked(url)) {
         return false;
