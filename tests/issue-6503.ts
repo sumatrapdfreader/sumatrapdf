@@ -5,7 +5,7 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, runStandalone, tmpPath, USE_NG } from "./util";
-import { sleep, VK_DOWN, VK_RETURN } from "./winapi";
+import { sleep } from "./winapi";
 import { killAndWait, launchControlled } from "./win-automation";
 
 function pdfString(s: string): string {
@@ -36,9 +36,11 @@ const NOT_MENU_JS = 'Other([["Reference = U2"]]);';
 const MENU_RECT = "72 700 172 740";
 // covers the whole page, so a click in the middle of the canvas hits it
 const PAGE_RECT = "0 0 612 792";
-// Down selects the first item, so "Sheet = Power", the 4th, takes 4
-const SHEET_ITEM_DOWNS = 4;
 const POPUP_MS = 3000;
+// The menu's top left is the click. Rows are 28 dips apart, the first centered 18 below the top.
+const SHEET_ROW = 3;
+const MENU_ROW_DY = 28;
+const MENU_FIRST_ROW = 18;
 
 function makePdf(menuRect: string, withNotMenu: boolean): Buffer {
   const enc = (s: string) => Buffer.from(s, "latin1");
@@ -100,6 +102,22 @@ async function waitForUi(client: ControlClient, re: RegExp, what: string): Promi
   }
 }
 
+// The menu is open before its rows are drawn. A key before that does nothing,
+// and one after can land on whatever row the pointer is already hovering.
+async function waitDrawn(client: ControlClient, text: string): Promise<void> {
+  const deadline = Date.now() + POPUP_MS;
+  for (;;) {
+    const layout = String((await client.request(ControlCommand.TestToolWindow, ["layout", "frame"]))[1] ?? "");
+    if (layout.includes(`'${text}'`)) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`issue-6503: '${text}' was never drawn`);
+    }
+    await sleep(40);
+  }
+}
+
 // ng shows the menu in a gpui popup: clicking the link opens it, picking the
 // "#1" item goes to page 2. orig's TrackPopupMenu can't be driven from here.
 async function testNgPopup(): Promise<void> {
@@ -117,11 +135,9 @@ async function testNgPopup(): Promise<void> {
     await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
     await waitForUi(client, / popup=1/, "clicking the link didn't open its menu");
 
-    await client.waitForRenderIdle();
-    for (let i = 0; i < SHEET_ITEM_DOWNS; i++) {
-      await client.request(ControlCommand.TestInput, ["key", VK_DOWN, 0, 0, 0]);
-    }
-    await client.request(ControlCommand.TestInput, ["key", VK_RETURN, 0, 0, 0]);
+    await waitDrawn(client, "Sheet = Power");
+    const rowY = y + MENU_FIRST_ROW + SHEET_ROW * MENU_ROW_DY;
+    await client.request(ControlCommand.TestInput, ["click", x + 90, rowY, 0, 0]);
     await waitForUi(client, / page=2 /, "picking 'Sheet = Power' (#1) didn't go to page 2");
   } finally {
     await killAndWait(proc);
