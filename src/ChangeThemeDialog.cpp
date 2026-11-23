@@ -114,7 +114,8 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
 
 void ChangeThemeWnd::PreviewDocumentColors() {
     UpdateDocumentColors();
-    if (win && win->AsFixed()) {
+    // the dialog outlives the window it was opened from
+    if (IsMainWindowValidAndNotClosing(win) && win->AsFixed()) {
         MainWindowRerender(win);
     }
 }

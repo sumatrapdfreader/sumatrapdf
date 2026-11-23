@@ -677,6 +677,7 @@ import { testit as ebookSettingsOkTab } from "./ebook-settings-ok-tab.ts";
 import { testit as issue4210 } from "./issue-4210.ts";
 import { testit as annotContentsTabSwitch } from "./annot-contents-tab-switch.ts";
 import { testit as signPlacementTabSwitch } from "./sign-placement-tab-switch.ts";
+import { testit as changeThemeClosedWindow } from "./change-theme-closed-window.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -1350,6 +1351,7 @@ export const tests: NamedTest[] = [
   ["issue-4210", issue4210],
   ["annot-contents-tab-switch", annotContentsTabSwitch],
   ["sign-placement-tab-switch", signPlacementTabSwitch],
+  ["change-theme-closed-window", changeThemeClosedWindow],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
