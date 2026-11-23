@@ -1258,8 +1258,7 @@ heic_hevc_picture *heic_hevc_picture_new(
     const heic_frame *const *l0, int n_l0,
     const heic_frame *const *l1, int n_l1, heic_frame *out);
 int heic_hevc_picture_decode_segment(
-    heic_hevc_picture *picture, const heic_pps *slice_pps,
-    const heic_slice_header *sh,
+    heic_hevc_picture *picture, const heic_slice_header *sh,
     const uint8_t *data, size_t len,
     const uint32_t *ep_positions, int n_ep,
     const heic_frame *const *l0, int n_l0,
@@ -16260,7 +16259,6 @@ typedef struct {
     int              finished;
     heic_slice_header sh;
     heic_slice_header filter_sh;
-    const heic_pps *pic_pps;
 } heic_slice_work;
 
 struct heic_hevc_picture {
@@ -16292,7 +16290,6 @@ heic_hevc_picture *heic_hevc_picture_new(
             cw->sh.entry_point_offsets = NULL;
             cw->sh.num_entry_point_offsets = 0;
             cw->filter_sh = cw->sh;
-            cw->pic_pps = pps;
             if (slice_ctx_reset(&cw->sc, ctx, sps, pps, &cw->sh,
                                 l0, n_l0, l1, n_l1, out) == 0) {
                 memset(cw->ctb_decoded, 0, total);
@@ -16328,7 +16325,6 @@ heic_hevc_picture *heic_hevc_picture_new(
         work->sh.entry_point_offsets = NULL;
         work->sh.num_entry_point_offsets = 0;
         work->filter_sh = work->sh;
-        work->pic_pps = pps;
         if (slice_ctx_init(&work->sc, ctx, sps, pps, &work->sh,
                            l0, n_l0, l1, n_l1, out) != 0)
             goto fail;
@@ -16354,41 +16350,8 @@ fail:
     return NULL;
 }
 
-static int pps_picture_level_equal(const heic_pps *a, const heic_pps *b)
-{
-    if (a == b) return 1;
-    if (a->tiles_enabled_flag != b->tiles_enabled_flag
-        || a->entropy_coding_sync_enabled_flag
-               != b->entropy_coding_sync_enabled_flag
-        || a->pps_cb_qp_offset != b->pps_cb_qp_offset
-        || a->pps_cr_qp_offset != b->pps_cr_qp_offset
-        || a->loop_filter_across_tiles_enabled_flag
-               != b->loop_filter_across_tiles_enabled_flag)
-        return 0;
-    if (a->tiles_enabled_flag) {
-        if (a->num_tile_columns_minus1 != b->num_tile_columns_minus1
-            || a->num_tile_rows_minus1 != b->num_tile_rows_minus1
-            || a->uniform_spacing_flag != b->uniform_spacing_flag)
-            return 0;
-        if (!a->uniform_spacing_flag) {
-            int k;
-            if (!a->column_width_minus1 || !b->column_width_minus1
-                || !a->row_height_minus1 || !b->row_height_minus1)
-                return 0;
-            for (k = 0; k < (int)a->num_tile_columns_minus1; k++)
-                if (a->column_width_minus1[k] != b->column_width_minus1[k])
-                    return 0;
-            for (k = 0; k < (int)a->num_tile_rows_minus1; k++)
-                if (a->row_height_minus1[k] != b->row_height_minus1[k])
-                    return 0;
-        }
-    }
-    return 1;
-}
-
 int heic_hevc_picture_decode_segment(
-    heic_hevc_picture *picture, const heic_pps *slice_pps,
-    const heic_slice_header *sh,
+    heic_hevc_picture *picture, const heic_slice_header *sh,
     const uint8_t *data, size_t len,
     const uint32_t *ep_positions, int n_ep,
     const heic_frame *const *l0, int n_l0,
@@ -16416,18 +16379,9 @@ int heic_hevc_picture_decode_segment(
     sc = &work->sc;
     ctx = sc->hctx;
     sps = sc->sps;
-    out = sc->frame;
-    if (!ctx || !sps || !sc->pps || !out || work->finished) return -1;
-    if (slice_pps && slice_pps != sc->pps) {
-        if (!pps_picture_level_equal(work->pic_pps, slice_pps)) {
-            heic_error(ctx, HEIC_SEVERITY_ERROR,
-                       "slices of one picture use PPS that differ in tile "
-                       "layout or chroma QP offsets (not supported)");
-            return -1;
-        }
-        sc->pps = slice_pps;
-    }
     pps = sc->pps;
+    out = sc->frame;
+    if (!ctx || !sps || !pps || !out || work->finished) return -1;
     if (sh->slice_type != HEIC_SLICE_I && (!l0 || n_l0 <= 0)) {
         heic_error(ctx, HEIC_SEVERITY_ERROR,
                    "predictive slice missing L0 reference frame");
@@ -18005,19 +17959,6 @@ static int ref_is_available(const heic_frame *f, int managed)
     return f->dpb_mark == HEIC_DPB_SHORT || f->dpb_mark == HEIC_DPB_LONG;
 }
 
-static int slice_nal_pps_id(const heic_nal *nal)
-{
-    heic_bs sb;
-    uint32_t id;
-    heic_bs_init(&sb, nal->payload, nal->payload_len);
-    (void)heic_bs_bit(&sb);
-    if (nal->type >= HEIC_NAL_BLA_W_LP && nal->type <= HEIC_NAL_CRA)
-        (void)heic_bs_bit(&sb);
-    id = heic_bs_ue(&sb);
-    if (sb.error || id >= HEIC_PARAM_MAX_PPS) return -1;
-    return (int)id;
-}
-
 static int nal_is_reference(uint8_t nal_type)
 {
     if (nal_type >= HEIC_NAL_BLA_W_LP && nal_type <= HEIC_NAL_CRA)
@@ -18337,11 +18278,17 @@ static int heic_hevc_decode_impl(heic_ctx *ctx, const heic_hvcc *cfg,
     }
 
     for (i = 0; i < n_nals; i++) {
-        int id;
+        heic_bs sb;
+        uint32_t id;
         if (!heic_nal_is_slice(nals[i].type) || nals[i].nuh_layer_id != 0)
             continue;
-        id = slice_nal_pps_id(&nals[i]);
-        if (id >= 0 && pc->pps_valid[id]) active_pps_id = id;
+        heic_bs_init(&sb, nals[i].payload, nals[i].payload_len);
+        (void)heic_bs_bit(&sb);
+        if (nals[i].type >= HEIC_NAL_BLA_W_LP && nals[i].type <= HEIC_NAL_CRA)
+            (void)heic_bs_bit(&sb);
+        id = heic_bs_ue(&sb);
+        if (!sb.error && id < HEIC_PARAM_MAX_PPS && pc->pps_valid[id])
+            active_pps_id = (int)id;
         break;
     }
     if (active_pps_id < 0) {
@@ -18423,7 +18370,6 @@ static int heic_hevc_decode_impl(heic_ctx *ctx, const heic_hvcc *cfg,
             const heic_frame *l0[HEIC_MAX_REF_PICS] = {0};
             const heic_frame *l1[HEIC_MAX_REF_PICS] = {0};
             uint32_t *eps = NULL;
-            const heic_pps *slice_pps;
             size_t slice_len;
             int n_l0 = 0, n_l1 = 0;
             int ne = 0, e;
@@ -18438,21 +18384,8 @@ static int heic_hevc_decode_impl(heic_ctx *ctx, const heic_hvcc *cfg,
                 failed = 1;
                 break;
             }
-
-            {
-                int id = slice_nal_pps_id(&nals[i]);
-                if (id < 0 || !pc->pps_valid[id]
-                    || pc->pps_set[id].pps_seq_parameter_set_id
-                           != pps->pps_seq_parameter_set_id) {
-                    heic_error(ctx, HEIC_SEVERITY_ERROR,
-                               "slice refers to an unavailable PPS");
-                    failed = 1;
-                    break;
-                }
-                slice_pps = &pc->pps_set[id];
-            }
             if (heic_parse_slice_header(
-                    ctx, &nals[i], sps, slice_pps,
+                    ctx, &nals[i], sps, pps,
                     have_independent ? &independent : NULL, &sh) != 0) {
                 failed = 1;
                 break;
@@ -18557,8 +18490,7 @@ static int heic_hevc_decode_impl(heic_ctx *ctx, const heic_hvcc *cfg,
             }
             if (!failed
                 && heic_hevc_picture_decode_segment(
-                       picture, slice_pps, &sh, slice_data, slice_len,
-                       eps, ne,
+                       picture, &sh, slice_data, slice_len, eps, ne,
                        l0, n_l0, l1, n_l1, ab) != 0)
                 failed = 1;
             heic_free_buf(ctx, eps);
