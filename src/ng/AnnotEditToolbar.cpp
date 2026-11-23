@@ -289,12 +289,18 @@ void RefreshAnnotEditToolbar(MainWindow* win) {
     UpdateAnnotEditToolbar(win);
 }
 
+// the toolbar whose contents editor is open
+static AnnotEditToolbar* gEditingTb = nullptr;
+
 void DeleteAnnotEditToolbar(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
     if (!tb) {
         return;
     }
     win->annotEditToolbar = nullptr;
+    if (gEditingTb == tb) {
+        gEditingTb = nullptr;
+    }
     delete tb;
 }
 
@@ -322,8 +328,6 @@ bool AnnotContentsEditJustEnded() {
     gContentsEditJustEnded = false;
     return res;
 }
-
-static AnnotEditToolbar* gEditingTb = nullptr;
 
 // A kill-focus with no new window is the on-screen keyboard, not a click away.
 void AnnotContentsKeepOnKillFocus(MainWindow* win) {
