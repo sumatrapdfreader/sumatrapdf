@@ -3022,11 +3022,15 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
         return {};
     }
 
+    // bounded by the allocation: a DDE client's buffer may lack the NUL
+    size_t size = GlobalSize(h);
     TempStr res;
     if (isUnicode) {
-        res = ToUtf8Temp(WStr((WCHAR*)mem));
+        WCHAR* ws = (WCHAR*)mem;
+        res = ToUtf8Temp(WStr(ws, (int)wcsnlen(ws, size / sizeof(WCHAR))));
     } else {
-        res = str::DupTemp(Str((char*)mem));
+        char* s = (char*)mem;
+        res = str::DupTemp(Str(s, (int)strnlen(s, size)));
     }
     GlobalUnlock(h);
     return res;

@@ -456,8 +456,34 @@ static void PixmapToBgrTest() {
     utassert(PixmapToBgr(nullptr) == nullptr);
 }
 
+// a DDE client's buffer may lack the terminating NUL
+static void HGLOBALToStrTest() {
+    constexpr int kLen = 37;
+    HGLOBAL h = GlobalAlloc(GMEM_MOVEABLE, kLen);
+    utassert(h);
+    char* mem = (char*)GlobalLock(h);
+    memset(mem, 'x', kLen);
+    GlobalUnlock(h);
+    TempStr s = HGLOBALToStrTemp(h, false);
+    utassert(len(s) == kLen);
+    GlobalFree(h);
+
+    h = GlobalAlloc(GMEM_MOVEABLE, kLen * sizeof(WCHAR));
+    utassert(h);
+    WCHAR* wmem = (WCHAR*)GlobalLock(h);
+    for (int i = 0; i < kLen; i++) {
+        wmem[i] = L'y';
+    }
+    GlobalUnlock(h);
+    s = HGLOBALToStrTemp(h, true);
+    utassert(len(s) == kLen);
+    GlobalFree(h);
+}
+
 void WinUtilTest() {
     ScopedCom comScope;
+
+    HGLOBALToStrTest();
 
     QuoteCmdLineArgTest();
     RecolorLinkAaTest();
