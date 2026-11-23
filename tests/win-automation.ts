@@ -12,7 +12,7 @@
 // These are for *ad-hoc* tests (not checked in). Put reusable helpers here, not
 // in the individual ad-hoc scripts.
 
-import { IS_MAC } from "./host.ts";
+import { IS_MAC, IS_WIN } from "./host.ts";
 import { macClick } from "./mac-control.ts";
 import { cmdId, drainProcStderr, EXE, pollUntil, SLOW_BUILD_FACTOR, setFailureContext, USE_NG } from "./util.ts";
 import {
@@ -511,6 +511,9 @@ export function sendCommand(hwnd: number, cmdId: number): void {
 // an inactive window the first contact is spent activating it (a long press is
 // lost). The activating tap lands on the frame's caption, away from document and lists.
 export async function prepareTouchTarget(pid: number, frame: number): Promise<void> {
+  if (!IS_WIN) {
+    return;
+  }
   raiseProcessWindows(pid);
   const r = getWindowRect(frame);
   const x = r.left + Math.round(((r.right - r.left) * 3) / 4);

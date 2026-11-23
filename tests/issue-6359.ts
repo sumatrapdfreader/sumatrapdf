@@ -6,6 +6,7 @@
 import { copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
+import { IS_WIN } from "./host.ts";
 import { runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled, prepareTouchTarget, touchSwipe } from "./win-automation.ts";
 import { setProcessDpiAware, sleep } from "./winapi.ts";
@@ -41,6 +42,10 @@ async function waitListed(client: ControlClient): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
+  if (!IS_WIN) {
+    console.log("SKIP issue-6359: touch injection is Windows only");
+    return;
+  }
   setProcessDpiAware();
   const dir = tmpPath("issue-6359");
   rmSync(dir, { recursive: true, force: true });
