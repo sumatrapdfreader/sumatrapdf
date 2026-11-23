@@ -905,6 +905,36 @@ void HtmlImageCacheTest() {
     DeleteHtmlImageCache(cache);
 }
 
+// a page narrower than one character still lays out every character (used to hang)
+void HtmlFormatterNarrowPageTest() {
+#if OS_WIN
+    ScopedGdiPlus gdiPlus;
+#endif
+    Arena* arena = ArenaNew();
+    HtmlFormatterArgs args;
+    args.pageDx = 2;
+    args.pageDy = 1000;
+    args.SetFontName(WStrL(L"Georgia"));
+    args.fontSize = 12;
+    args.textAllocator = arena;
+    args.htmlStr = StrL("<p>Hello</p>");
+
+    HtmlFormatter formatter(&args);
+    Vec<HtmlPage*>* pages = formatter.FormatAllPages();
+    str::Builder text;
+    for (HtmlPage* page : *pages) {
+        for (DrawInstr& di : page->instructions) {
+            if (di.type == DrawInstrType::String) {
+                text.Append(di.str);
+            }
+        }
+    }
+    utassert(str::Eq(ToStr(text), StrL("Hello")));
+    DeleteVecMembers(*pages);
+    delete pages;
+    ArenaDelete(arena);
+}
+
 // the classic dialog, -print-to and the Windows 11 dialog all start from
 // PrinterDefaults (the Windows 11 one used to ignore PrintDpi)
 // orig only: ng's test_util doesn't link Print.cpp
