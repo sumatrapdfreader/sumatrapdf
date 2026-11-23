@@ -90,6 +90,8 @@ struct WatchedFile {
     FileWatcherState fileState;
 
     bool ignore = false;
+    // tells a new file apart from a freed one at the same address
+    u64 id = 0;
 };
 
 void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
@@ -111,6 +113,7 @@ static WatchedDir* gWatchedDirs = nullptr;
 static WatchedFile* gWatchedFiles = nullptr;
 
 static AtomicInt gRemovalsPending = 0;
+static u64 gNextWatchedFileId = 0;
 
 // dirs unlinked from gWatchedDirs whose StopMonitoringDirAPC / cancel-io round
 // trip hasn't completed yet. Only used to report what shutdown is waiting for.
@@ -347,9 +350,9 @@ static DWORD GetTimeoutInMs() {
     return INFINITE;
 }
 
-static bool WatchedFileStillActive(WatchedFile* wf) {
+static bool WatchedFileStillActive(WatchedFile* wf, u64 id) {
     for (WatchedFile* p = gWatchedFiles; p; p = p->next) {
-        if (p == wf) {
+        if (p == wf && p->id == id) {
             return true;
         }
     }
@@ -362,6 +365,7 @@ static bool WatchedFileStillActive(WatchedFile* wf) {
 static void RunManualChecks() {
     struct ManualCheckItem {
         WatchedFile* wf = nullptr;
+        u64 id = 0;
         Str path;
         FileWatcherState state{};
         bool changed = false;
@@ -375,6 +379,7 @@ static void RunManualChecks() {
             }
             ManualCheckItem it;
             it.wf = wf;
+            it.id = wf->id;
             // Dup so we can use path after releasing the lock (wf may be freed).
             it.path = str::Dup(wf->filePath);
             it.state = wf->fileState;
@@ -396,8 +401,9 @@ static void RunManualChecks() {
             if (!it.changed) {
                 continue;
             }
-            // Unwatch may have removed/freed wf while we were querying attributes
-            if (!WatchedFileStillActive(it.wf)) {
+            // Unwatch may have freed wf, and a new file reused its address,
+            // while we were querying attributes
+            if (!WatchedFileStillActive(it.wf, it.id)) {
                 continue;
             }
             it.wf->fileState = it.state;
@@ -535,6 +541,7 @@ static WatchedFile* NewWatchedFile(Str filePath, const Func0& onFileChangedCb, b
     wf->onFileChangedCb = onFileChangedCb;
     wf->watchedDir = wd;
     wf->isManualCheck = isManualCheck;
+    wf->id = ++gNextWatchedFileId;
 
     ListInsertFront(&gWatchedFiles, wf);
 
