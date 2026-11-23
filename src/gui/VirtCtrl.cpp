@@ -1334,9 +1334,8 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
 
         case WM_MOUSEWHEEL: {
             // wheel messages carry screen coords
-            POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
-            ScreenToClient(hwnd, &pt);
-            ptWindow = {pt.x, pt.y};
+            ptWindow = HwndScreenToClient(hwnd, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
+            UnmirrorRtl(hwnd, ptWindow);
             VirtCtrl* target = VirtAtPoint(this, ptWindow, &ptLocal);
             if (!target) {
                 return false;
@@ -1358,8 +1357,8 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
             if (pt.x == -1 && pt.y == -1) {
                 return false;
             }
-            ScreenToClient(hwnd, &pt);
-            ptWindow = {pt.x, pt.y};
+            ptWindow = HwndScreenToClient(hwnd, Point(pt.x, pt.y));
+            UnmirrorRtl(hwnd, ptWindow);
             VirtCtrl* target = VirtAtPoint(this, ptWindow, &ptLocal);
             if (!target) {
                 return false;
@@ -2491,17 +2490,18 @@ void VirtSplitter::UpdateOverlay() {
         SetWindowLongPtrW(overlayHwnd, GWLP_USERDATA, (LONG_PTR)brush);
     }
 
+    // tree coordinates: x = 0 is the left edge, also in an RTL window
     Point pos = HwndGetCursorPos(hwnd);
-    Point origin = HwndClientToScreen(hwnd, Point());
+    UnmirrorRtl(hwnd, pos);
     Rect b = BoundsInWindow();
-    Rect screen = {origin.x + b.x, origin.y + b.y, b.dx, b.dy};
 
     Rect r;
     if (type != SplitterType::Horiz) {
-        r = {origin.x + pos.x - 2, screen.y, 4, screen.dy};
+        r = {pos.x - 2, b.y, 4, b.dy};
     } else {
-        r = {screen.x, origin.y + pos.y - 2, screen.dx, 4};
+        r = {b.x, pos.y - 2, b.dx, 4};
     }
+    r = HwndMapLtrClientRectToScreen(hwnd, r);
     SetWindowPos(overlayHwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_SHOWWINDOW | SWP_NOACTIVATE);
     HwndInvalidate(overlayHwnd, true);
 }

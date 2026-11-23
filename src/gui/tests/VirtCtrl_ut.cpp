@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Win.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -280,7 +281,78 @@ static void Slider_HaloFitsTest() {
     delete s;
 }
 
+namespace {
+struct RtlHits {
+    int wheel = 0;
+    int menu = 0;
+};
+} // namespace
+
+static void OnRtlWheel(RtlHits* h, VirtMouseEvent* ev) {
+    h->wheel++;
+    ev->didHandle = true;
+}
+
+static void OnRtlMenu(RtlHits* h, VirtMouseEvent* ev) {
+    h->menu++;
+    ev->didHandle = true;
+}
+
+// wheel and context menu carry screen coordinates; in an RTL window they must
+// hit the control under the cursor, as clicks do, not the mirrored one
+static void RtlScreenCoords_Test() {
+    constexpr int kDx = 200;
+    constexpr int kDy = 100;
+    HWND hwnd = CreateWindowExW(WS_EX_LAYOUTRTL, L"STATIC", nullptr, WS_POPUP, 100, 100, kDx, kDy, nullptr, nullptr,
+                                GetModuleHandleW(nullptr), nullptr);
+    utassert(hwnd != nullptr);
+    if (!hwnd) {
+        return;
+    }
+    Rect rc = HwndClientRect(hwnd);
+
+    auto* box = new HBox();
+    auto* left = new VirtSpacer(50, rc.dy);
+    auto* right = new VirtSpacer(50, rc.dy);
+    left->SetFlag(vwfNoHitTest, false);
+    right->SetFlag(vwfNoHitTest, false);
+    box->AddChild(left);
+    box->AddChild(new Spacer(rc.dx - 100, rc.dy), 1);
+    box->AddChild(right);
+    box->Layout(Tight({rc.dx, rc.dy}));
+    box->SetBounds({0, 0, rc.dx, rc.dy});
+
+    RtlHits hitsLeft;
+    RtlHits hitsRight;
+    left->onMouseWheel = MkFunc1(OnRtlWheel, &hitsLeft);
+    left->onContextMenu = MkFunc1(OnRtlMenu, &hitsLeft);
+    right->onMouseWheel = MkFunc1(OnRtlWheel, &hitsRight);
+    right->onContextMenu = MkFunc1(OnRtlMenu, &hitsRight);
+
+    VirtRoot root(hwnd);
+    root.bounds = {0, 0, rc.dx, rc.dy};
+    Vec<VirtCtrl*> tops;
+    CollectVirtCtrls(box, tops);
+    root.SetTops(tops);
+
+    // the left control as a click sees it: mirrored client x, then on screen
+    Point pt = {10, rc.dy / 2};
+    UnmirrorRtl(hwnd, pt);
+    Point scr = HwndClientToScreen(hwnd, pt);
+    LPARAM lp = MAKELPARAM(scr.x, scr.y);
+    LRESULT res = 0;
+    root.OnMessage(WM_MOUSEWHEEL, MAKEWPARAM(0, WHEEL_DELTA), lp, res);
+    root.OnMessage(WM_CONTEXTMENU, (WPARAM)hwnd, lp, res);
+    utassert(hitsLeft.wheel == 1 && hitsRight.wheel == 0);
+    utassert(hitsLeft.menu == 1 && hitsRight.menu == 0);
+
+    root.SetTops(Vec<VirtCtrl*>());
+    delete box;
+    DestroyWindow(hwnd);
+}
+
 void VirtCtrl_UnitTests() {
+    RtlScreenCoords_Test();
     Slider_HaloFitsTest();
     TipLinkUnderlines_Test();
     Table_TestGrid();
