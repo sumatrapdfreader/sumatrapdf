@@ -129,8 +129,14 @@ export async function testit(): Promise<void> {
     await noTabs.client.waitForRenderIdle();
     const pinned = await noTabs.client.layout();
     await invoke(noTabs.client, "CmdToggleCaption off");
-    const hidden = await barLayout(noTabs.client, false);
-    if (hidden.items.menu.visible) throw new Error("issue-6355: native menu remained visible");
+    // UseTabs is off, so the tab band is already hidden and does not mark the toggle
+    const hideDeadline = Date.now() + 5_000;
+    let hidden = await barLayout(noTabs.client, false);
+    while (hidden.items.menu.visible) {
+      if (Date.now() > hideDeadline) throw new Error("issue-6355: native menu remained visible");
+      await sleep(40);
+      hidden = await noTabs.client.layout();
+    }
     if (hidden.items.canvas.rect.dy <= pinned.items.canvas.rect.dy)
       throw new Error("issue-6355: native caption space was not reclaimed");
     if (hover) {
@@ -189,10 +195,15 @@ export async function testit(): Promise<void> {
         throw new Error("issue-6355: caption overlay resized the browser");
       const button = clientToScreen(browser.frame, 12, 12);
       setCursorPos(button.x, button.y);
-      await sleep(150);
-      const hit = windowFromPoint(button.x, button.y);
-      if (hit !== browser.frame && getClassName(hit) !== "SumatraCaptionOverlay")
-        throw new Error(`issue-6355: browser covers caption buttons: ${getClassName(hit)}`);
+      const hitDeadline = Date.now() + 1_000;
+      let hitClass = "";
+      for (;;) {
+        await sleep(40);
+        const hit = windowFromPoint(button.x, button.y);
+        hitClass = getClassName(hit);
+        if (hit === browser.frame || hitClass === "SumatraCaptionOverlay") break;
+        if (Date.now() > hitDeadline) throw new Error(`issue-6355: browser covers caption buttons: ${hitClass}`);
+      }
       setCursorPos(0, 0);
       await barLayout(browser.client, false);
     }
