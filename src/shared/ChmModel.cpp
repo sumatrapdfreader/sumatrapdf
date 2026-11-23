@@ -180,7 +180,7 @@ struct ChmTocBuilder {
     StrVec* pages = nullptr;
     Vec<BrowserTocTraceItem>* tocTrace = nullptr;
     Arena* a = nullptr;
-    dict::MapStrToInt urlsSet;
+    dict::StrToInt urlsSet;
 
     // We fake page numbers by doing a depth-first traversal of
     // toc tree and considering each unique html page in toc tree

@@ -6,16 +6,15 @@ namespace dict {
 struct MapSlot;
 
 // the initial capacity (in entries) when none is given; the table grows as needed
-constexpr int kMapDefaultInitialSize = 64;
+constexpr int kDictDefaultInitialSize = 64;
 
 // a dictionary whose keys are strings and the values are integers
-// note: StrToInt would be more natural name but it's re-#define'd in <shlwapi.h>
-class MapStrToInt {
+class StrToInt {
   public:
-    explicit MapStrToInt(int initialSize = kMapDefaultInitialSize);
-    ~MapStrToInt();
-    MapStrToInt(const MapStrToInt&) = delete;
-    MapStrToInt& operator=(const MapStrToInt&) = delete;
+    explicit StrToInt(int initialSize = kDictDefaultInitialSize);
+    ~StrToInt();
+    StrToInt(const StrToInt&) = delete;
+    StrToInt& operator=(const StrToInt&) = delete;
 
     int Count() const;
 

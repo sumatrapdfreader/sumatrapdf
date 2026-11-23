@@ -24,8 +24,8 @@ static Str GenRandomString() {
     return Str(buf, n);
 }
 
-void DictTestMapStrToInt() {
-    dict::MapStrToInt d(4); // start small so that we can test resizing
+void DictTestStrToInt() {
+    dict::StrToInt d(4); // start small so that we can test resizing
     bool ok;
     int val;
 
@@ -78,7 +78,7 @@ void DictTestMapStrToInt() {
 
 // removing from the middle of probe runs must keep every other key findable
 static void DictTestRemoveKeepsOthers() {
-    dict::MapStrToInt d(4);
+    dict::StrToInt d(4);
     constexpr int kN = 3000;
     for (int i = 0; i < kN; i++) {
         utassert(d.Insert(fmt("key-%d", i), i));
@@ -111,7 +111,7 @@ static TempStr RepeatedTemp(char c, int n) {
 }
 
 static void DictTestKeys() {
-    dict::MapStrToInt d;
+    dict::StrToInt d;
     int v = -1;
     // empty keys are refused
     utassert(!d.Insert(Str(), 1));
@@ -133,7 +133,7 @@ static void DictTestKeys() {
 }
 
 void DictTest() {
-    DictTestMapStrToInt();
+    DictTestStrToInt();
     DictTestRemoveKeepsOthers();
     DictTestKeys();
 }

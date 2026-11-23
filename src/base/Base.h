@@ -154,6 +154,8 @@
 #include <ws2def.h>
 #include <unknwn.h>
 #include <shlwapi.h>
+// frees the name for dict::StrToInt; we don't use shlwapi's
+#undef StrToInt
 #include <shlobj.h>
 #include <commctrl.h>
 #include <windowsx.h>

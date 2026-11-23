@@ -62,29 +62,29 @@ static const u8* VarintDecode(const u8* p, u32* v) {
     return p;
 }
 
-MapStrToInt::MapStrToInt(int initialSize) {
+StrToInt::StrToInt(int initialSize) {
     int entries = limitValue(initialSize, 1, kMaxInitialEntries);
     // room for that many entries at the 3/4 load limit
     firstSlots = std::max(kMinSlots, RoundToPowerOf2(entries + (entries / 3) + 1));
 }
 
-MapStrToInt::~MapStrToInt() {
+StrToInt::~StrToInt() {
     free(slots);
     free(keys);
 }
 
-int MapStrToInt::Count() const {
+int StrToInt::Count() const {
     return nUsed;
 }
 
-bool MapStrToInt::KeyEq(u32 keyOff, Str key) const {
+bool StrToInt::KeyEq(u32 keyOff, Str key) const {
     u32 n = 0;
     const u8* p = VarintDecode((const u8*)keys + keyOff, &n);
     return n == (u32)len(key) && memcmp(p, key.s, n) == 0;
 }
 
 // the slot holding key, or the empty slot where it would go
-int MapStrToInt::Find(Str key, u32 hash) const {
+int StrToInt::Find(Str key, u32 hash) const {
     u32 mask = (u32)nSlots - 1;
     for (u32 i = hash & mask;; i = (i + 1) & mask) {
         const MapSlot& s = slots[i];
@@ -98,7 +98,7 @@ int MapStrToInt::Find(Str key, u32 hash) const {
 }
 
 // the offset of the copy of key, 0 if out of memory
-u32 MapStrToInt::AppendKey(Str key) {
+u32 StrToInt::AppendKey(Str key) {
     u32 n = (u32)len(key);
     u64 need = (u64)keysLen + kMaxVarintLen + n + (keysLen == 0 ? 1 : 0);
     if (need > UINT32_MAX) {
@@ -125,7 +125,7 @@ u32 MapStrToInt::AppendKey(Str key) {
     return off;
 }
 
-bool MapStrToInt::Grow() {
+bool StrToInt::Grow() {
     int newN = nSlots == 0 ? firstSlots : nSlots * 2;
     MapSlot* newSlots = AllocArray<MapSlot>(newN);
     if (!newSlots) {
@@ -151,7 +151,7 @@ bool MapStrToInt::Grow() {
 
 // if key exists: returns false and sets existingValOut to its value
 // if it doesn't: inserts a copy of key with val and returns true
-bool MapStrToInt::Insert(Str key, int val, int* existingValOut) {
+bool StrToInt::Insert(Str key, int val, int* existingValOut) {
     if (len(key) == 0) {
         return false;
     }
@@ -181,7 +181,7 @@ bool MapStrToInt::Insert(Str key, int val, int* existingValOut) {
     return true;
 }
 
-bool MapStrToInt::Remove(Str key, int* removedValOut) {
+bool StrToInt::Remove(Str key, int* removedValOut) {
     if (len(key) == 0 || nSlots == 0) {
         return false;
     }
@@ -213,7 +213,7 @@ bool MapStrToInt::Remove(Str key, int* removedValOut) {
     return true;
 }
 
-bool MapStrToInt::Get(Str key, int* valOut) const {
+bool StrToInt::Get(Str key, int* valOut) const {
     if (len(key) == 0 || nSlots == 0) {
         return false;
     }

@@ -24,7 +24,7 @@ static int gCurrLangIdx = 0;
 // for each translation: english string followed by a translation
 static StrVec* gTranslationCache = nullptr;
 // english string => its index in gTranslationCache
-static dict::MapStrToInt* gTranslationIdx = nullptr;
+static dict::StrToInt* gTranslationIdx = nullptr;
 
 static TempStr UnescapeTemp(Str sOrig) {
     TempStr s = str::DupTemp(sOrig);
@@ -106,7 +106,7 @@ static void ParseTranslationsTxt(Str d, Str langCode) {
 
     FreeTranslations();
     gTranslationCache = new StrVec();
-    gTranslationIdx = new dict::MapStrToInt(nStrings * 2);
+    gTranslationIdx = new dict::StrToInt(nStrings * 2);
     auto* c = gTranslationCache;
     int nUntranslated = 0;
 
@@ -403,7 +403,7 @@ bool Translations_UnitTestUnescape() {
 bool Translations_UnitTestLookup() {
     using namespace trans;
     StrVec* savedCache = gTranslationCache;
-    dict::MapStrToInt* savedIdx = gTranslationIdx;
+    dict::StrToInt* savedIdx = gTranslationIdx;
     int savedLangIdx = gCurrLangIdx;
     gTranslationCache = nullptr;
     gTranslationIdx = nullptr;

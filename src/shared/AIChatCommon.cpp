@@ -269,7 +269,7 @@ struct AIChatFileCacheEntry {
 
 struct AIChatFileCache {
     Mutex mu;
-    dict::MapStrToInt idx{256}; // path -> index in entries
+    dict::StrToInt idx{256}; // path -> index in entries
     Vec<AIChatFileCacheEntry> entries;
     ~AIChatFileCache() {
         for (AIChatFileCacheEntry& e : entries) {

@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 namespace dict {
-class MapStrToInt;
+class StrToInt;
 }
 
 #if OS_WIN
@@ -207,7 +207,7 @@ struct HtmlFormatter {
     static constexpr int kMaxMeasureCacheFonts = 6;
     struct MeasureCache {
         PlatformFont* font = nullptr;
-        dict::MapStrToInt* keys = nullptr; // text -> index into vals
+        dict::StrToInt* keys = nullptr; // text -> index into vals
         Vec<RectF> vals;
     };
     MeasureCache measureCaches[kMaxMeasureCacheFonts];

@@ -174,7 +174,7 @@ HtmlFormatter::MeasureCache* HtmlFormatter::GetMeasureCacheForCurrFont() {
     }
     MeasureCache* mc = &measureCaches[nMeasureCaches++];
     mc->font = font;
-    mc->keys = new dict::MapStrToInt(measureCacheInitialSize);
+    mc->keys = new dict::StrToInt(measureCacheInitialSize);
     lastMeasureCache = mc;
     return mc;
 }
@@ -184,7 +184,7 @@ HtmlFormatter::MeasureCache* HtmlFormatter::GetMeasureCacheForCurrFont() {
 RectF HtmlFormatter::MeasureTextCached(Str s) {
     textMeasure->SetFont(CurrFont());
     MeasureCache* mc = GetMeasureCacheForCurrFont();
-    // MapStrToInt keys are utf-8, which is what we measure, so s is the key
+    // StrToInt keys are utf-8, which is what we measure, so s is the key
     int idx = 0;
     if (mc && !mc->keys->Insert(s, len(mc->vals), &idx)) {
         return mc->vals[idx];
