@@ -90,10 +90,26 @@ static bool IsOurThread(ThreadId tid, Str callstack) {
     return false;
 }
 
-// Suspends every thread of this process except the watchdog, captures raw
-// callstack addresses, then resumes them. Returns how many threads were
-// captured. Allocates nothing between the first suspend and the last resume.
-static int CollectFrozenStacks() {
+// StackWalk64 can block on a dbghelp, loader or function-table lock a frozen
+// thread holds, so it runs on a walker thread the watchdog stops waiting for
+constexpr int kWalkTimeoutMs = 2000;
+static HANDLE gWalkGo = nullptr;
+static ThreadHandle gWalker = nullptr;
+static int gWalkCount = 0;
+
+static DWORD WINAPI WalkFrozenStacks(LPVOID) {
+    WaitForSingleObject(gWalkGo, INFINITE);
+    for (int i = 0; i < gWalkCount; i++) {
+        gStacks[i].nAddrs = dbghelp::GetSuspendedThreadCallstackAddrs(gThreadHandles[i], gStacks[i].addrs, kMaxFrames);
+    }
+    return 0;
+}
+
+// Suspends every thread of this process except the watchdog and the walker,
+// has the walker capture raw callstack addresses, then resumes them. Returns
+// how many threads were captured. Allocates nothing between the first suspend
+// and the last resume.
+static int CollectFrozenStacks(ThreadId walkerId) {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (snap == INVALID_HANDLE_VALUE) {
         return 0;
@@ -106,7 +122,8 @@ static int CollectFrozenStacks() {
     te32.dwSize = sizeof(te32);
     BOOL ok = Thread32First(snap, &te32);
     while (ok && n < kMaxThreads) {
-        bool skip = te32.th32OwnerProcessID != pid || te32.th32ThreadID == gWatchdogThreadId;
+        bool skip =
+            te32.th32OwnerProcessID != pid || te32.th32ThreadID == gWatchdogThreadId || te32.th32ThreadID == walkerId;
         if (!skip) {
             ThreadHandle h = OpenThread(access, false, te32.th32ThreadID);
             if (h) {
@@ -119,20 +136,48 @@ static int CollectFrozenStacks() {
         ok = Thread32Next(snap, &te32);
     }
     CloseHandle(snap);
+    gWalkCount = n;
 
     for (int i = 0; i < n; i++) {
         SuspendThread(gThreadHandles[i]);
     }
-    for (int i = 0; i < n; i++) {
-        gStacks[i].nAddrs = dbghelp::GetSuspendedThreadCallstackAddrs(gThreadHandles[i], gStacks[i].addrs, kMaxFrames);
-    }
+    SetEvent(gWalkGo);
+    DWORD res = WaitForSingleObject(gWalker, kWalkTimeoutMs);
     for (int i = 0; i < n; i++) {
         ResumeThread(gThreadHandles[i]);
     }
+    if (res != WAIT_OBJECT_0) {
+        // the lock holder runs again, so the walker finishes; its stacks are of running threads
+        WaitForSingleObject(gWalker, INFINITE);
+        log(StrL("CollectFrozenStacks: stack walk blocked on a frozen thread, no report\n"));
+        n = 0;
+    }
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < gWalkCount; i++) {
         SafeCloseThreadHandle(&gThreadHandles[i]);
     }
+    return n;
+}
+
+// Runs CollectFrozenStacks() with a walker thread that waits for the threads
+// to be frozen. Returns how many threads were captured.
+static int CollectStacks() {
+    gWalkGo = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    if (!gWalkGo) {
+        return 0;
+    }
+    gWalkCount = 0;
+    ThreadId walkerId = 0;
+    gWalker = CreateThread(nullptr, 0, WalkFrozenStacks, nullptr, 0, &walkerId);
+    int n = 0;
+    if (gWalker) {
+        n = CollectFrozenStacks(walkerId);
+        // releases the walker if CollectFrozenStacks() returned before freezing
+        SetEvent(gWalkGo);
+        WaitForSingleObject(gWalker, INFINITE);
+        SafeCloseThreadHandle(&gWalker);
+    }
+    SafeCloseHandle(&gWalkGo);
     return n;
 }
 
@@ -148,7 +193,7 @@ static void ReportHang(double blockedMs) {
     // the frozen window doesn't have to wait on a first-time symbol load
     dbghelp::GetCurrentThreadCallstackTemp();
 
-    int nThreads = CollectFrozenStacks();
+    int nThreads = CollectStacks();
     if (nThreads == 0) {
         return;
     }
