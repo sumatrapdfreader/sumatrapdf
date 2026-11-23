@@ -6,11 +6,12 @@
  * Designed for SumatraPDF's image path (see AvifReader.cpp):
  *   - probe dimensions without full decode
  *   - decode primary image to RGB/BGR/RGBA/BGRA
- *   - extract EXIF (TIFF payload, HEIF 4-byte prefix stripped)
+ *   - extract EXIF (TIFF payload, HEIF offset header skipped)
  *
  * Codecs:
  *   - HEVC (hvc1): pure-C port of imazen/heic
  *   - AV1  (av01): videolan dav1d (vendored / linked; not re-ported)
+ *   - unci (unci): ISO 23001-17 uncompressed (optional zlib / brotli)
  */
 #ifndef HEIC_H
 #define HEIC_H
@@ -65,15 +66,17 @@ heic_ctx *heic_ctx_new(heic_alloc_cb alloc, heic_free_cb free_cb,
                        heic_error_cb error, void *user);
 void heic_ctx_free(heic_ctx *ctx);
 
-/* Resource limits (0 = use default). Defaults match imazen/heic
-   Limits::server_defaults: 16384x16384, 256 MP, 1 GiB. */
+/* Resource limits. A new heic_ctx starts with the imazen/heic
+   Limits::server_defaults: 16384x16384, 256 MP (256*1024*1024), 1 GiB. */
 typedef struct {
-    uint32_t max_width;         /* 0 = default 16384 */
-    uint32_t max_height;        /* 0 = default 16384 */
-    uint64_t max_pixels;        /* 0 = default 256e6 */
-    size_t   max_memory_bytes;  /* 0 = default 1 GiB */
+    uint32_t max_width;         /* default 16384 */
+    uint32_t max_height;        /* default 16384 */
+    uint64_t max_pixels;        /* default 268435456 (256*1024*1024) */
+    size_t   max_memory_bytes;  /* default 1 GiB */
 } heic_limits;
 
+/* Override limits. A 0 field keeps the context's current value (the
+   default unless an earlier call changed it). */
 void heic_ctx_set_limits(heic_ctx *ctx, const heic_limits *limits);
 
 /* ----- documents ----- */
@@ -86,10 +89,11 @@ void heic_doc_close(heic_doc *doc);
 /* Brand / kind of the opened file. */
 typedef enum {
     HEIC_KIND_UNKNOWN = 0,
-    HEIC_KIND_HEIC,     /* HEVC still (heic/heix/…) */
-    HEIC_KIND_AVIF,     /* AV1 still */
-    HEIC_KIND_HEIF,     /* generic HEIF (mif1 without heic brand) */
-    HEIC_KIND_SEQUENCE  /* HEVC/AV1 image sequence (msf1/avis) */
+    HEIC_KIND_HEIC,     /* heic/heix/hevc/hevx brand */
+    HEIC_KIND_AVIF,     /* avif/avis brand */
+    HEIC_KIND_HEIF,     /* generic HEIF (e.g. mif1 without heic/avif brand) */
+    HEIC_KIND_SEQUENCE  /* a decodable moov image sequence was parsed (HEVC or
+                           AV1), or an msf1 brand without heic/avif brands */
 } heic_kind;
 
 heic_kind heic_doc_kind(const heic_doc *doc);
@@ -97,7 +101,8 @@ heic_kind heic_doc_kind(const heic_doc *doc);
 typedef struct {
     uint32_t width;
     uint32_t height;
-    int      bit_depth;       /* 8, 10, or 12 */
+    int      bit_depth;       /* coded luma depth: 8..16 for HEVC (RExt), 8/10/12
+                                 for AV1; reported as 8 for unci items */
     int      has_alpha;
     int      has_exif;
     int      has_xmp;
@@ -132,10 +137,15 @@ typedef struct {
 
 /* ----- image sequences ----- */
 
-/* Sequence timing uses timescale ticks. repetition_count is 1 without an
-   edit-list loop, 0 for an unrecognized edit pattern, or UINT32_MAX for an
-   indefinite loop. frame_count describes one bounded presentation pass;
-   callers repeat that pass according to repetition_count. */
+/* Sequence timing uses timescale ticks. repetition_count (same meaning as
+   libheif's heif_track_get_number_of_repetitions):
+     1           no edit list: play once
+     0           an edit list is present but is not a recognized loop
+                 (including a plain, non-repeating edit): play once
+     UINT32_MAX  indefinite loop
+     otherwise   the number of times the pass is played
+   frame_count describes one bounded presentation pass; callers repeat that
+   pass according to repetition_count. */
 typedef struct {
     uint32_t frame_count;
     uint32_t timescale;
@@ -176,15 +186,21 @@ heic_image *heic_sequence_decoder_decode_frame_abortable(
     heic_sequence_decoder *decoder, uint32_t frame_index, heic_abort *ab);
 
 /* Decode the primary image. Returns NULL on error; free with
-   heic_image_destroy(ctx, img). 8-bit output; 10/12-bit sources are
+   heic_image_destroy(ctx, img). 8-bit output; higher bit-depth sources are
    right-shifted (no EOTF / tone-map). */
 heic_image *heic_doc_decode(heic_doc *doc, heic_format format);
 heic_image *heic_doc_decode_abortable(heic_doc *doc, heic_format format,
                                       heic_abort *ab);
 void heic_image_destroy(heic_ctx *ctx, heic_image *img);
 
-/* Decode into a caller-owned buffer. buf_size must be at least
-   heic_doc_output_size(doc, format). Returns 0 on success. */
+/* heic_doc_output_size: bytes for a tightly packed image
+   (width * height * bytes-per-pixel), or 0 on error, including an image
+   larger than the context limits (which heic_doc_decode_into would refuse).
+   heic_doc_decode_into: decode the primary image into a caller-owned buffer.
+   stride <= 0 means tight (width * bytes-per-pixel); then
+   heic_doc_output_size is enough. Otherwise buf_size must be at least
+   stride * height. Returns 0 on success, -1 on error (including a too-small
+   buffer). */
 size_t heic_doc_output_size(const heic_doc *doc, heic_format format);
 int heic_doc_decode_into(heic_doc *doc, heic_format format,
                          uint8_t *buf, size_t buf_size, int stride);
@@ -202,8 +218,11 @@ heic_image *heic_doc_decode_gain_map_abortable(
 /* ----- metadata ----- */
 
 /* EXIF: returns 1 and sets out/out_len to a freshly allocated TIFF
-   payload (HEIF 4-byte prefix stripped). Caller must free with
-   heic_free(ctx, *out). Returns 0 if none. */
+   payload. The HEIF ExifDataBlock header is skipped: the 4-byte big-endian
+   offset field plus the number of bytes it gives. Caller must free with
+   heic_free(ctx, *out). Returns 0 if none, or if the Exif item has no valid
+   header (e.g. a raw TIFF item starting "MM\0*"): has_exif can then be 1
+   while this returns 0. */
 int heic_doc_exif(heic_doc *doc, uint8_t **out, size_t *out_len);
 
 /* XMP: raw XML bytes. Same ownership as EXIF. */
