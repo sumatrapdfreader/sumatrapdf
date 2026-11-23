@@ -1494,12 +1494,24 @@ static int WheelPageTurnDelta(MainWindow* win, int delta) {
     return std::max(kWheelDelta, lines * perLine);
 }
 
+static bool WheelMayTurnPage(MainWindow* win);
+
 static void WheelTurnPage(MainWindow* win, int dir) {
+    if (dir == 0) {
+        return;
+    }
+    if (!WheelMayTurnPage(win)) {
+        win->wheelAccumDelta = 0;
+        return;
+    }
     if (dir > 0) {
         win->ctrl->GoToPrevPage();
-    } else if (dir < 0) {
+    } else {
         win->ctrl->GoToNextPage();
     }
+    win->wheelAccumDelta = 0;
+    Ui(win)->wheelPageTurnTime = TimeGet();
+    Ui(win)->wheelDidTurnPage = true;
 }
 
 // this does zooming via mouse wheel (with ctrl or the right mouse button)
@@ -1632,7 +1644,7 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
 
     bool hScroll = isShift;
     bool vScroll = !hScroll;
-    bool isCont = !IsContinuous(win->ctrl->GetDisplayMode());
+    bool isCont = IsContinuous(win->ctrl->GetDisplayMode());
 
     // Alt speeds up scrolling but also triggers showing menu
     // this will suppress next menu trigger to avoid accidental triggering of menu
@@ -1664,8 +1676,9 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
         return;
     }
 
-    // fit content: flip page on wheel, regardless of scrollbar state
-    if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
+    // fit content: flip page on wheel, regardless of scrollbar state, in every
+    // non-continuous view
+    if (vScroll && dm && FitContentWheelFlipsPage(dm)) {
         WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
         return;
     }
@@ -1823,7 +1836,7 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
         }
     }
     // in non-continuous mode flip the page if necessary
-    if (!vScroll || !isCont || !gSettings->scrollEdgeTurnsPage) {
+    if (!vScroll || isCont || !gSettings->scrollEdgeTurnsPage) {
         return;
     }
     DocCanvasUI* ui = Ui(win);

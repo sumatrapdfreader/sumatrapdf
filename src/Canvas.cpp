@@ -3535,15 +3535,24 @@ static int WheelPageTurnDelta(MainWindow* win, int delta) {
     return std::max(WHEEL_DELTA, lines * perLine);
 }
 
+static bool WheelMayTurnPage(MainWindow* win);
+static void OnWheelPageTurn(MainWindow* win);
+
 static void WheelTurnPage(MainWindow* win, int dir) {
+    if (dir == 0) {
+        return;
+    }
+    if (!WheelMayTurnPage(win)) {
+        win->wheelAccumDelta = 0;
+        return;
+    }
     if (dir > 0) {
         win->ctrl->GoToPrevPage();
-    } else if (dir < 0) {
+    } else {
         win->ctrl->GoToNextPage();
     }
-    if (dir != 0) {
-        ReadAloudOnUserViewChanged(win);
-    }
+    OnWheelPageTurn(win);
+    ReadAloudOnUserViewChanged(win);
 }
 
 // Fit Content used to turn the mouse wheel into page flipping in every view mode.
@@ -3682,7 +3691,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     bool hScroll = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
     bool vScroll = !hScroll;
-    bool isCont = !IsContinuous(win->ctrl->GetDisplayMode());
+    bool isCont = IsContinuous(win->ctrl->GetDisplayMode());
 
     // logf("delta: %d, accumDelta: %d, hscroll: %d, continuous: %d, gDeltaPerLine: %d\n", (int)delta,
     // win->wheelAccumDelta,
@@ -3723,8 +3732,9 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return 0;
     }
 
-    // fit content: flip page on wheel, regardless of scrollbar state
-    if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
+    // fit content: flip page on wheel, regardless of scrollbar state (in the
+    // continuous views only if gFitContentWheelFlipsPageInContinuous)
+    if (vScroll && dm && FitContentWheelFlipsPage(dm)) {
         WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
         return 0;
     }
@@ -3904,7 +3914,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
     // in non-continuous mode flip page if necessary (ScrollEdgeTurnsPage off:
     // stay on this page, it is changed by keyboard / toolbar / scrollbar only)
-    if (!vScroll || !isCont || !gSettings->scrollEdgeTurnsPage) {
+    if (!vScroll || isCont || !gSettings->scrollEdgeTurnsPage) {
         return 0;
     }
     bool didScroll = WheelScrollPosOrTarget(win) != prevScrollPos;
