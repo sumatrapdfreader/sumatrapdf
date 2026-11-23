@@ -11,6 +11,9 @@ constexpr u16 kTiffShort = 3;
 constexpr u16 kTiffLong = 4;
 constexpr int kIfdEntryLen = 12;
 
+// file-local: LitDoc_ut.cpp has its own LeWriter
+namespace {
+
 // little-endian writer over a zero-filled buffer
 struct LeWriter {
     u8* d;
@@ -35,6 +38,8 @@ struct LeWriter {
         U32(val);
     }
 };
+
+} // namespace
 
 // TIFF with IFD0 = { Orientation = 6 }
 static void exifValidTiffTest() {
