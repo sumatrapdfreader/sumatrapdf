@@ -55,7 +55,8 @@ struct InstallerWnd {
     bool showOptions = false;
     bool installing = false;
     bool finished = false;
-    int currProgress = 0;
+    // InstallerThread advances it, the window's frames read it
+    AtomicInt currProgress = 0;
     ThreadHandle hThread = nullptr;
     // tests/installer-desktop-shortcut.ts reads these. The window has no
     // Button children, so the probe hwnd carries the same rows.
@@ -69,7 +70,7 @@ static void ProgressStep() {
         // when extracting with -x we don't create window
         return;
     }
-    gWnd->currProgress++;
+    AtomicIntInc(&gWnd->currProgress);
 }
 
 // ng: orig unpacks the lzsa payload here; a static exe only has itself
@@ -175,7 +176,7 @@ static Str InstallDirFromUiTemp() {
 static void StartInstallation(InstallerWnd* wnd) {
     gInstallStarted = true;
     wnd->installing = true;
-    wnd->currProgress = 0;
+    AtomicIntSet(&wnd->currProgress, 0);
     // first one to show progress quickly
     ProgressStep();
     wnd->showOptions = false;
@@ -604,7 +605,7 @@ gp::El* InstallerView::Render(InstallerView*, gp::Ctx* cx) {
 
     gp::El* bottom = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8)->Pad(margin);
     if (wnd->installing) {
-        float pct = 100.f * (float)wnd->currProgress / (float)kInstallationSteps;
+        float pct = 100.f * (float)AtomicIntGet(&wnd->currProgress) / (float)kInstallationSteps;
         bottom->Child(gpc::Progress::New(cx)->Value(pct)->W((float)GetInstallerWinDx() / 2)->IntoEl());
     } else if (!wnd->finished) {
         //[ ACCESSKEY_ALTERNATIVE // ideally, the same access key is used for both
