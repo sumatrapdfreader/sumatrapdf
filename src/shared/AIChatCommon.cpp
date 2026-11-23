@@ -361,11 +361,7 @@ TempStr AIChatDebugGetTemp() {
 static TempStr LocalTimeStampTemp() {
     time_t t = time(nullptr);
     struct tm lt{};
-#if OS_WIN
-    localtime_s(&lt, &t);
-#else
-    localtime_r(&t, &lt);
-#endif
+    LocalTime(t, &lt);
     return fmt("%04d-%02d-%02d %02d:%02d:%02d", lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour, lt.tm_min,
                lt.tm_sec);
 }

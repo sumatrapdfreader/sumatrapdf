@@ -80,7 +80,7 @@ static u32 FileTimeToDosDateTime(FILETIME ft) {
     }
     time_t seconds = (time_t)((ticks - kFileTimeUnixEpoch) / kFileTimeTicksPerSec);
     struct tm local{};
-    if (!localtime_r(&seconds, &local)) {
+    if (!LocalTime(seconds, &local)) {
         return 0;
     }
     int year = local.tm_year + 1900;

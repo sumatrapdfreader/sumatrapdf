@@ -708,6 +708,15 @@ void SleepInMs(int ms) {
 #endif
 }
 
+// thread-safe localtime(); false if t can't be converted
+bool LocalTime(time_t t, struct tm* out) {
+#if OS_WIN
+    return localtime_s(out, &t) == 0;
+#else
+    return localtime_r(&t, out) != nullptr;
+#endif
+}
+
 AtomicInt gDangerousThreadCount = 0;
 
 bool AreDangerousThreadsPending() {

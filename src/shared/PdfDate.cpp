@@ -10,15 +10,9 @@ TempStr FormatPdfDateLocalTimeTemp(time_t secs) {
         return {};
     }
     struct tm tm;
-#if OS_WIN
-    if (localtime_s(&tm, &secs) != 0) {
+    if (!LocalTime(secs, &tm)) {
         return {};
     }
-#else
-    if (!localtime_r(&secs, &tm)) {
-        return {};
-    }
-#endif
     char buf[64];
     size_t n = strftime(buf, sizeof buf, "%Y-%m-%d %H:%M", &tm);
     return str::DupTemp(Str(buf, (int)n));
@@ -30,11 +24,10 @@ TempStr FormatPdfDateNowTemp() {
     time_t t = time(nullptr);
     struct tm lt{};
     struct tm gt{};
+    LocalTime(t, &lt);
 #if OS_WIN
-    localtime_s(&lt, &t);
     gmtime_s(&gt, &t);
 #else
-    localtime_r(&t, &lt);
     gmtime_r(&t, &gt);
 #endif
     // local minus UTC, in minutes; the day can differ across midnight

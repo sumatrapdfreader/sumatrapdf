@@ -1321,6 +1321,7 @@ bool GetPhysMemoryInfo(u64* availPhysOut, int* loadPercentOut, u64* totalPhysOut
 
 void SetThreadName(Str threadName, ThreadId threadId = 0);
 void SleepInMs(int ms);
+bool LocalTime(time_t t, struct tm* out);
 
 // ng: the wasm build has no pthreads (emscripten without -pthread), so
 // StartThread() runs the function inline and returns a handle that joins

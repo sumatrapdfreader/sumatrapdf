@@ -548,8 +548,18 @@ static void EnvVariableTest() {
 #endif
 }
 
+static void LocalTimeTest() {
+    // 2023-11-14 22:13:20 UTC: November 2023 in every time zone
+    time_t t = 1700000000;
+    struct tm tm{};
+    utassert(LocalTime(t, &tm));
+    utassert(tm.tm_year == 123 && tm.tm_mon == 10);
+    utassert(mktime(&tm) == t);
+}
+
 void BaseUtilTest() {
     EnvVariableTest();
+    LocalTimeTest();
     StrEqLenTest();
     ReplaceNoCaseTest();
     InPlacePastLenTest();
