@@ -2467,6 +2467,14 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     win->annotationResizeRerender.Cancel();
     CanvasSetCursor(win, kCurArrow);
 
+    // a rectangle resize writes the annotation on every mouse move: put it back
+    bool wroteRect = !outlineOnly && !IsLineEndpointHandle(handle) && !IsVertexHandle(handle);
+    if (aborted && wroteRect && AnnotationIsLive(annot) && GetRect(annot) != win->annotationOriginalRect) {
+        SetRect(annot, win->annotationOriginalRect);
+        EndPdfEditOperation(win);
+        MainWindowRerender(win);
+        return true;
+    }
     if (aborted || !annot) {
         EndPdfEditOperation(win);
         AppShellInvalidate(win);

@@ -685,6 +685,7 @@ import { testit as annotAttachFileReload } from "./annot-attach-file-reload.ts";
 import { testit as commandPaletteHistoryReload } from "./command-palette-history-reload.ts";
 import { testit as commandPaletteTocReload } from "./command-palette-toc-reload.ts";
 import { testit as editFavoritesReload } from "./edit-favorites-reload.ts";
+import { testit as annotResizeEscape } from "./annot-resize-escape.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -1366,6 +1367,7 @@ export const tests: NamedTest[] = [
   ["command-palette-history-reload", commandPaletteHistoryReload],
   ["command-palette-toc-reload", commandPaletteTocReload],
   ["edit-favorites-reload", editFavoritesReload],
+  ["annot-resize-escape", annotResizeEscape],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
