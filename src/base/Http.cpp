@@ -866,25 +866,33 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
                                 : nullptr;
     bool ok = false;
     if (request) {
-        AtomicPtrExchange(&cancel->request, request);
-        if (cancel->IsCanceled()) cancel->Cancel();
         constexpr int kConnectTimeoutMs = 30000;
         constexpr int kStreamTimeoutMs = 180000;
         WinHttpSetTimeouts(request, kConnectTimeoutMs, kConnectTimeoutMs, kConnectTimeoutMs, kStreamTimeoutMs);
         DWORD policy = WINHTTP_OPTION_REDIRECT_POLICY_NEVER;
+        bool setOk = WinHttpSetOption(request, WINHTTP_OPTION_REDIRECT_POLICY, &policy, sizeof(policy));
+        AtomicPtrExchange(&cancel->request, request);
+        if (cancel->IsCanceled()) cancel->Cancel();
+        // Cancel() closes the request to abort a blocking call, so each call
+        // re-reads it: a closed handle must not be used again
+        auto live = [cancel] {
+            return (HINTERNET)InterlockedCompareExchangePointer((void* volatile*)&cancel->request, nullptr, nullptr);
+        };
         TempWStr wideHeaders = ToWStrTemp(headers);
-        if (WinHttpSetOption(request, WINHTTP_OPTION_REDIRECT_POLICY, &policy, sizeof(policy)) &&
-            WinHttpSendRequest(request, wideHeaders.s, (DWORD)len(wideHeaders), (void*)body.s, (DWORD)len(body),
+        HINTERNET h = live();
+        if (setOk && h &&
+            WinHttpSendRequest(h, wideHeaders.s, (DWORD)len(wideHeaders), (void*)body.s, (DWORD)len(body),
                                (DWORD)len(body), 0) &&
-            WinHttpReceiveResponse(request, nullptr)) {
+            (h = live()) != nullptr && WinHttpReceiveResponse(h, nullptr) && (h = live()) != nullptr) {
             DWORD status = 0, size = sizeof(status);
-            if (WinHttpQueryHeaders(request, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+            if (WinHttpQueryHeaders(h, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
                                     WINHTTP_HEADER_NAME_BY_INDEX, &status, &size, WINHTTP_NO_HEADER_INDEX)) {
                 sink->OnStatus((int)status);
                 char bytes[4096];
                 DWORD received;
                 while (!sink->IsCanceled()) {
-                    if (!WinHttpReadData(request, bytes, sizeof(bytes), &received)) break;
+                    h = live();
+                    if (!h || !WinHttpReadData(h, bytes, sizeof(bytes), &received)) break;
                     if (received == 0) {
                         ok = true;
                         break;
@@ -893,8 +901,8 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
                 }
             }
         }
-        HINTERNET live = (HINTERNET)AtomicPtrExchange(&cancel->request, nullptr);
-        if (live) WinHttpCloseHandle(live);
+        HINTERNET mine = (HINTERNET)AtomicPtrExchange(&cancel->request, nullptr);
+        if (mine) WinHttpCloseHandle(mine);
     }
     if (connect) WinHttpCloseHandle(connect);
     WinHttpCloseHandle(session);
