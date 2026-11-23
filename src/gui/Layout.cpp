@@ -443,6 +443,7 @@ Size VBox::Layout(const Constraints bc) {
                     auto size = v.layout->Layout(fbc);
                     v.size = size;
                     totalHeight += size.dy - oldHeight;
+                    height += size.dy - oldHeight;
                 }
             }
         }
@@ -740,6 +741,7 @@ Size HBox::Layout(const Constraints bc) {
             auto size = v.layout->Layout(fbc);
             v.size = size;
             totalWidth += size.dx - oldWidth;
+            width += size.dx - oldWidth;
         }
     }
 

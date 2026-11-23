@@ -175,6 +175,21 @@ static void Layout_TestHBoxFlex() {
     delete hb;
 }
 
+// under loose constraints a box reports the size its grown flex children take
+static void Layout_TestFlexGrowSize() {
+    auto* hb = new HBox();
+    hb->AddChild(new Spacer(10, 5), 1);
+    Size s = hb->Layout(Loose(Size{100, 20}));
+    utassert(s.dx == 100);
+    delete hb;
+
+    auto* vb = new VBox();
+    vb->AddChild(new Spacer(5, 10), 1);
+    s = vb->Layout(Loose(Size{20, 100}));
+    utassert(s.dy == 100);
+    delete vb;
+}
+
 static void Layout_TestHBoxCrossCenter() {
     auto* a = new Spacer(20, 10);
     auto* b = new Spacer(30, 40);
@@ -362,6 +377,7 @@ void Layout_UnitTests() {
     Layout_TestVBoxAlign();
     Layout_TestVBoxFlex();
     Layout_TestHBoxFlex();
+    Layout_TestFlexGrowSize();
     Layout_TestHBoxCrossCenter();
     Layout_TestBoxGap();
     Layout_TestCollapsed();
