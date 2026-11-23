@@ -235,13 +235,13 @@ PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
 // same constants StubTextRender uses, so layout and drawing agree
 constexpr float kAvgCharWidthRatio = 0.55f;
 constexpr float kLineSpacingRatio = 1.25f;
-constexpr float kDefaultGuiFontSizePt = 12.0f;
+// 12 px, the size the stub has always used
+constexpr float kDefaultGuiFontSizePt = 9.0f;
 
+// sizePt is in points, as on Linux and macOS; text is measured in 96 dpi pixels
 static float FontSizeOf(PlatformFont* font) {
-    if (font && font->sizePt > 0) {
-        return font->sizePt;
-    }
-    return kDefaultGuiFontSizePt;
+    float sizePt = (font && font->sizePt > 0) ? font->sizePt : kDefaultGuiFontSizePt;
+    return sizePt * 96.0f / 72.0f;
 }
 
 bool PlatformFontCreateNative(PlatformFont* f) {
@@ -281,6 +281,7 @@ PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
         fontName = Str();
     }
     PlatformFontStyle style = FontStyle(bold, italic);
-    return GetPlatformFont(fontName, (float)size, style);
+    float sizePt = (float)size * 72.0f / 96.0f;
+    return GetPlatformFont(fontName, sizePt, style);
 }
 #endif

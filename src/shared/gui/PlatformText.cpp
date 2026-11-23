@@ -81,9 +81,10 @@ int PlatformTextRender::StringLenForWidth(Str s, float dx, float sWidth) {
 struct StubTextRender : PlatformTextRender {
     PlatformFont* currFont = nullptr;
 
+    // font sizes are in points; measure in 96 dpi pixels like the native renderers
     float CurrFontSize() const {
         if (currFont && currFont->GetSize() > 0) {
-            return currFont->GetSize();
+            return currFont->GetSize() * 96.0f / 72.0f;
         }
         return 12.5f;
     }
