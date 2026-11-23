@@ -24,6 +24,7 @@ extern void DirRemoveAllTest();
 extern void UncExistsTest();
 extern void NonVirtualPathTest();
 extern void FileUtilTest();
+extern void ExifTest();
 extern void GuessFileTypeTest();
 extern void JsonTest();
 extern void SettingsUtilTest();
@@ -173,6 +174,7 @@ int main(int argc, char** argv) {
     UncExistsTest();
     NonVirtualPathTest();
     FileUtilTest();
+    ExifTest();
     GuessFileTypeTest();
     JsonTest();
     SettingsUtilTest();

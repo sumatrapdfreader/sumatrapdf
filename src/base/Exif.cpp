@@ -836,7 +836,7 @@ bool LooksLikeTiffExif(const u8* p, int n) {
     }
     u32 ifdOff = le ? (u32)(p[4] | (p[5] << 8) | (p[6] << 16) | (p[7] << 24))
                     : (u32)((p[4] << 24) | (p[5] << 16) | (p[6] << 8) | p[7]);
-    if (ifdOff < 8 || (int)ifdOff + 2 >= n) {
+    if (ifdOff < 8 || ifdOff >= (u32)n - 2) {
         return false;
     }
     u16 nTags = le ? (u16)(p[ifdOff] | (p[ifdOff + 1] << 8)) : (u16)((p[ifdOff] << 8) | p[ifdOff + 1]);

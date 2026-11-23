@@ -92,6 +92,7 @@ void UncExistsTest();
 void NonVirtualPathTest();
 void FileUtilTest();
 void UpdateTempFileTests();
+void ExifTest();
 void GuessFileTypeTest();
 void JsonTest();
 void RefHoverTest();
@@ -770,6 +771,7 @@ int RunAppUnitTests(bool forAi) {
     NonVirtualPathTest();
     FileUtilTest();
     UpdateTempFileTests();
+    ExifTest();
     GuessFileTypeTest();
     JsonTest();
     RefHoverTest();

@@ -1070,6 +1070,9 @@
     <ClCompile Include="..\src\base\tests\Dict_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\base\tests\Exif_ut.cpp">
+      <Filter>src\base\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\base\tests\FileWatcher_posix_ut.cpp">
       <Filter>src\base\tests</Filter>
     </ClCompile>
