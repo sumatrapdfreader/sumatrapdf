@@ -73,6 +73,63 @@ TempStr MarginTextTemp(const Vec<float>* margin) {
     return res;
 }
 
+// width x height in points; FitWindow is 0 x 0: the default width (A5's) and
+// a height from the window's shape, so one page is one screen (issue #4210)
+struct EbookPageDims {
+    float dx;
+    float dy;
+};
+static const EbookPageDims kEbookPageDims[] = {
+    {0, 0},     // FitWindow
+    {420, 595}, // A5
+    {595, 842}, // A4
+    {612, 792}, // US Letter
+};
+
+void EbookPageSizeLabels(StrVec& out) {
+    out.Reset();
+    out.Append(Tr("Fit window"));
+    out.Append(StrL("A5"));
+    out.Append(StrL("A4"));
+    out.Append(Tr("US Letter"));
+    out.Append(Tr("Custom"));
+}
+
+EbookPageSize EbookPageSizeFor(float dx, float dy) {
+    for (int i = 0; i < dimofi(kEbookPageDims); i++) {
+        if (kEbookPageDims[i].dx == dx && kEbookPageDims[i].dy == dy) {
+            return (EbookPageSize)i;
+        }
+    }
+    return EbookPageSize::Custom;
+}
+
+// a preset's size; Custom leaves *dx, *dy alone
+void EbookPageSizeDims(EbookPageSize size, float* dx, float* dy) {
+    int i = (int)size;
+    if (i < 0 || i >= dimofi(kEbookPageDims)) {
+        return;
+    }
+    *dx = kEbookPageDims[i].dx;
+    *dy = kEbookPageDims[i].dy;
+}
+
+// a typed width or height in points; 0 (the default) for empty or what the
+// engine ignores (100 or less) or is absurd
+float ParseLayoutPt(Str s) {
+    constexpr float kMinPt = 100;
+    constexpr float kMaxPt = 5000;
+    if (len(s) == 0) {
+        return 0;
+    }
+    float v = (float)atof(CStrTemp(s));
+    return (v > kMinPt && v <= kMaxPt) ? v : 0;
+}
+
+TempStr LayoutPtTextTemp(float pt) {
+    return pt > 0 ? fmt("%g", pt) : TempStr{};
+}
+
 bool MarginEq(const Vec<float>& a, const Vec<float>* b) {
     int n = len(a);
     if (n != (b ? len(*b) : 0)) {

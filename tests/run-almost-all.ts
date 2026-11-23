@@ -674,6 +674,7 @@ import { testit as controlPipeBusy } from "./control-pipe-busy.ts";
 import { testit as touchLongPressSelect } from "./touch-long-press-select.ts";
 import { testit as penInput } from "./pen-input.ts";
 import { testit as ebookSettingsOkTab } from "./ebook-settings-ok-tab.ts";
+import { testit as issue4210 } from "./issue-4210.ts";
 import { testit as annotContentsTabSwitch } from "./annot-contents-tab-switch.ts";
 import { testit as signPlacementTabSwitch } from "./sign-placement-tab-switch.ts";
 
@@ -1346,6 +1347,7 @@ export const tests: NamedTest[] = [
   ["stale-build-dir-future", staleBuildDirFuture],
   ["save-annots-same-path", saveAnnotsSamePath],
   ["ebook-settings-ok-tab", ebookSettingsOkTab],
+  ["issue-4210", issue4210],
   ["annot-contents-tab-switch", annotContentsTabSwitch],
   ["sign-placement-tab-switch", signPlacementTabSwitch],
 ];

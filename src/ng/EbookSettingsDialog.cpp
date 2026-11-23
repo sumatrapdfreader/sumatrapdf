@@ -51,6 +51,10 @@ struct EbookSettingsDlg {
     gpui::InputState* editMargin = nullptr;
     gpui::InputState* editSpacing = nullptr;
     gpui::InputState* editCss = nullptr;
+    // the page size: a preset, or Width x Height in points for Custom
+    DialogSelect ddPage;
+    gpui::InputState* editPageDx = nullptr;
+    gpui::InputState* editPageDy = nullptr;
     // orig's window opens with the font drop-down focused
     bool wantFocus = false;
     // the main window it was opened from is gone; the dialog stays, as
@@ -64,6 +68,7 @@ static EbookSettingsDlg gEbook;
 // file or every ebook, hairlines between those, then the footer
 constexpr float kEbookDlgDx = 480;
 constexpr float kEbookNumDx = 54;
+constexpr float kEbookPageDx = 110;
 constexpr float kEbookCssDy = 106;
 constexpr float kEbookCssFontPx = 13;
 
@@ -93,7 +98,8 @@ void CloseEbookSettingsDialog() {
     gEbook.visible = false;
     DlgWindowClose(&gEbookSettingsTw);
     MainWindow* win = gEbook.win;
-    gp::InputState* edits[] = {gEbook.editFont, gEbook.editSize, gEbook.editMargin, gEbook.editSpacing, gEbook.editCss};
+    gp::InputState* edits[] = {gEbook.editFont, gEbook.editSize,   gEbook.editMargin, gEbook.editSpacing,
+                               gEbook.editCss,  gEbook.editPageDx, gEbook.editPageDy};
     for (gp::InputState* e : edits) {
         if (e && win && win->gpuiWin) {
             InputBlurWhereFocused(e, win->gpuiWin);
@@ -105,7 +111,10 @@ void CloseEbookSettingsDialog() {
     gEbook.editMargin = nullptr;
     gEbook.editSpacing = nullptr;
     gEbook.editCss = nullptr;
+    gEbook.editPageDx = nullptr;
+    gEbook.editPageDy = nullptr;
     gEbook.ddFont.Free();
+    gEbook.ddPage.Free();
     str::Free(gEbook.filePath);
     gEbook.filePath = {};
     str::Free(gEbook.customCssText);
@@ -143,9 +152,21 @@ static void UpdateCssPreview() {
     gp::InputSetValue(gEbook.editCss, ToGpui(text));
 }
 
+// orig's SetPageControls: the preset the size is, and the size itself
+static void SetPageControls(float layoutDx, float layoutDy) {
+    gEbook.ddPage.SetSel(gEbook.ddPage.app, (int)EbookPageSizeFor(layoutDx, layoutDy));
+    gp::InputSetValue(gEbook.editPageDx, ToGpui(LayoutPtTextTemp(layoutDx)));
+    gp::InputSetValue(gEbook.editPageDy, ToGpui(LayoutPtTextTemp(layoutDy)));
+}
+
+static bool PageSizeIsCustom() {
+    return (EbookPageSize)gEbook.ddPage.sel == EbookPageSize::Custom;
+}
+
 // orig's SetValues
 static void SetValues(Str fontName, float fontSize, const Vec<float>* margin, float lineSpacing, bool ignoreCss,
-                      Str customCss) {
+                      Str customCss, float layoutDx, float layoutDy) {
+    SetPageControls(layoutDx, layoutDy);
     gp::InputSetValue(gEbook.editFont, ToGpui(len(fontName) > 0 ? fontName : FontDefaultLabel()));
     gp::InputSetValue(gEbook.editSize, ToGpui(fontSize > 0 ? Str(fmt("%g", fontSize)) : Str{}));
     gp::InputSetValue(gEbook.editMargin, ToGpui(MarginTextTemp(margin)));
@@ -174,7 +195,15 @@ static void LoadFromTarget() {
     float lineSpacing = g->lineSpacing;
     bool ignoreCss = g->ignoreDocumentCSS;
     Str customCss = g->customCSS;
+    float layoutDx = g->layoutDx;
+    float layoutDy = g->layoutDy;
     if (f) {
+        if (f->layoutDx > 0) {
+            layoutDx = f->layoutDx;
+        }
+        if (f->layoutDy > 0) {
+            layoutDy = f->layoutDy;
+        }
         if (f->fontName) {
             fontName = f->fontName;
         }
@@ -194,7 +223,7 @@ static void LoadFromTarget() {
             customCss = f->customCSS;
         }
     }
-    SetValues(fontName, fontSize, margin, lineSpacing, ignoreCss, customCss);
+    SetValues(fontName, fontSize, margin, lineSpacing, ignoreCss, customCss, layoutDx, layoutDy);
 }
 
 // orig's ReadControls
@@ -204,6 +233,12 @@ static void ReadControls(EbookVals& out) {
     ParseMargin(InputTextTemp(gEbook.editMargin), out.margin);
     out.lineSpacing = ParseFloatTemp(gEbook.editSpacing);
     out.ignoreDocumentCSS = gEbook.ignoreCss;
+    if (PageSizeIsCustom()) {
+        out.layoutDx = ParseLayoutPt(InputTextTemp(gEbook.editPageDx));
+        out.layoutDy = ParseLayoutPt(InputTextTemp(gEbook.editPageDy));
+    } else {
+        EbookPageSizeDims((EbookPageSize)gEbook.ddPage.sel, &out.layoutDx, &out.layoutDy);
+    }
     out.useCustomCSS = gEbook.customCss;
     if (out.useCustomCSS) {
         out.customCSS = InputTextTemp(gEbook.editCss);
@@ -229,6 +264,8 @@ static void Apply() {
         g->lineSpacing = v.lineSpacing;
         g->ignoreDocumentCSS = v.ignoreDocumentCSS;
         str::ReplaceWithCopy(&g->customCSS, v.customCSS);
+        g->layoutDx = v.layoutDx;
+        g->layoutDy = v.layoutDy;
         FileState* fs = FileHistoryFindByPath(gEbook.filePath);
         if (fs && fs->eBookUI) {
             DeleteFileEBookUI(fs->eBookUI);
@@ -245,7 +282,7 @@ static void Apply() {
     }
     bool differs = !str::Eq(v.fontName, g->fontName) || v.fontSize != g->fontSize || !MarginEq(v.margin, g->margin) ||
                    v.lineSpacing != g->lineSpacing || v.ignoreDocumentCSS != g->ignoreDocumentCSS ||
-                   !str::Eq(v.customCSS, g->customCSS);
+                   !str::Eq(v.customCSS, g->customCSS) || v.layoutDx != g->layoutDx || v.layoutDy != g->layoutDy;
     if (!differs) {
         // nothing left that isn't the global setting: drop the block entirely
         DeleteFileEBookUI(fs->eBookUI);
@@ -271,6 +308,9 @@ static void Apply() {
     }
     str::ReplaceWithCopy(&f->ignoreDocumentCSS, ignore);
     str::ReplaceWithCopy(&f->customCSS, str::Eq(v.customCSS, g->customCSS) ? Str{} : v.customCSS);
+    // 0 follows the global size, as orig's
+    f->layoutDx = (v.layoutDx == g->layoutDx) ? 0 : v.layoutDx;
+    f->layoutDy = (v.layoutDy == g->layoutDy) ? 0 : v.layoutDy;
     ScheduleSaveSettings();
 }
 
@@ -308,14 +348,18 @@ void ShowEbookSettingsDialog(MainWindow* win) {
     gEbook.filePath = str::Dup(win->CurrentTab()->filePath);
     gEbook.thisFile = true;
     gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
-    gp::InputState** edits[] = {&gEbook.editFont, &gEbook.editSize, &gEbook.editMargin, &gEbook.editSpacing,
-                                &gEbook.editCss};
+    gp::InputState** edits[] = {&gEbook.editFont, &gEbook.editSize,   &gEbook.editMargin, &gEbook.editSpacing,
+                                &gEbook.editCss,  &gEbook.editPageDx, &gEbook.editPageDy};
     for (gp::InputState** e : edits) {
         *e = new gp::InputState();
         (*e)->focus = gp::FocusHandleNew(app);
     }
     gEbook.ddFont.Init(app);
     FillFontList();
+    gEbook.ddPage.Init(app);
+    StrVec sizes;
+    EbookPageSizeLabels(sizes);
+    gEbook.ddPage.SetItems(sizes, 0);
     LoadFromTarget();
     gEbook.visible = true;
     DialogsTrackFrameDialog(IsEbookSettingsDialogVisible, [] { return gEbook.win; }, CloseEbookSettingsDialog);
@@ -368,9 +412,10 @@ void EbookSettingsView::OnOk(EbookSettingsView*, gp::Ctx* cx, const gp::ClickEve
 void EbookSettingsView::OnReset(EbookSettingsView*, gp::Ctx* cx, const gp::ClickEvent*) {
     if (gEbook.thisFile) {
         auto* g = &gSettings->eBookUI;
-        SetValues(g->fontName, g->fontSize, g->margin, g->lineSpacing, g->ignoreDocumentCSS, g->customCSS);
+        SetValues(g->fontName, g->fontSize, g->margin, g->lineSpacing, g->ignoreDocumentCSS, g->customCSS, g->layoutDx,
+                  g->layoutDy);
     } else {
-        SetValues({}, 0, nullptr, 0, false, {});
+        SetValues({}, 0, nullptr, 0, false, {}, 0, 0);
     }
     gp::Notify(cx);
     AppShellInvalidate(gEbook.win);
@@ -425,6 +470,15 @@ gp::El* EbookSettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (gEbook.ddFont.TakeComboPicked()) {
         UpdateCssPreview();
     }
+    // orig's OnPageSizeChanged: a preset shows its size; Custom keeps what was showing
+    if (gEbook.ddPage.PollChanged(cx->app) && !PageSizeIsCustom()) {
+        float dx = 0;
+        float dy = 0;
+        EbookPageSizeDims((EbookPageSize)gEbook.ddPage.sel, &dx, &dy);
+        SetPageControls(dx, dy);
+    }
+    // empty height: from the window's shape (orig's cue shows in a Custom field only)
+    gp::InputSetPlaceholder(gEbook.editPageDy, PageSizeIsCustom() ? GpuiDup(cx->a, Tr("auto")) : gp::Str{});
     gp::Listener onChange = gp::ListenTo(gEbookView, &EbookSettingsView::OnValueChanged);
     gEbook.editMargin->onChange = onChange;
     gEbook.editSpacing->onChange = onChange;
@@ -437,7 +491,8 @@ gp::El* EbookSettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
     gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
 
     // the font, then its size, the margin and the line spacing
-    float labelDx = std::max(DlgFieldLabelDx(cx, Tr("Font:")), DlgFieldLabelDx(cx, Tr("Size:")));
+    float labelDx = std::max(
+        {DlgFieldLabelDx(cx, Tr("Font:")), DlgFieldLabelDx(cx, Tr("Size:")), DlgFieldLabelDx(cx, Tr("Page:"))});
     auto number = [&](gp::Str id, gp::InputState* state, bool disabled) {
         return gp::Div(cx->a)
             ->W(kEbookNumDx)
@@ -458,6 +513,16 @@ gp::El* EbookSettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
     numRow->Child(DlgFieldLabel(cx, Tr("Line spacing:"), 0));
     numRow->Child(number(GStrL("ebook-spacing"), gEbook.editSpacing, gEbook.customCss));
     fields->Child(numRow);
+    // the page the text is laid out into
+    bool custom = PageSizeIsCustom();
+    gp::El* pageRow = DlgFieldRow(cx);
+    pageRow->Child(DlgFieldLabel(cx, Tr("Page:"), labelDx));
+    pageRow->Child(gEbook.ddPage.Build(cx, StrL("ebook-page"), kEbookPageDx));
+    pageRow->Child(DlgFieldLabel(cx, Tr("Width:"), 0));
+    pageRow->Child(number(GStrL("ebook-page-dx"), gEbook.editPageDx, !custom));
+    pageRow->Child(DlgFieldLabel(cx, Tr("Height:"), 0));
+    pageRow->Child(number(GStrL("ebook-page-dy"), gEbook.editPageDy, !custom));
+    fields->Child(pageRow);
     col->Child(fields);
     col->Child(DlgHairline(cx));
 

@@ -31,13 +31,15 @@
 #include "shared/PdfToolsCommon.h"
 #include "EbookSettingsDialogCommon.h"
 
-// Font, size and line spacing for reflowable documents (EPUB, MOBI, FB2, ...),
-// either globally or for the current document only (issue #4600). The CSS the
-// engine generates from those values is shown read-only; "Custom CSS" hands
-// the user the pen instead, and then what they type *is* the user CSS.
+// Font, size, line spacing and page size for reflowable documents (EPUB, MOBI,
+// FB2, ...), either globally or for the current document only (issues #4600,
+// #4210). The CSS the engine generates from those values is shown read-only;
+// "Custom CSS" hands the user the pen instead, and then what they type *is* the
+// user CSS.
 //
 //   Font:   [(default)                      v]
 //   Size:   12__   Margin: 1em__   Line spacing: 1.5__
+//   Page:   [Fit window v]   Width: ____   Height: ____   (points, Custom only)
 //   ---------------------------------------------- hairline
 //   [ ] Ignore the document's own styling
 //   [ ] Custom CSS
@@ -67,6 +69,10 @@ struct EbookSettingsWnd : WindowBase {
     Edit* editMargin = nullptr;
     VirtText* labelSpacing = nullptr;
     Edit* editSpacing = nullptr;
+    VirtText* labelPage = nullptr;
+    DropDown* ddPage = nullptr;
+    Edit* editPageDx = nullptr;
+    Edit* editPageDy = nullptr;
     Checkbox* cbIgnoreCss = nullptr;
     Checkbox* cbCustomCss = nullptr;
     Edit* editCss = nullptr;
@@ -84,7 +90,9 @@ struct EbookSettingsWnd : WindowBase {
     bool Create(MainWindow* win);
     void FillFontList();
     void SetValues(Str fontName, float fontSize, const Vec<float>* margin, float lineSpacing, bool ignoreCss,
-                   Str customCss);
+                   Str customCss, float layoutDx, float layoutDy);
+    void SetPageControls(float layoutDx, float layoutDy);
+    void OnPageSizeChanged();
     void LoadFromTarget();
     void ReadControls(EbookVals& out);
     void UpdateCssPreview();
@@ -168,7 +176,15 @@ void EbookSettingsWnd::LoadFromTarget() {
     float lineSpacing = g->lineSpacing;
     bool ignoreCss = g->ignoreDocumentCSS;
     Str customCss = g->customCSS;
+    float layoutDx = g->layoutDx;
+    float layoutDy = g->layoutDy;
     if (f) {
+        if (f->layoutDx > 0) {
+            layoutDx = f->layoutDx;
+        }
+        if (f->layoutDy > 0) {
+            layoutDy = f->layoutDy;
+        }
         if (f->fontName) {
             fontName = f->fontName;
         }
@@ -189,12 +205,45 @@ void EbookSettingsWnd::LoadFromTarget() {
         }
     }
 
-    SetValues(fontName, fontSize, margin, lineSpacing, ignoreCss, customCss);
+    SetValues(fontName, fontSize, margin, lineSpacing, ignoreCss, customCss, layoutDx, layoutDy);
+}
+
+// the preset the size is, and the size itself; the numbers are typed only for Custom
+void EbookSettingsWnd::SetPageControls(float layoutDx, float layoutDy) {
+    EbookPageSize size = EbookPageSizeFor(layoutDx, layoutDy);
+    bool wasUpdating = updating;
+    updating = true;
+    CbSetCurrentSelection(ddPage, (int)size);
+    editPageDx->SetText(LayoutPtTextTemp(layoutDx));
+    editPageDy->SetText(LayoutPtTextTemp(layoutDy));
+    updating = wasUpdating;
+    bool custom = size == EbookPageSize::Custom;
+    editPageDx->SetIsEnabled(custom);
+    editPageDy->SetIsEnabled(custom);
+}
+
+void EbookSettingsWnd::OnPageSizeChanged() {
+    if (updating) {
+        return;
+    }
+    auto size = (EbookPageSize)CbGetCurrentSelection(ddPage);
+    if (size == EbookPageSize::Custom) {
+        // start from the size that was showing
+        editPageDx->SetIsEnabled(true);
+        editPageDy->SetIsEnabled(true);
+        HwndSetFocus(editPageDx->hwnd);
+        return;
+    }
+    float dx = 0;
+    float dy = 0;
+    EbookPageSizeDims(size, &dx, &dy);
+    SetPageControls(dx, dy);
 }
 
 void EbookSettingsWnd::SetValues(Str fontName, float fontSize, const Vec<float>* margin, float lineSpacing,
-                                 bool ignoreCss, Str customCss) {
+                                 bool ignoreCss, Str customCss, float layoutDx, float layoutDy) {
     updating = true;
+    SetPageControls(layoutDx, layoutDy);
     ddFont->SetText(fontName ? fontName : FontDefaultLabel());
     editSize->SetText(fontSize > 0 ? fmt("%g", fontSize) : StrL(""));
     editMargin->SetText(MarginTextTemp(margin));
@@ -223,6 +272,13 @@ void EbookSettingsWnd::ReadControls(EbookVals& out) {
     ParseMargin(editMargin->GetTextTemp(), out.margin);
     out.lineSpacing = ParseFloatTemp(editSpacing);
     out.ignoreDocumentCSS = cbIgnoreCss->IsChecked();
+    auto size = (EbookPageSize)CbGetCurrentSelection(ddPage);
+    if (size == EbookPageSize::Custom) {
+        out.layoutDx = ParseLayoutPt(editPageDx->GetTextTemp());
+        out.layoutDy = ParseLayoutPt(editPageDy->GetTextTemp());
+    } else {
+        EbookPageSizeDims(size, &out.layoutDx, &out.layoutDy);
+    }
     out.useCustomCSS = cbCustomCss->IsChecked();
     if (out.useCustomCSS) {
         out.customCSS = FromEditTextTemp(editCss->GetTextTemp());
@@ -310,6 +366,8 @@ void EbookSettingsWnd::Apply() {
         g->lineSpacing = v.lineSpacing;
         g->ignoreDocumentCSS = v.ignoreDocumentCSS;
         str::ReplaceWithCopy(&g->customCSS, v.customCSS);
+        g->layoutDx = v.layoutDx;
+        g->layoutDy = v.layoutDy;
         // the global values are what the user wants to see, so this document's
         // overrides have to go (same as Change Background Color -> all files)
         FileState* fs = FileHistoryFindByPath(filePath);
@@ -328,7 +386,7 @@ void EbookSettingsWnd::Apply() {
     }
     bool differs = !str::Eq(v.fontName, g->fontName) || v.fontSize != g->fontSize || !MarginEq(v.margin, g->margin) ||
                    v.lineSpacing != g->lineSpacing || v.ignoreDocumentCSS != g->ignoreDocumentCSS ||
-                   !str::Eq(v.customCSS, g->customCSS);
+                   !str::Eq(v.customCSS, g->customCSS) || v.layoutDx != g->layoutDx || v.layoutDy != g->layoutDy;
     if (!differs) {
         // nothing left that isn't the global setting: drop the block entirely
         // so it stops being written out
@@ -355,6 +413,10 @@ void EbookSettingsWnd::Apply() {
     }
     str::ReplaceWithCopy(&f->ignoreDocumentCSS, ignore);
     str::ReplaceWithCopy(&f->customCSS, str::Eq(v.customCSS, g->customCSS) ? Str{} : v.customCSS);
+    // 0 follows the global size, so a document can't ask for Fit window while
+    // all ebooks have a fixed page
+    f->layoutDx = (v.layoutDx == g->layoutDx) ? 0 : v.layoutDx;
+    f->layoutDy = (v.layoutDy == g->layoutDy) ? 0 : v.layoutDy;
     ScheduleSaveSettings();
 }
 
@@ -369,10 +431,11 @@ void EbookSettingsWnd::OnReset(VirtMouseEvent*) {
     bool thisFile = radioThisFile && radioThisFile->IsChecked();
     if (thisFile) {
         auto* g = &gSettings->eBookUI;
-        SetValues(g->fontName, g->fontSize, g->margin, g->lineSpacing, g->ignoreDocumentCSS, g->customCSS);
+        SetValues(g->fontName, g->fontSize, g->margin, g->lineSpacing, g->ignoreDocumentCSS, g->customCSS, g->layoutDx,
+                  g->layoutDy);
         return;
     }
-    SetValues({}, 0, nullptr, 0, false, {});
+    SetValues({}, 0, nullptr, 0, false, {}, 0, 0);
 }
 
 void EbookSettingsWnd::OnOk(VirtMouseEvent*) {
@@ -461,9 +524,38 @@ bool EbookSettingsWnd::Create(MainWindow* mainWin) {
         row->AddChild(NewDlgUnderlined(editSpacing));
         fields->AddChild(row);
     }
+    {
+        // the page the text is laid out into: a preset, or Width x Height in points
+        HBox* row = NewDlgFieldRow();
+        labelPage = label(Tr("Page:"));
+        row->AddChild(labelPage);
+        DropDown::CreateArgs args;
+        args.parent = hwnd;
+        args.font = fontText;
+        args.isRtl = isRtl;
+        ddPage = new DropDown();
+        ddPage->Create(args);
+        StrVec sizes;
+        EbookPageSizeLabels(sizes);
+        ddPage->SetItems(sizes);
+        ddPage->onSelectionChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnPageSizeChanged>(this);
+        row->AddChild(ddPage);
+        row->AddChild(new Spacer(DpiScale(kToolDlgGapDx), 0));
+        row->AddChild(label(Tr("Width:")));
+        editPageDx = numberField();
+        row->AddChild(NewDlgUnderlined(editPageDx));
+        row->AddChild(new Spacer(DpiScale(kToolDlgGapDx), 0));
+        row->AddChild(label(Tr("Height:")));
+        editPageDy = numberField();
+        // empty height: from the window's shape
+        EditSetCueText(editPageDy, Tr("auto"));
+        row->AddChild(NewDlgUnderlined(editPageDy));
+        fields->AddChild(row);
+    }
     Vec<VirtText*> labels;
     VecAppend(labels, labelFont);
     VecAppend(labels, labelSize);
+    VecAppend(labels, labelPage);
     AlignDlgLabels(labels);
     vbox->AddChild(NewDlgSection(fields));
     vbox->AddChild(new VirtLine());
