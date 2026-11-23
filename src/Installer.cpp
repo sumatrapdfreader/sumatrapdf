@@ -1731,6 +1731,13 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
             PostQuitMessage(0);
             break;
 
+        case WM_CLOSE:
+            // closing mid-install would leave *.copy files and unregistered shell extensions
+            if (gWnd->hThread) {
+                return 0;
+            }
+            return DefWindowProc(hwnd, msg, wp, lp);
+
         case WM_ERASEBKGND:
             return TRUE;
 

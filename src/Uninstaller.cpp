@@ -168,6 +168,13 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
             return (LRESULT)ghbrBackground;
         }
 
+        case WM_CLOSE:
+            // closing mid-uninstall would leave a partial uninstall
+            if (hThread) {
+                return 0;
+            }
+            return DefWindowProc(hwnd, msg, wp, lp);
+
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
