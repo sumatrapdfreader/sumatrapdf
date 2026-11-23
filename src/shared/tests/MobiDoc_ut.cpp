@@ -122,11 +122,13 @@ static Str MkPalmDoc(Str text) {
 
 #if IS_DEBUG
 bool MobiDoc_UnitTestHeader();
+bool MobiDoc_UnitTestHuff();
 #endif
 
 void MobiDoc_UnitTests() {
 #if IS_DEBUG
     utassert(MobiDoc_UnitTestHeader());
+    utassert(MobiDoc_UnitTestHuff());
 #endif
     {
         MobiDoc mobi({});

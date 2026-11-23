@@ -121,6 +121,10 @@ constexpr int kHuffRecordMinLen = kHuffHeaderLen + kCacheDataLen + kBaseTableDat
 
 constexpr int kCdicsMax = 32;
 
+// a text record decodes to ~4 KB; a dictionary can nest symbols to expand far more
+constexpr int kMaxHuffRecordOutput = 64 * 1024;
+constexpr int kMaxHuffRecordSteps = 1024 * 1024;
+
 struct HuffDicDecompressor {
     u32 cacheTable[kCacheItemCount]{};
     u32 baseTable[kBaseTableItemCount]{};
@@ -133,14 +137,22 @@ struct HuffDicDecompressor {
     u32 codeLength = 0;
 
     int recursionDepth = 0;
+    // budget of the record being decompressed
+    int outLimit = 0;
+    int stepsLeft = 0;
 
     bool SetHuffData(u8* huffData, int huffDataLen);
     bool AddCdicData(u8* cdicData, u32 cdicDataLen);
     bool Decompress(u8* src, int srcSize, str::Builder& dst);
+    bool DecodeBits(u8* src, int srcSize, str::Builder& dst);
     bool DecodeOne(u32 code, str::Builder& dst);
 };
 
 bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
+    if (--stepsLeft < 0) {
+        logf("too many decode steps\n");
+        return false;
+    }
     u16 dict = (u16)(code >> codeLength);
     if (dict >= dictsCount) {
         logf("invalid dict value\n");
@@ -166,7 +178,7 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
             return false;
         }
         recursionDepth++;
-        bool ok = Decompress(p, symLen, dst);
+        bool ok = DecodeBits(p, symLen, dst);
         recursionDepth--;
         return ok;
     }
@@ -176,11 +188,22 @@ bool HuffDicDecompressor::DecodeOne(u32 code, str::Builder& dst) {
         logf("symLen too big\n");
         return false;
     }
-    dst.Append(Str((char*)p, (int)symLen));
-    return true;
+    if (len(dst) + (int)symLen > outLimit) {
+        logf("record output too big\n");
+        return false;
+    }
+    return dst.Append(Str((char*)p, (int)symLen));
 }
 
+// Decompresses one text record. Nested dictionary symbols can expand a few KB
+// exponentially, so output and decode steps are capped.
 bool HuffDicDecompressor::Decompress(u8* src, int srcSize, str::Builder& dst) {
+    outLimit = len(dst) + kMaxHuffRecordOutput;
+    stepsLeft = kMaxHuffRecordSteps;
+    return DecodeBits(src, srcSize, dst);
+}
+
+bool HuffDicDecompressor::DecodeBits(u8* src, int srcSize, str::Builder& dst) {
     int bitsConsumed = 0;
     u32 bits = 0;
 
@@ -1271,5 +1294,56 @@ bool MobiDoc_UnitTestHeader() {
            huff.baseTable[0] == 256 && huff.baseTable[63] == 319 && !huff.SetHuffData((u8*)bytes.s, len(bytes) - 1) &&
            CountMobiTrailers(1) == 0 && CountMobiTrailers(6) == 2 && CountMobiTrailers(0x8001) == 1 &&
            CountMobiTrailers(0xffff) == 15;
+}
+
+// Decompresses one code-0 byte with a dictionary where code k < levels expands to fanOut
+// copies of code k + 1 and code `levels` is a terminal of termLen 'x' bytes.
+static bool HuffChainDecompress(int levels, int fanOut, int termLen, str::Builder& out) {
+    constexpr int kCodeLen = 8;
+    constexpr int kNumCodes = 1 << kCodeLen;
+    ByteWriter syms;
+    Vec<u16> offsets;
+    for (int k = 0; k <= levels; k++) {
+        VecAppend(offsets, (u16)(kNumCodes * 2 + syms.Size()));
+        bool terminal = k == levels;
+        int n = terminal ? termLen : fanOut;
+        syms.Write16((u16)(terminal ? (0x8000 | n) : n));
+        for (int i = 0; i < n; i++) {
+            syms.Write8(terminal ? 'x' : (u8)(k + 1));
+        }
+    }
+    ByteWriter dict;
+    for (int i = 0; i < kNumCodes; i++) {
+        dict.Write16(i < len(offsets) ? offsets[i] : 0);
+    }
+    dict.d.Append(syms.AsByteSlice());
+    Str dictBytes = dict.AsByteSlice();
+
+    HuffDicDecompressor huff;
+    // every byte b is a terminal 8-bit code with value b
+    for (u32 i = 0; i < kCacheItemCount; i++) {
+        huff.cacheTable[i] = ((2 * i) << 8) | 0x80 | kCodeLen;
+    }
+    huff.codeLength = kCodeLen;
+    huff.dicts[0] = (u8*)dictBytes.s;
+    huff.dictSize[0] = (u32)len(dictBytes);
+    huff.dictsCount = 1;
+    u8 src[1] = {0};
+    return huff.Decompress(src, 1, out);
+}
+
+bool MobiDoc_UnitTestHuff() {
+    str::Builder out;
+    if (!HuffChainDecompress(2, 2, 3, out) || !str::Eq(ToStr(out), StrL("xxxxxxxxxxxx"))) {
+        return false;
+    }
+    // 4^9 * 127 bytes (33 MB) from one input byte
+    out.Reset();
+    if (HuffChainDecompress(9, 4, 127, out) || len(out) > kMaxHuffRecordOutput) {
+        return false;
+    }
+    // 4^12 empty terminals: no output, but 16 M decode steps
+    out.Reset();
+    return !HuffChainDecompress(12, 4, 0, out);
 }
 #endif
