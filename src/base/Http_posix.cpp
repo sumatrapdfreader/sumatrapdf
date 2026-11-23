@@ -803,7 +803,8 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
     curl_slist* list = AppendHeaders(nullptr, headers);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.s);
+    // a null POSTFIELDS makes curl read the body from stdin
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.s ? body.s : "");
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len(body));
     HttpStreamState state{curl, sink};
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStream);
