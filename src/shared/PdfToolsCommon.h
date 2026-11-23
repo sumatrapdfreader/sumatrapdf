@@ -138,3 +138,40 @@ extern "C" int pdfbake_main(int argc, char** argv);
 extern "C" int pdfclean_main(int argc, char** argv);
 extern "C" int muconvert_main(int argc, char** argv);
 extern "C" void fz_set_optind(int val);
+
+using PdfToolMain = int (*)(int, char**);
+int RunPdfToolMain(PdfToolMain toolMain, int argc, char** argv);
+
+// what a dialog does once its tool succeeded
+enum class PdfToolDone {
+    LoadDest,
+    ShowDest,
+};
+
+// how a dialog reports its tool's failure
+enum class PdfToolFail {
+    MessageBox,
+    Notification,
+};
+
+// a mutool command a tool dialog runs on a thread
+struct PdfToolJob {
+    PdfToolMain toolMain = nullptr;
+    StrVec args;
+    Str tmpPath;   // owned; a copy of the input, deleted after the run
+    Str destPath;  // owned
+    Str logName;   // owned
+    Str failMsg;   // owned
+    Str failTitle; // owned
+    PdfToolDone done = PdfToolDone::LoadDest;
+    PdfToolFail fail = PdfToolFail::MessageBox;
+    int res = -1;
+    // the dialog; the app clears it when the dialog goes away first
+    void* owner = nullptr;
+};
+PdfToolJob* NewPdfToolJob(PdfToolMain toolMain, Str logName, Str destPath, Str failMsg, Str failTitle);
+void SetPdfToolJobArgs(PdfToolJob* job, char** argv, int argc, Str tmpPath);
+void StartPdfToolJob(PdfToolJob* job);
+void FreePdfToolJob(PdfToolJob* job);
+// implemented by each app
+void FinishPdfToolJob(PdfToolJob* job);

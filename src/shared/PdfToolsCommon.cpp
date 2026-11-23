@@ -591,8 +591,7 @@ TempStr ExtractPdfPagesResultTemp(Str destPath, Str pagesSpec, int annotsOnly, i
         (char*)"-f",        (char*)"-i",         (char*)"-t",
         (char*)"-Z",        CStrTemp(inputPath), CStrTemp(destPath),
         CStrTemp(pageRange)};
-    fz_set_optind(0);
-    int res = pdfclean_main(dimofi(argv), argv);
+    int res = RunPdfToolMain(pdfclean_main, dimofi(argv), argv);
     if (tmpPath) {
         file::Delete(tmpPath);
     }
@@ -1015,4 +1014,69 @@ void SaveSelImgThread(SaveSelImgWork* d) {
     FreePixmap(d->px);
     d->px = nullptr;
     uitask::Post(MkFunc0(FinishSaveSelImg, d), "FinishSaveSelImg");
+}
+
+// the tools keep getopt state in globals: one runs at a time
+static Mutex gPdfToolMutex;
+
+int RunPdfToolMain(PdfToolMain toolMain, int argc, char** argv) {
+    ScopedMutex lock(&gPdfToolMutex);
+    fz_set_optind(0);
+    return toolMain(argc, argv);
+}
+
+PdfToolJob* NewPdfToolJob(PdfToolMain toolMain, Str logName, Str destPath, Str failMsg, Str failTitle) {
+    auto* job = new PdfToolJob();
+    job->toolMain = toolMain;
+    job->logName = str::Dup(logName);
+    job->destPath = str::Dup(destPath);
+    job->failMsg = str::Dup(failMsg);
+    job->failTitle = str::Dup(failTitle);
+    return job;
+}
+
+// tmpPath: the input's temp copy, if any, which the job deletes
+void SetPdfToolJobArgs(PdfToolJob* job, char** argv, int argc, Str tmpPath) {
+    for (int i = 0; i < argc; i++) {
+        job->args.Append(Str(argv[i]));
+    }
+    if (len(tmpPath) > 0) {
+        job->tmpPath = str::Dup(tmpPath);
+    }
+}
+
+void FreePdfToolJob(PdfToolJob* job) {
+    str::Free(job->tmpPath);
+    str::Free(job->destPath);
+    str::Free(job->logName);
+    str::Free(job->failMsg);
+    str::Free(job->failTitle);
+    delete job;
+}
+
+static void PdfToolJobDone(PdfToolJob* job) {
+    if (job->res == 0) {
+        logf("%s: succeeded\n", job->logName);
+    } else {
+        logf("%s: failed with %d\n", job->logName, job->res);
+    }
+    FinishPdfToolJob(job);
+    FreePdfToolJob(job);
+}
+
+static void PdfToolJobThread(PdfToolJob* job) {
+    Vec<char*> argv;
+    for (Str s : job->args) {
+        VecAppend(argv, CStrTemp(s));
+    }
+    job->res = RunPdfToolMain(job->toolMain, len(argv), argv.els);
+    if (len(job->tmpPath) > 0) {
+        file::Delete(job->tmpPath);
+    }
+    uitask::Post(MkFunc0(PdfToolJobDone, job), "PdfToolJobDone");
+}
+
+// a big PDF takes seconds to rewrite: off the UI thread
+void StartPdfToolJob(PdfToolJob* job) {
+    RunAsync(MkFunc0(PdfToolJobThread, job), StrL("PdfToolJob"));
 }
