@@ -27,6 +27,9 @@ as ng's. Build internals live under `cmd/helper/` and are not invoked directly.
 
 This creates ./out/dbg64/SumatraPDF.exe executable. The static build target is SumatraPDF-static and produces ./out/<config>/SumatraPDF-static.exe.
 
+Write every helper script, saved or temporary, in Bun TypeScript: not Python,
+PowerShell or shell scripts.
+
 MinGW/Wine builds are retired. Use the native ng Linux build, including WSL
 Ubuntu from Windows: `bun cmd/ng-build.ts -linux -dbg`.
 
