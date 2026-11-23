@@ -1200,8 +1200,9 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             break;
 
+        // on to the canvas, which opens the dropped files
         case WM_DROPFILES:
-            return ::DefWindowProc(hwnd, msg, wp, lp);
+            return DefSubclassProc(hwnd, msg, wp, lp);
 
         case WM_VSCROLL:
             win->SendMsg(msg, wp, lp);
@@ -1841,10 +1842,10 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject* dataObj) {
         return E_FAIL;
     }
 
-    HDROP hDrop = (HDROP)GlobalLock(stg.hGlobal);
+    // WM_DROPFILES takes the HDROP handle itself, not its locked memory
+    HDROP hDrop = (HDROP)stg.hGlobal;
     if (hDrop) {
         SendMessageW(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 1);
-        GlobalUnlock(stg.hGlobal);
     }
     ReleaseStgMedium(&stg);
     return hDrop != nullptr ? S_OK : E_FAIL;
