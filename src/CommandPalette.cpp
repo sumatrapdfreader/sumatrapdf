@@ -118,6 +118,7 @@ struct CommandPaletteWnd : WindowBase, PaletteSources {
     void CollectTabsMru(MainWindow*, WindowTab* currTab);
     void CollectToc(MainWindow*);
     void CollectFavorites(MainWindow*);
+    void CollectFileHistory();
     void CollectAnnotations(MainWindow*);
     void CollectSettings();
     void FillSwitchRow();
@@ -213,6 +214,8 @@ static i32 gCommandsNoActivate[] = {
 // clang-format on
 
 static int gPaletteOpDepth = 0;
+// a setting row is being applied, which can reload the settings
+static bool gApplyingSettingRow = false;
 static HWND gHwndToActivateOnClose = nullptr;
 static WindowTab* gTabToSelectOnClose = nullptr;
 static i32 gCmdIdToExecOnClose = 0;
@@ -761,6 +764,11 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     }
 
     if (IsSettingRow(data)) {
+        // data and itemText live in the rows a settings reload would rebuild
+        gApplyingSettingRow = true;
+        defer {
+            gApplyingSettingRow = false;
+        };
         Str itemText = m->strings[idx];
         if (len(data->settingPath) > 0) {
             // a value picked for a setting: the row text is the value
@@ -1449,6 +1457,44 @@ void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) 
     }
 }
 
+// ReloadSettings() freed the FileState / Favorite objects the file history and
+// favorites rows point at: collect them again from the new gSettings
+void CommandPaletteOnSettingsReloaded() {
+    gFavFsToGoToOnClose = nullptr;
+    gFavToGoToOnClose = nullptr;
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->hwnd || !IsMainWindowValidAndNotClosing(wnd->win)) {
+        return;
+    }
+    wnd->CollectFavorites(wnd->win);
+    wnd->CollectFileHistory();
+    // a setting row being applied refilters when it returns to the settings
+    if (gApplyingSettingRow || !wnd->listBox || !wnd->listBox->model) {
+        return;
+    }
+    // keep the selected row, which a reload can move ("changed first")
+    auto* m = (ListBoxModelCP*)wnd->listBox->model;
+    int sel = wnd->listBox->GetCurrentSelection();
+    TempStr selText = (sel >= 0 && sel < m->ItemsCount()) ? str::DupTemp(m->strings[sel]) : TempStr{};
+    Str filter = CommandPaletteSkipWS(Str(wnd->editQuery->GetTextTemp()));
+    FilterPaletteStrings(*wnd, filter, m->strings);
+    wnd->listBox->SetModel(m);
+    wnd->UpdateHelpRow();
+    wnd->UpdateCount();
+    int n = m->ItemsCount();
+    if (n == 0) {
+        return;
+    }
+    sel = std::clamp(sel, 0, n - 1);
+    for (int i = 0; selText && i < n; i++) {
+        if (str::Eq(m->strings[i], selText)) {
+            sel = i;
+            break;
+        }
+    }
+    CommandPaletteSetCurrentSelection(wnd, sel);
+}
+
 void CommandPaletteWnd::CollectToc(MainWindow* mainWin) {
     toc.Reset();
     currTocIdx = 0;
@@ -1506,6 +1552,19 @@ void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
     }
 }
 
+void CommandPaletteWnd::CollectFileHistory() {
+    fileHistory.Reset();
+    for (FileState* fs : *gSettings->fileStates) {
+        TempStr s = ConvertPathForDisplayTemp(fs->filePath);
+        if (len(s) == 0) {
+            continue;
+        }
+        ItemDataCP data;
+        data.filePath = fs->filePath;
+        fileHistory.Append(s, data);
+    }
+}
+
 void CommandPaletteWnd::CollectSettings() {
     settings.Reset();
     CollectSettingRows(settings);
@@ -1542,17 +1601,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
     CollectAnnotations(mainWin);
     CollectSettings();
-
-    fileHistory.Reset();
-    for (FileState* fs : *gSettings->fileStates) {
-        TempStr s = ConvertPathForDisplayTemp(fs->filePath);
-        if (len(s) == 0) {
-            continue;
-        }
-        ItemDataCP data;
-        data.filePath = fs->filePath;
-        fileHistory.Append(s, data);
-    }
+    CollectFileHistory();
 
     StrVecCP tempCommands;
     int cmdId = 0;

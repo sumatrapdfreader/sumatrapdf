@@ -3209,6 +3209,8 @@ void UpdateAfterThemeChange() {
 }
 
 void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
+    // the palette's rows point into the old gSettings
+    CommandPaletteOnSettingsReloaded();
     for (MainWindow* win : gWindows) {
         if (gSettings->showToolbar != showToolbarBefore) {
             ShowOrHideToolbar(win);
