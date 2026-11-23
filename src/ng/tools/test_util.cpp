@@ -97,14 +97,22 @@ extern bool PlatformFontPosix_UnitTests();
 #endif
 
 // ng: test data lives in docs/test/. Works when run from the repo root and
-// when run from out/<cfg>/, where the exe lives
+// from anywhere else: the exe is in out/<platform>/<cfg>/, so look up from it
 TempStr TestDocPathTemp(Str relPath) {
     TempStr path = str::DupTemp(relPath);
     if (file::Exists(path)) {
         return path;
     }
-    TempStr dir = path::JoinTemp(GetSelfExeDirTemp(), StrL("../.."));
-    return path::JoinTemp(dir, relPath);
+    constexpr int kMaxLevelsUp = 5;
+    TempStr dir = GetSelfExeDirTemp();
+    for (int i = 0; i < kMaxLevelsUp && len(dir) > 0; i++) {
+        TempStr candidate = path::JoinTemp(dir, relPath);
+        if (file::Exists(candidate)) {
+            return candidate;
+        }
+        dir = path::GetDirTemp(dir);
+    }
+    return path;
 }
 
 #if OS_WIN
