@@ -925,8 +925,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     OpenImageEdit(win, mode, filePath, px, fromRendered, selectPdf, originalData, closeOnEsc);
 }
 
-// px is an image taken from a document (no RenderedBitmap off Windows); the
-// editor owns it
+// px is an image taken from a document; the editor owns it
 void ShowImageEditWindowPixmap(MainWindow* win, ImageEditMode mode, Str filePath, Pixmap* px, bool selectPdf,
                                Str originalData) {
     if (!IsMainWindowValidAndNotClosing(win) || !px) {

@@ -92,26 +92,6 @@ enum class GoogleLensSrc {
     Image
 };
 
-static Pixmap* PixmapForImageElement(EngineBase* engine, IPageElement* imageElement) {
-#if OS_WIN
-    RenderedBitmap* bmp = engine->GetImageForPageElement(imageElement);
-    if (!bmp) {
-        return nullptr;
-    }
-    Pixmap* px = PixmapFromRenderedBitmap(bmp);
-    if (px && px->format == PixmapFormat::Native) {
-        Pixmap* copy = PixmapCopyAs32bppDIB(px);
-        FreePixmap(px);
-        px = copy;
-    }
-    return px;
-#else
-    // ng: a RenderedBitmap is win32-only; mupdf engines hand out the pixels.
-    // Other engines get null and Lens falls back to the page.
-    return PixmapToBgra(EngineMupdfPageImagePixmap(engine, imageElement));
-#endif
-}
-
 static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement* imageElement, int pageNo) {
     if (!tab || !tab->win || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
@@ -126,7 +106,7 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
     bool isImage = imageElement && imageElement->Is(kindPageElementImage);
     if (src == GoogleLensSrc::Image || (src == GoogleLensSrc::Auto && isImage)) {
         if (isImage) {
-            bitmap = PixmapForImageElement(dm->GetEngine(), imageElement);
+            bitmap = PageElementImagePixmap(dm->GetEngine(), imageElement);
         } else if (src == GoogleLensSrc::Image && dm->GetEngine()->kind != kindEngineImage) {
             GoogleLensNotify(tab, Tr("No image under the cursor."));
             return;

@@ -8493,6 +8493,20 @@ Pixmap* EngineMupdfPageImagePixmap(EngineBase* engineBase, IPageElement* ipel) {
 }
 #endif
 
+// The image of a page element as 32bpp BGRA. Off Windows only mupdf engines
+// return one (no RenderedBitmap there); others return null.
+Pixmap* PageElementImagePixmap(EngineBase* engine, IPageElement* el) {
+    if (!engine || !el) {
+        return nullptr;
+    }
+#if OS_WIN
+    RenderedBitmap* bmp = engine->GetImageForPageElement(el);
+    return PixmapToBgra(PixmapFromRenderedBitmap(bmp));
+#else
+    return PixmapToBgra(EngineMupdfPageImagePixmap(engine, el));
+#endif
+}
+
 RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
 #if !OS_WIN
     (void)pageNo;

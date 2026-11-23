@@ -384,11 +384,12 @@ Str EngineMupdfLoadEmbedded(EngineBase*, PageDestination*);
 TempStr EngineMupdfGetPdfInfo(Str path, Str password);
 TempStr EngineMupdfGetPdfOutline(Str path);
 int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, float fontSize);
-#if !OS_WIN
 struct Pixmap;
 struct IPageElement;
+#if !OS_WIN
 Pixmap* EngineMupdfPageImagePixmap(EngineBase*, IPageElement*);
 #endif
+Pixmap* PageElementImagePixmap(EngineBase*, IPageElement*);
 
 bool IsEnginePsAvailable();
 bool IsEnginePsSupportedFileType(FileType);

@@ -62,26 +62,16 @@ void StartTextDragDrop(MainWindow* win) {
 
 // the encoded image of win->imageDragElement; empty when it is gone
 static Str ImageDragPng(MainWindow* win) {
-#if OS_WIN
     DisplayModel* dm = win->AsFixed();
     IPageElement* el = win->imageDragElement;
     // page elements are freed when the page content changes (redaction, image replace)
     if (!dm || !el || win->imageDragElementGen != AtomicIntGet(&dm->GetEngine()->elementsGeneration)) {
         return {};
     }
-    RenderedBitmap* rb = dm->GetEngine()->GetImageForPageElement(el);
-    if (!rb) {
-        return {};
-    }
-    Pixmap* px = PixmapFromRenderedBitmap(rb); // takes ownership of rb
+    Pixmap* px = PageElementImagePixmap(dm->GetEngine(), el);
     Str png = px ? EncodePngFromPixmap(px) : Str();
     FreePixmap(px);
     return png;
-#else
-    // ng: only the win32 engines make a RenderedBitmap (see CopyRenderedBitmapToClipboard)
-    (void)win;
-    return {};
-#endif
 }
 
 // where the press was on the image, as fractions of its size: the drag

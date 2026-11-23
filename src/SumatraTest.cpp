@@ -916,16 +916,15 @@ TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, Str bmpPath, int* ex
         SafeEngineRelease(&engine);
         return fail(StrL("ERROR no-image-element"));
     }
-    RenderedBitmap* bmp = engine->GetImageForPageElement(imgEl);
+    Pixmap* px = PageElementImagePixmap(engine, imgEl);
     Str origData = engine->GetImageDataForPageElement(imgEl);
     int dataLen = len(origData);
     str::Free(origData);
     SafeEngineRelease(&engine);
-    if (!bmp) {
+    if (!px) {
         return fail(StrL("ERROR no-image"));
     }
-    Pixmap* px = PixmapToBgra(PixmapFromRenderedBitmap(bmp)); // takes ownership of bmp
-    if (!px || !px->data) {
+    if (!px->data) {
         FreePixmap(px);
         return fail(StrL("ERROR no-pixmap"));
     }
