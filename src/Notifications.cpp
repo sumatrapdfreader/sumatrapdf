@@ -667,7 +667,7 @@ bool UpdateNotificationProgress(NotificationWnd* wnd, Str msg, int perc) {
     }
     ReportIf(perc < 0 || perc > 100);
     wnd->progressPerc = perc;
-    wnd->UpdateMessage(msg);
+    wnd->UpdateMessage(msg, wnd->timeoutMs, wnd->highlight);
     return true;
 }
 
@@ -873,14 +873,14 @@ NotificationWnd* ShowPlainWarningNotification(HWND hwndParent, Str msg, int time
 }
 
 void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS, bool highlight) {
-    if (!wnd) {
+    if (NotificationIndexOf(wnd) < 0) {
         return;
     }
     wnd->UpdateMessage(msg, timeoutInMS, highlight);
 }
 
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd) {
-    if (!wnd) {
+    if (NotificationIndexOf(wnd) < 0) {
         return {};
     }
     return HwndGetTextTemp(wnd->hwnd);
