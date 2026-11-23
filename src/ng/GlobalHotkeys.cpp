@@ -111,8 +111,7 @@ void RegisterGlobalHotkeys(HWND hwnd) {
         if (cmdId <= 0) {
             cmdId = GetCommandIdByName(sc->cmd);
         }
-        GlobalHotkeyInfo info{hotkeyId, cmdId, sc->key, sc->cmd};
-        VecAppend(gGlobalHotkeys, info);
+        AddGlobalHotkey(hotkeyId, cmdId, sc->key, sc->cmd);
         logf("RegisterGlobalHotkeys: '%s' -> %s (%d)\n", sc->key, sc->cmd, cmdId);
     }
 }

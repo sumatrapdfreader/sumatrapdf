@@ -105,8 +105,7 @@ void RegisterGlobalHotkeys(HWND hwnd) {
         if (cmdId <= 0) {
             cmdId = GetCommandIdByName(sc->cmd);
         }
-        GlobalHotkeyInfo info{hotkeyId, cmdId, sc->key, sc->cmd};
-        VecAppend(gGlobalHotkeys, info);
+        AddGlobalHotkey(hotkeyId, cmdId, sc->key, sc->cmd);
     }
 }
 

@@ -11,6 +11,7 @@ struct GlobalHotkeyInfo {
     Str cmd;
 };
 extern Vec<GlobalHotkeyInfo> gGlobalHotkeys;
+void AddGlobalHotkey(int hotkeyId, int cmdId, Str key, Str cmd);
 extern HWND gGlobalHotkeysHwnd;
 extern Vec<HWND> gActiveFrameHwndMRU;
 #endif
