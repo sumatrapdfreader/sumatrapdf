@@ -284,8 +284,6 @@ constexpr float kRefHoverMinUserZoom = 0.4f;
 constexpr float kRefHoverMaxUserZoom = 3.0f;
 constexpr float kRefHoverUserZoomStep = 1.15f;
 
-constexpr int kRefHoverMaxLiveStates = 32;
-
 bool RefHoverIsLiveState(RefHoverState* s);
 void RefHoverRegisterLiveState(RefHoverState* s);
 void RefHoverUnregisterLiveState(RefHoverState* s);

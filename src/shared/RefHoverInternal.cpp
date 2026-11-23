@@ -9,33 +9,21 @@
 #include "EngineBase.h"
 #include "RefHover.h"
 
-static RefHoverState* gLiveStates[kRefHoverMaxLiveStates];
+// one per window; a render result for a state not in here is dropped
+static Vec<RefHoverState*> gLiveStates;
 
 bool RefHoverIsLiveState(RefHoverState* s) {
-    for (RefHoverState* live : gLiveStates) {
-        if (live == s) {
-            return true;
-        }
-    }
-    return false;
+    return VecContains(gLiveStates, s);
 }
 
 void RefHoverRegisterLiveState(RefHoverState* s) {
-    for (RefHoverState*& slot : gLiveStates) {
-        if (!slot) {
-            slot = s;
-            return;
-        }
+    if (!VecContains(gLiveStates, s)) {
+        VecAppend(gLiveStates, s);
     }
 }
 
 void RefHoverUnregisterLiveState(RefHoverState* s) {
-    for (RefHoverState*& slot : gLiveStates) {
-        if (slot == s) {
-            slot = nullptr;
-            return;
-        }
-    }
+    VecRemove(gLiveStates, s);
 }
 
 void RefHoverDropQueuedRender(RefHoverState* s) {

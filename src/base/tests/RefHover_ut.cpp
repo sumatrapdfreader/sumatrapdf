@@ -1087,7 +1087,26 @@ static void TwoColumnWatermarkStaysInColumn() {
     utassert(box.x + box.dx < 340.f);
 }
 
+// every popup's state stays live, however many windows there are
+static void ManyLiveStatesTracked() {
+    constexpr int kStates = 100;
+    RefHoverState* states[kStates];
+    for (int i = 0; i < kStates; i++) {
+        // only identity matters: never dereferenced
+        states[i] = (RefHoverState*)(uintptr_t)(16 * (i + 1));
+        RefHoverRegisterLiveState(states[i]);
+    }
+    for (int i = 0; i < kStates; i++) {
+        utassert(RefHoverIsLiveState(states[i]));
+    }
+    for (int i = 0; i < kStates; i++) {
+        RefHoverUnregisterLiveState(states[i]);
+        utassert(!RefHoverIsLiveState(states[i]));
+    }
+}
+
 void RefHoverTest() {
+    ManyLiveStatesTracked();
     TwoColumnNumericLeftEntryNotHijacked();
     TwoColumnNumericReferenceFound();
     TwoColumnWideSecondLineStaysInColumn();
