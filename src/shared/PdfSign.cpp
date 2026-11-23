@@ -308,20 +308,26 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
         // into the transform. /SumatraCertify is the DocMDP level the same
         // patch turns into the certification, inside the signed section.
         pdf_begin_operation(ctx, epdf->pdfdoc, "Prepare signature");
-        pdf_obj* wobj = pdf_annot_obj(ctx, widget);
-        if (args.lockFields || args.lockDocument) {
-            pdf_obj* lock = pdf_dict_put_dict(ctx, wobj, PDF_NAME(Lock), 2);
-            pdf_dict_put(ctx, lock, PDF_NAME(Action), PDF_NAME(All));
-            if (args.lockDocument) {
-                pdf_dict_put_int(ctx, lock, PDF_NAME(P), 1);
+        fz_try(ctx) {
+            pdf_obj* wobj = pdf_annot_obj(ctx, widget);
+            if (args.lockFields || args.lockDocument) {
+                pdf_obj* lock = pdf_dict_put_dict(ctx, wobj, PDF_NAME(Lock), 2);
+                pdf_dict_put(ctx, lock, PDF_NAME(Action), PDF_NAME(All));
+                if (args.lockDocument) {
+                    pdf_dict_put_int(ctx, lock, PDF_NAME(P), 1);
+                }
+            } else if (len(args.fieldName) == 0) {
+                pdf_dict_del(ctx, wobj, PDF_NAME(Lock));
             }
-        } else if (len(args.fieldName) == 0) {
-            pdf_dict_del(ctx, wobj, PDF_NAME(Lock));
+            if (args.certifyLevel > 0) {
+                pdf_dict_puts_drop(ctx, wobj, "SumatraCertify", pdf_new_int(ctx, args.certifyLevel));
+            }
+            pdf_end_operation(ctx, epdf->pdfdoc);
         }
-        if (args.certifyLevel > 0) {
-            pdf_dict_puts_drop(ctx, wobj, "SumatraCertify", pdf_new_int(ctx, args.certifyLevel));
+        fz_catch(ctx) {
+            pdf_abandon_operation(ctx, epdf->pdfdoc);
+            fz_rethrow(ctx);
         }
-        pdf_end_operation(ctx, epdf->pdfdoc);
         if (args.imagePath) {
             Str imgData = file::ReadFile(args.imagePath);
             if (len(imgData) == 0) {
