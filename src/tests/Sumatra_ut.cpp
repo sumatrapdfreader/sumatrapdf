@@ -79,6 +79,7 @@ void ZipDirTest();
 void ArchiveWarnTest();
 void ArchiveTarLazyTest();
 void ArchiveRarHugeEntryTest();
+void ArchiveTarHugeEntryTest();
 void BaseUtilTest();
 void ByteOrderTests();
 void ClipboardImageTest();
@@ -755,6 +756,7 @@ int RunAppUnitTests(bool forAi) {
     ArchiveWarnTest();
     ArchiveTarLazyTest();
     ArchiveRarHugeEntryTest();
+    ArchiveTarHugeEntryTest();
     BaseUtilTest();
     ByteOrderTests();
     ClipboardImageTest();

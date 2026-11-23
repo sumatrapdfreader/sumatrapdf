@@ -102,13 +102,15 @@ constexpr int kMaxArchiveEntries = 100'000;
 bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
     struct archive_entry* entry;
     int fileId = 0;
+    int nHeaders = 0;
     i64 eagerSize = 0;
     ArchiveExtractProgress prog{};
     prog.nTotal = -1; // libarchive streams; total is only known at end
     while (NextHeader(a, &entry)) {
-        if (fileId >= kMaxArchiveEntries) {
+        if (nHeaders >= kMaxArchiveEntries) {
             return false;
         }
+        int headerIdx = nHeaders++;
         Str entryName;
         const char* nameZ = archive_entry_pathname_utf8(entry);
         if (nameZ) {
@@ -118,8 +120,14 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
             entryName = nameZ ? Str(nameZ) : Str{};
         }
         i64 entrySize = archive_entry_size(entry);
-        if (entrySize < 0 || entrySize > INT_MAX) {
+        if (entrySize < 0) {
             return false;
+        }
+        // entry sizes are ints: skip one over 2 GB, keep the rest of the archive
+        if (entrySize > INT_MAX) {
+            logf("Archive::ParseEntries: skipping '%s', %d MB\n", entryName, (int)(entrySize >> 20));
+            archive_read_data_skip(a);
+            continue;
         }
         if (eagerLoad) {
             eagerSize += entrySize;
@@ -130,7 +138,7 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
         FileInfo* i = AllocArray<FileInfo>(this->a);
         i->fileId = fileId;
         i->fileSizeUncompressed = (int)entrySize;
-        i->filePos = (i64)fileId; // use fileId as position identifier
+        i->filePos = (i64)headerIdx; // its index among all entries, skipped ones included
         i->fileTime = (i64)archive_entry_mtime(entry);
         i->name = str::Dup(this->a, entryName);
         i->isDir = (archive_entry_filetype(entry) == AE_IFDIR);
@@ -385,7 +393,7 @@ Str Archive::ReadLibarchiveEntry(FileInfo* fi, int toRead, bool* permanent) {
 
     struct archive_entry* entry;
     for (int idx = 0; NextHeader(a, &entry); idx++) {
-        if (idx != fi->fileId) {
+        if (idx != fi->filePos) {
             archive_read_data_skip(a);
             continue;
         }
@@ -670,6 +678,8 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
     ArchiveExtractProgress prog{};
     prog.nTotal = -1;
     int fileId = 0;
+    int nHeaders = 0;
+    int nSkipped = 0;
     i64 eagerSize = 0;
     bool ok = true;
     while (true) {
@@ -680,10 +690,18 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         }
 
         // same limits as ParseEntries; a failure lets libarchive try
-        bool tooBig = rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize > (unsigned)INT_MAX;
-        if (tooBig || fileId >= kMaxArchiveEntries) {
+        if (nHeaders++ >= kMaxArchiveEntries) {
             ok = false;
             break;
+        }
+        if (rarHeader.Flags & RHDF_ENCRYPTED) {
+            isEncrypted = true;
+        }
+        bool tooBig = rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize > (unsigned)INT_MAX;
+        if (tooBig) {
+            nSkipped++;
+            RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
+            continue;
         }
         if (eagerLoad) {
             eagerSize += rarHeader.UnpSize;
@@ -691,10 +709,6 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
                 ok = false;
                 break;
             }
-        }
-
-        if (rarHeader.Flags & RHDF_ENCRYPTED) {
-            isEncrypted = true;
         }
 
         WStr nameW(rarHeader.FileNameW);
@@ -748,6 +762,9 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         cbProgress.Call(&prog);
     }
     RARCloseArchive(hArc);
+    if (fileId == 0 && nSkipped > 0) {
+        ok = false; // nothing usable
+    }
     if (!ok) {
         for (auto* fi : fileInfos_) {
             free(fi->data);

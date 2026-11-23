@@ -151,6 +151,72 @@ void ArchiveTarLazyTest() {
 #endif
 }
 
+constexpr i64 kOver2GB = 3LL * 1024 * 1024 * 1024;
+
+// a tar with a.txt, a GNU sparse entry that claims kOver2GB bytes (no data
+// stored) and c.txt
+static Str MakeTarWithHugeEntry() {
+    constexpr int kBlock = 512;
+    const char* names[] = {"a.txt", "huge.bin", "c.txt"};
+    const char* contents[] = {"aaa", "", "ccc"};
+    int size = kBlock * (3 * 2 + 2);
+    char* d = AllocArray<char>(size);
+    char* h = d;
+    for (int n = 0; n < 3; n++) {
+        bool huge = n == 1;
+        int contentLen = (int)strlen(contents[n]);
+        memcpy(h, names[n], strlen(names[n]));
+        memcpy(h + 100, "0000644", 7);
+        memcpy(h + 108, "0000000", 7);
+        memcpy(h + 116, "0000000", 7);
+        snprintf(h + 124, 12, "%011o", (unsigned)contentLen);
+        memcpy(h + 136, "00000000000", 11);
+        h[156] = huge ? 'S' : '0';
+        memcpy(h + 257, "ustar  ", 8); // GNU magic, needed for 'S'
+        if (huge) {
+            snprintf(h + 483, 12, "%011llo", (unsigned long long)kOver2GB); // real size
+        }
+        memset(h + 148, ' ', 8);
+        unsigned sum = 0;
+        for (int i = 0; i < kBlock; i++) {
+            sum += (u8)h[i];
+        }
+        snprintf(h + 148, 8, "%06o", sum);
+        memcpy(h + kBlock, contents[n], (size_t)contentLen);
+        h += kBlock * (contentLen > 0 ? 2 : 1);
+    }
+    return Str(d, (int)(h - d) + 2 * kBlock);
+}
+
+static void CheckHugeEntrySkipped(Archive& archive) {
+    auto& infos = archive.GetFileInfos();
+    utassert(len(infos) == 2);
+    if (len(infos) != 2) {
+        return;
+    }
+    utassert(str::Eq(infos[0]->name, StrL("a.txt")) && str::Eq(infos[1]->name, StrL("c.txt")));
+    auto* fi = archive.GetFileDataByName(StrL("c.txt"));
+    utassert(fi && fi->data && str::Eq(Str(fi->data, fi->fileSizeUncompressed), StrL("ccc")));
+}
+
+// an entry over 2 GB is skipped; the rest of the archive still opens
+void ArchiveTarHugeEntryTest() {
+#if !OS_WASM
+    Str tar = MakeTarWithHugeEntry();
+    TempStr path = GetTempFilePathTemp(StrL("hugetar"));
+    utassert(file::WriteFile(path, tar));
+    ArchiveExtractProgressCb emptyCb;
+    Archive lazy;
+    utassert(lazy.Open(path, false, FileType::Tar, emptyCb));
+    CheckHugeEntrySkipped(lazy);
+    Archive eager;
+    utassert(eager.Open(path, true, FileType::Tar, emptyCb));
+    CheckHugeEntrySkipped(eager);
+    file::Delete(path);
+    str::Free(tar);
+#endif
+}
+
 #if OS_WIN
 static void PutU16(u8* d, u32 v) {
     d[0] = (u8)v;
@@ -179,16 +245,17 @@ static void SetRarBlockCrc(u8* block, int size) {
     PutU16(block, crc & 0xffff);
 }
 
-// a RAR 4 archive with one stored entry whose header claims unpSize bytes
-static Str MakeRarWithUnpSize(u32 unpSize) {
+// a RAR 4 archive with stored 4-byte entries ("data") named a.txt, b.txt, ...
+// whose headers claim the given unpacked sizes
+static Str MakeRar(const u32* unpSizes, int nEntries) {
     static const u8 kMarker[] = {0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x00};
     constexpr int kMainSize = 13;
     constexpr int kNameLen = 5;
     constexpr int kFileHdrSize = 32 + kNameLen;
     constexpr int kPackSize = 4;
     constexpr int kEndSize = 7;
-    constexpr int kSize = (int)sizeof(kMarker) + kMainSize + kFileHdrSize + kPackSize + kEndSize;
-    u8* d = AllocArray<u8>(kSize);
+    int size = (int)sizeof(kMarker) + kMainSize + nEntries * (kFileHdrSize + kPackSize) + kEndSize;
+    u8* d = AllocArray<u8>(size);
     u8* p = d;
     memcpy(p, kMarker, sizeof(kMarker));
     p += sizeof(kMarker);
@@ -198,27 +265,35 @@ static Str MakeRarWithUnpSize(u32 unpSize) {
     SetRarBlockCrc(p, kMainSize);
     p += kMainSize;
 
-    p[2] = 0x74;
-    PutU16(p + 3, 0x8000);
-    PutU16(p + 5, kFileHdrSize);
-    PutU32(p + 7, kPackSize);
-    PutU32(p + 11, unpSize);
-    p[15] = 2;    // Windows
-    p[24] = 20;   // unpack version 2.0
-    p[25] = 0x30; // stored
-    PutU16(p + 26, kNameLen);
-    PutU32(p + 28, 0x20); // archive attribute
-    memcpy(p + 32, "a.txt", kNameLen);
-    SetRarBlockCrc(p, kFileHdrSize);
-    p += kFileHdrSize;
-    memcpy(p, "data", kPackSize);
-    p += kPackSize;
+    for (int n = 0; n < nEntries; n++) {
+        p[2] = 0x74;
+        PutU16(p + 3, 0x8000);
+        PutU16(p + 5, kFileHdrSize);
+        PutU32(p + 7, kPackSize);
+        PutU32(p + 11, unpSizes[n]);
+        p[15] = 2; // Windows
+        PutU32(p + 16, Crc32((const u8*)"data", kPackSize));
+        p[24] = 20;   // unpack version 2.0
+        p[25] = 0x30; // stored
+        PutU16(p + 26, kNameLen);
+        PutU32(p + 28, 0x20); // archive attribute
+        memcpy(p + 32, "a.txt", kNameLen);
+        p[32] = (u8)('a' + n);
+        SetRarBlockCrc(p, kFileHdrSize);
+        p += kFileHdrSize;
+        memcpy(p, "data", kPackSize);
+        p += kPackSize;
+    }
 
     p[2] = 0x7b;
     PutU16(p + 3, 0x4000);
     PutU16(p + 5, kEndSize);
     SetRarBlockCrc(p, kEndSize);
-    return Str((char*)d, kSize);
+    return Str((char*)d, size);
+}
+
+static Str MakeRarWithUnpSize(u32 unpSize) {
+    return MakeRar(&unpSize, 1);
 }
 #endif
 
@@ -243,6 +318,19 @@ void ArchiveRarHugeEntryTest() {
     Archive sane;
     utassert(sane.Open(path, false, FileType::Unknown, emptyCb));
     utassert(sane.format == Archive::Format::Rar && len(sane.GetFileInfos()) == 1);
+
+    // an entry over 2 GB is skipped by unrar; the others stay
+    str::Free(rar);
+    u32 sizes[] = {4, (u32)kOver2GB, 4};
+    rar = MakeRar(sizes, dimofi(sizes));
+    utassert(file::WriteFile(path, rar));
+    Archive mixed;
+    utassert(mixed.Open(path, false, FileType::Unknown, emptyCb));
+    utassert(mixed.format == Archive::Format::Rar);
+    auto& infos = mixed.GetFileInfos();
+    utassert(len(infos) == 2 && str::Eq(infos[0]->name, StrL("a.txt")) && str::Eq(infos[1]->name, StrL("c.txt")));
+    auto* fi = mixed.GetFileDataByName(StrL("c.txt"));
+    utassert(fi && fi->data && str::Eq(Str(fi->data, fi->fileSizeUncompressed), StrL("data")));
     file::Delete(path);
     str::Free(rar);
 #endif
