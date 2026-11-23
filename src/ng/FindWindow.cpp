@@ -808,66 +808,68 @@ static void ResultHighlightWords(MainWindow* win, StrVec& out) {
     }
 }
 
-static gp::El* BuildResults(MainWindow* win, gp::Ctx* cx) {
-    FindWindowWnd* w = Wnd(win);
+struct FindRowsUser {
+    MainWindow* win = nullptr;
+    FindWindowWnd* w = nullptr;
+    float rowDy = 0;
+    gp::Listener click = {};
+};
+
+static gp::El* FindResultRow(void* user, gp::Ctx* cx, int i) {
+    auto* u = (FindRowsUser*)user;
+    MainWindow* win = u->win;
+    if (!win || i < 0 || i >= len(win->findMatches)) {
+        return nullptr;
+    }
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    float rowDy = (float)DpiScale(kFindWinRowDy);
     StrVec words;
     ResultHighlightWords(win, words);
+    const FindMatch& fm = win->findMatches[i];
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(u->rowDy)
+                      ->ItemsCenter()
+                      ->PadX(6)
+                      ->Gap(10)
+                      ->Cursor(gp::CursorKind::Pointer)
+                      ->PathClick(GpuiDup(cx->a, fmt("find-res-%d", i)))
+                      ->OnClick(gp::ListenerArg(u->click, i));
+    if (i == u->w->sel) {
+        row->Bg(th.selection);
+    } else {
+        row->HoverBg(th.tokens.muted);
+    }
+    // snippet on the left with the matched term highlighted, the page label
+    // in a fixed-width right column so it doesn't move as rows change
+    row->Child(FilterHighlightText(cx, fm.snippet, words, th.foreground, 13)->Flex1()->MinW(0)->ClipX());
+    // the page label sits in a fixed-width right column so the right edge
+    // stays stable as the rows change (orig's pageColDx)
+    TempStr pageStr = win->ctrl ? win->ctrl->GetPageLabeTemp(fm.startPage) : fmt("%d", fm.startPage);
+    row->Child(gp::Div(cx->a)
+                   ->FlexRow()
+                   ->JustifyEnd()
+                   ->W((float)DpiScale(kFindWinPageColDx))
+                   ->Shrink0()
+                   ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, pageStr))->Font(12)->Fg(th.mutedFg)));
+    return row;
+}
 
+static gp::El* BuildResults(MainWindow* win, gp::Ctx* cx) {
+    FindWindowWnd* w = Wnd(win);
+    float rowDy = (float)DpiScale(kFindWinRowDy);
     int n = len(win->findMatches);
-    float viewH = w->ui->listView.h > 0 ? w->ui->listView.h : 200;
-    int first = std::max(0, (int)(w->scrollY / rowDy) - 2);
-    int end = std::min(n, (int)((w->scrollY + viewH) / rowDy) + 3);
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
-    if (first > 0) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * rowDy));
-    }
-    gp::Listener click = gp::ListenTo(w->ui->view, &FindWindowView::OnRow, 0);
-    for (int i = first; i < end; i++) {
-        const FindMatch& fm = win->findMatches[i];
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(rowDy)
-                          ->ItemsCenter()
-                          ->PadX(6)
-                          ->Gap(10)
-                          ->Cursor(gp::CursorKind::Pointer)
-                          ->PathClick(GpuiDup(cx->a, fmt("find-res-%d", i)))
-                          ->OnClick(gp::ListenerArg(click, i));
-        if (i == w->sel) {
-            row->Bg(th.selection);
-        } else {
-            row->HoverBg(th.tokens.muted);
-        }
-        // snippet on the left with the matched term highlighted, the page label
-        // in a fixed-width right column so it doesn't move as rows change
-        row->Child(FilterHighlightText(cx, fm.snippet, words, th.foreground, 13)->Flex1()->MinW(0)->ClipX());
-        // the page label sits in a fixed-width right column so the right edge
-        // stays stable as the rows change (orig's pageColDx)
-        TempStr pageStr = win->ctrl ? win->ctrl->GetPageLabeTemp(fm.startPage) : fmt("%d", fm.startPage);
-        row->Child(gp::Div(cx->a)
-                       ->FlexRow()
-                       ->JustifyEnd()
-                       ->W((float)DpiScale(kFindWinPageColDx))
-                       ->Shrink0()
-                       ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, pageStr))->Font(12)->Fg(th.mutedFg)));
-        list->Child(row);
-    }
-    if (end < n) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - end) * rowDy));
-    }
-    return gp::Div(cx->a)
-        ->FlexCol()
+    auto* rows = gp::ArenaNew<FindRowsUser>(cx->a);
+    rows->win = win;
+    rows->w = w;
+    rows->rowDy = rowDy;
+    rows->click = gp::ListenTo(w->ui->view, &FindWindowView::OnRow, 0);
+    return VirtualRows(cx, GStrL("find-results"), n, rowDy, 0, w->scrollY, FindResultRow, rows)
         ->Flex1()
         ->W(gp::kFill)
         ->MinH(0)
-        ->ScrollY(w->scrollY)
-        ->ScrollFromPath()
         ->OnScroll(gp::ListenTo(w->ui->view, &FindWindowView::OnScroll))
-        ->BoundsOut(&w->ui->listView)
-        ->Child(list);
+        ->BoundsOut(&w->ui->listView);
 }
 
 gp::El* FindWindowBuild(MainWindow* win, gp::Ctx* cx) {

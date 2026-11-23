@@ -1522,105 +1522,97 @@ void PaletteView::OnThumbScroll(PaletteView*, gp::Ctx* cx, const gp::ScrollEvent
     gp::Notify(cx);
 }
 
-static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
+static gp::El* PaletteRow(void* user, gp::Ctx* cx, int i) {
+    auto* wnd = (CommandPaletteWnd*)user;
+    if (!wnd || i < 0 || i >= len(wnd->items)) {
+        return nullptr;
+    }
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colText = ThemeWindowTextColor();
     Color colMuted = ThemeWindowTextDisabledColor();
-    // keep the selected row visible; gpui has no EnsureVisible for a plain box
-    if (wnd->sel >= 0) {
-        float selTop = (float)wnd->sel * kPaletteRowDy;
-        float selBottom = selTop + kPaletteRowDy;
-        if (selTop < wnd->scrollOff) {
-            wnd->scrollOff = selTop;
-        } else if (selBottom > wnd->scrollOff + listDy) {
-            wnd->scrollOff = selBottom - listDy;
+    ItemDataCP* data = wnd->items.AtData(i);
+    Str itemText = wnd->items[i];
+    // the list's own inset, then the row's; the selection stays inside the inset
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(kPaletteRowDy)
+                      ->Shrink0()
+                      ->ItemsCenter()
+                      ->PadX(kPaletteInsetDx)
+                      ->Radius(kPaletteSelectionRadius)
+                      ->PathClick(GpuiDup(cx->a, fmt("palette-row-%d", i)))
+                      ->OnClick(gp::ListenTo(gPaletteView, &PaletteView::OnRowClick, (intptr_t)i));
+    if (i == wnd->sel) {
+        row->Bg(ToGpui(AccentColor(colBg, 28)));
+    }
+    if (data->indent > 0) {
+        row->Child(gp::Div(cx->a)->W((float)(data->indent * 16))->Shrink0());
+    }
+    // a long directory must not push the filename off the left (#6104)
+    bool fileRow = len(data->filePath) > 0;
+    gp::El* left = gp::Div(cx->a)->FlexRow()->ItemsCenter()->ClipX();
+    if (fileRow) {
+        left->Shrink0();
+    } else {
+        left->Flex1()->MinW(0);
+    }
+    left->Child(FilterHighlightText(cx, itemText, wnd->filterWords, ToGpui(colText), kPaletteTextFontPx));
+    if (data->annot) {
+        Str contents = Contents(data->annot);
+        if (len(contents) > 0) {
+            left->Child(gp::TextEl(cx->a, GpuiDup(cx->a, str::JoinTemp(StrL("  "), contents)))
+                            ->Font(kPaletteTextFontPx)
+                            ->Fg(ToGpui(colMuted))
+                            ->Truncate());
         }
     }
-    float maxOff = std::max(0.f, (float)len(wnd->items) * kPaletteRowDy - listDy);
-    wnd->scrollOff = limitValue(wnd->scrollOff, 0.f, maxOff);
-
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H(listDy)->PadX(kPaletteInsetDx)->ScrollY(wnd->scrollOff);
-    int n = len(wnd->items);
-    // only the rows in view are built, spacers stand in for the rest: there
-    // can be thousands (commands, files, settings) and this runs every frame
-    int first = std::max(0, (int)(wnd->scrollOff / kPaletteRowDy) - 1);
-    int end = std::min(n, (int)((wnd->scrollOff + listDy) / kPaletteRowDy) + 2);
-    if (first > 0) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kPaletteRowDy)->Shrink0());
+    row->Child(left);
+    // a color setting shows its color before the value, as in advanced settings
+    Color swatch;
+    if (PaletteRowColor(data, itemText, &swatch)) {
+        row->Child(gp::Div(cx->a)->W(kPaletteSwatchGap)->Shrink0());
+        row->Child(gp::Div(cx->a)
+                       ->W(kPaletteSwatchDx)
+                       ->H(kPaletteSwatchDx)
+                       ->Shrink0()
+                       ->Bg(ToGpui(swatch))
+                       ->Border(1, ToGpui(ThemeEdgeColor())));
     }
-    for (int i = first; i < end; i++) {
-        ItemDataCP* data = wnd->items.AtData(i);
-        Str itemText = wnd->items[i];
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kPaletteRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadX(kPaletteInsetDx)
-                          ->Radius(kPaletteSelectionRadius)
-                          ->PathClick(GpuiDup(cx->a, fmt("palette-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gPaletteView, &PaletteView::OnRowClick, (intptr_t)i));
-        if (i == wnd->sel) {
-            row->Bg(ToGpui(AccentColor(colBg, 28)));
-        }
-        if (data->indent > 0) {
-            row->Child(gp::Div(cx->a)->W((float)(data->indent * 16))->Shrink0());
-        }
-        // a long directory must not push the filename off the left (#6104)
-        bool fileRow = len(data->filePath) > 0;
-        gp::El* left = gp::Div(cx->a)->FlexRow()->ItemsCenter()->ClipX();
+    TempStr right = PaletteRightColumnTemp(data);
+    if (len(right) > 0) {
+        // a setting's value reads as part of the row; one off its default is bold
+        bool settingValue = IsSettingRow(data) && len(data->settingPath) == 0;
+        bool emphasized = settingValue && SettingDiffersFromDefault(data);
+        gp::Rgba rightFg = ToGpui(settingValue ? colText : colMuted);
+        int boldLen = emphasized ? len(right) : 0;
+        gp::El* rightEl = FilterHighlightText(cx, right, wnd->filterWords, rightFg, kPaletteMetaFontPx, 0, boldLen);
         if (fileRow) {
-            left->Shrink0();
+            rightEl->Flex1()->MinW(0)->ClipX();
         } else {
-            left->Flex1()->MinW(0);
+            rightEl->Shrink0();
         }
-        left->Child(FilterHighlightText(cx, itemText, wnd->filterWords, ToGpui(colText), kPaletteTextFontPx));
-        if (data->annot) {
-            Str contents = Contents(data->annot);
-            if (len(contents) > 0) {
-                left->Child(gp::TextEl(cx->a, GpuiDup(cx->a, str::JoinTemp(StrL("  "), contents)))
-                                ->Font(kPaletteTextFontPx)
-                                ->Fg(ToGpui(colMuted))
-                                ->Truncate());
-            }
-        }
-        row->Child(left);
-        // a color setting shows its color before the value, as in advanced settings
-        Color swatch;
-        if (PaletteRowColor(data, itemText, &swatch)) {
-            row->Child(gp::Div(cx->a)->W(kPaletteSwatchGap)->Shrink0());
-            row->Child(gp::Div(cx->a)
-                           ->W(kPaletteSwatchDx)
-                           ->H(kPaletteSwatchDx)
-                           ->Shrink0()
-                           ->Bg(ToGpui(swatch))
-                           ->Border(1, ToGpui(ThemeEdgeColor())));
-        }
-        TempStr right = PaletteRightColumnTemp(data);
-        if (len(right) > 0) {
-            // a setting's value reads as part of the row; one off its default is bold
-            bool settingValue = IsSettingRow(data) && len(data->settingPath) == 0;
-            bool emphasized = settingValue && SettingDiffersFromDefault(data);
-            gp::Rgba rightFg = ToGpui(settingValue ? colText : colMuted);
-            int boldLen = emphasized ? len(right) : 0;
-            gp::El* rightEl = FilterHighlightText(cx, right, wnd->filterWords, rightFg, kPaletteMetaFontPx, 0, boldLen);
-            if (fileRow) {
-                rightEl->Flex1()->MinW(0)->ClipX();
-            } else {
-                rightEl->Shrink0();
-            }
-            row->Child(gp::Div(cx->a)->W(kPalettePadDx)->Shrink0());
-            row->Child(rightEl);
-        }
-        list->Child(row);
-        gPaletteRowsBuilt++;
+        row->Child(gp::Div(cx->a)->W(kPalettePadDx)->Shrink0());
+        row->Child(rightEl);
     }
-    if (end < n) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - end) * kPaletteRowDy)->Shrink0());
+    gPaletteRowsBuilt++;
+    return gp::Div(cx->a)->W(gp::kFill)->H(kPaletteRowDy)->Shrink0()->PadX(kPaletteInsetDx)->Child(row);
+}
+
+static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
+    int n = len(wnd->items);
+    if (wnd->sel >= 0) {
+        wnd->scrollOff =
+            gp::VirtualListScrollToRow(n, kPaletteRowDy, wnd->sel, wnd->scrollOff, listDy, gp::ScrollStrategy::Top);
+    } else {
+        float maxOff = std::max(0.f, (float)n * kPaletteRowDy - listDy);
+        wnd->scrollOff = limitValue(wnd->scrollOff, 0.f, maxOff);
     }
+
+    gp::El* frame = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H(listDy);
     if (n == 0) {
-        list->Child(
+        Color colMuted = ThemeWindowTextDisabledColor();
+        frame->Child(
             gp::Div(cx->a)
                 ->W(gp::kFill)
                 ->H(kPaletteRowDy)
@@ -1629,8 +1621,11 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
                 ->ItemsCenter()
                 ->Child(
                     gp::TextEl(cx->a, ToGpui(Tr("No result found")))->Font(kPaletteTextFontPx)->Fg(ToGpui(colMuted))));
+        return frame;
     }
-    return list;
+    frame->Child(VirtualRows(cx, GStrL("palette-list"), n, kPaletteRowDy, listDy, wnd->scrollOff, PaletteRow, wnd)
+                     ->W(gp::kFill));
+    return frame;
 }
 
 // orig's PageThumbnailsCtrl::SetBounds + DrawRow for ThumbnailsHost::Palette

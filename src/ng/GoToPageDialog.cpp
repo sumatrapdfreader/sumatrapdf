@@ -204,8 +204,8 @@ gp::El* GoToPageDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (gGoToPage.hasChapters) {
         // the fields start in one column; the labels are in the app font's
         // family, a size up
-        float scale = kToolDlgTextFontPx / kDlgWinFontPx;
-        float labelDx = std::max(DlgWinTextDx(cx, Tr("&Chapter:")), DlgWinTextDx(cx, Tr("&Page:"))) * scale;
+        float labelDx = std::max(DlgWinTextDx(cx, Tr("&Chapter:"), (float)kToolDlgTextFontPx),
+                                 DlgWinTextDx(cx, Tr("&Page:"), (float)kToolDlgTextFontPx));
         col->Child(GoToLine(cx, Tr("&Chapter:"), labelDx, gGoToPage.editChapter, StrL("goto-chapter"),
                             gGoToPage.chapterCount));
         col->Child(DlgHairline(cx));

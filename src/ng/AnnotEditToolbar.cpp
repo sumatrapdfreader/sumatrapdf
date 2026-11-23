@@ -1754,60 +1754,42 @@ static gp::El* BuildPopup(AnnotEditToolbar* tb, gp::Ctx* cx) {
         card->Child(list);
     }
     if (tb->popupKind == AnnotPopupKind::FontList) {
-        // only the rows in view are built, between two spacers that stand in
-        // for the rest
         constexpr int kFontRows = 12;
-        constexpr int kOverscan = 4;
         float rowDy = (float)DpiScale(22);
         int n = len(tb->popupNames);
         float viewDy = rowDy * (float)std::min(n, kFontRows);
         float maxScroll = std::max(0.f, (float)n * rowDy - viewDy);
-        tb->fontScrollY = std::max(0.f, std::min(tb->fontScrollY, maxScroll));
-        int first = std::max((int)(tb->fontScrollY / rowDy) - kOverscan, 0);
-        int last = std::min(first + kFontRows + 1 + 2 * kOverscan, n);
-        gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadR((float)DpiScale(10));
-        if (first > 0) {
-            rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * rowDy)->Shrink0());
-        }
-        for (int i = first; i < last; i++) {
-            TempStr id = fmt("annot-font-%d", i);
+        tb->fontScrollY = std::min(std::max(tb->fontScrollY, 0.f), maxScroll);
+        auto rowFn = [](void* user, gp::Ctx* cx, int i) -> gp::El* {
+            auto* bar = (AnnotEditToolbar*)user;
+            float dy = (float)DpiScale(22);
             gp::El* row = gp::Div(cx->a)
                               ->FlexRow()
                               ->ItemsCenter()
                               ->W(gp::kFill)
-                              ->H(rowDy)
+                              ->H(dy)
                               ->Shrink0()
                               ->PadX(6)
                               ->Radius(4)
                               ->HoverBg(ToGpui(BarHoverBg()))
                               ->Cursor(gp::CursorKind::Pointer)
-                              ->PathClick(GpuiDup(cx->a, id))
+                              ->PathClick(GpuiDup(cx->a, fmt("annot-font-%d", i)))
                               ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnFontItem, (intptr_t)i));
-            if (i == tb->popupCurrent) {
+            if (i == bar->popupCurrent) {
                 row->Bg(ToGpui(BarActiveBg()));
             }
-            row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, tb->popupNames[i]))
+            row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, bar->popupNames[i]))
                            ->Font(13)
-                           ->Fg(ToGpui(fg))
+                           ->Fg(ToGpui(BarTextColor()))
                            ->Flex1()
                            ->MinW(0)
                            ->Truncate());
-            rows->Child(row);
-        }
-        if (last < n) {
-            rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - last) * rowDy)->Shrink0());
-        }
-        card->Child(gp::Div(cx->a)
-                        ->Id(GStrL("annot-font-list"))
-                        ->FlexCol()
-                        ->W(gp::kFill)
+            return gp::Div(cx->a)->W(gp::kFill)->H(dy)->Shrink0()->PadR((float)DpiScale(10))->Child(row);
+        };
+        card->Child(VirtualRows(cx, GStrL("annot-font-list"), n, rowDy, viewDy, tb->fontScrollY, rowFn, tb)
                         ->MinW((float)DpiScale(240))
-                        ->H(viewDy)
                         ->Shrink0()
-                        ->ScrollY(tb->fontScrollY)
-                        ->ScrollFromPath()
-                        ->OnScroll(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnFontScroll))
-                        ->Child(rows));
+                        ->OnScroll(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnFontScroll)));
     }
     return card;
 }

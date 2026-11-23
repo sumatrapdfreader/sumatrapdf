@@ -74,8 +74,6 @@ constexpr int kFloatWinDx = 360;
 constexpr int kFloatWinDy = 540;
 constexpr int kFloatWinMinClientDx = 256;
 constexpr int kFloatWinMinClientDy = 2 * kFloatWinPadding + 300;
-// rows built above and below the visible ones
-constexpr int kOverscanRows = 2;
 constexpr int kScrollbarDx = 10;
 
 // which part of the card a key was typed into
@@ -1344,8 +1342,6 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
                     ->Child(NoteIconButton(cx, StrL("annot-help"), gIconHelpCircle, Tr("Search syntax"),
                                            kSyntaxHelpCmdId, false, iconPx)));
 
-    // ng: only the rows in view are built, between two spacers that stand in
-    // for the rest
     float rowDy = RowDy();
     int viewRows = limitValue((int)((ws.dipH - (float)kCardChromeDy) / rowDy), kMinListLines, kMaxListLines);
     if (ownWindow) {
@@ -1359,38 +1355,43 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
         ScrollTo(f, f->scrollY);
     }
     int n = ItemsCount(f);
-    int first = std::max((int)(f->scrollY / rowDy) - kOverscanRows, 0);
-    int last = std::min(first + f->viewRows + 1 + 2 * kOverscanRows, n);
-    gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    struct AnnotRowsUser {
+        AnnotFilterToolbar* f = nullptr;
+        Color colBg = 0;
+        Color colText = 0;
+        float fontScale = 1;
+        float rowDy = 0;
+        float padR = 0;
+    };
+    auto* rowsUser = gp::ArenaNew<AnnotRowsUser>(cx->a);
+    rowsUser->f = f;
+    rowsUser->colBg = colBg;
+    rowsUser->colText = colText;
+    rowsUser->fontScale = fontScale;
+    rowsUser->rowDy = rowDy;
     // orig's ScrollbarDx(): the rows keep clear of the scrollbar's strip
     if (MaxScrollY(f) > 0) {
-        rows->PadR((float)DpiScale(kScrollbarDx));
+        rowsUser->padR = (float)DpiScale(kScrollbarDx);
     }
-    if (first > 0) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * rowDy)->Shrink0());
-    }
-    for (int i = first; i < last; i++) {
-        rows->Child(AnnotRowEl(f, cx, i, colBg, colText, fontScale));
-    }
-    if (last < n) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - last) * rowDy)->Shrink0());
-    }
+    auto rowFn = [](void* user, gp::Ctx* cx, int i) -> gp::El* {
+        auto* u = (AnnotRowsUser*)user;
+        gp::El* row = AnnotRowEl(u->f, cx, i, u->colBg, u->colText, u->fontScale);
+        if (u->padR <= 0) {
+            return row;
+        }
+        return gp::Div(cx->a)->W(gp::kFill)->H(u->rowDy)->Shrink0()->PadR(u->padR)->Child(row);
+    };
     // orig draws a dashed outline while the list has the keys
     gp::Rgba colRing = f->listFocused ? ToGpui(colText) : th.border;
-    gp::El* list = gp::Div(cx->a)
-                       ->Id(GStrL("annot-filter-list"))
-                       ->FlexCol()
+    gp::El* list = VirtualRows(cx, GStrL("annot-filter-list"), n, rowDy, 0, f->scrollY, rowFn, rowsUser)
                        ->W(gp::kFill)
                        ->H(ViewDy(f) + 2 * kListBorderDx)
                        ->Shrink0()
                        ->Border(kListBorderDx, colRing)
-                       ->ScrollY(f->scrollY)
-                       ->ScrollFromPath()
                        ->OnScroll(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnScroll))
                        ->BoundsOut(&f->listBounds)
                        ->OnMouseDown(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnListDown))
-                       ->OnMouseUp(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnListUp))
-                       ->Child(rows);
+                       ->OnMouseUp(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnListUp));
 
     // ng: the ContextMenu wraps a box around the list, so the list's own
     // right-press listener can keep the press from it

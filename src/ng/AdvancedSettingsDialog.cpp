@@ -71,7 +71,6 @@ constexpr float kAdvSwatchDx = 12;
 constexpr float kAdvDotDx = 6;
 constexpr float kAdvValueDx = 240;
 constexpr float kAdvListDy = 360; // the list in a frame dialog
-constexpr int kAdvOverscanRows = 2;
 
 struct AdvancedSettingsDlg {
     MainWindow* win = nullptr;
@@ -548,16 +547,14 @@ static float AdvListViewDy() {
 // orig's VirtListBox::EnsureVisible, on whole rows
 static void AdvEnsureVisible() {
     float viewDy = (float)(int)(AdvListViewDy() / kAdvRowDy) * kAdvRowDy;
-    float maxY = std::max(0.f, (float)len(gAdv.rows) * kAdvRowDy - viewDy);
+    int n = len(gAdv.rows);
     if (gAdv.sel >= 0) {
-        float top = (float)gAdv.sel * kAdvRowDy;
-        if (top < gAdv.scrollY) {
-            gAdv.scrollY = top;
-        } else if (top + kAdvRowDy > gAdv.scrollY + viewDy) {
-            gAdv.scrollY = top + kAdvRowDy - viewDy;
-        }
+        gAdv.scrollY =
+            gp::VirtualListScrollToRow(n, kAdvRowDy, gAdv.sel, gAdv.scrollY, viewDy, gp::ScrollStrategy::Top);
+    } else {
+        float maxY = std::max(0.f, (float)n * kAdvRowDy - viewDy);
+        gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, maxY));
     }
-    gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, maxY));
 }
 
 static bool AdvMoveSelection(int dir);
@@ -826,40 +823,36 @@ static gp::El* AdvSettingRow(gp::Ctx* cx, int i, float valDx, Color colBg, Color
     return row;
 }
 
-// the list: only the rows in view are built, between two spacers that stand
-// in for the rest
+struct AdvRowsUser {
+    float valDx = 0;
+    Color colBg = 0;
+    Color colText = 0;
+    Color colMuted = 0;
+};
+
+static gp::El* AdvListRow(void* user, gp::Ctx* cx, int i) {
+    auto* u = (AdvRowsUser*)user;
+    if (i < 0 || i >= len(gAdv.rows)) {
+        return nullptr;
+    }
+    const SettingRow& r = gAdv.rows[i];
+    gp::El* row = r.itemIdx < 0 ? AdvSectionRow(cx, gAdv.sections[r.sectionIdx], u->colMuted)
+                                : AdvSettingRow(cx, i, u->valDx, u->colBg, u->colText, u->colMuted);
+    return gp::Div(cx->a)->W(gp::kFill)->H(kAdvRowDy)->Shrink0()->PadX(kAdvInsetDx)->Child(row);
+}
+
 static gp::El* AdvList(gp::Ctx* cx, float viewDy, float rowDx) {
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color colText = ThemeWindowTextColor();
-    Color colMuted = ThemeWindowTextDisabledColor();
     int n = len(gAdv.rows);
-    gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, std::max(0.f, (float)n * kAdvRowDy - viewDy)));
-    int first = std::max((int)(gAdv.scrollY / kAdvRowDy) - kAdvOverscanRows, 0);
-    int last = std::min(first + (int)(viewDy / kAdvRowDy) + 1 + 2 * kAdvOverscanRows, n);
-    float valDx = AdvValueDx(rowDx - 2 * kAdvInsetDx);
-    gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kAdvInsetDx);
-    if (first > 0) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kAdvRowDy)->Shrink0());
-    }
-    for (int i = first; i < last; i++) {
-        const SettingRow& r = gAdv.rows[i];
-        if (r.itemIdx < 0) {
-            rows->Child(AdvSectionRow(cx, gAdv.sections[r.sectionIdx], colMuted));
-        } else {
-            rows->Child(AdvSettingRow(cx, i, valDx, colBg, colText, colMuted));
-        }
-    }
-    if (last < n) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - last) * kAdvRowDy)->Shrink0());
-    }
-    return gp::Div(cx->a)
-        ->Id(GStrL("adv-list"))
-        ->FlexCol()
+    float maxY = std::max(0.f, (float)n * kAdvRowDy - viewDy);
+    gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, maxY));
+    auto* rows = gp::ArenaNew<AdvRowsUser>(cx->a);
+    rows->valDx = AdvValueDx(rowDx - 2 * kAdvInsetDx);
+    rows->colBg = ThemeWindowControlBackgroundColor();
+    rows->colText = ThemeWindowTextColor();
+    rows->colMuted = ThemeWindowTextDisabledColor();
+    return VirtualRows(cx, GStrL("adv-list"), n, kAdvRowDy, 0, gAdv.scrollY, AdvListRow, rows)
         ->W(gp::kFill)
-        ->ScrollY(gAdv.scrollY)
-        ->ScrollFromPath()
-        ->OnScroll(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnScroll))
-        ->Child(rows);
+        ->OnScroll(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnScroll));
 }
 
 // the filter line: a bare input with the count at its right end

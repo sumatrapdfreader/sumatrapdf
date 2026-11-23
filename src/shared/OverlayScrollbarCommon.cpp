@@ -80,9 +80,19 @@ int MulDivI(int a, int b, int c) {
 }
 
 int ThumbLen(OverlayScrollbar* sb, int trackLen) {
-    int range = sb->nMax - sb->nMin + 1;
-    int thumbLen = MulDivI(trackLen, (int)sb->nPage, std::max(range, 1));
+    int range = std::max(sb->nMax - sb->nMin + 1, 1);
+#if defined(SUMATRA_NG)
+    // same inputs as the MulDiv path; gpui's minimum is ours, not its 48dip default
+    if (trackLen <= 0) {
+        return DpiScale(kMinThumbSize);
+    }
+    float thumb =
+        gp::ScrollbarThumbSize((float)trackLen, (float)sb->nPage, (float)range, (float)DpiScale(kMinThumbSize));
+    return (int)(thumb + 0.5f);
+#else
+    int thumbLen = MulDivI(trackLen, (int)sb->nPage, range);
     return std::max(thumbLen, DpiScale(kMinThumbSize));
+#endif
 }
 
 // Calculate thumb rect within the track. The offset is clamped to 0 when the
@@ -99,12 +109,18 @@ Rect GetThumbRect(OverlayScrollbar* sb) {
     int thumbLen = ThumbLen(sb, trackLen);
 
     int scrollableTrack = trackLen - thumbLen;
-    int scrollableRange = range - nPage;
     int pos = sb->isDragging ? sb->nTrackPos : sb->nPos;
     int thumbOffset = 0;
+#if defined(SUMATRA_NG)
+    float off = gp::ScrollbarThumbPos((float)trackLen, (float)thumbLen, (float)(pos - sb->nMin), (float)nPage,
+                                      (float)std::max(range, 1));
+    thumbOffset = (int)(off + 0.5f);
+#else
+    int scrollableRange = range - nPage;
     if (scrollableRange > 0) {
         thumbOffset = MulDivI(pos - sb->nMin, scrollableTrack, scrollableRange);
     }
+#endif
     thumbOffset = limitValue(thumbOffset, 0, std::max(0, scrollableTrack));
 
     if (IsVert(sb)) {
@@ -119,8 +135,20 @@ int PosForThumbCenteredAt(OverlayScrollbar* sb, int clickPos) {
     int range = sb->nMax - sb->nMin + 1;
     int trackLen = IsVert(sb) ? track.dy : track.dx;
     int thumbLen = ThumbLen(sb, trackLen);
-    int scrollableTrack = trackLen - thumbLen;
     int scrollableRange = range - (int)sb->nPage;
+#if defined(SUMATRA_NG)
+    int origin = IsVert(sb) ? track.y : track.x;
+    float off = gp::ScrollbarOffsetForTrackPress((float)clickPos, (float)origin, (float)trackLen, (float)thumbLen,
+                                                 (float)sb->nPage, (float)std::max(range, 1));
+    int newPos = sb->nMin + (int)(off + 0.5f);
+    if (scrollableRange > 0) {
+        newPos = limitValue(newPos, sb->nMin, sb->nMin + scrollableRange);
+    } else {
+        newPos = sb->nMin;
+    }
+    return newPos;
+#else
+    int scrollableTrack = trackLen - thumbLen;
     int clickInTrack = clickPos - (IsVert(sb) ? track.y : track.x);
     int thumbOffset = clickInTrack - (thumbLen / 2);
     thumbOffset = limitValue(thumbOffset, 0, std::max(0, scrollableTrack));
@@ -129,6 +157,7 @@ int PosForThumbCenteredAt(OverlayScrollbar* sb, int clickPos) {
         newPos = sb->nMin + MulDivI(thumbOffset, scrollableRange, scrollableTrack);
     }
     return newPos;
+#endif
 }
 
 Rect GetArrowTopRect(OverlayScrollbar* sb) {

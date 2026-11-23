@@ -627,26 +627,31 @@ static void TranslateToolOnClosed(MainWindow*) {
 // sizes: the source edit is as wide as the selection's longest line, between
 // 40 and 120 average characters; the language row needs its two combos
 static Size TranslateToolClientSize(MainWindow* win, Str selText) {
-    int dpi = std::max(AppShellWindowDpi(win), 96);
-    PlatformFont* font = GetDefaultGuiFont();
-    int textDx = 0;
+    gp::PaintCtx* paint = win->gpuiWin ? &win->gpuiWin->paint : nullptr;
+    float fontPx = (float)kToolDlgTextFontPx;
+    auto textW = [&](Str s) {
+        if (paint && paint->pa && len(s) > 0) {
+            return gp::MeasureText(paint, ToGpui(s), fontPx, 0).w;
+        }
+        int dpi = std::max(AppShellWindowDpi(win), 96);
+        return (float)PlatformFontMeasureText(GetDefaultGuiFont(), s).dx * 96.f / (float)dpi;
+    };
+    float textDx = 0;
     for (int off = 0; off < selText.len;) {
         Str rest = Str(selText.s + off, selText.len - off);
         int nl = str::IndexOfChar(rest, '\n');
         int lineLen = nl >= 0 ? nl : rest.len;
-        textDx = std::max(PlatformFontMeasureText(font, Str(rest.s, lineLen)).dx, textDx);
+        textDx = std::max(textW(Str(rest.s, lineLen)), textDx);
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
-    int acw = font->averageCharWidth;
-    if (acw <= 0) {
-        acw = std::max(PlatformFontMeasureText(font, StrL("x")).dx, 1);
+    float acw = textW(StrL("x"));
+    if (acw < 1) {
+        acw = 1;
     }
-    int editDx = std::clamp(textDx, kTrEditIdealChars * acw, kTrEditMaxChars * acw) + MulDiv(kTrEditExtraDx, dpi, 96);
-    int fromDx = PlatformFontMeasureText(font, Tr("From:")).dx;
-    int toDx = PlatformFontMeasureText(font, Tr("To:")).dx;
-    int langRowDx = fromDx + toDx + MulDiv(2 * 4 + 2 * kTrLangComboDx, dpi, 96);
-    int dx = std::max(editDx, langRowDx);
-    return Size(MulDiv(dx, 96, dpi) + 2 * (int)kToolDlgPadDx, kTrBaseDy);
+    float editDx = std::clamp(textDx, kTrEditIdealChars * acw, kTrEditMaxChars * acw) + (float)kTrEditExtraDx;
+    float langRowDx = textW(Tr("From:")) + textW(Tr("To:")) + 2 * 4 + 2 * (float)kTrLangComboDx;
+    float dx = std::max(editDx, langRowDx);
+    return Size((int)(dx + 0.5f) + 2 * (int)kToolDlgPadDx, kTrBaseDy);
 }
 
 static void TranslateOpenToolWindow(MainWindow* win, Str selText) {

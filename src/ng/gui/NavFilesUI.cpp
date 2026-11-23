@@ -111,8 +111,6 @@ constexpr float kNavInputFontPx = 14;
 constexpr float kNavCapPadX = 7;
 constexpr float kNavCapPadY = 1;
 constexpr float kNavCapRadius = 5;
-// rows built above and below the visible ones
-constexpr int kNavOverscanRows = 2;
 // the path label's slot in tipBounds, after the buttons
 constexpr int kNavTipDirLabel = NavBtnCount;
 
@@ -1515,6 +1513,16 @@ static void NavYieldToPresentation(MainWindow* win) {
     NavGiveKeyboardToDoc(win);
 }
 
+struct NavRowsUser {
+    Color colBg = 0;
+    Color colTxt = 0;
+};
+
+static gp::El* NavListRow(void* user, gp::Ctx* cx, int i) {
+    auto* u = (NavRowsUser*)user;
+    return NavRowEl(cx, i, u->colBg, u->colTxt);
+}
+
 // the picker's content: it fills a window of its own, or the panel in the frame
 static gp::El* NavContentEl(gp::Ctx* cx, bool ownWindow) {
     if (!gNav.view.IsValid()) {
@@ -1613,33 +1621,17 @@ static gp::El* NavContentEl(gp::Ctx* cx, bool ownWindow) {
                                                                   ->IntoEl()
                                                                   ->H(kNavEditDy)));
 
-    // ng: only the rows in view are built, between two spacers that stand in
-    // for the rest, so a folder of tens of thousands of files stays cheap
     int n = len(gNav.entries);
-    int first = std::max((int)(gNav.scrollY / kNavRowDy) - kNavOverscanRows, 0);
-    int last = std::min(first + NavVisibleRows() + 1 + 2 * kNavOverscanRows, n);
-    gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
-    if (first > 0) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kNavRowDy)->Shrink0());
-    }
-    for (int i = first; i < last; i++) {
-        rows->Child(NavRowEl(cx, i, colBg, colTxt));
-    }
-    if (last < n) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - last) * kNavRowDy)->Shrink0());
-    }
-    gp::El* list = gp::Div(cx->a)
-                       ->Id(GStrL("nav-files-list"))
-                       ->FlexCol()
+    auto* rows = gp::ArenaNew<NavRowsUser>(cx->a);
+    rows->colBg = colBg;
+    rows->colTxt = colTxt;
+    gp::El* list = VirtualRows(cx, GStrL("nav-files-list"), n, kNavRowDy, 0, gNav.scrollY, NavListRow, rows)
                        ->Flex1()
                        ->W(gp::kFill)
                        ->MinH(0)
-                       ->ScrollY(gNav.scrollY)
-                       ->ScrollFromPath()
                        ->OnScroll(gp::ListenTo(gNav.view, &NavFilesView::OnScroll))
                        ->OnMouseDown(gp::ListenTo(gNav.view, &NavFilesView::OnListDown))
-                       ->BoundsOut(&gNav.listBounds)
-                       ->Child(rows);
+                       ->BoundsOut(&gNav.listBounds);
     if (ownWindow) {
         // the list has the keyboard unless one of the two fields does
         list->TrackFocus(gNav.listFocus)->TabStop(false);

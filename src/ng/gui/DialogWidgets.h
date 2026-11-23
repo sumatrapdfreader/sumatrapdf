@@ -87,6 +87,9 @@ bool DismissTrackedPopup(gpui::Ctx* cx);
 // row `row` of `nRows` rows of `rowDy` in a view `viewDy` tall.
 float DialogScrollToRow(float scrollY, int row, int nRows, float rowDy, float viewDy);
 
+gpui::El* VirtualRows(gpui::Ctx* cx, gpui::Str id, int count, float rowH, float viewH, float scrollY,
+                      gpui::VirtualRowFn row, void* user, const float* sizes = nullptr);
+
 // the height a FlexCol list of `nRows` rows gets between MinH and MaxH, less
 // its border
 float DialogListViewDy(int nRows, float rowDy, float minDy, float maxDy, float borderDy = 1);
@@ -186,7 +189,7 @@ gpui::El* DlgIntoEl(gpui::Ctx* cx, gpui::component::Dialog* dlg);
 constexpr float kDlgWinFontPx = 12;
 constexpr float kDlgWinEditDy = 23;
 // the width of `label` (its '&' dropped) in the app font, in dips
-float DlgWinTextDx(gpui::Ctx* cx, Str label);
+float DlgWinTextDx(gpui::Ctx* cx, Str label, float fontPx = kDlgWinFontPx);
 // in place of DlgIntoEl(): `col` is the whole content, laid out by the
 // dialog; the window gets spec.clientDx and the column's height
 gpui::El* DlgWinContent(gpui::Ctx* cx, gpui::El* col);

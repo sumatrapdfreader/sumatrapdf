@@ -704,12 +704,19 @@ static gp::El* DlgWindowFitTo(DlgWindowEntry* e, gp::Ctx* cx, gp::El* col, float
     return gp::Div(cx->a)->FlexCol()->SizeFull()->Child(col);
 }
 
-float DlgWinTextDx(gp::Ctx* cx, Str label) {
-    DlgWindowEntry* e = DlgWindowEntryOf(cx->win);
-    int dpi = std::max(e ? AppShellWindowDpi(e->win) : 96, 96);
+float DlgWinTextDx(gp::Ctx* cx, Str label, float fontPx) {
     TempStr noAmp = str::ReplaceTemp(label, StrL("&"), StrL(""));
+    if (cx && cx->win && cx->win->paint.pa && len(noAmp) > 0 && fontPx > 0) {
+        return gp::MeasureText(&cx->win->paint, ToGpui(noAmp), fontPx, 0).w;
+    }
+    DlgWindowEntry* e = cx ? DlgWindowEntryOf(cx->win) : nullptr;
+    int dpi = std::max(e ? AppShellWindowDpi(e->win) : 96, 96);
     int dx = PlatformFontMeasureText(GetDefaultGuiFont(), noAmp).dx;
-    return (float)dx * 96.f / (float)dpi;
+    float dips = (float)dx * 96.f / (float)dpi;
+    if (fontPx > 0 && kDlgWinFontPx > 0) {
+        dips *= fontPx / kDlgWinFontPx;
+    }
+    return dips;
 }
 
 gp::El* DlgWinContent(gp::Ctx* cx, gp::El* col) {
@@ -1442,7 +1449,7 @@ gp::El* DlgFieldLabel(gp::Ctx* cx, Str s, float dx) {
 
 // the app font is the labels' family, a size smaller
 float DlgFieldLabelDx(gp::Ctx* cx, Str s) {
-    return DlgWinTextDx(cx, s) * kToolDlgTextFontPx / kDlgWinFontPx;
+    return DlgWinTextDx(cx, s, (float)kToolDlgTextFontPx);
 }
 
 gp::El* DlgSectionHeader(gp::Ctx* cx, Str s) {

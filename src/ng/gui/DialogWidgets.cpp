@@ -10,16 +10,26 @@
 #include "SumatraLog.h"
 
 float DialogScrollToRow(float scrollY, int row, int nRows, float rowDy, float viewDy) {
-    float maxY = std::max(0.f, (float)nRows * rowDy - viewDy);
     if (row >= 0 && row < nRows) {
-        float top = (float)row * rowDy;
-        if (top < scrollY) {
-            scrollY = top;
-        } else if (top + rowDy > scrollY + viewDy) {
-            scrollY = top + rowDy - viewDy;
-        }
+        return gp::VirtualListScrollToRow(nRows, rowDy, row, scrollY, viewDy, gp::ScrollStrategy::Top);
     }
+    float maxY = std::max(0.f, (float)nRows * rowDy - viewDy);
     return std::max(0.f, std::min(scrollY, maxY));
+}
+
+// viewH of 0 fills the parent. sizes is per-row height when the rows are not all rowH.
+gp::El* VirtualRows(gp::Ctx* cx, gp::Str id, int count, float rowH, float viewH, float scrollY, gp::VirtualRowFn row,
+                    void* user, const float* sizes) {
+    gp::VirtualListOpts o;
+    o.count = count;
+    o.rowH = rowH;
+    o.viewH = viewH;
+    o.scrollY = scrollY;
+    o.axis = gp::ScrollAxis::Vertical;
+    o.sizes = sizes;
+    o.row = row;
+    o.user = user;
+    return gp::VirtualList::New(cx, id, o)->ScrollFromPath();
 }
 
 float DialogListViewDy(int nRows, float rowDy, float minDy, float maxDy, float borderDy) {
@@ -34,9 +44,10 @@ static gp::Entity<gp::PopupMenuState> gFitPopup;
 static int gFitPopupFrames = 0;
 
 // orig's TrackPopupMenu keeps a menu on the screen: one that doesn't fit right
-// of / below the point opens left of / above it. gpui puts a menu where it is
-// told to, so one opened near the window's right or bottom edge was cut off.
-// Its size is only known once it was painted, so it moves on its second frame.
+// of / below the point opens left of / above it. The size is only known once
+// it was painted, so AnchoredCornerResolve runs on the second frame. st->x/y
+// are relative to the element that opened the menu; the resolver works in
+// window coordinates, and the delta is applied back.
 static void FitPopupInWindow(gp::Ctx* cx, gp::PopupMenuState* st) {
     if (!st->open || !cx->win) {
         gFitPopup = {};
@@ -53,14 +64,23 @@ static void FitPopupInWindow(gp::Ctx* cx, gp::PopupMenuState* st) {
     if (b.w <= 0 || b.h <= 0) {
         return;
     }
-    float dx = 0;
-    float dy = 0;
-    if (b.x + b.w > ws.dipW) {
-        dx = -std::min(b.w, b.x);
+    bool overX = b.x + b.w > ws.dipW;
+    bool overY = b.y + b.h > ws.dipH;
+    if (!overX && !overY) {
+        return;
     }
-    if (b.y + b.h > ws.dipH) {
-        dy = -std::min(b.h, b.y);
+    gp::Anchor anchor = gp::Anchor::TopLeft;
+    if (overX && overY) {
+        anchor = gp::Anchor::BottomRight;
+    } else if (overX) {
+        anchor = gp::Anchor::TopRight;
+    } else {
+        anchor = gp::Anchor::BottomLeft;
     }
+    gp::AnchoredPosition pos =
+        gp::AnchoredCornerResolve(anchor, gp::Point{b.x, b.y}, gp::Size{b.w, b.h}, gp::Size{ws.dipW, ws.dipH}, 0);
+    float dx = pos.bounds.x - b.x;
+    float dy = pos.bounds.y - b.y;
     if (dx == 0 && dy == 0) {
         return;
     }

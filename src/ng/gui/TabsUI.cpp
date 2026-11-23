@@ -181,20 +181,28 @@ static void FreeTabTextDx() {
     VecReset(gTabTextDx);
 }
 
-// the tab bar is laid out every frame and measuring text is slow (pango
-// lays it out), so widths are remembered by text, font and size
-static int MeasureTabTextDx(Str family, int fontPx, Str s) {
+// the tab bar is laid out every frame, so widths are remembered by text, font
+// and size. gpui's MeasureText is what the labels are painted with.
+static int MeasureTabTextDx(gp::PaintCtx* paint, Str family, float fontPx, Str s) {
+    int key = (int)fontPx;
     for (const TabTextDx& e : gTabTextDx) {
-        if (e.fontPx == fontPx && str::Eq(e.text, s) && str::Eq(e.family, family)) {
+        if (e.fontPx == key && str::Eq(e.text, s) && str::Eq(e.family, family)) {
             return e.dx;
         }
     }
     if (len(gTabTextDx) >= kTabTextDxMax) {
         FreeTabTextDx();
     }
-    PlatformFont* font = GetUserGuiFont(family, fontPx);
-    int dx = PlatformFontMeasureText(font, s).dx;
-    VecAppend(gTabTextDx, TabTextDx{str::Dup(s), str::Dup(family), fontPx, dx});
+    int dx = 0;
+    if (paint && paint->pa && len(s) > 0) {
+        dx = (int)(gp::MeasureText(paint, ToGpui(s), fontPx, 0).w + 0.5f);
+    }
+    if (dx <= 0 && len(s) > 0) {
+        float dpi = paint && paint->dpi > 0 ? paint->dpi : 96.f;
+        PlatformFont* font = GetUserGuiFont(family, (int)(fontPx * dpi / 96.f + 0.5f));
+        dx = (int)((float)PlatformFontMeasureText(font, s).dx * 96.f / dpi + 0.5f);
+    }
+    VecAppend(gTabTextDx, TabTextDx{str::Dup(s), str::Dup(family), key, dx});
     gTabTextMeasureCount++;
     return dx;
 }
@@ -202,12 +210,9 @@ static int MeasureTabTextDx(Str family, int fontPx, Str s) {
 // TabsEqualWidth = false: what a tab sized to its name needs, in dips, as
 // BuildTab lays it out: margins, page suffix, dirty dot and room for the ✕
 static int FitToNameDx(MainWindow* win, WindowTab* tab) {
-    int dpi = std::max(AppShellWindowDpi(win), 96);
+    gp::PaintCtx* paint = win->gpuiWin ? &win->gpuiWin->paint : nullptr;
     Str family = FromGpui(gp::PaintSystemUIFontMappedFamily());
-    auto measure = [&](Str s, float fontSize) {
-        int dx = MeasureTabTextDx(family, MulDiv((int)fontSize, dpi, 96), s);
-        return MulDiv(dx, 96, dpi);
-    };
+    auto measure = [&](Str s, float fontSize) { return MeasureTabTextDx(paint, family, fontSize, s); };
     int dx = 8 + measure(tab->GetTabTitle(), kTabFontSize);
     TempStr pageText = TabPageSuffixTemp(tab);
     if (len(pageText) > 0) {
@@ -227,9 +232,9 @@ static int ChipDx(MainWindow* win, StripGroup* g) {
     if (len(label) == 0) {
         return kMinDx;
     }
-    int dpi = std::max(AppShellWindowDpi(win), 96);
+    gp::PaintCtx* paint = win->gpuiWin ? &win->gpuiWin->paint : nullptr;
     Str family = FromGpui(gp::PaintSystemUIFontMappedFamily());
-    int dx = MulDiv(MeasureTabTextDx(family, MulDiv((int)kTabFontSize, dpi, 96), label), 96, dpi) + 18;
+    int dx = MeasureTabTextDx(paint, family, kTabFontSize, label) + 18;
     return limitValue(dx, kMinDx, kMaxDx);
 }
 

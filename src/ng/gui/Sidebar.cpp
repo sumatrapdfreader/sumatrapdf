@@ -1468,21 +1468,6 @@ static float LayoutTocRows(MainWindow* win, Vec<TocRow>& rows, float viewDx) {
     return y;
 }
 
-// the row at list position y (the last one below the end)
-static int TocRowAtY(const Vec<TocRow>& rows, float y) {
-    int lo = 0;
-    int hi = len(rows) - 1;
-    while (lo < hi) {
-        int mid = (lo + hi + 1) / 2;
-        if (rows[mid].top <= y) {
-            lo = mid;
-        } else {
-            hi = mid - 1;
-        }
-    }
-    return std::max(lo, 0);
-}
-
 static bool TocRowsSame(const Vec<TocRow>& a, const Vec<TocRow>& b) {
     if (len(a) != len(b)) {
         return false;
@@ -2005,14 +1990,7 @@ static float ScrollToRow(float scrollY, float viewH, int idx, int nRows) {
     if (idx < 0 || viewH <= 0) {
         return scrollY;
     }
-    float top = (float)idx * kRowDy;
-    float maxScroll = std::max(0.f, (float)nRows * kRowDy - viewH);
-    if (top < scrollY) {
-        scrollY = top;
-    } else if (top + kRowDy > scrollY + viewH) {
-        scrollY = top + kRowDy - viewH;
-    }
-    return std::max(0.f, std::min(scrollY, maxScroll));
+    return gp::VirtualListScrollToRow(nRows, kRowDy, idx, scrollY, viewH, gp::ScrollStrategy::Top);
 }
 
 // a row's expand / collapse marker; the row's own click handler decides whether
@@ -2449,11 +2427,106 @@ TempStr TocRowsResultTemp(int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+struct TocRowsUser {
+    MainWindow* win = nullptr;
+    SidebarUI* ui = nullptr;
+    gp::Listener click = {};
+    gp::Listener down = {};
+    gp::Listener hover = {};
+    bool hasFocus = false;
+};
+
+static gp::El* TocListRow(void* user, gp::Ctx* cx, int i) {
+    auto* u = (TocRowsUser*)user;
+    SidebarUI* ui = u->ui;
+    if (!ui || i < 0 || i >= len(ui->tocRows)) {
+        return nullptr;
+    }
+    MainWindow* win = u->win;
+    TocItem* item = ui->tocRows[i].item;
+    int depth = ui->tocRows[i].depth;
+    float rowDy = ui->tocRows[i].dy;
+    bool isWrapped = rowDy > kRowDy;
+    bool isSel = item == ui->tocSel;
+    bool isMatch = TocItemIsMultiHighlight(win, item);
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(rowDy)
+                      ->ItemsCenter()
+                      ->PadR(6)
+                      ->PadL(kRowPadL + (float)depth * kIndentDx)
+                      ->PathClick(GpuiDup(cx->a, fmt("toc-row-%d", i)))
+                      ->Cursor(gp::CursorKind::Pointer)
+                      ->OnClick(gp::ListenerArg(u->click, i))
+                      ->OnMouseDown(gp::ListenerArg(u->down, i))
+                      ->OnHover(gp::ListenerArg(u->hover, i));
+    Color bgCol, txtCol;
+    TreeRowColors(isSel || isMatch, isSel && u->hasFocus, &bgCol, &txtCol);
+    if (!(isSel && u->hasFocus) && item->color != kColorUnset) {
+        txtCol = item->color;
+    }
+    row->Child(RowChevron(cx, item->child != nullptr, item->IsExpanded(), txtCol));
+    gp::El* labelBox = TreeRowLabelBox(cx, row, bgCol);
+    gp::Rgba fg = ToGpui(txtCol);
+    gp::El* label;
+    StrVec filterWords;
+    SplitFilterToWords(SidebarTocFilterTextTemp(win), filterWords);
+    if (isWrapped) {
+        row->ItemsStart();
+        labelBox->ItemsStart()->PadT(2);
+        label = gp::TextEl(cx->a, GpuiDup(cx->a, item->title))
+                    ->Font(kTreeFontSize)
+                    ->Fg(fg)
+                    ->Flex1()
+                    ->MinW(0)
+                    ->Wrap()
+                    ->LineHeight(kWrapLineHeight)
+                    ->ClipY();
+        if (bit::IsSet(item->fontFlags, kFontBitBold)) {
+            label->Bold();
+        }
+        if (bit::IsSet(item->fontFlags, kFontBitItalic)) {
+            label->Italic();
+        }
+    } else if (len(filterWords) > 0) {
+        label = FilterHighlightText(cx, item->title, filterWords, fg, 13)->Flex1()->MinW(0)->ClipX();
+    } else {
+        label =
+            gp::TextEl(cx->a, GpuiDup(cx->a, item->title))->Font(kTreeFontSize)->Fg(fg)->Flex1()->MinW(0)->Truncate();
+        if (bit::IsSet(item->fontFlags, kFontBitBold)) {
+            label->Bold();
+        }
+        if (bit::IsSet(item->fontFlags, kFontBitItalic)) {
+            label->Italic();
+        }
+    }
+    labelBox->Child(label);
+    if (gSettings->showTocPageNumbers && win->ctrl && item->pageNo > 0) {
+        TempStr pageLabel = win->ctrl->GetPageLabeTemp(item->pageNo);
+        if (len(pageLabel) > 0) {
+            Color pageCol = txtCol;
+            if (!(isSel && u->hasFocus)) {
+                Color bg = bgCol != kColorUnset ? bgCol : ThemeControlBackgroundColor();
+                pageCol = MkRgb((GetRed(txtCol) * 2 + GetRed(bg)) / 3, (GetGreen(txtCol) * 2 + GetGreen(bg)) / 3,
+                                (GetBlue(txtCol) * 2 + GetBlue(bg)) / 3);
+            }
+            labelBox->Child(gp::TextEl(cx->a, GpuiDup(cx->a, pageLabel))
+                                ->Font(kTreeFontSize)
+                                ->Fg(ToGpui(pageCol))
+                                ->PadL(8)
+                                ->Shrink0());
+        }
+    }
+    row->Child(labelBox);
+    return row;
+}
+
 static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     SidebarUI* ui = Ui(win);
     const gp::Theme& th = gp::ThemeNow(cx->app);
 
-    float listDy = UpdateTocRows(win, ui);
+    UpdateTocRows(win, ui);
     int nRows = len(ui->tocRows);
 
     if (ui->tocReveal) {
@@ -2464,16 +2537,13 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
                 break;
             }
         }
-        // ScrollToRow with the rows' own heights
         if (idx >= 0 && ui->tocView.h > 0) {
-            const TocRow& r = ui->tocRows[idx];
-            float y = ui->tocScrollY;
-            if (r.top < y) {
-                y = r.top;
-            } else if (r.top + r.dy > y + ui->tocView.h) {
-                y = r.top + r.dy - ui->tocView.h;
+            float* sizes = (float*)cx->a->Alloc(nRows * (int)sizeof(float));
+            for (int i = 0; i < nRows; i++) {
+                sizes[i] = ui->tocRows[i].dy;
             }
-            ui->tocScrollY = std::max(0.f, std::min(y, std::max(0.f, listDy - ui->tocView.h)));
+            ui->tocScrollY =
+                gp::VirtualListScrollToItem(sizes, nRows, idx, ui->tocScrollY, ui->tocView.h, gp::ScrollStrategy::Top);
         }
         // the pane has no height before its first layout: reveal on a later frame
         if (ui->tocView.h > 0) {
@@ -2497,129 +2567,31 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
             ->IntoEl()
             ->Font((float)ui->filterFontPx)));
 
-    // the rows that fit the pane, plus spacers for the ones above and below
-    float viewH = ui->tocView.h > 0 ? ui->tocView.h : 400;
-    int first = nRows > 0 ? std::max(0, TocRowAtY(ui->tocRows, ui->tocScrollY) - 2) : 0;
-    int end = nRows > 0 ? std::min(nRows, TocRowAtY(ui->tocRows, ui->tocScrollY + viewH) + 3) : 0;
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
-    if (first > 0) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H(ui->tocRows[first].top));
+    float* sizes = nRows > 0 ? (float*)cx->a->Alloc(nRows * (int)sizeof(float)) : nullptr;
+    for (int i = 0; i < nRows; i++) {
+        sizes[i] = ui->tocRows[i].dy;
     }
-    gp::Listener click = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowClick, 0);
-    gp::Listener down = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowDown, 0);
-    gp::Listener hover = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowHover, 0);
-    StrVec filterWords;
-    SplitFilterToWords(SidebarTocFilterTextTemp(win), filterWords);
     gp::FocusHandle treeFocus = SlotFocus(ui, slot);
-    bool hasFocus = treeFocus.IsValid() && gp::FocusHandleIsFocused(cx->win, treeFocus);
-    for (int i = first; i < end; i++) {
-        TocItem* item = ui->tocRows[i].item;
-        int depth = ui->tocRows[i].depth;
-        float rowDy = ui->tocRows[i].dy;
-        bool isWrapped = rowDy > kRowDy;
-        bool isSel = item == ui->tocSel;
-        bool isMatch = TocItemIsMultiHighlight(win, item);
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(rowDy)
-                          ->ItemsCenter()
-                          ->PadR(6)
-                          ->PadL(kRowPadL + (float)depth * kIndentDx)
-                          ->PathClick(GpuiDup(cx->a, fmt("toc-row-%d", i)))
-                          // orig's TVS_TRACKSELECT: a hand over the rows
-                          ->Cursor(gp::CursorKind::Pointer)
-                          ->OnClick(gp::ListenerArg(click, i))
-                          ->OnMouseDown(gp::ListenerArg(down, i))
-                          ->OnHover(gp::ListenerArg(hover, i));
-        // orig's OnTocCustomDraw / DrawTocItemPostPaint
-        Color bgCol, txtCol;
-        TreeRowColors(isSel || isMatch, isSel && hasFocus, &bgCol, &txtCol);
-        if (!(isSel && hasFocus) && item->color != kColorUnset) {
-            txtCol = item->color;
-        }
-        row->Child(RowChevron(cx, item->child != nullptr, item->IsExpanded(), txtCol));
-        gp::El* labelBox = TreeRowLabelBox(cx, row, bgCol);
-        gp::Rgba fg = ToGpui(txtCol);
-        gp::El* label;
-        if (isWrapped) {
-            // the chevron, the first line and the page number share the top row
-            row->ItemsStart();
-            labelBox->ItemsStart()->PadT(2);
-            label = gp::TextEl(cx->a, GpuiDup(cx->a, item->title))
-                        ->Font(kTreeFontSize)
-                        ->Fg(fg)
-                        ->Flex1()
-                        ->MinW(0)
-                        ->Wrap()
-                        ->LineHeight(kWrapLineHeight)
-                        ->ClipY();
-            if (bit::IsSet(item->fontFlags, kFontBitBold)) {
-                label->Bold();
-            }
-            if (bit::IsSet(item->fontFlags, kFontBitItalic)) {
-                label->Italic();
-            }
-        } else if (len(filterWords) > 0) {
-            // orig's DrawTreeItemFilterHighlight: the matched letters get an
-            // underlay while the bookmark filter is on
-            label = FilterHighlightText(cx, item->title, filterWords, fg, 13)->Flex1()->MinW(0)->ClipX();
-        } else {
-            label = gp::TextEl(cx->a, GpuiDup(cx->a, item->title))
-                        ->Font(kTreeFontSize)
-                        ->Fg(fg)
-                        ->Flex1()
-                        ->MinW(0)
-                        ->Truncate();
-            if (bit::IsSet(item->fontFlags, kFontBitBold)) {
-                label->Bold();
-            }
-            if (bit::IsSet(item->fontFlags, kFontBitItalic)) {
-                label->Italic();
-            }
-        }
-        labelBox->Child(label);
-        if (gSettings->showTocPageNumbers && win->ctrl && item->pageNo > 0) {
-            TempStr pageLabel = win->ctrl->GetPageLabeTemp(item->pageNo);
-            if (len(pageLabel) > 0) {
-                // Slightly muted vs title when not selected (keeps numbers secondary).
-                Color pageCol = txtCol;
-                if (!(isSel && hasFocus)) {
-                    Color bg = bgCol != kColorUnset ? bgCol : ThemeControlBackgroundColor();
-                    pageCol = MkRgb((GetRed(txtCol) * 2 + GetRed(bg)) / 3, (GetGreen(txtCol) * 2 + GetGreen(bg)) / 3,
-                                    (GetBlue(txtCol) * 2 + GetBlue(bg)) / 3);
-                }
-                labelBox->Child(gp::TextEl(cx->a, GpuiDup(cx->a, pageLabel))
-                                    ->Font(kTreeFontSize)
-                                    ->Fg(ToGpui(pageCol))
-                                    ->PadL(8)
-                                    ->Shrink0());
-            }
-        }
-        row->Child(labelBox);
-        list->Child(row);
-    }
-    if (end < nRows) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H(listDy - ui->tocRows[end].top));
-    }
-
-    gp::El* scroll = gp::Div(cx->a)
-                         ->Id(GStrL("toc-tree"))
-                         ->TrackFocus(SlotFocus(ui, slot))
+    auto* rows = gp::ArenaNew<TocRowsUser>(cx->a);
+    rows->win = win;
+    rows->ui = ui;
+    rows->click = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowClick, 0);
+    rows->down = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowDown, 0);
+    rows->hover = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowHover, 0);
+    rows->hasFocus = treeFocus.IsValid() && gp::FocusHandleIsFocused(cx->win, treeFocus);
+    float rowH = nRows > 0 ? ui->tocRows[0].dy : kRowDy;
+    gp::El* scroll = VirtualRows(cx, GStrL("toc-tree"), nRows, rowH, 0, ui->tocScrollY, TocListRow, rows, sizes)
+                         ->TrackFocus(treeFocus)
                          ->FocusOnPress()
                          ->TabStop(false)
                          ->FocusRing()
-                         ->FlexCol()
                          ->Flex1()
                          ->W(gp::kFill)
                          ->MinH(0)
-                         ->ScrollY(ui->tocScrollY)
-                         ->ScrollFromPath()
                          ->OnScroll(gp::ListenTo(Ui(win)->view, &SidebarView::OnTocScroll))
                          ->BoundsOut(&ui->tocView)
                          ->OnMouseDown(gp::ListenTo(Ui(win)->view, &SidebarView::OnTreeDown, 1))
-                         ->OnMouseUp(gp::ListenTo(Ui(win)->view, &SidebarView::OnTreeUp, 1))
-                         ->Child(list);
+                         ->OnMouseUp(gp::ListenTo(Ui(win)->view, &SidebarView::OnTreeUp, 1));
 
     if (!ui->tocMenuValid || ui->tocMenuFor != ui->tocRightClick) {
         DeleteMenuModel(ui->tocMenu);
@@ -2662,21 +2634,28 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot, bool
     pane->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(6)->PadB(4)->Child(
         gpc::Input::New(cx, GStrL("fav-filter"), filter)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl()));
 
-    float viewH = ui->favView.h > 0 ? ui->favView.h : 200;
-    int first = std::max(0, (int)(ui->favScrollY / kRowDy) - 2);
-    int end = std::min(nRows, (int)((ui->favScrollY + viewH) / kRowDy) + 3);
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
-    if (first > 0) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kRowDy));
-    }
-    gp::Listener click = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavRowClick, 0);
-    gp::Listener down = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavRowDown, 0);
-    gp::Listener hover = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavRowHover, 0);
-    StrVec filterWords;
-    SplitFilterToWords(SidebarFavFilterTextTemp(win), filterWords);
+    struct FavRowsUser {
+        MainWindow* win = nullptr;
+        SidebarUI* ui = nullptr;
+        gp::Listener click = {};
+        gp::Listener down = {};
+        gp::Listener hover = {};
+        bool hasFocus = false;
+    };
     gp::FocusHandle treeFocus = SlotFocus(ui, slot);
-    bool hasFocus = treeFocus.IsValid() && gp::FocusHandleIsFocused(cx->win, treeFocus);
-    for (int i = first; i < end; i++) {
+    auto* rows = gp::ArenaNew<FavRowsUser>(cx->a);
+    rows->win = win;
+    rows->ui = ui;
+    rows->click = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavRowClick, 0);
+    rows->down = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavRowDown, 0);
+    rows->hover = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavRowHover, 0);
+    rows->hasFocus = treeFocus.IsValid() && gp::FocusHandleIsFocused(cx->win, treeFocus);
+    auto rowFn = [](void* user, gp::Ctx* cx, int i) -> gp::El* {
+        auto* u = (FavRowsUser*)user;
+        SidebarUI* ui = u->ui;
+        if (!ui || i < 0 || i >= len(ui->favRows)) {
+            return nullptr;
+        }
         FavTreeItem* item = ui->favRows[i].item;
         int depth = ui->favRows[i].depth;
         bool isSel = item == ui->favSel;
@@ -2689,21 +2668,20 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot, bool
                           ->PadL(kRowPadL + (float)depth * kIndentDx)
                           ->PathClick(GpuiDup(cx->a, fmt("fav-row-%d", i)))
                           ->Cursor(gp::CursorKind::Pointer)
-                          ->OnClick(gp::ListenerArg(click, i))
-                          ->OnMouseDown(gp::ListenerArg(down, i))
-                          ->OnHover(gp::ListenerArg(hover, i));
-        // orig's DrawFavItemText
+                          ->OnClick(gp::ListenerArg(u->click, i))
+                          ->OnMouseDown(gp::ListenerArg(u->down, i))
+                          ->OnHover(gp::ListenerArg(u->hover, i));
         Color bgCol, txtCol;
-        TreeRowColors(isSel, hasFocus, &bgCol, &txtCol);
+        TreeRowColors(isSel, u->hasFocus, &bgCol, &txtCol);
         gp::Rgba fg = ToGpui(txtCol);
         bool hasChildren = len(item->children) > 0;
         row->Child(RowChevron(cx, hasChildren, item->isExpanded, txtCol));
         gp::El* labelBox = TreeRowLabelBox(cx, row, bgCol);
-        // orig bolds the file-name span of a row that leads with one and
-        // underlays the filter's matched letters (DrawTreeItemFilterHighlight)
         Str text = item->text;
         int nameLen = item->fileNameLen;
         bool hasName = item->fileNameOffset == 0 && nameLen > 0 && nameLen < len(text);
+        StrVec filterWords;
+        SplitFilterToWords(SidebarFavFilterTextTemp(u->win), filterWords);
         if (len(filterWords) > 0) {
             int boldLen = hasName ? nameLen : 0;
             labelBox->Child(FilterHighlightText(cx, text, filterWords, fg, 13, 0, boldLen)->Flex1()->MinW(0)->ClipX());
@@ -2718,29 +2696,20 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot, bool
                 gp::TextEl(cx->a, GpuiDup(cx->a, text))->Font(kTreeFontSize)->Fg(fg)->Flex1()->MinW(0)->Truncate());
         }
         row->Child(labelBox);
-        list->Child(row);
-    }
-    if (end < nRows) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(nRows - end) * kRowDy));
-    }
-
-    gp::El* scroll = gp::Div(cx->a)
-                         ->Id(GStrL("fav-tree"))
-                         ->TrackFocus(SlotFocus(ui, slot))
+        return row;
+    };
+    gp::El* scroll = VirtualRows(cx, GStrL("fav-tree"), nRows, kRowDy, 0, ui->favScrollY, rowFn, rows)
+                         ->TrackFocus(treeFocus)
                          ->FocusOnPress()
                          ->TabStop(false)
                          ->FocusRing()
-                         ->FlexCol()
                          ->Flex1()
                          ->W(gp::kFill)
                          ->MinH(0)
-                         ->ScrollY(ui->favScrollY)
-                         ->ScrollFromPath()
                          ->OnScroll(gp::ListenTo(Ui(win)->view, &SidebarView::OnFavScroll))
                          ->BoundsOut(&ui->favView)
                          ->OnMouseDown(gp::ListenTo(Ui(win)->view, &SidebarView::OnTreeDown, 0))
-                         ->OnMouseUp(gp::ListenTo(Ui(win)->view, &SidebarView::OnTreeUp, 0))
-                         ->Child(list);
+                         ->OnMouseUp(gp::ListenTo(Ui(win)->view, &SidebarView::OnTreeUp, 0));
 
     if (!ui->favMenuValid || ui->favMenuFor != ui->favRightClick) {
         DeleteMenuModel(ui->favMenu);
@@ -2820,13 +2789,23 @@ static gp::El* BuildLayersPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
                            gp::ListenTo(ui->view, &SidebarView::OnLayersClose)));
 
     gp::FocusHandle focus = SlotFocus(ui, slot);
-    bool hasFocus = focus.IsValid() && gp::FocusHandleIsFocused(cx->win, focus);
-    gp::Listener click = gp::ListenTo(ui->view, &SidebarView::OnLayerClick, 0);
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadY(2);
-    for (int i = 0; i < len(ui->layerRows); i++) {
-        const PdfLayerRow* layer = ui->layerRows[i];
+    struct LayerRowsUser {
+        SidebarUI* ui = nullptr;
+        gp::Listener click = {};
+        bool hasFocus = false;
+    };
+    auto* rows = gp::ArenaNew<LayerRowsUser>(cx->a);
+    rows->ui = ui;
+    rows->click = gp::ListenTo(ui->view, &SidebarView::OnLayerClick, 0);
+    rows->hasFocus = focus.IsValid() && gp::FocusHandleIsFocused(cx->win, focus);
+    auto rowFn = [](void* user, gp::Ctx* cx, int i) -> gp::El* {
+        auto* u = (LayerRowsUser*)user;
+        if (!u->ui || i < 0 || i >= len(u->ui->layerRows)) {
+            return nullptr;
+        }
+        const PdfLayerRow* layer = u->ui->layerRows[i];
         Color bgCol, txtCol;
-        TreeRowColors(i == ui->layerSel, hasFocus, &bgCol, &txtCol);
+        TreeRowColors(i == u->ui->layerSel, u->hasFocus, &bgCol, &txtCol);
         gp::El* row = gp::Div(cx->a)
                           ->FlexRow()
                           ->W(gp::kFill)
@@ -2851,7 +2830,7 @@ static gp::El* BuildLayersPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
                            ->Disabled(layer->locked)
                            ->WithSize(gp::UiSize::Small)
                            ->TabStop(false)
-                           ->OnClick(gp::ListenerArg(click, i))
+                           ->OnClick(gp::ListenerArg(u->click, i))
                            ->IntoEl());
         } else {
             row->Child(gpc::Checkbox::New(cx, GpuiDup(cx->a, id))
@@ -2860,26 +2839,22 @@ static gp::El* BuildLayersPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
                            ->Disabled(layer->locked)
                            ->WithSize(gp::UiSize::Small)
                            ->TabStop(false)
-                           ->OnClick(gp::ListenerArg(click, i))
+                           ->OnClick(gp::ListenerArg(u->click, i))
                            ->IntoEl());
         }
-        list->Child(row);
-    }
-    gp::El* scroll = gp::Div(cx->a)
-                         ->Id(GStrL("layers-list"))
-                         ->TrackFocus(focus)
-                         ->FocusOnPress()
-                         ->TabStop(false)
-                         ->FocusRing()
-                         ->FlexCol()
-                         ->Flex1()
-                         ->W(gp::kFill)
-                         ->MinH(0)
-                         ->ScrollY(ui->layersScrollY)
-                         ->ScrollFromPath()
-                         ->OnScroll(gp::ListenTo(ui->view, &SidebarView::OnLayersScroll))
-                         ->Child(list);
-    pane->Child(scroll);
+        return row;
+    };
+    gp::El* scroll =
+        VirtualRows(cx, GStrL("layers-list"), len(ui->layerRows), kRowDy + 4, 0, ui->layersScrollY, rowFn, rows)
+            ->TrackFocus(focus)
+            ->FocusOnPress()
+            ->TabStop(false)
+            ->FocusRing()
+            ->Flex1()
+            ->W(gp::kFill)
+            ->MinH(0)
+            ->OnScroll(gp::ListenTo(ui->view, &SidebarView::OnLayersScroll));
+    pane->Child(gp::Div(cx->a)->FlexCol()->Flex1()->W(gp::kFill)->MinH(0)->PadY(2)->Child(scroll));
     return pane;
 }
 
@@ -3026,13 +3001,24 @@ static gp::El* BuildSignaturesPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slo
         ui->sigWantFocus = false;
         gp::FocusHandleFocus(cx->win, focus);
     }
-    bool hasFocus = focus.IsValid() && gp::FocusHandleIsFocused(cx->win, focus);
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    struct SigRowsUser {
+        SidebarUI* ui = nullptr;
+        PdfSigResult* res = nullptr;
+        bool hasFocus = false;
+    };
+    auto* rows = gp::ArenaNew<SigRowsUser>(cx->a);
+    rows->ui = ui;
+    rows->res = res;
+    rows->hasFocus = focus.IsValid() && gp::FocusHandleIsFocused(cx->win, focus);
     int n = res ? len(res->entries) : 0;
-    for (int i = 0; i < n; i++) {
-        const PdfSigEntry* e = res->entries[i];
+    auto rowFn = [](void* user, gp::Ctx* cx, int i) -> gp::El* {
+        auto* u = (SigRowsUser*)user;
+        if (!u->res || i < 0 || i >= len(u->res->entries)) {
+            return nullptr;
+        }
+        const PdfSigEntry* e = u->res->entries[i];
         Color bgCol, txtCol;
-        TreeRowColors(i == ui->sigSel, hasFocus, &bgCol, &txtCol);
+        TreeRowColors(i == u->ui->sigSel, u->hasFocus, &bgCol, &txtCol);
         gp::El* row = gp::Div(cx->a)
                           ->PathClick(GpuiDup(cx->a, fmt("signature-%d", i)))
                           ->FlexRow()
@@ -3042,7 +3028,7 @@ static gp::El* BuildSignaturesPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slo
                           ->ItemsCenter()
                           ->PadX((float)kSigRowPadDx)
                           ->Gap((float)kSigRowPadDx)
-                          ->OnClick(gp::ListenTo(ui->view, &SidebarView::OnSigRowClick, (int64_t)i));
+                          ->OnClick(gp::ListenTo(u->ui->view, &SidebarView::OnSigRowClick, (int64_t)i));
         if (bgCol != kColorUnset) {
             row->Bg(ToGpui(bgCol));
         } else {
@@ -3066,22 +3052,17 @@ static gp::El* BuildSignaturesPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slo
                         ->W(gp::kFill)
                         ->Truncate());
         row->Child(text);
-        list->Child(row);
-    }
-    gp::El* scroll = gp::Div(cx->a)
-                         ->Id(GStrL("signatures-list"))
+        return row;
+    };
+    gp::El* scroll = VirtualRows(cx, GStrL("signatures-list"), n, (float)kSigRowDy, 0, ui->sigScrollY, rowFn, rows)
                          ->TrackFocus(focus)
                          ->FocusOnPress()
                          ->TabStop(false)
                          ->FocusRing()
-                         ->FlexCol()
                          ->Flex1()
                          ->W(gp::kFill)
                          ->MinH(0)
-                         ->ScrollY(ui->sigScrollY)
-                         ->ScrollFromPath()
-                         ->OnScroll(gp::ListenTo(ui->view, &SidebarView::OnSigScroll))
-                         ->Child(list);
+                         ->OnScroll(gp::ListenTo(ui->view, &SidebarView::OnSigScroll));
     pane->Child(scroll);
     return pane;
 }
