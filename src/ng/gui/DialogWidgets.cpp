@@ -734,17 +734,27 @@ bool DlgDefaultOnEnter(gp::Ctx* cx, bool editFocused) {
     return false;
 }
 
+static void DlgAccelsForget(gp::Window* win) {
+    for (int i = len(gDlgAccels) - 1; i >= 0; i--) {
+        if (gDlgAccels[i].win == win) {
+            VecRemoveAt(gDlgAccels, i);
+        }
+    }
+}
+
 void DlgAccelBeginFrame(gp::Window* win) {
     DlgDefaultsBeginFrame(win);
     if (len(gDlgAccels) == 0) {
         // no dialog was up: win32 forgets the cue state with the dialog
         gDlgCues = false;
     }
-    for (int i = len(gDlgAccels) - 1; i >= 0; i--) {
-        if (gDlgAccels[i].win == win) {
-            VecRemoveAt(gDlgAccels, i);
-        }
-    }
+    DlgAccelsForget(win);
+}
+
+// a closed window's entries point into its freed frame and dialog state
+void DlgAccelWindowClosed(gp::Window* win) {
+    DlgDefaultsBeginFrame(win);
+    DlgAccelsForget(win);
 }
 
 void DlgAccelOnAlt() {
@@ -831,7 +841,7 @@ gp::El* DlgAccelUnderline(gp::Ctx* cx, gp::El* el, gp::Str text) {
     }
     const DlgAccel* acc = nullptr;
     for (const DlgAccel& a : gDlgAccels) {
-        if (a.text.s == text.s) {
+        if (a.win == cx->win && a.text.s == text.s) {
             acc = &a;
         }
     }

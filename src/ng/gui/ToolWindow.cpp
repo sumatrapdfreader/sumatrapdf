@@ -451,6 +451,7 @@ static void ToolOnBounds(void* data, gp::Window* gw, gp::WindowBoundsEvent ev) {
 
 // the close box, Alt+F4, AppQuit, the owner going: whichever way it went
 static void OnGpuiWindowClosed(void*, gp::Window* gw) {
+    DlgAccelWindowClosed(gw);
     for (ToolWindow* tw : gToolWindows) {
         if (tw->gw == gw) {
             Forget(tw);

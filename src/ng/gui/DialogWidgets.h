@@ -240,6 +240,7 @@ float DialogComboListBottom(gpui::Window* win);
 
 // the shell's side
 void DlgAccelBeginFrame(gpui::Window* win);
+void DlgAccelWindowClosed(gpui::Window* win);
 void DlgAccelOnAlt();
 bool DlgAccelOnKey(gpui::Ctx* cx, int vk, bool alt, bool ctrl, bool editFocused);
 
