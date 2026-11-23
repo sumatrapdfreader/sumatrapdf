@@ -4,7 +4,7 @@
 // ng: what CrashHandler_posix.cpp needs from Mach: the stack of every thread
 // and the images those stacks run through. Frames are written as
 // "module + offset" and each module with its Mach-O UUID, which is all
-// cmd/ng-crashes.ts needs to symbolicate them with atos and the build's .dSYM.
+// daily/cmd/sumatra-mac-crashes.ts (hack repo) needs to symbolicate them with atos and the build's .dSYM.
 
 #include "base/Base.h"
 

@@ -177,7 +177,8 @@ Ng on macOS has no minidumps. A crash writes a text report (every thread's
 stack as module + offset, Mach-O UUIDs, log, settings) to
 `crashinfo/sumatrapdfcrash.txt` in the app data dir and uploads it on the
 next start (`src/base/CrashHandler_posix.cpp`, `CrashHandler_mac.cpp`).
-`bun cmd/ng-crashes.ts` lists, downloads and symbolicates them with `atos`
+`bun cmd/sumatra-mac-crashes.ts` in `../hack/daily` (the crash scripts live in
+the hack repo) lists, downloads and symbolicates them with `atos`
 and the build's `.dSYM` (downloaded from R2 for an uploaded build); `-file
 <path>` symbolicates a local report. ASan
 builds and `-for-testing` runs don't upload.
