@@ -333,6 +333,46 @@ void UncExistsTest() {
 #endif
 }
 
+// The real path of a UNC path is \\server\share\..., and a path longer than
+// GetNonVirtualTemp's first buffer still resolves.
+void NonVirtualPathTest() {
+#if OS_WIN
+    TempStr local = GetTempFilePathTemp(StrL("nonvirt"));
+    file::Delete(local);
+    if (len(local) < 3 || local.s[1] != ':') {
+        return;
+    }
+
+    TempStr uncRoot = fmt("\\\\localhost\\%c$\\", local.s[0]);
+    if (GetFileAttributesW(CWStrTemp(uncRoot)) != INVALID_FILE_ATTRIBUTES) {
+        TempStr unc = fmt("\\\\localhost\\%c$%s", local.s[0], Str(local.s + 2, len(local) - 2));
+        utassert(file::WriteFile(local, StrL("x")));
+        TempStr real = path::GetNonVirtualTemp(unc);
+        utassert(str::EqI(real, unc));
+        file::Delete(local);
+    }
+
+    // \\?\ lets the dirs exceed MAX_PATH; 6 x 200 chars is past MAX_PATH * 4
+    TempStr root = fmt("\\\\?\\%s", local);
+    utassert(dir::Create(root));
+    str::Builder seg;
+    for (int i = 0; i < 200; i++) {
+        seg.AppendChar('d');
+    }
+    TempStr deep = root;
+    for (int i = 0; i < 6; i++) {
+        deep = path::JoinTemp(deep, ToStr(seg));
+        utassert(dir::Create(deep));
+    }
+    TempStr deepFile = path::JoinTemp(deep, StrL("f.txt"));
+    utassert(file::WriteFile(deepFile, StrL("x")));
+    TempStr real = path::GetNonVirtualTemp(deepFile);
+    Str want = Str(deepFile.s + 4, len(deepFile) - 4);
+    utassert(str::EqI(real, want));
+    dir::RemoveAll(root);
+#endif
+}
+
 // dir::RemoveAll must remove nested and read-only content and must be safe
 // to call from several threads at once (the shutdown WebView profile removal
 // races the DeleteStaleFilesAsync sweep)

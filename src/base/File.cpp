@@ -1220,15 +1220,30 @@ TempStr GetNonVirtualTemp(Str virtualPath) {
         return virtualPath;
     }
 
-    WCHAR realPath[MAX_PATH * 4];
-    DWORD ret = GetFinalPathNameByHandleW(hFile, realPath, dimof(realPath), FILE_NAME_NORMALIZED);
+    WCHAR buf[MAX_PATH * 4];
+    WCHAR* realPath = buf;
+    DWORD ret = GetFinalPathNameByHandleW(hFile, realPath, dimof(buf), FILE_NAME_NORMALIZED);
+    // too small: ret is the size needed, including the NUL
+    if (ret >= dimof(buf)) {
+        DWORD cch = ret;
+        realPath = AllocArrayTemp<WCHAR>((int)cch);
+        ret = realPath ? GetFinalPathNameByHandleW(hFile, realPath, cch, FILE_NAME_NORMALIZED) : 0;
+        if (ret >= cch) {
+            ret = 0;
+        }
+    }
 
     CloseHandle(hFile);
-    if (ret <= 0) {
+    if (ret == 0) {
         return virtualPath;
     }
 
-    TempStr res = ToUtf8Temp(realPath);
+    // \\?\UNC\server\share => \\server\share, \\?\C:\dir => C:\dir
+    TempStr res = ToUtf8Temp(WStr(realPath, (int)ret));
+    Str uncPrefix = StrL("\\\\?\\UNC\\");
+    if (str::StartsWithI(res, uncPrefix)) {
+        return str::JoinTemp(StrL("\\\\"), Str(res.s + len(uncPrefix), len(res) - len(uncPrefix)));
+    }
     str::TrimPrefix(res, StrL("\\\\?\\"));
     return res;
 }

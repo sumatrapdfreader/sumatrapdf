@@ -87,6 +87,7 @@ void CssParser_UnitTests();
 void DictTest();
 void DirRemoveAllTest();
 void UncExistsTest();
+void NonVirtualPathTest();
 void FileUtilTest();
 void UpdateTempFileTests();
 void GuessFileTypeTest();
@@ -760,6 +761,7 @@ int RunAppUnitTests(bool forAi) {
     DictTest();
     DirRemoveAllTest();
     UncExistsTest();
+    NonVirtualPathTest();
     FileUtilTest();
     UpdateTempFileTests();
     GuessFileTypeTest();

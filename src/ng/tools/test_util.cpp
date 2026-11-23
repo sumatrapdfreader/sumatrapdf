@@ -21,6 +21,7 @@ extern void CssParser_UnitTests();
 extern void DictTest();
 extern void DirRemoveAllTest();
 extern void UncExistsTest();
+extern void NonVirtualPathTest();
 extern void FileUtilTest();
 extern void GuessFileTypeTest();
 extern void JsonTest();
@@ -156,6 +157,7 @@ int main(int argc, char** argv) {
     DictTest();
     DirRemoveAllTest();
     UncExistsTest();
+    NonVirtualPathTest();
     FileUtilTest();
     GuessFileTypeTest();
     JsonTest();
