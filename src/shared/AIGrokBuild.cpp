@@ -8,6 +8,7 @@
 #include "base/CmdLineArgs.h"
 #include "base/DirScan.h"
 #include "base/File.h"
+#include "base/UITask.h"
 #if OS_WIN
 #include "base/Win.h"
 #endif
@@ -89,6 +90,40 @@ static bool QueryGrokModels(Str exePath, StrVec& models) {
     return ParseGrokModelsOutput(ToStr(output), models);
 }
 
+struct GrokModelsQuery {
+    AIChatProvider* provider = nullptr;
+    Str exePath; // owned
+    StrVec models;
+};
+
+// UI thread
+static void GrokModelsQueried(GrokModelsQuery* q) {
+    if (len(q->models) > 0) {
+        gGrokModels = q->models;
+        q->provider->defaultModel = gGrokModels[0];
+        AIChatModelsChanged(q->provider);
+    }
+    str::Free(q->exePath);
+    delete q;
+}
+
+static void GrokModelsThread(GrokModelsQuery* q) {
+    QueryGrokModels(q->exePath, q->models);
+    uitask::Post(MkFunc0(GrokModelsQueried, q), "GrokModelsQueried");
+}
+
+// the query takes seconds: run it once, off the UI thread
+static void StartGrokModelsQuery(AIChatProvider* provider) {
+    TempStr exePath = FindGrokExecutableTemp();
+    if (len(exePath) == 0) {
+        return;
+    }
+    auto* q = new GrokModelsQuery();
+    q->provider = provider;
+    q->exePath = str::Dup(exePath);
+    RunAsync(MkFunc0(GrokModelsThread, q), StrL("GrokModels"));
+}
+
 // --- Session history ---
 
 // URL-encode a path the way Grok stores session dirs (e.g. C:\foo -> C%3A%5Cfoo)
@@ -137,14 +172,9 @@ static TempStr GrokSessionsProjectDirTemp(Str dir) {
     return path::JoinTemp(sessionsDir, encodedDir);
 }
 
-static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
-    TempStr historyPath = path::JoinTemp(projectDir, StrL("prompt_history.jsonl"));
-    Str data = file::ReadFile(historyPath);
-    if (len(data) == 0) {
-        return str::Dup(StrL("(no description)"));
-    }
-    Str result = AIChatFindHistoryPrompt(data, sessionId, StrL("prompt"));
-    str::Free(data);
+// history: the project's prompt_history.jsonl, read once per scan
+static Str GetGrokSessionDescription(Str history, Str sessionId) {
+    Str result = len(history) > 0 ? AIChatFindHistoryPrompt(history, sessionId, StrL("prompt")) : Str{};
     return result ? result : str::Dup(StrL("(no description)"));
 }
 
@@ -155,6 +185,7 @@ static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
 
+    Str history = file::ReadFile(path::JoinTemp(projectDir, StrL("prompt_history.jsonl")));
     DirIter di(projectDir);
     di.includeFiles = false;
     di.includeDirs = true;
@@ -163,7 +194,7 @@ static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
             continue;
         }
 
-        Str desc = GetGrokSessionDescription(projectDir, de->name);
+        Str desc = GetGrokSessionDescription(history, de->name);
         AIChatSessionInfo si;
         si.sessionId = str::Dup(de->name);
         si.display = desc;
@@ -171,6 +202,7 @@ static void CollectGrokSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         si.timestamp = AIChatFileTimeToMs(de->modificationTime);
         VecAppend(sessions, si);
     }
+    str::Free(history);
 
     AIChatSortSessionsByTimestampDesc(sessions);
 }
@@ -302,10 +334,7 @@ struct GrokBuildProvider : AIChatProvider {
         models.Reset();
         if (!gTriedGrokModels) {
             gTriedGrokModels = true;
-            TempStr exePath = FindGrokExecutableTemp();
-            if (exePath && QueryGrokModels(exePath, gGrokModels)) {
-                defaultModel = gGrokModels[0];
-            }
+            StartGrokModelsQuery(this);
         }
         if (len(gGrokModels) > 0) {
             for (int i = 0; i < len(gGrokModels); i++) {
@@ -313,6 +342,8 @@ struct GrokBuildProvider : AIChatProvider {
             }
         } else {
             AIChatAppendModelUnique(models, StrL("grok-4.5"));
+            // the catalog may not be in yet: keep the chosen model selectable
+            AIChatAppendModelUnique(models, gSettings->grokBuild.model);
         }
         AIChatAppendModels(models, gSettings->grokBuild.models);
     }

@@ -10,6 +10,7 @@
 
 #include "base/CmdLineArgs.h"
 #include "base/DirScan.h"
+#include "base/Dict.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #if OS_WIN
@@ -241,13 +242,75 @@ void AIChatCollectJsonlSessions(Str sessionDir, Str project, Vec<AIChatSessionIn
         if (duplicate) {
             continue;
         }
+        i64 mtime = AIChatFileTimeToMs(de->modificationTime);
+        TempStr display;
+        if (!AIChatFileCacheGet(de->filePath, de->size, mtime, &display)) {
+            Str desc = AIChatSessionDescription(de->filePath);
+            AIChatFileCacheSet(de->filePath, de->size, mtime, desc);
+            display = str::DupTemp(desc);
+            str::Free(desc);
+        }
         AIChatSessionInfo session;
         session.sessionId = str::Dup(sessionId);
-        session.display = AIChatSessionDescription(de->filePath);
+        session.display = str::Dup(display);
         session.project = str::Dup(project);
-        session.timestamp = AIChatFileTimeToMs(de->modificationTime);
+        session.timestamp = mtime;
         VecAppend(sessions, session);
     }
+}
+
+// a value parsed out of a session file, kept while the file's size and mtime
+// hold: the session list is re-read on every tab switch
+struct AIChatFileCacheEntry {
+    i64 size = 0;
+    i64 mtime = 0;
+    Str value; // owned
+};
+
+struct AIChatFileCache {
+    Mutex mu;
+    dict::MapStrToInt idx{256}; // path -> index in entries
+    Vec<AIChatFileCacheEntry> entries;
+    ~AIChatFileCache() {
+        for (AIChatFileCacheEntry& e : entries) {
+            str::Free(e.value);
+        }
+    }
+};
+
+static AIChatFileCache gAIChatFileCache;
+
+bool AIChatFileCacheGet(Str path, i64 size, i64 mtime, TempStr* valueOut) {
+    AIChatFileCache& c = gAIChatFileCache;
+    ScopedMutex lock(&c.mu);
+    int idx = -1;
+    if (!c.idx.Get(path, &idx)) {
+        return false;
+    }
+    AIChatFileCacheEntry& e = c.entries[idx];
+    if (e.size != size || e.mtime != mtime) {
+        return false;
+    }
+    *valueOut = str::DupTemp(e.value);
+    return true;
+}
+
+void AIChatFileCacheSet(Str path, i64 size, i64 mtime, Str value) {
+    if (len(path) == 0) {
+        return;
+    }
+    AIChatFileCache& c = gAIChatFileCache;
+    ScopedMutex lock(&c.mu);
+    int idx = len(c.entries);
+    if (c.idx.Insert(path, idx, &idx)) {
+        VecAppend(c.entries, AIChatFileCacheEntry{});
+    } else {
+        str::Free(c.entries[idx].value);
+    }
+    AIChatFileCacheEntry& e = c.entries[idx];
+    e.size = size;
+    e.mtime = mtime;
+    e.value = str::Dup(value);
 }
 
 static TempStr AIChatProjectDirTemp(Str home, Str encodedDir, Str root) {

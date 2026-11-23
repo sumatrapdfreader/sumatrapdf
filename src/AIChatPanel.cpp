@@ -300,6 +300,26 @@ static void ApplyAIChatSettingsToUI(MainWindow* win) {
     }
 }
 
+// a provider's model list arrived after its panel was built; keeps the
+// picked model, which is only saved on send
+void AIChatModelsChanged(AIChatProvider* p) {
+    for (MainWindow* win : gWindows) {
+        if (!win->aiChatModelCombo || CurrentProvider(win) != p) {
+            continue;
+        }
+        TempStr cur = HwndGetTextTemp(win->aiChatModelCombo->hwnd);
+        PopulateModelCombo(win, p);
+        StrVec models;
+        p->BuildModelsList(models);
+        int idx = AIChatFindModelInList(models, cur);
+        if (idx < 0) {
+            Str model = AIChatResolveModel(models, p->GetModel(), p->defaultModel);
+            idx = std::max(AIChatFindModelInList(models, model), 0);
+        }
+        CbSetCurrentSelection(win->aiChatModelCombo, idx);
+    }
+}
+
 // Read current settings from UI controls and save
 static void SyncAIChatSettingsFromUI(MainWindow* win) {
     AIChatProvider* p = CurrentProvider(win);

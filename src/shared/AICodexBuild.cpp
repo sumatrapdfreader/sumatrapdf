@@ -296,70 +296,74 @@ static bool IsCodexRolloutFileName(Str name) {
     return name && str::StartsWith(name, StrL("rollout-")) && str::EndsWithI(name, StrL(".jsonl"));
 }
 
-static Str GetCodexSessionDescription(Str sessionId) {
-    TempStr codexHome = CodexHomeTemp();
-    TempStr historyPath = len(codexHome) > 0 ? path::JoinTemp(codexHome, StrL("history.jsonl")) : TempStr();
-    if (len(historyPath) == 0) {
-        return str::Dup(StrL("(no description)"));
-    }
-    Str data = file::ReadFile(historyPath);
-    if (len(data) == 0) {
-        return str::Dup(StrL("(no description)"));
-    }
-    Str result = AIChatFindHistoryPrompt(data, sessionId, StrL("text"));
-    str::Free(data);
+// history: ~/.codex/history.jsonl, read once per scan
+static Str GetCodexSessionDescription(Str history, Str sessionId) {
+    Str result = len(history) > 0 ? AIChatFindHistoryPrompt(history, sessionId, StrL("text")) : Str{};
     return result ? result : str::Dup(StrL("(no description)"));
 }
 
-static bool ParseCodexRolloutMetaLine(Str line, Str matchDir, Str* sessionIdOut) {
-    if (!str::Contains(line, StrL("\"type\":\"session_meta\""))) {
-        return false;
+// the first line, a rollout's session_meta; the rest can be megabytes
+static TempStr ReadFirstLineTemp(Str path) {
+    FILE* fp = file::OpenFILE(path);
+    if (!fp) {
+        return {};
     }
-    Str payload;
-    str::Cut(line, StrL("\"payload\":"), nullptr, &payload);
-    TempStr cwd = payload ? AIChatJsonStrTemp(payload, StrL("cwd")) : TempStr();
-    TempStr id = payload ? AIChatJsonStrTemp(payload, StrL("id")) : TempStr();
-    if (len(cwd) == 0 || len(id) == 0 || !CodexPathsEqual(cwd, matchDir)) {
-        return false;
+    str::Builder line;
+    char buf[16 * 1024];
+    while (true) {
+        size_t n = fread(buf, 1, sizeof(buf), fp);
+        if (n == 0) {
+            break;
+        }
+        auto* nl = (const char*)memchr(buf, '\n', n);
+        if (nl) {
+            line.Append(Str(buf, (int)(nl - buf)));
+            break;
+        }
+        line.Append(Str(buf, (int)n));
     }
-    *sessionIdOut = str::Dup(id);
-    return true;
+    fclose(fp);
+    return ToStrTemp(line);
 }
 
-static void TryAddCodexSession(Str rolloutPath, const FILETIME& ft, Str matchDir, Vec<AIChatSessionInfo>& sessions) {
-    Str data = file::ReadFile(rolloutPath);
-    if (len(data) == 0) {
-        return;
+// "<cwd>\n<id>" of a rollout's session_meta line, empty for other files
+static TempStr CodexRolloutMetaTemp(DirIterEntry* de) {
+    i64 mtime = AIChatFileTimeToMs(de->modificationTime);
+    TempStr meta;
+    if (AIChatFileCacheGet(de->filePath, de->size, mtime, &meta)) {
+        return meta;
     }
-    Str content = data;
-    Str firstLine;
-    Str rest;
-    if (!str::NextLine(content, firstLine, rest) || len(firstLine) == 0) {
-        str::Free(data);
-        return;
+    TempStr line = ReadFirstLineTemp(de->filePath);
+    Str payload;
+    if (str::Contains(line, StrL("\"type\":\"session_meta\""))) {
+        str::Cut(line, StrL("\"payload\":"), nullptr, &payload);
     }
-    TempStr line = str::DupTemp(firstLine);
+    TempStr cwd = payload ? AIChatJsonStrTemp(payload, StrL("cwd")) : TempStr();
+    TempStr id = payload ? AIChatJsonStrTemp(payload, StrL("id")) : TempStr();
+    meta = len(cwd) > 0 && len(id) > 0 ? fmt("%s\n%s", cwd, id) : TempStr();
+    AIChatFileCacheSet(de->filePath, de->size, mtime, meta);
+    return meta;
+}
+
+static void TryAddCodexSession(DirIterEntry* de, Str matchDir, Str history, Vec<AIChatSessionInfo>& sessions) {
+    Str cwd;
     Str sessionId;
-    if (!ParseCodexRolloutMetaLine(line, matchDir, &sessionId)) {
-        str::Free(data);
+    if (!str::Cut(CodexRolloutMetaTemp(de), StrL("\n"), &cwd, &sessionId) || !CodexPathsEqual(cwd, matchDir)) {
         return;
     }
-    i64 ts = AIChatFileTimeToMs(ft);
+    i64 ts = AIChatFileTimeToMs(de->modificationTime);
     for (int i = 0; i < len(sessions); i++) {
         if (str::Eq(sessions[i].sessionId, sessionId)) {
             sessions[i].timestamp = std::max(ts, sessions[i].timestamp);
-            str::Free(sessionId);
-            str::Free(data);
             return;
         }
     }
     AIChatSessionInfo si;
-    si.sessionId = sessionId;
-    si.display = GetCodexSessionDescription(sessionId);
+    si.sessionId = str::Dup(sessionId);
+    si.display = GetCodexSessionDescription(history, sessionId);
     si.project = str::Dup(matchDir);
     si.timestamp = ts;
     VecAppend(sessions, si);
-    str::Free(data);
 }
 
 // Walk ~/.codex/sessions/YYYY/MM/DD/ for a rollout file whose name ends with sessionId.jsonl
@@ -388,6 +392,9 @@ static void CollectCodexSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         return;
     }
 
+    TempStr codexHome = CodexHomeTemp();
+    Str history = len(codexHome) > 0 ? file::ReadFile(path::JoinTemp(codexHome, StrL("history.jsonl"))) : Str{};
+
     DirIter di(root);
     di.includeFiles = true;
     di.includeDirs = false;
@@ -396,8 +403,9 @@ static void CollectCodexSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         if (!IsCodexRolloutFileName(de->name)) {
             continue;
         }
-        TryAddCodexSession(de->filePath, de->modificationTime, dir, sessions);
+        TryAddCodexSession(de, dir, history, sessions);
     }
+    str::Free(history);
 
     AIChatSortSessionsByTimestampDesc(sessions);
 }

@@ -172,6 +172,8 @@ void AIChatCollectProjectSessions(Str dir, const Str* roots, int rootCount, Vec<
 TempStr AIChatFindProjectSessionTemp(Str dir, Str sessionId, const Str* roots, int rootCount);
 void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions);
 i64 AIChatFileTimeToMs(const FILETIME& ft);
+bool AIChatFileCacheGet(Str path, i64 size, i64 mtime, TempStr* valueOut);
+void AIChatFileCacheSet(Str path, i64 size, i64 mtime, Str value);
 
 void AIChatLog(AIChatLogger* logger, Str direction, Str text);
 
