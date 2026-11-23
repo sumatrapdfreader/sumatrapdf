@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { IS_WIN } from "./host.ts";
 import { makeTextPdf, pollUntil, runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled } from "./win-automation.ts";
+import { killAndWait, launchControlled, prepareTouchTarget } from "./win-automation.ts";
 import {
   injectTouch,
   POINTER_FLAG_DOWN,
@@ -81,10 +81,11 @@ export async function testit(): Promise<void> {
   setProcessDpiAware();
   const pdf = tmpPath("touch-long-press-select.pdf");
   writeFileSync(pdf, makeTextPdf(LINE));
-  const { proc, client } = await launchControlled([pdf]);
+  const { proc, client, frame } = await launchControlled([pdf]);
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(true);
+    await prepareTouchTarget(proc.pid, frame);
     const bravo = await wordPos(client, "bravo");
     if (!(await holdAt(bravo))) {
       console.log("touch-long-press-select: touch injection not available here, skipping");

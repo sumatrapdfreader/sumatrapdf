@@ -7,7 +7,7 @@ import { copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, touchSwipe } from "./win-automation.ts";
+import { killAndWait, launchControlled, prepareTouchTarget, touchSwipe } from "./win-automation.ts";
 import { setProcessDpiAware, sleep } from "./winapi.ts";
 
 const SRC_PDF = join(import.meta.dir, "issue-3219.pdf");
@@ -49,7 +49,7 @@ export async function testit(): Promise<void> {
     copyFileSync(SRC_PDF, join(dir, `f${String(i).padStart(3, "0")}.pdf`));
   }
 
-  const { proc, client } = await launchControlled([join(dir, "f000.pdf")]);
+  const { proc, client, frame } = await launchControlled([join(dir, "f000.pdf")]);
   try {
     await client.request(ControlCommand.TestInvokeCommand, ["CmdNavigateFilesInFolder"]);
     await waitListed(client);
@@ -63,6 +63,7 @@ export async function testit(): Promise<void> {
     const [x, y, dx, dy] = m.slice(1, 5).map(Number) as [number, number, number, number];
     // finger up the middle of the list (away from the scrollbar on the right)
     const cx = x + Math.round(dx / 3);
+    await prepareTouchTarget(proc.pid, frame);
     if (!(await touchSwipe(cx, y + Math.round(dy * 0.8), y + Math.round(dy * 0.2)))) {
       console.log("issue-6359: touch injection not available here, skipping");
       return;

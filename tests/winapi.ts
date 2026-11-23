@@ -719,6 +719,24 @@ export function findTopWindow(pid: number, className: string): number {
   return found;
 }
 
+// Puts a process's visible top-level windows above every non-topmost window,
+// without activating them. Injected touch and pen input goes to whatever window
+// is under the point, so a window in front (a terminal) would get it instead.
+export function raiseProcessWindows(pid: number): void {
+  if (IS_MAC) {
+    return;
+  }
+  const flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE;
+  enumWindows((hwnd) => {
+    if (getWindowPid(hwnd) === pid && isWindowVisible(hwnd)) {
+      // topmost lifts it over everything; not-topmost keeps it at the top of the normal band
+      user32.symbols.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
+      user32.symbols.SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, flags);
+    }
+    return true;
+  });
+}
+
 // find a descendant window of a given class (0 if none)
 export function findChildWindow(parent: number, className: string): number {
   let found = 0;
@@ -1092,6 +1110,9 @@ export function moveWindow(hwnd: number, x: number, y: number, w: number, h: num
 
 // SWP_* flags (subset)
 export const HWND_TOPMOST = -1;
+export const HWND_NOTOPMOST = -2;
+export const SWP_NOSIZE = 0x0001;
+export const SWP_NOMOVE = 0x0002;
 export const SWP_NOZORDER = 0x0004;
 export const SWP_NOACTIVATE = 0x0010;
 export const SWP_FRAMECHANGED = 0x0020;

@@ -704,6 +704,9 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6359", issue6359],
+  ["touch-long-press-select", touchLongPressSelect],
+  ["pen-input", penInput],
   ["tab-drag-to-window", tabDragToWindow],
   ["issue-6270", issue6270],
   ["issue-5938", issue5938],
@@ -1052,7 +1055,6 @@ export const tests: NamedTest[] = [
   ["epub-first-page-image", epubFirstPageImage],
   ["css-invalid-color", cssInvalidColor],
   ["epub-pre-wraps", epubPreWraps],
-  ["issue-6359", issue6359],
   ["issue-6361", issue6361],
   ["issue-6362", issue6362],
   ["issue-6280", issue6280],
@@ -1354,8 +1356,6 @@ export const tests: NamedTest[] = [
   ["trackpad-diagonal-scroll", trackpadDiagonalScroll],
   ["trackpad-pinch-zoom", trackpadPinchZoom],
   ["page-links-fresh-engine", pageLinksFreshEngine],
-  ["touch-long-press-select", touchLongPressSelect],
-  ["pen-input", penInput],
   ["toolbar-right-click", toolbarRightClick],
   ["stale-build-dir-future", staleBuildDirFuture],
   ["save-annots-same-path", saveAnnotsSamePath],

@@ -18,6 +18,7 @@ import { cmdId, drainProcStderr, EXE, pollUntil, SLOW_BUILD_FACTOR, setFailureCo
 import {
   testWindowPos,
   injectTouch,
+  raiseProcessWindows,
   POINTER_FLAG_DOWN,
   POINTER_FLAG_UP,
   POINTER_FLAG_UPDATE,
@@ -37,6 +38,7 @@ import {
   getSystemMetrics,
   getWindowOwner,
   getWindowPid,
+  getForegroundWindow,
   WM_CLOSE,
   getWindowRect,
   isWindowVisible,
@@ -502,6 +504,26 @@ export async function waitForContextMenu(timeoutMs = 1500): Promise<number> {
 // Send a WM_COMMAND (menu/command id) to a window (usually the frame).
 export function sendCommand(hwnd: number, cmdId: number): void {
   postMessage(hwnd, WM_COMMAND, cmdId, 0);
+}
+
+// Before injecting touch or pen input: bring the app's windows to the front and
+// activate the frame. Injected input goes to the window under the point, and on
+// an inactive window the first contact is spent activating it (a long press is
+// lost). The activating tap lands on the frame's caption, away from document and lists.
+export async function prepareTouchTarget(pid: number, frame: number): Promise<void> {
+  raiseProcessWindows(pid);
+  const r = getWindowRect(frame);
+  const x = r.left + Math.round(((r.right - r.left) * 3) / 4);
+  const y = r.top + 15;
+  injectTouch(x, y, POINTER_FLAG_DOWN);
+  await sleep(50);
+  injectTouch(x, y, POINTER_FLAG_UP);
+  // activation is asynchronous; a contact sent before it completes is dropped
+  const deadline = Date.now() + 2000 * SLOW_BUILD_FACTOR;
+  while (getWindowPid(getForegroundWindow()) !== pid && Date.now() < deadline) {
+    await sleep(25);
+  }
+  await sleep(200);
 }
 
 // A one-finger vertical swipe from (x, y0) to (x, y1), in screen pixels: a

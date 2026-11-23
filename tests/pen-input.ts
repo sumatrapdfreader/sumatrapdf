@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { IS_WIN } from "./host.ts";
 import { cmdId, makeTextPdf, pollUntil, runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { killAndWait, launchControlled, prepareTouchTarget, sendCommand } from "./win-automation.ts";
 import {
   injectPen,
   PEN_FLAG_BARREL,
@@ -98,6 +98,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(true);
+    await prepareTouchTarget(proc.pid, frame);
     const alpha = await wordPos(client, "alpha");
     const charlie = await wordPos(client, "charlie");
     const echo = await wordPos(client, "echo");
