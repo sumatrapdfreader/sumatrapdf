@@ -788,6 +788,8 @@ static void OnAIChatWebViewNavigated(void* ctx, Str, bool) {
         return;
     }
     if (win->aiChatWebView) {
+        // only now does the page's JS exist to eval into
+        win->aiChatWebViewReady = true;
         // the webview is created lazily, often before the panel has its final
         // size, leaving its window (and so the WebView2 controller) at 0x0. Now
         // that the page has loaded and the panel is laid out, re-run the layout
@@ -799,7 +801,7 @@ static void OnAIChatWebViewNavigated(void* ctx, Str, bool) {
 }
 
 static void EnsureWebViewReady(MainWindow* win) {
-    if (win->aiChatWebViewReady) {
+    if (win->aiChatWebView) {
         return;
     }
     if (!HasWebView()) {
@@ -840,14 +842,14 @@ static void EnsureWebViewReady(MainWindow* win) {
     webView->Create(wvArgs);
 
     if (webView->hwnd) {
+        // set first: the navigated handler looks for it
+        win->aiChatWebView = webView;
         TempStr url = fmt("%sindex.html", p->virtualHost);
         webView->Navigate(url);
         // make the webview visible, like the manual browser does; without this
         // the embedded controller stays hidden (isVisible defaults to false) and
         // the loaded page never paints
         webView->SetIsVisible(true);
-        win->aiChatWebView = webView;
-        win->aiChatWebViewReady = true;
         RelayoutAIChatPanel(win);
     } else {
         delete webView;
