@@ -7834,10 +7834,8 @@ static char *zone_text(zparse *z, int off, int len)
 
 static void free_zone_kids(djvu_ctx *ctx, djvu_text_zone *z);
 
-/* zone types nest 7 deep (page > ... > char); deeper input is malformed and
-   would overflow the stack in the recursive walks */
 #define DJVU_MAX_ZONE_DEPTH 32
-/* type, x, y, w, h, text offset, text length, child count */
+
 #define DJVU_ZONE_MIN_BYTES 17
 
 static int parse_zone(zparse *z, djvu_text_zone *out,
