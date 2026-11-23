@@ -30,7 +30,7 @@ static bool IsWordByte(u8 b) {
     if (b >= 0x80) {
         return true;
     }
-    return IsCharAlphaNumericW((WCHAR)b) || b == '_';
+    return IsAlNumW(b) || b == '_';
 }
 
 void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterWords, Vec<u8>& highlighted, Color colBg,

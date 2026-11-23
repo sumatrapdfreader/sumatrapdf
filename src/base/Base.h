@@ -2318,6 +2318,7 @@ WStr ToWStr(const wstr::Builder&);
 TempStr ToStrTemp(const str::Builder&);
 
 wchar_t WCharToLower(wchar_t c);
+bool IsAlNumW(int c);
 int FoldCaseRune(int c);
 bool IsCombiningMark(int c);
 int FoldDiacriticsRune(int c);

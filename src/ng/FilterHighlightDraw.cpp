@@ -17,12 +17,7 @@ static bool IsWordByte(u8 b) {
     if (b >= 0x80) {
         return true;
     }
-#if OS_WIN
-    return IsCharAlphaNumericW((WCHAR)b) || b == '_';
-#else
-    // ng: no IsCharAlphaNumericW off Windows (as in EngineMupdf.cpp)
-    return iswalnum((wint_t)b) != 0 || b == '_';
-#endif
+    return IsAlNumW(b) || b == '_';
 }
 
 void MarkFilterHighlights(Str text, const StrVec& filterWords, Vec<u8>& out, bool matchWholeWord) {

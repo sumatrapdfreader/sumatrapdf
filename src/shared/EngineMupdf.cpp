@@ -5758,17 +5758,9 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     return dest;
 }
 
-static bool IsAlnumW(WCHAR c) {
-#if OS_WIN
-    return IsCharAlphaNumericW(c) != 0;
-#else
-    return iswalnum((wint_t)c) != 0;
-#endif
-}
-
 static bool HasAlnumW(const WStr& ws) {
     for (int i = 0; i < ws.len; i++) {
-        if (IsAlnumW(ws.s[i])) {
+        if (IsAlNumW(ws.s[i])) {
             return true;
         }
     }

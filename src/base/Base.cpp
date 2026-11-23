@@ -1691,6 +1691,15 @@ wchar_t WCharToLower(wchar_t c) {
 #endif
 }
 
+// a Unicode letter or digit: IsCharAlphaNumericW on Windows, iswalnum elsewhere
+bool IsAlNumW(int c) {
+#if OS_WIN
+    return IsCharAlphaNumericW((WCHAR)c) != 0;
+#else
+    return iswalnum((wint_t)c) != 0;
+#endif
+}
+
 // locale-independent lowercase of a codepoint for case-insensitive matching
 int FoldCaseRune(int c) {
     // CharLowerW maps İ (U+0130) to 'i' only under Turkish locale (issue #5597)

@@ -557,9 +557,20 @@ static void LocalTimeTest() {
     utassert(mktime(&tm) == t);
 }
 
+static void IsAlNumWTest() {
+    utassert(IsAlNumW('a') && IsAlNumW('Z') && IsAlNumW('5'));
+    utassert(!IsAlNumW(' ') && !IsAlNumW('_') && !IsAlNumW('-') && !IsAlNumW('.'));
+#if OS_WIN
+    // posix iswalnum depends on the locale for non-ASCII
+    utassert(IsAlNumW(0x00E9) && IsAlNumW(0x0410));
+    utassert(!IsAlNumW(0x2014));
+#endif
+}
+
 void BaseUtilTest() {
     EnvVariableTest();
     LocalTimeTest();
+    IsAlNumWTest();
     StrEqLenTest();
     ReplaceNoCaseTest();
     InPlacePastLenTest();
