@@ -127,6 +127,29 @@ static void AuthorYearEntryFitsToOneEntry() {
     utassert(box.dx < kPageW);
 }
 
+// (3d2) Author-year hanging indent, link dest pointing into the gap above the
+// entry head (XYZ dests often anchor a few points above the first line, inside
+// the previous entry's last line): the out-dented head line below must win over
+// the y-nearest continuation line, so the box excludes the previous entry.
+static void AuthorYearDestAboveHead() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    AddText(text, coords, n, 1024, L"Prior, A. (2016). Earlier work title.", 72, 170);
+    AddText(text, coords, n, 1024, L"someurl.example/path/ Accessed 18 July 2026.", 92, 185);
+    AddText(text, coords, n, 1024, L"Vendor, C. (2017). License usage study.", 72, 197);
+    AddText(text, coords, n, 1024, L"Empirical Journal, 22(3), 1537-1577.", 92, 212);
+    AddText(text, coords, n, 1024, L"Next, D. (2018). Following entry.", 72, 236);
+    // dest 7pt above the head: nearer to the previous entry's last line
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 190.f);
+    utassert(!IsEmpty(box));
+    // starts at the head line (197 minus padding), not the tail line at y=185
+    utassert(box.y >= 190.f && box.y <= 197.f);
+    // covers the full entry (both lines), nothing of the next entry
+    utassert(box.y + box.dy >= 224.f);
+    utassert(box.y + box.dy < 236.f);
+}
+
 // (3e) Single-line description-list entries (abbreviation lists) with normal
 // leading: the next entry is detected by a new line back at the entry's X
 // before any continuation indent was seen (rule (d)).
@@ -1100,6 +1123,7 @@ void RefHoverTest() {
     NormalizeGlyphLinesFlattensLine();
     VariableGlyphTopsEntryNotHijacked();
     AuthorYearEntryFitsToOneEntry();
+    AuthorYearDestAboveHead();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
     CaptionExtensionPicksTopmost();

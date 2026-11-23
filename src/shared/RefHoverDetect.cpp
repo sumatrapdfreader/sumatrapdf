@@ -783,6 +783,42 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         startIdx = run.leftIdx;
     }
 
+    // An XYZ link dest often anchors a few points above the entry's first line,
+    // inside the previous entry's last line, which then wins the nearest-line
+    // pick. In a hanging-indent bibliography the entry head is out-dented: a
+    // line just below the pick that starts further left is the head the dest
+    // meant, so the box must not swallow the previous entry's tail.
+    if (text.s[startIdx] != L'[') {
+        constexpr int kMinOutdentPt = 4;
+        constexpr int kMaxOutdentPt = 60;
+        int pickedY = coords[startIdx].y;
+        int headIdx = -1;
+        int headY = INT_MAX;
+        int headX = INT_MAX;
+        for (int i = 0; i < text.len; i++) {
+            if (IsGlyphSpace(text.s[i])) {
+                continue;
+            }
+            Rect r = coords[i];
+            if (r.y <= pickedY + 2 || r.y > dY + 30) {
+                continue;
+            }
+            if (r.x < columnLeft || r.x >= run.leftX - kMinOutdentPt || r.x < run.leftX - kMaxOutdentPt) {
+                continue;
+            }
+            if (r.y < headY || (r.y == headY && r.x < headX)) {
+                headY = r.y;
+                headX = r.x;
+                headIdx = i;
+            }
+        }
+        if (headIdx >= 0) {
+            run = LineRunExtent(text, coords, headIdx);
+            startIdx = run.leftIdx;
+            lineRunRightX = run.rightX;
+        }
+    }
+
     // Recover a bracket label whose baseline differs from the body, within one hanging indent.
     if (text.s[startIdx] != L'[') {
         constexpr int kMaxHangingIndentPt = 60;
