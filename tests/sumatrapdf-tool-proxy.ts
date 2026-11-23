@@ -1,7 +1,7 @@
 // sumatrapdf-tool.exe forwards its args to SumatraPDF.exe over a named pipe and
 // relays SumatraPDF.exe's stdout / stderr and exit code (src/ToolPipe.h): text
-// and binary output, errors, non-ASCII args, `cli`, piped stdin, and no
-// SumatraPDF.exe left.
+// and binary output, errors, non-ASCII args, `cli`, piped stdin, rejecting what
+// would open a window, and no SumatraPDF.exe left.
 //
 // Run: bun tests/sumatrapdf-tool-proxy.ts [--no-build]
 
@@ -65,6 +65,12 @@ export async function testit(): Promise<void> {
   const runOut = runP.stdout.toString();
   if (runP.exitCode !== 0 || !runOut.includes("from stdin 3")) {
     throw new Error(`sumatrapdf-tool-proxy: run < script: exit ${runP.exitCode}, stdout: ${runOut}`);
+  }
+
+  // what would open a window is not a command-line operation: rejected
+  const view = run(tool, [pdf]);
+  if (view.exitCode === 0 || !view.stderr.includes("not a command-line operation")) {
+    throw new Error(`sumatrapdf-tool-proxy: viewing a file wasn't rejected: exit ${view.exitCode}, ${view.stderr}`);
   }
 
   if (sumatraRunning()) {

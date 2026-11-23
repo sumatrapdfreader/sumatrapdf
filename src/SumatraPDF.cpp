@@ -17259,6 +17259,15 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         goto Exit;
     }
 
+    // every command-line operation has run by now; the rest opens a window,
+    // which sumatrapdf-tool (a console front end) doesn't do
+    if (gDrivenByTool) {
+        fprintf(stderr, "sumatrapdf-tool: not a command-line operation, it would open a window\n");
+        fprintf(stderr, "run SumatraPDF.exe to view documents. Operations: the mupdf tools (draw, info, ...),\n");
+        fprintf(stderr, "cli <command>, -print-to, -dump-exif, ... (see SumatraPDF's command-line arguments)\n");
+        goto Exit;
+    }
+
     if (existingHwnd) {
         int nFiles = len(flags.fileNames);
         // reusing an instance whose windows are all on other virtual desktops:
