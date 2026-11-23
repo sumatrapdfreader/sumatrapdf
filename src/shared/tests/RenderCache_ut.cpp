@@ -13,6 +13,7 @@
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "RenderCache.h"
+#include "CachedObjects.h"
 
 struct RequestLockProbe {
     RecursiveMutex* mutex = nullptr;
@@ -200,6 +201,73 @@ bool RenderCache_UnitTestFullOfOldZoom() {
         bool full = cache.cacheCount == kMaxBitmapsCached;
         cache.Add(visible, AllocPixmap(4, 4));
         ok = full && cache.Exists(dm, 1, visible.rotation, visible.zoom, &visible.tile);
+        cache.AbortRendering(dm);
+        cache.FreeForDisplayModel(dm);
+    }
+
+    delete dm;
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+    return ok;
+}
+
+static int gAbortedRenders = 0;
+
+static void CountAbortedRender(PageRenderRequest* req) {
+    if (req->abort) {
+        gAbortedRenders++;
+    }
+}
+
+static bool IsCachedObjectRegistered(uintptr_t id) {
+    for (auto& o : gCachedObjects) {
+        if (o.id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// dropping every tile must unregister them (else the cache total stays
+// inflated) and abort queued requests through their callback
+bool RenderCache_UnitTestReduceTileSize() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    EngineBase* engine = CreateEngineMupdfFromData(Str(kOnePagePdf), StrL("one-page.pdf"), nullptr);
+    if (!engine) {
+        return false;
+    }
+
+    NoopDocCb cb;
+    auto* dm = new DisplayModel(engine, &cb);
+    dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
+    dm->Relayout(25, 0);
+
+    bool ok = false;
+    {
+        RenderCache cache;
+        cache.maxRenderThreads = 0;
+        cache.maxTileSize = {400, 400};
+        PageRenderRequest req;
+        req.dm = dm;
+        req.pageNo = 1;
+        req.zoom = dm->GetRenderZoom(1);
+        req.darkModeEpoch = cache.darkModeEpoch;
+        req.tile = TilePosition(0, 0, 0);
+        cache.Add(req, AllocPixmap(4, 4));
+        uintptr_t id = (uintptr_t)cache.cache[0];
+
+        cache.requests[0] = req;
+        cache.requests[0].renderFinishedCb = MkFunc1Void(CountAbortedRender);
+        cache.requestCount = 1;
+        gAbortedRenders = 0;
+
+        bool reduced = cache.ReduceTileSize();
+        ok = reduced && cache.cacheCount == 0 && !IsCachedObjectRegistered(id) && gAbortedRenders == 1;
         cache.AbortRendering(dm);
         cache.FreeForDisplayModel(dm);
     }

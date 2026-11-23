@@ -157,6 +157,7 @@ void ReadAloudHighlight_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
 bool RenderCache_UnitTestFullOfOneVisiblePage();
 bool RenderCache_UnitTestFullOfOldZoom();
+bool RenderCache_UnitTestReduceTileSize();
 bool DisplayModel_UnitTestZoomFallback();
 bool EngineEbook_UnitTestUrlLink();
 bool DisplayModel_UnitTestFreePanFirstPage();
@@ -839,6 +840,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(RenderCache_UnitTestCookieUnlocked());
     utassert(RenderCache_UnitTestFullOfOneVisiblePage());
     utassert(RenderCache_UnitTestFullOfOldZoom());
+    utassert(RenderCache_UnitTestReduceTileSize());
     utassert(DisplayModel_UnitTestZoomFallback());
     utassert(EngineEbook_UnitTestUrlLink());
     utassert(DisplayModel_UnitTestFreePanFirstPage());

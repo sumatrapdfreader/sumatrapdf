@@ -787,6 +787,8 @@ u16 RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
     return maxRes;
 }
 
+static void CallRenderAborted(PageRenderRequest* req);
+
 // reduce the size of tiles in order to hopefully use less memory overall
 bool RenderCache::ReduceTileSize() {
     rcLogf("RenderCache::ReduceTileSize: reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
@@ -795,22 +797,28 @@ bool RenderCache::ReduceTileSize() {
     }
 
     ScopedRecursiveMutex scope1(&requestAccess);
-    ScopedRecursiveMutex scope2(&cacheAccess);
+    {
+        ScopedRecursiveMutex scope2(&cacheAccess);
 
-    if (maxTileSize.dx > maxTileSize.dy) {
-        maxTileSize.dx /= 2;
-    } else {
-        maxTileSize.dy /= 2;
-    }
-    nTileSizeReductions++;
+        if (maxTileSize.dx > maxTileSize.dy) {
+            maxTileSize.dx /= 2;
+        } else {
+            maxTileSize.dy /= 2;
+        }
+        nTileSizeReductions++;
 
-    // invalidate all rendered bitmaps and all requests (force-clear: PaintTile may
-    // hold refs from Find(), so DropCacheEntryIfNotUsed would never make progress)
-    for (int i = cacheCount - 1; i >= 0; i--) {
-        delete cache[i];
-        cache[i] = nullptr;
+        // invalidate all rendered bitmaps and all requests (force-clear: PaintTile may
+        // hold refs from Find(), so DropCacheEntryIfNotUsed would never make progress)
+        for (int i = cacheCount - 1; i >= 0; i--) {
+            UnregisterCachedObject((uintptr_t)cache[i]);
+            delete cache[i];
+            cache[i] = nullptr;
+        }
+        cacheCount = 0;
     }
-    cacheCount = 0;
+    for (int i = 0; i < requestCount; i++) {
+        CallRenderAborted(&requests[i]);
+    }
     requestCount = 0;
     for (int i = 0; i < nRenderThreads; i++) {
         AbortCurrentRequest(i);
