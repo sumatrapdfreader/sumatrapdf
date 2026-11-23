@@ -2815,6 +2815,8 @@ void DestroyToolbar(MainWindow* win) {
     win->chapterEdit = nullptr;
     win->toolbarVirt = nullptr;
     win->hwndToolbar = nullptr;
+    // the pending hide timer dies with the host
+    win->toolbarOverlayHidePending = false;
     delete tb->host;
     delete tb;
 }
