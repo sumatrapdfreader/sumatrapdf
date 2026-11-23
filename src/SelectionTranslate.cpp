@@ -480,6 +480,8 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         CreateCustomArgs args;
         args.title = title;
         args.visible = false;
+        // it disables the owner like a modal dialog, so it must stay in front of it
+        args.owner = owner;
         // resizable: thick frame; CLIPCHILDREN avoids flicker while resizing
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN;
         args.font = fontText;

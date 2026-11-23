@@ -229,6 +229,7 @@ import { testit as autoScrollExtras } from "./auto-scroll-extras.ts";
 import { testit as toolbarWrap } from "./toolbar-wrap.ts";
 import { testit as reopenClosedWindow } from "./reopen-closed-window.ts";
 import { testit as tabGroupAutoSync } from "./tab-group-autosync.ts";
+import { testit as translateDialogOwner } from "./translate-dialog-owner.ts";
 import { testit as tabGroupsClosePaint } from "./tab-groups-close-paint.ts";
 import { testit as ddeReuseEmptyWindow } from "./dde-reuse-empty-window.ts";
 import { testit as tabGroupEmptyPath } from "./tab-group-empty-path.ts";
@@ -1230,6 +1231,7 @@ export const tests: NamedTest[] = [
   ["reopen-closed-window", reopenClosedWindow],
   ["tab-group-autosync", tabGroupAutoSync],
   ["tab-groups-close-paint", tabGroupsClosePaint],
+  ["translate-dialog-owner", translateDialogOwner],
   ["dde-reuse-empty-window", ddeReuseEmptyWindow],
   ["tab-group-empty-path", tabGroupEmptyPath],
   ["replace-image", replaceImage],
