@@ -674,6 +674,7 @@ AnnotEditKind ChipColorKind(AnnotEditToolbarBase* tb) {
 // the dialog the pencil opens. cmdId 0 is the annotation preset list, not a
 // toolbar button's (orig's ShowAnnotColorsDialog).
 struct AnnotColorDlgTarget {
+    MainWindow* win = nullptr;
     AnnotEditToolbar* tb = nullptr;
 };
 
@@ -682,7 +683,10 @@ static void AnnotColorDlgPicked(AnnotColorDlgTarget* target, ChangeColorsArgs* a
         str::ReplaceWithCopy(&gSettings->annotations.presetColors, SerializeColorList(args->colors));
         ScheduleSaveSettings();
     }
-    if (args->didSelect && args->color != kColorUnset && target->tb) {
+    // the dialog is not modal: the window or its toolbar may be gone by now
+    MainWindow* win = target->win;
+    bool tbLive = IsMainWindowValidAndNotClosing(win) && win->annotEditToolbar == target->tb;
+    if (args->didSelect && args->color != kColorUnset && tbLive) {
         ChipColorPicked(target->tb, args->color);
     }
     delete target;
@@ -696,6 +700,7 @@ static void OpenAnnotColorsDialog(AnnotEditToolbar* tb) {
         return;
     }
     auto* target = new AnnotColorDlgTarget();
+    target->win = win;
     target->tb = tb;
 
     auto* args = new ChangeColorsArgs();
