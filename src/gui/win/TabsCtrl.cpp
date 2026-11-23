@@ -1171,13 +1171,14 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     return 0;
                 }
                 // move the tab out: draw it as a image and drag around the screen
-                draggingTab = true;
                 TabCtrl* hlCtrl = TabCtrlAt(hl);
                 HBITMAP hbmp = RenderForDragging(hl);
                 if (!hbmp || !hlCtrl) {
                     logf("TabsCtrl::WndProc: RenderForDragging failed for tab %d\n", hl);
                     return 0;
                 }
+                // only now: WM_LBUTTONUP drops the tab while it's set
+                draggingTab = true;
                 Rect r = hlCtrl->BoundsInWindow();
                 HIMAGELIST himl = ImageList_Create(r.dx, r.dy, 0, 1, 0);
                 ImageList_Add(himl, hbmp, nullptr);
