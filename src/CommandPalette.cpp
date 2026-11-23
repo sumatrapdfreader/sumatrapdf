@@ -1493,15 +1493,8 @@ void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
     WindowTab* currTab = mainWin->CurrentTab();
     Str currFilePath = currTab ? currTab->filePath : Str();
 
-    FileState* currFs = nullptr;
-    if (currFilePath) {
-        for (FileState* fs : *gSettings->fileStates) {
-            if (str::Eq(fs->filePath, currFilePath)) {
-                currFs = fs;
-                break;
-            }
-        }
-    }
+    // the history matches paths ignoring case
+    FileState* currFs = currFilePath ? FileHistoryFindByPath(currFilePath) : nullptr;
     if (currFs) {
         AppendFavoritesForFile(favorites, currFs, true);
     }
