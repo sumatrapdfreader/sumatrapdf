@@ -25,6 +25,9 @@ extern "C" {
 typedef void *(*chm_alloc_cb)(void *user, void *ctx, size_t size);
 typedef void  (*chm_free_cb)(void *user, void *ctx, void *ptr);
 
+#define CHM_SEV_ERROR 0
+#define CHM_SEV_WARNING 1
+
 typedef void (*chm_error_cb)(void *user, int severity, const char *msg);
 
 typedef struct chm_ctx chm_ctx;
@@ -132,7 +135,6 @@ int chm_get_entries(chm_ctx *ctx, struct chm_entry ***outEntries);
 struct LZXstate {
     uint8_t *window;
     uint32_t window_size;
-    uint32_t actual_size;
     uint32_t window_posn;
     uint32_t R0, R1, R2;
     uint16_t main_elements;
@@ -152,17 +154,17 @@ struct LZXstate {
     LZX_DECLARE_TABLE(ALIGNED);
 };
 
-struct LZXstate *LZXinit(int window);
-void LZXteardown(struct LZXstate *pState);
+struct LZXstate *LZXinit(chm_ctx *ctx, int window);
+void LZXteardown(chm_ctx *ctx, struct LZXstate *pState);
 int LZXreset(struct LZXstate *pState);
 int LZXdecompress(struct LZXstate *pState, uint8_t *inpos, uint8_t *outpos, int inlen, int outlen);
-int LZX_test_pretree_make_decode_table(void);
 
 #define LZX_INPUT_PAD 64
 
-#define CHM_MAX_BLOCKS_CACHED 2048
 #define CHM_FULL_CACHE_MAX_BLOCKS 1536
+#define CHM_FULL_CACHE_MAX_BYTES ((uint64_t)CHM_FULL_CACHE_MAX_BLOCKS * 32768)
 #define CHM_RING_CACHE_BLOCKS 64
+#define CHM_MAX_BLOCKS_CACHED CHM_FULL_CACHE_MAX_BLOCKS
 #define CHM_MAX_DIR_PAGES 65536
 #define CHM_DIR_SEEN_BITMAP_BITS CHM_MAX_DIR_PAGES
 #define CHM_DIR_SEEN_BITMAP_WORDS (CHM_DIR_SEEN_BITMAP_BITS / 32)
@@ -211,7 +213,6 @@ struct chmItspHeader {
     uint8_t unknown_0044[16];
 };
 
-static const char *_chm_pmgl_marker = "PMGL";
 #define _CHM_PMGL_LEN (0x14)
 
 struct chmPmglHeader {
@@ -222,7 +223,6 @@ struct chmPmglHeader {
     int32_t block_next;
 };
 
-static const char *_chm_pmgi_marker = "PMGI";
 #define _CHM_PMGI_LEN (0x08)
 
 struct chmPmgiHeader {
@@ -257,13 +257,11 @@ struct chmLzxcControlData {
 
 void *chm_alloc(chm_ctx *ctx, size_t size);
 void  chm_free(chm_ctx *ctx, void *ptr);
-void  chm_errorf(chm_ctx *ctx, int sev, const char *fmt, ...);
 
-struct chmDirSession {
-    chm_ctx *ctx;
-    uint8_t *page_buf;
-    uint8_t *page_buf_end;
-};
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((format(printf, 3, 4)))
+#endif
+void  chm_errorf(chm_ctx *ctx, int sev, const char *fmt, ...);
 
 struct chm_ctx {
     chm_alloc_cb alloc;
@@ -281,7 +279,6 @@ struct chm_ctx {
     int32_t index_head;
     uint32_t block_len;
 
-    uint64_t span;
     struct chm_entry rt_entry;
     struct chm_entry cn_entry;
     struct chmLzxcResetTable reset_table;
@@ -323,23 +320,23 @@ static const uint32_t position_base[51] = {
     8192,   12288,  16384,  24576,   32768,   49152,   65536,   98304,   131072,  196608,  262144,  393216, 524288,
     655360, 786432, 917504, 1048576, 1179648, 1310720, 1441792, 1572864, 1703936, 1835008, 1966080, 2097152};
 
-struct LZXstate* LZXinit(int window) {
+struct LZXstate* LZXinit(chm_ctx* ctx, int window) {
     struct LZXstate* pState = NULL;
-    uint32_t wndsize = 1 << window;
+    uint32_t wndsize;
     int i, posn_slots;
 
     if (window < 15 || window > 21) return NULL;
+    wndsize = 1u << window;
 
-    pState = (struct LZXstate*)malloc(sizeof(struct LZXstate));
+    pState = (struct LZXstate*)chm_alloc(ctx, sizeof(struct LZXstate));
     if (pState) {
-        pState->window = (uint8_t*)malloc(wndsize);
+        pState->window = (uint8_t*)chm_alloc(ctx, wndsize);
     }
     if (!pState || !pState->window) {
-        free(pState);
+        chm_free(ctx, pState);
         return NULL;
     }
     memset(pState->window, 0, wndsize);
-    pState->actual_size = wndsize;
     pState->window_size = wndsize;
 
     if (window == 20)
@@ -366,10 +363,10 @@ struct LZXstate* LZXinit(int window) {
     return pState;
 }
 
-void LZXteardown(struct LZXstate* pState) {
+void LZXteardown(chm_ctx* ctx, struct LZXstate* pState) {
     if (pState) {
-        if (pState->window) free(pState->window);
-        free(pState);
+        chm_free(ctx, pState->window);
+        chm_free(ctx, pState);
     }
 }
 
@@ -422,41 +419,12 @@ int LZXreset(struct LZXstate* pState) {
 #define SYMTABLE(tbl) (pState->tbl##_table)
 #define LENTABLE(tbl) (pState->tbl##_len)
 
-#define BUILD_TABLE(tbl)                                                                    \
-    if (make_decode_table(MAXSYMBOLS(tbl), TABLEBITS(tbl), LENTABLE(tbl), SYMTABLE(tbl))) { \
-        return DECR_ILLEGALDATA;                                                            \
-    }
-
-#define BUILD_TABLE_NSYMS(tbl, nsyms)                                              \
+#define BUILD_TABLE_NSYMS(tbl, nsyms)                                               \
     if (make_decode_table((nsyms), TABLEBITS(tbl), LENTABLE(tbl), SYMTABLE(tbl))) { \
         return DECR_ILLEGALDATA;                                                   \
     }
 
-#define READ_HUFFSYM(tbl, var)                                                      \
-    do {                                                                            \
-        uint32_t _e;                                                                \
-        ENSURE_BITS(16);                                                            \
-        hufftbl = SYMTABLE(tbl);                                                    \
-        _e = hufftbl[PEEK_BITS(TABLEBITS(tbl))];                                    \
-        if (CHM_UNLIKELY(_e & LZX_HUFF_NODE)) {                                     \
-            uint64_t jb = 1ull << (BITBUF_WIDTH - TABLEBITS(tbl));                   \
-            do {                                                                    \
-                uint32_t node = _e & LZX_HUFF_NODE_MASK;                             \
-                jb >>= 1;                                                           \
-                node = (node << 1) | ((bitbuf & jb) ? 1u : 0u);                     \
-                if (!jb) {                                                          \
-                    return DECR_ILLEGALDATA;                                        \
-                }                                                                   \
-                _e = hufftbl[node];                                                 \
-            } while (_e & LZX_HUFF_NODE);                                           \
-        }                                                                           \
-        (var) = (int)LZX_HUFF_SYM(_e);                                              \
-        j = LZX_HUFF_LEN(_e);                                                       \
-        if (CHM_UNLIKELY(j == 0)) {                                                 \
-            return DECR_ILLEGALDATA;                                                \
-        }                                                                           \
-        REMOVE_BITS(j);                                                             \
-    } while (0)
+#define BUILD_TABLE(tbl) BUILD_TABLE_NSYMS(tbl, MAXSYMBOLS(tbl))
 
 #define READ_HUFFSYM_LOCAL(table, tablebits, var)                                   \
     do {                                                                            \
@@ -481,6 +449,14 @@ int LZXreset(struct LZXstate* pState) {
             return DECR_ILLEGALDATA;                                                \
         }                                                                           \
         REMOVE_BITS(j);                                                             \
+    } while (0)
+
+#define READ_HUFFSYM(tbl, var) READ_HUFFSYM_LOCAL(SYMTABLE(tbl), TABLEBITS(tbl), var)
+
+#define LZX_INPUT_SLACK 8
+#define CHECK_INPUT_END(endp, fail)                                   \
+    do {                                                              \
+        if (CHM_UNLIKELY(inpos > (endp) + LZX_INPUT_SLACK)) fail;     \
     } while (0)
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -630,30 +606,6 @@ static int make_decode_table(uint32_t nsyms, uint32_t nbits, uint8_t* length, ui
     return 0;
 }
 
-int LZX_test_pretree_make_decode_table(void) {
-    uint32_t nsyms = LZX_PRETREE_MAXSYMBOLS;
-    uint32_t nbits = LZX_PRETREE_TABLEBITS;
-    uint32_t table_elems = (1 << nbits) + (nsyms << 1);
-    uint32_t* table = (uint32_t*)calloc(table_elems, sizeof(uint32_t));
-    uint8_t* length = (uint8_t*)malloc(nsyms);
-    uint32_t i;
-
-    if (!table || !length) {
-        free(table);
-        free(length);
-        return -1;
-    }
-
-    for (i = 0; i < nsyms; i++) {
-        length[i] = 15;
-    }
-
-    i = (uint32_t)make_decode_table(nsyms, nbits, length, table);
-    free(table);
-    free(length);
-    return (int)i;
-}
-
 struct lzx_bits {
     uint64_t bb;
     int bl;
@@ -668,8 +620,6 @@ static int lzx_read_lens(struct LZXstate* pState, uint8_t* lens, uint32_t first,
     uint64_t bitbuf = lb->bb;
     int bitsleft = lb->bl;
     uint8_t* inpos = lb->ip;
-    uint32_t* hufftbl;
-    (void)lb->end;
 
     for (x = 0; x < 20; x++) {
         READ_BITS(y, 4);
@@ -678,6 +628,7 @@ static int lzx_read_lens(struct LZXstate* pState, uint8_t* lens, uint32_t first,
     BUILD_TABLE(PRETREE);
 
     for (x = first; x < last;) {
+        CHECK_INPUT_END(lb->end, return 1);
         READ_HUFFSYM(PRETREE, z);
         if (z == 17) {
             READ_BITS(y, 4);
@@ -814,6 +765,7 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                     uint32_t* main_table = SYMTABLE(MAINTREE);
                     uint32_t* length_table = SYMTABLE(LENGTH);
                     while (this_run > 0) {
+                        CHECK_INPUT_END(endinp, return DECR_ILLEGALDATA);
                         READ_HUFFSYM_LOCAL(main_table, LZX_MAINTREE_TABLEBITS, main_element);
 
                         if (CHM_LIKELY(main_element < LZX_NUM_CHARS)) {
@@ -884,6 +836,7 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                     uint32_t* length_table = SYMTABLE(LENGTH);
                     uint32_t* aligned_table = SYMTABLE(ALIGNED);
                     while (this_run > 0) {
+                        CHECK_INPUT_END(endinp, return DECR_ILLEGALDATA);
                         READ_HUFFSYM_LOCAL(main_table, LZX_MAINTREE_TABLEBITS, main_element);
 
                         if (CHM_LIKELY(main_element < LZX_NUM_CHARS)) {
@@ -1034,96 +987,26 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
     return DECR_OK;
 }
 
-#ifdef LZX_CHM_TESTDRIVER
-int main(int c, char** v) {
-    FILE *fin, *fout;
-    struct LZXstate state;
-    uint8_t ibuf[16384];
-    uint8_t obuf[32768];
-    int ilen, olen;
-    int status;
-    int i;
-    int count = 0;
-    int w = atoi(v[1]);
-    LZXinit(&state, w);
-    fout = fopen(v[2], "wb");
-    for (i = 3; i < c; i++) {
-        fin = fopen(v[i], "rb");
-        ilen = fread(ibuf, 1, 16384, fin);
-        status = LZXdecompress(&state, ibuf, obuf, ilen, 32768);
-        switch (status) {
-            case DECR_OK:
-                printf("ok\n");
-                fwrite(obuf, 1, 32768, fout);
-                break;
-            case DECR_DATAFORMAT:
-                printf("bad format\n");
-                break;
-            case DECR_ILLEGALDATA:
-                printf("illegal data\n");
-                break;
-            case DECR_NOMEMORY:
-                printf("no memory\n");
-                break;
-            default:
-                break;
-        }
-        fclose(fin);
-        if (++count == 2) {
-            count = 0;
-            LZXreset(&state);
-        }
-    }
-    fclose(fout);
-}
-#endif
-
 static const char _CHMU_RESET_TABLE[] =
     "::DataSpace/Storage/MSCompressed/Transform/"
     "{7FC28940-9D31-11D0-9B27-00A0C91E9C7C}/"
     "InstanceData/ResetTable";
 static const char _CHMU_LZXC_CONTROLDATA[] = "::DataSpace/Storage/MSCompressed/ControlData";
 static const char _CHMU_CONTENT[] = "::DataSpace/Storage/MSCompressed/Content";
-#if 0
-static const char _CHMU_SPANINFO[] = "::DataSpace/Storage/MSCompressed/SpanInfo";
-#endif
 
-static int read_char_array(uint8_t **pData, unsigned int *pLenRemain, char *dest, int count)
+static int read_bytes(uint8_t **pData, unsigned int *pLenRemain, void *dest, int count)
 {
     if (count <= 0 || (unsigned int)count > *pLenRemain) return 0;
     memcpy(dest, *pData, (size_t)count);
     *pData += count;
     *pLenRemain -= (unsigned int)count;
-    return 1;
-}
-
-static int read_uchar_array(uint8_t **pData, unsigned int *pLenRemain, uint8_t *dest, int count)
-{
-    if (count <= 0 || (unsigned int)count > *pLenRemain) return 0;
-    memcpy(dest, *pData, (size_t)count);
-    *pData += count;
-    *pLenRemain -= (unsigned int)count;
-    return 1;
-}
-
-static int read_i32(uint8_t **pData, unsigned int *pLenRemain, int32_t *dest)
-{
-    uint32_t v;
-    if (4 > *pLenRemain) return 0;
-
-    v = (uint32_t)(*pData)[0]
-      | ((uint32_t)(*pData)[1] << 8)
-      | ((uint32_t)(*pData)[2] << 16)
-      | ((uint32_t)(*pData)[3] << 24);
-    *dest = (int32_t)v;
-    *pData += 4;
-    *pLenRemain -= 4;
     return 1;
 }
 
 static int read_u32(uint8_t **pData, unsigned int *pLenRemain, uint32_t *dest)
 {
     if (4 > *pLenRemain) return 0;
+
     *dest = (uint32_t)(*pData)[0]
           | ((uint32_t)(*pData)[1] << 8)
           | ((uint32_t)(*pData)[2] << 16)
@@ -1133,17 +1016,11 @@ static int read_u32(uint8_t **pData, unsigned int *pLenRemain, uint32_t *dest)
     return 1;
 }
 
-static int read_i64(uint8_t **pData, unsigned int *pLenRemain, int64_t *dest)
+static int read_i32(uint8_t **pData, unsigned int *pLenRemain, int32_t *dest)
 {
-    int64_t temp = 0;
-    if (8 > *pLenRemain) return 0;
-    for (int i = 8; i > 0; i--) {
-        temp <<= 8;
-        temp |= (*pData)[i - 1];
-    }
-    *dest = temp;
-    *pData += 8;
-    *pLenRemain -= 8;
+    uint32_t v;
+    if (!read_u32(pData, pLenRemain, &v)) return 0;
+    *dest = (int32_t)v;
     return 1;
 }
 
@@ -1161,16 +1038,24 @@ static int read_u64(uint8_t **pData, unsigned int *pLenRemain, uint64_t *dest)
     return 1;
 }
 
+static int read_i64(uint8_t **pData, unsigned int *pLenRemain, int64_t *dest)
+{
+    uint64_t v;
+    if (!read_u64(pData, pLenRemain, &v)) return 0;
+    *dest = (int64_t)v;
+    return 1;
+}
+
 static int read_uuid(uint8_t **pData, unsigned int *pDataLen, uint8_t *dest)
 {
-    return read_uchar_array(pData, pDataLen, dest, 16);
+    return read_bytes(pData, pDataLen, dest, 16);
 }
 
 static int read_itsf_header(uint8_t **pData, unsigned int *pDataLen, struct chmItsfHeader *dest)
 {
     if (*pDataLen != _CHM_ITSF_V2_LEN && *pDataLen != _CHM_ITSF_V3_LEN) return 0;
 
-    read_char_array(pData, pDataLen, dest->signature, 4);
+    read_bytes(pData, pDataLen, dest->signature, 4);
     read_i32(pData, pDataLen, &dest->version);
     read_i32(pData, pDataLen, &dest->header_len);
     read_i32(pData, pDataLen, &dest->unknown_000c);
@@ -1208,7 +1093,7 @@ static int read_itsp_header(uint8_t **pData, unsigned int *pDataLen, struct chmI
 {
     if (*pDataLen != _CHM_ITSP_V1_LEN) return 0;
 
-    read_char_array(pData, pDataLen, dest->signature, 4);
+    read_bytes(pData, pDataLen, dest->signature, 4);
     read_i32(pData, pDataLen, &dest->version);
     read_i32(pData, pDataLen, &dest->header_len);
     read_i32(pData, pDataLen, &dest->unknown_000c);
@@ -1222,7 +1107,7 @@ static int read_itsp_header(uint8_t **pData, unsigned int *pDataLen, struct chmI
     read_i32(pData, pDataLen, &dest->unknown_002c);
     read_u32(pData, pDataLen, &dest->lang_id);
     read_uuid(pData, pDataLen, dest->system_uuid);
-    read_uchar_array(pData, pDataLen, dest->unknown_0044, 16);
+    read_bytes(pData, pDataLen, dest->unknown_0044, 16);
 
     if (memcmp(dest->signature, "ITSP", 4) != 0) return 0;
     if (dest->version != 1) return 0;
@@ -1240,10 +1125,10 @@ static int read_pmgi_header(uint8_t **pData, unsigned int *pDataLen, unsigned in
     if (*pDataLen != _CHM_PMGI_LEN) return 0;
     if (blockLen < _CHM_PMGI_LEN) return 0;
 
-    read_char_array(pData, pDataLen, dest->signature, 4);
+    read_bytes(pData, pDataLen, dest->signature, 4);
     read_u32(pData, pDataLen, &dest->free_space);
 
-    if (memcmp(dest->signature, _chm_pmgi_marker, 4) != 0) return 0;
+    if (memcmp(dest->signature, "PMGI", 4) != 0) return 0;
     if (dest->free_space > blockLen - _CHM_PMGI_LEN) return 0;
     return 1;
 }
@@ -1326,10 +1211,8 @@ chm_ctx *chm_ctx_new(chm_alloc_cb alloc, chm_free_cb free_cb,
 static void chm_release_decode_resources(chm_ctx *ctx)
 {
     int i;
-    if (ctx->lzx_state) {
-        LZXteardown(ctx->lzx_state);
-        ctx->lzx_state = NULL;
-    }
+    LZXteardown(ctx, ctx->lzx_state);
+    ctx->lzx_state = NULL;
     for (i = 0; i < CHM_MAX_BLOCKS_CACHED; i++) {
         chm_free(ctx, ctx->cache_blocks[i]);
         ctx->cache_blocks[i] = NULL;
@@ -1357,13 +1240,13 @@ static int read_pmgl_header(uint8_t **pData, unsigned int *pDataLen, unsigned in
     if (*pDataLen != _CHM_PMGL_LEN) return 0;
     if (blockLen < _CHM_PMGL_LEN) return 0;
 
-    read_char_array(pData, pDataLen, dest->signature, 4);
+    read_bytes(pData, pDataLen, dest->signature, 4);
     read_u32(pData, pDataLen, &dest->free_space);
     read_u32(pData, pDataLen, &dest->unknown_0008);
     read_i32(pData, pDataLen, &dest->block_prev);
     read_i32(pData, pDataLen, &dest->block_next);
 
-    if (memcmp(dest->signature, _chm_pmgl_marker, 4) != 0) return 0;
+    if (memcmp(dest->signature, "PMGL", 4) != 0) return 0;
     if (dest->free_space > blockLen - _CHM_PMGL_LEN) return 0;
     return 1;
 }
@@ -1373,7 +1256,7 @@ static int read_lzxc_control_data(uint8_t **pData, unsigned int *pDataLen, struc
     if (*pDataLen < _CHM_LZXC_MIN_LEN) return 0;
 
     read_u32(pData, pDataLen, &dest->size);
-    read_char_array(pData, pDataLen, dest->signature, 4);
+    read_bytes(pData, pDataLen, dest->signature, 4);
     read_u32(pData, pDataLen, &dest->version);
     read_u32(pData, pDataLen, &dest->resetInterval);
     read_u32(pData, pDataLen, &dest->windowSize);
@@ -1461,8 +1344,9 @@ static int dir_fetch_page(chm_ctx *ctx, int32_t page, uint8_t* page_buf) {
 }
 
 static void dir_visit_reset(chm_ctx *ctx) {
+
     ctx->dir_pages_seen = 0;
-    memset(ctx->dir_seen_bitmap, 0, sizeof(ctx->dir_seen_bitmap));
+    memset(ctx->dir_seen_bitmap, 0, (size_t)((ctx->dir_page_count + 31) / 32) * sizeof(uint32_t));
 }
 
 static int dir_visit_begin(chm_ctx *ctx) {
@@ -1487,6 +1371,12 @@ static int dir_visit_page(chm_ctx *ctx, int32_t page) {
     ctx->dir_pages_seen++;
     return 1;
 }
+
+struct chmDirSession {
+    chm_ctx *ctx;
+    uint8_t *page_buf;
+    uint8_t *page_buf_end;
+};
 
 static int dir_session_begin(chm_ctx *ctx, struct chmDirSession *s)
 {
@@ -1585,14 +1475,15 @@ static int collect_entries(chm_ctx *ctx) {
     uint8_t *cur, *end;
     unsigned int remain;
 
-    if (!ctx || ctx->entry_count > 0) return ctx->entry_count;
+    if (!ctx) return 0;
+    if (ctx->entry_count > 0) return ctx->entry_count;
 
     if (!dir_session_begin(ctx, &session)) return 0;
 
     int32_t page = ctx->index_head;
     while (page != -1) {
         if (!dir_session_fetch(&session, page)) break;
-        if (memcmp(session.page_buf, _chm_pmgl_marker, 4) == 0) {
+        if (memcmp(session.page_buf, "PMGL", 4) == 0) {
             cur = session.page_buf;
             remain = _CHM_PMGL_LEN;
             if (read_pmgl_header(&cur, &remain, ctx->block_len, &header)) {
@@ -1636,7 +1527,7 @@ static int collect_entries(chm_ctx *ctx) {
     page = ctx->index_head;
     while (page != -1 && idx < count) {
         if (!dir_session_fetch(&session, page)) break;
-        if (memcmp(session.page_buf, _chm_pmgl_marker, 4) != 0) {
+        if (memcmp(session.page_buf, "PMGL", 4) != 0) {
             page = -1; continue;
         }
         cur = session.page_buf;
@@ -1699,6 +1590,7 @@ static uint8_t* find_in_PMGL(uint8_t* page_buf, uint32_t block_len, const char* 
     uint8_t* cur;
     uint8_t* temp;
     uint64_t strLen;
+    size_t objPathLen = strlen(objPath);
 
     cur = page_buf;
     hremain = _CHM_PMGL_LEN;
@@ -1713,7 +1605,7 @@ static uint8_t* find_in_PMGL(uint8_t* page_buf, uint32_t block_len, const char* 
 
         if ((uint64_t)(end - cur) < strLen) return NULL;
 
-        if (strLen == strlen(objPath) &&
+        if (strLen == objPathLen &&
             strncasecmp((const char*)cur, objPath, (size_t)strLen) == 0) {
             return temp;
         }
@@ -1784,15 +1676,13 @@ static bool chm_resolve_entry(chm_ctx *ctx, const char* objPath, struct chm_entr
 
         if (!dir_session_fetch(&session, curPage)) goto cleanup;
 
-        if (ctx->block_len < 4) goto cleanup;
-
-        if (memcmp(session.page_buf, _chm_pmgl_marker, 4) == 0) {
+        if (memcmp(session.page_buf, "PMGL", 4) == 0) {
             pEntry = find_in_PMGL(session.page_buf, ctx->block_len, objPath);
             if (pEntry == NULL) goto cleanup;
             if (!parse_PMGL_entry(ctx, &pEntry, session.page_buf_end, entry)) goto cleanup;
             dir_session_end(&session);
             return true;
-        } else if (memcmp(session.page_buf, _chm_pmgi_marker, 4) == 0) {
+        } else if (memcmp(session.page_buf, "PMGI", 4) == 0) {
             new_page = find_in_PMGI(session.page_buf, ctx->block_len, objPath);
             curPage = new_page;
         } else {
@@ -1905,8 +1795,12 @@ static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer)
     uint32_t i;
     int ok;
 
+    if (ctx->cache_num_blocks == 0) {
+        return -1;
+    }
+
     cbufferLen = ctx->reset_table.block_len + 6144;
-    cbuffer = lzx_cbuffer_ensure(ctx, cbufferLen);
+    cbuffer = lzx_cbuffer_ensure(ctx, cbufferLen + LZX_INPUT_PAD);
     if (!cbuffer) return -1;
 
     if (ctx->lzx_last_block >= 0) {
@@ -1931,7 +1825,7 @@ static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer)
                 ctx->cache_block_indices[indexSlot] = curBlockIdx;
 
                 if (!get_cmpblock_bounds(ctx, curBlockIdx, &cmpStart, &cmpLen) || cmpLen < 0 ||
-                    (uint64_t)cmpLen + LZX_INPUT_PAD > cbufferLen ||
+                    (uint64_t)cmpLen > cbufferLen ||
                     fetch_bytes(ctx, cbuffer, cmpStart, cmpLen) != cmpLen) {
                     memset(lbuffer, 0, (size_t)ctx->reset_table.block_len);
                     return (int64_t)0;
@@ -1953,10 +1847,6 @@ static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer)
         }
     }
 
-    if (ctx->cache_num_blocks == 0) {
-        return -1;
-    }
-
     indexSlot = (int)(block % ctx->cache_num_blocks);
     lbuffer = cache_slot_get(ctx, indexSlot, (uint32_t)ctx->reset_table.block_len);
     if (!lbuffer)
@@ -1965,7 +1855,7 @@ static int64_t decompress_block(chm_ctx *ctx, uint64_t block, uint8_t** ubuffer)
     *ubuffer = lbuffer;
 
     ok = get_cmpblock_bounds(ctx, block, &cmpStart, &cmpLen);
-    if (!ok || cmpLen < 0 || (uint64_t)cmpLen + LZX_INPUT_PAD > cbufferLen ||
+    if (!ok || cmpLen < 0 || (uint64_t)cmpLen > cbufferLen ||
         fetch_bytes(ctx, cbuffer, cmpStart, cmpLen) != cmpLen) {
         memset(lbuffer, 0, (size_t)ctx->reset_table.block_len);
         return (int64_t)0;
@@ -2021,13 +1911,14 @@ static int64_t decompress_region(chm_ctx *ctx, uint8_t* buf, uint64_t start, int
         want_wnd = (window_bits > 0) ? (1u << window_bits) : 0;
         if (!ctx->lzx_state) {
             ctx->lzx_last_block = -1;
-            ctx->lzx_state = LZXinit(window_bits);
+            ctx->lzx_state = LZXinit(ctx, window_bits);
         } else if (ctx->lzx_state->window_size != want_wnd) {
 
-            LZXteardown(ctx->lzx_state);
+            LZXteardown(ctx, ctx->lzx_state);
             ctx->lzx_last_block = -1;
-            ctx->lzx_state = LZXinit(window_bits);
+            ctx->lzx_state = LZXinit(ctx, window_bits);
         }
+        if (!ctx->lzx_state) return (int64_t)0;
     }
 
     if (ctx->reset_blkcount == 0) {
@@ -2055,23 +1946,36 @@ static int64_t read_entry_range(chm_ctx *ctx, struct chm_entry* entry, uint8_t* 
     if ((uint64_t)len > entry->length - addr) len = (int64_t)(entry->length - addr);
 
     if (entry->space == CHM_UNCOMPRESSED) {
+        int64_t got = 0;
 
-        if (!get_entry_offset(ctx, entry, addr, len, &offset)) return (int64_t)0;
-        return fetch_bytes(ctx, buf, offset, len);
+        if (get_entry_offset(ctx, entry, addr, len, &offset))
+            got = fetch_bytes(ctx, buf, offset, len);
+        if (got == 0)
+            chm_errorf(ctx, CHM_SEV_ERROR, "%s: data lies outside the file", entry->path ? entry->path : "?");
+        return got;
     }
 
     else
     {
         int64_t swath = 0, total = 0;
 
-        if (!ctx->compression_enabled) return total;
+        if (!ctx->compression_enabled) {
+            chm_errorf(ctx, CHM_SEV_ERROR, "%s: compressed, but the archive has no usable LZX section",
+                       entry->path ? entry->path : "?");
+            return total;
+        }
 
         do {
             if (!add_u64(entry->start, addr, &offset)) return total;
 
             swath = decompress_region(ctx, buf, offset, len);
 
-            if (swath == 0) return total;
+            if (swath == 0) {
+                chm_errorf(ctx, CHM_SEV_ERROR, "%s: decompression failed after %lld of %llu bytes",
+                           entry->path ? entry->path : "?", (long long)(addr),
+                           (unsigned long long)entry->length);
+                return total;
+            }
 
             total += swath;
             len -= swath;
@@ -2084,6 +1988,13 @@ static int64_t read_entry_range(chm_ctx *ctx, struct chm_entry* entry, uint8_t* 
     }
 }
 
+static bool open_failed(chm_ctx *ctx, const char *why)
+{
+    chm_errorf(ctx, CHM_SEV_ERROR, "chm_open: %s", why);
+    chm_close(ctx);
+    return false;
+}
+
 bool chm_open(chm_ctx *ctx, const uint8_t *data, size_t len)
 {
     uint8_t sbuffer[256];
@@ -2091,9 +2002,6 @@ bool chm_open(chm_ctx *ctx, const uint8_t *data, size_t len)
     uint8_t *sbufpos;
     struct chmItsfHeader itsfHeader = {0};
     struct chmItspHeader itspHeader = {0};
-#if 0
-    struct chm_entry uiSpan;
-#endif
     struct chm_entry uiLzxc = {0};
     struct chmLzxcControlData ctlData;
     int ok;
@@ -2111,10 +2019,7 @@ bool chm_open(chm_ctx *ctx, const uint8_t *data, size_t len)
     if (ok) {
         ok = read_itsf_header(&sbufpos, &sremain, &itsfHeader);
     }
-    if (!ok) {
-        chm_close(ctx);
-        return false;
-    }
+    if (!ok) return open_failed(ctx, "not a CHM (missing or invalid ITSF header)");
 
     ctx->dir_offset = itsfHeader.dir_offset;
     ctx->dir_len = itsfHeader.dir_len;
@@ -2126,53 +2031,25 @@ bool chm_open(chm_ctx *ctx, const uint8_t *data, size_t len)
     if (ok) {
         ok = read_itsp_header(&sbufpos, &sremain, &itspHeader);
     }
-    if (!ok) {
-        chm_close(ctx);
-        return false;
-    }
-    if (itsfHeader.dir_len < (uint64_t)itspHeader.header_len) {
-        chm_close(ctx);
-        return false;
-    }
+    if (!ok) return open_failed(ctx, "missing or invalid ITSP directory header");
+    if (itsfHeader.dir_len < (uint64_t)itspHeader.header_len)
+        return open_failed(ctx, "directory shorter than its ITSP header");
 
     ctx->dir_offset += itspHeader.header_len;
     ctx->dir_len -= itspHeader.header_len;
     ctx->index_root = itspHeader.index_root;
     ctx->index_head = itspHeader.index_head;
     ctx->block_len = itspHeader.block_len;
-    if (dir_page_count(ctx) > CHM_MAX_DIR_PAGES) {
-        chm_close(ctx);
-        return false;
-    }
+    if (dir_page_count(ctx) > CHM_MAX_DIR_PAGES)
+        return open_failed(ctx, "too many directory pages");
     ctx->dir_page_count = dir_page_count(ctx);
 
     if (ctx->index_root <= -1) ctx->index_root = ctx->index_head;
 
-    collect_entries(ctx);
+    if (collect_entries(ctx) == 0)
+        chm_errorf(ctx, CHM_SEV_WARNING, "chm_open: no entries found (corrupt directory or out of memory)");
 
     ctx->compression_enabled = 1;
-
-#if 0
-
-    if (!chm_resolve_entry(ctx,
-                           _CHMU_SPANINFO,
-                           &uiSpan) ||
-        uiSpan.is_compressed)
-    {
-        chm_close(ctx);
-        return false;
-    }
-
-    sremain = 8;
-    sbufpos = sbuffer;
-    if (read_entry_range(ctx, &uiSpan, sbuffer,
-                            0, sremain) != sremain                        ||
-        !read_u64(&sbufpos, &sremain, &ctx->span))
-    {
-        chm_close(ctx);
-        return false;
-    }
-#endif
 
     if (!chm_resolve_entry(ctx, _CHMU_RESET_TABLE, &ctx->rt_entry) ||
         ctx->rt_entry.is_compressed ||
@@ -2191,43 +2068,38 @@ bool chm_open(chm_ctx *ctx, const uint8_t *data, size_t len)
             ok = read_lzxc_reset_table(&sbufpos, &sremain, &ctx->reset_table);
         }
         if (!ok) {
+            chm_errorf(ctx, CHM_SEV_WARNING, "chm_open: invalid LZX reset table; compressed entries can't be read");
             ctx->compression_enabled = 0;
         } else {
 
             uint32_t bc = ctx->reset_table.block_count;
-            if (bc > 0 && bc <= (uint32_t)CHM_FULL_CACHE_MAX_BLOCKS)
+            if (bc <= (uint32_t)CHM_FULL_CACHE_MAX_BLOCKS &&
+                (uint64_t)bc * ctx->reset_table.block_len <= CHM_FULL_CACHE_MAX_BYTES)
                 ctx->cache_num_blocks = (int)bc;
-            else if (bc > (uint32_t)CHM_FULL_CACHE_MAX_BLOCKS)
-                ctx->cache_num_blocks = CHM_RING_CACHE_BLOCKS;
             else
-                ctx->cache_num_blocks = CHM_MAX_BLOCKS_CACHED;
+                ctx->cache_num_blocks = CHM_RING_CACHE_BLOCKS;
         }
     }
 
     if (ctx->compression_enabled) {
         sremain = (unsigned int)uiLzxc.length;
         if (uiLzxc.length > sizeof(sbuffer)) {
+
             chm_free(ctx, uiLzxc.path);
-            chm_close(ctx);
-            return false;
+            return open_failed(ctx, "LZX control data too large");
         }
 
         sbufpos = sbuffer;
         if (read_entry_range(ctx, &uiLzxc, sbuffer, 0, sremain) != sremain ||
             !read_lzxc_control_data(&sbufpos, &sremain, &ctlData)) {
+            chm_errorf(ctx, CHM_SEV_WARNING, "chm_open: invalid LZX control data; compressed entries can't be read");
             ctx->compression_enabled = 0;
-        } else
-        {
+        } else {
             ctx->window_size = ctlData.windowSize;
             ctx->reset_interval = ctlData.resetInterval;
 
-#if 0
-        ctx->reset_blkcount = ctx->reset_interval /
-                    (ctx->window_size / 2);
-#else
             ctx->reset_blkcount =
                 ctx->reset_interval / (ctx->window_size / 2) * ctlData.windowsPerReset;
-#endif
         }
     }
 
@@ -2246,7 +2118,7 @@ void chm_close(chm_ctx *ctx)
     ctx->lzx_last_block = -1;
 
     if (ctx->entries) {
-        for (int i = 0; i < ctx->entry_count; i++) {
+        for (i = 0; i < ctx->entry_count; i++) {
             chm_free(ctx, ctx->entries[i].path);
         }
         chm_free(ctx, ctx->entries);
@@ -2265,7 +2137,6 @@ void chm_close(chm_ctx *ctx)
     ctx->index_root = 0;
     ctx->index_head = 0;
     ctx->block_len = 0;
-    ctx->span = 0;
 
     chm_free(ctx, ctx->rt_entry.path);
     chm_free(ctx, ctx->cn_entry.path);

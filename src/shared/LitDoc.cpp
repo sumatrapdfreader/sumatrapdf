@@ -25,12 +25,18 @@ extern "C" {
 // d3des, in ext/msdes
 #include <d3des.h>
 
-// the LZX decompressor inside ext/chmdec/chm.c
+// the LZX decompressor inside ext/chmdec/chm.c; must match its definitions
+// (extern "C": a mismatch links and corrupts the arguments). A null ctx uses malloc.
+struct chm_ctx;
 struct LZXstate;
-struct LZXstate* LZXinit(int window);
-void LZXteardown(struct LZXstate* pState);
+struct LZXstate* LZXinit(struct chm_ctx* ctx, int window);
+void LZXteardown(struct chm_ctx* ctx, struct LZXstate* pState);
 int LZXreset(struct LZXstate* pState);
 int LZXdecompress(struct LZXstate* pState, u8* inpos, u8* outpos, int inlen, int outlen);
+}
+
+static void FreeLzx(struct LZXstate* lzx) {
+    LZXteardown(nullptr, lzx);
 }
 
 #include "LitDoc.h"
@@ -668,12 +674,12 @@ static Str LitLzxDecompress(Str content, Str control, Str resetTable) {
     if (windowSize < 15 || windowSize > 21) {
         return {};
     }
-    struct LZXstate* lzx = LZXinit(windowSize);
+    struct LZXstate* lzx = LZXinit(nullptr, windowSize);
     if (!lzx) {
         return {};
     }
 
-    AutoCall teardown(LZXteardown, lzx);
+    AutoCall teardown(FreeLzx, lzx);
 
     u32 ofsEntry32 = LitU32(resetTable, 12);
     if (ofsEntry32 > (u32)len(resetTable) - 8) {
@@ -1649,11 +1655,11 @@ bool LitDoc_UnitTestLzxOverrun() {
     f2.Put(kCodeB, 2);
     f2.Flush();
 
-    struct LZXstate* lzx = LZXinit(kWindowBits);
+    struct LZXstate* lzx = LZXinit(nullptr, kWindowBits);
     if (!lzx) {
         return false;
     }
-    AutoCall teardown(LZXteardown, lzx);
+    AutoCall teardown(FreeLzx, lzx);
 
     char out[6];
     if (LZXdecompress(lzx, f1.d, (u8*)out, f1.off, 4) != kLzxOk || !MemEq(out, "abbb", 4)) {

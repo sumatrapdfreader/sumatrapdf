@@ -2,8 +2,8 @@
 //
 // Builds SumatraPDF-static.exe with ASan (cmd/build.ts -asan), generates a minimal
 // malicious CHM (issue-chm-lzx-make.ts), and runs the control pipe CHM test command.
-// With the fix, the isolated pretree check rejects malformed input and the
-// process exits 0. Without the fix, ASan aborts on the isolated heap buffer test.
+// With the fix, reading the malformed LZX data is rejected and the process
+// exits 0. Without the fix, ASan aborts on the heap overflow.
 //
 // Run:  bun tests/issue-chm-lzx.ts [--no-build]
 
@@ -66,9 +66,6 @@ export async function testit(): Promise<void> {
 
   if (res.code !== 0) {
     throw new Error(`control TestChm exited with ${res.code} (expected 0; ASan abort means unfixed lzx.c)`);
-  }
-  if (!res.out.includes("pretree_isolated=REJECTED")) {
-    throw new Error("expected pretree_isolated=REJECTED in output");
   }
   if (!res.out.includes("result=OK")) {
     throw new Error("expected result=OK in output");

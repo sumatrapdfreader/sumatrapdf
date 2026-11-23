@@ -56,9 +56,6 @@ extern "C" {
 #include "Notifications.h"
 #include "SumatraTest.h"
 
-// internal LZX test hook, defined in chm.c but not exposed in chm.h
-extern "C" int LZX_test_pretree_make_decode_table(void);
-
 void EnsureTestSettings() {
     // engine creation reads a few fields off gSettings (e.g. disableAntiAlias)
     if (!gSettings) {
@@ -100,21 +97,12 @@ TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line) {
     return ToStrTemp(out);
 }
 
-// Headless CHM exercise test. Runs an isolated PRETREE make_decode_table check (so
-// ASan can catch the lzx overflow on a heap buffer), opens the chm via chm_open,
-// reads every entry, and optionally loads ChmFile / EngineChm.
+// Headless CHM exercise test. Opens the chm via chm_open, reads every entry
+// (ASan catches an lzx overflow), and optionally loads ChmFile / EngineChm.
 // Used by tests/issue-chm-lzx.ts; not meant for end users.
 TempStr ChmResultTemp(Str chmPath, int* exitCodeOut) {
     str::Builder out;
     bool ok = true;
-
-    int pretreeRes = LZX_test_pretree_make_decode_table();
-    if (pretreeRes == 1) {
-        out.Append(StrL("pretree_isolated=REJECTED\n"));
-    } else {
-        out.Append(fmt("pretree_isolated=UNEXPECTED_%d\n", pretreeRes));
-        ok = false;
-    }
 
     Str fileData = file::ReadFile(chmPath);
     if (len(fileData) == 0) {

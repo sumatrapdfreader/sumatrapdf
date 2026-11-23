@@ -38,7 +38,11 @@ extern "C" {
 typedef void *(*chm_alloc_cb)(void *user, void *ctx, size_t size);
 typedef void  (*chm_free_cb)(void *user, void *ctx, void *ptr);
 
-/* msg is a NUL-terminated, already-formatted message. */
+/* severity passed to chm_error_cb */
+#define CHM_SEV_ERROR 0   /* the operation failed (chm_open, chm_read_entry) */
+#define CHM_SEV_WARNING 1 /* the operation went on with reduced results */
+
+/* msg is a NUL-terminated, already-formatted message (no trailing newline). */
 typedef void (*chm_error_cb)(void *user, int severity, const char *msg);
 
 typedef struct chm_ctx chm_ctx;
