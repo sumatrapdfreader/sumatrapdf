@@ -6244,7 +6244,8 @@ static void RenameCurrentFile(MainWindow* win) {
     auto s = Tr("Rename To");
     ofn.lpstrTitle = CWStrTemp(s);
     ofn.lpstrInitialDir = initDir.s;
-    ofn.lpstrDefExt = defExtW.s + 1;
+    // without the leading dot; nullptr when there is no extension
+    ofn.lpstrDefExt = len(defExtW) > 1 ? defExtW.s + 1 : nullptr;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     ok = (TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn));
