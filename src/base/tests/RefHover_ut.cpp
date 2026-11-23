@@ -127,6 +127,78 @@ static void AuthorYearEntryFitsToOneEntry() {
     utassert(box.dx < kPageW);
 }
 
+// (3d2) Author-year hanging indent, link dest pointing into the gap above the
+// entry head (XYZ dests often anchor a few points above the first line, inside
+// the previous entry's last line): the out-dented head line below must win over
+// the y-nearest continuation line, so the box excludes the previous entry.
+static void AuthorYearDestAboveHead() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    AddText(text, coords, n, 1024, L"Prior, A. (2016). Earlier work title.", 72, 170);
+    AddText(text, coords, n, 1024, L"someurl.example/path/ Accessed 18 July 2026.", 92, 185);
+    AddText(text, coords, n, 1024, L"Vendor, C. (2017). License usage study.", 72, 197);
+    AddText(text, coords, n, 1024, L"Empirical Journal, 22(3), 1537-1577.", 92, 212);
+    AddText(text, coords, n, 1024, L"Next, D. (2018). Following entry.", 72, 236);
+    // dest 7pt above the head: nearer to the previous entry's last line
+    RectF box = DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 190.f);
+    utassert(!IsEmpty(box));
+    // starts at the head line (197 minus padding), not the tail line at y=185
+    utassert(box.y >= 190.f && box.y <= 197.f);
+    // covers the full entry (both lines), nothing of the next entry
+    utassert(box.y + box.dy >= 224.f);
+    utassert(box.y + box.dy < 236.f);
+}
+
+// (3d3) Entry cut by a page break: the next page's reference column starts
+// with indented continuation lines. FindPageWrapContinuation returns their
+// box (dropping the running header, which sits a large gap above the body)
+// and empty when the page starts with a new (flush) entry instead.
+static void PageWrapContinuationFound() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    AddText(text, coords, n, 1024, L"36                              Author et al.", 72, 57);
+    AddText(text, coords, n, 1024, L"tail of the entry cut by the page break. Work-", 92, 94);
+    AddText(text, coords, n, 1024, L"shop Papers, vol. 12, pp. 10-20.", 92, 106);
+    AddText(text, coords, n, 1024, L"Next, D. (2024) The following entry here.", 72, 118);
+    RectF box = FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 72);
+    utassert(!IsEmpty(box));
+    // starts at the first tail line, header excluded
+    utassert(box.y >= 85.f && box.y <= 94.f);
+    // covers both tail lines, not the next entry's head line
+    utassert(box.y + box.dy >= 118.f);
+    utassert(box.y + box.dy <= 125.f);
+
+    // flush first body line = a new entry starts the page: no continuation
+    n = 0;
+    AddText(text, coords, n, 1024, L"36                              Author et al.", 72, 57);
+    AddText(text, coords, n, 1024, L"Next, D. (2024) A new entry starting flush on", 72, 94);
+    AddText(text, coords, n, 1024, L"this page, with its continuation line.", 92, 106);
+    utassert(IsEmpty(FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 72)));
+}
+
+// (3d4) mayWrapPageOut: set when the fitted entry ends its column with no
+// text below (it may continue on the next page), not when a sibling follows.
+static void EntryMayWrapAtColumnEnd() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    AddText(text, coords, n, 1024, L"Last, E. (2023) A study cut by the page", 72, 700);
+    AddText(text, coords, n, 1024, L"break: its tail is on the next page and", 92, 712);
+    bool mayWrap = false;
+    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 700.f, nullptr, &mayWrap);
+    utassert(mayWrap);
+
+    n = 0;
+    AddText(text, coords, n, 1024, L"First, F. (2022) A complete entry with", 72, 200);
+    AddText(text, coords, n, 1024, L"its continuation line right here.", 92, 212);
+    AddText(text, coords, n, 1024, L"Second, S. (2023) The following entry.", 72, 224);
+    mayWrap = false;
+    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f, nullptr, &mayWrap);
+    utassert(!mayWrap);
+}
+
 // (3e) Single-line description-list entries (abbreviation lists) with normal
 // leading: the next entry is detected by a new line back at the entry's X
 // before any continuation indent was seen (rule (d)).
@@ -1119,6 +1191,9 @@ void RefHoverTest() {
     NormalizeGlyphLinesFlattensLine();
     VariableGlyphTopsEntryNotHijacked();
     AuthorYearEntryFitsToOneEntry();
+    AuthorYearDestAboveHead();
+    PageWrapContinuationFound();
+    EntryMayWrapAtColumnEnd();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
     CaptionExtensionPicksTopmost();
