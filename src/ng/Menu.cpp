@@ -1107,6 +1107,10 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     }
 
     int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
+    win->contextMenuPageNo = pageNoUnderCursor;
+    if (pageNoUnderCursor > 0) {
+        win->contextMenuPagePt = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
+    }
 
     bool onImage = pageEl && pageEl->Is(kindPageElementImage);
     onImage = onImage || (engine && engine->kind == kindEngineImage);
@@ -1272,20 +1276,57 @@ static void ContextMenuEditImage(MainWindow* win, IPageElement* pageEl, int page
     str::Free(origData);
 }
 
+// the commands below that act on the link, image or annotation under the menu
+static bool ActsOnElementUnderMenu(int cmdId) {
+    switch (cmdId) {
+        case CmdSearchGoogleLensImage:
+        case CmdReplaceImage:
+        case CmdEditImageExternally:
+        case CmdSaveImage:
+        case CmdCropImage:
+        case CmdResizeImage:
+        case CmdConvertImageToPdf:
+        case CmdCopyLinkTarget:
+        case CmdShowAnnotationText:
+        case CmdCopyComment:
+        case CmdSaveAttachment:
+        case CmdCopyImage:
+            return true;
+    }
+    return false;
+}
+
 // orig's switch after TrackPopupMenu returned
 void WindowContextMenuCommand(MainWindow* win, int cmdId) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     win->contextMenuHighlightPageNo = 0;
+    DisplayModel* dm = win->AsFixed();
+    // the popup isn't modal: move the point to where its page is now. If the
+    // page scrolled out of view, nothing is under the point the menu was for.
+    int pageNoUnderCursor = win->contextMenuPageNo;
+    bool pointGone = false;
+    if (dm && pageNoUnderCursor > 0 && dm->ValidPageNo(pageNoUnderCursor)) {
+        win->contextMenuPt = dm->CvtToScreen(pageNoUnderCursor, win->contextMenuPagePt);
+        pointGone = !dm->PageVisible(pageNoUnderCursor);
+    } else {
+        pageNoUnderCursor = 0;
+    }
+    if (pointGone) {
+        win->contextMenuPtValid = false;
+    }
     if (HandleReadAloudMenuCommand(win, cmdId)) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
     if (!dm || !win->ctrl) {
         return;
     }
     logf("WindowContextMenuCommand: %d (%s)\n", cmdId, GetCommandName(cmdId));
+    if (pointGone && (CommandUsesContextMenuPoint(cmdId) || ActsOnElementUnderMenu(cmdId))) {
+        logf("WindowContextMenuCommand: page %d scrolled out of view\n", pageNoUnderCursor);
+        return;
+    }
     Point cursorPos = win->contextMenuPt;
     WindowTab* tab = win->CurrentTab();
     Str filePath = win->ctrl->GetFilePath();
@@ -1294,7 +1335,6 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
     int pageNoUnderEl = 0;
     IPageElement* pageEl = dm->GetElementAtPos(cursorPos, &pageNoUnderEl);
     Str value = pageEl ? pageEl->GetValue() : Str{};
-    int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
     EngineBase* engine = dm->GetEngine();
     BuildMenuCtx* ctx = NewBuildMenuCtx(tab, cursorPos);
     AutoDelete<AppCommandCtx> delCtx(ctx);

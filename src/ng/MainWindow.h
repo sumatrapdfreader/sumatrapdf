@@ -577,6 +577,9 @@ struct MainWindow {
     int contextMenuHighlightPageNo = 0;
     Point contextMenuPt;
     bool contextMenuPtValid = false;
+    // contextMenuPt on its page: the view can scroll while the menu is up
+    int contextMenuPageNo = 0;
+    PointF contextMenuPagePt;
 
     bool showSelection = false;
     // -quicklook: a chrome-less always-on-top preview window (Explorer Space)
