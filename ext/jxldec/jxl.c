@@ -529,6 +529,20 @@ static JXL_INLINE_HINT uint32_t jxl_ans_read_symbol(const jxl_ans_hist *h,
     return symbol;
 }
 
+static JXL_INLINE_HINT void jxl_rbr_refill(const uint8_t *data, size_t len,
+                                           size_t *pos, uint64_t *buf,
+                                           int *nbits) {
+    uint64_t bits;
+    if (*pos + 8 > len) return;
+    memcpy(&bits, data + *pos, sizeof(bits));
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    bits = __builtin_bswap64(bits);
+#endif
+    *buf |= bits << *nbits;
+    *pos += (size_t)((63 - *nbits) >> 3);
+    *nbits |= 56;
+}
+
 uint32_t jxl_dec_hybrid_uint(jxl_br *br, const jxl_int_config *cfg,
                              uint32_t token);
 
@@ -538,6 +552,55 @@ uint32_t jxl_dec_read_clustered_no_lz77(jxl_dec *dec, jxl_br *br,
 int jxl_dec_is_prefix_rle1(const jxl_dec *dec);
 uint32_t jxl_dec_read_prefix_rle1(jxl_dec *dec, jxl_br *br, uint32_t cluster,
                                   uint32_t *last, uint32_t *run, int *have);
+
+static JXL_INLINE_HINT int jxl_dec_read_prefix_rle1_fast(
+    const jxl_dec *dec, const jxl_pfx_hist *h, const uint8_t *data,
+    size_t data_len, size_t *pos, uint64_t *bufp, int *nbitsp,
+    uint32_t *last, uint32_t *run, int *have) {
+    uint64_t buf;
+    int nbits;
+    uint32_t e, token, nb, len;
+    if (*nbitsp < 46) {
+        jxl_rbr_refill(data, data_len, pos, bufp, nbitsp);
+        if (*nbitsp < 46) return 0;
+    }
+    buf = *bufp;
+    nbits = *nbitsp;
+    e = h->root[buf & h->root_mask].bits;
+    if (e >> 24) {
+        e = h->sub[(e & 0xffff) +
+                   ((uint32_t)(buf >> h->root_bits) & ((e >> 16) & 0xff))].bits;
+    }
+    len = (e >> 16) & 0xff;
+    token = e & 0xffff;
+    buf >>= len;
+    if (token >= dec->min_symbol) {
+        const jxl_int_config *cfg = &dec->lz_len_conf;
+        uint32_t n;
+        if (!*have) return 0;
+        token -= dec->min_symbol;
+        if (token < cfg->split) {
+            n = token;
+            nb = 0;
+        } else {
+            nb = (cfg->split_exponent + token - cfg->split) & 31;
+            n = (1u << nb) | ((uint32_t)buf & ((1u << nb) - 1));
+        }
+        if (n > 0xffffffffu - dec->min_length) return 0;
+        *run = n + dec->min_length - 1;
+    } else if (token == 0) {
+        nb = 0;
+        *last = 0;
+        *have = 1;
+    } else {
+        nb = (token - 1) & 31;
+        *last = (1u << nb) | ((uint32_t)buf & ((1u << nb) - 1));
+        *have = 1;
+    }
+    *bufp = buf >> nb;
+    *nbitsp = nbits - (int)(len + nb);
+    return 1;
+}
 int jxl_dec_finalize(jxl_dec *dec);
 
 int jxl_read_clusters(jxl_ctx *ctx, jxl_br *br, uint32_t num_dist,
@@ -7311,20 +7374,47 @@ int jxl_modular_decode(jxl_ctx *ctx, jxl_modular *m, jxl_chanlist *cl,
                 if (rle1_fast) {
                     int32_t *row = ch->data;
 
+                    const jxl_pfx_hist *hist = &dec->pfx[cluster];
+                    const uint8_t *b_data = br->data;
+                    size_t b_len = br->len, b_pos = br->byte_pos;
+                    uint64_t b_buf = br->buf;
+                    int b_nbits = br->nbits;
+                    uint32_t r_value = rle1_value, r_run = rle1_run;
+                    int32_t r_diff = rle1_diff;
+                    int r_have = rle1_have;
+#define JXL_RLE1_NEXT()                                                       \
+    do {                                                                      \
+        if (r_run) {                                                          \
+            r_run--;                                                          \
+        } else {                                                              \
+            if (!jxl_dec_read_prefix_rle1_fast(dec, hist, b_data, b_len,      \
+                                               &b_pos, &b_buf, &b_nbits,      \
+                                               &r_value, &r_run, &r_have)) {  \
+                br->byte_pos = b_pos; br->buf = b_buf; br->nbits = b_nbits;   \
+                rle1_value = r_value; rle1_run = r_run; rle1_have = r_have;   \
+                jxl_dec_read_prefix_rle1(dec, br, cluster, &rle1_value,       \
+                                         &rle1_run, &rle1_have);              \
+                b_pos = br->byte_pos; b_buf = br->buf; b_nbits = br->nbits;   \
+                r_value = rle1_value; r_run = rle1_run; r_have = rle1_have;   \
+            }                                                                 \
+            r_diff = jxl_unpack_signed(r_value);                              \
+        }                                                                     \
+    } while (0)
+#define JXL_RLE1_SYNC()                                                       \
+    do {                                                                      \
+        br->byte_pos = b_pos; br->buf = b_buf; br->nbits = b_nbits;           \
+        rle1_value = r_value; rle1_run = r_run;                               \
+        rle1_diff = r_diff; rle1_have = r_have;                               \
+    } while (0)
+
                     for (x = 0; x < ch->w; x++) {
                         int32_t guess = x ? row[x - 1] : 0;
-                        if (rle1_run) {
-                            rle1_run--;
-                        } else {
-                            uint32_t token = jxl_dec_read_prefix_rle1(
-                                dec, br, cluster, &rle1_value, &rle1_run,
-                                &rle1_have);
-                            rle1_diff = jxl_unpack_signed(token);
-                        }
-                        row[x] = (int32_t)((uint32_t)rle1_diff +
+                        JXL_RLE1_NEXT();
+                        row[x] = (int32_t)((uint32_t)r_diff +
                                            (uint32_t)guess);
                     }
                     if (br->err || dec->err) {
+                        JXL_RLE1_SYNC();
                         JXL_ERR(ctx, "modular: truncated stream %u",
                                 (unsigned)stream_idx);
                         goto done;
@@ -7334,40 +7424,30 @@ int jxl_modular_decode(jxl_ctx *ctx, jxl_modular *m, jxl_chanlist *cl,
                         int32_t left, topleft;
                         row = ch->data + (size_t)y * ch->stride;
                         rtop = row - ch->stride;
-                        if (rle1_run) {
-                            rle1_run--;
-                        } else {
-                            uint32_t token = jxl_dec_read_prefix_rle1(
-                                dec, br, cluster, &rle1_value, &rle1_run,
-                                &rle1_have);
-                            rle1_diff = jxl_unpack_signed(token);
-                        }
-                        row[0] = (int32_t)((uint32_t)rle1_diff +
+                        JXL_RLE1_NEXT();
+                        row[0] = (int32_t)((uint32_t)r_diff +
                                            (uint32_t)rtop[0]);
                         left = row[0];
                         topleft = rtop[0];
                         for (x = 1; x < ch->w; x++) {
                             int32_t top;
-                            if (rle1_run) {
-                                rle1_run--;
-                            } else {
-                                uint32_t token = jxl_dec_read_prefix_rle1(
-                                    dec, br, cluster, &rle1_value, &rle1_run,
-                                    &rle1_have);
-                                rle1_diff = jxl_unpack_signed(token);
-                            }
+                            JXL_RLE1_NEXT();
                             top = rtop[x];
-                            left = (int32_t)((uint32_t)rle1_diff +
+                            left = (int32_t)((uint32_t)r_diff +
                                 (uint32_t)grad_clamped(top, left, topleft));
                             row[x] = left;
                             topleft = top;
                         }
                         if (br->err || dec->err) {
+                            JXL_RLE1_SYNC();
                             JXL_ERR(ctx, "modular: truncated stream %u",
                                     (unsigned)stream_idx);
                             goto done;
                         }
                     }
+                    JXL_RLE1_SYNC();
+#undef JXL_RLE1_NEXT
+#undef JXL_RLE1_SYNC
                     continue;
                 }
 
