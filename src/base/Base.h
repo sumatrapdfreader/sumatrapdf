@@ -158,7 +158,6 @@
 #include <commctrl.h>
 #include <windowsx.h>
 #include <winsafer.h>
-#include <wininet.h>
 #include <versionhelpers.h>
 #include <tlhelp32.h>
 #include <shellapi.h>

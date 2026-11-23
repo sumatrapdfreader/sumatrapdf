@@ -493,7 +493,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg32/obj-s/bench_image.lib" /MAP:"../out/dbg32/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -527,7 +527,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg64/obj-s/bench_image.lib" /MAP:"../out/dbg64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -561,7 +561,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj-s/bench_image.lib" /MAP:"../out/dbgarm64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -595,7 +595,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj-s/bench_image.lib" /MAP:"../out/dbg64_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -629,7 +629,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj-s/bench_image.lib" /MAP:"../out/dbgfull32/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -663,7 +663,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj-s/bench_image.lib" /MAP:"../out/dbgfull64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -697,7 +697,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj-s/bench_image.lib" /MAP:"../out/dbgfullarm64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -731,7 +731,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj-s/bench_image.lib" /MAP:"../out/dbgfull64_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -769,7 +769,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel32/obj-s/bench_image.lib" /MAP:"../out/rel32/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -807,7 +807,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64/obj-s/bench_image.lib" /MAP:"../out/rel64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -845,7 +845,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/arm64/obj-s/bench_image.lib" /MAP:"../out/arm64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -882,7 +882,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj-s/bench_image.lib" /MAP:"../out/rel64_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -921,7 +921,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj-s/bench_image.lib" /MAP:"../out/rel32_prefast/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -960,7 +960,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj-s/bench_image.lib" /MAP:"../out/rel64_prefast/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -999,7 +999,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj-s/bench_image.lib" /MAP:"../out/arm64_prefast/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -1037,7 +1037,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj-s/bench_image.lib" /MAP:"../out/rel64_prefast_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -1070,7 +1070,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/prf32/obj-s/bench_image.lib" /MAP:"../out/prf32/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -1103,7 +1103,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/prf64/obj-s/bench_image.lib" /MAP:"../out/prf64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -1136,7 +1136,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/prfarm64/obj-s/bench_image.lib" /MAP:"../out/prfarm64/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -1169,7 +1169,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;gdi32.lib;user32.lib;comctl32.lib;shlwapi.lib;Version.lib;ole32.lib;oleAut32.lib;windowscodecs.lib;shcore.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>false</GenerateMapFile>
       <AdditionalOptions>/IMPLIB:"../out/prf64_asan/obj-s/bench_image.lib" /MAP:"../out/prf64_asan/obj-s/bench_image.map" %(AdditionalOptions)</AdditionalOptions>
     </Link>

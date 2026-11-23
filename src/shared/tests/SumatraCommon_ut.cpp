@@ -723,6 +723,38 @@ static void RunSlowStream(SlowStreamRun* run) {
     run->ok = HttpPostStream(run->url, Str(), StrL("{}"), &run->sink, &run->cancel);
 }
 
+static void CountProgress(int* calls, HttpProgress* p) {
+    *calls += 1;
+    utassert(p->nDownloaded > 0);
+}
+
+// HttpGet / HttpGetToFile: any url (no origin check), redirects followed
+static void HttpGetTest(Str base) {
+#if OS_WIN
+    HttpRsp rsp;
+    utassert(HttpGet(fmt("%s/public-redirect", base), &rsp));
+    utassert(rsp.httpStatusCode == 200 && len(rsp.data) == 100000);
+    HttpRsp missing;
+    utassert(!HttpGet(fmt("%s/nope", base), &missing));
+    utassert(missing.httpStatusCode != 200);
+
+    TempStr dest = GetTempFilePathTemp(StrL("sumatra-get-"));
+    int calls = 0;
+    auto cb = MkFunc1(CountProgress, &calls);
+    utassert(HttpGetToFile(fmt("%s/public-redirect", base), dest, cb));
+    utassert(file::GetSize(dest) == 100000);
+    utassert(calls > 0);
+    // over maxSize: fails and leaves no file
+    file::Delete(dest);
+    utassert(!HttpGetToFile(fmt("%s/public", base), dest, cb, 1000));
+    utassert(file::GetSize(dest) < 0);
+    utassert(!HttpGetToFile(fmt("%s/nope", base), dest, cb));
+    utassert(file::GetSize(dest) < 0);
+#else
+    (void)base;
+#endif
+}
+
 // HttpPostStream: a whole streamed reply, and a cancel that ends a stalled one
 static void HttpStreamTest(Str base) {
     {
@@ -842,6 +874,7 @@ void HttpTransferTest() {
 
     file::Delete(dest);
     HttpStreamTest(kBase);
+    HttpGetTest(kBase);
 }
 
 // a 2x2 RGBA PNG

@@ -1957,18 +1957,20 @@ TempStr GetLastErrorStrTemp(DWORD& err) {
     if (err == 0) {
         return StrL("");
     }
-    if (err == ERROR_INTERNET_EXTENDED_ERROR) {
-        WCHAR buf[4096]{};
-        DWORD bufSize = dimof(buf) - 1;
-        // ignoring a case where buffer is too small. 4 kB should be enough for everybody
-        InternetGetLastResponseInfoW(&err, buf, &bufSize);
-        buf[dimof(buf) - 1] = 0;
-        return ToUtf8Temp(buf);
-    }
     WCHAR* msgBuf = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    // WinHTTP's errors (12001 - 12999) are in its own message table
+    constexpr DWORD kWinHttpErrorFirst = 12001;
+    constexpr DWORD kWinHttpErrorLast = 12999;
+    HMODULE from = nullptr;
+    if (err >= kWinHttpErrorFirst && err <= kWinHttpErrorLast) {
+        from = GetModuleHandleW(L"winhttp.dll");
+    }
+    if (from) {
+        flags |= FORMAT_MESSAGE_FROM_HMODULE;
+    }
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
-    DWORD ferr = FormatMessageW(flags, nullptr, err, lang, (LPWSTR)&msgBuf, 0, nullptr);
+    DWORD ferr = FormatMessageW(flags, from, err, lang, (LPWSTR)&msgBuf, 0, nullptr);
     if (!ferr || !msgBuf) {
         return StrL("");
     }

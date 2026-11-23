@@ -518,10 +518,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbg32/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbg32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbg32/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbg32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -561,10 +561,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbg64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbg64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbg64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbg64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -604,10 +604,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgarm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgarm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgarm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -647,10 +647,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbg64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbg64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbg64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -690,10 +690,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfull32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull32/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfull32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -733,10 +733,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfull64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfull64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -776,10 +776,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfullarm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfullarm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfullarm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -819,10 +819,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfull64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/dbgfull64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/dbgfull64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -866,10 +866,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel32/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel32/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -913,10 +913,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -960,10 +960,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/arm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/arm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/arm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/arm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1006,10 +1006,10 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1053,10 +1053,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel32_prefast/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel32_prefast/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel32_prefast/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1100,10 +1100,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64_prefast/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64_prefast/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1147,10 +1147,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj-s/SumatraPDF-static.lib" /MAP:"../out/arm64_prefast/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/arm64_prefast/obj-s/SumatraPDF-static.lib" /MAP:"../out/arm64_prefast/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1193,10 +1193,10 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64_prefast_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/rel64_prefast_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/rel64_prefast_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1235,10 +1235,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/prf32/obj-s/SumatraPDF-static.lib" /MAP:"../out/prf32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/prf32/obj-s/SumatraPDF-static.lib" /MAP:"../out/prf32/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1277,10 +1277,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/prf64/obj-s/SumatraPDF-static.lib" /MAP:"../out/prf64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/prf64/obj-s/SumatraPDF-static.lib" /MAP:"../out/prf64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1319,10 +1319,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/prfarm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/prfarm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/prfarm64/obj-s/SumatraPDF-static.lib" /MAP:"../out/prfarm64/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /DEPENDENTLOADFLAG:0x800 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1361,10 +1361,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;wininet.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>delayimp.lib;uiautomationcore.lib;uxtheme.lib;wintrust.lib;advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;comctl32.lib;msimg32.lib;winspool.lib;urlmon.lib;gdiplus.lib;ole32.lib;oleAut32.lib;shlwapi.lib;version.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/IMPLIB:"../out/prf64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/prf64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/IMPLIB:"../out/prf64_asan/obj-s/SumatraPDF-static.lib" /MAP:"../out/prf64_asan/obj-s/SumatraPDF-static.map" /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:uiautomationcore.dll /INFERASANLIBS %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>

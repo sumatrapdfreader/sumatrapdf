@@ -496,10 +496,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg32\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbg32/PdfPreview.dll" /PDB:"../out/dbg32/PdfPreview.pdb" /IMPLIB:"../out/dbg32/obj/PdfPreview.lib" /MAP:"../out/dbg32/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbg32/PdfPreview.dll" /PDB:"../out/dbg32/PdfPreview.pdb" /IMPLIB:"../out/dbg32/obj/PdfPreview.lib" /MAP:"../out/dbg32/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -534,10 +534,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbg64/PdfPreview.dll" /PDB:"../out/dbg64/PdfPreview.pdb" /IMPLIB:"../out/dbg64/obj/PdfPreview.lib" /MAP:"../out/dbg64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbg64/PdfPreview.dll" /PDB:"../out/dbg64/PdfPreview.pdb" /IMPLIB:"../out/dbg64/obj/PdfPreview.lib" /MAP:"../out/dbg64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -572,10 +572,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgarm64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbgarm64/PdfPreview.dll" /PDB:"../out/dbgarm64/PdfPreview.pdb" /IMPLIB:"../out/dbgarm64/obj/PdfPreview.lib" /MAP:"../out/dbgarm64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbgarm64/PdfPreview.dll" /PDB:"../out/dbgarm64/PdfPreview.pdb" /IMPLIB:"../out/dbgarm64/obj/PdfPreview.lib" /MAP:"../out/dbgarm64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -610,10 +610,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64_asan\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbg64_asan/PdfPreview.dll" /PDB:"../out/dbg64_asan/PdfPreview.pdb" /IMPLIB:"../out/dbg64_asan/obj/PdfPreview.lib" /MAP:"../out/dbg64_asan/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbg64_asan/PdfPreview.dll" /PDB:"../out/dbg64_asan/PdfPreview.pdb" /IMPLIB:"../out/dbg64_asan/obj/PdfPreview.lib" /MAP:"../out/dbg64_asan/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -648,10 +648,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfull32\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbgfull32/PdfPreview.dll" /PDB:"../out/dbgfull32/PdfPreview.pdb" /IMPLIB:"../out/dbgfull32/obj/PdfPreview.lib" /MAP:"../out/dbgfull32/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbgfull32/PdfPreview.dll" /PDB:"../out/dbgfull32/PdfPreview.pdb" /IMPLIB:"../out/dbgfull32/obj/PdfPreview.lib" /MAP:"../out/dbgfull32/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -686,10 +686,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfull64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbgfull64/PdfPreview.dll" /PDB:"../out/dbgfull64/PdfPreview.pdb" /IMPLIB:"../out/dbgfull64/obj/PdfPreview.lib" /MAP:"../out/dbgfull64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbgfull64/PdfPreview.dll" /PDB:"../out/dbgfull64/PdfPreview.pdb" /IMPLIB:"../out/dbgfull64/obj/PdfPreview.lib" /MAP:"../out/dbgfull64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -724,10 +724,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfullarm64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbgfullarm64/PdfPreview.dll" /PDB:"../out/dbgfullarm64/PdfPreview.pdb" /IMPLIB:"../out/dbgfullarm64/obj/PdfPreview.lib" /MAP:"../out/dbgfullarm64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbgfullarm64/PdfPreview.dll" /PDB:"../out/dbgfullarm64/PdfPreview.pdb" /IMPLIB:"../out/dbgfullarm64/obj/PdfPreview.lib" /MAP:"../out/dbgfullarm64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -762,10 +762,10 @@
       <SubSystem>Windows</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbgfull64_asan\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/dbgfull64_asan/PdfPreview.dll" /PDB:"../out/dbgfull64_asan/PdfPreview.pdb" /IMPLIB:"../out/dbgfull64_asan/obj/PdfPreview.lib" /MAP:"../out/dbgfull64_asan/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/dbgfull64_asan/PdfPreview.dll" /PDB:"../out/dbgfull64_asan/PdfPreview.pdb" /IMPLIB:"../out/dbgfull64_asan/obj/PdfPreview.lib" /MAP:"../out/dbgfull64_asan/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -804,10 +804,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/rel32/PdfPreview.dll" /PDB:"../out/rel32/PdfPreview.pdb" /IMPLIB:"../out/rel32/obj/PdfPreview.lib" /MAP:"../out/rel32/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/rel32/PdfPreview.dll" /PDB:"../out/rel32/PdfPreview.pdb" /IMPLIB:"../out/rel32/obj/PdfPreview.lib" /MAP:"../out/rel32/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -846,10 +846,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/rel64/PdfPreview.dll" /PDB:"../out/rel64/PdfPreview.pdb" /IMPLIB:"../out/rel64/obj/PdfPreview.lib" /MAP:"../out/rel64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/rel64/PdfPreview.dll" /PDB:"../out/rel64/PdfPreview.pdb" /IMPLIB:"../out/rel64/obj/PdfPreview.lib" /MAP:"../out/rel64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -888,10 +888,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\arm64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/arm64/PdfPreview.dll" /PDB:"../out/arm64/PdfPreview.pdb" /IMPLIB:"../out/arm64/obj/PdfPreview.lib" /MAP:"../out/arm64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/arm64/PdfPreview.dll" /PDB:"../out/arm64/PdfPreview.pdb" /IMPLIB:"../out/arm64/obj/PdfPreview.lib" /MAP:"../out/arm64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -929,10 +929,10 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_asan\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/rel64_asan/PdfPreview.dll" /PDB:"../out/rel64_asan/PdfPreview.pdb" /IMPLIB:"../out/rel64_asan/obj/PdfPreview.lib" /MAP:"../out/rel64_asan/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/rel64_asan/PdfPreview.dll" /PDB:"../out/rel64_asan/PdfPreview.pdb" /IMPLIB:"../out/rel64_asan/obj/PdfPreview.lib" /MAP:"../out/rel64_asan/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -972,10 +972,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32_prefast\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/rel32_prefast/PdfPreview.dll" /PDB:"../out/rel32_prefast/PdfPreview.pdb" /IMPLIB:"../out/rel32_prefast/obj/PdfPreview.lib" /MAP:"../out/rel32_prefast/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/rel32_prefast/PdfPreview.dll" /PDB:"../out/rel32_prefast/PdfPreview.pdb" /IMPLIB:"../out/rel32_prefast/obj/PdfPreview.lib" /MAP:"../out/rel32_prefast/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1015,10 +1015,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/rel64_prefast/PdfPreview.dll" /PDB:"../out/rel64_prefast/PdfPreview.pdb" /IMPLIB:"../out/rel64_prefast/obj/PdfPreview.lib" /MAP:"../out/rel64_prefast/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/rel64_prefast/PdfPreview.dll" /PDB:"../out/rel64_prefast/PdfPreview.pdb" /IMPLIB:"../out/rel64_prefast/obj/PdfPreview.lib" /MAP:"../out/rel64_prefast/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1058,10 +1058,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\arm64_prefast\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/arm64_prefast/PdfPreview.dll" /PDB:"../out/arm64_prefast/PdfPreview.pdb" /IMPLIB:"../out/arm64_prefast/obj/PdfPreview.lib" /MAP:"../out/arm64_prefast/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/arm64_prefast/PdfPreview.dll" /PDB:"../out/arm64_prefast/PdfPreview.pdb" /IMPLIB:"../out/arm64_prefast/obj/PdfPreview.lib" /MAP:"../out/arm64_prefast/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1100,10 +1100,10 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast_asan\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/rel64_prefast_asan/PdfPreview.dll" /PDB:"../out/rel64_prefast_asan/PdfPreview.pdb" /IMPLIB:"../out/rel64_prefast_asan/obj/PdfPreview.lib" /MAP:"../out/rel64_prefast_asan/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/rel64_prefast_asan/PdfPreview.dll" /PDB:"../out/rel64_prefast_asan/PdfPreview.pdb" /IMPLIB:"../out/rel64_prefast_asan/obj/PdfPreview.lib" /MAP:"../out/rel64_prefast_asan/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1137,10 +1137,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\prf32\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/prf32/PdfPreview.dll" /PDB:"../out/prf32/PdfPreview.pdb" /IMPLIB:"../out/prf32/obj/PdfPreview.lib" /MAP:"../out/prf32/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/prf32/PdfPreview.dll" /PDB:"../out/prf32/PdfPreview.pdb" /IMPLIB:"../out/prf32/obj/PdfPreview.lib" /MAP:"../out/prf32/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1174,10 +1174,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\prf64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/prf64/PdfPreview.dll" /PDB:"../out/prf64/PdfPreview.pdb" /IMPLIB:"../out/prf64/obj/PdfPreview.lib" /MAP:"../out/prf64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/prf64/PdfPreview.dll" /PDB:"../out/prf64/PdfPreview.pdb" /IMPLIB:"../out/prf64/obj/PdfPreview.lib" /MAP:"../out/prf64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1211,10 +1211,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\prfarm64\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/prfarm64/PdfPreview.dll" /PDB:"../out/prfarm64/PdfPreview.pdb" /IMPLIB:"../out/prfarm64/obj/PdfPreview.lib" /MAP:"../out/prfarm64/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/prfarm64/PdfPreview.dll" /PDB:"../out/prfarm64/PdfPreview.pdb" /IMPLIB:"../out/prfarm64/obj/PdfPreview.lib" /MAP:"../out/prfarm64/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>
@@ -1248,10 +1248,10 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wininet.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;kernel32.lib;user32.lib;gdi32.lib;comdlg32.lib;shell32.lib;windowscodecs.lib;winspool.lib;urlmon.lib;ole32.lib;oleAut32.lib;delayimp.lib;comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;wintrust.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\prf64_asan\obj\PdfPreview.lib</ImportLibrary>
       <GenerateMapFile>false</GenerateMapFile>
-      <AdditionalOptions>/OUT:"../out/prf64_asan/PdfPreview.dll" /PDB:"../out/prf64_asan/PdfPreview.pdb" /IMPLIB:"../out/prf64_asan/obj/PdfPreview.lib" /MAP:"../out/prf64_asan/obj/PdfPreview.map" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/OUT:"../out/prf64_asan/PdfPreview.dll" /PDB:"../out/prf64_asan/PdfPreview.pdb" /IMPLIB:"../out/prf64_asan/obj/PdfPreview.lib" /MAP:"../out/prf64_asan/obj/PdfPreview.map" /DELAYLOAD:winhttp.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <ProjectReference>
     </ProjectReference>

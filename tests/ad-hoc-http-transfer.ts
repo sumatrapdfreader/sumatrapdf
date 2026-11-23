@@ -54,6 +54,13 @@ function startServer() {
         });
         return new Response(body, { headers: { "content-length": "100000" } });
       }
+      if (url.pathname === "/public") {
+        // no auth: what HttpGet / HttpGetToFile fetch
+        return new Response(new Uint8Array(kFileSize).fill(67));
+      }
+      if (url.pathname === "/public-redirect") {
+        return new Response("moved", { status: 302, headers: { location: "/public" } });
+      }
       if (url.pathname === "/stream" && req.method === "POST") {
         // a streamed reply in three pieces (HttpPostStream)
         const enc = new TextEncoder();

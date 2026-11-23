@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include <winhttp.h>
 #include "base/UITask.h"
 #include "base/SquareTreeParser.h"
 #include "base/Http.h"
@@ -504,21 +505,21 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     }
     if (kind == UpdateInfoFetch::BadStatus) {
         logf("ShowAutoUpdateDialog: http get of '%s' failed with code %d\n", url, (int)rsp->httpStatusCode);
-        return ERROR_INTERNET_INVALID_URL;
+        return ERROR_WINHTTP_INVALID_URL;
     }
     if (kind == UpdateInfoFetch::UnlistedUrl) {
         logf("ShowAutoUpdateDialog: '%s' is not a valid url\n", url);
-        return ERROR_INTERNET_INVALID_URL;
+        return ERROR_WINHTTP_INVALID_URL;
     }
     if (kind == UpdateInfoFetch::EmptyBody) {
         logf("ShowAutoUpdateDialog: empty response from url '%s'\n", url);
-        return ERROR_INTERNET_CONNECTION_ABORTED;
+        return ERROR_WINHTTP_CONNECTION_ERROR;
     }
 
     UpdateInfo* updateInfo = ParseUpdateInfo(ToStr(*data));
     if (!updateInfo) {
         logf("ShowAutoUpdateDialog: ParseUpdateInfo() failed. URL: '%s'\nAuto update data:\n%s\n", url, ToStr(*data));
-        return ERROR_INTERNET_INCORRECT_FORMAT;
+        return ERROR_WINHTTP_INVALID_SERVER_RESPONSE;
     }
     updateInfo->hwndParent = hwndParent;
 
