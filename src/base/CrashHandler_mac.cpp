@@ -189,12 +189,18 @@ static void AppendOtherThreads(str::Builder& b, thread_t self) {
         if (t != self && thread_suspend(t) == KERN_SUCCESS) {
             ThreadState state{};
             mach_msg_type_number_t count = kThreadStateCount;
-            if (thread_get_state(t, kThreadFlavor, (thread_state_t)&state, &count) == KERN_SUCCESS) {
-                AppendThreadHeader(b, t, false);
-                AppendStack(b, RegsFromState(state));
-            }
-            // a debug report is not the end of the process
+            bool ok = thread_get_state(t, kThreadFlavor, (thread_state_t)&state, &count) == KERN_SUCCESS;
+            uintptr_t frames[kMaxFrames];
+            int n = ok ? WalkStack(RegsFromState(state), frames, kMaxFrames) : 0;
+            // a debug report is not the end of the process. Resume before
+            // symbolizing: dladdr, pthread_getname_np and malloc take locks t may hold
             thread_resume(t);
+            if (ok) {
+                AppendThreadHeader(b, t, false);
+                for (int j = 0; j < n; j++) {
+                    AppendFrame(b, j, frames[j]);
+                }
+            }
         }
         mach_port_deallocate(mach_task_self(), t);
     }
