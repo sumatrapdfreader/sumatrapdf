@@ -831,7 +831,7 @@ export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
 }
 
 const WM_RBUTTONDBLCLK = 0x0206;
-const WM_MBUTTONUP = 0x0208;
+export const WM_MBUTTONUP = 0x0208;
 const WM_MBUTTONDBLCLK = 0x0209;
 const WM_MOUSEWHEEL = 0x020a;
 const WM_MOUSEHWHEEL = 0x020e;

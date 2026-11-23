@@ -1038,6 +1038,9 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
             return;
         }
     }
+    if (ev->button != 0) {
+        return;
+    }
     if (!w->IsEnabled()) {
         return;
     }
