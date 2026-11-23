@@ -674,7 +674,7 @@ enum class ControlCmd : u16 {
     TestRenderSelections = 108,
     TestToggleFormButton = 109,
     ResolveUnsavedChanges = 110,
-    // orig's. 105 is TestSaveFileAs.
+    TestSaveFileAs = 105,
     TestImageOrientation = 106,
     // orig's
     StopPerfLog = 102,
@@ -3736,6 +3736,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
 #else
             AppendTestResult(req, 1, StrL("NOTPORTED 71"));
 #endif
+            break;
+        }
+
+        case ControlCmd::TestSaveFileAs: {
+            Str dstPath = StringArg(req, 0);
+            if (len(dstPath) == 0) {
+                AppendError(req, StrL("TestSaveFileAs expects string dstPath"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = SaveFileAsResultTemp(dstPath, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

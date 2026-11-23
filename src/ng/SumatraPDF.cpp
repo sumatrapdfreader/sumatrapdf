@@ -3523,17 +3523,11 @@ struct SaveFileAsCtx {
     Str defExt;  // owned
 };
 
-static void OnSaveFileAsPathPicked(SaveFileAsCtx* ctx, SavePathArgs* args) {
-    MainWindow* win = ctx->win;
-    TempStr srcFileName = str::DupTemp(ctx->srcPath);
-    TempStr defExt = str::DupTemp(ctx->defExt);
-    str::Free(ctx->srcPath);
-    str::Free(ctx->defExt);
-    delete ctx;
-
-    TempStr dstFilePath = str::DupTemp(args->path);
+// Apply a chosen Save As path. False when nothing was written.
+static bool SaveLoadedFileTo(MainWindow* win, Str srcFileName, Str defExt, Str dstIn) {
+    TempStr dstFilePath = str::DupTemp(dstIn);
     if (len(dstFilePath) == 0 || !IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
-        return;
+        return false;
     }
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
@@ -3560,10 +3554,41 @@ static void OnSaveFileAsPathPicked(SaveFileAsCtx* ctx, SavePathArgs* args) {
         logf("SaveCurrentFileAs(): '%s' doesn't exist after a successful save\n", dstFilePath);
         ok = false;
     }
-    if (!ok) {
-        MessageBoxWarning(win, Tr("Failed to save a file"));
+    return ok;
+}
+
+static void OnSaveFileAsPathPicked(SaveFileAsCtx* ctx, SavePathArgs* args) {
+    MainWindow* win = ctx->win;
+    TempStr srcFileName = str::DupTemp(ctx->srcPath);
+    TempStr defExt = str::DupTemp(ctx->defExt);
+    str::Free(ctx->srcPath);
+    str::Free(ctx->defExt);
+    delete ctx;
+
+    if (len(args->path) == 0 || !IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
         return;
     }
+    if (!SaveLoadedFileTo(win, srcFileName, defExt, args->path)) {
+        MessageBoxWarning(win, Tr("Failed to save a file"));
+    }
+}
+
+// -dbg-control TestSaveFileAs: Save As without the dialog
+TempStr SaveFileAsResultTemp(Str dstPath, int* exitCodeOut) {
+    *exitCodeOut = 1;
+    if (len(gWindows) == 0 || !gWindows[0] || !gWindows[0]->IsDocLoaded()) {
+        return StrL("NOTREADY no-document");
+    }
+    MainWindow* win = gWindows[0];
+    Str srcFileName = win->ctrl->GetFilePath();
+    if (len(srcFileName) == 0) {
+        return StrL("FAIL no-path");
+    }
+    if (!SaveLoadedFileTo(win, srcFileName, win->ctrl->GetDefaultFileExt(), dstPath)) {
+        return StrL("FAIL save");
+    }
+    *exitCodeOut = 0;
+    return StrL("OK");
 }
 
 static void SaveCurrentFileAs(MainWindow* win) {

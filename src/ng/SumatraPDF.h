@@ -30,6 +30,7 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void RememberDefaultWindowPosition(MainWindow* win);
 TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 TempStr RenameFileResultTemp(Str dstPath, int* exitCodeOut);
+TempStr SaveFileAsResultTemp(Str dstPath, int* exitCodeOut);
 Str CliPassword();
 
 // orig re-arms a WM_TIMER on the canvas; the shell's tick counts this down
