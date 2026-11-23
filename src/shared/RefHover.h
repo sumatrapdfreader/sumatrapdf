@@ -110,6 +110,10 @@ struct RefHoverState {
         // dropped as soon as the user interacts (region-shift math for a
         // composited bitmap isn't supported).
         RectF continuationRegion;
+        // Page continuationRegion renders from; 0 means pageNo (same-page
+        // column wrap). Set to pageNo + 1 when the entry's tail sits at the
+        // top of the next page's reference column.
+        int continuationPageNo = 0;
         // initial show: commit displayed.* and show the popup on completion.
         // false for wheel zoom / scroll re-renders, which update displayed.*
         // optimistically and only need the new bitmap.
@@ -233,7 +237,9 @@ RectF NoteBox(RectF mediabox, float destY, WStr text, const Rect* coords);
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY);
 
 RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY,
-                     RectF* continuationOut = nullptr);
+                     RectF* continuationOut = nullptr, bool* mayWrapPageOut = nullptr);
+
+RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int colLeftX);
 
 bool ShouldSearchNextPage(RectF mediabox, float destY);
 
@@ -275,6 +281,9 @@ bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, 
 //--- shared between the RefHover*.cpp files, not for use outside them
 
 constexpr float kRefHoverRenderZoom = 1.5f;
+
+// pt of padding DetectEntryBox adds around the fitted entry for display.
+constexpr float kRefHoverEntryPadPt = 6.f;
 constexpr int kRefHoverMaxPopupWidth = 1200;
 constexpr int kRefHoverMaxPopupHeight = 600;
 constexpr int kRefHoverBorder = 4;

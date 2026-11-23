@@ -207,7 +207,9 @@ static void RefHoverRenderThread(RefHoverRenderJob* job) {
     job->bmp = job->req.engine->RenderPage(args);
     RectF cont = job->req.continuationRegion;
     if (job->bmp && cont.dx > 0.f && cont.dy > 0.f) {
-        RenderPageArgs contArgs(job->req.pageNo, job->req.zoom, 0, &cont);
+        // A page-wrap tail renders from the next page (continuationPageNo).
+        int contPage = job->req.continuationPageNo > 0 ? job->req.continuationPageNo : job->req.pageNo;
+        RenderPageArgs contArgs(contPage, job->req.zoom, 0, &cont);
         Pixmap* contBmp = job->req.engine->RenderPage(contArgs);
         if (contBmp) {
             Pixmap* stacked = StackPixmapsVertically(job->bmp, contBmp);

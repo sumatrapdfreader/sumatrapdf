@@ -150,6 +150,55 @@ static void AuthorYearDestAboveHead() {
     utassert(box.y + box.dy < 236.f);
 }
 
+// (3d3) Entry cut by a page break: the next page's reference column starts
+// with indented continuation lines. FindPageWrapContinuation returns their
+// box (dropping the running header, which sits a large gap above the body)
+// and empty when the page starts with a new (flush) entry instead.
+static void PageWrapContinuationFound() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    AddText(text, coords, n, 1024, L"36                              Author et al.", 72, 57);
+    AddText(text, coords, n, 1024, L"tail of the entry cut by the page break. Work-", 92, 94);
+    AddText(text, coords, n, 1024, L"shop Papers, vol. 12, pp. 10-20.", 92, 106);
+    AddText(text, coords, n, 1024, L"Next, D. (2024) The following entry here.", 72, 118);
+    RectF box = FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 72);
+    utassert(!IsEmpty(box));
+    // starts at the first tail line, header excluded
+    utassert(box.y >= 85.f && box.y <= 94.f);
+    // covers both tail lines, not the next entry's head line
+    utassert(box.y + box.dy >= 118.f);
+    utassert(box.y + box.dy <= 125.f);
+
+    // flush first body line = a new entry starts the page: no continuation
+    n = 0;
+    AddText(text, coords, n, 1024, L"36                              Author et al.", 72, 57);
+    AddText(text, coords, n, 1024, L"Next, D. (2024) A new entry starting flush on", 72, 94);
+    AddText(text, coords, n, 1024, L"this page, with its continuation line.", 92, 106);
+    utassert(IsEmpty(FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 72)));
+}
+
+// (3d4) mayWrapPageOut: set when the fitted entry ends its column with no
+// text below (it may continue on the next page), not when a sibling follows.
+static void EntryMayWrapAtColumnEnd() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    AddText(text, coords, n, 1024, L"Last, E. (2023) A study cut by the page", 72, 700);
+    AddText(text, coords, n, 1024, L"break: its tail is on the next page and", 92, 712);
+    bool mayWrap = false;
+    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 700.f, nullptr, &mayWrap);
+    utassert(mayWrap);
+
+    n = 0;
+    AddText(text, coords, n, 1024, L"First, F. (2022) A complete entry with", 72, 200);
+    AddText(text, coords, n, 1024, L"its continuation line right here.", 92, 212);
+    AddText(text, coords, n, 1024, L"Second, S. (2023) The following entry.", 72, 224);
+    mayWrap = false;
+    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f, nullptr, &mayWrap);
+    utassert(!mayWrap);
+}
+
 // (3e) Single-line description-list entries (abbreviation lists) with normal
 // leading: the next entry is detected by a new line back at the entry's X
 // before any continuation indent was seen (rule (d)).
@@ -1124,6 +1173,8 @@ void RefHoverTest() {
     VariableGlyphTopsEntryNotHijacked();
     AuthorYearEntryFitsToOneEntry();
     AuthorYearDestAboveHead();
+    PageWrapContinuationFound();
+    EntryMayWrapAtColumnEnd();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
     CaptionExtensionPicksTopmost();
