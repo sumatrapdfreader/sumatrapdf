@@ -205,6 +205,8 @@ export enum ControlCommand {
   TestOpenFileNames = 176,
   // orig: the next "Unsaved changes" prompt fails as if TaskDialogIndirect had
   TestFailSavePrompt = 177,
+  // orig: ["closepaint"] closes the open tab groups dialog with a paint before its end
+  TestTabGroups = 178,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

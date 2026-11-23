@@ -59,6 +59,7 @@
 #include "Notifications.h"
 #include "AIChatCommon.h"
 #include "SumatraDialogs.h"
+#include "TabGroupsManage.h"
 #include "PageGridDialogCommon.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
@@ -754,6 +755,8 @@ enum class ControlCmd : u16 {
     TestOpenFileNames = 176,
     // the next "Unsaved changes" prompt fails as if TaskDialogIndirect had
     TestFailSavePrompt = 177,
+    // [action]: "closepaint" closes the open tab groups dialog with a paint before its end
+    TestTabGroups = 178,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1979,6 +1982,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             SetTestOpenFileNames(StringArg(req, 0));
 #endif
             AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestTabGroups: {
+            int exitCode = 0;
+            Str res = TabGroupsTestTemp(StringArg(req, 0), &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 
