@@ -3332,6 +3332,29 @@ static void ExecuteControlRequest(ControlRequest* req) {
             if (len(op) > 0) {
                 i32 arg = 0;
                 IntArg(req, 1, arg);
+                // notifications of the first window: 0 = count, 1 = show an ad-hoc one,
+                // 2 / 3 = show one of a test group tied to tab 0 / 1
+                if (str::Eq(op, StrL("notif"))) {
+                    MainWindow* win = FirstWindow();
+                    if (!win) {
+                        AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                        break;
+                    }
+                    static Kind kNotifTestGroup = "notifTestGroup";
+                    if (arg == 1) {
+                        ShowTemporaryNotification(win, StrL("ad-hoc"), 0);
+                    } else if (arg == 2 || arg == 3) {
+                        NotificationCreateArgs nargs;
+                        nargs.win = win;
+                        nargs.groupId = kNotifTestGroup;
+                        nargs.tab = win->GetTab(arg - 2);
+                        nargs.msg = StrL("grouped");
+                        nargs.plainText = true;
+                        ShowNotification(nargs);
+                    }
+                    AppendTestResult(req, 0, fmt("OK count=%d", NotificationCountForWindow(win)));
+                    break;
+                }
                 if (str::Eq(op, StrL("menubuilds"))) {
                     AppendTestResult(req, 0, fmt("OK builds=%d", MenuBuildCount()));
                     break;

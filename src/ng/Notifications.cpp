@@ -171,6 +171,16 @@ void RemoveNotificationsForTab(WindowTab* tab) {
     }
 }
 
+int NotificationCountForWindow(MainWindow* win) {
+    int n = 0;
+    for (NotificationWnd* wnd : gNotifications) {
+        if (wnd->win == win) {
+            n++;
+        }
+    }
+    return n;
+}
+
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
     if (!gNotificationsEnabled) {
         // richMsg is ours to free
@@ -180,8 +190,21 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
         }
         return nullptr;
     }
-    // one notification per group per window, as orig does
-    RemoveNotificationsForGroup(args.win, args.groupId);
+    // one notification per group per window, as orig's NotifsAdd: ad-hoc ones
+    // stack, and a tab's leaves another tab's of the group alone
+    if (args.groupId && args.groupId != kNotifAdHoc) {
+        for (int i = len(gNotifications) - 1; i >= 0; i--) {
+            NotificationWnd* old = gNotifications[i];
+            if (old->win != args.win || old->groupId != args.groupId) {
+                continue;
+            }
+            if (args.tab && old->tab && old->tab != args.tab) {
+                continue;
+            }
+            VecRemoveAt(gNotifications, i);
+            FreeNotification(old);
+        }
+    }
     auto* wnd = new NotificationWnd();
     wnd->win = args.win;
     wnd->tab = args.tab;
