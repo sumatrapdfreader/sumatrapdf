@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/GuessFileType.h"
 #include "base/Archive.h"
 #include "base/Zip.h"
 
@@ -98,6 +99,55 @@ void ArchiveWarnTest() {
     utassert(lazy.OpenFromData(zip, false));
     utassert(HasBothEntries(lazy));
     str::Free(zip);
+#endif
+}
+
+// a ustar archive with one entry
+static Str MakeTar(Str name, Str content) {
+    constexpr int kBlock = 512;
+    int dataBlocks = (len(content) + kBlock - 1) / kBlock;
+    int size = kBlock * (1 + dataBlocks + 2);
+    char* d = AllocArray<char>(size);
+    memcpy(d, name.s, (size_t)len(name));
+    memcpy(d + 100, "0000644", 7);
+    memcpy(d + 108, "0000000", 7);
+    memcpy(d + 116, "0000000", 7);
+    snprintf(d + 124, 12, "%011o", (unsigned)len(content));
+    memcpy(d + 136, "00000000000", 11);
+    d[156] = '0';
+    memcpy(d + 257, "ustar", 6);
+    memcpy(d + 263, "00", 2);
+    memset(d + 148, ' ', 8);
+    unsigned sum = 0;
+    for (int i = 0; i < kBlock; i++) {
+        sum += (u8)d[i];
+    }
+    snprintf(d + 148, 8, "%06o", sum);
+    memcpy(d + kBlock, content.s, (size_t)len(content));
+    return Str(d, size);
+}
+
+// a tar file opened lazily stays lazy: entries are read on demand
+void ArchiveTarLazyTest() {
+#if !OS_WASM
+    Str tar = MakeTar(StrL("page.txt"), StrL("tar content"));
+    TempStr path = GetTempFilePathTemp(StrL("lazytar"));
+    utassert(file::WriteFile(path, tar));
+
+    Archive archive;
+    ArchiveExtractProgressCb emptyCb;
+    utassert(archive.Open(path, false, FileType::Tar, emptyCb));
+    auto& infos = archive.GetFileInfos();
+    utassert(len(infos) == 1 && infos[0]->data == nullptr);
+    auto* fi = archive.GetFileDataById(0);
+    utassert(fi && fi->data && str::Eq(Str(fi->data, fi->fileSizeUncompressed), StrL("tar content")));
+
+    Archive fromData;
+    utassert(fromData.OpenFromData(tar, false));
+    utassert(len(fromData.GetFileInfos()) == 1 && fromData.GetFileInfos()[0]->data == nullptr);
+
+    file::Delete(path);
+    str::Free(tar);
 #endif
 }
 

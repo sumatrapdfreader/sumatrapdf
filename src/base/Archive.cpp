@@ -184,12 +184,6 @@ bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExt
         }
     }
 
-    // tar archives can't seek, so we have to eager-load even when the
-    // caller didn't ask for it.
-    if (ft == FileType::Tar) {
-        eagerLoad = true;
-    }
-
     bool ok = false;
     if (ft == FileType::Rar) {
         ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress);
@@ -289,13 +283,6 @@ bool Archive::OpenFromData(Str data, bool eagerLoad) {
     archiveData_ = str::Dup(data);
     if (len(archiveData_) == 0) {
         return false;
-    }
-
-    // tar archives can't seek, so we have to eager-load even when the
-    // caller didn't ask for it.
-    FileType ft = GuessFileTypeFromData(archiveData_);
-    if (ft == FileType::Tar || ft == FileType::Cbt) {
-        eagerLoad = true;
     }
 
     struct archive* a = OpenLibarchiveMemory(archiveData_, password);
