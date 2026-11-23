@@ -697,7 +697,13 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
 
     ReportIf(len(doc) != 0);
     doc.Reset();
-    doc.cap = docUncompressedSize; // capacity hint, same trick as ByteWriter ctor
+    // docUncompressedSize is untrusted: a 1 KB file can claim 256 MB
+    constexpr i64 kMaxExpansion = 8;
+    i64 rawSize = 0;
+    for (int i = 1; i <= docRecCount; i++) {
+        rawSize += len(pdbReader->GetRecord(i));
+    }
+    doc.Reserve((int)std::min((i64)docUncompressedSize, rawSize * kMaxExpansion));
     int nFailed = 0;
     for (int i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, doc)) {

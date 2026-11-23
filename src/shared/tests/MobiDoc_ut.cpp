@@ -221,6 +221,20 @@ void MobiDoc_UnitTests() {
         utassert(doc->docRecCount == kNumRecs - 1);
     }
 
+    // the claimed uncompressed size (here 256 MB) used to size the text buffer
+    {
+        constexpr int kDocSizeOffset = 4;
+        constexpr u32 kClaimedSize = 256 * 1024 * 1024;
+        Str data = MkMobi(0);
+        AutoFree<char> cleanup(data.s);
+        BeWriter writer{(u8*)data.s, kRec0Off + kDocSizeOffset};
+        writer.U32(kClaimedSize);
+        AutoDelete<MobiDoc> doc(MobiDoc::CreateFromData(data));
+        utassert(doc.o != nullptr);
+        utassert(doc->doc.cap < 1024 * 1024);
+        utassert(str::Eq(ToStr(doc->doc), StrL("hi\r\n")));
+    }
+
     utassert(KindleEmbedToRecIndex(StrL("kindle:embed:000A")) == 10);
     utassert(KindleEmbedToRecIndex(StrL("kindle:embed:VVVVVVVVVVVV")) == 0);
 
