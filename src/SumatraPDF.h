@@ -134,7 +134,7 @@ WindowTab* FindTabInWindow(Str path, MainWindow* win);
 // the tab that currently owns this controller, null if it is no longer shown
 WindowTab* FindTabByController(DocController*);
 bool CanCloseWindow(MainWindow* win);
-void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
+void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose = false);
 void PostAppExit();
 enum class SidebarResizeFrame {
     Keep,

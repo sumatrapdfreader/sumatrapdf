@@ -151,7 +151,7 @@ void CloseWindowIfNoDocuments(MainWindow* win) {
     if (HasOpenedDocuments(win)) {
         return;
     }
-    CloseWindow(win, true, false);
+    CloseWindow(win, true);
 }
 
 WindowTab* NewHomeTab(MainWindow* win, HomeTabKind kind) {

@@ -814,13 +814,13 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             ShutdownBlockReasonCreate(hwnd, ToWStrTemp(Tr("Printing in progress.")).s);
             return FALSE;
         case WM_ENDSESSION:
-            // the forced CloseWindow below aborts any print job still running
+            // CloseWindow below aborts any print job still running
             ScheduleSaveSettings();
             FlushScheduledSaveSettings();
             // wp is FALSE when the session end was cancelled: we keep running
             if (wp == TRUE) {
                 gDontSaveSettings = true;
-                CloseWindow(WinOf(hwnd), true, true);
+                CloseWindow(WinOf(hwnd), true);
             }
             return 0;
         case WM_SYSCOLORCHANGE:

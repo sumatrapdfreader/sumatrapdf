@@ -37,7 +37,7 @@ bool ExplorerQuickLookOnKeyDown(MainWindow* win, int key, bool hasModifiers) {
         return false;
     }
     if (key == VK_ESCAPE || key == VK_SPACE) {
-        CloseWindow(win, true, false);
+        CloseWindow(win, true);
         return true;
     }
     if (hasModifiers) {
@@ -137,7 +137,7 @@ void ShowExplorerQuickLook(Str path) {
     if (existing) {
         WindowTab* tab = existing->CurrentTab();
         if (tab && tab->filePath && path::IsSame(tab->filePath, norm)) {
-            CloseWindow(existing, true, false);
+            CloseWindow(existing, true);
             return;
         }
 #ifdef SUMATRA_NG

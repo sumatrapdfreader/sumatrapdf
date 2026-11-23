@@ -173,7 +173,7 @@ StrVec* GetNextPrevFilesReady(Str path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
 void RequestCloseWindow(MainWindow* win, bool quitIfLast);
-void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
+void CloseWindow(MainWindow* win, bool quitIfLast);
 void CloseWindowIfCan(MainWindow* win, bool quitIfLast);
 void OnMenuExit();
 void CopyFilePath(WindowTab* tab);

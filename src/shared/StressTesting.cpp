@@ -553,9 +553,9 @@ static void Finished(StressTest* st, bool success) {
     }
 
 #if defined(SUMATRA_NG)
-    CloseWindow(st->win, st->exitWhenDone, false);
+    CloseWindow(st->win, st->exitWhenDone);
 #else
-    CloseWindow(st->win, st->exitWhenDone && CanCloseWindow(st->win), false);
+    CloseWindow(st->win, st->exitWhenDone && CanCloseWindow(st->win));
 #endif
     delete st;
 }
@@ -621,7 +621,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
         }
     } else {
         if (!w->IsDocLoaded()) { // new MainWindow
-            CloseWindow(w, false, false);
+            CloseWindow(w, false);
             return false;
         }
     }

@@ -1226,7 +1226,7 @@ void AppShellReapClosedWindows() {
         }
         logf("AppShellReapClosedWindows: window 0x%p was closed\n", win);
         win->gpuiWin = nullptr;
-        CloseWindow(win, false, false);
+        CloseWindow(win, false);
     }
 }
 

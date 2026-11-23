@@ -487,7 +487,7 @@ bool RestoreSession(MainWindow* firstWin) {
     }
     for (MainWindow* win : emptyWindows) {
         if (IsMainWindowValid(win)) {
-            CloseWindow(win, false, false);
+            CloseWindow(win, false);
         }
     }
 #if OS_WIN

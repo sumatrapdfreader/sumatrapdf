@@ -383,7 +383,7 @@ static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
         if (w->printThread) {
             continue;
         }
-        CloseWindow(w, false, false);
+        CloseWindow(w, false);
     }
     return len(gWindows) > 0 ? gWindows[0] : nullptr;
 }
@@ -4058,7 +4058,7 @@ static void ContinueCloseWindow(PendingCloseWindow* p) {
     bool quitIfLast = p->quitIfLast;
     win->isClosePending = false;
     delete p;
-    CloseWindow(win, quitIfLast, false);
+    CloseWindow(win, quitIfLast);
 }
 
 // Exit's save prompts are running
@@ -4166,7 +4166,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
 
     int tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
-        CloseWindow(win, quitIfLast, false);
+        CloseWindow(win, quitIfLast);
         return;
     }
     if (win->GetTabIdx(tab) < 0) {
@@ -4182,7 +4182,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     // only the home tab left, and another window is open: this one goes away
     WindowTab* lastTab = (win->TabCount() == 1) ? win->GetTab(0) : nullptr;
     if (lastTab && lastTab->IsAboutTab() && len(gWindows) > 1 && !closedHome) {
-        CloseWindow(win, false, false);
+        CloseWindow(win, false);
         return;
     }
     UpdateWindowTitle(win);
@@ -4202,7 +4202,7 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
         return;
     }
     if (quitIfLast) {
-        CloseWindow(win, true, false);
+        CloseWindow(win, true);
     }
 }
 
@@ -4355,7 +4355,7 @@ void ShowFileInFolder(MainWindow* win, Str path) {
     OpenPathInDefaultFileManager(path);
 }
 
-void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
+void CloseWindow(MainWindow* win, bool quitIfLast) {
     if (!win || win->isBeingClosed) {
         return;
     }
@@ -4428,7 +4428,7 @@ static void FinishExit() {
 
     Vec<MainWindow*> toClose = gWindows;
     for (MainWindow* win : toClose) {
-        CloseWindow(win, false, false);
+        CloseWindow(win, false);
     }
     AppShellQuit();
 }
