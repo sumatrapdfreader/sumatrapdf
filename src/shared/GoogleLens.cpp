@@ -93,11 +93,11 @@ enum class GoogleLensSrc {
 };
 
 static Pixmap* PixmapForImageElement(EngineBase* engine, IPageElement* imageElement) {
+#if OS_WIN
     RenderedBitmap* bmp = engine->GetImageForPageElement(imageElement);
     if (!bmp) {
         return nullptr;
     }
-#if OS_WIN
     Pixmap* px = PixmapFromRenderedBitmap(bmp);
     if (px && px->format == PixmapFormat::Native) {
         Pixmap* copy = PixmapCopyAs32bppDIB(px);
@@ -106,8 +106,9 @@ static Pixmap* PixmapForImageElement(EngineBase* engine, IPageElement* imageElem
     }
     return px;
 #else
-    // ng: a RenderedBitmap is win32-only, so bmp is always null here
-    return nullptr;
+    // ng: a RenderedBitmap is win32-only; mupdf engines hand out the pixels.
+    // Other engines get null and Lens falls back to the page.
+    return PixmapToBgra(EngineMupdfPageImagePixmap(engine, imageElement));
 #endif
 }
 
