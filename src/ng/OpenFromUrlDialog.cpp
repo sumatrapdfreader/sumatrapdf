@@ -135,6 +135,10 @@ void ShowOpenFromUrlDialog(MainWindow* win) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
+    // one up for another window would be left behind, empty and modal to it
+    if (gUrlDlg.visible && gUrlDlg.win != win) {
+        CloseOpenFromUrlDialog();
+    }
     if (!gUrlDlg.visible) {
         gUrlDlg.editUrl = NewInput(win, {});
         if (!OS_WASM) {

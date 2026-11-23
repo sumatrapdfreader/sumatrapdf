@@ -192,6 +192,7 @@ import { testit as cssInvalidColor } from "./css-invalid-color.ts";
 import { testit as epubPreWraps } from "./epub-pre-wraps.ts";
 import { testit as issue4788 } from "./issue-4788.ts";
 import { testit as brightnessSecondWindow } from "./brightness-second-window.ts";
+import { testit as ngDialogSecondWindow } from "./ng-dialog-second-window.ts";
 import { testit as issue6359 } from "./issue-6359.ts";
 import { testit as issue6360 } from "./issue-6360.ts";
 import { testit as issue6441 } from "./issue-6441.ts";
@@ -723,6 +724,7 @@ export const tests: NamedTest[] = [
   ["issue-6412", issue6412],
   ["issue-4788", issue4788],
   ["brightness-second-window", brightnessSecondWindow],
+  ["ng-dialog-second-window", ngDialogSecondWindow],
   ["issue-5736", issue5736],
   ["codex-provider", codexProvider],
   ["issue-6405", issue6405],

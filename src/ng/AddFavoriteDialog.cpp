@@ -286,8 +286,9 @@ static void ShowFavoriteDialog(MainWindow* win, FavDlgMode mode, Str filePath, i
     if (mode == FavDlgMode::Add && len(filePath) == 0) {
         return;
     }
-    // orig reuses the open dialog and re-targets it
-    if (gAddFav.visible && gAddFav.mode != mode) {
+    // orig reuses the open dialog and re-targets it; one up for another
+    // window would be left behind, empty and modal to it
+    if (gAddFav.visible && (gAddFav.mode != mode || gAddFav.win != win)) {
         CloseAddFavoriteDialog();
     }
     bool wasVisible = gAddFav.visible;
