@@ -392,6 +392,12 @@ static TempStr TripleClickLineResultTemp(Str pdfPath, Str clickWord, Str expecte
     return fmt("OK selected=%s\n", selected);
 }
 
+// The text engine answers before the first layout. Tests retry NOTREADY.
+static bool PageLaidOut(DisplayModel* dm, int pageNo) {
+    PageInfo* pi = dm ? dm->GetPageInfo(pageNo) : nullptr;
+    return pi && pi->isShown && !pi->pageOnScreen.IsEmpty();
+}
+
 // tests/issue-5881.ts: a click on empty page drops the text selection
 TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     str::Builder out;
@@ -419,6 +425,9 @@ TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     double wx = 0, wy = 0;
     if (!FindWordCenter(dm->GetEngine(), pageNo, word, &wx, &wy)) {
         return fail(StrL("ERROR word-not-found"));
+    }
+    if (!PageLaidOut(dm, pageNo)) {
+        return fail(StrL("NOTREADY no-layout"));
     }
 
     WindowTab* tab = win->CurrentTab();
@@ -481,6 +490,9 @@ TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
     double wx = 0, wy = 0;
     if (!FindWordCenter(dm->GetEngine(), pageNo, word, &wx, &wy)) {
         return fail(StrL("ERROR word-not-found"));
+    }
+    if (!PageLaidOut(dm, pageNo)) {
+        return fail(StrL("NOTREADY no-layout"));
     }
     Point center = dm->CvtToScreen(pageNo, PointF((float)wx, (float)wy));
 
