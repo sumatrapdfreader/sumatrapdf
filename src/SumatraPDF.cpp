@@ -3210,8 +3210,9 @@ void UpdateAfterThemeChange() {
 }
 
 void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
-    // the palette's rows point into the old gSettings
+    // the palette's and favorites dialog's rows point into the old gSettings
     CommandPaletteOnSettingsReloaded();
+    AddFavoriteOnSettingsReloaded();
     for (MainWindow* win : gWindows) {
         if (gSettings->showToolbar != showToolbarBefore) {
             ShowOrHideToolbar(win);

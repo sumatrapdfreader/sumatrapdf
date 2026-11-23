@@ -374,6 +374,23 @@ static void ShowFavoriteDialog(MainWindow* win, FavDlgMode mode, Str filePath, i
     RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }
 
+// ReloadSettings() freed the FileState / Favorite objects the rows point at:
+// build them again from the new gSettings, keeping the selected row
+void AddFavoriteOnSettingsReloaded() {
+    AddFavoriteWnd* w = gAddFavoriteWnd;
+    if (!w || !w->listBox || !w->model) {
+        return;
+    }
+    int sel = w->listBox->GetCurrentSelection();
+    BuildFavEditRows(w->model->rows);
+    w->listBox->SetModel(w->model);
+    if (sel >= len(w->model->rows)) {
+        sel = -1;
+    }
+    w->listBox->SetCurrentSelection(sel);
+    w->OnSelectionChanged();
+}
+
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name) {
     ShowFavoriteDialog(win, FavDlgMode::Add, filePath, pageNo, pageLabel, name);
 }

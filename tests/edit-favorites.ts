@@ -35,7 +35,7 @@ const kNgWindow = "addfavorite";
 // gpui's accessibility role for a text field
 const kRoleTextField = 17;
 
-function makePdf(): string {
+export function makePdf(): string {
   const objs: string[] = ["<< /Type /Catalog /Pages 2 0 R >>"];
   const kids = Array.from({ length: kPages }, (_, i) => `${i + 3} 0 R`).join(" ");
   objs.push(`<< /Type /Pages /Count ${kPages} /Kids [${kids}] >>`);
@@ -45,7 +45,7 @@ function makePdf(): string {
   return assemblePdf(objs);
 }
 
-async function favNav(client: ControlClient, action: string, pageNo = 0): Promise<string> {
+export async function favNav(client: ControlClient, action: string, pageNo = 0): Promise<string> {
   const res = await client.request(ControlCommand.TestFavoriteNav, [action, pageNo]);
   const out = String(res[1] ?? "").trim();
   if (res[0] !== 0) {
@@ -54,7 +54,7 @@ async function favNav(client: ControlClient, action: string, pageNo = 0): Promis
   return out;
 }
 
-async function expectFavs(client: ControlClient, want: string, what: string): Promise<void> {
+export async function expectFavs(client: ControlClient, want: string, what: string): Promise<void> {
   const deadline = Date.now() + kWaitMs;
   let got = "";
   while (Date.now() < deadline) {
@@ -68,7 +68,7 @@ async function expectFavs(client: ControlClient, want: string, what: string): Pr
 }
 
 // what the scenario does to the dialog
-type Driver = {
+export type Driver = {
   open(cmd: string, title: string): Promise<void>;
   selectRow(idx: number): Promise<void>;
   click(label: string): Promise<void>;
@@ -104,7 +104,7 @@ function clickDlg(dlg: number, x: number, y: number): void {
   postMessage(dlg, WM_LBUTTONUP, 0, lp);
 }
 
-function origDriver(client: ControlClient, frame: number, pid: number, dir: string): Driver {
+export function origDriver(client: ControlClient, frame: number, pid: number, dir: string): Driver {
   let dlg = 0;
   const virt = async () => client.virtTree(getClassName(dlg));
   const edits = () => {
@@ -173,7 +173,7 @@ function parseBoxes(layout: string, prefix: string): Box[] {
   return res;
 }
 
-function ngDriver(client: ControlClient): Driver {
+export function ngDriver(client: ControlClient): Driver {
   const req = async (...args: (string | number)[]) =>
     String((await client.request(ControlCommand.TestToolWindow, args))[1] ?? "");
   const layout = () => req("layout", kNgWindow, "", 0, 0, 0, 0);

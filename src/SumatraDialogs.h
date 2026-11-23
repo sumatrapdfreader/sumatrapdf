@@ -13,6 +13,7 @@ struct WindowBase;
 enum class VirtButtonStyle;
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
+void AddFavoriteOnSettingsReloaded();
 void ShowEditFavoritesDialog(MainWindow* win);
 void ShowAdvancedSettingsDialog(MainWindow* win);
 void ShowConfigureRestrictedUseDialog(MainWindow* win);

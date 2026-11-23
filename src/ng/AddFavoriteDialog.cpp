@@ -144,6 +144,17 @@ static void ReloadRows(Favorite* toSelect) {
     SelectRow(sel);
 }
 
+// ReloadSettings() freed the FileState / Favorite objects the rows point at:
+// build them again from the new gSettings, keeping the selected row
+void AddFavoriteOnSettingsReloaded() {
+    if (!gAddFav.visible) {
+        return;
+    }
+    int sel = gAddFav.sel;
+    BuildFavEditRows(gAddFav.rows);
+    SelectRow(sel < len(gAddFav.rows) ? sel : -1);
+}
+
 // orig's AddFavoriteWnd::OnOk
 static void AddFavoriteOk() {
     if (gAddFav.mode == FavDlgMode::Add) {

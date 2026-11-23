@@ -681,6 +681,7 @@ import { testit as changeThemeClosedWindow } from "./change-theme-closed-window.
 import { testit as annotAttachFileReload } from "./annot-attach-file-reload.ts";
 import { testit as commandPaletteHistoryReload } from "./command-palette-history-reload.ts";
 import { testit as commandPaletteTocReload } from "./command-palette-toc-reload.ts";
+import { testit as editFavoritesReload } from "./edit-favorites-reload.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -1358,6 +1359,7 @@ export const tests: NamedTest[] = [
   ["annot-attach-file-reload", annotAttachFileReload],
   ["command-palette-history-reload", commandPaletteHistoryReload],
   ["command-palette-toc-reload", commandPaletteTocReload],
+  ["edit-favorites-reload", editFavoritesReload],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

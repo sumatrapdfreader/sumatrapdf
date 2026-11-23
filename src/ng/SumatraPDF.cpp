@@ -353,6 +353,7 @@ void ApplySettingsToWindowsUi() {
 void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
     // its favorites and file history rows point into the old gSettings
     CommandPaletteOnSettingsReloaded();
+    AddFavoriteOnSettingsReloaded();
     for (MainWindow* win : gWindows) {
         if (gSettings->showToolbar != showToolbarBefore) {
             ShowOrHideToolbar(win);
