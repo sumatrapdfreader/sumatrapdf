@@ -8,7 +8,7 @@
 
 static constexpr float kAnchorTopMarginPt = 6.f;
 // pt of padding around the detected entry box.
-static constexpr float kEntryPadPt = kRefHoverEntryPadPt;
+static constexpr float kEntryPadPt = 6.f;
 static constexpr float kLatePageStartRatio = 0.70f;
 
 bool ShouldSearchNextPage(RectF mediabox, float destY) {
@@ -729,102 +729,161 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     return box;
 }
 
-// Tail of a bibliography entry that wraps onto the top of the next page's
-// reference column, called with that next page's text. colLeftX is the
-// entry-head X of the column on the previous page. Running headers are
-// dropped (they sit more than two line pitches above the body). The tail is
-// the leading run of indented (hanging-indent continuation) lines; it ends at
-// the first flush or bracket-labeled line, which starts the next entry.
-// Empty when the page's column starts with a new entry or no boundary is
-// found within the cap (so unrelated body text is never captured).
-RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int colLeftX) {
+// glyph tops within this distance are on the same line
+static constexpr int kLineTolPt = 3;
+// runs narrower than this (page and line numbers) are not body text
+static constexpr int kMinBodyRunPt = 30;
+
+// Distinct line tops of the glyphs within [xLo, xHi], sorted top to bottom.
+static int CollectLineTops(WStr text, const Rect* coords, int xLo, int xHi, int* tops, int maxTops) {
+    int nTops = 0;
+    for (int i = 0; i < len(text); i++) {
+        if (IsGlyphSpace(text.s[i])) {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x < xLo || r.x > xHi) {
+            continue;
+        }
+        int t = r.y;
+        int pos = 0;
+        bool found = false;
+        for (; pos < nTops; pos++) {
+            if (abs(tops[pos] - t) <= kLineTolPt) {
+                tops[pos] = std::min(tops[pos], t);
+                found = true;
+                break;
+            }
+            if (tops[pos] > t) {
+                break;
+            }
+        }
+        if (found || nTops >= maxTops) {
+            continue;
+        }
+        for (int m = nTops; m > pos; m--) {
+            tops[m] = tops[m - 1];
+        }
+        tops[pos] = t;
+        nTops++;
+    }
+    return nTops;
+}
+
+// Leftmost glyph within [xLo, xHi] on the line at `top`; -1 if none.
+static int LineLeftGlyph(WStr text, const Rect* coords, int top, int xLo, int xHi) {
+    int leftIdx = -1;
+    for (int i = 0; i < len(text); i++) {
+        if (IsGlyphSpace(text.s[i])) {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x < xLo || r.x > xHi || abs(r.y - top) > kLineTolPt) {
+            continue;
+        }
+        if (leftIdx < 0 || r.x < coords[leftIdx].x) {
+            leftIdx = i;
+        }
+    }
+    return leftIdx;
+}
+
+// Right edge of the glyphs within [xLo, xHi] on the line at `top`.
+static int LineRightX(WStr text, const Rect* coords, int top, int xLo, int xHi) {
+    int right = INT_MIN;
+    for (int i = 0; i < len(text); i++) {
+        if (IsGlyphSpace(text.s[i])) {
+            continue;
+        }
+        Rect r = coords[i];
+        if (r.x < xLo || r.x > xHi || abs(r.y - top) > kLineTolPt) {
+            continue;
+        }
+        right = std::max(r.x + r.dx, right);
+    }
+    return right;
+}
+
+// Left X of the page's first text column: the leftmost start of a body-wide
+// run in the left half of the page. Margin line numbers and the page number of
+// a running header are narrow runs and don't count. INT_MAX if none.
+static int FirstColumnLeftX(WStr text, const Rect* coords, RectF mediabox) {
+    constexpr int kMaxTops = 128;
+    constexpr int kMaxRunsPerLine = 4;
+    int xMid = (int)(mediabox.x + (mediabox.dx / 2));
+    int tops[kMaxTops];
+    int nTops = CollectLineTops(text, coords, INT_MIN, xMid, tops, kMaxTops);
+    int colLeftX = INT_MAX;
+    for (int t = 0; t < nTops; t++) {
+        int xLo = INT_MIN;
+        for (int k = 0; k < kMaxRunsPerLine; k++) {
+            int idx = LineLeftGlyph(text, coords, tops[t], xLo, xMid);
+            if (idx < 0) {
+                break;
+            }
+            LineRun run = LineRunExtent(text, coords, idx);
+            if (run.rightX - run.leftX >= kMinBodyRunPt) {
+                colLeftX = std::min(run.leftX, colLeftX);
+                break;
+            }
+            xLo = run.rightX + 1;
+        }
+    }
+    return colLeftX;
+}
+
+// Tail of a bibliography entry that wraps onto the top of the next page,
+// called with that page's text. It continues in the page's first column, whose
+// X can differ from the entry's page (alternating margins, or an entry at the
+// bottom of a right column). Running headers are dropped. The tail is the
+// leading run of lines at the entry's continuation indent indentDx (0 when
+// unknown: any hanging indent), up to the first flush line, which starts the
+// next entry. Empty when the column starts with a new entry or a line at
+// another indent (an indented paragraph), or no boundary is found within the
+// cap (so unrelated body text is never captured).
+RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int indentDx) {
     if (len(text) == 0 || !coords) {
         return RectF{};
     }
     constexpr int kIndentSlackPt = 4;
     constexpr int kMaxHangingIndentPt = 60;
-    constexpr int kColWidthMaxPt = 400;
-    constexpr int kLineTolPt = 3;
-
-    // Distinct line tops in the column band, sorted.
+    constexpr int kColSlackPt = 5;
+    // a running header has a hole this wide between page number and title
+    constexpr int kHeaderHolePt = 40;
     constexpr int kMaxTops = 64;
-    int tops[kMaxTops];
-    int nTops = 0;
-    for (int i = 0; i < text.len; i++) {
-        if (IsGlyphSpace(text.s[i])) {
-            continue;
-        }
-        Rect r = coords[i];
-        if (r.x < colLeftX - 5 || r.x > colLeftX + kColWidthMaxPt) {
-            continue;
-        }
-        int t = r.y;
-        int lo = 0;
-        bool found = false;
-        for (; lo < nTops; lo++) {
-            if (abs(tops[lo] - t) <= kLineTolPt) {
-                tops[lo] = std::min(tops[lo], t);
-                found = true;
-                break;
-            }
-            if (tops[lo] > t) {
-                break;
-            }
-        }
-        if (!found && nTops < kMaxTops) {
-            for (int m = nTops; m > lo; m--) {
-                tops[m] = tops[m - 1];
-            }
-            tops[lo] = t;
-            nTops++;
-        }
+    constexpr int kMaxHeaderLines = 2;
+    constexpr int kMaxContinuationLines = 8;
+
+    int colLeftX = FirstColumnLeftX(text, coords, mediabox);
+    if (colLeftX == INT_MAX) {
+        return RectF{};
     }
+    int colRightX = FindColumnRight(text, coords, colLeftX, 0, (int)(mediabox.dy / 2), (int)mediabox.dx);
+    if (colRightX <= colLeftX) {
+        return RectF{};
+    }
+    int xLo = colLeftX - kColSlackPt;
+    int tops[kMaxTops];
+    int nTops = CollectLineTops(text, coords, xLo, colRightX, tops, kMaxTops);
     if (nTops < 3) {
         return RectF{};
     }
-
-    // The leftmost glyph of the first body line decides: indented =
-    // continuation of the previous page's entry, flush = a new entry.
-    auto lineLeftX = [&](int top, int* leftIdxOut = nullptr, int* rightOut = nullptr) {
-        int left = INT_MAX;
-        int right = INT_MIN;
-        for (int i = 0; i < text.len; i++) {
-            if (IsGlyphSpace(text.s[i])) {
-                continue;
-            }
-            Rect r = coords[i];
-            if (r.x < colLeftX - 5 || r.x > colLeftX + kColWidthMaxPt) {
-                continue;
-            }
-            if (abs(r.y - top) > kLineTolPt) {
-                continue;
-            }
-            if (r.x < left) {
-                left = r.x;
-                if (leftIdxOut) {
-                    *leftIdxOut = i;
-                }
-            }
-            right = std::max(r.x + r.dx, right);
-        }
-        if (rightOut) {
-            *rightOut = right;
-        }
-        return left;
+    auto lineLeftX = [&](int top) {
+        int idx = LineLeftGlyph(text, coords, top, xLo, colRightX);
+        return idx >= 0 ? coords[idx].x : INT_MAX;
     };
 
-    // Drop running-header lines (at most two): a header is separated from the
-    // body by more than 1.5x the body's own line pitch, or has a wide internal
-    // gap (page number left, running title right) that no body line has.
+    // Drop running-header lines: a header is separated from the body by more
+    // than 1.5x the body's own line pitch, or has a wide internal hole (page
+    // number left, running title right) that no body line has.
     int first = 0;
-    while (first + 2 < nTops && first < 2) {
+    while (first + 2 < nTops && first < kMaxHeaderLines) {
         bool bigGap = 2 * (tops[first + 1] - tops[first]) > 3 * (tops[first + 2] - tops[first + 1]);
         bool wideHole = false;
-        int leftIdx = -1;
-        int lineRight = INT_MIN;
-        if (lineLeftX(tops[first], &leftIdx, &lineRight) != INT_MAX && leftIdx >= 0) {
+        int leftIdx = LineLeftGlyph(text, coords, tops[first], xLo, colRightX);
+        if (leftIdx >= 0) {
             LineRun run = LineRunExtent(text, coords, leftIdx);
-            wideHole = run.rightX < lineRight - 40;
+            wideHole = run.rightX < LineRightX(text, coords, tops[first], xLo, colRightX) - kHeaderHolePt;
         }
         if (!bigGap && !wideHole) {
             break;
@@ -832,13 +891,18 @@ RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, in
         first++;
     }
 
-    int firstLeft = lineLeftX(tops[first]);
-    if (firstLeft <= colLeftX + kIndentSlackPt || firstLeft > colLeftX + kMaxHangingIndentPt) {
+    // The first body line decides: at the continuation indent, the previous
+    // page's entry goes on; flush, a new entry starts the page.
+    int firstIndent = lineLeftX(tops[first]) - colLeftX;
+    if (indentDx > 0) {
+        if (abs(firstIndent - indentDx) > kIndentSlackPt) {
+            return RectF{};
+        }
+    } else if (firstIndent <= kIndentSlackPt || firstIndent > kMaxHangingIndentPt) {
         return RectF{};
     }
 
     // Boundary: the first flush line below, which starts the next entry.
-    constexpr int kMaxContinuationLines = 8;
     int boundaryY = -1;
     int lastTail = first;
     for (int k = first + 1; k < nTops && k <= first + kMaxContinuationLines; k++) {
@@ -853,12 +917,12 @@ RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, in
     }
 
     int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
-    for (int i = 0; i < text.len; i++) {
+    for (int i = 0; i < len(text); i++) {
         if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
-        if (r.x < colLeftX - 5 || r.x > colLeftX + kColWidthMaxPt) {
+        if (r.x < xLo || r.x > colRightX) {
             continue;
         }
         if (r.y < tops[first] - kLineTolPt || r.y > tops[lastTail] + kLineTolPt) {
@@ -869,7 +933,7 @@ RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, in
         bMaxX = std::max(r.x + r.dx, bMaxX);
         bMaxY = std::max(r.y + r.dy, bMaxY);
     }
-    if (bMinX == INT_MAX || (bMaxX - bMinX) < 30 || (bMaxY - bMinY) < 8) {
+    if (bMinX == INT_MAX || (bMaxX - bMinX) < kMinBodyRunPt || (bMaxY - bMinY) < 8) {
         return RectF{};
     }
     RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt, (float)(bMaxX - bMinX) + (2.f * kEntryPadPt),
@@ -878,22 +942,24 @@ RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, in
     return box;
 }
 
-// True when no further text follows `box` in its column on this page: the
-// entry is the column's last and may continue at the top of the next page.
+// True when no body text follows `box` in its column on this page: the entry
+// is the column's last and may continue on the next page. A page number or
+// other narrow run below it doesn't count.
 static bool NoColumnTextBelow(WStr text, const Rect* coords, RectF box) {
     int x0 = (int)box.x;
     int x1 = (int)(box.x + box.dx);
     int yBot = (int)(box.y + box.dy);
-    for (int i = 0; i < text.len; i++) {
+    for (int i = 0; i < len(text); i++) {
         if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         Rect r = coords[i];
-        int cx = r.x + r.dx / 2;
-        if (cx < x0 || cx > x1) {
+        int cx = r.x + (r.dx / 2);
+        if (cx < x0 || cx > x1 || r.y < yBot) {
             continue;
         }
-        if (r.y >= yBot) {
+        LineRun run = LineRunExtent(text, coords, i);
+        if (run.rightX - run.leftX >= kMinBodyRunPt) {
             return false;
         }
     }
@@ -901,18 +967,16 @@ static bool NoColumnTextBelow(WStr text, const Rect* coords, RectF box) {
 }
 
 // Fit a bibliography, glossary, or abbreviation entry; otherwise use LandscapeBox.
-
-// Fit a bibliography, glossary, or abbreviation entry; otherwise use LandscapeBox.
 // continuationOut optionally receives the entry's tail in the next column.
-// mayWrapPageOut optionally reports that the entry ends its column with no
+// pageWrapOut optionally reports that the entry ends its column with no
 // following text, so it may continue on the next page.
 RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY, RectF* continuationOut,
-                     bool* mayWrapPageOut) {
+                     EntryPageWrap* pageWrapOut) {
     if (continuationOut) {
         *continuationOut = RectF{};
     }
-    if (mayWrapPageOut) {
-        *mayWrapPageOut = false;
+    if (pageWrapOut) {
+        *pageWrapOut = {};
     }
     // Show the whole page when sparse text would hide its images.
     constexpr int kSparsePageTextLen = 50;
@@ -1240,8 +1304,10 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                         *continuationOut = FindColumnWrapContinuation(text, coords, mediabox, columnRightX);
                     }
                 }
-                if (mayWrapPageOut && !foundSibling && NoColumnTextBelow(text, coords, box)) {
-                    *mayWrapPageOut = true;
+                if (pageWrapOut && !foundSibling && NoColumnTextBelow(text, coords, box)) {
+                    // continuation lines align with the body after the label
+                    pageWrapOut->mayWrap = true;
+                    pageWrapOut->indentDx = entryBodyLeftX > firstLineLeftX ? entryBodyLeftX - firstLineLeftX : 0;
                 }
                 return box;
             }
@@ -1389,8 +1455,9 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
     }
     // Bracket labels identify bibliography entries.
     if (text.s[startIdx] == L'[') {
-        if (mayWrapPageOut && !sawSibling && NoColumnTextBelow(text, coords, box)) {
-            *mayWrapPageOut = true;
+        if (pageWrapOut && !sawSibling && NoColumnTextBelow(text, coords, box)) {
+            pageWrapOut->mayWrap = true;
+            pageWrapOut->indentDx = indentX > firstLineLeftX ? indentX - firstLineLeftX : 0;
         }
         return box;
     }
@@ -1433,8 +1500,9 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         return LandscapeBox(mediabox, destX, destY, text, coords);
     }
     // Keep the fitted author-year entry.
-    if (mayWrapPageOut && !sawSibling && NoColumnTextBelow(text, coords, box)) {
-        *mayWrapPageOut = true;
+    if (pageWrapOut && !sawSibling && NoColumnTextBelow(text, coords, box)) {
+        pageWrapOut->mayWrap = true;
+        pageWrapOut->indentDx = indentX > firstLineLeftX ? indentX - firstLineLeftX : 0;
     }
     return box;
 }

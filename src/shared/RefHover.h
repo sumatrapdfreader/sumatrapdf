@@ -236,10 +236,17 @@ RectF NoteBox(RectF mediabox, float destY, WStr text, const Rect* coords);
 
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY);
 
-RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY,
-                     RectF* continuationOut = nullptr, bool* mayWrapPageOut = nullptr);
+// an entry that may continue on the next page
+struct EntryPageWrap {
+    bool mayWrap = false;
+    // X of its continuation lines relative to its head; 0 if unknown
+    int indentDx = 0;
+};
 
-RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int colLeftX);
+RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY,
+                     RectF* continuationOut = nullptr, EntryPageWrap* pageWrapOut = nullptr);
+
+RectF FindPageWrapContinuation(WStr text, const Rect* coords, RectF mediabox, int indentDx);
 
 bool ShouldSearchNextPage(RectF mediabox, float destY);
 
@@ -281,9 +288,6 @@ bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, 
 //--- shared between the RefHover*.cpp files, not for use outside them
 
 constexpr float kRefHoverRenderZoom = 1.5f;
-
-// pt of padding DetectEntryBox adds around the fitted entry for display.
-constexpr float kRefHoverEntryPadPt = 6.f;
 constexpr int kRefHoverMaxPopupWidth = 1200;
 constexpr int kRefHoverMaxPopupHeight = 600;
 constexpr int kRefHoverBorder = 4;

@@ -42,8 +42,8 @@ static RectF DetectNoteRegion(EngineBase* engine, int pageNo, RectF mediabox, fl
 }
 
 static RectF DetectRegion(EngineBase* engine, int pageNo, RectF mediabox, float destX, float destY, RectF* continuation,
-                          MissingEntry missingEntry, bool* mayWrapPage) {
-    *mayWrapPage = false;
+                          MissingEntry missingEntry, EntryPageWrap* pageWrap) {
+    *pageWrap = {};
     AutoArenaSavepoint tempScope;
 
     Rect* normCoords = nullptr;
@@ -51,7 +51,7 @@ static RectF DetectRegion(EngineBase* engine, int pageNo, RectF mediabox, float 
 
     RectF region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
     if (region.dx <= 0.f || region.dy <= 0.f) {
-        region = DetectEntryBox(text, normCoords, mediabox, destX, destY, continuation, mayWrapPage);
+        region = DetectEntryBox(text, normCoords, mediabox, destX, destY, continuation, pageWrap);
     }
     if ((region.dx <= 0.f || region.dy <= 0.f) && missingEntry == MissingEntry::Landscape) {
         region = LandscapeBox(mediabox, destX, destY, text, normCoords);
@@ -100,15 +100,14 @@ void RefHoverOnTimer(RefHoverState* s, EngineBase* engine, float pageZoom) {
     // "[63]"): a second crop, stitched below `region` in the delivered
     // bitmap. Empty (dx/dy <= 0) otherwise.
     RectF continuation{};
-    bool mayWrapPage = false;
+    EntryPageWrap pageWrap;
     RectF noteRegion = s->pending.noteRef ? DetectNoteRegion(engine, destPage, mediabox, destY) : RectF{};
     if (noteRegion.dx > 0.f && noteRegion.dy > 0.f) {
         region = noteRegion;
     } else if (useLinkZoom) {
         region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
     } else {
-        region =
-            DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Empty, &mayWrapPage);
+        region = DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Empty, &pageWrap);
         bool regionEmpty = region.dx <= 0.f || region.dy <= 0.f;
         bool searchNext = regionEmpty || ShouldSearchNextPage(mediabox, destY);
         if (searchNext && !regionEmpty) {
@@ -130,24 +129,23 @@ void RefHoverOnTimer(RefHoverState* s, EngineBase* engine, float pageZoom) {
                 destX = std::max(destX, 0.f);
                 mediabox = engine->PageMediabox(destPage);
                 region = DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Landscape,
-                                      &mayWrapPage);
+                                      &pageWrap);
             }
         }
         if (regionEmpty && nextY < 0.f) {
             region = DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Landscape,
-                                  &mayWrapPage);
+                                  &pageWrap);
         }
     }
     // The entry ends its column with nothing below: look for its tail at the
     // top of the next page's reference column and stitch it below the popup.
     int continuationPageNo = 0;
-    if (mayWrapPage && continuation.dx <= 0.f && destPage < engine->PageCount()) {
+    if (pageWrap.mayWrap && continuation.dx <= 0.f && destPage < engine->PageCount()) {
         AutoArenaSavepoint tempScope;
         Rect* nextCoords = nullptr;
         TempWStr nextText = RegionTextTemp(engine, destPage + 1, &nextCoords);
         RectF nextMediabox = engine->PageMediabox(destPage + 1);
-        int colLeftX = (int)(region.x + kRefHoverEntryPadPt);
-        RectF tail = FindPageWrapContinuation(nextText, nextCoords, nextMediabox, colLeftX);
+        RectF tail = FindPageWrapContinuation(nextText, nextCoords, nextMediabox, pageWrap.indentDx);
         if (tail.dx > 0.f && tail.dy > 0.f) {
             continuation = tail;
             continuationPageNo = destPage + 1;

@@ -162,7 +162,7 @@ static void PageWrapContinuationFound() {
     AddText(text, coords, n, 1024, L"tail of the entry cut by the page break. Work-", 92, 94);
     AddText(text, coords, n, 1024, L"shop Papers, vol. 12, pp. 10-20.", 92, 106);
     AddText(text, coords, n, 1024, L"Next, D. (2024) The following entry here.", 72, 118);
-    RectF box = FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 72);
+    RectF box = FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 20);
     utassert(!IsEmpty(box));
     // starts at the first tail line, header excluded
     utassert(box.y >= 85.f && box.y <= 94.f);
@@ -175,10 +175,53 @@ static void PageWrapContinuationFound() {
     AddText(text, coords, n, 1024, L"36                              Author et al.", 72, 57);
     AddText(text, coords, n, 1024, L"Next, D. (2024) A new entry starting flush on", 72, 94);
     AddText(text, coords, n, 1024, L"this page, with its continuation line.", 92, 106);
-    utassert(IsEmpty(FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 72)));
+    utassert(IsEmpty(FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 20)));
 }
 
-// (3d4) mayWrapPageOut: set when the fitted entry ends its column with no
+// (3d3b) The tail is in the next page's first column, wherever that is: its
+// margin can differ from this page's (odd / even pages), and a right-column
+// entry continues in the next page's left column, not its right one.
+static void PageWrapUsesNextPageFirstColumn() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    // margins swapped: the column starts at x=90, the tail is indented to 110
+    AddText(text, coords, n, 1024, L"tail of the entry cut by the page break. Work-", 110, 94);
+    AddText(text, coords, n, 1024, L"shop Papers, vol. 12, pp. 10-20.", 110, 106);
+    AddText(text, coords, n, 1024, L"Next, D. (2024) The following entry here.", 90, 118);
+    AddText(text, coords, n, 1024, L"Other, G. (2025) And one more entry here.", 90, 130);
+    RectF box = FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 20);
+    utassert(!IsEmpty(box));
+    utassert(box.y >= 85.f && box.y <= 94.f);
+    utassert(box.y + box.dy <= 125.f);
+
+    // two columns: the left one starts with a new entry. The indented lines
+    // topping the right column continue another entry and must not be taken.
+    n = 0;
+    AddText(text, coords, n, 1024, L"Next, D. (2024) A new entry here", 50, 94);
+    AddText(text, coords, n, 1024, L"with its continuation line.", 70, 106);
+    AddText(text, coords, n, 1024, L"Other, G. (2025) Another entry", 50, 118);
+    AddText(text, coords, n, 1024, L"tail of some other entry, cut", 340, 94);
+    AddText(text, coords, n, 1024, L"by the column break, pp. 1-9.", 340, 106);
+    AddText(text, coords, n, 1024, L"Right, H. (2026) A right entry.", 320, 118);
+    utassert(IsEmpty(FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 20)));
+}
+
+// (3d3c) A tail starts at the entry's own continuation indent. A paragraph
+// whose first line is indented by some other amount is not one.
+static void PageWrapIndentMustMatch() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int n = 0;
+    AddText(text, coords, n, 1024, L"The first line of an unrelated paragraph", 84, 94);
+    AddText(text, coords, n, 1024, L"which continues flush with the margin and", 72, 106);
+    AddText(text, coords, n, 1024, L"goes on for a few more lines like this.", 72, 118);
+    utassert(IsEmpty(FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 20)));
+    // the same lines are a tail of an entry indented by 12
+    utassert(!IsEmpty(FindPageWrapContinuation(WStr(text, n), coords, Mediabox(), 12)));
+}
+
+// (3d4) pageWrapOut: mayWrap is set when the fitted entry ends its column with no
 // text below (it may continue on the next page), not when a sibling follows.
 static void EntryMayWrapAtColumnEnd() {
     WCHAR text[1024];
@@ -186,17 +229,24 @@ static void EntryMayWrapAtColumnEnd() {
     int n = 0;
     AddText(text, coords, n, 1024, L"Last, E. (2023) A study cut by the page", 72, 700);
     AddText(text, coords, n, 1024, L"break: its tail is on the next page and", 92, 712);
-    bool mayWrap = false;
-    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 700.f, nullptr, &mayWrap);
-    utassert(mayWrap);
+    EntryPageWrap wrap;
+    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 700.f, nullptr, &wrap);
+    utassert(wrap.mayWrap);
+    utassert(wrap.indentDx == 20);
+
+    // a page number below the entry is not text that follows it
+    AddText(text, coords, n, 1024, L"36", 300, 760);
+    wrap = {};
+    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 700.f, nullptr, &wrap);
+    utassert(wrap.mayWrap);
 
     n = 0;
     AddText(text, coords, n, 1024, L"First, F. (2022) A complete entry with", 72, 200);
     AddText(text, coords, n, 1024, L"its continuation line right here.", 92, 212);
     AddText(text, coords, n, 1024, L"Second, S. (2023) The following entry.", 72, 224);
-    mayWrap = false;
-    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f, nullptr, &mayWrap);
-    utassert(!mayWrap);
+    wrap = {};
+    DetectEntryBox(WStr(text, n), coords, Mediabox(), 72.f, 200.f, nullptr, &wrap);
+    utassert(!wrap.mayWrap);
 }
 
 // (3e) Single-line description-list entries (abbreviation lists) with normal
@@ -1193,6 +1243,8 @@ void RefHoverTest() {
     AuthorYearEntryFitsToOneEntry();
     AuthorYearDestAboveHead();
     PageWrapContinuationFound();
+    PageWrapUsesNextPageFirstColumn();
+    PageWrapIndentMustMatch();
     EntryMayWrapAtColumnEnd();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
