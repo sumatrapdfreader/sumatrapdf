@@ -453,6 +453,11 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
+    // the menu loop pumps messages: the tab may have closed or moved meanwhile
+    tabIdx = win->GetTabIdx(tabUnderMouse);
+    if (tabIdx < 0) {
+        return;
+    }
     if (StripGroupCmd(win, tabUnderMouse, cmdId)) {
         return;
     }
