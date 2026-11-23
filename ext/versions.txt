@@ -128,7 +128,7 @@ dav1d           1.5.5      2026-11-17
 
 heicdec         dist       2026-11-23
   https://github.com/kjk/heicdec
-  commit aa619f829aa95e8f58d02d4f13b478258aeedfc1
+  commit 306ab0e2cf16d8dbeb6a140d307f1701dcb7a392
   amalgamated dist/heic.c + dist/heic.h only
   HEVC pure-C; AV1 via dav1d; unci via zlib/brotli when present.
   Build flags: HEIC_HAVE_DAV1D, HEIC_HAVE_ZLIB, HEIC_HAVE_BROTLI.
