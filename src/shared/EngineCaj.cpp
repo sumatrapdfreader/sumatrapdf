@@ -82,14 +82,11 @@ struct Caj2pdfVer {
 // tests serve their own converter and keep it away from the user's data dir
 static TempStr DebugEnvTemp(const char* name) {
 #if defined(DEBUG)
-    const char* v = getenv(name);
-    if (v) {
-        return str::DupTemp(Str(v));
-    }
+    return GetEnvVariableTemp(Str(name));
 #else
     (void)name;
-#endif
     return {};
+#endif
 }
 
 static TempStr Caj2pdfBaseUrlTemp() {

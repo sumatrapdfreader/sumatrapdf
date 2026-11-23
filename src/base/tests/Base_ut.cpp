@@ -541,7 +541,15 @@ static void FormatSizeTest() {
     utassert(str::Eq(FormatSizeCompactTemp(17), StrL("17 B")));
 }
 
+static void EnvVariableTest() {
+    utassert(len(GetEnvVariableTemp(StrL("SUMATRA_UT_SURELY_NOT_SET_1234"))) == 0);
+#if !OS_WASM
+    utassert(len(GetEnvVariableTemp(StrL("PATH"))) > 0);
+#endif
+}
+
 void BaseUtilTest() {
+    EnvVariableTest();
     StrEqLenTest();
     ReplaceNoCaseTest();
     InPlacePastLenTest();

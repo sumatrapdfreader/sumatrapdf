@@ -221,11 +221,8 @@ static TempStr FontEnvTemp(Str name) {
     char buf[1024];
     WasmJsGetEnv(name.s, len(name), buf, (int)sizeof(buf));
     return str::DupTemp(Str(buf));
-#elif OS_WIN
-    return GetEnvVariableTemp(name);
 #else
-    const char* v = getenv(CStrTemp(name));
-    return str::DupTemp(Str((char*)(v ? v : "")));
+    return GetEnvVariableTemp(name);
 #endif
 }
 

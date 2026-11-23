@@ -129,6 +129,15 @@ int GetMeasurementSystem() {
     return MeasurementSystemForLocale(Str(locale));
 }
 
+// empty if not set
+TempStr GetEnvVariableTemp(Str name) {
+    const char* v = getenv(CStrTemp(name));
+    if (!v) {
+        return {};
+    }
+    return str::DupTemp(Str(v));
+}
+
 bool MeasurementSystem_UnitTests() {
     return MeasurementSystemForLocale(StrL("en_US.UTF-8")) == 1 && MeasurementSystemForLocale(StrL("en-US")) == 1 &&
            MeasurementSystemForLocale(StrL("en_LR")) == 1 && MeasurementSystemForLocale(StrL("my_MM.UTF-8")) == 1 &&

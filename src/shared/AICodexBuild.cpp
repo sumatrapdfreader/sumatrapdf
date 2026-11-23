@@ -184,12 +184,7 @@ static bool QueryCodexModels(Str, StrVec&) {
 
 // $CODEX_HOME, ~/.codex by default
 static TempStr CodexHomeTemp() {
-#if OS_WIN
     TempStr configured = GetEnvVariableTemp(StrL("CODEX_HOME"));
-#else
-    const char* env = getenv("CODEX_HOME");
-    TempStr configured = env ? str::DupTemp(Str(env)) : TempStr();
-#endif
     if (len(configured) > 0) {
         return configured;
     }

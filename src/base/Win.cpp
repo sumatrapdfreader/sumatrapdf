@@ -1929,7 +1929,7 @@ Str GetLastErrorAsStr(Arena* arena) {
     return str::Dup(arena, fmt("0x%08lX '%s'", err, msg));
 }
 
-// returns nullptr if not set
+// empty if not set
 TempStr GetEnvVariableTemp(Str name) {
     WCHAR bufStatic[256];
     WCHAR* buf = &bufStatic[0];

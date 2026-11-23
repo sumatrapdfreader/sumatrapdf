@@ -405,9 +405,9 @@ static bool ResolveAPIEndpoint(Str model, APIEndpoint& ep, Str& error) {
     Str key = gSettings->customAI.apiKey;
     Str env = gSettings->customAI.apiKeyEnv;
     if (len(env) > 0) {
-        const char* value = getenv(CStrTemp(env));
-        if (value && *value) {
-            key = Str(value);
+        TempStr value = GetEnvVariableTemp(env);
+        if (len(value) > 0) {
+            key = value;
         }
     }
     for (int i = 0; i < len(key); i++) {

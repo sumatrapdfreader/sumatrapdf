@@ -340,7 +340,6 @@ TempStr CpuFeaturesTemp();
 
 //--- environment / errors / paths
 
-TempStr GetEnvVariableTemp(Str name);
 TempStr GetLastErrorStrTemp(DWORD& err);
 void LogLastError(DWORD err = 0);
 Str GetLastErrorAsStr(Arena* arena);
