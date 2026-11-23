@@ -9,7 +9,17 @@
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
 
+// the user's home: an existing directory wherever there is one
+static void HomeDirTest() {
+#if !OS_WASM
+    TempStr home = GetHomeDirTemp();
+    utassert(len(home) > 0);
+    utassert(dir::Exists(home));
+#endif
+}
+
 void FileUtilTest() {
+    HomeDirTest();
     FILETIME epoch = FileTimeFromU64(kFileTimeUnixEpoch);
     FILETIME oneSecond = FileTimeFromU64(kFileTimeUnixEpoch + kFileTimeTicksPerSec);
     utassert(FileTimeToU64(epoch) == kFileTimeUnixEpoch);

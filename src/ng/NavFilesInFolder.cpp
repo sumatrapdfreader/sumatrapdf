@@ -43,8 +43,7 @@
 // the user's home directory, and there is no Quick access.
 void ListDriveRoots(StrVec& out) {
     out.Append(StrL("/"));
-    const char* home = getenv("HOME");
-    Str homeDir = Str((char*)(home ? home : ""));
+    TempStr homeDir = GetHomeDirTemp();
     if (len(homeDir) > 1 && dir::Exists(homeDir)) {
         out.Append(homeDir);
     }

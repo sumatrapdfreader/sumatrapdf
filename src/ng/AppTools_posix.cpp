@@ -58,10 +58,10 @@ static TempStr DefaultAppDataDirTemp() {
 #if OS_WASM
     return str::DupTemp(StrL("/settings"));
 #else
-    const char* home = getenv("HOME");
+    TempStr home = GetHomeDirTemp();
 #if OS_DARWIN
-    if (home && *home) {
-        TempStr dir = path::JoinTemp(Str((char*)home), StrL("Library/Application Support"));
+    if (len(home) > 0) {
+        TempStr dir = path::JoinTemp(home, StrL("Library/Application Support"));
         return path::JoinTemp(dir, StrL(kAppName));
     }
 #else
@@ -69,8 +69,8 @@ static TempStr DefaultAppDataDirTemp() {
     if (xdg && *xdg) {
         return path::JoinTemp(Str((char*)xdg), StrL(kAppName));
     }
-    if (home && *home) {
-        TempStr dir = path::JoinTemp(Str((char*)home), StrL(".config"));
+    if (len(home) > 0) {
+        TempStr dir = path::JoinTemp(home, StrL(".config"));
         return path::JoinTemp(dir, StrL(kAppName));
     }
 #endif

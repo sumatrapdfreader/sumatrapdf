@@ -1336,8 +1336,7 @@ static TempStr NavStartDirNoDocTemp() {
 #if OS_WIN
     TempStr docs = GetSpecialFolderTemp(CSIDL_PERSONAL);
 #else
-    const char* home = getenv("HOME");
-    TempStr docs = str::DupTemp(Str((char*)(home ? home : "")));
+    TempStr docs = GetHomeDirTemp();
 #endif
     if (len(docs) > 0 && dir::Exists(docs)) {
         return docs;

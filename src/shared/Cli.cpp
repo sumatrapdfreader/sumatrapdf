@@ -3033,15 +3033,6 @@ so the password isn't on the command line.
 - 5: the command doesn't apply to this kind of document (a PDF tool on an EPUB)
 )";
 
-static TempStr HomeDirTemp() {
-#if OS_WIN
-    const char* home = getenv("USERPROFILE");
-#else
-    const char* home = getenv("HOME");
-#endif
-    return home ? str::DupTemp(Str(home)) : TempStr{};
-}
-
 static int CmdAgentSkill(CliCtx& cx) {
     TempStr md = str::ReplaceTemp(Str(kSkillMd), StrL("<EXE>"), GetSelfExePathTemp());
     Str where = OptValue(cx, StrL("--install"));
@@ -3056,11 +3047,11 @@ static int CmdAgentSkill(CliCtx& cx) {
     // where each agent looks for skills
     TempStr dir;
     if (str::Eq(where, StrL("claude"))) {
-        dir = path::JoinTemp(HomeDirTemp(), StrL(".claude/skills"));
+        dir = path::JoinTemp(GetHomeDirTemp(), StrL(".claude/skills"));
     } else if (str::Eq(where, StrL("codex"))) {
-        dir = path::JoinTemp(HomeDirTemp(), StrL(".codex/skills"));
+        dir = path::JoinTemp(GetHomeDirTemp(), StrL(".codex/skills"));
     } else if (str::Eq(where, StrL("agents"))) {
-        dir = path::JoinTemp(HomeDirTemp(), StrL(".agents/skills"));
+        dir = path::JoinTemp(GetHomeDirTemp(), StrL(".agents/skills"));
     } else {
         dir = str::DupTemp(where);
     }

@@ -29,7 +29,7 @@ static TempStr FindAntiGravityExecutableTemp() {
     gAntiGravityExecutableSearched = true;
 
     StrVec candidates;
-    TempStr userProfile = AIChatHomeDirTemp();
+    TempStr userProfile = GetHomeDirTemp();
     if (len(userProfile) > 0) {
 #if OS_WIN
         candidates.Append(fmt("%s\\AppData\\Local\\agy\\bin\\agy.exe", userProfile));

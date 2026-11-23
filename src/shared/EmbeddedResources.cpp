@@ -246,10 +246,10 @@ static TempStr FontCacheDirTemp() {
     }
     return path::JoinTemp(dir, StrL(kAppName), StrL("fonts"));
 #else
-    const char* home = getenv("HOME");
+    TempStr home = GetHomeDirTemp();
 #if OS_DARWIN
-    if (home && *home) {
-        TempStr dir = path::JoinTemp(Str((char*)home), StrL("Library/Application Support"));
+    if (len(home) > 0) {
+        TempStr dir = path::JoinTemp(home, StrL("Library/Application Support"));
         dir = path::JoinTemp(dir, StrL(kAppName));
         return path::JoinTemp(dir, StrL("fonts"));
     }
@@ -258,8 +258,8 @@ static TempStr FontCacheDirTemp() {
     if (xdg && *xdg) {
         return path::JoinTemp(Str((char*)xdg), StrL(kAppName), StrL("fonts"));
     }
-    if (home && *home) {
-        TempStr dir = path::JoinTemp(Str((char*)home), StrL(".config"));
+    if (len(home) > 0) {
+        TempStr dir = path::JoinTemp(home, StrL(".config"));
         dir = path::JoinTemp(dir, StrL(kAppName));
         return path::JoinTemp(dir, StrL("fonts"));
     }

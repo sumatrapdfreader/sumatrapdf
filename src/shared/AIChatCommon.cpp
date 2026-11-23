@@ -165,15 +165,6 @@ MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {
 
 #endif
 
-TempStr AIChatHomeDirTemp() {
-#if OS_WIN
-    return GetSpecialFolderTemp(CSIDL_PROFILE);
-#else
-    const char* home = getenv("HOME");
-    return str::DupTemp(Str((char*)(home && *home ? home : "")));
-#endif
-}
-
 AIChatJsonlReader::AIChatJsonlReader(Str path) {
     data = file::ReadFile(path);
     rest = data;
@@ -318,7 +309,7 @@ static TempStr AIChatProjectDirTemp(Str home, Str encodedDir, Str root) {
 }
 
 void AIChatCollectProjectSessions(Str dir, const Str* roots, int rootCount, Vec<AIChatSessionInfo>& sessions) {
-    TempStr home = AIChatHomeDirTemp();
+    TempStr home = GetHomeDirTemp();
     if (len(home) == 0) {
         return;
     }
@@ -330,7 +321,7 @@ void AIChatCollectProjectSessions(Str dir, const Str* roots, int rootCount, Vec<
 }
 
 TempStr AIChatFindProjectSessionTemp(Str dir, Str sessionId, const Str* roots, int rootCount) {
-    TempStr home = AIChatHomeDirTemp();
+    TempStr home = GetHomeDirTemp();
     if (len(home) == 0) {
         return {};
     }

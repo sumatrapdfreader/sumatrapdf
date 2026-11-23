@@ -35,7 +35,7 @@ static TempStr FindGrokExecutableTemp() {
     gGrokExecutableSearched = true;
 
     StrVec candidates;
-    TempStr userProfile = AIChatHomeDirTemp();
+    TempStr userProfile = GetHomeDirTemp();
     if (len(userProfile) > 0) {
 #if OS_WIN
         candidates.Append(fmt("%s\\.grok\\bin\\grok.exe", userProfile));
@@ -163,7 +163,7 @@ static bool IsGrokSessionDirName(Str name) {
 }
 
 static TempStr GrokSessionsProjectDirTemp(Str dir) {
-    TempStr userProfile = AIChatHomeDirTemp();
+    TempStr userProfile = GetHomeDirTemp();
     if (len(userProfile) == 0) {
         return {};
     }

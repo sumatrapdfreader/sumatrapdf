@@ -1926,8 +1926,6 @@ bool HasWriteAccess(Str dir) {
 
 } // namespace dir
 
-TempStr GetHomeDirTemp();
-
 bool FileSystemEntryExists(Str s) {
     return path::GetType(s) != path::Type::None;
 }
@@ -1945,6 +1943,7 @@ TempStr GetDownloadsDirTemp() {
     return res;
 }
 
+// %USERPROFILE%, as Node / Rust tools resolve ~; the profile folder when unset
 TempStr GetHomeDirTemp() {
     WCHAR buf[MAX_PATH];
     DWORD n = GetEnvironmentVariableW(L"USERPROFILE", buf, MAX_PATH);
@@ -1968,7 +1967,14 @@ TempStr GetHomeDirTemp() {
         combined[pos] = 0;
         return ToUtf8Temp(WStr(combined, pos));
     }
-    return {};
+
+    PWSTR pathW = nullptr;
+    TempStr res;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Profile, 0, nullptr, &pathW)) && pathW) {
+        res = ToUtf8Temp(pathW);
+    }
+    CoTaskMemFree(pathW);
+    return res;
 }
 
 #endif

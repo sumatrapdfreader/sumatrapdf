@@ -35,7 +35,7 @@ static TempStr FindCodexExecutableTemp() {
     gCodexExecutableSearched = true;
 
     StrVec candidates;
-    TempStr userProfile = AIChatHomeDirTemp();
+    TempStr userProfile = GetHomeDirTemp();
     if (len(userProfile) > 0) {
 #if OS_WIN
         candidates.Append(fmt("%s\\.codex\\bin\\codex.exe", userProfile));
@@ -193,7 +193,7 @@ static TempStr CodexHomeTemp() {
     if (len(configured) > 0) {
         return configured;
     }
-    TempStr home = AIChatHomeDirTemp();
+    TempStr home = GetHomeDirTemp();
     if (len(home) == 0) {
         return {};
     }

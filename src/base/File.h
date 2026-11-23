@@ -178,6 +178,7 @@ bool HasWriteAccess(Str dir);
 
 bool FileSystemEntryExists(Str s);
 TempStr GetDownloadsDirTemp();
+TempStr GetHomeDirTemp();
 
 bool FileTimeEq(const FILETIME& a, const FILETIME& b);
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);

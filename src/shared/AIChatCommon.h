@@ -164,7 +164,6 @@ Str AIChatSessionDescription(Str sessionPath);
 void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath);
 
 MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame);
-TempStr AIChatHomeDirTemp();
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions);
 void AIChatCollectJsonlSessions(Str sessionDir, Str project, Vec<AIChatSessionInfo>& sessions);

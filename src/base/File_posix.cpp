@@ -743,6 +743,7 @@ bool HasWriteAccess(Str dir) {
 
 } // namespace dir
 
+// $HOME; empty when unset
 TempStr GetHomeDirTemp() {
     const char* home = getenv("HOME");
     if (!home || !home[0]) {
