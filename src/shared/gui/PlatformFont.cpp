@@ -366,18 +366,10 @@ PlatformFont* GetPlatformFont(HFONT hfont) {
 // derived from the font's own HFONT rather than from (name, size, Bold): an
 // adopted UI font's point size is reconstructed from its LOGFONT, so going
 // through gdiplus again could land on slightly different metrics
-PlatformFont* GetBoldPlatformFont(PlatformFont* f) {
-    if (!f) {
-        return nullptr;
-    }
-    if (f->boldVariant) {
-        return f->boldVariant;
-    }
+static PlatformFont* CreateBoldVariant(PlatformFont* f) {
     if ((int)f->style & (int)PlatformFontStyle::Bold) {
-        f->boldVariant = f;
         return f;
     }
-    f->boldVariant = f; // fall back to the font itself if anything below fails
     HFONT hf = f->GetHFont();
     if (!hf) {
         return f;
@@ -392,7 +384,24 @@ PlatformFont* GetBoldPlatformFont(PlatformFont* f) {
         return f;
     }
     PlatformFont* res = GetPlatformFont(bold);
-    if (res) {
+    return res ? res : f;
+}
+
+// boldVariant is read and set under the lock, but created outside it:
+// GetPlatformFont() takes the lock too
+PlatformFont* GetBoldPlatformFont(PlatformFont* f) {
+    if (!f) {
+        return nullptr;
+    }
+    {
+        ScopedMutex lock(&gPlatformFontsMutex);
+        if (f->boldVariant) {
+            return f->boldVariant;
+        }
+    }
+    PlatformFont* res = CreateBoldVariant(f);
+    ScopedMutex lock(&gPlatformFontsMutex);
+    if (!f->boldVariant) {
         f->boldVariant = res;
     }
     return f->boldVariant;
