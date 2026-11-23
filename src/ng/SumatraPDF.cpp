@@ -2958,6 +2958,37 @@ void RerenderTabPage(WindowTab* tab, int pageNo) {
 // If it still matches, our annotation is the most recent copy and Ctrl+V should
 // paste it; if something else copied since, that wins instead.
 static DWORD gAnnotClipboardSeqNo = 0;
+#else
+// Clipboard image at the last annotation copy. A later copy has different
+// bytes; an image that was already there does not.
+static int gAnnotClipImageLen = 0;
+static u64 gAnnotClipImageHash = 0;
+
+// FNV-1a. Distinguishes one clipboard image from the next.
+static u64 HashBytes(const u8* p, int n) {
+    const u64 kFnvOffset = 14695981039346656037ULL;
+    const u64 kFnvPrime = 1099511628211ULL;
+    u64 h = kFnvOffset;
+    for (int i = 0; i < n; i++) {
+        h ^= (u64)p[i];
+        h *= kFnvPrime;
+    }
+    return h;
+}
+
+static void NoteClipboardImageAtAnnotCopy(MainWindow* win) {
+    gAnnotClipImageLen = 0;
+    gAnnotClipImageHash = 0;
+    if (!win || !win->gpuiWin) {
+        return;
+    }
+    gp::ClipboardItem item = gp::ClipboardGetItem(gp::GetTempArena(), win->gpuiWin);
+    if (!item.HasImage()) {
+        return;
+    }
+    gAnnotClipImageLen = item.imageBytesLen;
+    gAnnotClipImageHash = HashBytes(item.imageBytes, item.imageBytesLen);
+}
 #endif
 
 // orig's: snapshot the annotation and put its contents on the OS clipboard.
@@ -2973,21 +3004,34 @@ static bool CopyAnnotationToClipboard(MainWindow* win, Annotation* annot, bool c
     }
 #if OS_WIN
     gAnnotClipboardSeqNo = GetClipboardSequenceNumber();
+#else
+    NoteClipboardImageAtAnnotCopy(win);
 #endif
     return true;
 }
 
 // true if our copied annotation is newer than whatever is on the OS clipboard.
-// ng off Windows has no clipboard counter: an image on the clipboard wins.
-static bool CopiedAnnotationIsFresh(Pixmap* clipboardImage) {
+// An image copied after the annotation wins. One that was already there does not.
+static bool CopiedAnnotationIsFresh(MainWindow* win, Pixmap* clipboardImage) {
     if (!HasCopiedAnnotation()) {
         return false;
     }
 #if OS_WIN
+    (void)win;
     (void)clipboardImage;
     return GetClipboardSequenceNumber() == gAnnotClipboardSeqNo;
 #else
-    return !clipboardImage;
+    if (!clipboardImage) {
+        return true;
+    }
+    if (!win || !win->gpuiWin || gAnnotClipImageLen <= 0) {
+        return false;
+    }
+    gp::ClipboardItem item = gp::ClipboardGetItem(gp::GetTempArena(), win->gpuiWin);
+    if (!item.HasImage() || item.imageBytesLen != gAnnotClipImageLen) {
+        return false;
+    }
+    return HashBytes(item.imageBytes, item.imageBytesLen) == gAnnotClipImageHash;
 #endif
 }
 
@@ -6105,7 +6149,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             // themselves, so it never gets here. orig then prefers a copied
             // annotation while ours is the most recent copy
             Pixmap* image = ImageEditGetClipboard(win);
-            if (win->pdfAnnotationsToolbarEnabled && CopiedAnnotationIsFresh(image)) {
+            if (win->pdfAnnotationsToolbarEnabled && CopiedAnnotationIsFresh(win, image)) {
                 FreePixmap(image);
                 PasteAnnotationInTab(win, tab);
                 break;
