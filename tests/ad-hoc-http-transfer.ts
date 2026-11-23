@@ -54,6 +54,39 @@ function startServer() {
         });
         return new Response(body, { headers: { "content-length": "100000" } });
       }
+      if (url.pathname === "/stream" && req.method === "POST") {
+        // a streamed reply in three pieces (HttpPostStream)
+        const enc = new TextEncoder();
+        const parts = ["a", "b", "c"];
+        const body = new ReadableStream({
+          async pull(ctl) {
+            const part = parts.shift();
+            if (part === undefined) {
+              ctl.close();
+              return;
+            }
+            await Bun.sleep(50);
+            ctl.enqueue(enc.encode(part));
+          },
+        });
+        return new Response(body);
+      }
+      if (url.pathname === "/slowstream" && req.method === "POST") {
+        // one piece, then nothing for a long time: only a cancel ends it early
+        let sentFirst = false;
+        const body = new ReadableStream({
+          async pull(ctl) {
+            if (!sentFirst) {
+              sentFirst = true;
+              ctl.enqueue(new TextEncoder().encode("x"));
+              return;
+            }
+            await Bun.sleep(20000);
+            ctl.close();
+          },
+        });
+        return new Response(body);
+      }
       if (auth !== "Bearer tk-123") {
         return new Response("unauthorized", { status: 401 });
       }

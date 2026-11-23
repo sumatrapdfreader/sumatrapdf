@@ -5,6 +5,7 @@
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
 #include "base/Http.h"
+#include "base/Timer.h"
 
 #include "gui/UIModels.h"
 
@@ -699,6 +700,60 @@ void SumatraPDFWebTest() {
     utassert(len(files) == 0);
 }
 
+struct TestStreamSink : HttpStreamSink {
+    HttpStreamCancel* cancel = nullptr;
+    str::Builder data;
+    int status = 0;
+    void OnStatus(int s) override { status = s; }
+    bool OnData(Str bytes) override {
+        data.Append(bytes);
+        return true;
+    }
+    bool IsCanceled() override { return cancel->IsCanceled(); }
+};
+
+struct SlowStreamRun {
+    HttpStreamCancel cancel;
+    TestStreamSink sink;
+    Str url;
+    bool ok = true;
+};
+
+static void RunSlowStream(SlowStreamRun* run) {
+    run->ok = HttpPostStream(run->url, Str(), StrL("{}"), &run->sink, &run->cancel);
+}
+
+// HttpPostStream: a whole streamed reply, and a cancel that ends a stalled one
+static void HttpStreamTest(Str base) {
+    {
+        HttpStreamCancel cancel;
+        TestStreamSink sink;
+        sink.cancel = &cancel;
+        utassert(HttpPostStream(fmt("%s/stream", base), Str(), StrL("{}"), &sink, &cancel));
+        utassert(sink.status == 200);
+        utassert(str::Eq(ToStr(sink.data), StrL("abc")));
+    }
+
+    auto* run = new SlowStreamRun();
+    run->sink.cancel = &run->cancel;
+    run->url = fmt("%s/slowstream", base);
+    ThreadHandle th = StartThread(MkFunc0(RunSlowStream, run), StrL("SlowStreamTest"));
+    // let the first piece arrive, then cancel the read that waits for more
+    for (int i = 0; i < 100 && len(run->sink.data) == 0; i++) {
+        SleepInMs(20);
+    }
+    utassert(len(run->sink.data) == 1);
+    TimeStamp start = TimeGet();
+    run->cancel.Cancel();
+    bool joined = JoinThread(&th, 5000);
+    utassert(joined);
+    utassert(TimeSinceInMs(start) < 3000);
+    utassert(!run->ok);
+    if (joined) {
+        delete run;
+    }
+}
+
 // Run by tests/ad-hoc-http-transfer.ts, which serves 127.0.0.1:9332 and sets
 // SUMATRA_TEST_HTTP_SERVER; otherwise there is nothing to talk to.
 void HttpTransferTest() {
@@ -786,6 +841,7 @@ void HttpTransferTest() {
     utassert(file::GetSize(part) < 0);
 
     file::Delete(dest);
+    HttpStreamTest(kBase);
 }
 
 // a 2x2 RGBA PNG

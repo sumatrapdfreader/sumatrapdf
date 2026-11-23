@@ -48,13 +48,18 @@ struct HttpStreamSink {
 };
 
 struct HttpStreamCancel {
+    HttpStreamCancel();
+    ~HttpStreamCancel();
+    HttpStreamCancel(const HttpStreamCancel&) = delete;
+    HttpStreamCancel& operator=(const HttpStreamCancel&) = delete;
     void Cancel();
     bool IsCanceled();
 
   private:
     AtomicBool canceled = 0;
 #if OS_WIN
-    AtomicPtr request = nullptr;
+    // signaled by Cancel(); HttpPostStream waits on it next to its request
+    void* event = nullptr;
     friend bool HttpPostStream(Str, Str, Str, HttpStreamSink*, HttpStreamCancel*);
 #endif
 };
