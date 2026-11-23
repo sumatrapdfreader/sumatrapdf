@@ -378,11 +378,19 @@ void EbookSettingsWnd::OnReset(VirtMouseEvent*) {
 void EbookSettingsWnd::OnOk(VirtMouseEvent*) {
     Apply();
     MainWindow* w = win;
+    TempStr path = str::DupTemp(filePath);
     ScheduleDelete();
-    // the settings only reach the text through a fresh layout
-    if (IsMainWindowValidAndNotClosing(w) && w->IsDocLoaded()) {
-        ReloadDocument(w, false);
+    // the settings only reach the text through a fresh layout. The dialog is
+    // modeless: reload the ebook, not whatever tab is current now
+    WindowTab* tab = IsMainWindowValidAndNotClosing(w) ? FindTabInWindow(path, w) : nullptr;
+    if (!tab || !tab->IsDocLoaded()) {
+        return;
     }
+    if (tab == w->CurrentTab()) {
+        ReloadDocument(w, false);
+        return;
+    }
+    tab->reloadOnFocus = true;
 }
 
 static void OnClose(WindowBase::CloseEvent*) {

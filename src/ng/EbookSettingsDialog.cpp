@@ -347,9 +347,19 @@ void EbookSettingsView::OnOk(EbookSettingsView*, gp::Ctx* cx, const gp::ClickEve
     logf("EbookSettingsDialog: applied to %s\n", target);
     MainWindow* w = gEbook.win;
     bool ownerClosed = gEbook.ownerClosed;
+    TempStr path = str::DupTemp(gEbook.filePath);
     CloseEbookSettingsDialog();
-    if (!ownerClosed && IsMainWindowValidAndNotClosing(w) && w->IsDocLoaded()) {
-        ReloadDocument(w, false);
+    // the dialog is modeless: reload the ebook, not whatever tab is current now
+    WindowTab* tab = nullptr;
+    if (!ownerClosed && IsMainWindowValidAndNotClosing(w)) {
+        tab = FindTabByFilePath(path, w);
+    }
+    if (tab && tab->ctrl) {
+        if (IsCurrentTab(w, tab)) {
+            ReloadDocument(w, false);
+        } else {
+            tab->reloadOnFocus = true;
+        }
     }
     gp::Notify(cx);
 }
