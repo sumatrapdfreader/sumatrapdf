@@ -49,7 +49,7 @@ HWND TreeView::Create(const CreateArgs& args) {
     // drag-detect loop on every button-down, which never ends for a synthetic
     // (sent) click that has no button-up behind it
     cargs.style |= TVS_DISABLEDRAGDROP;
-    cargs.exStyle = args.exStyle | TVS_EX_DOUBLEBUFFER;
+    cargs.exStyle = args.exStyle;
     cargs.isRtl = args.isRtl;
 
     idealSize = {48, 120}; // arbitrary

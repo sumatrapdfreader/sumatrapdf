@@ -162,6 +162,10 @@ static const char* gle_name(DWORD err) {
 }
 
 static void warn_gle(fz_context* ctx, const char* where, DWORD err) {
+    // pkcs7_windows_check_certificate has no context
+    if (!ctx) {
+        return;
+    }
     const char* name = gle_name(err);
     if (name) {
         fz_warn(ctx, "pkcs7-windows %s: %s (0x%08lX)", where, name, err);

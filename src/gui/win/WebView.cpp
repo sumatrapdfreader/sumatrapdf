@@ -33,11 +33,12 @@ TempStr GetWebView2VersionTemp() {
 static bool IsWebViewAvailable() {
     WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
-    if (FAILED(hr) || len(ver) == 0) {
+    bool ok = SUCCEEDED(hr) && len(ver) > 0;
+    CoTaskMemFree(ver);
+    if (!ok) {
         logf("WebView2 is not available\n");
-        return false;
     }
-    return true;
+    return ok;
 }
 
 bool HasWebView() {
@@ -817,6 +818,7 @@ static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedE
         GlobalUnlock(hMem);
         HRESULT hr = CreateStreamOnHGlobal(hMem, TRUE, &stream);
         if (FAILED(hr)) {
+            GlobalFree(hMem);
             return false;
         }
     }
@@ -1156,6 +1158,8 @@ void WebviewWnd::FailInit() {
         controller->Release();
         controller = nullptr;
     }
+    // RevokeDragDrop fails once the windows are gone, leaking the target
+    RevokeForwardingDropTarget();
     HwndDestroyWindowSafe(&hwnd);
 }
 

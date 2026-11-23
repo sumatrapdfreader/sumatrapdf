@@ -343,13 +343,16 @@ static HGLOBAL PixmapToPngGlobal(const Pixmap* p) {
         return nullptr;
     }
     Gdiplus::Status status = bmp->Save(stream, &pngClsid, nullptr);
+    // the stream doesn't free its HGLOBAL (fDeleteOnRelease is FALSE)
     HGLOBAL hMem = nullptr;
-    if (status == Gdiplus::Ok) {
-        GetHGlobalFromStream(stream, &hMem);
-    }
+    GetHGlobalFromStream(stream, &hMem);
     stream->Release();
     delete bmp;
-    return status == Gdiplus::Ok ? hMem : nullptr;
+    if (status != Gdiplus::Ok && hMem) {
+        GlobalFree(hMem);
+        hMem = nullptr;
+    }
+    return hMem;
 }
 
 // Put an image on the clipboard so that a paste into an image editor keeps its

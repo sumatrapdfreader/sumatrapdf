@@ -89,6 +89,10 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
 }
 
 void FrameRateWnd::ShowFrameRate(int frameRateIn) {
+    // Create() failed
+    if (!hwnd || !text) {
+        return;
+    }
     if (frameRate == frameRateIn) {
         return;
     }

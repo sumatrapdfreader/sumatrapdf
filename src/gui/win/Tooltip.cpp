@@ -62,7 +62,7 @@ void TooltipRemoveAll(HWND hwnd) {
 }
 
 static TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
-    WCHAR buf[512];
+    WCHAR buf[512] = {};
     TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;

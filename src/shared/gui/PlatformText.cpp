@@ -545,7 +545,9 @@ void TextRenderGdi::Lock() {
     SelectClipRgn(hdcGfxLocked, hrgn);
     DeleteObject(hrgn);
 
-    SelectFont(hdcGfxLocked, currFont);
+    if (currFont) {
+        SelectFont(hdcGfxLocked, currFont->GetHFont());
+    }
     ::SetTextColor(hdcGfxLocked, textColor);
     ::SetBkColor(hdcGfxLocked, textBgColor);
 }
