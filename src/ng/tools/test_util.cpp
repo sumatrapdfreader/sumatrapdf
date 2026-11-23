@@ -70,6 +70,7 @@ bool DisplayMode_UnitTestZoom();
 bool Translations_UnitTestUnescape();
 bool Translations_UnitTestLocale();
 bool Translations_UnitTestLookup();
+bool Eutl_UnitTestListedCache();
 extern bool Accelerators_UnitTestFolderNavIsSafe();
 extern bool NavFiles_UnitTestHidden();
 #if !OS_WIN
@@ -209,6 +210,7 @@ int main(int argc, char** argv) {
     utassert(Translations_UnitTestUnescape());
     utassert(Translations_UnitTestLocale());
     utassert(Translations_UnitTestLookup());
+    utassert(Eutl_UnitTestListedCache());
     utassert(NavFiles_UnitTestHidden());
 #if !OS_WIN
     utassert(MeasurementSystem_UnitTests());

@@ -396,18 +396,55 @@ static Str EutlListDate(void* listPtr) {
     return ((EutlList*)listPtr)->date;
 }
 
+// fingerprints of the cache file's certificates, re-read only when the file changes
+struct ListedCache {
+    Mutex mu;
+    Str path;
+    i64 size = -1;
+    FILETIME modTime{};
+    StrVec listed;
+    int nLoads = 0;
+};
+
+static ListedCache gListedCache;
+
+static bool IsListedInFile(Str path, Str hex) {
+    ListedCache& c = gListedCache;
+    ScopedMutex lock(&c.mu);
+    i64 size = file::GetSize(path);
+    FILETIME modTime = file::GetModificationTime(path);
+    bool same = str::Eq(c.path, path) && size == c.size && FileTimeEq(modTime, c.modTime);
+    if (!same) {
+        str::ReplaceWithCopy(&c.path, path);
+        c.size = size;
+        c.modTime = modTime;
+        c.listed.Reset();
+        c.nLoads++;
+        Str text = size > 0 ? file::ReadFile(path) : Str();
+        StrVec lines;
+        Split(&lines, text, StrL("\n"), true);
+        for (Str line : lines) {
+            StrVec f;
+            Split(&f, line, StrL(" "), true);
+            if (len(f) == 3 && str::Eq(f[0], StrL("C"))) {
+                c.listed.Append(f[1]);
+            }
+        }
+        str::Free(text);
+    }
+    return c.listed.Find(hex) >= 0;
+}
+
 bool EutlCertIsListed(const u8* der, int derLen) {
     if (!der || derLen <= 0) {
         return false;
     }
-    void* list = EutlListOpen();
-    if (!list) {
+    TempStr path = EutlCachePathTemp();
+    if (len(path) == 0 || !file::Exists(path)) {
         return false;
     }
     TempStr hex = FingerprintHexTemp(Str((const char*)der, derLen));
-    bool found = hex && ((EutlList*)list)->listed.Find(hex) >= 0;
-    EutlListClose(list);
-    return found;
+    return len(hex) > 0 && IsListedInFile(path, hex);
 }
 
 // downloads by itself, from the EU's server only, when a signature needs it
@@ -532,3 +569,24 @@ void EutlRegisterLookup() {
     SetEutlLookup(&kLookup);
 #endif
 }
+
+#if IS_DEBUG
+bool Eutl_UnitTestListedCache() {
+    TempStr path = GetTempFilePathTemp(StrL("eutl"));
+    bool ok =
+        file::WriteFile(path, StrL("# sumatrapdf eutl 2 2026-01-01\nC aa11 Zm9v\nS aa11 CA 0 0 1 0\nC bb22 YmFy\n"));
+    int loads = gListedCache.nLoads;
+    ok = ok && IsListedInFile(path, StrL("aa11")) && IsListedInFile(path, StrL("bb22"));
+    ok = ok && !IsListedInFile(path, StrL("cc33")) && !IsListedInFile(path, StrL("aa1"));
+    ok = ok && gListedCache.nLoads == loads + 1;
+
+    // a rewritten file is re-read
+    ok = ok && file::WriteFile(path, StrL("# sumatrapdf eutl 2 2026-01-08\nC cc33 Zm9v\n"));
+    ok = ok && IsListedInFile(path, StrL("cc33")) && !IsListedInFile(path, StrL("aa11"));
+    ok = ok && gListedCache.nLoads == loads + 2;
+
+    file::Delete(path);
+    ok = ok && !IsListedInFile(path, StrL("cc33"));
+    return ok;
+}
+#endif
