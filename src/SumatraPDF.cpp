@@ -5225,7 +5225,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         return false;
     }
     TempStr dstFilePath = ToUtf8Temp(dstFileName);
-    bool savingToExisting = str::Eq(dstFilePath, srcFileName);
+    bool savingToExisting = path::IsSame(dstFilePath, srcFileName);
     if (savingToExisting) {
         return SaveAnnotationsToExistingFile(tab);
     }
