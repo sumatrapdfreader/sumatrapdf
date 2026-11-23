@@ -23,6 +23,7 @@ extern void DictTest();
 extern void DirRemoveAllTest();
 extern void UncExistsTest();
 extern void NonVirtualPathTest();
+extern void FileWatcherOverflowTest();
 extern void FileUtilTest();
 extern void ExifTest();
 extern void GuessFileTypeTest();
@@ -174,6 +175,7 @@ int main(int argc, char** argv) {
     DirRemoveAllTest();
     UncExistsTest();
     NonVirtualPathTest();
+    FileWatcherOverflowTest();
     FileUtilTest();
     ExifTest();
     GuessFileTypeTest();

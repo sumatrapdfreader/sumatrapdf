@@ -91,6 +91,7 @@ void DictTest();
 void DirRemoveAllTest();
 void UncExistsTest();
 void NonVirtualPathTest();
+void FileWatcherOverflowTest();
 void FileUtilTest();
 void UpdateTempFileTests();
 void ExifTest();
@@ -811,6 +812,7 @@ int RunAppUnitTests(bool forAi) {
     DirRemoveAllTest();
     UncExistsTest();
     NonVirtualPathTest();
+    FileWatcherOverflowTest();
     FileUtilTest();
     UpdateTempFileTests();
     ExifTest();

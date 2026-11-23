@@ -422,3 +422,75 @@ void DirRemoveAllTest() {
     utassert(!dir::Empty(missing));
 #endif
 }
+
+#if OS_WIN
+namespace {
+struct OverflowWatch {
+    AtomicInt calls = 0;
+    AtomicBool release = 0;
+};
+} // namespace
+
+// the first call blocks the watcher thread, so ReadDirectoryChangesW isn't
+// re-armed and the dir's change buffer overflows
+static void OnOverflowBlocker(OverflowWatch* w) {
+    if (AtomicIntInc(&w->calls) != 1) {
+        return;
+    }
+    for (int i = 0; i < 1000 && !AtomicBoolGet(&w->release); i++) {
+        SleepInMs(10);
+    }
+}
+
+static void OnOverflowTarget(OverflowWatch* w) {
+    AtomicIntInc(&w->calls);
+}
+
+static bool WaitForCalls(OverflowWatch* w, int n) {
+    for (int i = 0; i < 500 && AtomicIntGet(&w->calls) < n; i++) {
+        SleepInMs(10);
+    }
+    return AtomicIntGet(&w->calls) >= n;
+}
+#endif
+
+// a change lost in a ReadDirectoryChangesW buffer overflow must still be reported
+void FileWatcherOverflowTest() {
+#if OS_WIN
+    TempStr dir = GetTempFilePathTemp(StrL("fwover"));
+    file::Delete(dir);
+    utassert(dir::CreateAll(dir));
+    TempStr blockerPath = path::JoinTemp(dir, StrL("blocker.txt"));
+    TempStr targetPath = path::JoinTemp(dir, StrL("target.txt"));
+    utassert(file::WriteFile(blockerPath, StrL("x")));
+    utassert(file::WriteFile(targetPath, StrL("x")));
+
+    OverflowWatch blocker;
+    OverflowWatch target;
+    WatchedFile* wfBlocker = FileWatcherSubscribe(blockerPath, MkFunc0(OnOverflowBlocker, &blocker));
+    WatchedFile* wfTarget = FileWatcherSubscribe(targetPath, MkFunc0(OnOverflowTarget, &target));
+    utassert(wfBlocker && wfTarget);
+
+    // the watch is armed asynchronously: a write before that goes unseen
+    for (int i = 0; i < 50 && AtomicIntGet(&blocker.calls) == 0; i++) {
+        utassert(file::WriteFile(blockerPath, StrL("y")));
+        SleepInMs(100);
+    }
+    utassert(AtomicIntGet(&blocker.calls) > 0);
+
+    // ~200 bytes per notification: far more than the 16 KB buffer
+    Str longName = StrL("overflow-file-with-a-long-name-to-fill-the-change-buffer-quickly-0123456789");
+    for (int i = 0; i < 300; i++) {
+        utassert(file::WriteFile(path::JoinTemp(dir, fmt("%s-%d.txt", longName, i)), StrL("x")));
+    }
+    utassert(file::WriteFile(targetPath, StrL("changed")));
+    AtomicBoolSet(&blocker.release, true);
+
+    utassert(WaitForCalls(&target, 1));
+
+    FileWatcherUnsubscribe(wfBlocker);
+    FileWatcherUnsubscribe(wfTarget);
+    FileWatcherWaitForShutdown();
+    dir::RemoveAll(dir);
+#endif
+}

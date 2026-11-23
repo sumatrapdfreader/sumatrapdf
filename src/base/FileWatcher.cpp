@@ -184,6 +184,39 @@ static void CollectNotificationsAboutFile(WatchedDir* d, Str fileName, Vec<Func0
     }
 }
 
+// collects names of files that changed, without duplicates
+static void CollectChangedFiles(WatchedDir* wd, StrVec& changedFiles) {
+    FILE_NOTIFY_INFORMATION* notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
+    for (;;) {
+        size_t fnLen = notify->FileNameLength / sizeof(WCHAR);
+        TempStr fileName = ToUtf8Temp(WStr(notify->FileName, (int)fnLen));
+        // files can get updated either by writing to them directly or
+        // by writing to a .tmp file first and then moving that file in place
+        // (the latter only yields a RENAMED action with the expected file name)
+        if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
+            notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
+            AppendIfNotExists(&changedFiles, fileName);
+        }
+
+        // step to the next entry if there is one
+        DWORD nextOff = notify->NextEntryOffset;
+        if (!nextOff) {
+            break;
+        }
+        notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
+    }
+}
+
+static void CollectNotificationsAboutDir(WatchedDir* d, Vec<Func0>& toNotify) {
+    for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
+        if (wf->ignore || wf->watchedDir != d) {
+            continue;
+        }
+        logf("CollectNotificationsAboutDir(): '%s'\n", wf->filePath);
+        VecAppend(toNotify, wf->onFileChangedCb);
+    }
+}
+
 static void DeleteWatchedDir(WatchedDir* wd) {
     logf("DeleteWatchedDir() %s\n", wd->dirPath);
     str::Free(wd->dirPath);
@@ -230,37 +263,19 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
 
         wd->startMonitoring = false;
 
-        // This might mean overflow? Not sure.
-        if (!bytesTransfered) {
-            StartMonitoringDirForChanges(wd);
-            return;
-        }
-
-        FILE_NOTIFY_INFORMATION* notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
-
-        // collect files that changed, removing duplicates
+        // 0 bytes: the change buffer overflowed and its changes were dropped
+        // (e.g. a LaTeX build churning aux files), so every file may have changed
+        bool overflow = !bytesTransfered && (errCode == ERROR_SUCCESS || errCode == ERROR_NOTIFY_ENUM_DIR);
         StrVec changedFiles;
-        for (;;) {
-            size_t fnLen = notify->FileNameLength / sizeof(WCHAR);
-            TempStr fileName = ToUtf8Temp(WStr(notify->FileName, (int)fnLen));
-            // files can get updated either by writing to them directly or
-            // by writing to a .tmp file first and then moving that file in place
-            // (the latter only yields a RENAMED action with the expected file name)
-            if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
-                notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
-                AppendIfNotExists(&changedFiles, fileName);
-            }
-
-            // step to the next entry if there is one
-            DWORD nextOff = notify->NextEntryOffset;
-            if (!nextOff) {
-                break;
-            }
-            notify = (FILE_NOTIFY_INFORMATION*)((char*)notify + nextOff);
+        if (bytesTransfered) {
+            CollectChangedFiles(wd, changedFiles);
         }
 
         StartMonitoringDirForChanges(wd);
 
+        if (overflow) {
+            CollectNotificationsAboutDir(wd, toNotify);
+        }
         for (Str f : changedFiles) {
             CollectNotificationsAboutFile(wd, f, toNotify);
         }
