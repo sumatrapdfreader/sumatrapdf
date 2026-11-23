@@ -36,7 +36,7 @@ static Pixmap* PixmapAsReadable32(Pixmap* px) {
     if (!px) {
         return nullptr;
     }
-    if (px->format == PixmapFormat::BGRA8 || px->format == PixmapFormat::BGR8) {
+    if (px->format != PixmapFormat::Native) {
         return nullptr;
     }
 #if OS_WIN
@@ -46,21 +46,30 @@ static Pixmap* PixmapAsReadable32(Pixmap* px) {
 #endif
 }
 
+static bool CanBlitRows(Pixmap* px) {
+    bool known =
+        px->format == PixmapFormat::BGRA8 || px->format == PixmapFormat::BGR8 || px->format == PixmapFormat::RGBA8;
+    return known && px->data;
+}
+
+// src: BGRA8, BGR8 or RGBA8 (see CanBlitRows); dst: BGRA8
 static void BlitPixmapRows(Pixmap* dst, Pixmap* src, int atY) {
-    int bpp = PixmapBytesPerPixel(src->format);
-    int rowBytes = src->width * bpp;
     for (int y = 0; y < src->height; y++) {
         u8* s = src->data + ((size_t)y * src->stride);
         u8* d = dst->data + ((size_t)(y + atY) * dst->stride);
-        if (bpp == 4) {
-            memcpy(d, s, (size_t)rowBytes);
+        if (src->format == PixmapFormat::BGRA8) {
+            memcpy(d, s, (size_t)src->width * 4);
             continue;
         }
+        bool rgba = src->format == PixmapFormat::RGBA8;
+        int bpp = rgba ? 4 : 3;
         for (int x = 0; x < src->width; x++) {
-            d[(x * 4) + 0] = s[(x * 3) + 0];
-            d[(x * 4) + 1] = s[(x * 3) + 1];
-            d[(x * 4) + 2] = s[(x * 3) + 2];
-            d[(x * 4) + 3] = 0xff;
+            u8* sp = s + (x * bpp);
+            u8* dp = d + (x * 4);
+            dp[0] = rgba ? sp[2] : sp[0];
+            dp[1] = sp[1];
+            dp[2] = rgba ? sp[0] : sp[2];
+            dp[3] = rgba ? sp[3] : 0xff;
         }
     }
 }
@@ -78,7 +87,8 @@ static Pixmap* StackPixmapsVertically(Pixmap* top, Pixmap* bottom) {
     Pixmap* t = topConv ? topConv : top;
     Pixmap* b = bottomConv ? bottomConv : bottom;
     Pixmap* out = nullptr;
-    bool ok = t->format != PixmapFormat::Native && b->format != PixmapFormat::Native && t->data && b->data;
+    // off Windows a Native pixmap can't be converted: refuse it
+    bool ok = CanBlitRows(t) && CanBlitRows(b);
     if (ok) {
         int w = t->width > b->width ? t->width : b->width;
         int h = t->height + b->height;
