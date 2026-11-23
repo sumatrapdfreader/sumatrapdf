@@ -151,6 +151,103 @@ void ArchiveTarLazyTest() {
 #endif
 }
 
+#if OS_WIN
+static void PutU16(u8* d, u32 v) {
+    d[0] = (u8)v;
+    d[1] = (u8)(v >> 8);
+}
+
+static void PutU32(u8* d, u32 v) {
+    PutU16(d, v);
+    PutU16(d + 2, v >> 16);
+}
+
+static u32 Crc32(const u8* d, int n) {
+    u32 crc = 0xffffffff;
+    for (int i = 0; i < n; i++) {
+        crc ^= d[i];
+        for (int bit = 0; bit < 8; bit++) {
+            crc = (crc >> 1) ^ (0xedb88320 & (0 - (crc & 1)));
+        }
+    }
+    return ~crc;
+}
+
+// RAR 4 block CRC: low 16 bits of crc32 over the block after the CRC field
+static void SetRarBlockCrc(u8* block, int size) {
+    u32 crc = Crc32(block + 2, size - 2);
+    PutU16(block, crc & 0xffff);
+}
+
+// a RAR 4 archive with one stored entry whose header claims unpSize bytes
+static Str MakeRarWithUnpSize(u32 unpSize) {
+    static const u8 kMarker[] = {0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x00};
+    constexpr int kMainSize = 13;
+    constexpr int kNameLen = 5;
+    constexpr int kFileHdrSize = 32 + kNameLen;
+    constexpr int kPackSize = 4;
+    constexpr int kEndSize = 7;
+    constexpr int kSize = (int)sizeof(kMarker) + kMainSize + kFileHdrSize + kPackSize + kEndSize;
+    u8* d = AllocArray<u8>(kSize);
+    u8* p = d;
+    memcpy(p, kMarker, sizeof(kMarker));
+    p += sizeof(kMarker);
+
+    p[2] = 0x73;
+    PutU16(p + 5, kMainSize);
+    SetRarBlockCrc(p, kMainSize);
+    p += kMainSize;
+
+    p[2] = 0x74;
+    PutU16(p + 3, 0x8000);
+    PutU16(p + 5, kFileHdrSize);
+    PutU32(p + 7, kPackSize);
+    PutU32(p + 11, unpSize);
+    p[15] = 2;    // Windows
+    p[24] = 20;   // unpack version 2.0
+    p[25] = 0x30; // stored
+    PutU16(p + 26, kNameLen);
+    PutU32(p + 28, 0x20); // archive attribute
+    memcpy(p + 32, "a.txt", kNameLen);
+    SetRarBlockCrc(p, kFileHdrSize);
+    p += kFileHdrSize;
+    memcpy(p, "data", kPackSize);
+    p += kPackSize;
+
+    p[2] = 0x7b;
+    PutU16(p + 3, 0x4000);
+    PutU16(p + 5, kEndSize);
+    SetRarBlockCrc(p, kEndSize);
+    return Str((char*)d, kSize);
+}
+#endif
+
+// an entry size that doesn't fit an int must not open as a negative size
+void ArchiveRarHugeEntryTest() {
+#if OS_WIN
+    Str rar = MakeRarWithUnpSize(0xfffffff0);
+    TempStr path = GetTempFilePathTemp(StrL("hugerar"));
+    utassert(file::WriteFile(path, rar));
+    Archive archive;
+    ArchiveExtractProgressCb emptyCb;
+    bool ok = archive.Open(path, false, FileType::Unknown, emptyCb);
+    for (auto* fi : archive.GetFileInfos()) {
+        utassert(fi->fileSizeUncompressed >= 0);
+    }
+    utassert(!ok);
+
+    // the same archive with a sane size lists through unrar
+    str::Free(rar);
+    rar = MakeRarWithUnpSize(4);
+    utassert(file::WriteFile(path, rar));
+    Archive sane;
+    utassert(sane.Open(path, false, FileType::Unknown, emptyCb));
+    utassert(sane.format == Archive::Format::Rar && len(sane.GetFileInfos()) == 1);
+    file::Delete(path);
+    str::Free(rar);
+#endif
+}
+
 void ZipDirTest() {
 #if !OS_WASM
     TempStr dir = GetTempFilePathTemp(StrL("zipdir"));

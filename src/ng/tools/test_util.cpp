@@ -13,6 +13,7 @@ extern void ArchiveTest();
 extern void ZipDirTest();
 extern void ArchiveWarnTest();
 extern void ArchiveTarLazyTest();
+extern void ArchiveRarHugeEntryTest();
 extern void BaseUtilTest();
 extern void ByteOrderTests();
 extern void CryptoUtilTest();
@@ -147,6 +148,7 @@ int main(int argc, char** argv) {
     ZipDirTest();
     ArchiveWarnTest();
     ArchiveTarLazyTest();
+    ArchiveRarHugeEntryTest();
     BaseUtilTest();
     ByteOrderTests();
     CryptoUtilTest();

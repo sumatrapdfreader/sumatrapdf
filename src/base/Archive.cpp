@@ -96,9 +96,10 @@ static void ReportAllDecoded(const ArchiveExtractProgressCb& cb, ArchiveExtractP
     cb.Call(&prog);
 }
 
+constexpr i64 kMaxEagerArchiveSize = 256LL * 1024 * 1024;
+constexpr int kMaxArchiveEntries = 100'000;
+
 bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
-    constexpr i64 kMaxEagerArchiveSize = 256LL * 1024 * 1024;
-    constexpr int kMaxArchiveEntries = 100'000;
     struct archive_entry* entry;
     int fileId = 0;
     i64 eagerSize = 0;
@@ -669,11 +670,27 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
     ArchiveExtractProgress prog{};
     prog.nTotal = -1;
     int fileId = 0;
+    i64 eagerSize = 0;
+    bool ok = true;
     while (true) {
         RARHeaderDataEx rarHeader{};
         int res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res) {
             break;
+        }
+
+        // same limits as ParseEntries; a failure lets libarchive try
+        bool tooBig = rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize > (unsigned)INT_MAX;
+        if (tooBig || fileId >= kMaxArchiveEntries) {
+            ok = false;
+            break;
+        }
+        if (eagerLoad) {
+            eagerSize += rarHeader.UnpSize;
+            if (eagerSize > kMaxEagerArchiveSize) {
+                ok = false;
+                break;
+            }
         }
 
         if (rarHeader.Flags & RHDF_ENCRYPTED) {
@@ -730,8 +747,16 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         prog.nDecoded = fileId;
         cbProgress.Call(&prog);
     }
-    ReportAllDecoded(cbProgress, prog, fileInfos_, fileId);
     RARCloseArchive(hArc);
+    if (!ok) {
+        for (auto* fi : fileInfos_) {
+            free(fi->data);
+        }
+        VecReset(fileInfos_);
+        isEncrypted = false;
+        return false;
+    }
+    ReportAllDecoded(cbProgress, prog, fileInfos_, fileId);
 
     rarFilePath_ = str::Dup(a, rarPath);
     return true;
