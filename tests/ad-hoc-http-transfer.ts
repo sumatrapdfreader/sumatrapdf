@@ -40,6 +40,20 @@ function startServer() {
         });
         return new Response(body, { headers: { "content-length": String(kBigSize) } });
       }
+      if (url.pathname === "/truncated") {
+        // promises more than it sends, then drops the connection
+        const body = new ReadableStream({
+          start(ctl) {
+            ctl.enqueue(new Uint8Array(1000).fill(66));
+          },
+          async pull(ctl) {
+            // let the status line and first chunk go out first
+            await Bun.sleep(300);
+            ctl.error(new Error("truncated"));
+          },
+        });
+        return new Response(body, { headers: { "content-length": "100000" } });
+      }
       if (auth !== "Bearer tk-123") {
         return new Response("unauthorized", { status: 401 });
       }

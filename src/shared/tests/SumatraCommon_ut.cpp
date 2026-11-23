@@ -727,6 +727,17 @@ void HttpTransferTest() {
     utassert(list.httpStatusCode == 200 && list.error == 0);
     utassert(str::IndexOf(ToStr(list.data), StrL("\"files\"")) >= 0);
 
+    // a body cut short after the status line is a failure
+    HttpRsp cut;
+    utassert(!HttpGetWithHeaders(fmt("%s/truncated", kBase), kAuth, &cut));
+    utassert(cut.error != 0);
+    HttpRsp cutPost;
+    utassert(!HttpPostUrlNoRedirect(fmt("%s/truncated", kBase), kBlob, kAuth, Str(), &cutPost));
+    utassert(cutPost.error != 0);
+    HttpRsp cutPost2;
+    utassert(!HttpPostUrl(fmt("%s/truncated", kBase), kBlob, kAuth, Str(), &cutPost2));
+    utassert(cutPost2.error != 0);
+
     HttpRsp redir;
     utassert(!HttpGetWithHeaders(fmt("%s/redirect", kBase), kAuth, &redir));
     utassert(redir.httpStatusCode == 302);

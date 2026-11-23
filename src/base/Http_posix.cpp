@@ -296,9 +296,9 @@ static bool InMemoryRequest(const char* what, HttpMethod method, Str url, Str co
     CURLcode code = curl_easy_perform(curl);
     NoteStatus(curl, rspOut);
     DWORD sc = rspOut->httpStatusCode;
-    // a received response is not a transport error
-    rspOut->error = sc != kHttpNoStatus ? kHttpErrorSuccess : (DWORD)code;
-    bool ok = isPost ? (sc >= 200 && sc < 300) : sc == kHttpOk200;
+    // a transfer cut short after the status line is a failure
+    rspOut->error = (DWORD)code;
+    bool ok = code == CURLE_OK && (isPost ? (sc >= 200 && sc < 300) : sc == kHttpOk200);
     logf("%s: url: '%s' status: %d\n", Str(what), url, (int)sc);
     curl_slist_free_all(list);
     curl_easy_cleanup(curl);

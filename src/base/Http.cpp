@@ -310,12 +310,20 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
 
         for (;;) {
             DWORD avail = 0;
-            if (!WinHttpQueryDataAvailable(hRequest, &avail) || avail == 0) {
+            if (!WinHttpQueryDataAvailable(hRequest, &avail)) {
+                rspOut->error = GetLastError();
+                break;
+            }
+            if (avail == 0) {
                 break;
             }
             char* buf = AllocArrayTemp<char>((int)avail + 1);
             DWORD read = 0;
-            if (!WinHttpReadData(hRequest, buf, avail, &read) || read == 0) {
+            if (!WinHttpReadData(hRequest, buf, avail, &read)) {
+                rspOut->error = GetLastError();
+                break;
+            }
+            if (read == 0) {
                 break;
             }
             rspOut->data.Append(Str(buf, (int)read));
@@ -324,7 +332,8 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
                 break;
             }
         }
-        ok = sc >= 200 && sc < 300;
+        // a transfer cut short after the status line is a failure
+        ok = rspOut->error == ERROR_SUCCESS && sc >= 200 && sc < 300;
     }
 
 Exit2:
@@ -428,12 +437,20 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
 
         for (;;) {
             DWORD avail = 0;
-            if (!WinHttpQueryDataAvailable(hRequest, &avail) || avail == 0) {
+            if (!WinHttpQueryDataAvailable(hRequest, &avail)) {
+                rspOut->error = GetLastError();
+                break;
+            }
+            if (avail == 0) {
                 break;
             }
             char* buf = AllocArrayTemp<char>((int)avail + 1);
             DWORD read = 0;
-            if (!WinHttpReadData(hRequest, buf, avail, &read) || read == 0) {
+            if (!WinHttpReadData(hRequest, buf, avail, &read)) {
+                rspOut->error = GetLastError();
+                break;
+            }
+            if (read == 0) {
                 break;
             }
             rspOut->data.Append(Str(buf, (int)read));
@@ -441,7 +458,8 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
                 break;
             }
         }
-        ok = sc >= 200 && sc < 300;
+        // a transfer cut short after the status line is a failure
+        ok = rspOut->error == ERROR_SUCCESS && sc >= 200 && sc < 300;
     }
 
 ExitPost:
@@ -589,7 +607,11 @@ static bool InMemoryRequest(const WCHAR* verb, const char* what, Str url, Str ex
                 break;
             }
             DWORD avail = 0;
-            if (!WinHttpQueryDataAvailable(hRequest, &avail) || avail == 0) {
+            if (!WinHttpQueryDataAvailable(hRequest, &avail)) {
+                rspOut->error = GetLastError();
+                break;
+            }
+            if (avail == 0) {
                 break;
             }
             if ((int)avail > room) {
@@ -597,12 +619,17 @@ static bool InMemoryRequest(const WCHAR* verb, const char* what, Str url, Str ex
             }
             char* buf = AllocArrayTemp<char>((int)avail + 1);
             DWORD read = 0;
-            if (!WinHttpReadData(hRequest, buf, avail, &read) || read == 0) {
+            if (!WinHttpReadData(hRequest, buf, avail, &read)) {
+                rspOut->error = GetLastError();
+                break;
+            }
+            if (read == 0) {
                 break;
             }
             rspOut->data.Append(Str(buf, (int)read));
         }
-        ok = sc == 200;
+        // a transfer cut short after the status line is a failure
+        ok = rspOut->error == ERROR_SUCCESS && sc == 200;
     }
 
 ExitGet:
