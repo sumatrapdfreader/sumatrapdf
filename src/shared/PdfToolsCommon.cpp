@@ -773,7 +773,7 @@ bool PagesFitDpi(EngineBase* engine, const Vec<int>& pages, int dpi) {
 // render each page at dpi and write it to templatePath with <N> replaced by
 // the 1-based page number. Returns how many files were written.
 int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages, int dpi,
-                         Str* firstPathOwnedOut) {
+                         Str* firstPathOwnedOut, const Func1<int>& onProgress) {
     if (firstPathOwnedOut) {
         *firstPathOwnedOut = {};
     }
@@ -788,7 +788,9 @@ int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, con
     float zoom = SaveSelectionZoom(engine, (float)dpi);
     int nOk = 0;
     StrVec pngs;
+    int nDone = 0;
     for (int pageNo : pages) {
+        onProgress.Call(nDone++);
         if (!PageFitsDpi(engine, pageNo, dpi)) {
             logf("ConvertPagesToImages: page %d at %d DPI is too large\n", pageNo, dpi);
             continue;
@@ -1060,20 +1062,217 @@ static void PdfToolJobDone(PdfToolJob* job) {
     } else {
         logf("%s: failed with %d\n", job->logName, job->res);
     }
-    FinishPdfToolJob(job);
+    if (job->onFinish.IsValid()) {
+        job->onFinish.Call(job);
+    } else {
+        FinishPdfToolJob(job);
+    }
     FreePdfToolJob(job);
 }
 
-static void PdfToolJobThread(PdfToolJob* job) {
+int PdfToolJob::Run() {
     Vec<char*> argv;
-    for (Str s : job->args) {
+    for (Str s : args) {
         VecAppend(argv, CStrTemp(s));
     }
-    job->res = RunPdfToolMain(job->toolMain, len(argv), argv.els);
+    return RunPdfToolMain(toolMain, len(argv), argv.els);
+}
+
+static void PdfToolJobThread(PdfToolJob* job) {
+    job->res = job->Run();
     if (len(job->tmpPath) > 0) {
         file::Delete(job->tmpPath);
     }
     uitask::Post(MkFunc0(PdfToolJobDone, job), "PdfToolJobDone");
+}
+
+// a headless caller (tests) needs the result now
+int RunPdfToolJobNow(PdfToolJob* job) {
+    int res = job->Run();
+    if (len(job->tmpPath) > 0) {
+        file::Delete(job->tmpPath);
+    }
+    FreePdfToolJob(job);
+    return res;
+}
+
+// the job outlives its progress tasks: PdfToolJobDone is posted after them
+static void PostPdfToolJobProgress(PdfToolJob* job, int nDone) {
+    AtomicIntSet(&job->nDone, nDone);
+    uitask::Post(MkFunc0(PdfToolJobProgress, job), "PdfToolJobProgress");
+}
+
+static void InitJob(PdfToolJob* job, Str logName, Str destPath, Str failMsg, Str failTitle) {
+    job->logName = str::Dup(logName);
+    job->destPath = str::Dup(destPath);
+    job->failMsg = str::Dup(failMsg);
+    job->failTitle = str::Dup(failTitle);
+}
+
+// stamps a clone of the document: cloning off the UI thread is safe
+// (thumbnails do it) and the reference keeps the engine alive
+struct StampJob : PdfToolJob {
+    EngineBase* engine = nullptr;
+    bool watermark = true;
+    Str text; // owned
+    Vec<int> pages;
+    int posIdx = 0;
+
+    ~StampJob() override {
+        SafeEngineRelease(&engine);
+        str::Free(text);
+    }
+    int Run() override {
+        Vec<PdfStamp> stamps;
+        DialogStamps(watermark, text, pages, posIdx, stamps);
+        Str err;
+        if (StampPdfToFile(engine, stamps, destPath, &err)) {
+            return 0;
+        }
+        logf("StampJob: failed: %s\n", err);
+        str::ReplaceWithCopy(&failMsg, err);
+        return 1;
+    }
+};
+
+PdfToolJob* NewStampJob(EngineBase* engine, bool watermark, Str text, const Vec<int>& pages, int posIdx, Str destPath) {
+    auto* job = new StampJob();
+    Str title = watermark ? Tr("Add Watermark") : Tr("Add Page Numbers");
+    InitJob(job, StrL("PdfStampDoIt"), destPath, {}, title);
+    engine->AddRef();
+    job->engine = engine;
+    job->watermark = watermark;
+    job->text = str::Dup(text);
+    job->pages = pages;
+    job->posIdx = posIdx;
+    return job;
+}
+
+// render threads already render the document's pages concurrently, so one
+// more thread may too; the reference keeps the engine alive
+struct ImagesJob : PdfToolJob {
+    EngineBase* engine = nullptr;
+    int rotation = 0;
+    Vec<int> pages;
+    int dpi = 0;
+
+    ~ImagesJob() override { SafeEngineRelease(&engine); }
+    int Run() override {
+        Str firstPath;
+        auto onProgress = MkFunc1(PostPdfToolJobProgress, (PdfToolJob*)this);
+        int nOk = ConvertPagesToImages(engine, rotation, destPath, pages, dpi, &firstPath, onProgress);
+        logf("ImagesJob: wrote %d of %d file(s)\n", nOk, len(pages));
+        if (nOk == 0) {
+            str::Free(firstPath);
+            return 1;
+        }
+        // the file the dialog shows
+        str::Free(destPath);
+        destPath = firstPath;
+        return 0;
+    }
+};
+
+PdfToolJob* NewImagesJob(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages, int dpi) {
+    auto* job = new ImagesJob();
+    InitJob(job, StrL("ConvertPdfToImages"), templatePath, Tr("Failed to convert to images."), Tr("Convert to Images"));
+    engine->AddRef();
+    job->engine = engine;
+    job->rotation = rotation;
+    job->pages = pages;
+    job->dpi = dpi;
+    job->nTotal = len(pages);
+    job->done = PdfToolDone::ShowDest;
+    return job;
+}
+
+// lays the book out anew from its file: no engine of the UI's is touched
+struct EpubToPdfJob : PdfToolJob {
+    Str srcPath; // owned
+    float pageDx = 0;
+    float pageDy = 0;
+    int fontSize = 0;
+
+    ~EpubToPdfJob() override { str::Free(srcPath); }
+    int Run() override {
+        int nPages = EngineMupdfEbookToPdf(srcPath, destPath, pageDx, pageDy, (float)fontSize);
+        logf("ConvertEpubToPdf: wrote %d pages\n", nPages);
+        return nPages > 0 ? 0 : 1;
+    }
+};
+
+PdfToolJob* NewEpubToPdfJob(Str srcPath, Str destPath, const EbookPdfPageSize& ps, int fontSize) {
+    auto* job = new EpubToPdfJob();
+    InitJob(job, StrL("ConvertEpubToPdf"), destPath, Tr("Failed to save a file"), Tr("Convert EPUB to PDF"));
+    job->srcPath = str::Dup(srcPath);
+    job->pageDx = ps.dx;
+    job->pageDy = ps.dy;
+    job->fontSize = fontSize;
+    return job;
+}
+
+struct CajToPdfJob : PdfToolJob {
+    Str srcPath; // owned
+
+    ~CajToPdfJob() override { str::Free(srcPath); }
+    int Run() override {
+        if (ConvertCajToPdf(srcPath, destPath)) {
+            return 0;
+        }
+        str::ReplaceWithCopy(&failMsg, CajErrorReasonTemp(srcPath));
+        return 1;
+    }
+};
+
+PdfToolJob* NewCajToPdfJob(Str srcPath, Str destPath) {
+    auto* job = new CajToPdfJob();
+    InitJob(job, StrL("ConvertCajToPdf"), destPath, {}, Tr("Convert CAJ to PDF"));
+    job->srcPath = str::Dup(srcPath);
+    return job;
+}
+
+// merges into a temp file, then copies it over destPath, which may be one of
+// the sources
+struct MergeJob : PdfToolJob {
+    StrVec paths;
+    StrVec passwords;
+    Vec<PdfMergePage> pages;
+
+    int Run() override {
+        Vec<PdfMergeSource> srcs;
+        for (int i = 0; i < len(paths); i++) {
+            VecAppend(srcs, PdfMergeSource{paths[i], passwords[i]});
+        }
+        TempStr mergedPath = GetTempFilePathTemp(StrL("merge"));
+        bool ok = len(mergedPath) > 0 && EngineMupdfMergePdfs(srcs, pages, mergedPath);
+        if (ok) {
+            Str data = file::ReadFile(mergedPath);
+            ok = len(data) > 0 && file::WriteFile(destPath, data);
+            str::Free(data);
+        }
+        if (len(mergedPath) > 0) {
+            file::Delete(mergedPath);
+        }
+        logf("MergeJob: %d pages from %d files to '%s', ok: %d\n", len(pages), len(srcs), destPath, (int)ok);
+        return ok ? 0 : 1;
+    }
+};
+
+// srcCopy: a copy of the first source with its unsaved changes, deleted after
+PdfToolJob* NewMergeJob(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePage>& pages, Str srcCopy, Str destPath) {
+    auto* job = new MergeJob();
+    InitJob(job, StrL("MergePdf"), destPath, fmt(Tr("Couldn't save '%s'").s, destPath), Tr("Merge PDF"));
+    for (const PdfMergeSource& src : srcs) {
+        job->paths.Append(src.path);
+        job->passwords.Append(src.password);
+    }
+    if (len(srcCopy) > 0) {
+        job->paths.SetAt(0, srcCopy);
+        job->tmpPath = str::Dup(srcCopy);
+    }
+    job->pages = pages;
+    job->done = PdfToolDone::ReloadDest;
+    return job;
 }
 
 // a big PDF takes seconds to rewrite: off the UI thread

@@ -716,10 +716,24 @@ static void RunToolJob(PdfToolJob* job) {
     gTool.job = job;
     job->owner = gCurTool;
     AppShellInvalidate(gTool.win);
+    ToolWindowInvalidate(gTool.dlgTw);
     StartPdfToolJob(job);
 }
 
+// the write failed: the next change of the file is a real one
+static void UnignoreReload(Str path) {
+    WindowTab* tab = FindTabByFilePath(path);
+    if (tab) {
+        tab->ignoreNextAutoReload = false;
+    }
+}
+
+static void MergeAfterSave(Str path);
+
 void FinishPdfToolJob(PdfToolJob* job) {
+    if (job->res != 0 && job->done == PdfToolDone::ReloadDest) {
+        UnignoreReload(job->destPath);
+    }
     auto* tool = (PdfToolDlg*)job->owner;
     if (!tool) {
         return;
@@ -728,6 +742,7 @@ void FinishPdfToolJob(PdfToolJob* job) {
     gTool.job = nullptr;
     MainWindow* win = gTool.win;
     AppShellInvalidate(win);
+    ToolWindowInvalidate(gTool.dlgTw);
     if (job->res != 0 && job->fail == PdfToolFail::Notification) {
         ShowWarningNotification(win, job->failMsg, kNotif5SecsTimeOut);
         return;
@@ -742,7 +757,30 @@ void FinishPdfToolJob(PdfToolJob* job) {
         ShowFileInFolder(win, path);
         return;
     }
+    if (job->done == PdfToolDone::ReloadDest) {
+        MergeAfterSave(job->destPath);
+        return;
+    }
     CloseAndLoad(job->destPath);
+}
+
+// the footer's hint says which page is being converted
+void PdfToolJobProgress(PdfToolJob* job) {
+    auto* tool = (PdfToolDlg*)job->owner;
+    if (!tool) {
+        return;
+    }
+    ToolScope scope(tool);
+    AppShellInvalidate(gTool.win);
+    ToolWindowInvalidate(gTool.dlgTw);
+}
+
+static TempStr JobProgressTemp() {
+    PdfToolJob* job = gTool.job;
+    if (!job || job->nTotal == 0) {
+        return {};
+    }
+    return fmt(Tr("Page %d of %d").s, AtomicIntGet(&job->nDone) + 1, job->nTotal);
 }
 
 // the tab the dialog was opened for; the user may have switched tabs since
@@ -999,24 +1037,15 @@ static void PdfEncryptDoIt() {
 
 static void PdfStampDoIt() {
     TempStr destPath = DestPathTemp();
-    MainWindow* win = gTool.win;
     WindowTab* tab = ToolSrcTab();
     EngineBase* engine = tab ? tab->GetEngine() : nullptr;
     Vec<int> pages;
     if (len(destPath) == 0 || !engine || !ParseDeletePages(InputTextTemp(gTool.pagesEdit), gTool.pageCount, pages)) {
         return;
     }
-    Vec<PdfStamp> stamps;
-    DialogStamps(gTool.kind == PdfToolKind::Watermark, InputTextTemp(gTool.textEdit), pages, gTool.ddPosition.sel,
-                 stamps);
-    logf("PdfStampDoIt: %d pages of '%s' to '%s'\n", len(stamps), gTool.srcPath, destPath);
-    Str err;
-    if (StampPdfToFile(engine, stamps, destPath, &err)) {
-        CloseAndLoad(destPath);
-        return;
-    }
-    logf("PdfStampDoIt: failed: %s\n", err);
-    MessageBoxWarning(win, err, ToolTitle());
+    bool watermark = gTool.kind == PdfToolKind::Watermark;
+    logf("PdfStampDoIt: %d pages of '%s' to '%s'\n", len(pages), gTool.srcPath, destPath);
+    RunToolJob(NewStampJob(engine, watermark, InputTextTemp(gTool.textEdit), pages, gTool.ddPosition.sel, destPath));
 }
 
 static void PdfDecryptDoIt() {
@@ -1065,13 +1094,7 @@ static void ConvertEpubToPdfDoIt() {
     }
     const EbookPdfPageSize& ps = kEbookPdfPageSizes[idx];
     logf("ConvertEpubToPdf: '%s' -> '%s', %s, %d pt\n", gTool.srcPath, destPath, ps.label, fontSize);
-    int nPages = EngineMupdfEbookToPdf(gTool.srcPath, destPath, ps.dx, ps.dy, (float)fontSize);
-    if (nPages == 0) {
-        MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Convert EPUB to PDF"));
-        return;
-    }
-    logf("ConvertEpubToPdf: wrote %d pages\n", nPages);
-    CloseAndLoad(destPath);
+    RunToolJob(NewEpubToPdfJob(gTool.srcPath, destPath, ps, fontSize));
 }
 
 // orig's ConvertCajToPdfDialog::DoIt
@@ -1081,11 +1104,7 @@ static void ConvertCajToPdfDoIt() {
         return;
     }
     logf("ConvertCajToPdf: '%s' -> '%s'\n", gTool.srcPath, destPath);
-    if (!ConvertCajToPdf(gTool.srcPath, destPath)) {
-        MessageBoxWarning(gTool.win, CajErrorReasonTemp(gTool.srcPath), Tr("Convert CAJ to PDF"));
-        return;
-    }
-    CloseAndLoad(destPath);
+    RunToolJob(NewCajToPdfJob(gTool.srcPath, destPath));
 }
 
 static void ConvertToPdfDoIt() {
@@ -1181,20 +1200,7 @@ static void ConvertPdfToImagesDoIt() {
     }
 
     logf("ConvertPdfToImages: '%s' -> '%s', %d page(s), %d DPI\n", gTool.srcPath, destPath, len(pages), dpi);
-
-    Str firstPath;
-    int nOk = ConvertPagesToImages(engine, dm->GetRotation(), destPath, pages, dpi, &firstPath);
-
-    if (nOk == 0) {
-        str::Free(firstPath);
-        MessageBoxWarning(win, Tr("Failed to convert to images."), Tr("Convert to Images"));
-        return;
-    }
-    logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
-    TempStr openPath = str::DupTemp(firstPath);
-    str::Free(firstPath);
-    ClosePdfToolDialog();
-    ShowFileInFolder(win, openPath);
+    RunToolJob(NewImagesJob(engine, dm->GetRotation(), destPath, pages, dpi));
 }
 
 static void SaveSelectionAsImageDoIt() {
@@ -1927,9 +1933,9 @@ bool PdfToolDialogOnDropFiles(MainWindow* win, const Str* paths, int n, const Po
     return true;
 }
 
-// Writes the pages not removed to destPath, which may be one of the sources:
-// the result goes to a temp file first
-static bool MergeSaveTo(Str destPath) {
+// The merge of the pages not removed into destPath, which may be one of the
+// sources; nullptr if there's nothing to save
+static PdfToolJob* NewMergeSaveJob(Str destPath) {
     Vec<PdfMergeSource> sources;
     Vec<PdfMergePage> pages;
     for (const MergePageDlg& page : gTool.mergePages) {
@@ -1938,7 +1944,7 @@ static bool MergeSaveTo(Str destPath) {
         }
     }
     if (len(destPath) == 0 || len(pages) == 0) {
-        return false;
+        return nullptr;
     }
     for (const MergeSourceDlg& source : gTool.mergeSources) {
         VecAppend(sources, PdfMergeSource{source.path, source.password});
@@ -1950,30 +1956,24 @@ static bool MergeSaveTo(Str destPath) {
     if (docEngine && EngineHasUnsavedAnnotations(docEngine)) {
         sourceCopy = GetTempFilePathTemp(StrL("merge-source"));
         if (len(sourceCopy) == 0 || !EngineMupdfSaveCopy(docEngine, sourceCopy)) {
-            return false;
+            return nullptr;
         }
-        sources[0].path = sourceCopy;
     }
+    WindowTab* tab = FindTabByFilePath(destPath);
+    if (tab) {
+        // it's reloaded after; the file watcher needn't
+        tab->ignoreNextAutoReload = true;
+    }
+    return NewMergeJob(sources, pages, sourceCopy, destPath);
+}
 
-    TempStr tmpPath = GetTempFilePathTemp(StrL("merge"));
-    bool ok = len(tmpPath) > 0 && EngineMupdfMergePdfs(sources, pages, tmpPath);
-    if (ok) {
-        WindowTab* tab = FindTabByFilePath(destPath);
-        if (tab) {
-            // it's reloaded below; the file watcher needn't
-            tab->ignoreNextAutoReload = true;
-        }
-        Str data = file::ReadFile(tmpPath);
-        ok = len(data) > 0 && file::WriteFile(destPath, data);
-        str::Free(data);
+// saves now, for tests
+static bool MergeSaveTo(Str destPath) {
+    PdfToolJob* job = NewMergeSaveJob(destPath);
+    bool ok = job && RunPdfToolJobNow(job) == 0;
+    if (!ok) {
+        UnignoreReload(destPath);
     }
-    if (len(tmpPath) > 0) {
-        file::Delete(tmpPath);
-    }
-    if (len(sourceCopy) > 0) {
-        file::Delete(sourceCopy);
-    }
-    logf("MergeSaveTo: %d pages from %d files to '%s', ok: %d\n", len(pages), len(sources), destPath, (int)ok);
     return ok;
 }
 
@@ -1993,13 +1993,18 @@ static void MergeAfterSave(Str path) {
     }
 }
 
+// closes the dialog once saved (FinishPdfToolJob)
 static void MergeSaveAndClose(Str destPath) {
+    if (gTool.job) {
+        return;
+    }
     TempStr path = str::DupTemp(destPath);
-    if (!MergeSaveTo(path)) {
+    PdfToolJob* job = NewMergeSaveJob(path);
+    if (!job) {
         MessageBoxWarning(gTool.win, fmt(Tr("Couldn't save '%s'").s, path), Tr("Merge PDF"));
         return;
     }
-    MergeAfterSave(path);
+    RunToolJob(job);
 }
 
 // Save: over the document itself
@@ -4228,7 +4233,10 @@ static gp::El* ToolDlgFooter(gp::Ctx* cx, Str hint) {
                       ->Gap(kToolDlgGapDx);
     // files Convert would overwrite replace the hint (#6439)
     int nExisting = ExistingImageCount();
-    if (nExisting > 0) {
+    TempStr progress = JobProgressTemp();
+    if (len(progress) > 0) {
+        row->Child(ToolText(cx, progress, kToolDlgMetaFontPx, ThemeWindowTextDisabledColor()));
+    } else if (nExisting > 0) {
         row->Child(ToolText(cx, ExistingImagesTextTemp(nExisting), kToolDlgMetaFontPx, ThemeWindowTextColor()));
         row->Child(DlgGhostButton(cx, GStrL("pdftool-newnames"), Tr("Use New Names"),
                                   gp::ListenTo(gToolView, &PdfToolView::OnUseNewNames)));

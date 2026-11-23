@@ -179,6 +179,8 @@ struct PdfToolDialog : WindowBase {
     void DetachJob();
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
+    virtual void JobEnded() { SetActionEnabled(true); }
+    virtual void JobProgress(int nDone, int nTotal) {}
 };
 
 // the tab the dialog was opened for; the user may have switched tabs since
@@ -238,7 +240,7 @@ void FinishPdfToolJob(PdfToolJob* job) {
         return;
     }
     dlg->job = nullptr;
-    dlg->SetActionEnabled(true);
+    dlg->JobEnded();
     if (job->res != 0 && job->fail == PdfToolFail::Notification) {
         ShowWarningNotification(dlg->win, job->failMsg, kNotif5SecsTimeOut);
         return;
@@ -257,6 +259,13 @@ void FinishPdfToolJob(PdfToolJob* job) {
     if (IsMainWindowValidAndNotClosing(w)) {
         LoadArgs args(path, w);
         StartLoadDocument(&args);
+    }
+}
+
+void PdfToolJobProgress(PdfToolJob* job) {
+    auto* dlg = (PdfToolDialog*)job->owner;
+    if (dlg) {
+        dlg->JobProgress(AtomicIntGet(&job->nDone), job->nTotal);
     }
 }
 
@@ -510,9 +519,10 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     EditSetFocus(focusOn);
 }
 
+// stays disabled while the tool runs
 void PdfToolDialog::SetActionEnabled(bool enabled) {
     if (actionBtn) {
-        SetDlgButtonEnabled(actionBtn, DlgButtonStyle::Filled, enabled);
+        SetDlgButtonEnabled(actionBtn, DlgButtonStyle::Filled, enabled && !job);
     }
 }
 
@@ -1202,6 +1212,7 @@ struct PdfStampDialog : PdfPagesDialog {
 
     bool Create(MainWindow* win, WindowTab* tab, bool watermark);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
+    void JobEnded() override { UpdateButton(); }
     void UpdateButton();
 };
 
@@ -1225,23 +1236,8 @@ void PdfStampDialog::DoIt(VirtMouseEvent*) {
         return;
     }
     int posIdx = dropPosition ? CbGetCurrentSelection(dropPosition) : 0;
-    Vec<PdfStamp> stamps;
-    DialogStamps(watermark, textEdit->GetTextTemp(), pages, posIdx, stamps);
-    logf("PdfStampDialog: %d pages of '%s' to '%s'\n", len(stamps), srcPath, destPath);
-    Str err;
-    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
-    bool ok = StampPdfToFile(engine, stamps, destPath, &err);
-    SetCursor(prev);
-    if (!ok) {
-        logf("PdfStampDialog: failed: %s\n", err);
-        MessageBoxWarning(hwnd, err, watermark ? Tr("Add Watermark") : Tr("Add Page Numbers"));
-        return;
-    }
-    MainWindow* w = win;
-    TempStr path = str::DupTemp(destPath);
-    Close();
-    LoadArgs args(path, w);
-    StartLoadDocument(&args);
+    logf("PdfStampDialog: %d pages of '%s' to '%s'\n", len(pages), srcPath, destPath);
+    RunJob(NewStampJob(engine, watermark, textEdit->GetTextTemp(), pages, posIdx, destPath));
 }
 
 bool PdfStampDialog::Create(MainWindow* w, WindowTab* tab, bool watermarkArg) {
@@ -1510,20 +1506,7 @@ void ConvertEpubToPdfDialog::DoIt(VirtMouseEvent*) {
     }
     const EbookPdfPageSize& ps = kEbookPdfPageSizes[idx];
     logf("ConvertEpubToPdf: '%s' -> '%s', %s, %d pt\n", srcPath, destPath, ps.label, fontSize);
-
-    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
-    int nPages = EngineMupdfEbookToPdf(srcPath, destPath, ps.dx, ps.dy, (float)fontSize);
-    SetCursor(prev);
-    if (nPages == 0) {
-        MessageBoxWarning(hwnd, Tr("Failed to save a file"), Tr("Convert EPUB to PDF"));
-        return;
-    }
-    logf("ConvertEpubToPdf: wrote %d pages\n", nPages);
-    MainWindow* w = win;
-    TempStr path = str::DupTemp(destPath);
-    Close();
-    LoadArgs args(path, w);
-    StartLoadDocument(&args);
+    RunJob(NewEpubToPdfJob(srcPath, destPath, ps, fontSize));
 }
 
 bool ConvertEpubToPdfDialog::Create(MainWindow* w, WindowTab* tab) {
@@ -1572,19 +1555,7 @@ void ConvertCajToPdfDialog::DoIt(VirtMouseEvent*) {
         return;
     }
     logf("ConvertCajToPdf: '%s' -> '%s'\n", srcPath, destPath);
-
-    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
-    bool ok = ConvertCajToPdf(srcPath, destPath);
-    SetCursor(prev);
-    if (!ok) {
-        MessageBoxWarning(hwnd, CajErrorReasonTemp(srcPath), Tr("Convert CAJ to PDF"));
-        return;
-    }
-    MainWindow* w = win;
-    TempStr path = str::DupTemp(destPath);
-    Close();
-    LoadArgs args(path, w);
-    StartLoadDocument(&args);
+    RunJob(NewCajToPdfJob(srcPath, destPath));
 }
 
 bool ConvertCajToPdfDialog::Create(MainWindow* w, WindowTab* tab) {
@@ -1716,6 +1687,8 @@ struct ConvertPdfToImagesDialog : PdfToolDialog {
 
     bool Create(MainWindow* win, WindowTab* tab);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
+    void JobEnded() override { UpdateButton(); }
+    void JobProgress(int nDone, int nTotal) override;
     void OnBrowseTemplate(VirtMouseEvent* ev = nullptr);
     void UpdateButton();
     bool SelectedPages(Vec<int>& pages);
@@ -1906,22 +1879,16 @@ void ConvertPdfToImagesDialog::DoIt(VirtMouseEvent*) {
     }
 
     logf("ConvertPdfToImages: '%s' -> '%s', %d page(s), %d DPI\n", srcPath, destPath, len(pages), dpi);
+    RunJob(NewImagesJob(engine, dm->GetRotation(), destPath, pages, dpi));
+}
 
-    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
-    Str firstPath;
-    int nOk = ConvertPagesToImages(engine, dm->GetRotation(), destPath, pages, dpi, &firstPath);
-    SetCursor(prev);
-
-    if (nOk == 0) {
-        str::Free(firstPath);
-        MessageBoxWarning(hwnd, Tr("Failed to convert to images."), Tr("Convert to Images"));
-        return;
-    }
-    logf("ConvertPdfToImages: wrote %d of %d file(s)\n", nOk, len(pages));
-    TempStr openPath = str::DupTemp(firstPath);
-    str::Free(firstPath);
-    Close();
-    ShowToolOutput(openPath);
+// the hint says which page is being converted
+void ConvertPdfToImagesDialog::JobProgress(int nDone, int nTotal) {
+    hintText->SetText(fmt(Tr("Page %d of %d").s, nDone + 1, nTotal));
+    hintText->SetColor(kColText, colMuted);
+    footerBtn->SetIsVisible(false);
+    DoLayout();
+    HwndInvalidate(hwnd);
 }
 
 bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
