@@ -1294,6 +1294,18 @@ static void EndContentsEdit(AnnotEditToolbar* tb, bool accept) {
     }
 }
 
+bool IsEditingAnnotContents(MainWindow* win) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    return tb && tb->editingContents;
+}
+
+// Ends the contents edit of whichever window has one (focus allows only one).
+void EndAnnotContentsEdit(bool accept) {
+    for (MainWindow* win : gWindows) {
+        EndContentsEdit(win->annotEditToolbar, accept);
+    }
+}
+
 // posted tasks outlive the window that posted them: check it's still there
 static void PostedAcceptContents(MainWindow* win) {
     if (!IsMainWindowValid(win) || !win->annotEditToolbar) {
@@ -2148,6 +2160,10 @@ void HideAnnotEditToolbar(MainWindow* win) {
     if (!tb || !tb->host) {
         return;
     }
+    if (tb->editingContents && LiveToolbarAnnot(tb)) {
+        // keep the typing: scrolling the annotation off screen is not cancel
+        EndContentsEdit(tb, true);
+    }
     if (tb->editingContents) {
         RestoreCanvasFocus(tb);
         DestroyContentsEditor(tb);
@@ -2177,6 +2193,11 @@ void UpdateAnnotEditToolbar(MainWindow* win) {
     AnnotEditToolbar* tb = win->annotEditToolbar;
     if (tb && tb->editingContents) {
         if (!win->pdfAnnotationsToolbarEnabled || !AnnotationIsLive(annot) || annot != tb->annot) {
+            if (LiveToolbarAnnot(tb)) {
+                // leaving Edit PDF: keep the typing (this call comes back here)
+                EndContentsEdit(tb, true);
+                return;
+            }
             RestoreCanvasFocus(tb);
             DestroyContentsEditor(tb);
         } else {

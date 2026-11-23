@@ -47,6 +47,7 @@
 #include "gui/TabsUI.h"
 #include "gui/DocCanvas.h"
 #include "AnnotPlacement.h"
+#include "AnnotEditToolbar.h"
 #include "MeasurementToolbar.h"
 #include "LinkFollow.h"
 #include "SelectTextKeyboard.h"
@@ -164,6 +165,10 @@ void LoadModelIntoTab(WindowTab* tab) {
         StopKeyboardLinkFollowing(win);
         StopSelectTextWithKeyboard(win);
         CancelAnnotationPlacement(win);
+        // as orig's CloseDocumentInCurrentTab: keep typed contents
+        if (IsEditingAnnotContents(win)) {
+            EndAnnotContentsEdit(true);
+        }
         if (win->mouseAction != MouseAction::None || win->annotationBeingDragged || win->annotationBeingResized) {
             CanvasCancelDrag(win);
         }

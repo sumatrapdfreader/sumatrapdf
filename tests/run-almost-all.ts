@@ -673,6 +673,7 @@ import { testit as controlPipeBusy } from "./control-pipe-busy.ts";
 import { testit as touchLongPressSelect } from "./touch-long-press-select.ts";
 import { testit as penInput } from "./pen-input.ts";
 import { testit as ebookSettingsOkTab } from "./ebook-settings-ok-tab.ts";
+import { testit as annotContentsTabSwitch } from "./annot-contents-tab-switch.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -1342,6 +1343,7 @@ export const tests: NamedTest[] = [
   ["stale-build-dir-future", staleBuildDirFuture],
   ["save-annots-same-path", saveAnnotsSamePath],
   ["ebook-settings-ok-tab", ebookSettingsOkTab],
+  ["annot-contents-tab-switch", annotContentsTabSwitch],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

@@ -4917,6 +4917,10 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
+    // a tab switch clears the selection below, which would drop typed contents
+    if (IsEditingAnnotContents(win)) {
+        EndAnnotContentsEdit(true);
+    }
     CloseMeasurement(win);
     CancelAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
