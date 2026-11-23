@@ -4185,6 +4185,8 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         // Cancel while win->ctrl still belongs to the closing tab. The toolbar
         // update in cancellation needs CurrentTab and ctrl to agree.
         CancelAnnotationPlacement(win);
+        // as orig: a signature placed after the close would land in another tab
+        CloseSignDocumentDialog(win);
     }
     CloseAnnotationUiForTab(tab);
 

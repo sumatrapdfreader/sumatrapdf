@@ -38,7 +38,7 @@ const kSaveTimeoutMs = 20000;
 
 // How the test reaches the dialog: win32 windows on Windows, the control
 // channel's view of the gpui ones on macOS.
-type SignUi = {
+export type SignUi = {
   // opens the dialog, fills it in and presses Sign; returns the placement offered
   sign(pfx: string, password: string): Promise<string>;
   // closes the error box; false if there was none
@@ -96,7 +96,7 @@ function childrenOfClass(parent: number, className: string): number[] {
   return res;
 }
 
-function winSignUi(pid: number, frame: number, client: ControlClient): SignUi {
+export function winSignUi(pid: number, frame: number, client: ControlClient): SignUi {
   const findDlg = () => findTopWindow(pid, "SumatraWgDefaultWinClass", kDlgTitle);
   return {
     async sign(pfx, password) {
@@ -191,7 +191,7 @@ function parseNodes(raw: string): UiNode[] {
   }));
 }
 
-function macSignUi(client: ControlClient, frame: number): SignUi {
+export function macSignUi(client: ControlClient, frame: number): SignUi {
   const toolWin = async (...args: (string | number)[]) =>
     String((await client.request(ControlCommand.TestToolWindow, args))[1] ?? "");
   const dlgNodes = async () => parseNodes(await toolWin("layout", kToolWin));

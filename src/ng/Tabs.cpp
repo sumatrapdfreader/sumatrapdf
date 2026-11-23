@@ -165,10 +165,12 @@ void LoadModelIntoTab(WindowTab* tab) {
         StopKeyboardLinkFollowing(win);
         StopSelectTextWithKeyboard(win);
         CancelAnnotationPlacement(win);
-        // as orig's CloseDocumentInCurrentTab: keep typed contents
+        // as orig's CloseDocumentInCurrentTab: keep typed contents, and don't
+        // let a signature placed in the outgoing document land in this one
         if (IsEditingAnnotContents(win)) {
             EndAnnotContentsEdit(true);
         }
+        CloseSignDocumentDialog(win);
         if (win->mouseAction != MouseAction::None || win->annotationBeingDragged || win->annotationBeingResized) {
             CanvasCancelDrag(win);
         }

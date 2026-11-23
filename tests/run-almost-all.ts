@@ -674,6 +674,7 @@ import { testit as touchLongPressSelect } from "./touch-long-press-select.ts";
 import { testit as penInput } from "./pen-input.ts";
 import { testit as ebookSettingsOkTab } from "./ebook-settings-ok-tab.ts";
 import { testit as annotContentsTabSwitch } from "./annot-contents-tab-switch.ts";
+import { testit as signPlacementTabSwitch } from "./sign-placement-tab-switch.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -1344,6 +1345,7 @@ export const tests: NamedTest[] = [
   ["save-annots-same-path", saveAnnotsSamePath],
   ["ebook-settings-ok-tab", ebookSettingsOkTab],
   ["annot-contents-tab-switch", annotContentsTabSwitch],
+  ["sign-placement-tab-switch", signPlacementTabSwitch],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
