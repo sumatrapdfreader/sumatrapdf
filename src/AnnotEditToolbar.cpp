@@ -827,6 +827,12 @@ static bool ConfirmFontEmbedding(HWND hwnd) {
     return res == IDOK;
 }
 
+// After a modal dialog: a reload in its message loop frees the annotation, so
+// compare pointers before AnnotationIsLive() dereferences it
+static bool StillEditingAnnot(AnnotEditToolbar* tb, WindowTab* tab, Annotation* annot) {
+    return tb->annot == annot && tb->tab == tab && tab->selectedAnnotation == annot && AnnotationIsLive(annot);
+}
+
 // Font chip menu: the base 14 fonts and any other font from the Windows font dialog
 static void PickFreeTextFont(AnnotEditToolbar* tb, Annotation* annot, Point screen, Rect chipScreen) {
     HMENU menu = CreatePopupMenu();
@@ -879,8 +885,7 @@ static void PickFreeTextFont(AnnotEditToolbar* tb, Annotation* annot, Point scre
             family = SeqStrByIndex(gBase14FontFamilies, cmd - 1);
             break;
     }
-    // the dialogs ran a message loop, in which the annotation could have gone
-    if (!AnnotationIsLive(annot) || tab->selectedAnnotation != annot) {
+    if (!StillEditingAnnot(tb, tab, annot)) {
         return;
     }
     SetFreeTextFont(annot, family, style);
@@ -1034,6 +1039,9 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
             ofn.nFilterIndex = 1;
             ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
             if (!GetOpenFileNameW(&ofn)) {
+                break;
+            }
+            if (!StillEditingAnnot(tb, tab, annot)) {
                 break;
             }
             if (SetEmbeddedFileFromPath(annot, ToUtf8Temp(pathW))) {
