@@ -177,8 +177,12 @@ static void OnUrlDownloadProgress(UrlDownload* d, HttpProgress* progress) {
 static void UrlDownloadDone(UrlDownload* d) {
     MainWindow* win = DownloadWindow(d->win);
     logf("UrlDownloadDone: ok=%d '%s' -> '%s'\n", d->ok ? 1 : 0, d->url, d->path);
-    if (win && !d->ok) {
-        ShowDownloadFailed(win, d->url);
+    if (!d->ok) {
+        // StartOpenFromUrl reserved the name with an empty file
+        file::Delete(d->path);
+        if (win) {
+            ShowDownloadFailed(win, d->url);
+        }
     } else if (win) {
         RemoveNotificationsForGroup(win, kNotifOpenFromUrl);
         OpenDownloadedFile(win, d->path);
