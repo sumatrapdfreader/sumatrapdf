@@ -2248,7 +2248,7 @@ void OpenPathInDefaultFileManager(Str path) {
     if (n == 0 || n >= MAX_PATH) return;
     TempStr explorer = ToUtf8Temp(winDir);
     explorer = path::JoinTemp(explorer, StrL("explorer.exe"));
-    if (file::Exists(explorer)) return;
+    if (!file::Exists(explorer)) return;
     TempStr args = fmt("/select,\"%s\"", path);
     CreateProcessHelper(explorer, args);
 }
