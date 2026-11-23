@@ -288,7 +288,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
     HW_IInternetProtocol() = default;
 
   protected:
-    virtual ~HW_IInternetProtocol() = default;
+    virtual ~HW_IInternetProtocol() { str::Free(data); }
 
   public:
     // IUnknown
@@ -313,7 +313,8 @@ class HW_IInternetProtocol : public IInternetProtocol {
     AtomicInt refCount = 1;
 
     // those are filled in Start() and represent data to be sent
-    // for a given url
+    // for a given url. A copy: Read() can run after Start() returns, and a
+    // theme change or closing the document frees the cached original
     Str data;
     size_t dataCurrPos = 0;
 };
@@ -413,10 +414,13 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     if (!win->htmlWinCb) {
         return INET_E_OBJECT_NOT_FOUND;
     }
-    data = win->htmlWinCb->GetDataForUrl(urlRest);
-    if (len(data) == 0) {
+    Str urlData = win->htmlWinCb->GetDataForUrl(urlRest);
+    if (len(urlData) == 0) {
         return INET_E_DATA_NOT_AVAILABLE;
     }
+    str::Free(data);
+    data = str::Dup(urlData);
+    dataCurrPos = 0;
 
     TempStr imgExt = GfxFileExtFromDataTemp(data);
     TempStr mime = MimeFromUrlTemp(urlRest, imgExt);
