@@ -1029,7 +1029,7 @@ void TabColorPicked(TabColorTarget* target, ChangeColorsArgs* args) {
     if (args->colorsChanged) {
         SaveCustomColors(args->colors);
     }
-    WindowTab* tab = FindTabByFilePath(target->filePath);
+    WindowTab* tab = FindTabByFilePath(target->filePath, target->win);
     bool tabValid = IsMainWindowValidAndNotClosing(target->win) && tab && tab->win == target->win && tab->ctrl;
     if (args->didSelect && tabValid) {
         tab->tabColor = args->color;

@@ -6057,7 +6057,7 @@ WindowTab* FindTabInWindow(Str path, MainWindow* win) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return nullptr;
     }
-    WindowTab* t = FindTabByFilePath(path);
+    WindowTab* t = FindTabByFilePath(path, win);
     if (!t || t->win != win) {
         return nullptr;
     }
