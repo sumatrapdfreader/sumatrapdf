@@ -590,7 +590,9 @@ static void OnPaintAbout(HWND hwnd) {
 }
 
 static void CreateInfotipForLink(Str tooltip, const Rect& rc) {
+    // moving straight to another link: show its text at its rect
     if (gAboutTooltip != nullptr) {
+        gAboutTooltip->SetSingle(tooltip, rc, false);
         return;
     }
 
