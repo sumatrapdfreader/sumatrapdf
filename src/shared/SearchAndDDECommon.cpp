@@ -676,6 +676,12 @@ static Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
     if (len(term) == 0) {
         return next;
     }
+    // a heap copy: in ng, selecting or reloading the document renders, which
+    // resets the temp arena
+    term = str::Dup(term);
+    defer {
+        str::Free(term);
+    };
     MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
@@ -702,6 +708,12 @@ static Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack) {
     if (str::IsNull(next)) {
         return {};
     }
+    // a heap copy: in ng, selecting or reloading the document renders, which
+    // resets the temp arena
+    term = str::Dup(term);
+    defer {
+        str::Free(term);
+    };
     MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
@@ -740,6 +752,12 @@ static Str HandleGotoCmd(HWND hwnd, Str cmd, bool* ack) {
     if (str::IsNull(next)) {
         return {};
     }
+    // a heap copy: in ng, selecting or reloading the document renders, which
+    // resets the temp arena
+    destName = str::Dup(destName);
+    defer {
+        str::Free(destName);
+    };
 
     MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
@@ -1345,6 +1363,13 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
     if (str::IsNull(next)) {
         return {};
     }
+    // heap copies: in ng, opening a window renders, which resets the temp arena
+    pdfFile = str::Dup(pdfFile);
+    srcFile = str::Dup(srcFile);
+    defer {
+        str::Free(pdfFile);
+        str::Free(srcFile);
+    };
 
     MainWindow* win = nullptr;
     if (pdfFile) {
