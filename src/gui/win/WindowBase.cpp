@@ -153,10 +153,25 @@ HwndBase::~HwndBase() {
     DeleteBrushSafe(&bgBrush);
 }
 
+constexpr const WCHAR* kModalOwnerProp = L"SumatraModalOwner";
+
+// A modal window's owner must be enabled before the window is destroyed:
+// otherwise Windows can't activate it and activates another app's window.
+static void EnableModalOwner(HWND hwnd) {
+    if (!hwnd) {
+        return;
+    }
+    HWND owner = (HWND)RemovePropW(hwnd, kModalOwnerProp);
+    if (owner) {
+        EnableWindow(owner, TRUE);
+    }
+}
+
 void HwndBase::Destroy() {
     // the order is important
     // stop dispatching messages to this object
     HwndListRemove(this);
+    EnableModalOwner(hwnd);
     // unsubclass while hwnd is still valid
     UnSubclass();
     // finally destroy hwnd
@@ -1022,6 +1037,7 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
         // not Destroy(): that unmaps us first, so WM_DESTROY (and onDestroy)
         // would never reach this object; WM_NCDESTROY does the unmapping
+        EnableModalOwner(hwnd);
         ::DestroyWindow(hwnd);
         return 0;
     }
@@ -2099,6 +2115,7 @@ void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
     if (hwndParent && IsWindowEnabled(hwndParent)) {
         EnableWindow(hwndParent, FALSE);
         reEnableParent = true;
+        SetPropW(hwndDialog, kModalOwnerProp, hwndParent);
     }
 
     MSG msg;
