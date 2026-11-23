@@ -187,6 +187,7 @@ PdfToolJob* NewStampJob(EngineBase* engine, bool watermark, Str text, const Vec<
 PdfToolJob* NewImagesJob(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages, int dpi);
 PdfToolJob* NewEpubToPdfJob(Str srcPath, Str destPath, const EbookPdfPageSize& ps, int fontSize);
 PdfToolJob* NewCajToPdfJob(Str srcPath, Str destPath);
+PdfToolJob* NewConvertToPdfJob(EngineBase* engine, Str destPath);
 struct PdfMergeSource;
 struct PdfMergePage;
 PdfToolJob* NewMergeJob(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePage>& pages, Str srcCopy, Str destPath);

@@ -1393,19 +1393,7 @@ void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
     }
 
     logf("ConvertToPdf: converting '%s' to '%s'\n", srcPath, destPath);
-    // OFD keeps its text and vector paths; image collections become one image per page
-    bool ok = isOfd ? EngineMupdfSaveAsPdf(engine, destPath) : ConvertImageCollectionToPdf(engine, destPath);
-    if (ok) {
-        logf("ConvertToPdf: converted successfully\n");
-        MainWindow* w = win;
-        TempStr path = str::DupTemp(destPath);
-        Close();
-        LoadArgs args(path, w);
-        StartLoadDocument(&args);
-    } else {
-        logf("ConvertToPdf: SaveImageCollectionAsPdf failed\n");
-        MessageBoxWarning(hwnd, Tr("Failed to save a file"), Tr("Convert to PDF"));
-    }
+    RunJob(NewConvertToPdfJob(engine, destPath));
 }
 
 bool ConvertToPdfDialog::Create(MainWindow* w, WindowTab* tab) {

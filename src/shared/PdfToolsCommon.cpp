@@ -406,6 +406,14 @@ bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath) {
     return PdfCreator::SaveImageCollectionAsPdf(destPath, engine);
 }
 
+// OFD keeps its text and vector paths; image collections become one image per page
+static bool ConvertDocToPdf(EngineBase* engine, Str destPath) {
+    if (EngineMupdfIsOfd(engine)) {
+        return EngineMupdfSaveAsPdf(engine, destPath);
+    }
+    return ConvertImageCollectionToPdf(engine, destPath);
+}
+
 // Make PDF From Images: the Open dialog's filter, "\1" separated as ng's
 Str ImagesToPdfFilter() {
     return StrL(
@@ -526,9 +534,8 @@ TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* ex
     if (!engine) {
         return finish(1, str::DupTemp(StrL("ERROR engine-create-failed")));
     }
-    // as the Convert to PDF dialog: OFD as vector pages
-    bool ok = EngineMupdfIsOfd(engine) ? EngineMupdfSaveAsPdf(engine, destPath)
-                                       : ConvertImageCollectionToPdf(engine, destPath);
+    // as the Convert to PDF dialog
+    bool ok = ConvertDocToPdf(engine, destPath);
     SafeEngineRelease(&engine);
     if (!ok) {
         return finish(1, str::DupTemp(StrL("ERROR convert-failed")));
@@ -1228,6 +1235,23 @@ PdfToolJob* NewCajToPdfJob(Str srcPath, Str destPath) {
     auto* job = new CajToPdfJob();
     InitJob(job, StrL("ConvertCajToPdf"), destPath, {}, Tr("Convert CAJ to PDF"));
     job->srcPath = str::Dup(srcPath);
+    return job;
+}
+
+// converts the open document: its engine already serves concurrent render
+// threads (OFD conversion holds docLock); the reference keeps it alive
+struct ConvertToPdfJob : PdfToolJob {
+    EngineBase* engine = nullptr;
+
+    ~ConvertToPdfJob() override { SafeEngineRelease(&engine); }
+    int Run() override { return ConvertDocToPdf(engine, destPath) ? 0 : 1; }
+};
+
+PdfToolJob* NewConvertToPdfJob(EngineBase* engine, Str destPath) {
+    auto* job = new ConvertToPdfJob();
+    InitJob(job, StrL("ConvertToPdf"), destPath, Tr("Failed to save a file"), Tr("Convert to PDF"));
+    engine->AddRef();
+    job->engine = engine;
     return job;
 }
 

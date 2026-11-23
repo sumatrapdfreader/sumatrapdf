@@ -1125,15 +1125,7 @@ static void ConvertToPdfDoIt() {
     }
 
     logf("ConvertToPdf: converting '%s' to '%s'\n", gTool.srcPath, destPath);
-    // OFD keeps its text and vector paths; image collections become one image per page
-    bool ok = isOfd ? EngineMupdfSaveAsPdf(engine, destPath) : ConvertImageCollectionToPdf(engine, destPath);
-    if (ok) {
-        logf("ConvertToPdf: converted successfully\n");
-        CloseAndLoad(destPath);
-        return;
-    }
-    logf("ConvertToPdf: SaveImageCollectionAsPdf failed\n");
-    MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Convert to PDF"));
+    RunToolJob(NewConvertToPdfJob(engine, destPath));
 }
 
 // the pages the mode picks; false for a custom range that doesn't parse
