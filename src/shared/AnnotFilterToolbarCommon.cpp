@@ -78,6 +78,26 @@ void AnnotListMenuItems(MainWindow* win, Annotation* annot, int nSel, Vec<AnnotL
     VecAppend(out, del);
 }
 
+// the Save button's label names the file. A long name is cut in the middle so
+// it can't widen the list window off screen (#6582):
+// "Save changes to Samsung A175F…rus.pdf"
+TempStr AnnotSaveLabelTemp(WindowTab* tab) {
+    constexpr int kMaxNameChars = 28;
+    TempStr name = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
+    if (len(name) == 0) {
+        return str::DupTemp(Tr("Save changes to existing PDF"));
+    }
+    int n = Utf8CodepointCount(name);
+    if (n > kMaxNameChars) {
+        int nEnd = kMaxNameChars / 2;
+        int nStart = kMaxNameChars - nEnd - 1;
+        Str start = Utf8SliceByCodepoints(name, 0, nStart);
+        Str end = Utf8SliceByCodepoints(name, n - nEnd, nEnd);
+        name = fmt("%s…%s", start, end);
+    }
+    return fmt(Tr("Save changes to %s").s, name);
+}
+
 void ToggleFloatingAnnotList(MainWindow* win) {
     if (!win) {
         return;

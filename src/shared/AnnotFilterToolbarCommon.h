@@ -33,6 +33,7 @@ struct AnnotListMenuItem {
 };
 
 void AnnotListMenuItems(MainWindow* win, Annotation* annot, int nSel, Vec<AnnotListMenuItem>& out);
+TempStr AnnotSaveLabelTemp(WindowTab* tab);
 
 constexpr int kSelectionDebounceMs = 300;
 

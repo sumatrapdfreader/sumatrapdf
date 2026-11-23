@@ -1438,11 +1438,7 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
         }
         return el;
     };
-    TempStr base = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
-    Str saveLabel = Tr("Save changes to existing PDF");
-    if (len(base) > 0) {
-        saveLabel = fmt(Tr("Save changes to %s").s, base);
-    }
+    Str saveLabel = AnnotSaveLabelTemp(tab);
     // orig's UpdateFloatButtons
     int nSel = DeleteCount(f);
     Str delLabel = Tr("Delete Annotation");

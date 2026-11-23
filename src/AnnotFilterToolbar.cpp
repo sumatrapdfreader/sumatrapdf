@@ -515,7 +515,9 @@ static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
     return ShiftRectToWorkArea({x, fr.y, dx, dy}, nullptr, true);
 }
 
-static Rect AnnotFilterWindowPlacementRect(MainWindow* win) {
+// Placement must use the size Windows will give the window: SetWindowPos
+// enforces OnGetMinMaxInfo's minimum and would widen it past the clamped spot.
+static Rect AnnotFilterWindowPlacementRect(MainWindow* win, Size minSize) {
     if (!win || !win->hwndFrame) {
         return {};
     }
@@ -529,6 +531,10 @@ static Rect AnnotFilterWindowPlacementRect(MainWindow* win) {
     if (saved.dy > 0) {
         dy = saved.dy;
     }
+    dx = std::max(dx, minSize.dx);
+    dy = std::max(dy, minSize.dy);
+    saved.dx = std::max(saved.dx, minSize.dx);
+    saved.dy = std::max(saved.dy, minSize.dy);
     if (win->annotListFloatPosUserSet && !saved.IsEmpty()) {
         return ShiftRectToWorkArea(saved, nullptr, true);
     }
@@ -542,7 +548,12 @@ static void PositionAnnotFilterWindow(AnnotFilterWindow* w) {
     if (!w || !w->hwnd || !w->win) {
         return;
     }
-    Rect r = AnnotFilterWindowPlacementRect(w->win);
+    MINMAXINFO mmi{};
+    WindowBase::GetMinMaxInfoEvent ev;
+    ev.mmi = &mmi;
+    w->OnGetMinMaxInfo(&ev);
+    Size minSize = {(int)mmi.ptMinTrackSize.x, (int)mmi.ptMinTrackSize.y};
+    Rect r = AnnotFilterWindowPlacementRect(w->win, minSize);
     SetWindowPos(w->hwnd, HWND_TOP, r.x, r.y, r.dx, r.dy, SWP_NOACTIVATE);
 }
 
@@ -710,12 +721,7 @@ static void UpdateFloatButtons(AnnotFilterToolbar* f) {
     }
     if (w->btnSave) {
         w->btnSave->SetIsEnabled(dirty);
-        TempStr base = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
-        if (len(base) > 0) {
-            w->btnSave->SetText(fmt(Tr("Save changes to %s").s, base));
-        } else {
-            w->btnSave->SetText(Tr("Save changes to existing PDF"));
-        }
+        w->btnSave->SetText(AnnotSaveLabelTemp(tab));
         w->btnSave->RequestLayout();
     }
     if (w->btnSaveNew) {
@@ -820,7 +826,7 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
         args.style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_CLIPCHILDREN;
         args.exStyle = WS_EX_TOOLWINDOW;
         args.isRtl = IsUIRtl();
-        args.pos = AnnotFilterWindowPlacementRect(win);
+        args.pos = AnnotFilterWindowPlacementRect(win, {});
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         args.bgColor = colBg;
         CreateCustom(args);

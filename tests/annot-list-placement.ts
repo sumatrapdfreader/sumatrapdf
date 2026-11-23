@@ -1,5 +1,6 @@
 // The Annotations list opens on the roomier side of the main window, or on the
 // right edge of the screen when maximized / fullscreen. Position is session-only.
+// A long file name (in the Save button) must not widen it off screen (#6582).
 //
 // Run: bun tests/annot-list-placement.ts [--no-build]
 
@@ -69,11 +70,38 @@ async function frameScreenRect(
   return { left: x, top: y, right: x + dx, bottom: y + dy };
 }
 
+// The first open in fullscreen has no remembered size: the list must still end
+// at the screen's right edge, not be widened past it by the Save label (#6582).
+async function firstOpenInFullscreen(pdf: string): Promise<void> {
+  const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit page", pdf]);
+  try {
+    await client.waitForRenderIdle();
+    await client.setNotificationsEnabled(false);
+    sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
+    await client.waitForRenderIdle();
+    await sleep(200);
+    sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
+    await sleep(200);
+    sendCommandSync(frame, cmdId("CmdFindAnnotation"));
+    const list = await waitFloat(client, true);
+    const fr = await frameScreenRect(client, frame);
+    if (list.x + list.dx > fr.right + 8) {
+      throw new Error(
+        `annot-list-placement: first fullscreen open past the right edge: list=${JSON.stringify(list)} frame=${JSON.stringify(fr)}`,
+      );
+    }
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("annot-list-placement");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
-  const pdf = join(dir, "a.pdf");
+  // long enough that "Save changes to <name>" is wider than the default list
+  const pdf = join(dir, "annotations-list-placement-with-a-file-name-long-enough-to-widen-the-list.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
 
   const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit page", pdf]);
@@ -89,6 +117,11 @@ export async function testit(): Promise<void> {
     const wa = getWorkArea();
     const spaceRight = wa.right - fr.right;
     const spaceLeft = fr.left - wa.left;
+    if (!IS_MAC && (first.x < wa.left || first.x + first.dx > wa.right)) {
+      throw new Error(
+        `annot-list-placement: list not inside the work area: list=${JSON.stringify(first)} workArea=${JSON.stringify(wa)}`,
+      );
+    }
     const listMid = first.x + first.dx / 2;
     const frameMid = (fr.left + fr.right) / 2;
     if (spaceRight >= spaceLeft) {
@@ -161,6 +194,7 @@ export async function testit(): Promise<void> {
     await killAndWait(proc);
   }
 
+  await firstOpenInFullscreen(pdf);
   console.log("annot-list-placement: OK");
 }
 
