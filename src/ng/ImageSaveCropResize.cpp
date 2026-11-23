@@ -883,6 +883,9 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
 }
 #endif
 
+static void OpenImageEdit(MainWindow* win, ImageEditMode mode, Str filePath, Pixmap* px, bool fromRendered,
+                          bool selectPdf, Str originalData, bool closeOnEsc);
+
 void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf,
                          Str originalData, bool closeOnEsc) {
     if (!IsMainWindowValidAndNotClosing(win)) {
@@ -914,7 +917,24 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
         logf("ShowImageEditWindow: no image ('%s')\n", filePath);
         return;
     }
+    OpenImageEdit(win, mode, filePath, px, fromRendered, selectPdf, originalData, closeOnEsc);
+}
 
+// px is an image taken from a document (no RenderedBitmap off Windows); the
+// editor owns it
+void ShowImageEditWindowPixmap(MainWindow* win, ImageEditMode mode, Str filePath, Pixmap* px, bool selectPdf,
+                               Str originalData) {
+    if (!IsMainWindowValidAndNotClosing(win) || !px) {
+        FreePixmap(px);
+        return;
+    }
+    InitImageEditHost();
+    CloseImageEditWindow();
+    OpenImageEdit(win, mode, filePath, px, true, selectPdf, originalData, false);
+}
+
+static void OpenImageEdit(MainWindow* win, ImageEditMode mode, Str filePath, Pixmap* px, bool fromRendered,
+                          bool selectPdf, Str originalData, bool closeOnEsc) {
     gImgEdit.win = win;
     gImgEdit.mode = mode;
     gImgEdit.fromRenderedBitmap = fromRendered;

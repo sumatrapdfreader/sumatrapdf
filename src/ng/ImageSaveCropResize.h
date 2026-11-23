@@ -56,6 +56,8 @@ bool TrySaveOriginalAsCmykTiff(Str originalData, Str destPath);
 // extension still matches the original format. Caller keeps ownership.
 void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath = {}, RenderedBitmap* rbmp = nullptr,
                          bool selectPdf = false, Str originalData = {}, bool closeOnEsc = false);
+void ShowImageEditWindowPixmap(MainWindow* win, ImageEditMode mode, Str filePath, Pixmap* px, bool selectPdf,
+                               Str originalData);
 #if OS_WIN
 // orig's capture picker passes the owner HWND. The editor takes a copy of rbmp.
 void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath = {}, RenderedBitmap* rbmp = nullptr,

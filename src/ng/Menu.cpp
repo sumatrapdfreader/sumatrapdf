@@ -9,6 +9,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/Pixmap.h"
 
 #include "gui/UIModels.h"
 
@@ -1240,10 +1241,18 @@ static void ContextMenuEditImage(MainWindow* win, IPageElement* pageEl, int page
         ShowImageEditWindow(win, m, imgEngine->FilePath(), nullptr, selectPdf);
         return;
     }
+#if OS_WIN
     RenderedBitmap* bmp = imgEngine->GetImageForPageElement(pageEl);
     if (!bmp) {
         return;
     }
+#else
+    // no RenderedBitmap off Windows: the same pixels Copy Image uses
+    Pixmap* px = PixmapToBgra(EngineMupdfPageImagePixmap(imgEngine, pageEl));
+    if (!px) {
+        return;
+    }
+#endif
     Str filePath = win->ctrl ? win->ctrl->GetFilePath() : Str{};
     TempStr dir = path::GetDirTemp(filePath);
     TempStr base = path::GetBaseNameTemp(filePath);
@@ -1254,8 +1263,12 @@ static void ContextMenuEditImage(MainWindow* win, IPageElement* pageEl, int page
         ext = StrL(".png");
     }
     TempStr destPath = path::JoinTemp(dir, fmt("%s_page_%d%s", noExt, pageNo, ext));
-    // ShowImageEditWindow takes ownership of the bitmap
+    // the editor takes ownership of the bitmap
+#if OS_WIN
     ShowImageEditWindow(win, m, destPath, bmp, selectPdf, origData);
+#else
+    ShowImageEditWindowPixmap(win, m, destPath, px, selectPdf, origData);
+#endif
     str::Free(origData);
 }
 
