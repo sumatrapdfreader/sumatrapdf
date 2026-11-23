@@ -1210,7 +1210,14 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     logf("OnButtonInstall: needsElevation=%d elevated=%d allUsers=%d dir='%s'\n", (int)needsElevation,
          (int)IsProcessRunningElevated(), (int)cli->allUsers, cli->installDir);
     if (needsElevation && !IsProcessRunningElevated()) {
-        RestartElevatedForAllUsers(cli);
+        // UAC declined or failed: stay, so another folder can be picked
+        if (RestartElevatedForAllUsers(cli) != 0) {
+            SetMsg(Tr("Administrator access is required."), kColorMsgFailed);
+            MessageBeep(MB_ICONEXCLAMATION);
+            wnd->btnInstall->SetIsEnabled(true);
+            InstallerRepaintNow();
+            return;
+        }
         ScheduleDeleteTempInstaller();
         ::ExitProcess(0);
     }
