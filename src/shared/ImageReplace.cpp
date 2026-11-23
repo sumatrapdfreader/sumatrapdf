@@ -151,7 +151,7 @@ static ImageEditWatch* StartImageEditWatch(MainWindow* win, int pageNo, int imag
     if (len(png) == 0) {
         return nullptr;
     }
-    TempStr name = fmt("SumatraPDF-image-%d-%d.png", CurrentProcessId(), ++gImageEditCounter);
+    TempStr name = fmt("SumatraPDF-image-%llu-%d.png", GetCurrProcessId(), ++gImageEditCounter);
     TempStr path = path::JoinTemp(GetTempDirPathTemp(), name);
     bool written = file::WriteFile(path, png);
     str::Free(png);

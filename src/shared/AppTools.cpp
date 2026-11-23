@@ -473,7 +473,7 @@ TempStr GetWebViewDataDirTemp() {
         str::BufSet(Str(id, dimof(id)), buildId);
     }
     dir = path::JoinTemp(dir, Str(id));
-    return path::JoinTemp(dir, fmt("webview-%d", (int)GetCurrentProcessId()));
+    return path::JoinTemp(dir, fmt("webview-%llu", GetCurrProcessId()));
 }
 
 // seconds since ft, from a FILETIME's 100-ns ticks
@@ -709,10 +709,6 @@ bool IsUntrustedFile(Str filePath, Str fileURL) {
 
 TempStr GetTempDirPathTemp() {
     return GetTempDirTemp();
-}
-
-int CurrentProcessId() {
-    return (int)GetCurrentProcessId();
 }
 
 #endif // OS_WIN

@@ -70,7 +70,7 @@ static bool WriteGoogleLensPage(WindowTab* tab, const u8* png, size_t pngSize) {
         GoogleLensNotify(tab, Tr("Could not create a temporary file for Google Lens."));
         return false;
     }
-    TempStr name = fmt("SumatraPDF-Lens-%d.html", CurrentProcessId());
+    TempStr name = fmt("SumatraPDF-Lens-%llu.html", GetCurrProcessId());
     TempStr htmlPath = path::JoinTemp(dir, name);
     if (!file::WriteFile(htmlPath, ToStr(html))) {
         file::Delete(htmlPath);

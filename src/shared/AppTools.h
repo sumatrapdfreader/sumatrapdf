@@ -38,7 +38,6 @@ TempStr GetAppDataDirTemp();
 TempStr PathForDisplayTemp(Str path);
 TempStr GetPathInAppDataDirTemp(Str fileName);
 TempStr GetTempDirPathTemp();
-int CurrentProcessId();
 
 void DetectTextEditors(Vec<TextEditor*>&);
 void CollectInverseSearchCommands(StrVec& out, Str cmdLine);

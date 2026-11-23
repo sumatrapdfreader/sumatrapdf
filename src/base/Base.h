@@ -1101,6 +1101,7 @@ using ThreadHandle = HANDLE;
 using ThreadId = u64;
 ThreadId GetCurrentThreadId();
 #endif
+u64 GetCurrProcessId();
 
 // Debug builds record which thread holds a Mutex / RecursiveMutex so code can
 // check a "caller holds X" precondition:

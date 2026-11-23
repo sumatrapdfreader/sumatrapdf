@@ -383,6 +383,14 @@ int NormalizeRotation(int rotation) {
 #endif
 #endif
 
+u64 GetCurrProcessId() {
+#if OS_WIN
+    return (u64)GetCurrentProcessId();
+#else
+    return (u64)getpid();
+#endif
+}
+
 #if OS_WIN
 
 void SetThreadName(Str threadName, ThreadId threadId) {

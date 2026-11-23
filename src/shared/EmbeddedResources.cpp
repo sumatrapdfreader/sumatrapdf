@@ -10,9 +10,6 @@
 #include "base/Http.h"
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
-#if OS_POSIX && !OS_WASM
-#include <unistd.h>
-#endif
 
 #include "Version.h"
 #if OS_WASM
@@ -331,12 +328,7 @@ static void OnFontDownloadChunk(FontDownloadProgress* p, HttpProgress* hp) {
 // per process and thread: other instances, PdfPreview.dll and sumatrapdf-tool
 // share the font cache
 static TempStr UniquePartPathTemp(Str dest) {
-#if OS_WIN
-    u64 pid = GetCurrentProcessId();
-#else
-    u64 pid = (u64)getpid();
-#endif
-    return fmt("%s.%llu.%llu.part", dest, pid, (u64)GetCurrentThreadId());
+    return fmt("%s.%llu.%llu.part", dest, GetCurrProcessId(), (u64)GetCurrentThreadId());
 }
 #endif
 

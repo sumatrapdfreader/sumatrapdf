@@ -877,11 +877,7 @@ static MainWindow* FirstWindow() {
 // test. The title is last, as it may have spaces.
 static TempStr TestWindowsListTemp() {
     str::Builder out;
-#if OS_WIN || OS_WASM
-    int pid = 0;
-#else
-    int pid = (int)getpid();
-#endif
+    int pid = (int)GetCurrProcessId();
     for (MainWindow* w : gWindows) {
         if (!w || w->isBeingClosed) {
             continue;

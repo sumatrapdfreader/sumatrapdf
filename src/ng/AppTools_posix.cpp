@@ -99,10 +99,6 @@ TempStr GetTempDirPathTemp() {
     return str::DupTemp(Str((char*)(tmp && *tmp ? tmp : "/tmp")));
 }
 
-int CurrentProcessId() {
-    return (int)getpid();
-}
-
 // resources embedded in the exe are a win32 concept; there is no dll build
 // off Windows
 bool IsDllBuild() {
@@ -143,7 +139,7 @@ TempStr GetWebViewDataDirTemp() {
         str::BufSet(Str(id, dimof(id)), buildId);
     }
     dir = path::JoinTemp(dir, Str(id));
-    return path::JoinTemp(dir, fmt("webview-%d", CurrentProcessId()));
+    return path::JoinTemp(dir, fmt("webview-%llu", GetCurrProcessId()));
 }
 
 bool AdjustVariableDriveLetter(Str&) {

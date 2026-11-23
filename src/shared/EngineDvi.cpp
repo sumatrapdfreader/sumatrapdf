@@ -453,14 +453,7 @@ static bool WriteDviMeta(Str metaPath, Str src, FILETIME mtime, Str pdfName) {
 // per process and thread: other tabs and instances may convert the same file.
 // Keeps the ".pdf.tmp" suffix DeleteStaleDviCache looks for.
 static TempStr DviTmpPathTemp(Str pdfPath) {
-#if OS_WIN
-    u64 pid = GetCurrentProcessId();
-#elif OS_POSIX && !OS_WASM
-    u64 pid = (u64)getpid();
-#else
-    u64 pid = 0;
-#endif
-    return fmt("%s.%llu.%llu.pdf.tmp", pdfPath, pid, (u64)GetCurrentThreadId());
+    return fmt("%s.%llu.%llu.pdf.tmp", pdfPath, GetCurrProcessId(), (u64)GetCurrentThreadId());
 }
 
 // <data>/dvi-cache/<md5(path)>.meta records the source path, its mtime, and
