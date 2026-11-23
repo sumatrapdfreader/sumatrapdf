@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Dict.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/UITask.h"
@@ -254,8 +255,11 @@ struct HomeFileSizeEntry {
     bool lookingUp = false;
 };
 static Vec<HomeFileSizeEntry> gHomeFileSizes;
+static dict::StrToInt* gHomeFileSizeIdx = nullptr; // path -> index in gHomeFileSizes
 // re-looked up after this, so a file that changed shows its new size
 constexpr u64 kHomeFileSizeTtlMs = 60 * 1000;
+// a local lookup is cheap, but ng redraws every frame and would repeat it per frame
+constexpr u64 kLocalFileSizeTtlMs = 2 * 1000;
 
 struct HomeFileSizeLookup {
     Str path;
@@ -263,12 +267,22 @@ struct HomeFileSizeLookup {
 };
 
 static HomeFileSizeEntry* FindHomeFileSize(Str path) {
-    for (HomeFileSizeEntry& e : gHomeFileSizes) {
-        if (str::Eq(e.path, path)) {
-            return &e;
-        }
+    int idx = -1;
+    if (!gHomeFileSizeIdx || !gHomeFileSizeIdx->Get(path, &idx)) {
+        return nullptr;
     }
-    return nullptr;
+    return &gHomeFileSizes[idx];
+}
+
+static HomeFileSizeEntry* AddHomeFileSize(Str path) {
+    if (!gHomeFileSizeIdx) {
+        gHomeFileSizeIdx = new dict::StrToInt();
+    }
+    gHomeFileSizeIdx->Insert(path, len(gHomeFileSizes));
+    HomeFileSizeEntry* e = VecAppendBlanks(gHomeFileSizes, 1);
+    e->path = str::Dup(path);
+    e->size = kHomeFileSizePending;
+    return e;
 }
 
 static void HomeFileSizeDone(HomeFileSizeLookup* res) {
@@ -305,16 +319,19 @@ static bool SizeLookupMayBlock(Str path) {
 // size of a file the Home page lists: -1 if unknown, kHomeFileSizePending while
 // being looked up
 i64 GetHomeFileSize(Str path) {
-    if (!SizeLookupMayBlock(path)) {
-        return file::GetSize(path);
-    }
     HomeFileSizeEntry* e = FindHomeFileSize(path);
     if (!e) {
-        e = VecAppendBlanks(gHomeFileSizes, 1);
-        e->path = str::Dup(path);
-        e->size = kHomeFileSizePending;
+        e = AddHomeFileSize(path);
     }
-    bool stale = e->size == kHomeFileSizePending || GetTickCount64() - e->lookedUpMs > kHomeFileSizeTtlMs;
+    u64 now = GetTickCount64();
+    if (!SizeLookupMayBlock(path)) {
+        if (e->size == kHomeFileSizePending || now - e->lookedUpMs > kLocalFileSizeTtlMs) {
+            e->size = file::GetSize(path);
+            e->lookedUpMs = now;
+        }
+        return e->size;
+    }
+    bool stale = e->size == kHomeFileSizePending || now - e->lookedUpMs > kHomeFileSizeTtlMs;
     if (stale && !e->lookingUp) {
         e->lookingUp = true;
         auto* res = new HomeFileSizeLookup{str::Dup(path), -1};
