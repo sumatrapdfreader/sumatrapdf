@@ -76,6 +76,64 @@ void DictTestMapStrToInt() {
     }
 }
 
+// removing from the middle of probe runs must keep every other key findable
+static void DictTestRemoveKeepsOthers() {
+    dict::MapStrToInt d(4);
+    constexpr int kN = 3000;
+    for (int i = 0; i < kN; i++) {
+        utassert(d.Insert(fmt("key-%d", i), i));
+    }
+    utassert(d.Count() == kN);
+    for (int i = 0; i < kN; i += 2) {
+        int v = -1;
+        utassert(d.Remove(fmt("key-%d", i), &v) && v == i);
+    }
+    utassert(d.Count() == kN / 2);
+    for (int i = 0; i < kN; i++) {
+        int v = -1;
+        bool found = d.Get(fmt("key-%d", i), &v);
+        utassert(found == (i % 2 == 1));
+        utassert(!found || v == i);
+    }
+    // removed keys can come back, with new values
+    for (int i = 0; i < kN; i += 2) {
+        utassert(d.Insert(fmt("key-%d", i), i + kN));
+    }
+    int v = -1;
+    utassert(d.Get(StrL("key-0"), &v) && v == kN);
+    utassert(d.Count() == kN);
+}
+
+static TempStr RepeatedTemp(char c, int n) {
+    char* d = AllocArrayTemp<char>(n + 1);
+    memset(d, c, (size_t)n);
+    return Str(d, n);
+}
+
+static void DictTestKeys() {
+    dict::MapStrToInt d;
+    int v = -1;
+    // empty keys are refused
+    utassert(!d.Insert(Str(), 1));
+    utassert(!d.Get(Str(), &v));
+    // a key needn't be NUL-terminated: only its length counts
+    Str full = StrL("hello world");
+    utassert(d.Insert(Str(full.s, 5), 7));
+    utassert(d.Get(StrL("hello"), &v) && v == 7);
+    utassert(!d.Get(full, &v));
+    utassert(!d.Get(StrL("hell"), &v));
+    // keys long enough for a multi-byte length
+    TempStr longKey = RepeatedTemp('x', 300);
+    utassert(d.Insert(longKey, 300));
+    utassert(d.Get(longKey, &v) && v == 300);
+    utassert(d.Insert(RepeatedTemp('x', 299), 299));
+    utassert(d.Get(longKey, &v) && v == 300);
+    int existing = -1;
+    utassert(!d.Insert(longKey, 1, &existing) && existing == 300);
+}
+
 void DictTest() {
     DictTestMapStrToInt();
+    DictTestRemoveKeepsOthers();
+    DictTestKeys();
 }

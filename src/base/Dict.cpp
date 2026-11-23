@@ -1,24 +1,24 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-/* This is a dictionary with intentionally unorthodox design.
-It's called dictionary, not a hashtable, to emphasize it's
-about the API, not implementation technique.
-Currently it's imlemented on top of a hash table, but it could
-just as well be a tree of some kind.
+/*
+A string -> int dictionary, built to use little memory.
 
-Usually those things are done as a templated hash table class,
-but I want to avoid code bloat and awful syntax.
+Open addressing with linear probing: one array of 12-byte slots
+(hash, key offset, value), kept at most 3/4 full. The keys live back to back
+in one growable buffer, each as a varint length and its bytes, so there is no
+per-entry allocation, padding or pointer.
 
-The classes are based on a generic, untyped uintptr => uintptr
-hash table. The actual dict class is a wrapper that provides
-a type-safe API and handles policy decisions like allocations
-(if they are necessary).
+Lookups compare the stored hash first, then the length, then the bytes; a
+resize re-places slots by their stored hash without hashing keys again.
+Remove() uses backward-shift deletion (no tombstones); a removed key's bytes
+stay in the buffer until the dictionary is deleted.
 
-Our hash table uses the same parameters as the one in redis
-(but without complexity of incremental hashing):
-- we use chaining on collisions
-- size of the hash table is power of two
+        slots (power of 2)                 keys
+   +------+--------+-----+
+   | hash | keyOff | val | --keyOff--> [len][k e y b y t e s][len][...]
+   +------+--------+-----+
+   |  0   |   0    |  -  |  <- empty
 */
 
 #include "base/Base.h"
@@ -26,230 +26,202 @@ Our hash table uses the same parameters as the one in redis
 
 namespace dict {
 
-class HasherComparator {
-  public:
-    virtual size_t Hash(uintptr_t key) = 0;
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
-    virtual ~HasherComparator() = default;
+struct MapSlot {
+    u32 hash;
+    u32 keyOff; // 0: the slot is empty (the keys buffer starts with a spare byte)
+    int val;
 };
 
-static Str KeyAsStr(uintptr_t key) {
-    // interned hash table keys are NUL-terminated
-    return Str((char*)key);
+// a hint above this doesn't pre-allocate more: the table grows when needed
+constexpr int kMaxInitialEntries = 1024;
+constexpr int kMinSlots = 8;
+constexpr int kMaxVarintLen = 5;
+
+static int VarintEncode(u8* d, u32 v) {
+    int n = 0;
+    while (v >= 0x80) {
+        d[n++] = (u8)(v | 0x80);
+        v >>= 7;
+    }
+    d[n++] = (u8)v;
+    return n;
 }
 
-class StrKeyHasherComparator : public HasherComparator {
-    size_t Hash(uintptr_t key) override {
-        Str s = KeyAsStr(key);
-        return MurmurHash2(s);
-    }
-    bool Equal(uintptr_t k1, uintptr_t k2) override { return str::Eq(KeyAsStr(k1), KeyAsStr(k2)); }
-};
-
-static StrKeyHasherComparator gStrKeyHasherComparator;
-
-struct HashTableEntry {
-    uintptr_t key;
-    uintptr_t val;
-    struct HashTableEntry* next;
-};
-
-// not a class so that it can be allocated with an allocator
-struct HashTable {
-    HashTableEntry** entries;
-    HashTableEntry* freeList;
-
-    int nEntries;
-    int nUsed; // total number of inserted entries
-};
-
-static HashTable* NewHashTable(int size, Arena* a) {
-    ReportIf(!a); // we'll leak otherwise
-    HashTable* h = AllocArray<HashTable>(a, 1);
-    // number of hash table entries should be power of 2
-    size = RoundToPowerOf2(size);
-    // entries are not allocated with the arena since those are large blocks
-    // and we don't want to waste their memory after
-    h->entries = AllocArray<HashTableEntry*>(size);
-    h->nEntries = size;
-    return h;
-}
-
-static void DeleteHashTable(HashTable* h) {
-    free((void*)h->entries);
-    // the rest is freed by the arena
-}
-
-static void HashTableResize(HashTable* h, HasherComparator* hc) {
-    int newSize = RoundToPowerOf2(h->nEntries + 1);
-    ReportIf(newSize <= h->nEntries);
-    HashTableEntry** newEntries = AllocArray<HashTableEntry*>(newSize);
-    HashTableEntry *e, *next;
-    size_t hash;
-    int pos;
-    for (int i = 0; i < h->nEntries; i++) {
-        e = h->entries[i];
-        while (e) {
-            next = e->next;
-            hash = hc->Hash(e->key);
-            pos = (int)(hash % (size_t)newSize);
-            e->next = newEntries[pos];
-            newEntries[pos] = e;
-            e = next;
-        }
-    }
-    free((void*)h->entries);
-    h->entries = newEntries;
-    h->nEntries = newSize;
-
-    ReportIf(h->nUsed >= (h->nEntries * 3) / 2);
-}
-
-// micro optimization: this is called often, so we want this check inlined. Resizing logic
-// is called rarely, so doesn't need to be inlined
-static inline void HashTableResizeIfNeeded(HashTable* h, HasherComparator* hc) {
-    // per http://stackoverflow.com/questions/1603712/when-should-i-do-rehashing-of-entire-hash-table/1604428#1604428
-    // when using collision chaining, load factor can be 150%
-    if (h->nUsed < (h->nEntries * 3) / 2) {
-        return;
-    }
-    HashTableResize(h, hc);
-}
-
-// note: a must be nullptr for get, non-nullptr for create
-static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uintptr_t key, Arena* a, bool& newEntry) {
-    bool shouldCreate = (a != nullptr);
-    size_t hash = hc->Hash(key);
-    int pos = (int)(hash % (size_t)h->nEntries);
-    HashTableEntry* e = h->entries[pos];
-    newEntry = false;
-    while (e) {
-        if (hc->Equal(key, e->key)) {
-            return e;
-        }
-        e = e->next;
-    }
-    if (!shouldCreate) {
-        return nullptr;
-    }
-
-    if (h->freeList) {
-        e = h->freeList;
-        h->freeList = h->freeList->next;
-    } else {
-        e = AllocArray<HashTableEntry>(a, 1);
-    }
-    e->next = h->entries[pos];
-    h->entries[pos] = e;
-    h->nUsed++;
-    newEntry = true;
-    return e;
-}
-
-static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintptr_t* removedValOut) {
-    size_t hash = hc->Hash(key);
-    int pos = (int)(hash % (size_t)h->nEntries);
-    HashTableEntry* e = h->entries[pos];
-    while (e) {
-        if (hc->Equal(key, e->key)) {
+static const u8* VarintDecode(const u8* p, u32* v) {
+    u32 res = 0;
+    int shift = 0;
+    for (;;) {
+        u8 b = *p++;
+        res |= (u32)(b & 0x7f) << shift;
+        if (b < 0x80) {
             break;
         }
-        e = e->next;
+        shift += 7;
     }
-    if (!e) {
-        return false;
-    }
-
-    // remove the the entry from the list
-    HashTableEntry* e2 = h->entries[pos];
-    if (e2 == e) {
-        h->entries[pos] = e->next;
-    } else {
-        while (e2->next != e) {
-            e2 = e2->next;
-        }
-        e2->next = e->next;
-    }
-    e->next = h->freeList;
-    h->freeList = e;
-    *removedValOut = e->val;
-    ReportIf(0 == h->nUsed);
-    h->nUsed -= 1;
-    return true;
+    *v = res;
+    return p;
 }
 
 MapStrToInt::MapStrToInt(int initialSize) {
-    // arena-allocate HashTableEntry entries and copies of string keys
-    a = ArenaNew();
-    h = NewHashTable(initialSize, a);
+    int entries = limitValue(initialSize, 1, kMaxInitialEntries);
+    // room for that many entries at the 3/4 load limit
+    firstSlots = std::max(kMinSlots, RoundToPowerOf2(entries + (entries / 3) + 1));
 }
 
 MapStrToInt::~MapStrToInt() {
-    DeleteHashTable(h);
-    ArenaDelete(a);
+    free(slots);
+    free(keys);
 }
 
 int MapStrToInt::Count() const {
-    return h->nUsed;
+    return nUsed;
 }
 
-// if a key exists:
-//   * returns false
-//   * sets existingValOut to existing value
-//   * sets existingKeyOut to (interned) existing key
+bool MapStrToInt::KeyEq(u32 keyOff, Str key) const {
+    u32 n = 0;
+    const u8* p = VarintDecode((const u8*)keys + keyOff, &n);
+    return n == (u32)len(key) && memcmp(p, key.s, n) == 0;
+}
 
-// if a key doesn't exist:
-//   * returns true
-//   * inserts a copy of the key allocated with the arena
-//   * sets existingKeyOut to (interned) key
-bool MapStrToInt::Insert(Str key, int val, int* existingValOut, Str* existingKeyOut) {
-    if (len(key) == 0) {
+// the slot holding key, or the empty slot where it would go
+int MapStrToInt::Find(Str key, u32 hash) const {
+    u32 mask = (u32)nSlots - 1;
+    for (u32 i = hash & mask;; i = (i + 1) & mask) {
+        const MapSlot& s = slots[i];
+        if (s.keyOff == 0) {
+            return (int)i;
+        }
+        if (s.hash == hash && KeyEq(s.keyOff, key)) {
+            return (int)i;
+        }
+    }
+}
+
+// the offset of the copy of key, 0 if out of memory
+u32 MapStrToInt::AppendKey(Str key) {
+    u32 n = (u32)len(key);
+    u64 need = (u64)keysLen + kMaxVarintLen + n + (keysLen == 0 ? 1 : 0);
+    if (need > UINT32_MAX) {
+        return 0;
+    }
+    if (need > keysCap) {
+        // 1.5x: less slack than doubling, still amortized
+        u64 newCap = std::max<u64>(need, (u64)keysCap + (keysCap / 2) + 64);
+        newCap = std::min<u64>(newCap, UINT32_MAX);
+        char* newKeys = (char*)realloc(keys, (size_t)newCap);
+        if (!newKeys) {
+            return 0;
+        }
+        keys = newKeys;
+        keysCap = (u32)newCap;
+    }
+    if (keysLen == 0) {
+        keysLen = 1; // offset 0 marks an empty slot
+    }
+    u32 off = keysLen;
+    keysLen += VarintEncode((u8*)keys + keysLen, n);
+    memcpy(keys + keysLen, key.s, n);
+    keysLen += n;
+    return off;
+}
+
+bool MapStrToInt::Grow() {
+    int newN = nSlots == 0 ? firstSlots : nSlots * 2;
+    MapSlot* newSlots = AllocArray<MapSlot>(newN);
+    if (!newSlots) {
         return false;
     }
-    bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)CStrTemp(key), a, newEntry);
-    if (!newEntry) {
-        if (existingValOut) {
-            *existingValOut = (int)e->val;
+    u32 mask = (u32)newN - 1;
+    for (int i = 0; i < nSlots; i++) {
+        const MapSlot& s = slots[i];
+        if (s.keyOff == 0) {
+            continue;
         }
-        if (existingKeyOut) {
-            *existingKeyOut = KeyAsStr(e->key);
+        u32 j = s.hash & mask;
+        while (newSlots[j].keyOff != 0) {
+            j = (j + 1) & mask;
         }
-        return false;
+        newSlots[j] = s;
     }
-    e->key = (intptr_t)str::Dup(a, key).s;
-    e->val = (intptr_t)val;
-    if (existingKeyOut) {
-        *existingKeyOut = KeyAsStr(e->key);
-    }
-
-    HashTableResizeIfNeeded(h, &gStrKeyHasherComparator);
+    free(slots);
+    slots = newSlots;
+    nSlots = newN;
     return true;
 }
 
-bool MapStrToInt::Remove(Str key, int* removedValOut) const {
+// if key exists: returns false and sets existingValOut to its value
+// if it doesn't: inserts a copy of key with val and returns true
+bool MapStrToInt::Insert(Str key, int val, int* existingValOut) {
     if (len(key) == 0) {
         return false;
     }
-    uintptr_t removedVal;
-    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)CStrTemp(key), &removedVal);
-    if (removed && removedValOut) {
-        *removedValOut = (int)removedVal;
+    u32 hash = MurmurHash2(key);
+    if (nSlots > 0) {
+        int i = Find(key, hash);
+        if (slots[i].keyOff != 0) {
+            if (existingValOut) {
+                *existingValOut = slots[i].val;
+            }
+            return false;
+        }
     }
-    return removed;
+    // keep at most 3/4 of the slots used, so a probe always ends
+    if (nSlots == 0 || (nUsed + 1) * 4 > nSlots * 3) {
+        if (!Grow()) {
+            return false;
+        }
+    }
+    u32 off = AppendKey(key);
+    if (off == 0) {
+        return false;
+    }
+    int i = Find(key, hash);
+    slots[i] = MapSlot{hash, off, val};
+    nUsed++;
+    return true;
+}
+
+bool MapStrToInt::Remove(Str key, int* removedValOut) {
+    if (len(key) == 0 || nSlots == 0) {
+        return false;
+    }
+    u32 i = (u32)Find(key, MurmurHash2(key));
+    if (slots[i].keyOff == 0) {
+        return false;
+    }
+    if (removedValOut) {
+        *removedValOut = slots[i].val;
+    }
+    // backward-shift: move later entries of the run into the hole when their
+    // home slot is at or before it, so every probe still finds them
+    u32 mask = (u32)nSlots - 1;
+    u32 j = i;
+    for (;;) {
+        j = (j + 1) & mask;
+        if (slots[j].keyOff == 0) {
+            break;
+        }
+        u32 home = slots[j].hash & mask;
+        bool homeInHoleToJ = (i <= j) ? (i < home && home <= j) : (i < home || home <= j);
+        if (!homeInHoleToJ) {
+            slots[i] = slots[j];
+            i = j;
+        }
+    }
+    slots[i] = MapSlot{};
+    nUsed--;
+    return true;
 }
 
 bool MapStrToInt::Get(Str key, int* valOut) const {
-    if (len(key) == 0) {
+    if (len(key) == 0 || nSlots == 0) {
         return false;
     }
-    StrKeyHasherComparator hc;
-    bool newEntry;
-    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)CStrTemp(key), nullptr, newEntry);
-    if (!e) {
+    const MapSlot& s = slots[Find(key, MurmurHash2(key))];
+    if (s.keyOff == 0) {
         return false;
     }
-    *valOut = (int)e->val;
+    *valOut = s.val;
     return true;
 }
 
