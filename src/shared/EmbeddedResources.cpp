@@ -110,11 +110,15 @@ u8* GetEmbeddedFileData(Str name, int* outSize) {
     return data;
 }
 
+// loadMutex is held while the font loads (maybe downloads), so only callers
+// wanting this font wait. data / size are final once loaded is set.
 struct EmbeddedFont {
-    EmbeddedFont* next;
+    EmbeddedFont* next = nullptr;
     Str name;
-    u8* data;
-    int size;
+    u8* data = nullptr;
+    int size = 0;
+    bool loaded = false;
+    Mutex loadMutex;
 };
 
 static Mutex gFontsMutex;
@@ -538,23 +542,42 @@ static void LoadSystemSubstitute(Str name, EmbeddedFont* f) {
 // else the font cache or a download.
 static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     Str name(fileName);
-    AutoUnlockMutex lock(&gFontsMutex);
-    for (EmbeddedFont* f = gFonts; f; f = f->next) {
-        if (str::Eq(f->name, name)) {
+    EmbeddedFont* f = nullptr;
+    {
+        AutoUnlockMutex lock(&gFontsMutex);
+        for (EmbeddedFont* el = gFonts; el; el = el->next) {
+            if (str::Eq(el->name, name)) {
+                f = el;
+                break;
+            }
+        }
+        if (f && f->loaded) {
             *size = f->size;
             return f->data;
         }
+        if (!f) {
+            f = new EmbeddedFont();
+            f->name = str::Dup(name);
+            ListInsertFront(&gFonts, f);
+        }
     }
-    EmbeddedFont* f = AllocStruct<EmbeddedFont>();
-    f->name = str::Dup(name);
-    f->data = GetEmbeddedFileData(fmt("fonts\\%s", name), &f->size);
-    if (!f->data) {
-        LoadSystemSubstitute(name, f);
+
+    // gFontsMutex is not held here: a download must not block other fonts
+    AutoUnlockMutex loadLock(&f->loadMutex);
+    if (!f->loaded) {
+        EmbeddedFont tmp;
+        tmp.data = GetEmbeddedFileData(fmt("fonts\\%s", name), &tmp.size);
+        if (!tmp.data) {
+            LoadSystemSubstitute(name, &tmp);
+        }
+        if (!tmp.data) {
+            LoadFontFromCacheOrNet(name, &tmp);
+        }
+        AutoUnlockMutex lock(&gFontsMutex);
+        f->data = tmp.data;
+        f->size = tmp.size;
+        f->loaded = true;
     }
-    if (!f->data) {
-        LoadFontFromCacheOrNet(name, f);
-    }
-    ListInsertFront(&gFonts, f);
     *size = f->size;
     return f->data;
 }
@@ -563,21 +586,15 @@ void InstallEmbeddedFontLoader() {
     fz_set_builtin_font_loader(LoadEmbeddedFont);
 }
 
-// whether the loader tried this font in this session and got nothing. TryLock:
-// the loader holds the lock while it downloads, the UI must not wait for that
+// whether the loader tried this font in this session and got nothing
 static bool FontFailedThisSession(Str name) {
-    if (!gFontsMutex.TryLock()) {
-        return false;
-    }
-    bool failed = false;
+    AutoUnlockMutex lock(&gFontsMutex);
     for (EmbeddedFont* f = gFonts; f; f = f->next) {
         if (str::Eq(f->name, name)) {
-            failed = !f->data;
-            break;
+            return f->loaded && !f->data;
         }
     }
-    gFontsMutex.Unlock();
-    return failed;
+    return false;
 }
 
 static void AppendPadded(str::Builder& b, Str s, int width) {
