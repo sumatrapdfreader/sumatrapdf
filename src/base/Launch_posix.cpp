@@ -7,6 +7,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 
+#include <errno.h>
 #include <spawn.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -78,8 +79,29 @@ static pid_t SpawnArgs(const StrVec& args) {
     return pid;
 }
 
+static Mutex gDetachedMutex;
+static Vec<pid_t> gDetachedPids;
+
+// nothing waits for a detached child, so reap the ones that exited; else each
+// stays a zombie until we exit
+static void ReapDetached() {
+    for (int i = len(gDetachedPids) - 1; i >= 0; i--) {
+        pid_t pid = gDetachedPids[i];
+        pid_t res = waitpid(pid, nullptr, WNOHANG);
+        if (res == pid || (res < 0 && errno == ECHILD)) {
+            VecRemoveAtFast(gDetachedPids, i);
+        }
+    }
+}
+
 static bool SpawnDetached(const StrVec& args) {
-    return SpawnArgs(args) != 0;
+    pid_t pid = SpawnArgs(args);
+    AutoUnlockMutex lock(&gDetachedMutex);
+    ReapDetached();
+    if (pid != 0) {
+        VecAppend(gDetachedPids, pid);
+    }
+    return pid != 0;
 }
 
 struct ChildProcess {
