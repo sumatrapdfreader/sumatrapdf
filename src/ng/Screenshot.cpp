@@ -86,14 +86,7 @@ static Pixmap* RenderRegionPixmap(EngineBase* engine, int rotation, int pageNo, 
     if (px->format != PixmapFormat::Native) {
         return px;
     }
-#if OS_WIN
-    Pixmap* converted = PixmapCopyAs32bppDIB(px);
-    FreePixmap(px);
-    return converted;
-#else
-    FreePixmap(px);
-    return nullptr;
-#endif
+    return PixmapToBgra(px);
 }
 
 // the rectangular selection, or the whole current page when there is none

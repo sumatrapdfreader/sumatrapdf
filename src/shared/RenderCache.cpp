@@ -59,23 +59,30 @@ static bool ShouldUpdateBitmapColorsLegacy(EngineBase* engine, RenderCache* cach
     return EngineUsesDocumentColorsFollowTheme(engine);
 }
 
+// A 32bpp copy of a Native (palette DIB) page bitmap, which only GDI can read.
+// bmp itself when it is readable or can't be copied.
+static Pixmap* ReadablePagePixmap(Pixmap* bmp) {
+    if (bmp->format != PixmapFormat::Native) {
+        return bmp;
+    }
+#if OS_WIN
+    Pixmap* converted = PixmapCopyAs32bppDIB(bmp);
+    if (!converted) {
+        return bmp;
+    }
+    FreePixmap(bmp);
+    return converted;
+#else
+    return bmp;
+#endif
+}
+
 // Grayscale only the page bitmap; overlays are painted later.
 static Pixmap* GrayscalePagePixmap(Pixmap* bmp) {
     if (!bmp) {
         return nullptr;
     }
-    if (bmp->format == PixmapFormat::Native) {
-#if OS_WIN
-        Pixmap* converted = PixmapCopyAs32bppDIB(bmp);
-        if (!converted) {
-            return bmp;
-        }
-        FreePixmap(bmp);
-        bmp = converted;
-#else
-        return bmp;
-#endif
-    }
+    bmp = ReadablePagePixmap(bmp);
     if (!bmp->data) {
         return bmp;
     }
@@ -107,18 +114,7 @@ static Pixmap* AdjustPagePixmap(Pixmap* bmp, int brightness, int contrast) {
     if (!bmp || (brightness == 0 && contrast == 0)) {
         return bmp;
     }
-    if (bmp->format == PixmapFormat::Native) {
-#if OS_WIN
-        Pixmap* converted = PixmapCopyAs32bppDIB(bmp);
-        if (!converted) {
-            return bmp;
-        }
-        FreePixmap(bmp);
-        bmp = converted;
-#else
-        return bmp;
-#endif
-    }
+    bmp = ReadablePagePixmap(bmp);
     if (!bmp->data) {
         return bmp;
     }

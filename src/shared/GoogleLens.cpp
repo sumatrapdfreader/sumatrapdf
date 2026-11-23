@@ -130,18 +130,7 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
             float zoom = dm->GetZoomReal(pageNo);
             RectF pageRect = dm->GetEngine()->PageMediabox(pageNo);
             RenderPageArgs args(pageNo, zoom, dm->PageRotation(pageNo), &pageRect, RenderTarget::Export);
-            bitmap = dm->GetEngine()->RenderPage(args);
-            if (bitmap && bitmap->format != PixmapFormat::BGRA8) {
-#if OS_WIN
-                Pixmap* converted = PixmapCopyAs32bppDIB(bitmap);
-                FreePixmap(bitmap);
-                bitmap = converted;
-#else
-                // ng: a Native (palette DIB) pixmap can only be read through GDI
-                FreePixmap(bitmap);
-                bitmap = nullptr;
-#endif
-            }
+            bitmap = PixmapToBgra(dm->GetEngine()->RenderPage(args));
         }
     }
     if (!bitmap) {

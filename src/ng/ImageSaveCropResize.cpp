@@ -905,12 +905,7 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
         // ng: orig keeps the bitmap and the caller deletes it; here the
         // Pixmap takes its pixels over, so the editor owns it from now on
 #if OS_WIN
-        px = PixmapFromRenderedBitmap(rbmp);
-        if (px && px->format == PixmapFormat::Native) {
-            Pixmap* copy = PixmapCopyAs32bppDIB(px);
-            FreePixmap(px);
-            px = copy;
-        }
+        px = PixmapToBgra(PixmapFromRenderedBitmap(rbmp));
 #else
         // ng: a RenderedBitmap is win32-only, so rbmp is always null here
 #endif
