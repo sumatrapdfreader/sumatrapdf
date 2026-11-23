@@ -17622,6 +17622,7 @@ Exit:
     FreeAnnotationClipboard();
     DeleteSyncTempFiles();
     ShutdownWin11Printing();
+    DeleteAIChatWebViewDataDirs();
 
     ShutdownCleanup();
     EngineEbookCleanup();

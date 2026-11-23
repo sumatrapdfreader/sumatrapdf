@@ -771,6 +771,31 @@ void RelayoutAIChatPanel(MainWindow* win) {
 
 // --- Lazy WebView2 init ---
 
+// the per-process WebView2 data dirs the chat panels used. Every window's
+// panel shares them (one WebView2 environment per process), so they are
+// deleted when the process exits, not when a panel closes
+static StrVec gAIChatWebViewDataDirs;
+
+// how long to wait for the WebView2 browser process to let go of the files
+constexpr int kDataDirDeleteTries = 20;
+constexpr int kDataDirDeleteRetryMs = 50;
+
+void DeleteAIChatWebViewDataDirs() {
+    for (Str dir : gAIChatWebViewDataDirs) {
+        for (int i = 0; i < kDataDirDeleteTries; i++) {
+            dir::RemoveAll(dir);
+            if (!dir::Exists(dir)) {
+                break;
+            }
+            ::Sleep(kDataDirDeleteRetryMs);
+        }
+        if (dir::Exists(dir)) {
+            logf("DeleteAIChatWebViewDataDirs: couldn't delete '%s'\n", dir);
+        }
+    }
+    gAIChatWebViewDataDirs.Reset();
+}
+
 static void DeleteAIChatWebView(MainWindow* win) {
     delete win->aiChatWebView;
     win->aiChatWebView = nullptr;
@@ -818,6 +843,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     // use unique data dir per process to avoid locking conflicts
     webView->dataDir =
         str::Dup(fmt("%s\\SumatraPDF\\%s_%d", localAppData, p->webViewDataDirPrefix, (int)GetCurrentProcessId()));
+    AppendIfNotExists(&gAIChatWebViewDataDirs, webView->dataDir);
     int markdownJsLen = 0;
     u8* markdownJs = GetEmbeddedFileData(StrL("markdown-it.min.js"), &markdownJsLen);
     if (!markdownJs || markdownJsLen <= 0) {
@@ -1200,13 +1226,8 @@ void DestroyAIChatPanel(MainWindow* win) {
         }
     }
 
-    // save webview dataDir before deleting so we can clean up
-    Str webViewDataDir;
     WebviewWnd* webView = win->aiChatWebView;
     win->aiChatWebView = nullptr;
-    if (webView) {
-        webViewDataDir = str::Dup(webView->dataDir);
-    }
     delete webView;
 
     // deleting the layout deletes the controls in it
@@ -1234,11 +1255,5 @@ void DestroyAIChatPanel(MainWindow* win) {
     if (win->hwndAiChatBox) {
         DestroyWindow(win->hwndAiChatBox);
         win->hwndAiChatBox = nullptr;
-    }
-
-    // clean up per-process WebView2 cache dir
-    if (webViewDataDir) {
-        dir::RemoveAll(webViewDataDir);
-        str::Free(webViewDataDir);
     }
 }

@@ -851,6 +851,9 @@ void OnAIChatTabChanged(MainWindow* win) {
     }
 }
 
+// ng: the chat's BrowserView keeps no per-process data dir
+void DeleteAIChatWebViewDataDirs() {}
+
 void DestroyAIChatPanel(MainWindow* win) {
     AIChatPanel* p = PanelOf(win);
     if (!p) {

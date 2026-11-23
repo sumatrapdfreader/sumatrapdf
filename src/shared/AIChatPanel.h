@@ -22,6 +22,7 @@ AIChatProvider* GetAIChatProvider(int providerId);
 
 void CreateAIChatPanel(MainWindow* win);
 void DestroyAIChatPanel(MainWindow* win);
+void DeleteAIChatWebViewDataDirs();
 void ShutdownAIChatForMainWindow(MainWindow* win);
 
 void OnAIChatToggle(MainWindow* win, int providerId);
