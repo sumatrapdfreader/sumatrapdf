@@ -64,7 +64,8 @@ struct InstallerWnd {
     Checkbox* checkboxRegisterPreview = nullptr;
     Checkbox* checkboxRegisterThumbnails = nullptr;
     Checkbox* checkboxDesktopShortcut = nullptr;
-    int currProgress = 0;
+    // incremented by the installer thread
+    AtomicInt currProgress = 0;
     Progress* progressBar = nullptr;
     Button* btnExit = nullptr;
     Button* btnInstall = nullptr;
@@ -82,10 +83,10 @@ static void ProgressStep() {
         // when extracting with -x we don't create window
         return;
     }
-    gWnd->currProgress++;
+    int progress = AtomicIntInc(&gWnd->currProgress);
     if (gWnd->progressBar) {
         // possibly dangerous as is called on a thread
-        gWnd->progressBar->SetCurrent(gWnd->currProgress);
+        gWnd->progressBar->SetCurrent(progress);
     }
 }
 
