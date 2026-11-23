@@ -1051,24 +1051,6 @@ void CollectHistoryFilesInDir(Str dir, StrVec& out) {
     }
 }
 
-// Keep the cached list naturally sorted without a full SortNatural on the UI thread.
-static void InsertSortedNatural(StrVec* v, Str s) {
-    if (v->Contains(s)) {
-        return;
-    }
-    int lo = 0;
-    int hi = len(*v);
-    while (lo < hi) {
-        int mid = lo + ((hi - lo) / 2);
-        if (StrLessNatural(v->At(mid), s)) {
-            lo = mid + 1;
-        } else {
-            hi = mid;
-        }
-    }
-    v->InsertAt(lo, s);
-}
-
 PendingNextPrevNav* gPendingNextPrevNav = nullptr;
 
 void ClearPendingNextPrevNav() {

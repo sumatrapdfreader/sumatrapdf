@@ -6115,6 +6115,28 @@ void SortNatural(StrVec* v) {
     Sort(v, StrLessNatural);
 }
 
+// Insert s into naturally sorted v unless already there; cheaper than a full SortNatural.
+void InsertSortedNatural(StrVec* v, Str s) {
+    int lo = 0;
+    int hi = len(*v);
+    while (lo < hi) {
+        int mid = lo + ((hi - lo) / 2);
+        if (StrLessNatural(v->At(mid), s)) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+
+    // an existing copy is in the run of naturally-equal strings at lo (e.g. "A.pdf", "a.pdf")
+    for (int i = lo; i < len(*v) && !StrLessNatural(s, v->At(i)); i++) {
+        if (str::Eq(v->At(i), s)) {
+            return;
+        }
+    }
+    v->InsertAt(lo, s);
+}
+
 static bool reachedMax(int nAdded, int max) {
     if (max < 0) {
         return false;

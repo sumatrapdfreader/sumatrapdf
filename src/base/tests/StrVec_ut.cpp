@@ -935,7 +935,21 @@ static void StrVecTestManyAppend() {
     utassert(v.Find(StrL("s1500")) >= 0);
 }
 
+static void StrVecTestInsertSortedNatural() {
+    StrVec v;
+    const char* adds[] = {"b10.pdf", "b2.pdf", "a.pdf", "A.pdf", "c.pdf", "b2.pdf", "a.pdf", "A.pdf", "b10.pdf"};
+    for (const char* s : adds) {
+        InsertSortedNatural(&v, Str(s));
+    }
+    const char* want[] = {"A.pdf", "a.pdf", "b2.pdf", "b10.pdf", "c.pdf"};
+    utassert(len(v) == dimofi(want));
+    for (int i = 0; i < len(v); i++) {
+        strEq(v.At(i), Str(want[i]));
+    }
+}
+
 void StrVecTest() {
+    StrVecTestInsertSortedNatural();
     StrVecTest9();
     StrVecTest8();
     StrVecTest1();
