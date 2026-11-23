@@ -33,19 +33,25 @@ function parseFooter(out: string): Footer {
   return { clientDx: +m[1]!, cancel: [+m[2]!, +m[3]!], save: [+m[4]!, +m[5]!], hints: +m[6]!, raw: out.trim() };
 }
 
-// the layout settles over a frame or two after a change
+// the layout settles over a frame or two after a change. A resize is applied
+// before this returns, but the report is still the previous frame, so a
+// requested width has to come back the same twice.
 async function footerFits(client: ControlClient, what: string, resizeTo = 0): Promise<Footer> {
   let f = parseFooter(await adv(client, "footer", resizeTo));
   const deadline = Date.now() + 5000;
+  let prevDx = -1;
+  let stable = 0;
   for (;;) {
     const fits = f.save[1] > f.save[0] && f.save[1] <= f.clientDx && f.cancel[1] <= f.save[0];
-    if (fits) {
+    stable = f.clientDx === prevDx ? stable + 1 : 0;
+    if (fits && (resizeTo <= 0 || stable >= 1)) {
       return f;
     }
     if (Date.now() > deadline) {
       throw new Error(`issue-6581: ${what}: Cancel / Save don't fit the window: ${f.raw}`);
     }
     await sleep(100);
+    prevDx = f.clientDx;
     f = parseFooter(await adv(client, "footer"));
   }
 }
