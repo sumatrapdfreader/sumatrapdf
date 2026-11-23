@@ -12,6 +12,8 @@
 //     presentation still forces single page (old behavior)
 //     windowed fullscreen keeps continuous
 //
+//   Fullscreen.DisplayMode = automatic: the same as empty
+//
 // Run:  bun tests/issue-4753.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -88,7 +90,8 @@ function expectState(got: ModeState, mode: string, presentation: number, fullscr
 }
 
 async function runWithSettings(pdf: string, extraSettings: string, body: (client: ControlClient) => Promise<void>) {
-  const dir = tmpPath(`issue-4753-${extraSettings.includes("facing") ? "facing" : "default"}`);
+  const kind = /DisplayMode = (facing|automatic)/.exec(extraSettings)?.[1] ?? "default";
+  const dir = tmpPath(`issue-4753-${kind}`);
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "SumatraPDF-settings.txt"), `${SETTINGS_HEAD}${extraSettings}\n`);
@@ -137,6 +140,22 @@ Fullscreen [
         "default windowed fullscreen keeps layout",
       );
       expectState(await queryMode(client, "fullscreen"), "continuous", 0, 0, "default windowed fullscreen exit");
+    },
+  );
+  // "automatic" is no layout of its own: the same as leaving it empty
+  await runWithSettings(
+    pdf,
+    `DefaultDisplayMode = continuous
+Fullscreen [
+    DisplayMode = automatic
+]
+`,
+    async (client) => {
+      expectState(await queryMode(client, "get"), "continuous", 0, 0, "window with Fullscreen.DisplayMode = automatic");
+      expectState(await queryMode(client, "presentation"), "single page", 1, 0, "automatic: presentation enter");
+      expectState(await queryMode(client, "presentation"), "continuous", 0, 0, "automatic: presentation exit");
+      expectState(await queryMode(client, "fullscreen"), "continuous", 0, 1, "automatic: windowed fullscreen enter");
+      expectState(await queryMode(client, "fullscreen"), "continuous", 0, 0, "automatic: windowed fullscreen exit");
     },
   );
 }

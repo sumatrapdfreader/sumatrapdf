@@ -3065,6 +3065,17 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
     GoToPage(currPageNo, 0);
 }
 
+// Fullscreen.DisplayMode, when it names a layout. "automatic" names none: a
+// model's display mode is always a resolved one
+static bool FullscreenDisplayModePref(DisplayMode* modeOut) {
+    DisplayMode mode{};
+    if (!TryParseDisplayMode(gSettings->fullscreen.displayMode, &mode) || mode == DisplayMode::Automatic) {
+        return false;
+    }
+    *modeOut = mode;
+    return true;
+}
+
 void DisplayModel::SetInPresentation(bool enable) {
     // entering twice would save the presentation layout as the one to restore
     if (enable && inPresentation) {
@@ -3078,7 +3089,7 @@ void DisplayModel::SetInPresentation(bool enable) {
         windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
         // Fullscreen.DisplayMode overrides the built-in single-page layout
         DisplayMode mode = DisplayMode::SinglePage;
-        TryParseDisplayMode(gSettings->fullscreen.displayMode, &mode);
+        FullscreenDisplayModePref(&mode);
         SetDisplayMode(mode);
         SetZoomVirtual(kZoomFitPage, nullptr);
         return;
@@ -3096,7 +3107,7 @@ void DisplayModel::SetInPresentation(bool enable) {
 // Presentation uses SetInPresentation instead.
 void DisplayModel::ApplyFullscreenDisplayMode(bool enable) {
     DisplayMode wanted{};
-    bool havePref = TryParseDisplayMode(gSettings->fullscreen.displayMode, &wanted);
+    bool havePref = FullscreenDisplayModePref(&wanted);
     if (enable) {
         if (!havePref) {
             return;
