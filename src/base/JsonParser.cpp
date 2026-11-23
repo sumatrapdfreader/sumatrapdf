@@ -127,11 +127,20 @@ static int ExtractString(str::Builder& string, Str data, int off) {
                 // \u0000 is valid JSON; accept the full BMP range 0..0xFFFF.
                 if (off + 4 < data.len && !str::IsNull(str::Parse(Str(data.s + off + 1, 4), "%4x", &i)) &&
                     i < 0x10000) {
+                    off += 4;
+                    // a high surrogate followed by \uDC00..\uDFFF is one code point
+                    int lo;
+                    bool isHigh = i >= 0xD800 && i <= 0xDBFF;
+                    if (isHigh && off + 6 < data.len && data.s[off + 1] == '\\' && data.s[off + 2] == 'u' &&
+                        !str::IsNull(str::Parse(Str(data.s + off + 3, 4), "%4x", &lo)) && lo >= 0xDC00 &&
+                        lo <= 0xDFFF) {
+                        i = 0x10000 + ((i - 0xD800) << 10) + (lo - 0xDC00);
+                        off += 6;
+                    }
                     char buf[4]{};
                     int n = 0;
                     str::Utf8Encode(buf, n, i);
                     string.Append(Str(buf, n));
-                    off += 4;
                     break;
                 }
                 return kParseFail;

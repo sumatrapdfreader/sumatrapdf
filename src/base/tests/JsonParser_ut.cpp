@@ -65,6 +65,8 @@ void JsonTest() {
                                                                       "4"))},
         // \u0000 is valid JSON
         {StrL("\"\\u0000\""), ExpectedValue(StrL(""), Str("\0", 1))},
+        // a surrogate pair is one code point (U+1F600)
+        {StrL("\"\\ud83d\\ude00\""), ExpectedValue(StrL(""), StrL("\xF0\x9F\x98\x80"))},
         // numbers
         {StrL("123"), ExpectedValue(StrL(""), StrL("123"), json::Type::Number)},
         {StrL("-99.99"), ExpectedValue(StrL(""), StrL("-99.99"), json::Type::Number)},
