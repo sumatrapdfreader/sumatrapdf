@@ -93,6 +93,10 @@ static bool gSaveSettingsPending = false;
 // are skipped when the file / serialized prefs still match this.
 static Str gLastSavedPrefs;
 
+// Settings that couldn't be written, for the next LoadSettings() to parse
+// instead of the file (see ForceReloadSettings).
+static Str gInMemoryPrefs;
+
 static bool IsLastSavedPrefs(Str s) {
     return len(gLastSavedPrefs) == len(s) && str::Eq(gLastSavedPrefs, s);
 }
@@ -623,30 +627,8 @@ static void RememberSessionState() {
 }
 #endif
 
-// called whenever global preferences change or a file is
-// added or removed from the file history (in order to keep
-// the list of recently opened documents in sync)
-// force: Open Settings File. -for-testing and exit skip every other save.
-static bool SaveSettings(bool force) {
-    gSaveSettingsPending = false;
-    if (!force && gForTesting) {
-        // started with -for-testing for ad-hoc testing: don't modify
-        // the settings of the tester
-        return true;
-    }
-    if (!force && gDontSaveSettings) {
-        // if we are exiting the application by File->Exit,
-        // OnMenuExit will have called SaveSettings() already
-        // and we skip the call here to avoid saving incomplete session info
-        // (because some windows might have been closed already)
-        return true;
-    }
-
-    // don't save preferences without the proper permission
-    if (!HasPermission(Perm::SavePreferences)) {
-        return false;
-    }
-    logf("SaveSettings\n");
+// Session state and string forms of parsed values, ready to serialize.
+static void SyncSettingsForSerialize() {
 #if defined(SUMATRA_NG)
     // update display states for all tabs, then snapshot the session
     if (gRememberSessionStateFn) {
@@ -682,6 +664,33 @@ static bool SaveSettings(bool force) {
     if (gSettings->comicBookUI.defaultZoomFloat != 0) {
         ZoomToString(&gSettings->comicBookUI.defaultZoom, gSettings->comicBookUI.defaultZoomFloat, nullptr);
     }
+}
+
+// called whenever global preferences change or a file is
+// added or removed from the file history (in order to keep
+// the list of recently opened documents in sync)
+// force: Open Settings File. -for-testing and exit skip every other save.
+static bool SaveSettings(bool force) {
+    gSaveSettingsPending = false;
+    if (!force && gForTesting) {
+        // started with -for-testing for ad-hoc testing: don't modify
+        // the settings of the tester
+        return true;
+    }
+    if (!force && gDontSaveSettings) {
+        // if we are exiting the application by File->Exit,
+        // OnMenuExit will have called SaveSettings() already
+        // and we skip the call here to avoid saving incomplete session info
+        // (because some windows might have been closed already)
+        return true;
+    }
+
+    // don't save preferences without the proper permission
+    if (!HasPermission(Perm::SavePreferences)) {
+        return false;
+    }
+    logf("SaveSettings\n");
+    SyncSettingsForSerialize();
 
     TempStr path = GetSettingsPathTemp();
     ReportIf(len(path) == 0);
@@ -771,7 +780,8 @@ bool LoadSettings() {
     TempStr settingsPath = GetSettingsPathTemp();
     bool settingsMigrated = false;
     {
-        Str prefsData = file::ReadFile(settingsPath);
+        Str prefsData = len(gInMemoryPrefs) > 0 ? gInMemoryPrefs : file::ReadFile(settingsPath);
+        gInMemoryPrefs = {};
 
         gSettings = NewSettings(prefsData);
         ReportIf(!gSettings);
@@ -967,14 +977,14 @@ static void ReloadSettings(bool force = false) {
 
 #endif
     TempStr settingsPath = GetSettingsPathTemp();
-    if (!file::Exists(settingsPath)) {
+    if (len(gInMemoryPrefs) == 0 && !file::Exists(settingsPath)) {
         return;
     }
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental data loss
     // this is triggered when e.g. saving the file with VS Code
-    bool ok = false;
+    bool ok = len(gInMemoryPrefs) > 0;
     Str prefsData{};
     for (int i = 0; !ok && i < 5; i++) {
         str::Free(prefsData);
@@ -1053,8 +1063,19 @@ void CleanUpSettings() {
 }
 
 void ForceReloadSettings() {
-    // a pending scheduled save must reach the file before we re-read it
-    FlushScheduledSaveSettings();
+    bool canSave = !gForTesting && !gDontSaveSettings && HasPermission(Perm::SavePreferences);
+    if (canSave) {
+        // a pending scheduled save must reach the file before we re-read it
+        FlushScheduledSaveSettings();
+        ReloadSettings(true);
+        return;
+    }
+
+    // the file won't get the change (-for-testing, restricted): reload it from memory
+    SyncSettingsForSerialize();
+    TempStr prevPrefs = file::ReadFileWithArena(GetSettingsPathTemp(), GetTempArena());
+    str::Free(gInMemoryPrefs);
+    gInMemoryPrefs = SerializeSettings(gSettings, prevPrefs, SerializeOpt::All);
     ReloadSettings(true);
 }
 

@@ -32,19 +32,16 @@ async function waitFrames(pid: number, want: number, what: string): Promise<void
   );
 }
 
-export async function testit(): Promise<void> {
-  if (!IS_WIN) {
-    console.log("SKIP use-tabs-transition: counts Windows frames");
-    return;
-  }
+// saveSettings: the change goes through the file; otherwise (-for-testing) it
+// must be applied from memory, not lost to a re-read of the old file
+async function runOnce(saveSettings: boolean): Promise<void> {
   const appdata = writeAppdata("use-tabs-transition", `${kSettings}UseTabs = true\n`);
   const docs = ["a", "b"].map((name) => {
     const path = tmpPath(`use-tabs-transition-${name}.pdf`);
     writeFileSync(path, makeBlankPdf(), "latin1");
     return path;
   });
-  // the change is saved and read back, which -for-testing doesn't do
-  const { proc, client } = await launchControlled(["-appdata", appdata, ...docs], { saveSettings: true });
+  const { proc, client } = await launchControlled(["-appdata", appdata, ...docs], { saveSettings });
   try {
     await client.waitForRenderIdle();
     await waitFrames(proc.pid!, 1, "with tabs");
@@ -58,6 +55,15 @@ export async function testit(): Promise<void> {
     client.close();
     await killAndWait(proc);
   }
+}
+
+export async function testit(): Promise<void> {
+  if (!IS_WIN) {
+    console.log("SKIP use-tabs-transition: counts Windows frames");
+    return;
+  }
+  await runOnce(true);
+  await runOnce(false);
 }
 
 if (import.meta.main) {
