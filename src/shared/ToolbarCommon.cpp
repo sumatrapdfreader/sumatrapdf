@@ -168,26 +168,37 @@ static TempStr CustomCommandToolbarToolTipTemp(CustomCommand* cmd, Str fallback)
     return StrL("External Viewer");
 }
 
-void PopulateCustomToolbarButtons() {
+// the strings are copies: a settings reload frees the shortcuts and custom
+// commands they come from, while hover and dumps read them until the next rebuild
+static void AddCustomButton(int cmdId, Str svgIcon, Str toolTip, bool isText) {
+    ToolbarButtonInfo& tbi = gCustomButtons[gCustomButtonsCount++];
+    tbi = ToolbarButtonInfo{};
+    tbi.cmdId = cmdId;
+    tbi.svgIcon = str::Dup(svgIcon);
+    tbi.toolTip = str::Dup(toolTip);
+    tbi.isText = isText;
+}
+
+static void FreeCustomButtons() {
+    for (int i = 0; i < gCustomButtonsCount; i++) {
+        str::FreePtr(&gCustomButtons[i].svgIcon);
+        str::FreePtr(&gCustomButtons[i].toolTip);
+    }
     gCustomButtonsCount = 0;
+}
+
+void PopulateCustomToolbarButtons() {
+    FreeCustomButtons();
     for (Shortcut* shortcut : *gSettings->shortcuts) {
         if (gCustomButtonsCount >= kMaxCustomButtons) {
             break;
         }
         if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarSvgIcon)) {
-            ToolbarButtonInfo tbi;
-            tbi.cmdId = shortcut->cmdId;
-            tbi.svgIcon = shortcut->toolbarSvgIcon;
-            tbi.toolTip = ShortcutToolbarToolTipTemp(shortcut);
-            gCustomButtons[gCustomButtonsCount++] = tbi;
+            AddCustomButton(shortcut->cmdId, shortcut->toolbarSvgIcon, ShortcutToolbarToolTipTemp(shortcut), false);
             continue;
         }
         if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarText)) {
-            ToolbarButtonInfo tbi;
-            tbi.cmdId = shortcut->cmdId;
-            tbi.toolTip = shortcut->toolbarText;
-            tbi.isText = true;
-            gCustomButtons[gCustomButtonsCount++] = tbi;
+            AddCustomButton(shortcut->cmdId, {}, shortcut->toolbarText, true);
         }
     }
 
@@ -207,21 +218,13 @@ void PopulateCustomToolbarButtons() {
         Str svgIcon = GetCommandStringArg(cc, kCmdArgToolbarSvgIcon, {});
         Str tbText = GetCommandStringArg(cc, kCmdArgToolbarText, {});
         if (!str::IsEmptyOrWhiteSpace(svgIcon)) {
-            ToolbarButtonInfo tbi;
-            tbi.cmdId = cc->id;
-            tbi.svgIcon = svgIcon;
-            tbi.toolTip = CustomCommandToolbarToolTipTemp(cc, tbText);
-            gCustomButtons[gCustomButtonsCount++] = tbi;
+            AddCustomButton(cc->id, svgIcon, CustomCommandToolbarToolTipTemp(cc, tbText), false);
             continue;
         }
         if (str::IsEmptyOrWhiteSpace(tbText)) {
             continue;
         }
-        ToolbarButtonInfo tbi;
-        tbi.cmdId = cc->id;
-        tbi.toolTip = tbText;
-        tbi.isText = true;
-        gCustomButtons[gCustomButtonsCount++] = tbi;
+        AddCustomButton(cc->id, {}, tbText, true);
     }
 }
 
