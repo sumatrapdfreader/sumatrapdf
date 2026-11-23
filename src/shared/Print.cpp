@@ -292,6 +292,10 @@ static void AppendPrinterStatus(str::Builder& out, DWORD status) {
     }
 }
 
+// DC_BINNAMES / DC_PAPERNAMES slot sizes, in WCHARs
+constexpr int kBinNameLen = 24;
+constexpr int kPaperNameLen = 64;
+
 static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, const WCHAR* portW) {
     // paper bins
     DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
@@ -305,12 +309,14 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         DeviceCapabilitiesW(nameW, portW, DC_BINS, (WCHAR*)binValues, nullptr);
         // drivers can report a different number of names: missing ones stay empty
         int nBinNames = (binNames == (DWORD)-1) ? 0 : (int)binNames;
-        WCHAR* binNameValues = AllocArrayTemp<WCHAR>(24 * std::max((int)bins, nBinNames));
+        WCHAR* binNameValues = AllocArrayTemp<WCHAR>(kBinNameLen * std::max((int)bins, nBinNames));
         if (nBinNames > 0) {
             DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, binNameValues, nullptr);
         }
         for (DWORD j = 0; j < bins; j++) {
-            TempStr s = ToUtf8Temp(WStr(binNameValues + (24 * (size_t)j)));
+            // a name that fills its slot has no NUL
+            WCHAR* name = binNameValues + (kBinNameLen * (size_t)j);
+            TempStr s = ToUtf8Temp(WStr(name, (int)wcsnlen(name, kBinNameLen)));
             out.Append(fmt("  bin %d: '%s' (%d)\n", (int)j, s, binValues[j]));
         }
     }
@@ -321,9 +327,8 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
     if (papers > 0 && papers != (DWORD)-1) {
         WORD* paperValues = AllocArrayTemp<WORD>((int)papers);
         DeviceCapabilitiesW(nameW, portW, DC_PAPERS, (WCHAR*)paperValues, nullptr);
-        // paper names are 64 WCHARs each
         int nPaperNames = (paperNames == (DWORD)-1) ? 0 : (int)paperNames;
-        WCHAR* paperNameValues = AllocArrayTemp<WCHAR>(64 * std::max((int)papers, nPaperNames));
+        WCHAR* paperNameValues = AllocArrayTemp<WCHAR>(kPaperNameLen * std::max((int)papers, nPaperNames));
         if (nPaperNames > 0) {
             DeviceCapabilitiesW(nameW, portW, DC_PAPERNAMES, paperNameValues, nullptr);
         }
@@ -332,7 +337,8 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         DeviceCapabilitiesW(nameW, portW, DC_PAPERSIZE, (WCHAR*)paperSizes, nullptr);
         out.Append(StrL("  paper sizes:\n"));
         for (DWORD j = 0; j < papers; j++) {
-            TempStr s = ToUtf8Temp(WStr(paperNameValues + (64 * (size_t)j)));
+            WCHAR* name = paperNameValues + (kPaperNameLen * (size_t)j);
+            TempStr s = ToUtf8Temp(WStr(name, (int)wcsnlen(name, kPaperNameLen)));
             POINT sz = paperSizes[j];
             out.Append(fmt("    '%s' (id %d, %.1f x %.1f mm)\n", s, paperValues[j], sz.x / 10.0, sz.y / 10.0));
         }
@@ -578,9 +584,8 @@ Printer* NewPrinter(Str printerName) {
             goto Exit;
         }
         printer->nPaperSizes = (int)n;
-        int paperNameSize = 64;
         printer->papers = AllocArray<WORD>((int)n);
-        WCHAR* paperNamesSeq = AllocArrayTemp<WCHAR>((paperNameSize * (int)n) + 1);
+        WCHAR* paperNamesSeq = AllocArrayTemp<WCHAR>((kPaperNameLen * (int)n) + 1);
         printer->paperSizes = AllocArray<POINT>((int)n);
 
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERS, (WCHAR*)printer->papers, nullptr);
@@ -588,7 +593,8 @@ Printer* NewPrinter(Str printerName) {
         DeviceCapabilitiesW(printerNameW, nullptr, DC_PAPERSIZE, (WCHAR*)printer->paperSizes, nullptr);
 
         for (int i = 0; i < (int)n; i++) {
-            TempStr name = ToUtf8Temp(WStr(paperNamesSeq + ((size_t)i * paperNameSize)));
+            WCHAR* nameW = paperNamesSeq + ((size_t)i * kPaperNameLen);
+            TempStr name = ToUtf8Temp(WStr(nameW, (int)wcsnlen(nameW, kPaperNameLen)));
             printer->paperNames.Append(name);
         }
     }
@@ -604,13 +610,13 @@ Printer* NewPrinter(Str printerName) {
         printer->nBins = (int)n;
         // it's ok for nBins to be 0, it means there's only one, default bin
         if (n > 0) {
-            int binNameSize = 24;
             printer->bins = AllocArray<WORD>((int)n);
-            WCHAR* binNamesSeq = AllocArrayTemp<WCHAR>((binNameSize * (int)n) + 1);
+            WCHAR* binNamesSeq = AllocArrayTemp<WCHAR>((kBinNameLen * (int)n) + 1);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINS, (WCHAR*)printer->bins, nullptr);
             DeviceCapabilitiesW(printerNameW, nullptr, DC_BINNAMES, binNamesSeq, nullptr);
             for (int i = 0; i < (int)n; i++) {
-                TempStr name = ToUtf8Temp(WStr(binNamesSeq + ((size_t)i * binNameSize)));
+                WCHAR* nameW = binNamesSeq + ((size_t)i * kBinNameLen);
+                TempStr name = ToUtf8Temp(WStr(nameW, (int)wcsnlen(nameW, kBinNameLen)));
                 printer->binNames.Append(name);
             }
         }
