@@ -7834,10 +7834,16 @@ static char *zone_text(zparse *z, int off, int len)
 
 static void free_zone_kids(djvu_ctx *ctx, djvu_text_zone *z);
 
+/* zone types nest 7 deep (page > ... > char); deeper input is malformed and
+   would overflow the stack in the recursive walks */
+#define DJVU_MAX_ZONE_DEPTH 32
+/* type, x, y, w, h, text offset, text length, child count */
+#define DJVU_ZONE_MIN_BYTES 17
+
 static int parse_zone(zparse *z, djvu_text_zone *out,
                       const djvu_text_zone *parent, const djvu_text_zone *sib,
                       int parent_toff, int sib_toff, int sib_tlen,
-                      int *out_toff, int *out_tlen)
+                      int *out_toff, int *out_tlen, int depth)
 {
     int type, x, y, w, h, toff, tlen, nkids, i;
     djvu_text_zone *prev = NULL;
@@ -7882,6 +7888,8 @@ static int parse_zone(zparse *z, djvu_text_zone *out,
 
     nkids = djvu_br_u24be(&z->br);
     if (z->br.failed || nkids < 0) return -1;
+    if (nkids > 0 && depth >= DJVU_MAX_ZONE_DEPTH) return -1;
+    if ((size_t)nkids > (z->br.len - z->br.pos) / DJVU_ZONE_MIN_BYTES) return -1;
     if (nkids > 0) {
         out->children = (djvu_text_zone *)djvu_alloc(z->br.ctx,
                             sizeof(djvu_text_zone) * (size_t)nkids);
@@ -7890,7 +7898,7 @@ static int parse_zone(zparse *z, djvu_text_zone *out,
         for (i = 0; i < nkids; i++) {
             int kt = 0, kl = 0;
             if (parse_zone(z, &out->children[i], out, prev,
-                           toff, prev_toff, prev_tlen, &kt, &kl) != 0) {
+                           toff, prev_toff, prev_tlen, &kt, &kl, depth + 1) != 0) {
                 out->nchildren = i;
                 return -1;
             }
@@ -7955,7 +7963,7 @@ djvu_page_text_zones *djvu_page_text_get_zones(djvu_doc *doc, int page_no)
         djvu_text_zone *root = (djvu_text_zone *)djvu_alloc(ctx, sizeof(*root));
         if (root) {
             memset(root, 0, sizeof(*root));
-            if (parse_zone(&z, root, NULL, NULL, 0, 0, 0, NULL, NULL) == 0) {
+            if (parse_zone(&z, root, NULL, NULL, 0, 0, 0, NULL, NULL, 0) == 0) {
                 page_h = (djvu_doc_page_info(doc, page_no, &info) == 0)
                              ? info.height : (root->y + root->h);
                 flip_zone_y(root, page_h);

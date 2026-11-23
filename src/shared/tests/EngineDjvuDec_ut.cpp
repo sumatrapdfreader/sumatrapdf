@@ -32,10 +32,55 @@ static djvu_text_zone MakeZone(djvu_zone_type type, const char* text, djvu_text_
 bool EngineDjvuDec_UnitTestRender();
 #endif
 
+static void AppendBe(str::Builder& sb, u32 v, int nBytes) {
+    for (int i = nBytes - 1; i >= 0; i--) {
+        sb.AppendChar((char)((v >> (i * 8)) & 0xff));
+    }
+}
+
+// single page DjVu whose TXTa holds a chain of zones, each the only child of the previous
+static void BuildNestedZonesDjvu(str::Builder& sb, int depth) {
+    str::Builder txt;
+    AppendBe(txt, 0, 3); // text length
+    txt.AppendChar(1);   // version
+    for (int i = 0; i < depth; i++) {
+        txt.AppendChar(DJVU_ZONE_PAGE);
+        for (int j = 0; j < 5; j++) {
+            AppendBe(txt, 0x8000, 2); // x, y, w, h, text offset (biased 0)
+        }
+        AppendBe(txt, 0, 3);                     // text length
+        AppendBe(txt, i + 1 < depth ? 1 : 0, 3); // children
+    }
+    sb.Append(StrL("AT&TFORM"));
+    AppendBe(sb, 4 + 8 + len(txt), 4);
+    sb.Append(StrL("DJVUTXTa"));
+    AppendBe(sb, len(txt), 4);
+    sb.Append(ToStr(txt));
+}
+
+static bool NestedZonesParse(int depth) {
+    str::Builder data;
+    BuildNestedZonesDjvu(data, depth);
+    djvu_ctx* ctx = djvu_ctx_new(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    Str d = ToStr(data);
+    djvu_doc* doc = djvu_doc_open(ctx, (const u8*)d.s, len(d));
+    utassert(doc);
+    djvu_page_text_zones* zones = djvu_page_text_get_zones(doc, 0);
+    bool ok = zones && zones->root;
+    djvu_text_zones_destroy(ctx, zones);
+    djvu_doc_close(doc);
+    djvu_ctx_free(ctx);
+    return ok;
+}
+
 void EngineDjvuDec_UnitTests() {
 #if IS_DEBUG
     utassert(EngineDjvuDec_UnitTestRender());
 #endif
+    // deeply nested text zones are rejected instead of overflowing the stack
+    utassert(NestedZonesParse(3));
+    utassert(!NestedZonesParse(200000));
+
     // a line of two words: a space after each word, one rect per codepoint
     djvu_text_zone words[2] = {MakeZone(DJVU_ZONE_WORD, "ab", nullptr, 0), MakeZone(DJVU_ZONE_WORD, "cd", nullptr, 0)};
     djvu_text_zone line = MakeZone(DJVU_ZONE_LINE, "ab cd", words, 2);

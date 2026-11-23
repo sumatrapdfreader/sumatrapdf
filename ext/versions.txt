@@ -73,6 +73,7 @@ djvudec         main       2026-11-08
   https://github.com/kjk/djvudec
   commit d0625e738913da8a293d585720219733110454f9
   amalgamated dist/djvu.c + dist/djvu.h only
+  local change not yet upstream: parse_zone depth / child count limits
 
 libwebp         1.6.0      2025-06-30
   https://github.com/webmproject/libwebp
