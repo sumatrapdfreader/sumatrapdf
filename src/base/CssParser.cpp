@@ -216,11 +216,12 @@ GetNextProperty:
            src.s[currOff] != '{' && src.s[currOff] != '}') {
         currOff++;
     }
+    int nameEnd = currOff;
     SkipWsAndComments(src, currOff);
     if (currOff >= src.len || src.s[currOff] != ':') {
         goto GetNextProperty;
     }
-    prop.type = FindCssProp(Str(src.s + nameOff, currOff - nameOff));
+    prop.type = FindCssProp(Str(src.s + nameOff, nameEnd - nameOff));
     currOff++;
     SkipWsAndComments(src, currOff);
 

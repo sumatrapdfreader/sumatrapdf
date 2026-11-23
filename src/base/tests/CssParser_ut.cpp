@@ -187,6 +187,16 @@ static void Test08() {
     utassert(!ok);
 }
 
+// whitespace between a property name and ':' is not part of the name
+static void Test09() {
+    Str inlineCss = StrL("font-weight : bold;color\t:red");
+    CssPullParser parser{inlineCss};
+    const CssProperty* prop = parser.NextProperty();
+    utassert(prop && Css_Font_Weight == prop->type && IsPropVal(prop, StrL("bold")));
+    prop = parser.NextProperty();
+    utassert(prop && Css_Color == prop->type && IsPropVal(prop, StrL("red")));
+}
+
 void CssParser_UnitTests() {
     Test01();
     Test02();
@@ -196,4 +206,5 @@ void CssParser_UnitTests() {
     Test06();
     Test07();
     Test08();
+    Test09();
 }
