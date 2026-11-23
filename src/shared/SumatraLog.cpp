@@ -125,6 +125,22 @@ static void* hLogPipe = nullptr;
 static void logToPipe(Str) {}
 #endif
 
+#if OS_WIN
+// s may not be NUL-terminated. Copies through a stack buffer, not the
+// allocator, so it stays safe during crash handling.
+static void OutputDebugStr(Str s) {
+    char buf[512];
+    int off = 0;
+    while (off < len(s)) {
+        int n = std::min(len(s) - off, (int)dimof(buf) - 1);
+        memcpy(buf, s.s + off, (size_t)n);
+        buf[n] = 0;
+        OutputDebugStringA(buf);
+        off += n;
+    }
+}
+#endif
+
 void log(Str s) {
     if (gDestroyedLogging) {
         return;
@@ -132,7 +148,7 @@ void log(Str s) {
     if (gReducedLogging) {
         // in reduced logging mode, we do want to log to at least the debugger
 #if OS_WIN
-        OutputDebugStringA(s.s);
+        OutputDebugStr(s);
 #else
         // ng: no debugger output channel on POSIX; stderr is the equivalent
         fwrite(s.s, 1, (size_t)s.len, stderr);
@@ -156,7 +172,7 @@ void log(Str s) {
     if (!skipLog) {
 #if OS_WIN
         if (gLogToDebugger || IsDebuggerPresent()) {
-            OutputDebugStringA(s.s);
+            OutputDebugStr(s);
         }
 #else
         if (gLogToDebugger) {
