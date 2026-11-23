@@ -123,7 +123,7 @@ static fz_buffer* base64(fz_context* ctx, const char* text) {
 static fz_buffer* decrypt_copy(fz_context* ctx, fz_buffer* data, const unsigned char* key, const unsigned char* iv) {
     fz_buffer* out = fz_new_buffer_from_copied_data(ctx, data->data, data->len);
     size_t n = ofd_sm4_cbc_decrypt(key, iv, out->data, out->len);
-    if (!n) {
+    if (n == OFD_SM4_BAD) {
         fz_drop_buffer(ctx, out);
         return NULL;
     }

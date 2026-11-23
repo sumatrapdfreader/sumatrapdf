@@ -25,6 +25,8 @@ int ofd_sm2_verify(const unsigned char pub[2 * OFD_SM2_COORD_SIZE], const unsign
 enum {
     OFD_SM4_BLOCK = 16
 };
+// ofd_sm4_cbc_decrypt: wrong length or padding (0 is a valid, empty plaintext)
+#define OFD_SM4_BAD ((size_t)-1)
 
 void ofd_sm3_kdf(const unsigned char* z, size_t z_len, unsigned char* out, size_t out_len);
 size_t ofd_sm4_cbc_decrypt(const unsigned char key[OFD_SM4_BLOCK], const unsigned char iv[OFD_SM4_BLOCK],

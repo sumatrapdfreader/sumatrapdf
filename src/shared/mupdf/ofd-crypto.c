@@ -561,11 +561,11 @@ static void sm4_block(const unsigned int rk[32], const unsigned char* in, unsign
     for (int i = 0; i < 4; ++i) sm4_store(out + 4 * i, x[35 - i]);
 }
 
-// Decrypts in place and removes PKCS#7 padding; returns the plaintext length, or 0 if the
-// length or padding is wrong (as with a wrong key).
+// Decrypts in place and removes PKCS#7 padding; returns the plaintext length, or OFD_SM4_BAD
+// if the length or padding is wrong (as with a wrong key).
 size_t ofd_sm4_cbc_decrypt(const unsigned char key[OFD_SM4_BLOCK], const unsigned char iv[OFD_SM4_BLOCK],
                            unsigned char* data, size_t len) {
-    if (len == 0 || len % OFD_SM4_BLOCK) return 0;
+    if (len == 0 || len % OFD_SM4_BLOCK) return OFD_SM4_BAD;
     unsigned int rk[32], drk[32];
     sm4_round_keys(key, rk);
     for (int i = 0; i < 32; ++i) drk[i] = rk[31 - i];
@@ -578,9 +578,9 @@ size_t ofd_sm4_cbc_decrypt(const unsigned char key[OFD_SM4_BLOCK], const unsigne
         memcpy(prev, cur, sizeof(prev));
     }
     unsigned char pad = data[len - 1];
-    if (pad < 1 || pad > OFD_SM4_BLOCK) return 0;
+    if (pad < 1 || pad > OFD_SM4_BLOCK) return OFD_SM4_BAD;
     for (size_t i = len - pad; i < len; ++i) {
-        if (data[i] != pad) return 0;
+        if (data[i] != pad) return OFD_SM4_BAD;
     }
     return len - pad;
 }
