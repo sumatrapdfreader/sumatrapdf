@@ -680,6 +680,7 @@ import { testit as signPlacementTabSwitch } from "./sign-placement-tab-switch.ts
 import { testit as changeThemeClosedWindow } from "./change-theme-closed-window.ts";
 import { testit as annotAttachFileReload } from "./annot-attach-file-reload.ts";
 import { testit as commandPaletteHistoryReload } from "./command-palette-history-reload.ts";
+import { testit as commandPaletteTocReload } from "./command-palette-toc-reload.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -1356,6 +1357,7 @@ export const tests: NamedTest[] = [
   ["change-theme-closed-window", changeThemeClosedWindow],
   ["annot-attach-file-reload", annotAttachFileReload],
   ["command-palette-history-reload", commandPaletteHistoryReload],
+  ["command-palette-toc-reload", commandPaletteTocReload],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

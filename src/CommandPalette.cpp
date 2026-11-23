@@ -1457,19 +1457,9 @@ void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) 
     }
 }
 
-// ReloadSettings() freed the FileState / Favorite objects the file history and
-// favorites rows point at: collect them again from the new gSettings
-void CommandPaletteOnSettingsReloaded() {
-    gFavFsToGoToOnClose = nullptr;
-    gFavToGoToOnClose = nullptr;
-    CommandPaletteWnd* wnd = gCommandPaletteWnd;
-    if (!wnd || !wnd->hwnd || !IsMainWindowValidAndNotClosing(wnd->win)) {
-        return;
-    }
-    wnd->CollectFavorites(wnd->win);
-    wnd->CollectFileHistory();
-    // a setting row being applied refilters when it returns to the settings
-    if (gApplyingSettingRow || !wnd->listBox || !wnd->listBox->model) {
+// re-filter the rows from the re-collected sources
+static void RefilterPaletteRows(CommandPaletteWnd* wnd) {
+    if (!wnd->listBox || !wnd->listBox->model) {
         return;
     }
     // keep the selected row, which a reload can move ("changed first")
@@ -1493,6 +1483,35 @@ void CommandPaletteOnSettingsReloaded() {
         }
     }
     CommandPaletteSetCurrentSelection(wnd, sel);
+}
+
+// ReloadSettings() freed the FileState / Favorite objects the file history and
+// favorites rows point at: collect them again from the new gSettings
+void CommandPaletteOnSettingsReloaded() {
+    gFavFsToGoToOnClose = nullptr;
+    gFavToGoToOnClose = nullptr;
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->hwnd || !IsMainWindowValidAndNotClosing(wnd->win)) {
+        return;
+    }
+    wnd->CollectFavorites(wnd->win);
+    wnd->CollectFileHistory();
+    // a setting row being applied refilters when it returns to the settings
+    if (!gApplyingSettingRow) {
+        RefilterPaletteRows(wnd);
+    }
+}
+
+// a reload replaced the document: the TOC and annotation rows point into the
+// freed controller
+void CommandPaletteOnDocumentReloaded(MainWindow* win) {
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->hwnd || wnd->win != win) {
+        return;
+    }
+    wnd->CollectToc(win);
+    wnd->CollectAnnotations(win);
+    RefilterPaletteRows(wnd);
 }
 
 void CommandPaletteWnd::CollectToc(MainWindow* mainWin) {

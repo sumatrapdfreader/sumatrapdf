@@ -41,6 +41,7 @@ void PaletteCollectTabs(MainWindow* win, bool mru, Vec<WindowTab*>& out, int& cu
 // the document's annotations changed: the `*` list is stale
 void CommandPaletteOnAnnotationsChanged();
 void CommandPaletteOnSettingsReloaded();
+void CommandPaletteOnDocumentReloaded(MainWindow* win);
 TempStr CommandPaletteStateTemp(int* exitCodeOut);
 
 #if OS_WIN

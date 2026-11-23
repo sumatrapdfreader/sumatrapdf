@@ -1350,6 +1350,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     }
     // the annotation list was emptied above; fill it from the new engine
     RefreshEditAnnotationsAfterEngineChange(win->CurrentTab());
+    CommandPaletteOnDocumentReloaded(win);
     if (state) {
         SetTabState(win->CurrentTab(), state);
         DeleteTabState(state);

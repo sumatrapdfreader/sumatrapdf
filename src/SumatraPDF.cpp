@@ -2562,6 +2562,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     ReplaceDocumentInCurrentTab(&args, ctrl, fs);
 
     RefreshEditAnnotationsAfterEngineChange(tab);
+    CommandPaletteOnDocumentReloaded(win);
 
     if (!ctrl) {
         DeleteFileState(fs);

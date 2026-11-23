@@ -1299,6 +1299,22 @@ void CommandPaletteOnSettingsReloaded() {
     AppShellInvalidate(wnd->win);
 }
 
+// a reload replaced the document: the TOC and annotation rows point into the
+// freed controller
+void CommandPaletteOnDocumentReloaded(MainWindow* win) {
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->visible || wnd->win != win) {
+        return;
+    }
+    int currSel = wnd->sel;
+    CollectToc(win);
+    CollectAnnotations(win);
+    FilterPaletteStrings(*wnd, CommandPaletteSkipWS(QueryTemp()), wnd->items);
+    int n = len(wnd->items);
+    SetCurrentSelection(n == 0 ? -1 : std::min(currSel, n - 1));
+    AppShellInvalidate(win);
+}
+
 // orig's CommandPaletteWnd::OnCommand: Ctrl+A and Ctrl+C are accelerators
 // delivered to the palette, so they edit the query rather than the document.
 bool CommandPaletteHandleCommand(MainWindow* win, int cmdId) {
