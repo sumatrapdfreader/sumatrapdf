@@ -58,6 +58,11 @@ static void FreeNotification(NotificationWnd* wnd) {
 // doesn't get to; the notification shows once it returns
 void RepaintNotificationNow(NotificationWnd*) {}
 
+// false for null and for a notification that was already removed (and freed)
+static bool IsLiveNotification(NotificationWnd* wnd) {
+    return VecFind(gNotifications, wnd) >= 0;
+}
+
 void RemoveNotification(NotificationWnd* wnd) {
     if (!wnd) {
         return;
@@ -109,7 +114,7 @@ void ExpireNotifications(MainWindow* win, int elapsedMs) {
 
 // the tab a notification is shown for, nullptr if any
 WindowTab* NotificationTab(NotificationWnd* wnd) {
-    return wnd ? wnd->tab : nullptr;
+    return IsLiveNotification(wnd) ? wnd->tab : nullptr;
 }
 
 NotificationWnd* GetNotificationForGroup(MainWindow* win, Kind kind) {
@@ -248,7 +253,7 @@ NotificationWnd* ShowPlainWarningNotification(MainWindow* win, Str msg, int time
 }
 
 void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS) {
-    if (!wnd) {
+    if (!IsLiveNotification(wnd)) {
         return;
     }
     str::ReplaceWithCopy(&wnd->msg, msg);
@@ -261,17 +266,17 @@ void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS) {
 }
 
 bool UpdateNotificationProgress(NotificationWnd* wnd, Str msg, int perc) {
-    if (VecFind(gNotifications, wnd) < 0) {
+    if (!IsLiveNotification(wnd)) {
         return false;
     }
     ReportIf(perc < 0 || perc > 100);
     wnd->progressPerc = limitValue(perc, 0, 100);
-    NotificationUpdateMessage(wnd, msg);
+    NotificationUpdateMessage(wnd, msg, wnd->timeoutMs);
     return true;
 }
 
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd) {
-    return wnd ? str::DupTemp(wnd->msg) : TempStr{};
+    return IsLiveNotification(wnd) ? str::DupTemp(wnd->msg) : TempStr{};
 }
 
 // a warning raised before there is a window to show it in waits here
