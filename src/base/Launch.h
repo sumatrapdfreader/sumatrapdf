@@ -12,6 +12,7 @@ extern bool gBlockExternalLaunch;
 // how many were blocked, for a test to check
 extern int gExternalLaunchesBlocked;
 bool ExternalLaunchBlocked(Str what);
+void SetExternalLaunchAllowDir(Str dir);
 
 #if !OS_WIN
 // hands `path` to the desktop (xdg-open on Linux, open on mac); params are ignored

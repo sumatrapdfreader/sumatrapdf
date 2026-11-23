@@ -363,6 +363,7 @@ extern bool gBlockExternalLaunch;
 // how many were blocked, for a test to check
 extern int gExternalLaunchesBlocked;
 bool ExternalLaunchBlocked(Str what);
+void SetExternalLaunchAllowDir(Str dir);
 bool LaunchFileShell(Str path, Str params = Str(), Str verb = Str(), bool hidden = false);
 bool LaunchBrowser(Str url);
 void OpenPathInDefaultFileManager(Str path);

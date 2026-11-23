@@ -11,7 +11,8 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { IS_MAC } from "./host";
-import { ROOT, runStandalone, tmpPath } from "./util";
+import { ControlCommand } from "./control";
+import { ROOT, runStandalone, tmpPath, USE_NG } from "./util";
 import { findCanvas, killAndWait, launchControlled, pressKey } from "./win-automation";
 import { sleep, VK_F4 } from "./winapi";
 
@@ -75,7 +76,15 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled(["-appdata", dir, pdf]);
   try {
     await client.waitForRenderIdle();
-    await pressKey(findCanvas(frame), VK_F4);
+    // a posted WM_KEYDOWN does not become a gpui key; TestInput does
+    if (USE_NG) {
+      const res = await client.request(ControlCommand.TestInput, ["key", VK_F4, 0, 0, 0]);
+      if (res[0] !== 0) {
+        throw new Error(`issue-6184: F4: ${String(res[1] ?? "")}`);
+      }
+    } else {
+      await pressKey(findCanvas(frame), VK_F4);
+    }
 
     const deadline = Date.now() + 5000;
     while (!existsSync(marker) && Date.now() < deadline) {

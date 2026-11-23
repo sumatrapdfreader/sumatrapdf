@@ -8235,6 +8235,10 @@ int GpuiMain(int argc, char** argv) {
     // either is set up, not with the settings
     if (len(gFlags->appdataDir) > 0) {
         SetAppDataDir(gFlags->appdataDir);
+        // the test's own stand-in viewer lives here; browsers still stay blocked
+        if (gForTesting) {
+            SetExternalLaunchAllowDir(GetAppDataDirTemp());
+        }
     }
     if (gFlags->startPerfLog) {
         StartPerfLog();
