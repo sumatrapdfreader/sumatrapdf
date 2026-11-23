@@ -801,8 +801,17 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
     // creating runs a nested message loop, which can ask for another page
     Str startUrl = str::Dup(bv->pendingUrl);
     gWebViewCreateDepth++;
-    bv->view = gp::WebViewNew(cx, &attrs);
+    gp::Entity<gp::WebView> view = gp::WebViewNew(cx, &attrs);
     gWebViewCreateDepth--;
+    // the nested loop can close the panel or window that owned bv
+    if (!VecContains(gBrowserViews, bv)) {
+        if (view.IsValid()) {
+            gp::EntityDrop(cx->app, view.id);
+        }
+        str::Free(startUrl);
+        return;
+    }
+    bv->view = view;
     gp::WebView* wv = bv->view.Get(cx->app);
     if (!wv || !gp::WebViewRaw(wv)) {
         str::Free(startUrl);
@@ -848,7 +857,12 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
 // inside gpui's paint (the window never stops repainting if it does), so the
 // shell's tick makes the pending views instead of BrowserViewBuild()
 void BrowserViewCreatePending(MainWindow* win, gp::Ctx* cx) {
-    for (BrowserView* bv : gBrowserViews) {
+    // a copy: creating runs a nested loop that can add or delete views
+    Vec<BrowserView*> views = gBrowserViews;
+    for (BrowserView* bv : views) {
+        if (!VecContains(gBrowserViews, bv)) {
+            continue;
+        }
         if (bv->win == win && bv->wantCreate && !bv->created && !bv->ownHost) {
             CreateWebView(bv, cx);
             AppShellInvalidate(win);
