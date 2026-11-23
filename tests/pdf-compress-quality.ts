@@ -10,9 +10,12 @@ import { photoPdf } from "./cli-pdf-tools.ts";
 import { type ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, EXE, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { sleep } from "./winapi.ts";
 
 const name = "pdf-compress-quality";
 const kTool = "pdfcompress";
+const kSame = "Same quality";
+const kBalanced = "Balanced (150 dpi pictures)";
 
 // a node by its text: a button's label, a Select's value
 async function layoutNode(client: ControlClient, label: string): Promise<{ x: number; y: number }> {
@@ -30,9 +33,41 @@ async function layoutNode(client: ControlClient, label: string): Promise<{ x: nu
   return { x: +m[1]! + Math.floor(+m[3]! / 2), y: +m[2]! + Math.floor(+m[4]! / 2) };
 }
 
+async function layoutText(client: ControlClient): Promise<string> {
+  const res = await client.request(ControlCommand.TestToolWindow, ["layout", kTool, "", 0, 0, 0, 0]);
+  return String(res[1] ?? "");
+}
+
+function nodeCount(text: string, label: string): number {
+  return text
+    .split("\n")
+    .filter((l) => l.startsWith("node ") && (l.includes(`label='${label}'`) || l.includes(`value='${label}'`))).length;
+}
+
 async function click(client: ControlClient, label: string): Promise<void> {
   const at = await layoutNode(client, label);
   await client.request(ControlCommand.TestToolWindow, ["input", kTool, "click", at.x, at.y, 0, 0]);
+}
+
+// The list's row can be in the layout a frame before it takes a click. A miss
+// leaves the default, Same quality, which does not scale the picture.
+async function chooseBalanced(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + 10000 * SLOW_BUILD_FACTOR;
+  for (;;) {
+    const text = await layoutText(client);
+    if (nodeCount(text, kBalanced) === 1 && nodeCount(text, kSame) === 0) {
+      return;
+    }
+    if (nodeCount(text, kBalanced) === 0) {
+      await click(client, kSame);
+    } else {
+      await click(client, kBalanced);
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`${name}: Pictures stayed on Same quality\n${await layoutText(client)}`);
+    }
+    await sleep(50);
+  }
 }
 
 function imageWidth(pdf: string, dir: string): number {
@@ -59,8 +94,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdPdfCompress"));
-    await click(client, "Same quality");
-    await click(client, "Balanced (150 dpi pictures)");
+    await chooseBalanced(client);
     await click(client, "Compress PDF");
     const out = await pollUntil(
       async () => readdirSync(dir).find((f) => f !== "photo.pdf" && f !== "plain.pdf" && f.endsWith(".pdf")),
