@@ -16,6 +16,7 @@ ISumatraVirtualDesktopManager* CreateVirtualDesktopManager();
 bool IsWindowOnCurrentDesktop(ISumatraVirtualDesktopManager* vdm, HWND hwnd);
 TempStr GetWindowDesktopIdTemp(ISumatraVirtualDesktopManager* vdm, HWND hwnd);
 bool MoveWindowToVirtualDesktop(ISumatraVirtualDesktopManager* vdm, HWND hwnd, Str desktopId);
+TempStr GetCurrentDesktopIdTemp(ISumatraVirtualDesktopManager* vdm);
 // OpenOnOtherDesktop setting: what to do with a window on another virtual desktop
 enum class OtherDesktopOpen {
     Switch,

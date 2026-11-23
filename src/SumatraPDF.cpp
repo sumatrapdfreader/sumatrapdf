@@ -17202,6 +17202,9 @@ ContinueOpenWindow:
     if (restoreSession) {
         // each window goes back to the virtual desktop it was on (#6271)
         ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+        // captured before any window shows: focus changes during the restore
+        // can switch the OS to another desktop
+        TempStr startDesktopId = GetCurrentDesktopIdTemp(vdm);
         MainWindow* winOnCurrentDesktop = nullptr;
         int sessionGen = gInitialSessionDataGen;
         for (SessionData* data : *gInitialSessionData) {
@@ -17303,6 +17306,20 @@ ContinueOpenWindow:
             if (win->IsDocLoaded() && (windowState == WIN_STATE_MAXIMIZED || windowState == WIN_STATE_FULLSCREEN)) {
                 win->canvasRc = {};
                 win->UpdateCanvasSize();
+            }
+        }
+        // every session window went to another desktop: the session windows
+        // stay there, but the user launched the app on this desktop, so give
+        // them an empty window here instead of letting the foreground yank
+        // them away (OpenOnOtherDesktop=switch keeps the follow-the-window
+        // behavior)
+        if (!winOnCurrentDesktop && win && GetOtherDesktopOpen() != OtherDesktopOpen::Switch) {
+            MainWindow* emptyWin = CreateAndShowMainWindow(nullptr);
+            if (emptyWin) {
+                MoveWindowToVirtualDesktop(vdm, emptyWin->hwndFrame, startDesktopId);
+                SetForegroundWindow(emptyWin->hwndFrame);
+                winOnCurrentDesktop = emptyWin;
+                win = emptyWin;
             }
         }
         if (vdm) {
