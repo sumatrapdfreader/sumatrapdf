@@ -67,7 +67,33 @@ static void exifHugeIfdOffsetTest() {
     utassert(!parser.Parse(Str((char*)d, dimofi(d))));
 }
 
+// IFD0 -> Exif IFD whose two ExifOffset entries point back at itself
+static void exifIfdCycleTest() {
+    constexpr int kExifIfdOff = 26;
+    u8 d[80]{};
+    LeWriter w{d};
+    w.Bytes("II*\0", 4);
+    w.U32(8);
+    w.U16(1);
+    w.Entry((u16)ExifProp::ExifOffset, kTiffLong, 1, kExifIfdOff);
+    w.U32(0);
+    utassert(w.off == kExifIfdOff);
+    w.U16(3);
+    w.Entry((u16)ExifProp::ISOSpeed, kTiffShort, 1, 100);
+    w.Entry((u16)ExifProp::ExifOffset, kTiffLong, 1, kExifIfdOff);
+    w.Entry((u16)ExifProp::ExifOffset, kTiffLong, 1, kExifIfdOff);
+    w.U32(0);
+
+    ExifParser parser;
+    utassert(parser.Parse(Str((char*)d, w.off)));
+    utassert(len(parser.entries) <= 4);
+    i64 v = 0;
+    utassert(parser.GetIntProp(ExifProp::ISOSpeed, &v));
+    utassert(v == 100);
+}
+
 void ExifTest() {
     exifValidTiffTest();
     exifHugeIfdOffsetTest();
+    exifIfdCycleTest();
 }

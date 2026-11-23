@@ -652,6 +652,8 @@ void AddEntry(ExifParser& parser, IfdGroup group, u16 tag, u16 type, u32 count, 
 
 static void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndian = 0, int depth = 0);
 
+constexpr int kMaxExifEntries = 10'000;
+
 void ParseMakerNote(ExifParser& parser, int dataOff, u32 count, int depth) {
     ByteReader r(parser.exifBlob);
     if (dataOff >= r.len || count < 6) {
@@ -697,6 +699,13 @@ void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndia
         return;
     }
     int ifdAbs = (int)ifdAbs64;
+
+    // an IFD that points back at itself (or an ancestor) would recurse exponentially
+    if (VecContains(parser.parsedIfds, ifdAbs)) {
+        return;
+    }
+    VecAppend(parser.parsedIfds, ifdAbs);
+
     bool savedBE = parser.isBE;
     if (makerNoteEndian) {
         parser.isBE = makerNoteEndian == 'M';
@@ -705,7 +714,7 @@ void ParseIfd(ExifParser& parser, IfdGroup group, int ifdRel, int makerNoteEndia
     int nextIfdOff = 0;
     for (u16 i = 0; i < nTags; i++) {
         int ent = ifdAbs + 2 + (i * 12);
-        if (ent + 12 > r.len) {
+        if (ent + 12 > r.len || len(parser.entries) >= kMaxExifEntries) {
             break;
         }
         u16 tag = ReadWord(parser, ent);
@@ -939,6 +948,7 @@ void ExifParser::Reset() {
     data = {};
     dumpLines.Reset();
     VecReset(entries);
+    VecReset(parsedIfds);
     free(ownedExif);
     ownedExif = nullptr;
     exifBlob = {};

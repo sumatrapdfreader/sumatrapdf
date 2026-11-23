@@ -93,6 +93,7 @@ struct ExifParser {
     int tiffBase = 0;
     bool hasJpegThumbnail = false;
     Vec<ExifEntry> entries;
+    Vec<int> parsedIfds; // absolute offsets, to skip IFD cycles
     StrVec dumpLines;
 
     ~ExifParser();
