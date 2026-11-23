@@ -347,8 +347,10 @@ void SumatraPDFWebWnd::FinishDownload(OnlineJobResult* res) {
     if (len(res->cachePath) == 0) {
         return;
     }
+    // the window may have closed during the download: a null window opens a new one
+    MainWindow* target = IsMainWindowValidAndNotClosing(win) ? win : nullptr;
     // Cache path must not become a File / History entry. The tab title is the server name.
-    LoadArgs args(res->cachePath, win);
+    LoadArgs args(res->cachePath, target);
     args.skipHistory = true;
     args.SetDisplayName(res->displayName);
     StartLoadDocument(&args);
