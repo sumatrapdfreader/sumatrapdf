@@ -337,7 +337,8 @@ void UncExistsTest() {
 // GetNonVirtualTemp's first buffer still resolves.
 void NonVirtualPathTest() {
 #if OS_WIN
-    TempStr local = GetTempFilePathTemp(StrL("nonvirt"));
+    // the real path has long names; %TEMP% can be 8.3 (C:\Users\RUNNER~1\...)
+    TempStr local = path::NormalizeTemp(GetTempFilePathTemp(StrL("nonvirt")));
     file::Delete(local);
     if (len(local) < 3 || local.s[1] != ':') {
         return;
