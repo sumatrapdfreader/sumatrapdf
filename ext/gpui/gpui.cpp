@@ -271588,6 +271588,21 @@ static void SetTrafficLightInset(NSWindow* window, Position position) {
     }
 }
 
+static void ApplyWebViewBackground(WKWebView* view, Rgba color) {
+    if (!view) {
+        return;
+    }
+    NSColor* c = [NSColor colorWithCalibratedRed:color.r / 255.0
+                                           green:color.g / 255.0
+                                            blue:color.b / 255.0
+                                           alpha:color.a / 255.0];
+    if (@available(macOS 12.0, *)) {
+        view.underPageBackgroundColor = c;
+    }
+    view.wantsLayer = YES;
+    view.layer.backgroundColor = c.CGColor;
+}
+
 WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
                     bool asChild) {
     if (!parentWindow || !attrs) {
@@ -271682,7 +271697,8 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
             [preferences setValue:@(policy) forKey:@"inactiveSchedulingPolicy"];
         }
     }
-    if (attrs->transparent) {
+    if (attrs->transparent || attrs->hasBackgroundColor) {
+
         [config setValue:@NO forKey:@"drawsBackground"];
     }
     [preferences setValue:@YES forKey:@"allowsPictureInPictureMediaPlayback"];
@@ -271797,6 +271813,9 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
         [wv->webview loadHTMLString:ToNS(attrs->html) baseURL:nil];
     }
 
+    if (attrs->hasBackgroundColor) {
+        ApplyWebViewBackground(wv->webview, attrs->backgroundColor);
+    }
     [parentView addSubview:wv->webview];
     if (!asChild) {
         wv->webview.frame = parentView.bounds;
@@ -272053,8 +272072,11 @@ bool WebViewMatchPageScale(WebView*, float) {
 
 void WebViewSetPageClick(WebView*, WebViewPageClick, void*) {}
 
-bool WebViewSetBackgroundColor(WebView*, Rgba) {
-
+bool WebViewSetBackgroundColor(WebView* wv, Rgba color) {
+    if (!wv || !wv->webview) {
+        return false;
+    }
+    ApplyWebViewBackground(wv->webview, color);
     return true;
 }
 
