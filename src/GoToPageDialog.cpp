@@ -54,7 +54,7 @@ struct GoToPageWnd : WindowBase {
     Vec<VirtText*> labels;
 
     bool Create(MainWindow* win);
-    Edit* AddLine(VBox* vbox, Str label, Str text, bool numbersOnly, VirtText** ofOut, int ofCount);
+    Edit* AddLine(VBox* vbox, Str label, VirtText** ofOut);
     void SetTarget(MainWindow* win);
 
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -146,8 +146,9 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     }
 }
 
-// a line: the label muted, the field in the larger font, "(of N)" at the end
-Edit* GoToPageWnd::AddLine(VBox* vbox, Str label, Str text, bool numbersOnly, VirtText** ofOut, int ofCount) {
+// a line: the label muted, the field in the larger font, "(of N)" at the end;
+// SetTarget() fills in the values
+Edit* GoToPageWnd::AddLine(VBox* vbox, Str label, VirtText** ofOut) {
     HBox* row = NewDlgRow();
     VirtText* t = NewDlgLabel(label, fontText, colMuted, kToolDlgLineDy, true);
     VecAppend(labels, t);
@@ -157,18 +158,16 @@ Edit* GoToPageWnd::AddLine(VBox* vbox, Str label, Str text, bool numbersOnly, Vi
     args.parent = hwnd;
     args.font = fontQuery;
     args.withBorder = false;
-    args.numbersOnly = numbersOnly;
+    args.numbersOnly = true;
     args.selectAllOnFocus = true;
     args.isRtl = IsUIRtl();
-    args.text = text;
     args.idealWidthChars = kGoToEditChars;
     auto* e = new Edit();
     e->SetColors(colTxt, colBg);
     e->Create(args);
     row->AddChild(e, 1);
 
-    *ofOut =
-        NewVirtText({.s = fmt(Tr("(of %d)").s, ofCount), .font = fontMeta, .textColor = colMuted, .isRtl = IsUIRtl()});
+    *ofOut = NewVirtText({.s = fmt(Tr("(of %d)").s, 0), .font = fontMeta, .textColor = colMuted, .isRtl = IsUIRtl()});
     row->AddChild(*ofOut);
     vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
     return e;
@@ -176,23 +175,8 @@ Edit* GoToPageWnd::AddLine(VBox* vbox, Str label, Str text, bool numbersOnly, Vi
 
 bool GoToPageWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-    Str pageLabel;
-    int chapterCount = 0;
-    int chapterCur = 0;
     if (IsMainWindowValidAndNotClosing(win) && win->IsDocLoaded() && win->ctrl) {
-        DocController* ctrl = win->ctrl;
-        hasChapters = ShowChapterUi(ctrl);
-        if (hasChapters) {
-            Location cur = ctrl->CurrentLocation();
-            chapterCount = ctrl->ChapterCount();
-            chapterCur = cur.chapter;
-            pageCount = ctrl->ChapterPageCount(cur.chapter);
-            pageLabel = fmt("%d", cur.page);
-        } else {
-            pageCount = ctrl->PageCount();
-            onlyNumeric = !ctrl->HasPageLabels();
-            pageLabel = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
-        }
+        hasChapters = ShowChapterUi(win->ctrl);
     }
 
     colTxt = ThemeWindowTextColor();
@@ -209,11 +193,13 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
     if (hasChapters) {
-        editChapter = AddLine(vbox, Tr("&Chapter:"), fmt("%d", chapterCur), true, &chapterLabelOf, chapterCount);
+        editChapter = AddLine(vbox, Tr("&Chapter:"), &chapterLabelOf);
         vbox->AddChild(new VirtLine());
     }
     Str label = hasChapters ? Tr("&Page:") : Tr("&Go to page:");
-    editPage = AddLine(vbox, label, pageLabel, onlyNumeric, &labelOf, pageCount);
+    editPage = AddLine(vbox, label, &labelOf);
+    // before sizing: "(of N)" widths depend on the values
+    SetTarget(mainWin);
 
     // the fields start in one column
     AlignDlgLabels(labels);
