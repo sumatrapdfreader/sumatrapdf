@@ -207,10 +207,14 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) 
         if (descriptor < 0) {
             return nullptr;
         }
-        dir = new WatchedDir();
-        dir->path = str::Dup(dirPath);
-        dir->descriptor = descriptor;
-        ListInsertFront(&gWatchedDirs, dir);
+        // another path to the same dir (a symlink) gets the same descriptor
+        dir = FindWatchedDirByDescriptor(descriptor);
+        if (!dir) {
+            dir = new WatchedDir();
+            dir->path = str::Dup(dirPath);
+            dir->descriptor = descriptor;
+            ListInsertFront(&gWatchedDirs, dir);
+        }
     }
 
     auto* file = new WatchedFile();
