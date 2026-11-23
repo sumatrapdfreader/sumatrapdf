@@ -640,9 +640,22 @@ static TempStr FormatParamTemp(Str arg, WindowTab* tab) {
     return ToStrTemp(out);
 }
 
-static TempStr GetDocumentPathQuoted(WindowTab* tab) {
-    auto path = tab->filePath;
-    return str::JoinTemp(StrL("\""), path, StrL("\""));
+#if !OS_WIN && !OS_WASM
+static void ExpandParam(WindowTab* tab, Str* arg) {
+    *arg = FormatParamTemp(*arg, tab);
+}
+#endif
+
+// runs exe with argsTemplate after %1 etc. substitution. Off Windows the
+// template is split into arguments first: a " in the file name can't add arguments
+static bool LaunchViewer(Str exe, Str argsTemplate, WindowTab* tab) {
+#if OS_WIN || OS_WASM
+    return LaunchFileShell(exe, FormatParamTemp(argsTemplate, tab));
+#else
+    StrVec args;
+    ProgramArgs(exe, argsTemplate, MkFunc1(ExpandParam, tab), args);
+    return LaunchFileShellArgs(args);
+#endif
 }
 
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
@@ -657,13 +670,8 @@ bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     if (len(ev->exeFullPath) == 0) {
         return false;
     }
-    TempStr args;
-    if (ev->launchArgs) {
-        args = FormatParamTemp(ev->launchArgs, tab);
-    } else {
-        args = GetDocumentPathQuoted(tab);
-    }
-    return LaunchFileShell(ev->exeFullPath, args);
+    Str argsTemplate = ev->launchArgs ? ev->launchArgs : StrL("\"%1\"");
+    return LaunchViewer(ev->exeFullPath, argsTemplate, tab);
 }
 
 bool PathMatchFilter(Str path, Str filter) {
@@ -735,10 +743,13 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
     }
     if (str::IsEmptyOrWhiteSpace(rest)) {
         // no arguments given: pass the document path as the only argument
+#if OS_WIN || OS_WASM
         return LaunchFileShell(exePath, tab->filePath);
+#else
+        rest = StrL("%1");
+#endif
     }
-    TempStr params = FormatParamTemp(rest, tab);
-    return LaunchFileShell(exePath, params);
+    return LaunchViewer(exePath, rest, tab);
 }
 
 // --- send as e-mail attachment (step 14a) -----------------------------------
@@ -851,9 +862,13 @@ static bool SendAsEmailAttachmentWithXdg(Str filePath) {
     if (len(exe) == 0) {
         return false;
     }
-    TempStr name = path::GetBaseNameTemp(filePath);
-    TempStr params = fmt("--attach \"%s\" --subject \"%s\"", filePath, name);
-    return LaunchFileShell(exe, params);
+    StrVec args;
+    args.Append(exe);
+    args.Append(StrL("--attach"));
+    args.Append(filePath);
+    args.Append(StrL("--subject"));
+    args.Append(path::GetBaseNameTemp(filePath));
+    return LaunchFileShellArgs(args);
 }
 #endif
 

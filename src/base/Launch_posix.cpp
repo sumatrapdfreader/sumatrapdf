@@ -203,6 +203,10 @@ void OpenPathInDefaultFileManager(Str path) {
 }
 
 #if IS_DEBUG
+static void ExpandDocPath(Str* docPath, Str* arg) {
+    *arg = str::ReplaceTemp(*arg, StrL("%1"), *docPath);
+}
+
 bool Launch_UnitTests() {
     // a document with the exec bit (vfat / smb mounts, archives) is opened, not run
     TempStr doc = GetTempFilePathTemp(StrL("launch-ut"));
@@ -211,6 +215,12 @@ bool Launch_UnitTests() {
     ShellOpenArgs(doc, args);
     ok = ok && len(args) == 2 && str::Eq(args[0], Str(OpenerProgram())) && str::Eq(args[1], doc);
     file::Delete(doc);
+
+    // a quote in the document path doesn't add arguments
+    Str docPath = StrL("/tmp/a\" --attach \"/etc/passwd.pdf");
+    args.Reset();
+    ProgramArgs(StrL("xdg-email"), StrL("--attach \"%1\" -x"), MkFunc1(ExpandDocPath, &docPath), args);
+    ok = ok && len(args) == 4 && str::Eq(args[2], docPath) && str::Eq(args[3], StrL("-x"));
     return ok;
 }
 #endif
