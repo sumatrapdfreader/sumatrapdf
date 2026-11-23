@@ -13,6 +13,9 @@ static const float ofd_points_per_mm = 72.0f / 25.4f;
 enum {
     OFD_PATH_SIZE = 4096,
     OFD_MAX_DEPTH = 32,
+    // per page: composite units, patterns and templates referencing each other draw exponentially many
+    OFD_MAX_REF_OBJECTS = 100000,
+    OFD_MAX_TEMPLATES = 64,
     OFD_MAX_SEAL_DEPTH = 4,
     OFD_MAX_GLYPHS = 1000000,
     OFD_MAX_DASHES = 128,
@@ -55,6 +58,14 @@ typedef struct {
     int first_page; // of this document in the package
     int seal_depth;
     fz_link** links_tail; // while a page is built: where its links go
+    // while a page is built: what references may still draw, and the units / patterns / templates being drawn
+    int ref_objects_left;
+    int templates_left;
+    fz_xml* units[OFD_MAX_DEPTH + 1];
+    int nunits;
+    int npatterns;
+    fz_xml* templates[OFD_MAX_DEPTH + 1];
+    int ntemplates;
 } ofd_document;
 
 // The fz_document: an OFD package, its documents' pages one after another.
@@ -955,10 +966,12 @@ static void ofd_brush(fz_context* ctx, ofd_document* doc, fz_xml* color, fz_devi
             ofd_paint paint = {NULL, NULL, 0.353f};
             fz_link** links_tail = doc->links_tail;
             doc->links_tail = NULL;
+            ++doc->npatterns;
             fz_try(ctx) {
                 ofd_draw_tree(ctx, doc, fz_xml_down(ofd_child(node, "CellContent")), dev, matrix, depth + 1, paint);
             }
             fz_always(ctx) {
+                --doc->npatterns;
                 doc->links_tail = links_tail;
             }
             fz_catch(ctx) {
@@ -1166,10 +1179,22 @@ static void ofd_collect_links(fz_context* ctx, ofd_document* doc, fz_xml* node, 
     }
 }
 
+static int ofd_is_drawing(fz_xml** stack, int n, fz_xml* node) {
+    for (int i = 0; i < n; ++i) {
+        if (stack[i] == node) return 1;
+    }
+    return 0;
+}
+
 static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix parent, int depth,
                           ofd_paint inherited) {
     if (depth > OFD_MAX_DEPTH) fz_throw(ctx, FZ_ERROR_LIMIT, "OFD nesting too deep");
     for (; node; node = fz_xml_next(node)) {
+        int referenced = doc->nunits > 0 || doc->npatterns > 0;
+        if (referenced && --doc->ref_objects_left < 0) {
+            if (doc->ref_objects_left == -1) fz_warn(ctx, "Too many OFD objects drawn by reference");
+            return;
+        }
         // link areas are often invisible paths
         if (doc->links_tail) ofd_collect_links(ctx, doc, node, parent);
         if (fz_xml_att_eq(node, "Visible", "false") || ofd_attr(node, "Alpha", 255) <= 0) continue;
@@ -1203,8 +1228,20 @@ static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
                 fz_xml* unit = ofd_resource_id(ctx, doc, "CompositeGraphicUnit", fz_xml_att(node, "ResourceID"), NULL);
                 if (!unit)
                     fz_warn(ctx, "Missing OFD composite resource");
-                else
-                    ofd_draw_tree(ctx, doc, ofd_child(unit, "Content"), dev, ctm, depth + 1, paint);
+                else if (ofd_is_drawing(doc->units, doc->nunits, unit))
+                    fz_warn(ctx, "OFD composite resource draws itself");
+                else {
+                    doc->units[doc->nunits++] = unit;
+                    fz_try(ctx) {
+                        ofd_draw_tree(ctx, doc, ofd_child(unit, "Content"), dev, ctm, depth + 1, paint);
+                    }
+                    fz_always(ctx) {
+                        --doc->nunits;
+                    }
+                    fz_catch(ctx) {
+                        fz_rethrow(ctx);
+                    }
+                }
             } else if (container)
                 ofd_draw_tree(ctx, doc, fz_xml_down(node), dev, ctm, depth + 1, paint);
         }
@@ -1244,15 +1281,23 @@ static void ofd_templates(fz_context* ctx, ofd_document* doc, fz_xml* page, fz_d
         if (!z) z = fz_xml_att(tpl, "ZOrder");
         if (strcmp(z ? z : "Background", order)) continue;
         fz_xml* xml = NULL;
+        int pushed = 0;
         fz_var(xml);
+        fz_var(pushed);
         fz_try(ctx) {
             if (!tpl) fz_throw(ctx, FZ_ERROR_FORMAT, "Missing OFD template %s", fz_xml_att(node, "TemplateID"));
+            if (ofd_is_drawing(doc->templates, doc->ntemplates, tpl))
+                fz_throw(ctx, FZ_ERROR_FORMAT, "OFD template %s uses itself", fz_xml_att(node, "TemplateID"));
+            if (--doc->templates_left < 0) fz_throw(ctx, FZ_ERROR_LIMIT, "Too many OFD templates on a page");
+            doc->templates[doc->ntemplates++] = tpl;
+            pushed = 1;
             char path[OFD_PATH_SIZE];
             ofd_resolve(ctx, path, doc->path, fz_xml_att(tpl, "BaseLoc"));
             xml = ofd_read_xml(ctx, doc, path);
             ofd_draw_page_xml(ctx, doc, fz_xml_root(xml), path, dev, ctm, depth + 1);
         }
         fz_always(ctx) {
+            if (pushed) --doc->ntemplates;
             fz_drop_xml(ctx, xml);
         }
         fz_catch(ctx) {
@@ -1502,6 +1547,11 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
         page->list = fz_new_display_list(ctx, page->bounds);
         dev = fz_new_list_device(ctx, page->list);
         doc->links_tail = &page->links;
+        doc->ref_objects_left = OFD_MAX_REF_OBJECTS;
+        doc->templates_left = OFD_MAX_TEMPLATES;
+        doc->nunits = 0;
+        doc->npatterns = 0;
+        doc->ntemplates = 0;
         ofd_draw_page_xml(ctx, doc, root, path, dev, ctm, 0);
         fz_try(ctx) {
             ofd_annots(ctx, doc, fz_xml_att(entry, "ID"), dev, ctm);

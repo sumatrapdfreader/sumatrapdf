@@ -109,6 +109,7 @@ void ChapterTable_UnitTests();
 void LitDoc_UnitTests();
 void RtfDoc_UnitTests();
 void MobiDoc_UnitTests();
+void Ofd_UnitTests();
 void PagePosition_UnitTests();
 void PdfSync_UnitTests();
 void CachedObjects_UnitTests();
@@ -787,6 +788,7 @@ int RunAppUnitTests(bool forAi) {
     LitDoc_UnitTests();
     RtfDoc_UnitTests();
     MobiDoc_UnitTests();
+    Ofd_UnitTests();
     PagePosition_UnitTests();
     PdfSync_UnitTests();
     utassert(PdfDarkModeImageStats_UnitTest());

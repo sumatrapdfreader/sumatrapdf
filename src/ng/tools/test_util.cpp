@@ -36,6 +36,7 @@ extern void VecTest();
 extern bool AnnotSearch_UnitTests();
 extern void ChapterTable_UnitTests();
 extern void MobiDoc_UnitTests();
+extern void Ofd_UnitTests();
 extern void LitDoc_UnitTests();
 extern void RtfDoc_UnitTests();
 extern void PdfSync_UnitTests();
@@ -186,6 +187,7 @@ int main(int argc, char** argv) {
     utassert(AnnotSearch_UnitTests());
     ChapterTable_UnitTests();
     MobiDoc_UnitTests();
+    Ofd_UnitTests();
     LitDoc_UnitTests();
     RtfDoc_UnitTests();
     PdfSync_UnitTests();

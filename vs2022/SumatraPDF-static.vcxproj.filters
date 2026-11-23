@@ -1706,6 +1706,9 @@
     <ClCompile Include="..\src\shared\tests\MobiDoc_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\tests\Ofd_ut.cpp">
+      <Filter>src\shared\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\tests\PagePosition_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
