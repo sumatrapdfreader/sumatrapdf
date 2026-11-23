@@ -218,6 +218,7 @@ int AIChatReadPipeChunk(void* hReadPipe, char* buf, int size);
 void AIChatCloseReadPipe(void* hReadPipe);
 // reads the whole pipe into `out` and closes it
 void AIChatReadPipeToEnd(void* hReadPipe, str::Builder& out);
+bool AIChatReadUntilExit(void* hReadPipe, void* hProcess, int timeoutMs, str::Builder& out);
 // waits up to timeoutMs for the process to exit; true if it did
 bool AIChatWaitForProcess(void* hProcess, int timeoutMs);
 void AIChatTerminateProcess(void* hProcess);

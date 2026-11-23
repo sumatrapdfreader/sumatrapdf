@@ -395,6 +395,48 @@ bool AIChatRunCapture(Str cmdLine, int timeoutMs, str::Builder& out) {
     return true;
 }
 
+// ng: AIChatCommon.cpp's Windows loop with poll() in place of PeekNamedPipe
+bool AIChatReadUntilExit(void* hReadPipe, void* hProcess, int timeoutMs, str::Builder& out) {
+    int fd = hReadPipe ? *(int*)hReadPipe : -1;
+    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    bool exited = false;
+    bool eof = fd < 0;
+    bool ok = true;
+    for (;;) {
+        if (!eof) {
+            struct pollfd pfd{};
+            pfd.fd = fd;
+            pfd.events = POLLIN;
+            int res = poll(&pfd, 1, exited ? 0 : 10);
+            if (res > 0) {
+                char buf[4096];
+                int n = AIChatReadPipeChunk(hReadPipe, buf, sizeof(buf));
+                if (n > 0) {
+                    out.Append(Str(buf, n));
+                    continue;
+                }
+                // every writer closed its end
+                eof = true;
+            } else if (res < 0 && errno != EINTR) {
+                eof = true;
+            }
+        } else if (!exited) {
+            SleepInMs(10);
+        }
+        // one more pass after the exit drains what it wrote before exiting
+        if (exited) {
+            break;
+        }
+        if (GetTickCount64() >= deadline) {
+            ok = false;
+            break;
+        }
+        exited = AIChatWaitForProcess(hProcess, 0);
+    }
+    AIChatCloseReadPipe(hReadPipe);
+    return ok;
+}
+
 #else
 
 void AIChatCloseProcess(void** processHandle, bool) {
@@ -424,6 +466,10 @@ void AIChatTerminateProcess(void*) {}
 
 bool AIChatRunCapture(Str, int, str::Builder&) {
     return false;
+}
+
+bool AIChatReadUntilExit(void*, void*, int, str::Builder&) {
+    return true;
 }
 
 #endif

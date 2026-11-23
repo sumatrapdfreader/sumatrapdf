@@ -29,6 +29,7 @@
 #include "EngineAll.h"
 #include "AppSettings.h"
 #include "AIChatTypes.h"
+#include "AIChatCommon.h"
 #include "WindowTab.h"
 #include "Flags.h"
 #include "Commands.h"
@@ -471,6 +472,26 @@ static void GuiFontLangTest() {
     SetGuiFontLang({});
 }
 
+// a child that keeps its output open must not hold the reader past the timeout
+static void AIChatReadUntilExitTest() {
+    AIChatProcessLaunchResult launch;
+    utassert(AIChatLaunchProcessWithStdoutPipe(StrL("cmd /c echo done"), {}, &launch));
+    str::Builder out;
+    utassert(AIChatReadUntilExit(launch.hReadPipe, launch.hProcess, 10 * 1000, out));
+    AIChatCloseProcess(&launch.hProcess, true);
+    utassert(str::Contains(ToStr(out), StrL("done")));
+
+    utassert(AIChatLaunchProcessWithStdoutPipe(StrL("cmd /c \"echo hi & ping -n 30 127.0.0.1\""), {}, &launch));
+    str::Builder out2;
+    u64 start = GetTickCount64();
+    bool exited = AIChatReadUntilExit(launch.hReadPipe, launch.hProcess, 1000, out2);
+    u64 elapsed = GetTickCount64() - start;
+    AIChatCloseProcess(&launch.hProcess, true);
+    utassert(!exited);
+    utassert(elapsed < 10 * 1000);
+    utassert(str::Contains(ToStr(out2), StrL("hi")));
+}
+
 static void SumatraPDF_UnitTests() {
     GuiFontLangTest();
     StripGroupOrderTest();
@@ -488,6 +509,7 @@ static void SumatraPDF_UnitTests() {
     SidebarViewSettingTest();
     FileUriTest();
     ServerPromoTest();
+    AIChatReadUntilExitTest();
     GhostButtonDisabledTest();
     DocPropertiesTest();
     JsMenuTest();

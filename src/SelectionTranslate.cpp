@@ -158,14 +158,6 @@ TempStr OsDefaultDestinationLanguageTemp() {
     return StrL("English");
 }
 
-static void ReadPipeToStrBuilder(HANDLE hPipe, str::Builder& out) {
-    char buf[4096];
-    DWORD bytesRead = 0;
-    while (ReadFile(hPipe, buf, sizeof(buf) - 1, &bytesRead, nullptr) && bytesRead > 0) {
-        out.Append(Str(buf, (int)bytesRead));
-    }
-}
-
 static void PopulateEngineDropDown(DropDown* dd, TranslateEngine selected) {
     StrVec items;
     int selIdx = 0;
@@ -195,12 +187,9 @@ TranslateRun RunTranslateCli(Str cmdLine, Str cwd, str::Builder& output) {
         return TranslateRun::LaunchFailed;
     }
 
-    ReadPipeToStrBuilder(launch.hReadPipe, output);
-    CloseHandle(launch.hReadPipe);
+    bool exited = AIChatReadUntilExit(launch.hReadPipe, launch.hProcess, 5 * 60 * 1000, output);
     launch.hReadPipe = nullptr;
-
-    DWORD waitRes = WaitForSingleObject(launch.hProcess, 5 * 60 * 1000);
-    if (waitRes == WAIT_TIMEOUT) {
+    if (!exited) {
         TerminateProcess(launch.hProcess, 1);
         AIChatCloseProcess(&launch.hProcess, false);
         return TranslateRun::TimedOut;

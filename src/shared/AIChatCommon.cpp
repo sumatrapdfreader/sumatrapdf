@@ -1029,3 +1029,45 @@ void AIChatWaitForTabProcessesToFinish(MainWindow* win, bool (*tabHasRunningProc
     }
     uitask::DrainQueue();
 }
+
+#if OS_WIN
+// Collects the process's output until it exits and the pipe is drained. A
+// child (or a grandchild) can keep the pipe open, so a plain read to the end
+// could block forever. false if it's still running after timeoutMs. Closes the pipe.
+bool AIChatReadUntilExit(void* hReadPipe, void* hProcess, int timeoutMs, str::Builder& out) {
+    HANDLE pipe = (HANDLE)hReadPipe;
+    ULONGLONG deadline = GetTickCount64() + (ULONGLONG)timeoutMs;
+    bool exited = false;
+    bool ok = true;
+    for (;;) {
+        DWORD available = 0;
+        if (pipe && !PeekNamedPipe(pipe, nullptr, 0, nullptr, &available, nullptr)) {
+            // every writer closed its end
+            CloseHandle(pipe);
+            pipe = nullptr;
+        }
+        if (available > 0) {
+            char buf[4096];
+            DWORD nRead = 0;
+            DWORD toRead = available < sizeof(buf) ? available : (DWORD)sizeof(buf);
+            if (ReadFile(pipe, buf, toRead, &nRead, nullptr) && nRead > 0) {
+                out.Append(Str(buf, (int)nRead));
+                continue;
+            }
+        }
+        // one more pass after the exit drains what it wrote before exiting
+        if (exited) {
+            break;
+        }
+        if (GetTickCount64() >= deadline) {
+            ok = false;
+            break;
+        }
+        exited = WaitForSingleObject((HANDLE)hProcess, 10) == WAIT_OBJECT_0;
+    }
+    if (pipe) {
+        CloseHandle(pipe);
+    }
+    return ok;
+}
+#endif

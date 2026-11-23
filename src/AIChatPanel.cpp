@@ -455,14 +455,6 @@ static void AIChatReadThread(AIChatReadThreadCtx* ctx) {
 
 // --- Headless chat runner (for -dbg-control tests) ---
 
-static void AIChatReadAllPipe(HANDLE hPipe, str::Builder& out) {
-    char buf[4096];
-    DWORD n = 0;
-    while (ReadFile(hPipe, buf, sizeof(buf), &n, nullptr) && n > 0) {
-        out.Append(Str(buf, (int)n));
-    }
-}
-
 // Runs one chat turn synchronously with no UI: builds the command line, launches
 // the process, reads its whole stdout, then feeds each line through the real
 // provider parser while capturing the emitted text/errors. Same provider code
@@ -519,11 +511,9 @@ bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str& outTex
 
     str::Builder raw;
     raw.Reserve(4096);
-    AIChatReadAllPipe(launch.hReadPipe, raw);
-    CloseHandle(launch.hReadPipe);
+    bool exited = AIChatReadUntilExit(launch.hReadPipe, launch.hProcess, 5 * 60 * 1000, raw);
     launch.hReadPipe = nullptr;
-    DWORD waitRes = WaitForSingleObject(launch.hProcess, 5 * 60 * 1000);
-    if (waitRes == WAIT_TIMEOUT) {
+    if (!exited) {
         TerminateProcess(launch.hProcess, 1);
         AIChatCloseProcess(&launch.hProcess, false);
         outErr = str::Dup(StrL("chat timed out"));

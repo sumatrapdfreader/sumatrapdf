@@ -94,10 +94,9 @@ TranslateRun RunTranslateCli(Str cmdLine, Str cwd, str::Builder& output) {
         return TranslateRun::LaunchFailed;
     }
 
-    AIChatReadPipeToEnd(launch.hReadPipe, output);
+    bool exited = AIChatReadUntilExit(launch.hReadPipe, launch.hProcess, 5 * 60 * 1000, output);
     launch.hReadPipe = nullptr;
-
-    if (!AIChatWaitForProcess(launch.hProcess, 5 * 60 * 1000)) {
+    if (!exited) {
         AIChatTerminateProcess(launch.hProcess);
         AIChatCloseProcess(&launch.hProcess, false);
         return TranslateRun::TimedOut;

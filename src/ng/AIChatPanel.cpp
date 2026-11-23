@@ -515,9 +515,9 @@ bool RunAIChatSync(AIChatBackend backend, Str filePath, Str message, Str& outTex
 
     str::Builder raw;
     str::BuilderReserve(raw, 4096);
-    AIChatReadPipeToEnd(launch.hReadPipe, raw);
+    bool exited = AIChatReadUntilExit(launch.hReadPipe, launch.hProcess, 5 * 60 * 1000, raw);
     launch.hReadPipe = nullptr;
-    if (!AIChatWaitForProcess(launch.hProcess, 5 * 60 * 1000)) {
+    if (!exited) {
         AIChatTerminateProcess(launch.hProcess);
         AIChatCloseProcess(&launch.hProcess, false);
         outErr = str::Dup(StrL("chat timed out"));
