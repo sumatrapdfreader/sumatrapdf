@@ -148,10 +148,11 @@ struct NavFilesInFolderWnd : WindowBase {
 };
 
 static NavFilesInFolderWnd* gNavFilesWnd = nullptr;
+// across windows: a new window at a freed one's address must not take its scans
+static int gNavScanGen = 0;
 static HWND gHwndToActivateOnNavClose = nullptr;
 
 NavFilesInFolderWnd::~NavFilesInFolderWnd() {
-    scanGen++; // in-flight scans must not apply to a destroyed window
     str::Free(currDir);
     str::Free(pendingSelectPath);
 }
@@ -580,7 +581,7 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx, NavList
     }
     str::ReplaceWithCopy(&currDir, dir);
     UpdateNavButtons();
-    scanGen++;
+    scanGen = ++gNavScanGen;
     scanInFlight = true;
     str::ReplaceWithCopy(&pendingSelectPath, selectPath);
     pendingSelectIdx = selectIdx;
