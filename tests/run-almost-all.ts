@@ -319,6 +319,7 @@ import { testit as issue6477 } from "./issue-6477.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
+import { testit as staleBuildDirFuture } from "./stale-build-dir-future.ts";
 import { testit as saveAnnotsSamePath } from "./save-annots-same-path.ts";
 import { testit as issue6095 } from "./issue-6095.ts";
 import { testit as epubRelayoutStalePage } from "./epub-relayout-stale-page.ts";
@@ -1321,6 +1322,7 @@ export const tests: NamedTest[] = [
   ["page-links-fresh-engine", pageLinksFreshEngine],
   ["touch-long-press-select", touchLongPressSelect],
   ["pen-input", penInput],
+  ["stale-build-dir-future", staleBuildDirFuture],
   ["save-annots-same-path", saveAnnotsSamePath],
 ];
 

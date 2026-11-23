@@ -15956,6 +15956,10 @@ static i64 FileTimeAgeSec(FILETIME ft, const ULARGE_INTEGER& now) {
     if (t.QuadPart == 0) {
         return -1;
     }
+    // in the future (clock skew, copied from another machine): just written
+    if (t.QuadPart > now.QuadPart) {
+        return 0;
+    }
     return (i64)((now.QuadPart - t.QuadPart) / 10000000ULL);
 }
 
@@ -16062,6 +16066,7 @@ static void DeleteStaleFilesAsync() {
     now.LowPart = nowFt.dwLowDateTime;
     now.HighPart = nowFt.dwHighDateTime;
     constexpr i64 kMaxAgeSec = 14LL * 24 * 60 * 60;
+    TempStr ownBuildDir = GetSumatraBuildSpecificDirTemp();
 
     DirIter di{dataDir};
     di.includeFiles = false;
@@ -16076,6 +16081,10 @@ static void DeleteStaleFilesAsync() {
         bool isBuildDir = IsBuildDirName(name);
         if (!isLegacy && !isBuildDir) {
             logf("DeleteStaleFilesAsync: skipping '%s'\n", name);
+            continue;
+        }
+        // the running build's dir holds its log and crash info
+        if (isBuildDir && str::EqI(de->filePath, ownBuildDir)) {
             continue;
         }
 
