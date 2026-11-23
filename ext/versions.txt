@@ -138,9 +138,9 @@ darkmodelib     0.76.0     2026-08-23
   https://github.com/ozone10/win32-darkmodelib
   https://github.com/ozone10/win32-darkmodelib/commit/25298e8a92ed0fac8e17b3e6878df5bbd7a5d699
 
-jxldec          dist       2026-11-23
+jxldec          dist       2026-11-24
   https://github.com/kjk/jxldec
-  commit 8d27d28b4e70d71cbc210da1de478535760f2375
+  commit 883d2dacf91230e9bf6e19a58a70dca55248025e
   amalgamated dist/jxl.c + dist/jxl.h only
   Replaces libjxl + highway + skcms for JPEG XL decode.
 

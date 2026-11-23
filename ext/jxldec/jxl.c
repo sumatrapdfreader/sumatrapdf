@@ -1142,11 +1142,32 @@ typedef struct {
     float iscale;
 } jxl_fplane;
 
+enum { JXL_CT_YCBCR = 1, JXL_CT_XYB = 2 };
+typedef struct {
+    int mode;
+    float opsin[9], luminances[3];
+    jxl_colour_encoding enc;
+    const jxl_image_metadata *meta;
+} jxl_ct;
+void jxl_ct_init(jxl_ctx *ctx, const jxl_image_metadata *meta, int ycbcr,
+                 jxl_ct *ct);
+void jxl_ct_row_linear(const jxl_ct *ct, float *r, float *g, float *b,
+                       uint32_t w);
+void jxl_ct_row_finish(const jxl_ct *ct, float *r, float *g, float *b,
+                       uint32_t w);
+
 typedef struct {
     jxl_fplane *plane;
     uint32_t nplane;
     uint32_t ncolor;
     uint32_t w, h;
+
+    uint32_t up_shift;
+    uint32_t up_nplane;
+    float *up_kernel;
+    int ct_pending;
+    jxl_ct ct;
+    const jxl_image_metadata *defer_meta;
 } jxl_fimage;
 
 int jxl_fimage_alloc(jxl_ctx *ctx, jxl_fimage *img, uint32_t nplane);
@@ -1154,6 +1175,11 @@ int jxl_fplane_alloc(jxl_ctx *ctx, jxl_fplane *p, uint32_t w, uint32_t h);
 
 int jxl_fplane_alloc_uninit(jxl_ctx *ctx, jxl_fplane *p, uint32_t w, uint32_t h);
 void jxl_fimage_free(jxl_ctx *ctx, jxl_fimage *img);
+
+int jxl_fimage_finish(jxl_ctx *ctx, jxl_fimage *img);
+
+void jxl_fimage_deferred_size(const jxl_fimage *img, uint32_t i, uint32_t *w,
+                              uint32_t *h);
 
 typedef struct {
     jxl_fimage refs[4];
@@ -1191,6 +1217,11 @@ int jxl_render_noise(jxl_ctx *ctx, jxl_fimage *img, const jxl_noise_params *np,
                      uint32_t invisible_frames, float corr_x, float corr_b);
 int jxl_output_buffer_size(int w, int h, int bpp, int *stride, size_t *total);
 
+float *jxl_upsample_kernel(jxl_ctx *ctx, uint32_t shift,
+                            const jxl_image_metadata *meta);
+void jxl_upsample_rows(const jxl_fplane *p, uint32_t shift,
+                       const float *kernel, uint32_t out_w, uint32_t out_h,
+                       uint32_t y, float *const *drows);
 int jxl_upsample_plane(jxl_ctx *ctx, jxl_fplane *p, uint32_t shift,
                        const jxl_image_metadata *meta, uint32_t out_w,
                        uint32_t out_h);
@@ -9196,7 +9227,8 @@ static float up_dot25(const float *a, const float *b) {
 #ifdef JXL_UPSAMPLE_SSE2
 
 static void up_block4(const float *const *srow, uint32_t x, uint32_t N,
-                      const float *kernel, float *dst_rows[8], uint32_t ny) {
+                      const float *kernel, float *const *dst_rows,
+                      uint32_t ny) {
     __m128 vlo, vhi;
     uint32_t oy, ox;
     int py, px;
@@ -9262,7 +9294,8 @@ static void up_block4(const float *const *srow, uint32_t x, uint32_t N,
 
 JXL_TARGET_AVX2
 static void up_block8(const float *const *srow, uint32_t x, uint32_t N,
-                      const float *kernel, float *dst_rows[8], uint32_t ny) {
+                      const float *kernel, float *const *dst_rows,
+                      uint32_t ny) {
     __m256 vlo = _mm256_setzero_ps(), vhi = _mm256_setzero_ps();
     uint32_t oy, ox;
     int py, px;
@@ -9562,106 +9595,119 @@ static const float *weights_for(const jxl_image_metadata *meta, uint32_t shift) 
     return meta->up8;
 }
 
+float *jxl_upsample_kernel(jxl_ctx *ctx, uint32_t shift,
+                            const jxl_image_metadata *meta) {
+    uint32_t N = 1u << shift;
+    float *kernel;
+    if (shift == 0 || shift > 3) return NULL;
+    kernel = (float *)jxl_calloc(ctx, (size_t)N * N * 25, sizeof(float));
+    if (kernel) build_kernel(kernel, shift, weights_for(meta, shift));
+    return kernel;
+}
+
+void jxl_upsample_rows(const jxl_fplane *p, uint32_t shift,
+                       const float *kernel, uint32_t out_w, uint32_t out_h,
+                       uint32_t y, float *const *drows) {
+    uint32_t N = 1u << shift;
+    uint32_t w = p->w, h = p->h, x;
+#ifdef JXL_UPSAMPLE_SSE2
+    const int use_avx2 = jxl_has_avx2();
+
+    const int y_full = (uint64_t)(y + 1) * N <= out_h;
+#endif
+
+    const float *srow[5];
+    int iy;
+    for (iy = -2; iy <= 2; iy++) {
+        srow[iy + 2] = p->data +
+            (size_t)up_mirror((int64_t)y + iy, h) * p->stride;
+    }
+    for (x = 0; x < w; ) {
+        float nb[25];
+        float lo, hi;
+        uint32_t oy, ox, ny, nx;
+        int ix;
+        int n = 0;
+
+#ifdef JXL_UPSAMPLE_SSE2
+
+        if (y_full) {
+            if (use_avx2 && x >= 2 && x + 10 <= w &&
+                (uint64_t)(x + 8) * N <= out_w) {
+                up_block8(srow, x, N, kernel, drows, N);
+                x += 8;
+                continue;
+            }
+            if (x >= 2 && x + 6 <= w && (uint64_t)(x + 4) * N <= out_w) {
+                up_block4(srow, x, N, kernel, drows, N);
+                x += 4;
+                continue;
+            }
+        }
+#endif
+
+        if (x >= 2 && x + 2 < w) {
+            for (iy = 0; iy < 5; iy++) {
+                const float *r = srow[iy] + x - 2;
+                nb[n] = r[0]; nb[n + 1] = r[1]; nb[n + 2] = r[2];
+                nb[n + 3] = r[3]; nb[n + 4] = r[4];
+                n += 5;
+            }
+        } else {
+            for (iy = 0; iy < 5; iy++) {
+                for (ix = -2; ix <= 2; ix++) {
+                    nb[n++] = srow[iy][up_mirror((int64_t)x + ix, w)];
+                }
+            }
+        }
+        up_minmax25(nb, &lo, &hi);
+
+        ny = y * N < out_h ? out_h - y * N : 0;
+        if (ny > N) ny = N;
+        nx = x * N < out_w ? out_w - x * N : 0;
+        if (nx > N) nx = N;
+        for (oy = 0; oy < ny; oy++) {
+            float *drow = drows[oy];
+            const float *krow = kernel + ((size_t)oy * N) * 25;
+            uint32_t dx0 = x * N;
+            for (ox = 0; ox < nx; ox++) {
+                float sum = up_dot25(nb, krow + (size_t)ox * 25);
+                if (sum < lo) sum = lo;
+                if (sum > hi) sum = hi;
+                drow[dx0 + ox] = sum;
+            }
+        }
+        x++;
+    }
+}
+
 int jxl_upsample_plane(jxl_ctx *ctx, jxl_fplane *p, uint32_t shift,
                        const jxl_image_metadata *meta, uint32_t out_w,
                        uint32_t out_h) {
     uint32_t N = 1u << shift;
-    uint32_t w = p->w, h = p->h, x, y;
+    uint32_t w = p->w, h = p->h, y;
     float *kernel = NULL;
     jxl_fplane dst;
     int rc = -1;
-#ifdef JXL_UPSAMPLE_SSE2
-    const int use_avx2 = jxl_has_avx2();
-#endif
 
     if (shift == 0 || shift > 3) return 0;
     if (w == 0 || h == 0) return 0;
 
     memset(&dst, 0, sizeof(dst));
-    kernel = (float *)jxl_calloc(ctx, (size_t)N * N * 25, sizeof(float));
+    kernel = jxl_upsample_kernel(ctx, shift, meta);
     if (!kernel) goto done;
-    build_kernel(kernel, shift, weights_for(meta, shift));
 
     if (jxl_fplane_alloc_uninit(ctx, &dst, out_w, out_h) != 0) goto done;
 
     for (y = 0; y < h; y++) {
+        float *drows[8];
+        uint32_t oy;
 
-#ifdef JXL_UPSAMPLE_SSE2
-        const int y_full = (uint64_t)(y + 1) * N <= out_h;
-#endif
-
-        const float *srow[5];
-        int iy;
-        for (iy = -2; iy <= 2; iy++) {
-            srow[iy + 2] = p->data +
-                (size_t)up_mirror((int64_t)y + iy, h) * p->stride;
+        for (oy = 0; oy < N; oy++) {
+            uint32_t r = y * N + oy;
+            drows[oy] = dst.data + (size_t)(r < out_h ? r : 0) * dst.stride;
         }
-        for (x = 0; x < w; ) {
-            float nb[25];
-            float lo, hi;
-            uint32_t oy, ox, ny, nx;
-            int ix;
-            int n = 0;
-
-#ifdef JXL_UPSAMPLE_SSE2
-
-            if (y_full) {
-                float *drows[8];
-                if (use_avx2 && x >= 2 && x + 10 <= w &&
-                    (uint64_t)(x + 8) * N <= out_w) {
-                    for (oy = 0; oy < N; oy++) {
-                        drows[oy] = dst.data +
-                                    (size_t)(y * N + oy) * dst.stride;
-                    }
-                    up_block8(srow, x, N, kernel, drows, N);
-                    x += 8;
-                    continue;
-                }
-                if (x >= 2 && x + 6 <= w && (uint64_t)(x + 4) * N <= out_w) {
-                    for (oy = 0; oy < N; oy++) {
-                        drows[oy] = dst.data +
-                                    (size_t)(y * N + oy) * dst.stride;
-                    }
-                    up_block4(srow, x, N, kernel, drows, N);
-                    x += 4;
-                    continue;
-                }
-            }
-#endif
-
-            if (x >= 2 && x + 2 < w) {
-                for (iy = 0; iy < 5; iy++) {
-                    const float *r = srow[iy] + x - 2;
-                    nb[n] = r[0]; nb[n + 1] = r[1]; nb[n + 2] = r[2];
-                    nb[n + 3] = r[3]; nb[n + 4] = r[4];
-                    n += 5;
-                }
-            } else {
-                for (iy = 0; iy < 5; iy++) {
-                    for (ix = -2; ix <= 2; ix++) {
-                        nb[n++] = srow[iy][up_mirror((int64_t)x + ix, w)];
-                    }
-                }
-            }
-            up_minmax25(nb, &lo, &hi);
-
-            ny = y * N < out_h ? out_h - y * N : 0;
-            if (ny > N) ny = N;
-            nx = x * N < out_w ? out_w - x * N : 0;
-            if (nx > N) nx = N;
-            for (oy = 0; oy < ny; oy++) {
-                float *drow = dst.data + (size_t)(y * N + oy) * dst.stride;
-                const float *krow = kernel + ((size_t)oy * N) * 25;
-                uint32_t dx0 = x * N;
-                for (ox = 0; ox < nx; ox++) {
-                    float sum = up_dot25(nb, krow + (size_t)ox * 25);
-                    if (sum < lo) sum = lo;
-                    if (sum > hi) sum = hi;
-                    drow[dx0 + ox] = sum;
-                }
-            }
-            x++;
-        }
+        jxl_upsample_rows(p, shift, kernel, out_w, out_h, y, drows);
     }
 
     jxl_free(ctx, p->data);
@@ -9714,6 +9760,11 @@ int jxl_fimage_alloc(jxl_ctx *ctx, jxl_fimage *img, uint32_t nplane) {
                                           sizeof(jxl_fplane));
     if (!img->plane) return -1;
     img->nplane = nplane;
+    img->up_shift = 0;
+    img->up_nplane = 0;
+    img->up_kernel = NULL;
+    img->ct_pending = 0;
+    img->defer_meta = NULL;
     return 0;
 }
 
@@ -9725,13 +9776,95 @@ void jxl_fimage_free(jxl_ctx *ctx, jxl_fimage *img) {
         jxl_free(ctx, img->plane[i].idata);
     }
     jxl_free(ctx, img->plane);
+    jxl_free(ctx, img->up_kernel);
     img->plane = NULL;
     img->nplane = 0;
+    img->up_kernel = NULL;
+    img->up_shift = 0;
+    img->ct_pending = 0;
+}
+
+void jxl_fimage_deferred_size(const jxl_fimage *img, uint32_t i, uint32_t *w,
+                              uint32_t *h) {
+
+    uint32_t tw = img->plane[i].w << img->up_shift;
+    uint32_t th = img->plane[i].h << img->up_shift;
+    *w = tw > img->w ? img->w : tw;
+    *h = th > img->h ? img->h : th;
+}
+
+void jxl_ct_init(jxl_ctx *ctx, const jxl_image_metadata *meta, int ycbcr,
+                 jxl_ct *ct) {
+    memset(ct, 0, sizeof(*ct));
+    ct->meta = meta;
+    ct->enc = meta->colour;
+    if (ycbcr) {
+        ct->mode = JXL_CT_YCBCR;
+        return;
+    }
+    ct->mode = JXL_CT_XYB;
+    jxl_opsin_matrix_for(meta, ct->opsin, ct->luminances);
+
+    if (ctx->srgb_output && !ct->enc.tf_have_gamma &&
+        ct->enc.tf == JXL_TF_LINEAR) {
+        ct->enc.tf = JXL_TF_SRGB;
+    }
+}
+
+void jxl_ct_row_linear(const jxl_ct *ct, float *r, float *g, float *b,
+                       uint32_t w) {
+    if (ct->mode == JXL_CT_YCBCR) {
+        jxl_ycbcr_to_rgb(r, g, b, w);
+        return;
+    }
+    jxl_xyb_to_linear(r, g, b, w, ct->opsin, ct->meta->opsin_bias,
+                      ct->meta->tone_mapping.intensity_target);
+}
+
+void jxl_ct_row_finish(const jxl_ct *ct, float *r, float *g, float *b,
+                       uint32_t w) {
+    float it = ct->meta->tone_mapping.intensity_target;
+    if (ct->mode != JXL_CT_XYB) return;
+    if (!ct->enc.tf_have_gamma && ct->enc.tf == JXL_TF_HLG)
+        jxl_hlg_inverse_ootf(r, g, b, w, ct->luminances, it);
+    jxl_linear_to_tf(r, w, &ct->enc, it);
+    jxl_linear_to_tf(g, w, &ct->enc, it);
+    jxl_linear_to_tf(b, w, &ct->enc, it);
+}
+
+int jxl_fimage_finish(jxl_ctx *ctx, jxl_fimage *img) {
+    uint32_t i, row;
+    if (!img || !img->plane) return 0;
+    if (img->up_shift) {
+        for (i = 0; i < img->up_nplane && i < img->nplane; i++) {
+            uint32_t tw, th;
+            jxl_fimage_deferred_size(img, i, &tw, &th);
+            if (jxl_upsample_plane(ctx, &img->plane[i], img->up_shift,
+                                   img->defer_meta, tw, th) != 0)
+                return -1;
+        }
+        jxl_free(ctx, img->up_kernel);
+        img->up_kernel = NULL;
+        img->up_shift = 0;
+    }
+    if (img->ct_pending) {
+        jxl_fplane *p = img->plane;
+        for (row = 0; row < p[0].h; row++) {
+            float *r = p[0].data + (size_t)row * p[0].stride;
+            float *g = p[1].data + (size_t)row * p[1].stride;
+            float *b = p[2].data + (size_t)row * p[2].stride;
+            jxl_ct_row_linear(&img->ct, r, g, b, p[0].w);
+            jxl_ct_row_finish(&img->ct, r, g, b, p[0].w);
+        }
+        img->ct_pending = 0;
+    }
+    return 0;
 }
 
 int jxl_fimage_materialize(jxl_ctx *ctx, jxl_fimage *img) {
     uint32_t i, x, y;
     if (!img || !img->plane) return 0;
+    if (jxl_fimage_finish(ctx, img) != 0) return -1;
     for (i = 0; i < img->nplane; i++) {
         jxl_fplane *p = &img->plane[i];
         int32_t *idata = p->idata;
@@ -10376,6 +10509,7 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
     int lazy_int = 0;
 
     int late_ec_upsample = fh->upsampling != 1;
+    int defer_up = 0;
     int any_ec_upsample = 0;
     uint32_t nspecs = 0, i, split;
     uint32_t color_w, color_h, group_dim, group_dim_shift;
@@ -10914,7 +11048,19 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
         if (jxl_render_splines(ctx, out, &splines, fh, cx, cb) != 0) goto done;
     }
 
-    if (color_upsampling_shift > 0) {
+    defer_up = st->lazy_int_ok && color_upsampling_shift > 0 && apply_ct &&
+               !have_noise && out->ncolor >= 3 && out->nplane >= 3 &&
+               meta->colour.colour_space != JXLDEC_CS_GRAY;
+    if (defer_up) {
+        out->up_kernel =
+            jxl_upsample_kernel(ctx, color_upsampling_shift, meta);
+        if (!out->up_kernel) goto done;
+        out->up_shift = color_upsampling_shift;
+        out->up_nplane = late_ec_upsample ? out->nplane : out->ncolor;
+        out->defer_meta = meta;
+        out->w = jxl_frame_sample_width(fh, 1);
+        out->h = jxl_frame_sample_height(fh, 1);
+    } else if (color_upsampling_shift > 0) {
         uint32_t full_w = jxl_frame_sample_width(fh, 1);
         uint32_t full_h = jxl_frame_sample_height(fh, 1);
         for (i = 0; i < (late_ec_upsample ? out->nplane : out->ncolor); i++) {
@@ -10939,61 +11085,43 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
             goto done;
     }
 
-    if (apply_ct && fh->do_ycbcr && out->ncolor >= 3) {
+    if (apply_ct && fh->do_ycbcr && out->ncolor >= 3 &&
+        meta->colour.colour_space == JXLDEC_CS_GRAY) {
         uint32_t row, rows = out->plane[0].h, rw = out->plane[0].w;
-        if (meta->colour.colour_space == JXLDEC_CS_GRAY) {
-            for (row = 0; row < rows; row++) {
-                jxl_ycbcr_to_gray(
-                    out->plane[0].data + (size_t)row * out->plane[0].stride,
-                    out->plane[1].data + (size_t)row * out->plane[1].stride,
-                    out->plane[2].data + (size_t)row * out->plane[2].stride,
-                    rw);
-            }
-            fimage_keep_gray(ctx, out);
-        } else {
-            for (row = 0; row < rows; row++) {
-                jxl_ycbcr_to_rgb(
-                    out->plane[0].data + (size_t)row * out->plane[0].stride,
-                    out->plane[1].data + (size_t)row * out->plane[1].stride,
-                    out->plane[2].data + (size_t)row * out->plane[2].stride,
-                    rw);
-            }
-        }
-    } else if (apply_ct && meta->xyb_encoded && out->ncolor >= 3) {
-        uint32_t row, rows = out->plane[0].h, rw = out->plane[0].w;
-        float opsin[9], luminances[3];
-        jxl_colour_encoding out_enc = meta->colour;
-        jxl_opsin_matrix_for(meta, opsin, luminances);
-
-        if (ctx->srgb_output && !out_enc.tf_have_gamma &&
-            out_enc.tf == JXL_TF_LINEAR) {
-            out_enc.tf = JXL_TF_SRGB;
-        }
         for (row = 0; row < rows; row++) {
-            jxl_xyb_to_linear(out->plane[0].data + (size_t)row * out->plane[0].stride,
-                              out->plane[1].data + (size_t)row * out->plane[1].stride,
-                              out->plane[2].data + (size_t)row * out->plane[2].stride,
-                              rw, opsin, meta->opsin_bias,
-                              meta->tone_mapping.intensity_target);
-            if (st->spot_linear) spot_mix_rows(out, meta, row, row + 1);
-            if (!out_enc.tf_have_gamma && out_enc.tf == JXL_TF_HLG) {
-                jxl_hlg_inverse_ootf(
-                    out->plane[0].data + (size_t)row * out->plane[0].stride,
-                    out->plane[1].data + (size_t)row * out->plane[1].stride,
-                    out->plane[2].data + (size_t)row * out->plane[2].stride,
-                    rw, luminances, meta->tone_mapping.intensity_target);
-            }
-            for (i = 0; i < 3; i++) {
-                jxl_linear_to_tf(out->plane[i].data +
-                                     (size_t)row * out->plane[i].stride,
-                                 rw, &out_enc,
-                                 meta->tone_mapping.intensity_target);
+            jxl_ycbcr_to_gray(
+                out->plane[0].data + (size_t)row * out->plane[0].stride,
+                out->plane[1].data + (size_t)row * out->plane[1].stride,
+                out->plane[2].data + (size_t)row * out->plane[2].stride,
+                rw);
+        }
+        fimage_keep_gray(ctx, out);
+    } else if (apply_ct && (fh->do_ycbcr || meta->xyb_encoded) &&
+               out->ncolor >= 3) {
+        jxl_ct ct;
+        jxl_ct_init(ctx, meta, fh->do_ycbcr, &ct);
+        if (defer_up) {
+            out->ct = ct;
+            out->ct_pending = 1;
+        } else {
+            uint32_t row, rows = out->plane[0].h, rw = out->plane[0].w;
+            for (row = 0; row < rows; row++) {
+                float *r = out->plane[0].data + (size_t)row * out->plane[0].stride;
+                float *g = out->plane[1].data + (size_t)row * out->plane[1].stride;
+                float *b = out->plane[2].data + (size_t)row * out->plane[2].stride;
+                jxl_ct_row_linear(&ct, r, g, b, rw);
+                if (ct.mode == JXL_CT_XYB && st->spot_linear)
+                    spot_mix_rows(out, meta, row, row + 1);
+                jxl_ct_row_finish(&ct, r, g, b, rw);
             }
         }
-        if (st->spot_linear) st->spot_done = 1;
+        if (ct.mode == JXL_CT_XYB) {
+            if (st->spot_linear) st->spot_done = 1;
 
-        if (meta->colour.colour_space == JXLDEC_CS_GRAY && out->ncolor == 3) {
-            fimage_keep_gray(ctx, out);
+            if (meta->colour.colour_space == JXLDEC_CS_GRAY &&
+                out->ncolor == 3) {
+                fimage_keep_gray(ctx, out);
+            }
         }
     }
     rc = 0;
@@ -16689,6 +16817,28 @@ static void write_transposed_rgba8(const jxl_out_planes *op,
 }
 #endif
 
+static void band_fill(const jxl_fimage *img, int alpha_pi, float *band,
+                      uint32_t sw, uint32_t sh, uint32_t by) {
+    uint32_t N = 1u << img->up_shift, k, j, ny;
+    size_t psz = (size_t)N * sw;
+    float *rows[8];
+    for (k = 0; k < 4; k++) {
+        int pi = k < 3 ? (int)k : alpha_pi;
+        if (pi < 0) break;
+        for (j = 0; j < N; j++) rows[j] = band + k * psz + (size_t)j * sw;
+        jxl_upsample_rows(&img->plane[pi], img->up_shift, img->up_kernel, sw,
+                          sh, by, rows);
+    }
+    if (!img->ct_pending) return;
+    ny = sh - by * N;
+    if (ny > N) ny = N;
+    for (j = 0; j < ny; j++) {
+        float *r = band + (size_t)j * sw;
+        jxl_ct_row_linear(&img->ct, r, r + psz, r + 2 * psz, sw);
+        jxl_ct_row_finish(&img->ct, r, r + psz, r + 2 * psz, sw);
+    }
+}
+
 static int write_pixels(jxl_ctx *ctx, jxl_doc *doc, jxl_fimage *img,
                         jxl_format fmt, uint8_t *dst, int stride) {
     const jxl_image_metadata *meta = &doc->meta;
@@ -16703,10 +16853,49 @@ static int write_pixels(jxl_ctx *ctx, jxl_doc *doc, jxl_fimage *img,
     int bgr = ctx->bgr;
 
     float *lazy_rows = NULL;
+
+    float *band = NULL;
+    int alpha_pi = -1;
+    uint32_t band_by = 0xffffffffu;
 #ifdef JXL_RENDER_SSE2
     const int use_avx2 = jxl_has_avx2();
 #endif
 
+    if (img->up_shift || img->ct_pending) {
+        int stream = img->up_shift != 0 && orientation >= 1 &&
+                     orientation <= 4 && img->w == sw && img->h == sh &&
+                     img->nplane >= 3 && img->up_nplane >= 3 && sw > 0 &&
+                     sh > 0;
+        uint32_t i, tw, th;
+        for (i = 0; i < 3 && stream; i++) {
+            jxl_fimage_deferred_size(img, i, &tw, &th);
+            if (tw != sw || th != sh) stream = 0;
+        }
+        if (stream && meta->alpha_index >= 0) {
+            uint32_t ai = img->ncolor + (uint32_t)meta->alpha_index;
+            if (ai < img->up_nplane && ai < img->nplane) {
+                jxl_fimage_deferred_size(img, ai, &tw, &th);
+                if (tw != sw || th != sh) stream = 0;
+                alpha_pi = (int)ai;
+            } else if (ai < img->nplane &&
+                       (!plane_is_full(&img->plane[ai], sw, sh) ||
+                        img->plane[ai].idata)) {
+                stream = 0;
+            }
+        }
+        if (stream) {
+            size_t n;
+            uint32_t nb = alpha_pi >= 0 ? 4 : 3;
+            if (!jxl_size_mul((size_t)sw << img->up_shift,
+                              nb * sizeof(float), &n))
+                return -1;
+            band = (float *)jxl_malloc(ctx, n);
+            if (!band) return -1;
+        } else {
+            alpha_pi = -1;
+            if (jxl_fimage_finish(ctx, img) != 0) return -1;
+        }
+    }
     pick_planes(img, meta, &op);
     jxl_apply_orientation_dims(orientation, sw, sh, &ow, &oh);
 
@@ -16721,6 +16910,7 @@ static int write_pixels(jxl_ctx *ctx, jxl_doc *doc, jxl_fimage *img,
         case JXLDEC_FORMAT_RGBA64: ncomp = 4; has_alpha = 1; wide = 1; break;
         default:
             JXL_ERR(ctx, "render: unsupported output format %d", (int)fmt);
+            jxl_free(ctx, band);
             return -1;
     }
     maxval = wide ? 65535u : 255u;
@@ -16734,6 +16924,7 @@ static int write_pixels(jxl_ctx *ctx, jxl_doc *doc, jxl_fimage *img,
              (gray || (plane_is_full(op.g, sw, sh) &&
                        plane_is_full(op.b, sw, sh))) &&
              (!op.a || plane_is_full(op.a, sw, sh));
+    if (band) direct = 1;
     reverse_x = orientation == 2 || orientation == 3;
     transposed = orientation >= 5;
 
@@ -16778,7 +16969,23 @@ static int write_pixels(jxl_ctx *ctx, jxl_doc *doc, jxl_fimage *img,
                 sy = (orientation == 3 || orientation == 4)
                          ? sh - 1 - oy : oy;
             }
-            if (lazy_rows) {
+            if (band) {
+
+                uint32_t by = sy >> img->up_shift;
+                size_t psz = (size_t)sw << img->up_shift;
+                size_t off = (size_t)(sy - (by << img->up_shift)) * sw;
+                if (by != band_by) {
+                    band_fill(img, alpha_pi, band, sw, sh, by);
+                    band_by = by;
+                }
+                pr = band + off;
+                if (!gray) {
+                    pg = pr + psz;
+                    pb = pr + 2 * psz;
+                }
+                if (alpha_pi >= 0) pa = band + 3 * psz + off;
+                else if (op.a) pa = op.a->data + (size_t)sy * op.a->stride;
+            } else if (lazy_rows) {
 
                 pr = plane_row(op.r, sy, sw, lazy_rows);
                 if (!gray) {
@@ -17024,6 +17231,7 @@ static int write_pixels(jxl_ctx *ctx, jxl_doc *doc, jxl_fimage *img,
         }
     }
     jxl_free(ctx, lazy_rows);
+    jxl_free(ctx, band);
     return 0;
 }
 
