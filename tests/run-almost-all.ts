@@ -656,6 +656,7 @@ import { testit as toolMerge } from "./tool-merge.ts";
 import { testit as toolGrep } from "./tool-grep.ts";
 import { testit as insertImageReload } from "./insert-image-reload.ts";
 import { testit as appdataInvalidDir } from "./appdata-invalid-dir.ts";
+import { testit as mergeClosePaint } from "./merge-close-paint.ts";
 import { testit as mergeStructParents } from "./merge-struct-parents.ts";
 import { testit as reuseInstanceFullscreen } from "./reuse-instance-fullscreen.ts";
 import { testit as attachmentOpenExternal } from "./attachment-open-external.ts";
@@ -1203,6 +1204,7 @@ export const tests: NamedTest[] = [
   ["tool-grep", toolGrep],
   ["insert-image-reload", insertImageReload],
   ["appdata-invalid-dir", appdataInvalidDir],
+  ["merge-close-paint", mergeClosePaint],
   ["merge-struct-parents", mergeStructParents],
   ["reuse-instance-fullscreen", reuseInstanceFullscreen],
   ["attachment-open-external", attachmentOpenExternal],

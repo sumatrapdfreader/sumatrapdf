@@ -1228,7 +1228,7 @@ void MergeGrid::ShowContextMenu() {
 // those far from them
 void MergeGrid::StartRendering() {
     int n = len(items);
-    if (sources->job.IsRunning() || n == 0 || ViewportDy() <= 0) {
+    if (!sources || sources->job.IsRunning() || n == 0 || ViewportDy() <= 0) {
         return;
     }
     int firstVisible = FirstVisibleIdx();
@@ -1435,12 +1435,23 @@ static void TeardownMergeWnd(MergePdfWnd* w) {
     KillTimer(w->hwnd, kAutoScrollTimerId);
     MergeSources* sources = w->sources;
     sources->grid = nullptr;
-    w->grid->sources = nullptr;
-    w->grid->wnd = nullptr;
+    // the window outlives the sources: until it's deleted it can still be
+    // painted or laid out (SetActiveWindow() below pumps messages when an IME
+    // is active), so nothing in it may point to them
+    MergeGrid* grid = w->grid;
+    grid->EndPress();
+    VecReset(grid->items);
+    VecReset(grid->clip);
+    grid->rowsModel->rows = 0;
+    grid->hoverIdx = -1;
+    grid->focusIdx = 0;
+    grid->anchorIdx = 0;
+    grid->sources = nullptr;
+    grid->wnd = nullptr;
+    w->sources = nullptr;
     if (sources->job.Detach()) {
         DeleteMergeSources(sources);
     }
-    w->sources = nullptr;
     if (gMergeWnd == w) {
         gMergeWnd = nullptr;
     }
@@ -1519,7 +1530,7 @@ TempStr MergePdfWnd::InfoTemp() {
 // dx, so every file is named (issue #6397). Relative to the legend
 void MergePdfWnd::LegendRects(int dx, Vec<Rect>& out) {
     VecReset(out);
-    if (len(sources->all) < 2) {
+    if (!sources || len(sources->all) < 2) {
         return;
     }
     int gap = fontMeta->averageCharWidth;
@@ -2165,8 +2176,8 @@ static void ReleaseCtrlKey() {
 // (arg: 0-based items like "0,2", n: in front of that item), "remove" /
 // "restore" (arg: items), "rotate" (arg: items, n: degrees), "copy" / "cut"
 // (arg: items), "paste" (arg: items, the paste goes after the last), "save" /
-// "saveas" (arg: the path), "ctrla" (presses Ctrl+A), "close" or "" (report
-// only). Reports the items as src:page[@rotation] (r: removed, s: selected),
+// "saveas" (arg: the path), "ctrla" (presses Ctrl+A), "close", "closepaint"
+// (tests/merge-close-paint.ts) or "" (report only). Reports the items as src:page[@rotation] (r: removed, s: selected),
 // the status text (info="...") and,
 // for clicking, the dialog's hwnd and each visible thumbnail and its corner
 // button in client coords. Used by tests/issue-6070.ts.
@@ -2236,6 +2247,17 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
         return finish(0, res);
     } else if (str::Eq(action, StrL("close"))) {
         w->Close();
+        return finish(0, str::DupTemp(StrL("OK closed")));
+    } else if (str::Eq(action, StrL("closepaint"))) {
+        // closes with a paint and a layout between the teardown and the
+        // window's end, as when SetActiveWindow() pumps messages there
+        HWND hwnd = w->hwnd;
+        TeardownMergeWnd(w);
+        RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+        Rect rc = HwndWindowRect(hwnd);
+        SetWindowPos(hwnd, nullptr, 0, 0, rc.dx + 40, rc.dy, SWP_NOMOVE | SWP_NOZORDER);
+        RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+        DestroyWindow(hwnd);
         return finish(0, str::DupTemp(StrL("OK closed")));
     } else if (str::Eq(action, StrL("ctrla"))) {
         // Ctrl+A through the message loop (and its accelerators), Ctrl held
