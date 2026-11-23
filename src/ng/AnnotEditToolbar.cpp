@@ -945,11 +945,15 @@ static void OnChipClick(AnnotEditToolbar* tb, int chipIdx) {
             if (AppShellPickFileAsync(tb->win, Tr("Open"), {}, MkFunc1(OnAttachPicked, tb->win))) {
                 break;
             }
-            TempStr path = AppShellPromptForPathTemp(tb->win, Tr("Open"), {});
-            if (len(path) > 0 && SetEmbeddedFileFromPath(annot, path)) {
-                AnnotChanged(tab);
+            // the prompt's nested loop can close the window or drop the annotation
+            MainWindow* win = tb->win;
+            TempStr path = AppShellPromptForPathTemp(win, Tr("Open"), {});
+            bool ok = len(path) > 0 && IsMainWindowValidAndNotClosing(win);
+            if (ok && LiveToolbarAnnot(win->annotEditToolbar) == annot && SetEmbeddedFileFromPath(annot, path)) {
+                AnnotChanged(win->CurrentTab());
             }
-            break;
+            AppShellInvalidate(win);
+            return;
         }
         case AnnotEditKind::SaveAttachment: {
             if (!HasEmbeddedFile(annot)) {
