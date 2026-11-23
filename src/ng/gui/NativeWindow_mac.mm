@@ -73,13 +73,16 @@ void AppShellOpenDocsReady() {
 }
 
 // Tests pass HWND_TOPMOST. orderFront stays under the active app, so the
-// frame also moves to the floating level, above ordinary windows.
+// frame also moves to the floating level, above ordinary windows. A
+// fullscreen app owns the visible space; join it and come forward without
+// activating, or the window is never what a drop hits.
 void AppShellRaiseAbove(MainWindow* win) {
     NSView* view = win && win->gpuiWin ? (__bridge NSView*)gp::PlatWindowHandle(win->gpuiWin) : nil;
     NSWindow* w = view.window;
     if (!w) {
         return;
     }
+    w.collectionBehavior = w.collectionBehavior | NSWindowCollectionBehaviorCanJoinAllSpaces;
     w.level = NSFloatingWindowLevel;
-    [w orderFront:nil];
+    [w orderFrontRegardless];
 }
