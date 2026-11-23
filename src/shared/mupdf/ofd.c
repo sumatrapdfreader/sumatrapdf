@@ -2073,7 +2073,7 @@ static void ofd_check_integrity(fz_context* ctx, ofd_package* pkg, ofd_signature
         int n = fz_count_archive_entries(ctx, pkg->archive);
         for (int i = 0; i < n; ++i) {
             const char* name = fz_list_archive_entry(ctx, pkg->archive, i);
-            if (!name || name[strlen(name) - 1] == '/') continue;
+            if (!name || !name[0] || name[strlen(name) - 1] == '/') continue;
             if (!strcmp(name, "OFDEntries.xml") || !strcmp(name, value_path)) continue;
             int listed = 0;
             for (fz_xml* file = fz_xml_down(list); file && !listed; file = fz_xml_next(file)) {
