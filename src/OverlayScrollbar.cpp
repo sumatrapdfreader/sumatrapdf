@@ -189,6 +189,22 @@ static void PaintScrollbar(OverlayScrollbar* sb) {
     }
     fillRect(thumbRc, thumbCol);
 
+    // find matches, over the thumb and opaque so they're seen on it
+    Vec<Rect> markers;
+    Rect currentMarker;
+    GetFindMarkerRects(sb, markers, &currentMarker);
+    if (len(markers) > 0 || !currentMarker.IsEmpty()) {
+        u8 barAlpha = alpha;
+        alpha = 255;
+        for (Rect& r : markers) {
+            fillRect(r, sb->findMarkerColor);
+        }
+        if (!currentMarker.IsEmpty()) {
+            fillRect(currentMarker, sb->findMarkerCurrentColor);
+        }
+        alpha = barAlpha;
+    }
+
     if (IsThick(sb)) {
         Gdiplus::Graphics gfx(hdcMem);
         gfx.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
@@ -390,7 +406,7 @@ static void CALLBACK MouseTrackTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR /
             // If we were showing, hide
             if (IsVisible(sb)) {
                 if (!sb->isDragging) {
-                    HideScrollbarWindow(sb);
+                    HideScrollbarWindow(sb, HideReason::Away);
                 }
             }
             continue;
@@ -439,7 +455,7 @@ static void CALLBACK MouseTrackTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_PTR /
             SetTimer(sb->hwnd, OverlayScrollbar::kTimerAutoHide, sb->hideAfterMouseStopMs, nullptr);
         } else if (IsThick(sb) && !overOwner) {
             // Mouse left the owner area while thick - transition to hidden
-            HideScrollbarWindow(sb);
+            HideScrollbarWindow(sb, HideReason::Idle);
         }
         // If mouse is over owner but not moving, the existing auto-hide timer handles it
     }
@@ -486,7 +502,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
         case WM_TIMER:
             if (wp == OverlayScrollbar::kTimerAutoHide) {
                 if (!sb->isDragging) {
-                    HideScrollbarWindow(sb);
+                    HideScrollbarWindow(sb, HideReason::Idle);
                 }
                 return 0;
             }
@@ -867,6 +883,14 @@ void OverlayScrollbarHide(OverlayScrollbar* sb) {
     }
     SetWindowPos(sb->hwnd, nullptr, 0, 0, 0, 0,
                  SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
+}
+
+// the search's matches on a vertical bar (see SetFindMarkers)
+void OverlayScrollbarSetFindMarkers(OverlayScrollbar* sb, const Vec<float>& markers, float current, Color col,
+                                    Color currentCol) {
+    if (sb && SetFindMarkers(sb, markers, current, col, currentCol)) {
+        PaintScrollbar(sb);
+    }
 }
 
 // Show/hide

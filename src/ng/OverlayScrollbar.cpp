@@ -87,12 +87,20 @@ void SetState(OverlayScrollbar* sb, State newState) {
     PaintScrollbar(sb);
 }
 
+// the search's matches on a vertical bar (see SetFindMarkers)
+void OverlayScrollbarSetFindMarkers(OverlayScrollbar* sb, const Vec<float>& markers, float current, Color col,
+                                    Color currentCol) {
+    if (sb && SetFindMarkers(sb, markers, current, col, currentCol)) {
+        PaintScrollbar(sb);
+    }
+}
+
 void OverlayScrollbarHide(OverlayScrollbar* sb) {
     // Created on the first overlay tick. Close still hides them before that.
     if (!sb) {
         return;
     }
-    HideScrollbarWindow(sb);
+    HideScrollbarWindow(sb, HideReason::Away);
 }
 
 // Restart the thin-bar auto-hide countdown (showAfterScrollMs). SetState only
@@ -183,7 +191,7 @@ void OverlayScrollbarOnMouse(OverlayScrollbar* sb, bool overOwner, bool overScro
     }
     if (IsThick(sb) && !overOwner) {
         // Mouse left the owner area while thick - transition to hidden
-        HideScrollbarWindow(sb);
+        HideScrollbarWindow(sb, HideReason::Idle);
     }
 }
 
@@ -253,11 +261,11 @@ bool OverlayScrollbarTick(OverlayScrollbar* sb, int elapsedMs, bool ownerActive)
     }
     // orig's poll: only scrollbars whose owner is in the active window show
     if (!ownerActive && IsActive(sb) && IsVisible(sb) && !sb->isDragging) {
-        HideScrollbarWindow(sb);
+        HideScrollbarWindow(sb, HideReason::Away);
     }
     // orig's kTimerAutoHide
     if (sb->autoHide.Tick(elapsedMs) && !sb->isDragging) {
-        HideScrollbarWindow(sb);
+        HideScrollbarWindow(sb, HideReason::Idle);
     }
     return was != sb->state;
 }
@@ -318,6 +326,22 @@ static void OnPaintScrollbar(gp::PaintCtx* ctx, gp::El* e, void* user) {
     Rect thumbRc = GetThumbRect(sb);
     Color thumbCol = sb->mouseOverThumb ? ThemeThumbHoverColor() : ThemeThumbColor();
     fillRect(thumbRc, thumbCol);
+
+    // find matches, over the thumb and opaque so they're seen on it
+    Vec<Rect> markers;
+    Rect currentMarker;
+    GetFindMarkerRects(sb, markers, &currentMarker);
+    if (len(markers) > 0 || !currentMarker.IsEmpty()) {
+        u8 barAlpha = alpha;
+        alpha = 255;
+        for (Rect& r : markers) {
+            fillRect(r, sb->findMarkerColor);
+        }
+        if (!currentMarker.IsEmpty()) {
+            fillRect(currentMarker, sb->findMarkerCurrentColor);
+        }
+        alpha = barAlpha;
+    }
 
     if (!thick) {
         return;

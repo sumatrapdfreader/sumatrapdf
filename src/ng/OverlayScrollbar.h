@@ -91,6 +91,13 @@ struct OverlayScrollbar {
     int clientDx = 0;
     int clientDy = 0;
     float k = 1;
+    // find matches, as fractions of the range (vertical bar only); the current
+    // match, -1 if none. See SetFindMarkers()
+    Vec<float> findMarkers;
+    float findMarkerCurrent = -1;
+    Color findMarkerColor = 0;
+    Color findMarkerCurrentColor = 0;
+
     // ng: the "windows" mode's right-click menu and where it was opened
     int popupIdx = -1;
     unsigned int popupGen = 0;
@@ -103,6 +110,9 @@ void OverlayScrollbarDestroy(OverlayScrollbar* sb);
 void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode);
 // same as SetScrollInfo with SIF_ALL; doesn't reveal the bar
 void OverlayScrollbarSetInfo(OverlayScrollbar* sb, int nMin, int nMax, int nPage, int nPos);
+TempStr OverlayScrollbarFindMarkersReportTemp(OverlayScrollbar* sb);
+void OverlayScrollbarSetFindMarkers(OverlayScrollbar* sb, const Vec<float>& markers, float current, Color col,
+                                    Color currentCol);
 // the cursor moved over the owner: `overBand` is orig's GetScrollbarScreenRect
 // test (the cursor is within the thick width of this edge)
 void OverlayScrollbarOnMouse(OverlayScrollbar* sb, bool overCanvas, bool overBand, bool mouseMoved);

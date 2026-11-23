@@ -1829,6 +1829,8 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     bool show = ScrollbarsUseOverlay() && thumbsVisibleDy > 0 && totalContentDy > thumbsVisibleDy;
     if (show) {
         OverlayScrollbarsSyncMode(win);
+        // the document's find markers, if it was shown last
+        OverlayScrollbarSetFindMarkers(win->overlayScrollV, Vec<float>{}, -1, 0, 0);
         show = IsOverlayScrollbarVisible(win->overlayScrollV);
     }
     h->vbarShown = show;

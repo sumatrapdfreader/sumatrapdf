@@ -42,6 +42,7 @@
 #include "ProgressUpdateUI.h"
 #include "TextSearch.h"
 #include "SearchAndDDE.h"
+#include "SearchAndDDECommon.h"
 #include "Toolbar.h"
 #include "SelectTextKeyboard.h"
 #include "SumatraDialogs.h"
@@ -4794,6 +4795,14 @@ gp::El* DocCanvasBuild(MainWindow* win, gp::Ctx* cx) {
 
     OverlayScrollbar* sbV = CanvasScrollbar(win, true);
     OverlayScrollbar* sbH = CanvasScrollbar(win, false);
+    // where the search matches are; first, as they show an auto-hidden bar.
+    // Cached, so per frame is cheap.
+    if (sbV) {
+        Vec<float> markers;
+        float current = -1;
+        FindScrollMarkers(win, markers, &current);
+        OverlayScrollbarSetFindMarkers(sbV, markers, current, kFindOtherMatchColor, FindCurrentMatchColor());
+    }
     bool showV = win->scrollV.visible && IsOverlayScrollbarVisible(sbV);
     bool showH = win->scrollH.visible && IsOverlayScrollbarVisible(sbH);
     // orig's OverlayScrollbarUpdatePos: two thick bars leave the corner free

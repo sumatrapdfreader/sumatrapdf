@@ -73,6 +73,7 @@ import { testit as inkAnnotationBounds } from "./ink-annotation-bounds.ts";
 import { testit as issue6197 } from "./issue-6197.ts";
 import { testit as findMatchSelect } from "./issue-find-match-select.ts";
 import { testit as findResultsSorted } from "./find-results-sorted.ts";
+import { testit as findScrollbarMarkers } from "./find-scrollbar-markers.ts";
 import { testit as findWindowLayout } from "./find-window-layout.ts";
 import { testit as findUiState } from "./find-ui-state.ts";
 import { testit as gotoPageWordAfterFind } from "./goto-page-word-after-find.ts";
@@ -950,6 +951,7 @@ export const tests: NamedTest[] = [
   ["issue-6197", issue6197],
   ["issue-find-match-select", findMatchSelect],
   ["find-results-sorted", findResultsSorted],
+  ["find-scrollbar-markers", findScrollbarMarkers],
   ["find-window-layout", findWindowLayout],
   ["find-ui-state", findUiState],
   ["goto-page-word-after-find", gotoPageWordAfterFind],

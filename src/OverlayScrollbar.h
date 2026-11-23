@@ -59,6 +59,13 @@ struct OverlayScrollbar {
     UINT repeatScrollCode = 0;    // SB_LINEUP, SB_PAGEDOWN, etc.; 0 = not repeating
     bool repeatIsInitial = false; // true = waiting for initial delay, false = repeating
 
+    // find matches, as fractions of the range (vertical bar only); the current
+    // match, -1 if none. See SetFindMarkers()
+    Vec<float> findMarkers;
+    float findMarkerCurrent = -1;
+    Color findMarkerColor = 0;
+    Color findMarkerCurrentColor = 0;
+
     // timer IDs
     static constexpr UINT_PTR kTimerAutoHide = 1;
     static constexpr UINT_PTR kTimerRepeatScroll = 2;
@@ -80,5 +87,8 @@ void OverlayScrollbarHide(OverlayScrollbar* sb);
 void OverlayScrollbarNotifyScroll(OverlayScrollbar* sb);
 
 void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode);
+TempStr OverlayScrollbarFindMarkersReportTemp(OverlayScrollbar* sb);
+void OverlayScrollbarSetFindMarkers(OverlayScrollbar* sb, const Vec<float>& markers, float current, Color col,
+                                    Color currentCol);
 
 bool IsOverlayScrollbarVisible(OverlayScrollbar* sb);

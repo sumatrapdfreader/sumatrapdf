@@ -2946,6 +2946,124 @@ void PaintAllFindMatches(MainWindow* win, PaintRef ctx) {
     }
 }
 
+// the current match's color, as in the page: FixedPageUI.SelectionColor
+Color FindCurrentMatchColor() {
+    return GetPrefsColor(gSettings->fixedPageUI.selectionColor)->col;
+}
+
+// what the scrollbar markers were computed for; they only change with these
+struct FindScrollMarkersCache {
+    MainWindow* win = nullptr;
+    DisplayModel* dm = nullptr;
+    int epoch = -1;
+    int nMatches = -1;
+    u64 currentKey = 0;
+    Size canvas;
+    float zoom = 0;
+    int rotation = 0;
+    DisplayMode mode = DisplayMode::Automatic;
+    int page = 0;
+    bool byPage = false;
+    Vec<float> markers;
+    float current = -1;
+};
+
+static FindScrollMarkersCache gFindScrollMarkers;
+
+// a match's place along the vertical scrollbar, 0..1; -1 when the bar doesn't
+// cover its page. byPage: the bar's range is the pages (ScrollbarInSinglePage).
+static float MatchScrollFraction(DisplayModel* dm, int pageNo, int glyph, bool byPage) {
+    EngineBase* engine = dm->GetEngine();
+    if (!dm->ValidPageNo(pageNo)) {
+        return -1;
+    }
+    // the glyph when its page's text was extracted (by the count), else the page top
+    RectF r{};
+    int textLen = 0;
+    Rect* coords = nullptr;
+    if (engine->TryGetTextForPage(pageNo, &textLen, &coords) && coords && glyph >= 0 && glyph < textLen) {
+        r = ToRectF(coords[glyph]);
+    }
+    if (byPage) {
+        RectF mb = engine->PageMediabox(pageNo);
+        float inPage = mb.dy > 0 ? limitValue((r.y - mb.y) / mb.dy, 0.f, 1.f) : 0.f;
+        return ((float)(pageNo - 1) + inPage) / (float)dm->PageCount();
+    }
+    // the canvas has the pages that are laid out: all of them when continuous,
+    // the current one (or row) otherwise
+    Size canvas = dm->GetCanvasSize();
+    if (!dm->PageShown(pageNo) || canvas.dy <= 0) {
+        return -1;
+    }
+    Rect onScreen = dm->CvtToScreen(pageNo, r);
+    int y = onScreen.y + (onScreen.dy / 2) + dm->GetViewPort().y;
+    return limitValue((float)y / (float)canvas.dy, 0.f, 1.f);
+}
+
+static int CmpFloat(const float* a, const float* b) {
+    return (*a < *b) ? -1 : ((*a > *b) ? 1 : 0);
+}
+
+// Where the find matches lie along the vertical scrollbar, as fractions of its
+// range (0: top, 1: bottom), sorted; *current is the current match, -1 if none.
+// Empty while the find UI is hidden. Called on every paint, so it's cached.
+void FindScrollMarkers(MainWindow* win, Vec<float>& out, float* current) {
+    VecReset(out);
+    *current = -1;
+    DisplayModel* dm = win->IsDocLoaded() ? win->AsFixed() : nullptr;
+    bool stale = dm && win->findCountEngine && win->findCountEngine != (void*)dm->GetEngine();
+    if (!dm || stale || !IsFindUIVisible(win) || FindEditTextLen(win) == 0 || len(win->findMatches) == 0) {
+        return;
+    }
+    TextSearch* ts = dm->textSearch;
+    bool hasCurrent = ts && len(ts->result) > 0;
+    u64 currentKey = hasCurrent ? MatchKey(ts->startPage, ts->startGlyph) : 0;
+    bool byPage = gSettings->scrollbarInSinglePage && dm->GetDisplayMode() == DisplayMode::SinglePage;
+    bool continuous = IsContinuous(dm->GetDisplayMode());
+
+    FindScrollMarkersCache& c = gFindScrollMarkers;
+    FindScrollMarkersCache key;
+    key.win = win;
+    key.dm = dm;
+    key.epoch = win->findCountEpoch;
+    key.nMatches = len(win->findMatches);
+    key.currentKey = currentKey;
+    key.canvas = dm->GetCanvasSize();
+    key.zoom = dm->GetZoomVirtual();
+    key.rotation = dm->GetRotation();
+    key.mode = dm->GetDisplayMode();
+    // a non-continuous canvas is the current page (row): a new page, new markers
+    key.page = continuous ? 0 : dm->CurrentPageNo();
+    key.byPage = byPage;
+    bool same = c.win == key.win && c.dm == key.dm && c.epoch == key.epoch && c.nMatches == key.nMatches &&
+                c.currentKey == key.currentKey && c.canvas == key.canvas && c.zoom == key.zoom &&
+                c.rotation == key.rotation && c.mode == key.mode && c.page == key.page && c.byPage == key.byPage;
+    if (!same) {
+        c.win = key.win;
+        c.dm = key.dm;
+        c.epoch = key.epoch;
+        c.nMatches = key.nMatches;
+        c.currentKey = key.currentKey;
+        c.canvas = key.canvas;
+        c.zoom = key.zoom;
+        c.rotation = key.rotation;
+        c.mode = key.mode;
+        c.page = key.page;
+        c.byPage = key.byPage;
+        VecReset(c.markers);
+        for (const FindMatch& fm : win->findMatches) {
+            float f = MatchScrollFraction(dm, fm.startPage, fm.startGlyph, byPage);
+            if (f >= 0) {
+                VecAppend(c.markers, f);
+            }
+        }
+        VecSort(c.markers, CmpFloat);
+        c.current = hasCurrent ? MatchScrollFraction(dm, ts->startPage, ts->startGlyph, byPage) : -1;
+    }
+    out = c.markers;
+    *current = c.current;
+}
+
 void PaintForwardSearchMark(MainWindow* win, PaintRef ctx) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();

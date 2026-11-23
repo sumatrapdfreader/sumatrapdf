@@ -332,6 +332,7 @@ static TempStr LayoutInfoResultTemp(Str action, int* exitCodeOut) {
         sbRc = {tl.x, tl.y, wr.dx, wr.dy};
     }
     AppendLayoutRect(out, StrL("overlayScrollV"), sbV && HwndIsVisible(sbV), sbRc);
+    out.Append(OverlayScrollbarFindMarkersReportTemp(win->overlayScrollV));
 
     AppendLayoutTree(out, StrL("chrome"), win->chromeLayout);
     AppendLayoutTree(out, StrL("frameLayout"), win->frameLayout);

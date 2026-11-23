@@ -53,6 +53,7 @@
 #include "Menu.h"
 #include "uia/Provider.h"
 #include "SearchAndDDE.h"
+#include "SearchAndDDECommon.h"
 #include "SignatureUICommon.h"
 #include "SignatureUI.h"
 #include "Selection.h"
@@ -5164,6 +5165,20 @@ void RevokeCanvasDropTarget(HWND hwndCanvas) {
     RevokeDragDrop(hwndCanvas);
 }
 
+// The vertical bar marks where the search matches are. Everything that moves
+// them (a search, the current match, zoom, a page change, another tab) repaints
+// the canvas, so each paint brings them up to date (they're cached).
+static void SyncFindScrollMarkers(MainWindow* win) {
+    if (!win->overlayScrollV) {
+        return;
+    }
+    Vec<float> markers;
+    float current = -1;
+    FindScrollMarkers(win, markers, &current);
+    OverlayScrollbarSetFindMarkers(win->overlayScrollV, markers, current, kFindOtherMatchColor,
+                                   FindCurrentMatchColor());
+}
+
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     DpiScope dpiScope(hwnd);
     // messages that don't require win
@@ -5254,6 +5269,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // don't consume the message, just observe it
     if (msg == WM_MOUSEMOVE && win->isToolbarOverlay) {
         UpdateOverlayToolbarForMouse(win);
+    }
+    if (msg == WM_PAINT) {
+        SyncFindScrollMarkers(win);
     }
 
     // messages that require win

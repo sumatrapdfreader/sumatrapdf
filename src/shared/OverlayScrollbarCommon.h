@@ -21,7 +21,15 @@ int PosForThumbCenteredAt(OverlayScrollbar* sb, int clickPos);
 Rect GetArrowTopRect(OverlayScrollbar* sb);
 Rect GetArrowBottomRect(OverlayScrollbar* sb);
 void ShowScrollbarWindow(OverlayScrollbar* sb, bool thick);
-void HideScrollbarWindow(OverlayScrollbar* sb);
+// Idle: the auto-hide timeout or the mouse leaving, which find markers outlast.
+// Away: the owner isn't active or is going away.
+enum class HideReason {
+    Idle,
+    Away
+};
+void HideScrollbarWindow(OverlayScrollbar* sb, HideReason why);
+bool SetFindMarkers(OverlayScrollbar* sb, const Vec<float>& markers, float current, Color col, Color currentCol);
+void GetFindMarkerRects(OverlayScrollbar* sb, Vec<Rect>& others, Rect* current);
 
 // implemented by each app
 bool IsAlwaysThickMode(OverlayScrollbar* sb);

@@ -116,6 +116,7 @@
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
+#include "OverlayScrollbar.h"
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 #include "StripGroups.h"
@@ -3006,6 +3007,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                            win->scrollV.nMax, win->scrollV.nPage));
             out.Append(fmt("scrollH pos=%d min=%d max=%d page=%d\n", win->scrollH.nPos, win->scrollH.nMin,
                            win->scrollH.nMax, win->scrollH.nPage));
+            out.Append(OverlayScrollbarFindMarkersReportTemp(win->overlayScrollV));
             DisplayModel* dm = win->AsFixed();
             if (dm) {
                 out.Append(
