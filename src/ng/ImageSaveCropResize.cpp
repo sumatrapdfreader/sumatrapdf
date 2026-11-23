@@ -918,7 +918,8 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
     gImgEdit.win = win;
     gImgEdit.mode = mode;
     gImgEdit.fromRenderedBitmap = fromRendered;
-    gImgEdit.closeWithEsc = closeOnEsc || (gImageEditHost.escToExit && mode == ImageEditMode::Save);
+    bool escToExit = gImageEditHost.EscToExit && gImageEditHost.EscToExit();
+    gImgEdit.closeWithEsc = closeOnEsc || (escToExit && mode == ImageEditMode::Save);
     gImgEdit.srcPixmap = px;
     gImgEdit.imgW = px->width;
     gImgEdit.imgH = px->height;

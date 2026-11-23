@@ -79,6 +79,10 @@ static void ApplyDarkMode(HWND hwnd) {
     DarkModeApplyToWindowAndEraseBg(hwnd);
 }
 
+static bool EscToExit() {
+    return gSettings->escToExit;
+}
+
 static HWND GetOwnerHwnd() {
     return len(gWindows) > 0 ? gWindows[0]->hwndFrame : nullptr;
 }
@@ -93,5 +97,5 @@ void InitImageEditHost() {
     gImageEditHost.GetFont = GetAppFont;
     gImageEditHost.GetOwnerHwnd = GetOwnerHwnd;
     gImageEditHost.appIconId = GetAppIconID();
-    gImageEditHost.escToExit = gSettings->escToExit;
+    gImageEditHost.EscToExit = EscToExit;
 }

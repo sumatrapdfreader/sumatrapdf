@@ -28,8 +28,8 @@ struct ImageEditHost {
     HWND (*GetOwnerHwnd)() = nullptr;
     // Icon resource id for the editor window; 0 leaves it without one.
     int appIconId = 0;
-    // whether Esc closes the editor from its save mode
-    bool escToExit = false;
+    // whether Esc closes the editor from its save mode; read when it opens
+    bool (*EscToExit)() = nullptr;
 };
 
 extern ImageEditHost gImageEditHost;

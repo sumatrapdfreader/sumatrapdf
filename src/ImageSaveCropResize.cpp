@@ -2112,7 +2112,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     Str origExt = ImageSaveExtFromData(origOwned);
 
     auto* ew = new ImageEditWindow();
-    ew->closeWithEsc = closeOnEsc || gImageEditHost.escToExit;
+    ew->closeWithEsc = closeOnEsc || (gImageEditHost.EscToExit && gImageEditHost.EscToExit());
     ew->mode = mode;
     ew->fromRenderedBitmap = fromRenderedBitmap;
     ew->filePath = filePath ? str::Dup(filePath) : Str();

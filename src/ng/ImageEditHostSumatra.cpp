@@ -277,6 +277,10 @@ static void OpenSavedFile(MainWindow* parent, Str path) {
     LoadDocument(win, path);
 }
 
+static bool EscToExit() {
+    return gSettings && gSettings->escToExit;
+}
+
 // fills the hooks above in with SumatraPDF's implementations
 void InitImageEditHost() {
     gImageEditHost.LoadImageFile = LoadImageFile;
@@ -285,5 +289,5 @@ void InitImageEditHost() {
     gImageEditHost.ImageFormatAvailable = ImageFormatAvailable;
     gImageEditHost.OpenSavedFile = OpenSavedFile;
     gImageEditHost.Translate = TranslateStr;
-    gImageEditHost.escToExit = gSettings && gSettings->escToExit;
+    gImageEditHost.EscToExit = EscToExit;
 }

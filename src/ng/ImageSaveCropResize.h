@@ -29,8 +29,8 @@ struct ImageEditHost {
     void (*OpenSavedFile)(MainWindow* parent, Str path) = nullptr;
     // Translates a UI string; without it the English source string is used.
     Str (*Translate)(Str) = nullptr;
-    // whether Esc closes the editor from its save mode
-    bool escToExit = false;
+    // whether Esc closes the editor from its save mode; read when it opens
+    bool (*EscToExit)() = nullptr;
 };
 
 extern ImageEditHost gImageEditHost;
