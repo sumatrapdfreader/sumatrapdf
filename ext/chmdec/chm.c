@@ -464,19 +464,69 @@ __attribute__((always_inline))
 #endif
 static inline void lzx_copy_match(uint8_t* CHM_RESTRICT dest, const uint8_t* CHM_RESTRICT src,
                                   int match_length) {
+
     uint32_t n = (uint32_t)match_length;
-    if (n <= 8) {
-        while (n--)
-            *dest++ = *src++;
+    if (n < 4) {
+
+        uint8_t a = src[0], b = src[n >> 1], c = src[n - 1];
+        dest[0] = a;
+        dest[n >> 1] = b;
+        dest[n - 1] = c;
+    } else if (n <= 8) {
+        uint32_t a, b;
+        memcpy(&a, src, 4);
+        memcpy(&b, src + n - 4, 4);
+        memcpy(dest, &a, 4);
+        memcpy(dest + n - 4, &b, 4);
+    } else if (n <= 16) {
+        uint64_t a, b;
+        memcpy(&a, src, 8);
+        memcpy(&b, src + n - 8, 8);
+        memcpy(dest, &a, 8);
+        memcpy(dest + n - 8, &b, 8);
+    } else {
+        uint64_t t;
+        const uint8_t* tail = src + n - 8;
+        uint8_t* dtail = dest + n - 8;
+        memcpy(&t, tail, 8);
+        do {
+            uint64_t a, b;
+            memcpy(&a, src, 8);
+            memcpy(&b, src + 8, 8);
+            memcpy(dest, &a, 8);
+            memcpy(dest + 8, &b, 8);
+            src += 16;
+            dest += 16;
+            n -= 16;
+        } while (n > 16);
+        if (n > 8) {
+            uint64_t a;
+            memcpy(&a, src, 8);
+            memcpy(dest, &a, 8);
+        }
+        memcpy(dtail, &t, 8);
+    }
+}
+
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((always_inline))
+#endif
+static inline void lzx_copy_overlap(uint8_t* dest, const uint8_t* src, uint32_t offset,
+                                    int match_length) {
+    uint32_t n = (uint32_t)match_length;
+    if (offset == 1) {
+        memset(dest, *src, n);
         return;
     }
-    while (n >= 8) {
-        uint64_t v;
-        memcpy(&v, src, 8);
-        memcpy(dest, &v, 8);
-        src += 8;
-        dest += 8;
-        n -= 8;
+    if (offset >= 8) {
+        while (n >= 8) {
+            uint64_t v;
+            memcpy(&v, src, 8);
+            memcpy(dest, &v, 8);
+            src += 8;
+            dest += 8;
+            n -= 8;
+        }
     }
     while (n--)
         *dest++ = *src++;
@@ -821,10 +871,8 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                             if (match_length > 0) {
                                 if (match_offset >= (uint32_t)match_length)
                                     lzx_copy_match(rundest, runsrc, match_length);
-                                else {
-                                    while (match_length-- > 0)
-                                        *rundest++ = *runsrc++;
-                                }
+                                else
+                                    lzx_copy_overlap(rundest, runsrc, match_offset, match_length);
                             }
                         }
                     }
@@ -903,10 +951,8 @@ int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int 
                             if (match_length > 0) {
                                 if (match_offset >= (uint32_t)match_length)
                                     lzx_copy_match(rundest, runsrc, match_length);
-                                else {
-                                    while (match_length-- > 0)
-                                        *rundest++ = *runsrc++;
-                                }
+                                else
+                                    lzx_copy_overlap(rundest, runsrc, match_offset, match_length);
                             }
                         }
                     }
