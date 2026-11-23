@@ -8465,10 +8465,15 @@ int GpuiMain(int argc, char** argv) {
     bool restoredSession = false;
     bool canRestore = !gFlags->configureRestrictedUse && !gOtherInstanceRunning;
     if (canRestore && (len(gFlags->fileNames) == 0 || SettingsUseTabs())) {
-        restoredSession = RestoreSession(win);
+        MainWindow* startWin = nullptr;
+        restoredSession = RestoreSession(win, &startWin);
         // the session may have opened more windows; the command line goes into
-        // the first one, as orig does
-        win = len(gWindows) > 0 ? gWindows[0] : win;
+        // the one on the launch desktop, else the first, as orig does
+        if (startWin && IsMainWindowValid(startWin)) {
+            win = startWin;
+        } else {
+            win = len(gWindows) > 0 ? gWindows[0] : win;
+        }
     }
     // a DDE [CmdExit] can close every window while the session is restored
     if (len(gWindows) > 0) {

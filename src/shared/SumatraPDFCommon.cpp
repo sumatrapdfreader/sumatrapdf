@@ -2602,14 +2602,9 @@ static bool GetCurrentDesktopId(ISumatraVirtualDesktopManager* vdm, GUID* out) {
     return false;
 }
 
-// The desktop the user is looking at, as "{GUID}". Empty when the shell
-// can't tell.
-TempStr GetCurrentDesktopIdTemp(ISumatraVirtualDesktopManager* vdm) {
-    if (!vdm) {
-        return {};
-    }
-    GUID id{};
-    if (!GetCurrentDesktopId(vdm, &id)) {
+// "{GUID}"; empty for the null GUID
+static TempStr DesktopIdToStrTemp(const GUID& id) {
+    if (IsEqualGUID(id, GUID{})) {
         return {};
     }
     WCHAR buf[40];
@@ -2617,6 +2612,15 @@ TempStr GetCurrentDesktopIdTemp(ISumatraVirtualDesktopManager* vdm) {
         return {};
     }
     return ToUtf8Temp(WStr(buf));
+}
+
+// The desktop the user is looking at; empty when the shell can't tell.
+TempStr GetCurrentDesktopIdTemp(ISumatraVirtualDesktopManager* vdm) {
+    GUID id{};
+    if (!vdm || !GetCurrentDesktopId(vdm, &id)) {
+        return {};
+    }
+    return DesktopIdToStrTemp(id);
 }
 
 // Under OpenOnOtherDesktop = move, pull hwnd onto the user's current virtual
@@ -2643,15 +2647,10 @@ TempStr GetWindowDesktopIdTemp(ISumatraVirtualDesktopManager* vdm, HWND hwnd) {
         return {};
     }
     GUID id{};
-    HRESULT hr = vdm->GetWindowDesktopId(hwnd, &id);
-    if (FAILED(hr) || IsEqualGUID(id, GUID{})) {
+    if (FAILED(vdm->GetWindowDesktopId(hwnd, &id))) {
         return {};
     }
-    WCHAR buf[40];
-    if (StringFromGUID2(id, buf, dimofi(buf)) == 0) {
-        return {};
-    }
-    return ToUtf8Temp(WStr(buf));
+    return DesktopIdToStrTemp(id);
 }
 
 // puts hwnd on the virtual desktop a session saved it on. False when that

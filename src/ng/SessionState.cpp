@@ -33,6 +33,7 @@
 #include "gui/TabsUI.h"
 #include "VirtualDesktop.h"
 #include "AppHelpersCommon.h"
+#include "gui/AppShell.h"
 #include "SessionState.h"
 #include "StripGroups.h"
 #include "SumatraLog.h"
@@ -407,7 +408,10 @@ bool SettingsRestoreSession() {
 
 // orig's RestoreSession: one window per SessionData. The first entry goes into
 // the window that already exists, every other one opens a window of its own.
-bool RestoreSession(MainWindow* firstWin) {
+// startWinOut: the window for the foreground and the command line, one on the
+// launch desktop; null to use the first window.
+bool RestoreSession(MainWindow* firstWin, MainWindow** startWinOut) {
+    *startWinOut = nullptr;
     if (!SettingsRestoreSession() || !gInitialSessionData || len(*gInitialSessionData) == 0) {
         return false;
     }
@@ -416,6 +420,9 @@ bool RestoreSession(MainWindow* firstWin) {
 #if OS_WIN
     // each window goes back to the virtual desktop it was on (#6271)
     ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+    // before any window moves: focus changes can switch the desktop
+    Str startDesktopId = str::Dup(GetCurrentDesktopIdTemp(vdm));
+    MainWindow* winOnCurrentDesktop = nullptr;
 #endif
     // a settings save rebuilds gInitialSessionData, freeing its SessionData
     int sessionGen = gInitialSessionDataGen;
@@ -479,9 +486,13 @@ bool RestoreSession(MainWindow* firstWin) {
         // [CmdExit] can close win and re-save (free) the session data
         TempStr desktopId = str::DupTemp(data->virtualDesktopId);
         MoveWindowToVirtualDesktop(vdm, MainWindowHwnd(win), desktopId);
+        bool onCurrentDesktop = IsWindowOnCurrentDesktop(vdm, MainWindowHwnd(win));
         if (!IsMainWindowValid(win) || sessionGen != gInitialSessionDataGen) {
             logf("RestoreSession: window closed or session re-saved while restoring, stopping\n");
             break;
+        }
+        if (onCurrentDesktop && !winOnCurrentDesktop) {
+            winOnCurrentDesktop = win;
         }
 #endif
     }
@@ -491,6 +502,20 @@ bool RestoreSession(MainWindow* firstWin) {
         }
     }
 #if OS_WIN
+    // orig: all windows went to other desktops: keep the user on the launch
+    // desktop with an empty window instead of following the last one
+    if (nWindows > 0 && !winOnCurrentDesktop) {
+        winOnCurrentDesktop = CreateAndShowMainWindow(nullptr);
+        if (winOnCurrentDesktop) {
+            MoveWindowToVirtualDesktop(vdm, MainWindowHwnd(winOnCurrentDesktop), startDesktopId);
+        }
+    }
+    // the first window on the launch desktop is what happens without this
+    if (winOnCurrentDesktop && winOnCurrentDesktop != firstWin && IsMainWindowValid(winOnCurrentDesktop)) {
+        AppShellActivateWindow(winOnCurrentDesktop);
+        *startWinOut = winOnCurrentDesktop;
+    }
+    str::Free(startDesktopId);
     if (vdm) {
         vdm->Release();
     }
