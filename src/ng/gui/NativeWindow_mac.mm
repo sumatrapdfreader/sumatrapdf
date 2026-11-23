@@ -72,17 +72,29 @@ void AppShellOpenDocsReady() {
     OpenQueuedDocs();
 }
 
-// Tests pass HWND_TOPMOST. orderFront stays under the active app, so the
-// frame also moves to the floating level, above ordinary windows. A
-// fullscreen app owns the visible space; join it and come forward without
-// activating, or the window is never what a drop hits.
+// Tests pass HWND_TOPMOST. Floating level stays above ordinary windows.
+// FullScreenPrimary excludes FullScreenAuxiliary, so clear it or the frame
+// stays off the space a drop is tested against.
 void AppShellRaiseAbove(MainWindow* win) {
     NSView* view = win && win->gpuiWin ? (__bridge NSView*)gp::PlatWindowHandle(win->gpuiWin) : nil;
     NSWindow* w = view.window;
     if (!w) {
         return;
     }
-    w.collectionBehavior = w.collectionBehavior | NSWindowCollectionBehaviorCanJoinAllSpaces;
+    NSWindowCollectionBehavior behavior = w.collectionBehavior;
+    behavior &= ~NSWindowCollectionBehaviorFullScreenPrimary;
+    behavior &= ~NSWindowCollectionBehaviorFullScreenNone;
+    behavior &= ~NSWindowCollectionBehaviorPrimary;
+    behavior &= ~NSWindowCollectionBehaviorAuxiliary;
+    behavior &= ~NSWindowCollectionBehaviorMoveToActiveSpace;
+    behavior &= ~NSWindowCollectionBehaviorManaged;
+    behavior &= ~NSWindowCollectionBehaviorTransient;
+    behavior |= NSWindowCollectionBehaviorCanJoinAllSpaces;
+    behavior |= NSWindowCollectionBehaviorStationary;
+    behavior |= NSWindowCollectionBehaviorIgnoresCycle;
+    behavior |= NSWindowCollectionBehaviorFullScreenAuxiliary;
+    behavior |= NSWindowCollectionBehaviorCanJoinAllApplications;
+    w.collectionBehavior = behavior;
     w.level = NSFloatingWindowLevel;
     [w orderFrontRegardless];
 }
