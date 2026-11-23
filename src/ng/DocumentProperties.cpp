@@ -68,6 +68,9 @@ struct PropertiesDlg {
     gp::Bounds oneChar{};
     bool remeasure = false;
     bool eutlUpdating = false;
+    // counts ShowProperties() calls: a font scan finishing late belongs to an
+    // earlier one when its number differs
+    int showNo = 0;
     // orig's window, where the platform can have one (gui/ToolWindow.h);
     // null: a dialog in the frame
     ToolWindow* tw = nullptr;
@@ -262,7 +265,7 @@ void PropertiesView::OnClose(PropertiesView*, gp::Ctx* cx, const gp::ClickEvent*
 static void PropsToolSizeToContent();
 
 void OnGetFontsFinished(GetFontsResult* result) {
-    if (gProps.visible && gProps.win == result->win) {
+    if (gProps.visible && gProps.win == result->win && gProps.showNo == result->showNo) {
         Str marker = Tr("Getting font information...");
         Str props = ToStr(gProps.propsText);
         int pos = str::IndexOf(props, marker);
@@ -294,6 +297,7 @@ void ShowProperties(MainWindow* win, DocController* ctrl) {
     }
 
     gProps.win = win;
+    gProps.showNo++;
     gProps.propsText.Reset();
     DisplayModel* dm = ctrl->AsFixed();
 #if OS_WIN
@@ -347,11 +351,13 @@ void ShowProperties(MainWindow* win, DocController* ctrl) {
     if (!dm || !dm->engine) {
         auto* result = new GetFontsResult;
         result->win = win;
+        result->showNo = gProps.showNo;
         OnGetFontsFinished(result);
         return;
     }
     auto* data = new GetFontsData;
     data->win = win;
+    data->showNo = gProps.showNo;
     data->engine = dm->engine;
     data->engine->AddRef();
     auto fn = MkFunc0<GetFontsData>(GetFontsThread, data);

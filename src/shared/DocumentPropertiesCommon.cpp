@@ -868,6 +868,7 @@ void GetFontsThread(GetFontsData* data) {
     auto* result = new GetFontsResult;
     result->hwnd = data->hwnd;
     result->win = data->win;
+    result->showNo = data->showNo;
     if (val) {
         result->fontsText.Append(StrL("\n"));
         result->fontsText.Append(Tr("Fonts:"));

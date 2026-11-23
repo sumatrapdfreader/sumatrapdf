@@ -46,12 +46,15 @@ void OnEutlUpdateDone(EutlUpdateJob* job);
 struct GetFontsResult {
     HWND hwnd = nullptr;
     MainWindow* win = nullptr;
+    // which Properties showing the scan was started for (ng)
+    int showNo = 0;
     str::Builder fontsText;
 };
 
 struct GetFontsData {
     HWND hwnd = nullptr;
     MainWindow* win = nullptr;
+    int showNo = 0;
     EngineBase* engine = nullptr;
 };
 void GetFontsThread(GetFontsData* data);
