@@ -8,6 +8,7 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 #include "pkcs7_mac.h"
+#include "ber_size.h"
 
 #include <Security/Security.h>
 #include <Security/CMSEncoder.h>
@@ -351,35 +352,11 @@ pdf_pkcs7_signer* pkcs7_mac_read_pfx(fz_context* ctx, const char* pfile, const c
     return &signer->base;
 }
 
-// The size of the DER element at sig, 0 if malformed. /Contents is padded
-// with zeros that CMSDecoder takes for more message.
-static size_t der_element_size(const unsigned char* sig, size_t sig_len) {
-    if (sig_len < 2) {
-        return 0;
-    }
-    size_t len = sig[1];
-    size_t header = 2;
-    if (len & BER_LONG_LEN) {
-        size_t n = len & ~BER_LONG_LEN;
-        if (n == 0 || n > sizeof(size_t) || sig_len < 2 + n) {
-            return 0;
-        }
-        len = 0;
-        for (size_t i = 0; i < n; i++) {
-            len = (len << 8) | sig[2 + i];
-        }
-        header += n;
-    }
-    if (len > sig_len - header) {
-        return 0;
-    }
-    return header + len;
-}
-
 // Decodes a detached signature over the bytes of `in` (NULL: only parse it).
 // NULL if it is not a CMS message.
 static CMSDecoderRef decode_signature(fz_context* ctx, fz_stream* in, const unsigned char* sig, size_t sig_len) {
-    size_t der_len = der_element_size(sig, sig_len);
+    // /Contents is padded with zeros that CMSDecoder would take for more message
+    size_t der_len = ber_element_size(sig, sig_len);
     CMSDecoderRef dec = NULL;
     if (der_len == 0 || CMSDecoderCreate(&dec) != errSecSuccess) {
         return NULL;

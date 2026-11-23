@@ -48,6 +48,7 @@ extern void Annotation_UnitTests();
 extern void EngineDjvuDec_UnitTests();
 extern void TipMarkup_UnitTests();
 extern void ContentHash_UnitTests();
+extern void BerSize_UnitTests();
 extern void ReadAloudHighlight_UnitTests();
 extern void RefHoverTest();
 extern void AppSettingsTest();
@@ -184,6 +185,7 @@ int main(int argc, char** argv) {
     EngineDjvuDec_UnitTests();
     TipMarkup_UnitTests();
     ContentHash_UnitTests();
+    BerSize_UnitTests();
     ReadAloudHighlight_UnitTests();
     RefHoverTest();
     AppSettingsTest();
