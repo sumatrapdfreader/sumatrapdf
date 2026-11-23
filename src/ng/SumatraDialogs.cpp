@@ -827,8 +827,13 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     return MsgBoxBuild(win, cx);
 }
 
+static bool DialogKeysElsewhere(MainWindow* win);
+
 // orig's dialogs with a list let Up / Down drive it from anywhere in the dialog
-bool DialogsOnArrowKey(MainWindow*, int dir, bool editFocused) {
+bool DialogsOnArrowKey(MainWindow* win, int dir, bool editFocused) {
+    if (DialogKeysElsewhere(win)) {
+        return false;
+    }
     if (ConfigureRestrictedUseMoveSelection(dir)) {
         return true;
     }
@@ -882,7 +887,34 @@ void DialogsCloseFrameDialogsFor(MainWindow* win) {
     }
 }
 
+// Every dialog drawn in a frame is up in another window: orig's dialogs are
+// modal only to their owner, so win keeps its keys. Dialogs that don't track
+// their owner keep every window's keys.
+static bool DialogKeysElsewhere(MainWindow* win) {
+    if (IsSimpleBrowserWindowVisible() || IsAIChatNotInstalledDialogVisible() || IsSavePathDialogVisible()) {
+        return false;
+    }
+    bool elsewhere = false;
+    for (FrameDialog& d : gFrameDialogs) {
+        if (!d.isFrameVisible()) {
+            continue;
+        }
+        if (d.owner() == win) {
+            return false;
+        }
+        elsewhere = true;
+    }
+    return elsewhere;
+}
+
+static bool MsgBoxUpIn(MainWindow* win) {
+    return IsMsgBoxVisible() && gMsgBox.win == win;
+}
+
 DialogAccels DialogsAccelTable(MainWindow* win) {
+    if (DialogKeysElsewhere(win)) {
+        return DialogAccels::All;
+    }
     // Only the properties window and its children use the edit table
     if (IsPropertiesDialogVisible()) {
         return DialogAccels::Edit;
@@ -899,14 +931,16 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
                IsConfigureRestrictedUseDialogVisible() || IsPageGridDialogVisible() || IsKeyboardHelpVisible() ||
                IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible() || IsRenameStripGroupDialogVisible() ||
                IsCaj2pdfDownloadDialogVisible();
-    (void)win;
     return any ? DialogAccels::None : DialogAccels::All;
 }
 
 bool DialogsOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift, bool alt) {
+    if (DialogKeysElsewhere(win)) {
+        return false;
+    }
     bool noMods = !ctrl && !shift && !alt;
     // win32's message box: &Yes / &No answer to their letters
-    if (IsMsgBoxVisible()) {
+    if (MsgBoxUpIn(win)) {
         int kind = MsgBoxButtonKind();
         bool isYesNo = kind == (int)MbYesNo || kind == (int)MbYesNoCancel;
         if (isYesNo && !ctrl && (vk == 'Y' || vk == 'N')) {
@@ -955,8 +989,11 @@ bool DialogsOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift, bool alt) 
 }
 
 // Enter outside a text field: orig's default button
-bool DialogsOnEnter(MainWindow*) {
-    if (IsMsgBoxVisible()) {
+bool DialogsOnEnter(MainWindow* win) {
+    if (DialogKeysElsewhere(win)) {
+        return false;
+    }
+    if (MsgBoxUpIn(win)) {
         AcceptMsgBox();
         return true;
     }
@@ -1236,7 +1273,10 @@ gp::El* UnsavedAnnotationsDialogBuild(MainWindow* win, gp::Ctx* cx) {
 
 // orig gives every dialog closeOnEsc; the message box answers Cancel
 bool DialogsOnEscape(MainWindow* win) {
-    if (IsMsgBoxVisible()) {
+    if (DialogKeysElsewhere(win)) {
+        return false;
+    }
+    if (MsgBoxUpIn(win)) {
         CancelMsgBox();
         return true;
     }
