@@ -69,6 +69,7 @@ bool GumboHtmlParser_UnitTest();
 bool DisplayMode_UnitTestZoom();
 bool Translations_UnitTestUnescape();
 bool Translations_UnitTestLocale();
+bool Translations_UnitTestLookup();
 extern bool Accelerators_UnitTestFolderNavIsSafe();
 extern bool NavFiles_UnitTestHidden();
 #if !OS_WIN
@@ -207,6 +208,7 @@ int main(int argc, char** argv) {
     utassert(DisplayMode_UnitTestZoom());
     utassert(Translations_UnitTestUnescape());
     utassert(Translations_UnitTestLocale());
+    utassert(Translations_UnitTestLookup());
     utassert(NavFiles_UnitTestHidden());
 #if !OS_WIN
     utassert(MeasurementSystem_UnitTests());

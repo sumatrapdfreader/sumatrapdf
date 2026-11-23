@@ -119,6 +119,7 @@ void VirtCtrl_UnitTests();
 bool TableOfContents_UnitTestSnapshotNamedDest();
 bool Translations_UnitTestUnescape();
 bool Translations_UnitTestLocale();
+bool Translations_UnitTestLookup();
 bool MarkdownModel_UnitTestBrowserNavigationUrl();
 bool MarkdownToc_UnitTestHtmlLinks();
 bool MarkdownToc_UnitTestHtmlHeadings();
@@ -796,6 +797,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(TableOfContents_UnitTestSnapshotNamedDest());
     utassert(Translations_UnitTestUnescape());
     utassert(Translations_UnitTestLocale());
+    utassert(Translations_UnitTestLookup());
     utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
     utassert(MarkdownToc_UnitTestHtmlLinks());
     utassert(MarkdownToc_UnitTestHtmlHeadings());
