@@ -10178,6 +10178,19 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
 }
 #endif
 
+#if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
+// the platform's signature verifier: CryptoAPI, Security.framework or OpenSSL
+static pdf_pkcs7_verifier* NewPkcs7Verifier(fz_context* ctx) {
+#if OS_WIN
+    return pkcs7_windows_new_verifier(ctx);
+#elif OS_DARWIN
+    return pkcs7_mac_new_verifier(ctx);
+#else
+    return pkcs7_openssl_new_verifier(ctx);
+#endif
+}
+#endif
+
 static TempStr GetSignatures(EngineMupdf* e, PdfSigResult* res) {
 #if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
     pdf_document* pdfdoc = e->pdfdoc;
@@ -10199,13 +10212,7 @@ static TempStr GetSignatures(EngineMupdf* e, PdfSigResult* res) {
 #endif
     fz_var(verifier);
     fz_try(ctx) {
-#if OS_WIN
-        verifier = pkcs7_windows_new_verifier(ctx);
-#elif OS_DARWIN
-        verifier = pkcs7_mac_new_verifier(ctx);
-#else
-        verifier = pkcs7_openssl_new_verifier(ctx);
-#endif
+        verifier = NewPkcs7Verifier(ctx);
         CollectSignatureFields(ctx, pdfdoc, fields);
 #if OS_WIN
         eutlList = gEutlLookup ? gEutlLookup->open() : nullptr;
@@ -10278,13 +10285,7 @@ bool EngineMupdfVerifySignatures(EngineBase* engine, Vec<PdfSigCheck*>& out) {
     fz_var(verifier);
     fz_var(ok);
     fz_try(ctx) {
-#if OS_WIN
-        verifier = pkcs7_windows_new_verifier(ctx);
-#elif OS_DARWIN
-        verifier = pkcs7_mac_new_verifier(ctx);
-#else
-        verifier = pkcs7_openssl_new_verifier(ctx);
-#endif
+        verifier = NewPkcs7Verifier(ctx);
         CollectSignatureFields(ctx, doc, fields);
         for (pdf_obj* field : fields) {
             auto* c = new PdfSigCheck();
