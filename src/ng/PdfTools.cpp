@@ -2144,6 +2144,26 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     } else if (str::Eq(action, StrL("close"))) {
         ClosePdfToolDialog();
         return finish(0, str::DupTemp(StrL("OK closed")));
+    } else if (str::Eq(action, StrL("closepaint"))) {
+        // free the files, paint while the window is still up, then close it
+        gp::Window* gw = ToolWindowGpui(gTool.tw);
+#if OS_WIN
+        HWND hwnd = ToolWindowHwnd(gTool.tw);
+        FreeToolState(gw);
+        if (hwnd) {
+            RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+            RECT rc{};
+            if (GetWindowRect(hwnd, &rc)) {
+                SetWindowPos(hwnd, nullptr, 0, 0, (rc.right - rc.left) + 40, rc.bottom - rc.top,
+                             SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+            }
+            RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
+        }
+#else
+        FreeToolState(gw);
+#endif
+        ClosePdfToolDialog();
+        return finish(0, str::DupTemp(StrL("OK closed")));
     } else if (str::Eq(action, StrL("key"))) {
         // a key in the grid: n is the virtual key, arg "shift" / "ctrl"
         PdfToolDialogOnKeyDown(gTool.win, n, str::Eq(arg, StrL("ctrl")), str::Eq(arg, StrL("shift")));
