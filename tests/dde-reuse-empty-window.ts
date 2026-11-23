@@ -13,14 +13,14 @@ import {
   sendCopyDataW,
   sleep,
 } from "./winapi.ts";
-import { killAndWait, launchControlled } from "./win-automation.ts";
+import { FRAME_CLASS, killAndWait, launchControlled } from "./win-automation.ts";
 
 const kCopyDataDdeW = 0x44646557;
 
 function countFrames(pid: number): number {
   let n = 0;
   enumWindows((hwnd) => {
-    if (getWindowPid(hwnd) === pid && getClassName(hwnd) === "SUMATRA_PDF_FRAME" && isWindowVisible(hwnd)) {
+    if (getWindowPid(hwnd) === pid && getClassName(hwnd) === FRAME_CLASS && isWindowVisible(hwnd)) {
       n++;
     }
     return true;
