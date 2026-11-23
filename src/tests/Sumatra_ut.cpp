@@ -13,6 +13,7 @@
 #include "base/GuessFileType.h"
 #include "base/SettingsUtil.h"
 #include "base/Win.h"
+#include "base/CrashHandler.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -729,6 +730,37 @@ static void ParseTip_UnitTests() {
     }
 }
 
+namespace {
+int gTestCrashCommentCalls = 0;
+
+Str TestCrashComment(Arena* a, Str, Str, bool) {
+    gTestCrashCommentCalls++;
+    return str::Dup(a, StrL("test report\n"));
+}
+
+void InstallTestCrashHandler() {
+    CrashHandlerConfig cfg{};
+    cfg.crashDumpPath = path::JoinTemp(GetTempDirTemp(), StrL("sumatra-ut-crash.dmp"));
+    cfg.getCrashComment = TestCrashComment;
+    InstallCrashHandler(cfg);
+}
+} // namespace
+
+// tears down the app's crash handler: run last
+static void CrashHandler_UnitTests() {
+    LPTOP_LEVEL_EXCEPTION_FILTER saved = SetUnhandledExceptionFilter(nullptr);
+    UninstallCrashHandler();
+
+    // uninstall restores the filter it replaced
+    SetUnhandledExceptionFilter(nullptr);
+    InstallTestCrashHandler();
+    UninstallCrashHandler();
+    LPTOP_LEVEL_EXCEPTION_FILTER cur = SetUnhandledExceptionFilter(nullptr);
+    utassert(cur == nullptr);
+
+    SetUnhandledExceptionFilter(saved);
+}
+
 static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* ei) {
     printf("unit tests crash\n");
     str::Builder s;
@@ -848,6 +880,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(Commands_UnitTestIdLimit());
     ReadAloudHighlight_UnitTests();
 #endif
+    CrashHandler_UnitTests();
     return utassert_print_results();
 }
 

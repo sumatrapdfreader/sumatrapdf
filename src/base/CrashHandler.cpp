@@ -760,9 +760,9 @@ void UninstallCrashHandler() {
         return;
     }
 
-    if (gPrevExceptionFilter) {
-        SetUnhandledExceptionFilter(gPrevExceptionFilter);
-    }
+    // null restores the system default; skipping it left our filter running on a torn-down handler
+    SetUnhandledExceptionFilter(gPrevExceptionFilter);
+    gPrevExceptionFilter = nullptr;
     // must go before we close the handles it waits on: left registered, it
     // would run on a heap corruption during shutdown and SetEvent() / wait on
     // closed handles, whose values may since have been recycled
