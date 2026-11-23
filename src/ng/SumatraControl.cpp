@@ -783,6 +783,8 @@ enum class ControlCmd : u16 {
     TestContentHash = 175,
     // [paths, a line each]: the files the next multi-file Open takes, without its dialog
     TestOpenFileNames = 176,
+    // the AI chat session combo of the first window (AIChatSessionsTestTemp)
+    TestAIChatSessions = 179,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -2365,6 +2367,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestOpenFileNames: {
             SetTestOpenFileNames(StringArg(req, 0));
             AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestAIChatSessions: {
+            int exitCode = 0;
+            Str res = AIChatSessionsTestTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

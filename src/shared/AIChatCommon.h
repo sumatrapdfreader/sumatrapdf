@@ -189,6 +189,7 @@ TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCo
 // Inject a canned (user, assistant) turn into the chat webview (opening the grok
 // panel if needed) to debug webview rendering without a live provider call.
 TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode);
+TempStr AIChatSessionsTestTemp(int* exitCode);
 
 void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 void AIChatShowNotInstalledDialog(MainWindow* win, const AIChatNotInstalledDialogArgs& args);

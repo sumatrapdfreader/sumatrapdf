@@ -757,6 +757,8 @@ enum class ControlCmd : u16 {
     TestFailSavePrompt = 177,
     // [action]: "closepaint" closes the open tab groups dialog with a paint before its end
     TestTabGroups = 178,
+    // the AI chat session combo of the first window (AIChatSessionsTestTemp)
+    TestAIChatSessions = 179,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1988,6 +1990,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestTabGroups: {
             int exitCode = 0;
             Str res = TabGroupsTestTemp(StringArg(req, 0), &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestAIChatSessions: {
+            int exitCode = 0;
+            Str res = AIChatSessionsTestTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -619,6 +619,7 @@ import { testit as issue6205 } from "./issue-6205.ts";
 import { testit as advSettingsEnter } from "./adv-settings-enter.ts";
 import { testit as comClassObject } from "./com-class-object.ts";
 import { testit as aichatCloseHidesWebview } from "./aichat-close-hides-webview.ts";
+import { testit as aichatSessions } from "./aichat-sessions.ts";
 import { testit as trackpadDiagonalScroll } from "./trackpad-diagonal-scroll.ts";
 import { testit as trackpadPinchZoom } from "./trackpad-pinch-zoom.ts";
 import { testit as hexView } from "./hex-view.ts";
@@ -1326,6 +1327,7 @@ export const tests: NamedTest[] = [
   ["custom-ai", customAI],
   ["custom-ai-ui", customAIUI],
   ["aichat-close-hides-webview", aichatCloseHidesWebview],
+  ["aichat-sessions", aichatSessions],
   ["trackpad-diagonal-scroll", trackpadDiagonalScroll],
   ["trackpad-pinch-zoom", trackpadPinchZoom],
   ["page-links-fresh-engine", pageLinksFreshEngine],

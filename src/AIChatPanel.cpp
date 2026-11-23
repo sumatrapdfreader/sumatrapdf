@@ -171,50 +171,12 @@ static void LayoutAIChatBox(MainWindow* win) {
 
 // --- Session combo ---
 
-static void PopulateSessionCombo(MainWindow* win) {
-    AIChatProvider* p = CurrentProvider(win);
-    if (!win->aiChatSessionCombo || !p) {
+void AIChatSetSessionItems(MainWindow* win, StrVec& items, int sel) {
+    if (!win->aiChatSessionCombo) {
         return;
     }
-
-    StrVec items;
-    items.Append(StrL("+ New Session"));
-
-    WindowTab* tab = win->CurrentTab();
-    AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
-    if (!tab || len(tab->filePath) == 0 || !st) {
-        win->aiChatSessionCombo->SetItems(items);
-        CbSetCurrentSelection(win->aiChatSessionCombo, 0);
-        return;
-    }
-
-    TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<AIChatSessionInfo> sessions;
-    p->CollectSessions(dir, sessions);
-
-    int selectedIdx = 0;
-    bool foundCurrent = false;
-    for (int i = 0; i < len(sessions); i++) {
-        Str display = sessions[i].display;
-        if (len(display) == 0) {
-            display = StrL("(no description)");
-        }
-        items.Append(ShortenStringUtf8Temp(display, 50));
-        if (st->sessionId && str::Eq(st->sessionId, sessions[i].sessionId)) {
-            selectedIdx = i + 1;
-            foundCurrent = true;
-        }
-    }
-
-    // if current tab has a session but it wasn't found on disk, add it anyway
-    if (st->sessionId && !foundCurrent) {
-        items.Append(StrL("(current session)"));
-        selectedIdx = len(sessions) + 1;
-    }
-
     win->aiChatSessionCombo->SetItems(items);
-    CbSetCurrentSelection(win->aiChatSessionCombo, selectedIdx);
-    AIChatFreeSessions(sessions);
+    CbSetCurrentSelection(win->aiChatSessionCombo, sel);
 }
 
 static void OnSessionComboChange(MainWindow* win) {
@@ -240,23 +202,17 @@ static void OnSessionComboChange(MainWindow* win) {
         return;
     }
 
-    // re-collect sessions to get the ID
-    TempStr dir = path::GetDirTemp(tab->filePath);
-    Vec<AIChatSessionInfo> sessions;
-    p->CollectSessions(dir, sessions);
-
-    int sessionIdx = sel - 1;
-    if (sessionIdx >= 0 && sessionIdx < len(sessions)) {
-        AIChatLog(p->logger, StrL("session"), sessions[sessionIdx].sessionId);
-        str::ReplaceWithCopy(&st->sessionId, sessions[sessionIdx].sessionId);
-        st->chatLog.Reset();
-        AIChatResetAPI(st);
-        WebViewClearChat(win);
-        p->LoadSessionHistory(win, st->sessionId, dir);
-        // LoadSessionHistory writes to the webview which rebuilds chatLog
+    Str sessionId = AIChatSessionIdAt(win, sel);
+    if (len(sessionId) == 0) {
+        return;
     }
-
-    AIChatFreeSessions(sessions);
+    AIChatLog(p->logger, StrL("session"), sessionId);
+    str::ReplaceWithCopy(&st->sessionId, sessionId);
+    st->chatLog.Reset();
+    AIChatResetAPI(st);
+    WebViewClearChat(win);
+    // LoadSessionHistory writes to the webview which rebuilds chatLog
+    p->LoadSessionHistory(win, st->sessionId, path::GetDirTemp(tab->filePath));
 }
 
 // --- Settings <-> UI ---
@@ -399,7 +355,7 @@ void OnAIChatFinished(MainWindow* win, AIChatProvider* p, AIChatTabState* st, bo
     if (isActiveTab) {
         WebViewFlushBlock(win);
         SetAIChatWorking(win, false);
-        PopulateSessionCombo(win);
+        ScanAIChatSessions(win, AIChatScanMode::Populate);
     }
 }
 
@@ -738,8 +694,7 @@ static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
         case WM_TIMER:
             if (wp == kTimerAutoSelectSession) {
                 KillTimer(hwnd, kTimerAutoSelectSession);
-                AutoSelectRecentSession(win);
-                PopulateSessionCombo(win);
+                ScanAIChatSessions(win, AIChatScanMode::AutoSelect);
             } else if (wp == kTimerWebViewSize) {
                 KillTimer(hwnd, kTimerWebViewSize);
                 if (win->aiChatWebView) {
@@ -1175,7 +1130,7 @@ void OnAIChatToggle(MainWindow* win, int providerId) {
         UpdateAIChatPanelTitle(win, 0);
         EnsureWebViewReady(win);
         UpdateAIChatPanelForCurrentTab(win);
-        PopulateSessionCombo(win);
+        ScanAIChatSessions(win, AIChatScanMode::Populate);
         EditSetFocus(win->aiChatInput);
         // if the webview was recreated (provider change), its navigationCompleted
         // callback replays the chat once the new page has loaded
@@ -1212,7 +1167,7 @@ void OnAIChatTabChanged(MainWindow* win) {
         return;
     }
 
-    PopulateSessionCombo(win);
+    ScanAIChatSessions(win, AIChatScanMode::Populate);
     WebViewClearChat(win);
 
     AIChatTabState* st = GetTabState(tab, win->aiChatProvider);

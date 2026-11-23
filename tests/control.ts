@@ -207,6 +207,8 @@ export enum ControlCommand {
   TestFailSavePrompt = 177,
   // orig: ["closepaint"] closes the open tab groups dialog with a paint before its end
   TestTabGroups = 178,
+  // "pending=<0|1> sel=<n>", then the AI chat session combo's items, a line each
+  TestAIChatSessions = 179,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -226,6 +226,8 @@ static bool AIChatTabHasRunningProcess(WindowTab* tab) {
     return false;
 }
 
+static void FreeSessionList(MainWindow* win);
+
 void ShutdownAIChatForMainWindow(MainWindow* win) {
     if (!win) {
         return;
@@ -240,29 +242,219 @@ void ShutdownAIChatForMainWindow(MainWindow* win) {
         }
     }
     AIChatWaitForTabProcessesToFinish(win, AIChatTabHasRunningProcess);
+    FreeSessionList(win);
 }
 
-// Auto-select the most recent session for the current tab if none is set
-void AutoSelectRecentSession(MainWindow* win) {
-    AIChatProvider* provider = CurrentProvider(win);
-    WindowTab* tab = win->CurrentTab();
-    AIChatTabState* st = GetTabState(tab, win->aiChatProvider);
-    if (!provider || !st || len(tab->filePath) == 0 || st->sessionId) {
-        return; // already has a session or no file
-    }
+// --- Session list ---
 
-    TempStr dir = path::GetDirTemp(tab->filePath);
+// the sessions a window's combo shows; UI thread only
+struct AIChatSessionList {
+    MainWindow* win = nullptr; // key, never dereferenced
+    int gen = 0;               // the latest scan started for win
+    int shownGen = 0;          // the scan the combo shows
+    // what ids belong to: tab is a key, never dereferenced
+    WindowTab* tab = nullptr;
+    int providerId = -1;
+    Str dir;                            // owned
+    WindowTab* autoSelectTab = nullptr; // key: a pending scan auto-selects for it
+    StrVec ids;                         // combo item i + 1 is session ids[i]
+    StrVec items;                       // the combo's items, for tests
+    int sel = 0;
+    ~AIChatSessionList() { str::Free(dir); }
+};
+
+static Vec<AIChatSessionList*> gAIChatSessionLists;
+static int gAIChatLastScanGen = 0;
+
+// a scan's input and result: the worker gets copies, never UI state
+struct AIChatSessionScan {
+    MainWindow* win = nullptr; // key, never dereferenced before validation
+    WindowTab* tab = nullptr;  // key
+    int providerId = -1;
+    int gen = 0;
+    AIChatScanMode mode = AIChatScanMode::Populate;
+    Str dir; // owned
     Vec<AIChatSessionInfo> sessions;
-    provider->CollectSessions(dir, sessions);
+};
 
-    if (len(sessions) > 0) {
-        // sessions are sorted by timestamp desc, so [0] is most recent
-        str::ReplaceWithCopy(&st->sessionId, sessions[0].sessionId);
+static AIChatSessionList* FindSessionList(MainWindow* win) {
+    for (AIChatSessionList* list : gAIChatSessionLists) {
+        if (list->win == win) {
+            return list;
+        }
+    }
+    return nullptr;
+}
+
+static AIChatSessionList* GetSessionList(MainWindow* win) {
+    AIChatSessionList* list = FindSessionList(win);
+    if (!list) {
+        list = new AIChatSessionList();
+        list->win = win;
+        VecAppend(gAIChatSessionLists, list);
+    }
+    return list;
+}
+
+static void FreeSessionList(MainWindow* win) {
+    AIChatSessionList* list = FindSessionList(win);
+    if (list) {
+        VecRemove(gAIChatSessionLists, list);
+        delete list;
+    }
+}
+
+static bool SessionListIsFor(AIChatSessionList* list, WindowTab* tab, int providerId, Str dir) {
+    return list->tab == tab && list->providerId == providerId && str::Eq(list->dir, dir);
+}
+
+static void SetSessionListKey(AIChatSessionList* list, WindowTab* tab, int providerId, Str dir) {
+    list->tab = tab;
+    list->providerId = providerId;
+    str::ReplaceWithCopy(&list->dir, dir);
+}
+
+// "+ New Session", the sessions, then the tab's session if not among them
+static void FillSessionCombo(MainWindow* win, AIChatSessionList* list, AIChatTabState* st,
+                             Vec<AIChatSessionInfo>& sessions) {
+    list->ids.Reset();
+    list->items.Reset();
+    StrVec& items = list->items;
+    items.Append(StrL("+ New Session"));
+    int selectedIdx = 0;
+    for (int i = 0; i < len(sessions); i++) {
+        Str display = sessions[i].display;
+        if (len(display) == 0) {
+            display = StrL("(no description)");
+        }
+        items.Append(ShortenStringUtf8Temp(display, 50));
+        list->ids.Append(sessions[i].sessionId);
+        if (st && st->sessionId && str::Eq(st->sessionId, sessions[i].sessionId)) {
+            selectedIdx = i + 1;
+        }
+    }
+    if (st && st->sessionId && selectedIdx == 0) {
+        items.Append(StrL("(current session)"));
+        selectedIdx = len(sessions) + 1;
+    }
+    list->sel = selectedIdx;
+    AIChatSetSessionItems(win, items, selectedIdx);
+}
+
+static void ApplySessionScan(MainWindow* win, AIChatSessionList* list, AIChatSessionScan* scan) {
+    AIChatTabState* st = GetTabState(scan->tab, scan->providerId);
+    if (scan->mode == AIChatScanMode::AutoSelect && st && len(st->sessionId) == 0 && len(scan->sessions) > 0) {
+        // sorted by timestamp desc, so [0] is the most recent
+        str::ReplaceWithCopy(&st->sessionId, scan->sessions[0].sessionId);
         WebViewClearChat(win);
-        provider->LoadSessionHistory(win, st->sessionId, dir);
+        CurrentProvider(win)->LoadSessionHistory(win, st->sessionId, scan->dir);
+    }
+    SetSessionListKey(list, scan->tab, scan->providerId, scan->dir);
+    list->autoSelectTab = nullptr;
+    list->shownGen = scan->gen;
+    FillSessionCombo(win, list, st, scan->sessions);
+}
+
+// UI thread; the window, tab or provider may have changed since the scan started
+static void AIChatSessionsScanned(AIChatSessionScan* scan) {
+    MainWindow* win = scan->win;
+    AIChatSessionList* list = FindSessionList(win);
+    bool isLatest = list && list->gen == scan->gen;
+    if (isLatest && IsMainWindowValidAndNotClosing(win) && AIChatPanelShown(win) && win->CurrentTab() == scan->tab &&
+        win->aiChatProvider == scan->providerId && str::Eq(path::GetDirTemp(scan->tab->filePath), scan->dir)) {
+        ApplySessionScan(win, list, scan);
+    }
+    AIChatFreeSessions(scan->sessions);
+    str::Free(scan->dir);
+    delete scan;
+}
+
+static void AIChatSessionsThread(AIChatSessionScan* scan) {
+    AIChatProvider* provider = GetAIChatProvider(scan->providerId);
+    provider->CollectSessions(scan->dir, scan->sessions);
+    uitask::Post(MkFunc0(AIChatSessionsScanned, scan), "AIChatSessionsScanned");
+}
+
+// Lists the current tab's sessions on a thread (reading session dirs can take
+// seconds), then fills the combo. AutoSelect also picks the most recent
+// session for a tab that has none. A newer scan drops the older one's result.
+void ScanAIChatSessions(MainWindow* win, AIChatScanMode mode) {
+    AIChatProvider* provider = CurrentProvider(win);
+    if (!provider) {
+        return;
+    }
+    AIChatSessionList* list = GetSessionList(win);
+    list->gen = ++gAIChatLastScanGen;
+    WindowTab* tab = win->CurrentTab();
+    int providerId = win->aiChatProvider;
+    AIChatTabState* st = GetTabState(tab, providerId);
+    bool hasFile = st && len(tab->filePath) > 0;
+    TempStr dir = hasFile ? path::GetDirTemp(tab->filePath) : TempStr();
+
+    // a newer scan for the same tab keeps a pending auto-select
+    if (list->autoSelectTab == tab && list->providerId == providerId) {
+        mode = AIChatScanMode::AutoSelect;
+    }
+    list->autoSelectTab = mode == AIChatScanMode::AutoSelect ? tab : nullptr;
+
+    // until the scan is back, don't offer another tab's sessions
+    Vec<AIChatSessionInfo> none;
+    if (!hasFile || !SessionListIsFor(list, tab, providerId, dir)) {
+        SetSessionListKey(list, tab, providerId, dir);
+        FillSessionCombo(win, list, st, none);
+    }
+    if (!hasFile) {
+        list->autoSelectTab = nullptr;
+        list->shownGen = list->gen;
+        return;
     }
 
-    AIChatFreeSessions(sessions);
+    auto* scan = new AIChatSessionScan();
+    scan->win = win;
+    scan->tab = tab;
+    scan->providerId = providerId;
+    scan->gen = list->gen;
+    scan->mode = mode;
+    scan->dir = str::Dup(dir);
+    RunAsync(MkFunc0(AIChatSessionsThread, scan), StrL("AIChatSessions"));
+}
+
+// the session combo item sel stands for in win's current tab; empty for
+// "+ New Session" and "(current session)"
+Str AIChatSessionIdAt(MainWindow* win, int sel) {
+    AIChatSessionList* list = FindSessionList(win);
+    WindowTab* tab = win->CurrentTab();
+    if (!list || !tab || len(tab->filePath) == 0) {
+        return {};
+    }
+    if (!SessionListIsFor(list, tab, win->aiChatProvider, path::GetDirTemp(tab->filePath))) {
+        return {};
+    }
+    int i = sel - 1;
+    if (i < 0 || i >= len(list->ids)) {
+        return {};
+    }
+    return list->ids[i];
+}
+
+// "pending=<0|1> sel=<n>", then the session combo's items, a line each
+TempStr AIChatSessionsTestTemp(int* exitCode) {
+    *exitCode = 1;
+    if (len(gWindows) == 0) {
+        return str::DupTemp(StrL("no window"));
+    }
+    AIChatSessionList* list = FindSessionList(gWindows[0]);
+    if (!list) {
+        return str::DupTemp(StrL("no session list"));
+    }
+    str::Builder res;
+    res.Append(fmt("pending=%d sel=%d\n", list->gen != list->shownGen ? 1 : 0, list->sel));
+    for (int i = 0; i < len(list->items); i++) {
+        res.Append(list->items[i]);
+        res.AppendChar('\n');
+    }
+    *exitCode = 0;
+    return ToStrTemp(res);
 }
 
 void StopAIChat(MainWindow* win) {

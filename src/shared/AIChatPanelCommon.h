@@ -34,10 +34,17 @@ struct AIChatCaptureSink {
     bool finished = false;
 };
 
-void AutoSelectRecentSession(MainWindow* win);
+enum class AIChatScanMode {
+    Populate,
+    AutoSelect, // also pick the most recent session if the tab has none
+};
+
+void ScanAIChatSessions(MainWindow* win, AIChatScanMode mode);
+Str AIChatSessionIdAt(MainWindow* win, int sel);
 void StopAIChat(MainWindow* win);
 
 // implemented by each app
+void AIChatSetSessionItems(MainWindow* win, StrVec& items, int sel);
 MainWindow* AIChatUpdateWindow(HWND hwndFrame, MainWindow* win);
 bool AIChatPanelShown(MainWindow* win);
 void AIChatUpdateApplied(MainWindow* win);
