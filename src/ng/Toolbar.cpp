@@ -660,25 +660,13 @@ static Rect HoverBoundsScreen(MainWindow* win, gp::Bounds b) {
     if (!(k > 0)) {
         k = 1;
     }
-    int ox = 0;
-    int oy = 0;
-#if OS_WIN
-    POINT o{0, 0};
-    if (HWND hwnd = AppShellNativeHwnd(win)) {
-        ClientToScreen(hwnd, &o);
-    }
-    ox = o.x;
-    oy = o.y;
-#else
+#if !OS_WIN
     // content rect and gpui bounds are both points; CanvasScale is dips per pixel
     k = 1;
-    Rect content = win && win->gpuiWin ? FromGpui(gp::WindowContentBounds(win->gpuiWin)) : Rect{};
-    if (content.IsEmpty()) {
-        content = AppShellWindowScreenRect(win);
-    }
-    ox = content.x;
-    oy = content.y;
 #endif
+    Point origin = AppShellContentOrigin(win);
+    int ox = origin.x;
+    int oy = origin.y;
     int x = ox + (int)(b.x / k + 0.5f);
     int y = oy + (int)(b.y / k + 0.5f);
     int x2 = ox + (int)((b.x + b.w) / k + 0.5f);

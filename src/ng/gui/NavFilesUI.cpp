@@ -1732,16 +1732,10 @@ TempStr NavFilesInFolderStateTemp(Str action, int idx, int* exitCodeOut) {
         if (exitCodeOut) {
             *exitCodeOut = 0;
         }
-        gp::Bounds r = gNav.listBounds;
-#if OS_WIN
-        HWND hwnd = gNavTw ? ToolWindowHwnd(gNavTw) : AppShellNativeHwnd(gNav.win);
-        float scale = (float)DpiGetForHwnd(hwnd) / 96.f;
-        POINT pt{(int)(r.x * scale), (int)(r.y * scale)};
-        ClientToScreen(hwnd, &pt);
-        return fmt("OK %d %d %d %d", (int)pt.x, (int)pt.y, (int)(r.w * scale), (int)(r.h * scale));
-#else
-        return fmt("OK %d %d %d %d", (int)r.x, (int)r.y, (int)r.w, (int)r.h);
-#endif
+        gp::Bounds b = gNav.listBounds;
+        gp::Window* gw = gNavTw ? ToolWindowGpui(gNavTw) : (gNav.win ? gNav.win->gpuiWin : nullptr);
+        Rect r = AppShellDipsToScreen(gw, b.x, b.y, b.w, b.h);
+        return fmt("OK %d %d %d %d", r.x, r.y, r.dx, r.dy);
     } else if (str::Eq(action, StrL("edit-path")) || str::TrimPrefix(action, StrL("path-"))) {
         // path editing: edit-path, path-text:<text>, path-commit, path-cancel,
         // path-state (report only)

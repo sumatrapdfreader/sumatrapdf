@@ -137,6 +137,8 @@ void AppShellSetFullScreen(MainWindow* win, bool fullScreen, bool restoreMaximiz
 Rect AppShellWindowScreenRect(MainWindow* win);
 // the canvas (MainWindow::canvasRc) in screen pixels; empty on wasm
 Rect AppShellCanvasScreenRect(MainWindow* win);
+Point AppShellContentOrigin(MainWindow* win);
+Rect AppShellDipsToScreen(gpui::Window* gw, float x, float y, float dx, float dy);
 // moves / sizes the frame to `r` (outer rectangle, screen pixels; empty: leave
 // it) and maximizes it. False on wasm.
 bool AppShellPlaceWindow(MainWindow* win, Rect r, bool maximize);

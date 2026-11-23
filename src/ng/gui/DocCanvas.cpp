@@ -3735,17 +3735,8 @@ Point CanvasToScreenPt(MainWindow* win, Point pt) {
     float k = CanvasScale(win);
     float wx = (float)win->canvasRc.x + (float)pt.x * k;
     float wy = (float)win->canvasRc.y + (float)pt.y * k;
-#if OS_WIN
-    HWND hwnd = MainWindowHwnd(win);
-    float dipScale = hwnd ? (float)DpiGetForHwnd(hwnd) / 96.f : 1.f;
-    POINT p{(int)(wx * dipScale), (int)(wy * dipScale)};
-    if (hwnd) {
-        ClientToScreen(hwnd, &p);
-    }
-    return Point(p.x, p.y);
-#else
-    return Point((int)wx, (int)wy);
-#endif
+    Rect r = AppShellDipsToScreen(win->gpuiWin, wx, wy, 0, 0);
+    return Point(r.x, r.y);
 }
 
 void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {

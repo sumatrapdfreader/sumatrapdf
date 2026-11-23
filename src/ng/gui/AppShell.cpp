@@ -1168,6 +1168,40 @@ gp::App* AppShellGetApp() {
     return gApp;
 }
 
+// where the window's content (client area) starts on screen
+Point AppShellContentOrigin(MainWindow* win) {
+#if OS_WIN
+    POINT o{0, 0};
+    if (HWND hwnd = AppShellNativeHwnd(win)) {
+        ClientToScreen(hwnd, &o);
+    }
+    return Point(o.x, o.y);
+#else
+    Rect content = win && win->gpuiWin ? FromGpui(gp::WindowContentBounds(win->gpuiWin)) : Rect{};
+    if (content.IsEmpty()) {
+        content = AppShellWindowScreenRect(win);
+    }
+    return Point(content.x, content.y);
+#endif
+}
+
+// A rect in window dips as screen pixels, for tests. Off Windows tests use
+// gpui's window coordinates, so it comes back as is.
+Rect AppShellDipsToScreen(gp::Window* gw, float x, float y, float dx, float dy) {
+#if OS_WIN
+    HWND hwnd = gw ? (HWND)gp::PlatWindowHandle(gw) : nullptr;
+    float scale = hwnd ? (float)DpiGetForHwnd(hwnd) / 96.f : 1.f;
+    POINT p{(int)(x * scale), (int)(y * scale)};
+    if (hwnd) {
+        ClientToScreen(hwnd, &p);
+    }
+    return Rect{p.x, p.y, (int)(dx * scale), (int)(dy * scale)};
+#else
+    (void)gw;
+    return Rect{(int)x, (int)y, (int)dx, (int)dy};
+#endif
+}
+
 #if !OS_WIN
 static bool SystemUsesDarkMode() {
     return gApp && gp::AppWindowAppearance(gApp) == gp::WindowAppearance::Dark;
