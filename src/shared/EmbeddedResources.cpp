@@ -10,6 +10,9 @@
 #include "base/Http.h"
 #include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
+#if OS_POSIX && !OS_WASM
+#include <unistd.h>
+#endif
 
 #include "Version.h"
 #if OS_WASM
@@ -324,6 +327,19 @@ static void OnFontDownloadChunk(FontDownloadProgress* p, HttpProgress* hp) {
 }
 #endif
 
+#if !OS_WASM
+// per process and thread: other instances, PdfPreview.dll and sumatrapdf-tool
+// share the font cache
+static TempStr UniquePartPathTemp(Str dest) {
+#if OS_WIN
+    u64 pid = GetCurrentProcessId();
+#else
+    u64 pid = (u64)getpid();
+#endif
+    return fmt("%s.%llu.%llu.part", dest, pid, (u64)GetCurrentThreadId());
+}
+#endif
+
 static bool DownloadFont(Str name, Str url, Str dest) {
     if (!dir::CreateForFile(dest)) {
         logf("font cache: cannot create '%s'\n", dest);
@@ -336,7 +352,7 @@ static bool DownloadFont(Str name, Str url, Str dest) {
     WasmPersistSettings();
     return true;
 #else
-    TempStr part = str::JoinTemp(dest, StrL(".part"));
+    TempStr part = UniquePartPathTemp(dest);
     FontDownloadProgress p;
     p.name = name;
     p.total = FontMapSize(name);
@@ -461,11 +477,13 @@ static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
             dlUrl = str::JoinTemp(base, StrL("/"), Str(file));
         }
         logf("font '%s': downloading\n", name);
-        if (!DownloadFont(name, dlUrl, path)) {
+        // another process may have downloaded it while ours failed
+        bool downloaded = DownloadFont(name, dlUrl, path);
+        data = ReadKeptFont(path);
+        if (!downloaded && len(data) == 0) {
             logf("font '%s': download failed\n", name);
             return;
         }
-        data = ReadKeptFont(path);
         if (len(data) > 0 && !FontMatchesFileName(Str(file), data)) {
             logf("font '%s': downloaded file doesn't match its sha1, not kept\n", name);
             ReportFontDownload(name, 0, 0, FontDownloadEvent::Failed);
