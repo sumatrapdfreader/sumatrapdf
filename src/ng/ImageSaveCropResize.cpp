@@ -46,6 +46,7 @@
 #include "gui/DialogWidgets.h"
 #include "shared/PdfToolsCommon.h"
 #include "gui/ToolWindow.h"
+#include "gui/WasmBridge.h"
 #include "SumatraDialogs.h"
 #include "ImageSaveCropResize.h"
 #include "ImageSaveCropResizeCommon.h"
@@ -721,6 +722,10 @@ static void FinishSave(Str dest) {
     MainWindow* win = gImgEdit.win;
     TempStr saved = str::DupTemp(dest);
     logf("ImageEdit: saved '%s'\n", saved);
+#if OS_WASM
+    // a file in MEMFS is not a file the user has; hand it to the browser
+    WasmDownloadFile(saved);
+#endif
     CloseImageEditWindow();
     if (gImageEditHost.OpenSavedFile) {
         gImageEditHost.OpenSavedFile(win, saved);
@@ -1033,6 +1038,9 @@ static void OnDestPathPicked(SavePathArgs* args) {
         return;
     }
     SetDestPath(args->path);
+    if (gImgEdit.tw) {
+        ToolWindowActivate(gImgEdit.tw);
+    }
     int idx = FormatIdxFromExt(path::GetExtTemp(args->path));
     for (int i = 0; i < len(gImgEdit.formatIndices); i++) {
         if (gImgEdit.formatIndices[i] == idx) {
@@ -1057,8 +1065,13 @@ void ImageEditView::OnBrowse(ImageEditView*, gp::Ctx* cx, const gp::ClickEvent*)
                       "BMP Files\1*.bmp\1"
                       "All Files\1*.*\1"));
     args->noDefExt = true;
+    args->pickOnly = true;
     args->onDone = MkFunc1Void<SavePathArgs*>(OnDestPathPicked);
     ShowSavePathDialog(args);
+    // the port's dialog is drawn in the main window, which can be behind the editor
+    if (gImgEdit.tw && IsSavePathDialogVisible()) {
+        AppShellActivateWindow(gImgEdit.win);
+    }
     gp::Notify(cx);
 }
 

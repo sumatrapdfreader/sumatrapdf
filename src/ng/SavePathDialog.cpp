@@ -170,7 +170,7 @@ static void FinishSavePathDialog(Str path) {
         args->onDone.Call(args);
 #if OS_WASM
         // a file in MEMFS is not a file the user has; hand it to the browser
-        if (len(path) > 0) {
+        if (len(path) > 0 && !args->pickOnly) {
             WasmDownloadFile(path);
         }
 #endif
