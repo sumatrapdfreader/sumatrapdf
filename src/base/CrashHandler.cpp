@@ -330,6 +330,16 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
 
     bool shouldUpload = isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
 
+    // a ReportIf in a hot path would walk the stack and copy log and settings
+    // into the never-reset crash arena on every hit: build one per session
+    static bool didBuildDebugReport = false;
+    if (!isCrash && !IsDebuggerPresent()) {
+        if (didBuildDebugReport) {
+            return;
+        }
+        didBuildDebugReport = true;
+    }
+
     if (gCfg.localOnly) {
         auto s = BuildCrashComment(condStr, fileLine, isCrash);
         if (len(s) == 0) {

@@ -758,6 +758,14 @@ static void CrashHandler_UnitTests() {
     LPTOP_LEVEL_EXCEPTION_FILTER cur = SetUnhandledExceptionFilter(nullptr);
     utassert(cur == nullptr);
 
+    // a debug report that isn't uploaded builds its full text once per session
+    InstallTestCrashHandler();
+    gTestCrashCommentCalls = 0;
+    _uploadDebugReport(StrL("test cond"), StrL("Sumatra_ut.cpp:1"), false);
+    _uploadDebugReport(StrL("test cond"), StrL("Sumatra_ut.cpp:1"), false);
+    utassert(gTestCrashCommentCalls <= 1);
+    UninstallCrashHandler();
+
     SetUnhandledExceptionFilter(saved);
 }
 

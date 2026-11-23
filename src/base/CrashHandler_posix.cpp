@@ -261,6 +261,17 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     if (TakeReportSlot() == ReportSlot::Nested) {
         return;
     }
+    // a ReportIf in a hot path would rebuild the report into the never-reset
+    // crash arena and rewrite the report file on every hit: write one per session
+    static bool didWriteDebugReport = false;
+    if (!isCrash && didWriteDebugReport) {
+        FreeReportSlot();
+        logf("_uploadDebugReport: %s %s\n", condStr, fileLine);
+        return;
+    }
+    if (!isCrash) {
+        didWriteDebugReport = true;
+    }
     WriteCrashReport(condStr, fileLine, isCrash, 0, nullptr, nullptr);
     FreeReportSlot();
     if (gCfg.forTesting && !isCrash) {
