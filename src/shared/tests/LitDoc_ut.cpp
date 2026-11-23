@@ -210,6 +210,7 @@ bool LitDoc_UnitTestDes();
 bool LitDoc_UnitTestDesThreads();
 bool LitDoc_UnitTestLzxOverrun();
 bool LitDoc_UnitTestZipName();
+bool LitDoc_UnitTestSectionNames();
 bool LitDoc_UnitTestOpfStrayClose();
 #endif
 
@@ -307,6 +308,7 @@ void LitDoc_UnitTests() {
     utassert(LitDoc_UnitTestDesThreads());
     utassert(LitDoc_UnitTestLzxOverrun());
     utassert(LitDoc_UnitTestZipName());
+    utassert(LitDoc_UnitTestSectionNames());
     utassert(LitDoc_UnitTestOpfStrayClose());
 #endif
     LitMustReject(MkLitHdrLenWrap());

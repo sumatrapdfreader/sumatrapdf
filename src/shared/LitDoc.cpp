@@ -558,8 +558,8 @@ Str LitFile::GetFile(Str name) {
     return Str(sec.s + e->offset, e->size);
 }
 
-static bool LitParseSectionNames(LitFile* lit) {
-    Str raw = lit->GetFile(StrL("::DataSpace/NameList"));
+// names are UTF-16LE: [u16 ?][u16 count] then per name [u16 nChars][chars][u16 0]
+static bool LitDecodeSectionNames(Str raw, StrVec& names) {
     if (len(raw) < 4) {
         return false;
     }
@@ -577,11 +577,16 @@ static bool LitParseSectionNames(LitFile* lit) {
         if (((i64)nChars * 2) + 2 > (i64)len(raw) - pos) {
             return false;
         }
-        WStr ws((const WCHAR*)(raw.s + pos), nChars);
-        lit->sectionNames.Append(ToUtf8Temp(ws));
+        Str utf16(raw.s + pos, nChars * 2);
+        names.Append(strconv::Utf16ToUtf8Temp(utf16, strconv::ByteOrder::LittleEndian));
         pos += (nChars * 2) + 2;
     }
     return true;
+}
+
+static bool LitParseSectionNames(LitFile* lit) {
+    Str raw = lit->GetFile(StrL("::DataSpace/NameList"));
+    return LitDecodeSectionNames(raw, lit->sectionNames);
 }
 
 static void LitDesDecrypt(u8* dst, const u8* src, int n, const u8 key[8]) {
@@ -1694,6 +1699,18 @@ bool LitDoc_UnitTestOpfStrayClose() {
     bool ok = str::EndsWith(opf, StrL("</dc-metadata></metadata><manifest></manifest></package>"));
     str::Free(opf);
     return ok;
+}
+
+// WCHAR is 4 bytes off Windows, so names must not be read through WCHAR*
+bool LitDoc_UnitTestSectionNames() {
+    // "Uncompressed", "ąb"
+    const u8 raw[] = {0,   0, 2,   0, 12,  0, 'U', 0, 'n', 0, 'c', 0, 'o', 0, 'm',  0,    'p', 0, 'r', 0,
+                      'e', 0, 's', 0, 's', 0, 'e', 0, 'd', 0, 0,   0, 2,   0, 0x05, 0x01, 'b', 0, 0,   0};
+    StrVec names;
+    if (!LitDecodeSectionNames(Str((const char*)raw, (int)sizeof(raw)), names) || len(names) != 2) {
+        return false;
+    }
+    return str::Eq(names.At(0), StrL("Uncompressed")) && str::Eq(names.At(1), StrL("\xc4\x85\x62"));
 }
 
 bool LitDoc_UnitTestZipName() {
