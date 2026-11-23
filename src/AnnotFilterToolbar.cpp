@@ -533,8 +533,11 @@ static Rect AnnotFilterWindowPlacementRect(MainWindow* win, Size minSize) {
     }
     dx = std::max(dx, minSize.dx);
     dy = std::max(dy, minSize.dy);
-    saved.dx = std::max(saved.dx, minSize.dx);
-    saved.dy = std::max(saved.dy, minSize.dy);
+    // an empty saved rect means none was saved: keep it empty
+    if (!saved.IsEmpty()) {
+        saved.dx = std::max(saved.dx, minSize.dx);
+        saved.dy = std::max(saved.dy, minSize.dy);
+    }
     if (win->annotListFloatPosUserSet && !saved.IsEmpty()) {
         return ShiftRectToWorkArea(saved, nullptr, true);
     }
