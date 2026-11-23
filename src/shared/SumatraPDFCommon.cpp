@@ -2602,6 +2602,23 @@ static bool GetCurrentDesktopId(ISumatraVirtualDesktopManager* vdm, GUID* out) {
     return false;
 }
 
+// The desktop the user is looking at, as "{GUID}". Empty when the shell
+// can't tell.
+TempStr GetCurrentDesktopIdTemp(ISumatraVirtualDesktopManager* vdm) {
+    if (!vdm) {
+        return {};
+    }
+    GUID id{};
+    if (!GetCurrentDesktopId(vdm, &id)) {
+        return {};
+    }
+    WCHAR buf[40];
+    if (StringFromGUID2(id, buf, dimofi(buf)) == 0) {
+        return {};
+    }
+    return ToUtf8Temp(WStr(buf));
+}
+
 // Under OpenOnOtherDesktop = move, pull hwnd onto the user's current virtual
 // desktop so focusing it won't switch desktops. False in the other modes.
 bool BringToCurrentDesktop(HWND hwnd) {
