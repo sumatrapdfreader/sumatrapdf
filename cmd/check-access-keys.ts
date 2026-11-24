@@ -17,7 +17,7 @@
 //   -all: also list translations that dropped the original's access key
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
-import { gLangs } from "./trans-gen.ts";
+import { gLangs } from "./regenerate-translation-languages.ts";
 
 interface Translation {
   text: string;

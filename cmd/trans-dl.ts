@@ -729,9 +729,9 @@ interface SupportedLang {
   name: string;
 }
 
-/** Languages we ship (from trans-gen.ts gLangs), excluding English. */
+/** Languages we ship (from regenerate-translation-languages.ts gLangs), excluding English. */
 function loadSupportedLangs(): SupportedLang[] {
-  const path = join(import.meta.dir, "trans-gen.ts");
+  const path = join(import.meta.dir, "regenerate-translation-languages.ts");
   const text = readFileSync(path, "utf-8");
   const startIdx = text.indexOf("const gLangs");
   const endIdx = text.indexOf("];", startIdx);
