@@ -1,8 +1,9 @@
 import { Socket, createConnection } from "node:net";
-import { IS_WIN } from "./host.ts";
+import { IS_MAC, IS_WIN } from "./host.ts";
 import { macControlRequest, registerControlPath } from "./mac-control.ts";
 import { ensureModifierKeysUp, killAndWait, testWindowPos } from "./winapi.ts";
-import { drainProcStderr, SLOW_BUILD_FACTOR } from "./util.ts";
+import { processReuseWanted } from "./process-reuse.ts";
+import { drainProcStderr, EXE, SLOW_BUILD_FACTOR } from "./util.ts";
 
 export enum ControlCommand {
   Ping = 1,
@@ -548,6 +549,9 @@ function cleanEnv(env: Record<string, string | undefined> | undefined): Record<s
 
 export class ControlClient {
   private nextId = 1;
+  // A shared process stays up. quit() releases its documents and drops the pipe.
+  detachOnQuit = false;
+  beforeDetach: (() => Promise<void>) | null = null;
 
   constructor(readonly socket: Socket) {
     socket.on("error", swallowSocketError);
@@ -613,6 +617,16 @@ export class ControlClient {
   // the "Unsaved changes" prompt. Call resolveUnsavedChanges("save") before
   // to keep them.
   async quit(): Promise<void> {
+    if (this.detachOnQuit) {
+      try {
+        if (this.beforeDetach) {
+          await this.beforeDetach();
+        }
+      } finally {
+        this.close();
+      }
+      return;
+    }
     try {
       await this.request(ControlCommand.Quit);
     } finally {
@@ -993,6 +1007,56 @@ export function uniquePipeName(prefix = "sumatra-control"): string {
 // -for-testing run; must match kDebugReportTestExitCode in src/base/CrashHandler.cpp
 export const DEBUG_REPORT_EXIT_CODE = 105;
 
+// One process for the tests that only reopen a document. A launch that needs
+// its own process ends that session first.
+async function runReusedSumatra<T>(
+  fn: (client: ControlClient, proc: Bun.Subprocess) => Promise<T>,
+  extraArgs: string[],
+  options: { defaultWindowPos?: boolean },
+): Promise<T> {
+  const { launchControlled } = await import("./win-automation.ts");
+  const launched = await launchControlled(extraArgs, { defaultWindowPos: options.defaultWindowPos });
+  let result: T | undefined;
+  let fnErr: unknown;
+  let fnOk = false;
+  try {
+    result = await fn(launched.client, launched.proc);
+    fnOk = true;
+  } catch (e) {
+    fnErr = e;
+  } finally {
+    try {
+      await launched.client.quit();
+    } catch (e) {
+      if (!launched.client.detachOnQuit) {
+        await killAndWait(launched.proc);
+      } else {
+        console.error(`shared session release: ${(e as Error)?.message ?? e}`);
+      }
+    }
+  }
+  if (!fnOk) {
+    throw fnErr;
+  }
+  if (launched.client.detachOnQuit) {
+    return result as T;
+  }
+  const quitMs = 30_000 * SLOW_BUILD_FACTOR;
+  const exitCode = await Promise.race([
+    launched.proc.exited,
+    new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), quitMs)),
+  ]);
+  if (exitCode === "timeout") {
+    await killAndWait(launched.proc);
+    throw new Error(`SumatraPDF did not exit within ${quitMs / 1000}s of Quit`);
+  }
+  if (exitCode !== 0) {
+    const what = exitCode === DEBUG_REPORT_EXIT_CODE ? "debug report (ReportIf) fired" : `exit code ${exitCode}`;
+    throw new Error(`SumatraPDF: ${what}`);
+  }
+  return result as T;
+}
+
 // fn also gets the spawned process so a test can combine control commands with
 // real window messages (its pid is what finds the app's windows)
 export async function withControlledSumatra<T>(
@@ -1021,6 +1085,19 @@ export async function withControlledSumatra<T>(
   // immediately so a verbose ASan dump cannot fill the pipe and stall exit.
   // tests post keys and clicks directly; a held modifier would chord them
   await ensureModifierKeysUp();
+  if (!IS_MAC && processReuseWanted()) {
+    const { canReuseLaunch, endSharedControlledSession, hasSharedSession } = await import("./win-automation.ts");
+    const join =
+      !options.cwd &&
+      exe === EXE &&
+      canReuseLaunch(extraArgs, { defaultWindowPos: options.defaultWindowPos, env: options.env });
+    if (!join && hasSharedSession()) {
+      await endSharedControlledSession();
+    }
+    if (join) {
+      return await runReusedSumatra(fn, extraArgs, options);
+    }
+  }
   const proc = Bun.spawn([exe, "-for-testing", ...posArgs, "-dbg-control", pipeName, ...extraArgs], {
     stdout: "ignore",
     stderr: "pipe",

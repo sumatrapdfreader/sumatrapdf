@@ -1009,6 +1009,32 @@ export function sendCopyDataW(hwnd: number, dataId: number, text: string): bigin
   return sendMessage(hwnd, WM_COPYDATA, 0, BigInt(ptr(cds)));
 }
 
+// Same payload, but returns when the window has not answered. A modal dialog
+// runs on that thread, and a plain SendMessage would block the suite.
+const SMTO_ABORTIFHUNG = 0x0002;
+
+export function sendCopyDataWTimeout(hwnd: number, dataId: number, text: string, timeoutMs: number): boolean {
+  if (IS_MAC) {
+    return sendCopyDataW(hwnd, dataId, text) !== 0n;
+  }
+  const payload = wideZ(text);
+  const cds = new Uint8Array(24);
+  const view = new DataView(cds.buffer);
+  view.setBigUint64(0, BigInt(dataId), true);
+  view.setUint32(8, payload.byteLength, true);
+  view.setBigUint64(16, BigInt(ptr(payload)), true);
+  const ret = user32.symbols.SendMessageTimeoutW(
+    hwnd,
+    WM_COPYDATA,
+    0n,
+    BigInt(ptr(cds)),
+    SMTO_ABORTIFHUNG,
+    timeoutMs,
+    null,
+  );
+  return ret !== 0n;
+}
+
 // The reuse-instance open request (kCopyDataOpen): u32 newWindow, then the
 // UTF-8 path, NUL-terminated. The receiver loads it after replying.
 export function sendOpenCopyData(hwnd: number, path: string, newWindow = 0): bigint {

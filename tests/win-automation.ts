@@ -63,6 +63,8 @@ import {
   getCursorPos,
   setCursorPos,
   sendCopyDataW,
+  sendCopyDataWTimeout,
+  windowResponds,
   getPopupMenuHandle,
   readMenuTree,
   getWindowText,
@@ -73,7 +75,8 @@ import {
 } from "./winapi.ts";
 
 export { ensureModifierKeysUp };
-import { ControlClient, ControlCommand, uniquePipeName } from "./control.ts";
+import { ControlClient, ControlCommand, DEBUG_REPORT_EXIT_CODE, uniquePipeName } from "./control.ts";
+import { processReuseWanted } from "./process-reuse.ts";
 
 export { captureWindowToPng, killProcessesNamed };
 
@@ -83,8 +86,61 @@ type SharedControlledSession = {
   frame: number;
 };
 
+type SharedMode = "annot" | "reopen";
+
+type ReusableLaunch = {
+  paths: string[];
+  view: string | null;
+  zoom: number | null;
+  page: number | null;
+};
+
 let sharedSessionRequested = false;
 let sharedSession: SharedControlledSession | null = null;
+let sharedMode: SharedMode | null = null;
+// Close between tests already wrote useDefaultState. Don't toggle the setting again.
+let rememberOff = false;
+let docsReleased = true;
+
+const kDdeExecute = 0x44646557;
+
+// State-bearing toggles. The dispatcher skips a command that is already in this
+// state, so repeating them does not flip the window.
+const kWindowReset =
+  "[CmdToggleFullscreen off][CmdTogglePresentationMode off][CmdToggleEditPDF off]" +
+  "[CmdToggleBookmarks off][CmdToggleThumbnails off][CmdToggleLayers off][CmdFavoriteToggle off]" +
+  "[CmdToggleToolbar on][CmdToggleMenuBar on][CmdToggleReadAloud off][CmdToggleAutomaticallyScroll off]" +
+  "[CmdTogglePageInfo off][CmdToggleLaserPointer off][CmdToggleGrayscale off][CmdToggleKeyboardHelp off]";
+
+const kZoomNames: Record<string, number> = {
+  "fit page": -1,
+  fitpage: -1,
+  "fit-page": -1,
+  "fit width": -2,
+  fitwidth: -2,
+  "fit-width": -2,
+  "fit height": -6,
+  fitheight: -6,
+  "fit-height": -6,
+  "fit content": -3,
+  fitcontent: -3,
+  "fit-content": -3,
+  "fit visible": -7,
+  fitvisible: -7,
+  "fit-visible": -7,
+  "actual size": 100,
+};
+
+const kViewNames = new Set([
+  "automatic",
+  "single page",
+  "facing",
+  "book view",
+  "continuous",
+  "continuous facing",
+  "continuous book view",
+  "continuous single page",
+]);
 
 // keep drain promises alive: `void new Response().text()` can be GC'd, the
 // pipe fills, ASan's next stderr write kills the process, tests see EPIPE
@@ -133,20 +189,288 @@ export function beginSharedControlledSession(): void {
   sharedSessionRequested = true;
 }
 
-export async function endSharedControlledSession(): Promise<void> {
-  sharedSessionRequested = false;
-  if (sharedSession) {
-    const session = sharedSession;
-    sharedSession = null;
+export function hasSharedSession(): boolean {
+  return sharedSession !== null;
+}
+
+function zoomArg(text: string): number | null {
+  const key = text.trim().toLowerCase();
+  const named = kZoomNames[key];
+  if (named !== undefined) {
+    return named;
+  }
+  const bare = key.endsWith("%") ? key.slice(0, -1) : key;
+  const n = Number(bare);
+  if (!Number.isFinite(n)) {
+    return null;
+  }
+  // The app turns anything below 1 into actual size.
+  return n < 1 ? 100 : n;
+}
+
+function viewArg(text: string): string | null {
+  const key = text.trim().toLowerCase();
+  if (!kViewNames.has(key)) {
+    return null;
+  }
+  return key === "continuous single page" ? "continuous" : key;
+}
+
+// null: this launch has to be its own process (extra flags, env, no file).
+function reusableLaunch(
+  args: string[],
+  opts?: { defaultWindowPos?: boolean; saveSettings?: boolean; env?: object; cwd?: string },
+): ReusableLaunch | null {
+  if (IS_MAC || opts?.defaultWindowPos || opts?.saveSettings || opts?.env || opts?.cwd) {
+    return null;
+  }
+  const paths: string[] = [];
+  let view: string | null = null;
+  let zoom: number | null = null;
+  let page: number | null = null;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === "-view" || a === "-zoom" || a === "-page") {
+      const v = args[++i];
+      if (v === undefined || v.startsWith("-")) {
+        return null;
+      }
+      if (a === "-view") {
+        view = viewArg(v);
+        if (view === null) {
+          return null;
+        }
+      } else if (a === "-zoom") {
+        zoom = zoomArg(v);
+        if (zoom === null) {
+          return null;
+        }
+      } else {
+        const n = Number(v);
+        if (!Number.isInteger(n) || n < 1) {
+          return null;
+        }
+        page = n;
+      }
+      continue;
+    }
+    if (a.startsWith("-") || a.includes('"')) {
+      return null;
+    }
+    paths.push(a);
+  }
+  if (paths.length === 0) {
+    return null;
+  }
+  return { paths, view, zoom, page };
+}
+
+export function canReuseLaunch(
+  args: string[],
+  opts?: { defaultWindowPos?: boolean; saveSettings?: boolean; env?: object; cwd?: string },
+): boolean {
+  return reusableLaunch(args, opts) !== null;
+}
+
+function ddeForLaunch(parsed: ReusableLaunch): string {
+  let cmd = kWindowReset + "[CmdDiscardChanges][CmdCloseAllTabs]";
+  for (const path of parsed.paths) {
+    const view = parsed.view && parsed.view !== "automatic" ? parsed.view : "automatic";
+    const zoom = parsed.zoom ?? -1;
+    const page = parsed.page ?? 1;
+    cmd += `[Open("${path}", 0, 1, 0)]`;
+    cmd += `[SetView("${path}", "${view}", ${zoom})]`;
+    cmd += `[GotoPage("${path}", ${page})]`;
+  }
+  cmd += kWindowReset;
+  return cmd;
+}
+
+function armDetach(client: ControlClient): void {
+  client.detachOnQuit = true;
+  client.beforeDetach = async () => {
+    await releaseSharedDocs(client);
+  };
+}
+
+// Once per process. The next close stores useDefaultState, so the following
+// open does not restore the previous test's page and zoom. Set, not toggle:
+// -for-testing still loads the user's settings.
+async function forgetDocState(client: ControlClient): Promise<void> {
+  if (rememberOff) {
+    return;
+  }
+  try {
+    const res = await client.request(ControlCommand.TestSetSetting, ["RememberStatePerDocument", "false"]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    if (code === 0) {
+      rememberOff = true;
+    }
+  } catch {
+    // The next open still forces page and zoom.
+  }
+}
+
+async function abandonShared(): Promise<void> {
+  const session = sharedSession;
+  sharedSession = null;
+  sharedMode = null;
+  rememberOff = false;
+  docsReleased = true;
+  if (session && session.proc.exitCode === null) {
     await killAndWaitProcess(session.proc);
   }
 }
 
-export async function killAndWait(proc: Bun.Subprocess): Promise<void> {
-  if (sharedSession?.proc === proc) {
+async function releaseSharedDocs(client: ControlClient | null): Promise<void> {
+  if (docsReleased || !sharedSession || sharedMode !== "reopen") {
     return;
   }
-  await killAndWaitProcess(proc);
+  docsReleased = true;
+  const session = sharedSession;
+  if (session.proc.exitCode !== null) {
+    return;
+  }
+  if (client && !client.socket.destroyed) {
+    try {
+      await client.setNotificationsEnabled(false);
+      await forgetDocState(client);
+      await client.resolveUnsavedChanges("discard");
+    } catch {
+      // CmdDiscardChanges below still drops a dirty document.
+    }
+  }
+  if (!windowResponds(session.frame, 2000)) {
+    await abandonShared();
+    return;
+  }
+  postMessage(session.frame, WM_KEYDOWN, VK_ESCAPE, 0);
+  const cmd = kWindowReset + "[CmdDiscardChanges][CmdCloseAllTabs]";
+  if (!sendCopyDataWTimeout(session.frame, kDdeExecute, cmd, 8000 * SLOW_BUILD_FACTOR)) {
+    await abandonShared();
+  }
+}
+
+async function reuseOpen(
+  parsed: ReusableLaunch,
+): Promise<{ proc: Bun.Subprocess; client: ControlClient; frame: number } | null> {
+  const session = sharedSession;
+  if (!session || sharedMode !== "reopen") {
+    return null;
+  }
+  if (session.proc.exitCode !== null || !windowResponds(session.frame, 2000)) {
+    await abandonShared();
+    return null;
+  }
+  if (!rememberOff) {
+    let prior: ControlClient | null = null;
+    try {
+      prior = await ControlClient.connect(session.pipe, 3000 * SLOW_BUILD_FACTOR);
+      await forgetDocState(prior);
+    } catch {
+      // The next open still forces page and zoom.
+    } finally {
+      prior?.close();
+    }
+  }
+  postMessage(session.frame, WM_KEYDOWN, VK_ESCAPE, 0);
+  if (!sendCopyDataWTimeout(session.frame, kDdeExecute, ddeForLaunch(parsed), 8000 * SLOW_BUILD_FACTOR)) {
+    await abandonShared();
+    return null;
+  }
+  docsReleased = false;
+  try {
+    const client = await ControlClient.connect(session.pipe);
+    armDetach(client);
+    await client.setNotificationsEnabled(true);
+    await client.waitForRenderIdle();
+    return { proc: session.proc, client, frame: session.frame };
+  } catch {
+    await abandonShared();
+    return null;
+  }
+}
+
+async function quitReopenProcess(session: SharedControlledSession): Promise<void> {
+  if (session.proc.exitCode !== null) {
+    return;
+  }
+  try {
+    const client = await ControlClient.connect(session.pipe, 3000 * SLOW_BUILD_FACTOR);
+    await client.quit();
+  } catch {
+    // The process is still up; kill it below.
+  }
+  const code = await Promise.race([
+    session.proc.exited,
+    new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 10000)),
+  ]);
+  if (code === "timeout") {
+    await killAndWaitProcess(session.proc);
+    return;
+  }
+  if (typeof code === "number" && code !== 0) {
+    const what = code === DEBUG_REPORT_EXIT_CODE ? "debug report (ReportIf) fired" : `exit code ${code}`;
+    console.error(`shared SumatraPDF: ${what}`);
+  }
+}
+
+export async function endSharedControlledSession(): Promise<void> {
+  const mode = sharedMode;
+  if (mode === "reopen") {
+    try {
+      await releaseSharedDocs(null);
+    } catch (e) {
+      console.error(`shared session release: ${(e as Error)?.message ?? e}`);
+    }
+  }
+  const session = sharedSession;
+  sharedSessionRequested = false;
+  sharedSession = null;
+  sharedMode = null;
+  rememberOff = false;
+  docsReleased = true;
+  if (!session) {
+    return;
+  }
+  if (mode !== "reopen") {
+    await killAndWaitProcess(session.proc);
+    return;
+  }
+  if (session.proc.exitCode !== null) {
+    return;
+  }
+  try {
+    await quitReopenProcess(session);
+  } catch (e) {
+    console.error(`ending shared SumatraPDF: ${(e as Error)?.message ?? e}`);
+    if (session.proc.exitCode === null) {
+      await killAndWaitProcess(session.proc);
+    }
+  }
+}
+
+export async function killAndWait(proc: Bun.Subprocess): Promise<void> {
+  if (sharedSession?.proc !== proc) {
+    await killAndWaitProcess(proc);
+    return;
+  }
+  if (sharedMode !== "reopen" || docsReleased) {
+    return;
+  }
+  let client: ControlClient | null = null;
+  try {
+    client = await ControlClient.connect(sharedSession.pipe, 3000 * SLOW_BUILD_FACTOR);
+    await releaseSharedDocs(client);
+  } catch {
+    try {
+      await releaseSharedDocs(null);
+    } catch (e) {
+      console.error(`shared session release: ${(e as Error)?.message ?? e}`);
+    }
+  } finally {
+    client?.close();
+  }
 }
 
 // ng's frame is gpui's window. Tests import this binding, so the assignment
@@ -192,7 +516,7 @@ export async function launchControlled(
 ): Promise<{ proc: Bun.Subprocess; client: ControlClient; frame: number }> {
   // many tests post keys and clicks directly; a held modifier would chord them
   await ensureModifierKeysUp();
-  if (sharedSession) {
+  if (sharedSession && sharedMode === "annot") {
     if (opts?.env) {
       throw new Error("a shared controlled session can't take env; register the test after the shared group");
     }
@@ -205,12 +529,23 @@ export async function launchControlled(
     sendMessage(sharedSession.frame, WM_COMMAND, cmdId("CmdDiscardChanges"), 0);
     sendMessage(sharedSession.frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
     const command = `[Open("${path}", 0, 1, 0)]`;
-    if (!sendCopyDataW(sharedSession.frame, 0x44646557, command)) {
+    if (!sendCopyDataW(sharedSession.frame, kDdeExecute, command)) {
       throw new Error("could not open the next document in the shared SumatraPDF process");
     }
     const client = await ControlClient.connect(sharedSession.pipe);
     await client.waitForRenderIdle();
     return { proc: sharedSession.proc, client, frame: sharedSession.frame };
+  }
+  const parsed = !IS_MAC && processReuseWanted() && sharedMode !== "annot" ? reusableLaunch(args, opts) : null;
+  if (!IS_MAC && processReuseWanted() && sharedMode === "reopen") {
+    if (parsed) {
+      const reused = await reuseOpen(parsed);
+      if (reused) {
+        return reused;
+      }
+    } else if (sharedSession) {
+      await endSharedControlledSession();
+    }
   }
   const pipe = uniquePipeName();
   const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
@@ -235,9 +570,21 @@ export async function launchControlled(
     }
     if (sharedSessionRequested) {
       sharedSession = { proc, pipe, frame };
+      sharedMode = "annot";
+    } else if (parsed) {
+      sharedSession = { proc, pipe, frame };
+      sharedMode = "reopen";
+      docsReleased = false;
+      armDetach(client);
     }
     return { proc, client, frame };
   } catch (e) {
+    if (sharedSession?.proc === proc) {
+      sharedSession = null;
+      sharedMode = null;
+      rememberOff = false;
+      docsReleased = true;
+    }
     await killAndWaitProcess(proc);
     throw e;
   }

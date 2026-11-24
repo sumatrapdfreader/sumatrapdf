@@ -2,10 +2,8 @@
 // (print-to-PDF, LaTeX, debounce/CPU/scroll windows, high-zoom tile settle,
 // 400-file HTML TOC, restrict.ini exe copies). Those live in run-all.ts.
 //
-// Order groups tests that can share a Sumatra session (default -for-testing +
-// quadrant -window-pos + -dbg-control) so a later shared-process runner can
-// keep one instance. Isolated tests (custom -appdata, session restore, their
-// own window placement) come after.
+// Tests that only reopen a document are moved to the end and share one process.
+// Everything else keeps its order. issue-5978 stays first.
 //
 // Run:  bun tests/run-almost-all.ts [--no-build] [-silent] [-ng] [-exe <SumatraPDF.exe>]
 //
@@ -16,6 +14,7 @@
 // whenever the session is locked or an RDP connection is closed. Run it by
 // hand on an unlocked console: bun tests/issue-6000.ts
 
+import { finishProcessReuse, noteReuseTest, orderForReuse } from "./shared-session.ts";
 import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type SuiteOptions } from "./util.ts";
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
@@ -704,7 +703,7 @@ async function annotationClipboardTests(): Promise<void> {
   }
 }
 
-export const tests: NamedTest[] = [
+export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
@@ -1377,14 +1376,18 @@ export const tests: NamedTest[] = [
   ["ctx-menu-scroll", ctxMenuScroll],
   ["issue-6587", issue6587],
   ["issue-6588", issue6588],
-];
+]);
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
   startSuiteProgress(tests.length);
   // the right half of the screen: this suite is run by a person, so the window
   // stays out of the way (run-github-ci.ts asks for the whole work area)
   setTestWindowLayout("rightHalf");
-  await runNamedTests(tests, { heading: "run-almost-all", ...opts });
+  try {
+    await runNamedTests(tests, { heading: "run-almost-all", ...opts, beforeEach: noteReuseTest });
+  } finally {
+    await finishProcessReuse();
+  }
 }
 
 if (import.meta.main) {

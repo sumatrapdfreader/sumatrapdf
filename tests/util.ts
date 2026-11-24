@@ -902,6 +902,7 @@ export type SuiteOptions = {
   keepTestTimes?: boolean;
   heading?: string;
   summary?: boolean;
+  beforeEach?: (name: string) => void | Promise<void>;
 };
 
 export async function runNamedTests(tests: NamedTest[], opts?: SuiteOptions): Promise<void> {
@@ -912,6 +913,9 @@ export async function runNamedTests(tests: NamedTest[], opts?: SuiteOptions): Pr
   const summary = opts?.summary ?? true;
   const t0 = performance.now();
   for (const [name, fn] of tests) {
+    if (opts?.beforeEach) {
+      await opts.beforeEach(name);
+    }
     if (!silent) {
       console.log(`\n========== ${name} ==========`);
     }
