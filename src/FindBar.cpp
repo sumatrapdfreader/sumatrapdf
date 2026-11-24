@@ -81,6 +81,9 @@ struct FindBarWnd : WindowBase {
     // set while Layout() runs so the WM_SIZE its own SetWindowPos generates
     // doesn't re-enter Layout()
     bool inLayout = false;
+    // set while UpdateDpi() runs: deleting the bar then is a use-after-free
+    // (crash 2026-11-23-10-29-3b90)
+    bool inUpdateDpi = false;
     Func1List<MainWindow*> onWindowMoved;
 
     FindBarWnd() = default;
@@ -417,6 +420,8 @@ void FindBarWnd::UpdateDpi(int dpi) {
     if (!layout || !edit) {
         return;
     }
+    logf("FindBarWnd::UpdateDpi: bar=0x%p dpi=%d layoutDpi=%d\n", this, dpi, layoutDpi);
+    inUpdateDpi = true;
     int prevDpi = layoutDpi > 0 ? layoutDpi : 96;
     PlatformFont* appFont = GetAppFontForDpi(dpi);
     edit->SetFont(appFont);
@@ -454,6 +459,7 @@ void FindBarWnd::UpdateDpi(int dpi) {
     } else {
         Layout();
     }
+    inUpdateDpi = false;
 }
 
 void FindBarWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
@@ -554,6 +560,10 @@ void DeleteFindBar(MainWindow* win) {
     if (!bar) {
         return;
     }
+    logf("DeleteFindBar: bar=0x%p inUpdateDpi=%d inLayout=%d\n", bar, (int)bar->inUpdateDpi, (int)bar->inLayout);
+    // the bar's own code is still on the stack: report to get the stack of
+    // whatever nested call deletes it
+    ReportIf(bar->inUpdateDpi || bar->inLayout);
     // Null first: DestroyWindow can re-enter RecreateFindBar / DeleteFindBar
     // (nested WM_DPICHANGED) and would otherwise double-free the bar.
     win->findBar = nullptr;
@@ -597,6 +607,7 @@ void RecreateFindBar(MainWindow* win) {
     if (!win->findBar) {
         return;
     }
+    logf("RecreateFindBar: win=0x%p bar=0x%p\n", win, win->findBar);
     // stop any in-flight find/count that captured the old bar's state
     AbortFinding(win, true);
     FindBarWnd* oldBar = win->findBar;

@@ -3180,6 +3180,7 @@ void DeleteMainWindow(MainWindow* win) {
 }
 
 void UpdateAfterThemeChange() {
+    logf("UpdateAfterThemeChange: theme='%s'\n", gSettings->theme);
     // the icon pixmaps are rendered in the theme's colors and the cache is keyed
     // by them, so the home page has to re-fetch them: without a relayout it keeps
     // painting the pixmaps of the previous theme
@@ -14386,6 +14387,7 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             return 0;
 
         case WM_SETTINGCHANGE:
+            logf("WM_SETTINGCHANGE: wp=0x%x lp='%s'\n", (int)wp, lp ? ToUtf8Temp((const WCHAR*)lp) : Str());
             // Windows switched between light and dark mode: re-resolve the
             // System theme (no-op unless Theme = System)
             if (lp && str::EqI(ToUtf8Temp((const WCHAR*)lp), StrL("ImmersiveColorSet"))) {
