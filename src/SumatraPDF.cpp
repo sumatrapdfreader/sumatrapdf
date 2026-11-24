@@ -13995,6 +13995,10 @@ void UpdateSidebarOverlay(MainWindow* win, SidebarOverlayUpdate update) {
     if (!SidebarFloats(win)) {
         KillTimer(win->hwndCanvas, kSidebarOverlayTimerID);
         win->sidebarOverlayShown = false;
+        // the relayout hides the panels, not the separator line (#6588)
+        if (win->hwndSidebarOverlayEdge) {
+            ShowWindow(win->hwndSidebarOverlayEdge, SW_HIDE);
+        }
         return;
     }
     if (update == SidebarOverlayUpdate::Layout) {
