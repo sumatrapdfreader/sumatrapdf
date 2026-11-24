@@ -204,6 +204,11 @@ int jxl_has_avx2(void);
 
 int jxl_has_avx2_fma(void);
 
+#if defined(__aarch64__) && defined(__ARM_NEON) && !defined(JXL_NO_NEON)
+#define JXL_HAVE_NEON 1
+#include <arm_neon.h>
+#endif
+
 #if defined(__clang__) || defined(__GNUC__)
 
 #define JXL_TARGET_AVX2 __attribute__((target("avx2")))
@@ -234,6 +239,16 @@ typedef struct {
 static inline size_t jxl_br_bits_read(const jxl_br *br) {
     return br->byte_pos * 8 - (size_t)br->nbits;
 }
+
+enum { JXL_SEED_ICC = 0, JXL_SEED_ENTROPY = 1, JXL_SEED_MODULAR = 2 };
+#ifdef JXL_FUZZ_SEEDS
+void jxl_fuzz_seed(int kind, const jxl_br *br, size_t bitpos,
+                   const uint8_t *param, size_t param_len);
+#define JXL_FUZZ_SEED(kind, br, bitpos, param, len) \
+    jxl_fuzz_seed(kind, br, bitpos, param, len)
+#else
+#define JXL_FUZZ_SEED(kind, br, bitpos, param, len) ((void)0)
+#endif
 
 void jxl_br_init(jxl_br *br, const uint8_t *data, size_t len);
 void jxl_br_refill(jxl_br *br);
@@ -852,6 +867,7 @@ typedef enum {
 
 typedef struct {
     size_t offset;
+    size_t size;
 } jxl_toc_entry;
 
 typedef struct {
@@ -3110,6 +3126,16 @@ void jxl_dec_begin(jxl_dec *dec, jxl_br *br) {
 }
 
 int jxl_dec_init(jxl_ctx *ctx, jxl_dec *dec, jxl_br *br, uint32_t num_dist) {
+#ifdef JXL_FUZZ_SEEDS
+    {
+        uint8_t p[4];
+        p[0] = (uint8_t)num_dist;
+        p[1] = (uint8_t)(num_dist >> 8);
+        p[2] = (uint8_t)(num_dist >> 16);
+        p[3] = (uint8_t)(num_dist >> 24);
+        JXL_FUZZ_SEED(JXL_SEED_ENTROPY, br, jxl_br_bits_read(br), p, 4);
+    }
+#endif
     memset(dec, 0, sizeof(*dec));
     dec->ctx = ctx;
     dec->lz77_enabled = jxl_br_bool(br);
@@ -3890,6 +3916,7 @@ int jxl_read_icc(jxl_ctx *ctx, jxl_br *br, uint8_t **out, size_t *out_len) {
 
     *out = NULL;
     *out_len = 0;
+    JXL_FUZZ_SEED(JXL_SEED_ICC, br, jxl_br_bits_read(br), NULL, 0);
     if (read_icc_stream(ctx, br, &enc, &enc_len) != 0) return -1;
     rc = decode_icc(ctx, enc, enc_len, out, out_len);
     jxl_free(ctx, enc);
@@ -4352,11 +4379,13 @@ int jxl_read_toc(jxl_ctx *ctx, jxl_br *br, const jxl_frame_header *fh,
                 goto done;
             }
             toc->entries[i].offset = offs[b];
+            toc->entries[i].size = sizes[b];
         }
         jxl_free(ctx, offs);
     } else {
         for (i = 0; i < entry_count; i++) {
             toc->entries[i].offset = acc;
+            toc->entries[i].size = sizes[i];
             acc += sizes[i];
             toc->total_size += sizes[i];
         }
@@ -4906,7 +4935,7 @@ static void sc_predict(const jxl_sc_pred *sc, int32_t n, int32_t nw, int32_t ne,
 
     if ((te_w | te_n | te_nw | te_ne) == 0 && n == w && nw == w && ne == w &&
         (sc->default_wp || nn == n)) {
-        w3 = (int64_t)w << 3;
+        w3 = (int64_t)w * 8;
         out->subpred[0] = w3;
         out->subpred[1] = w3;
         out->subpred[2] = w3;
@@ -4945,11 +4974,11 @@ static void sc_predict(const jxl_sc_pred *sc, int32_t n, int32_t nw, int32_t ne,
     wt2 >>= log_weight; wt3 >>= log_weight;
     sum_weights = wt0 + wt1 + wt2 + wt3;
 
-    n3 = (int64_t)n << 3;
-    nw3 = (int64_t)nw << 3;
-    ne3 = (int64_t)ne << 3;
-    w3 = (int64_t)w << 3;
-    nn3 = (int64_t)nn << 3;
+    n3 = (int64_t)n * 8;
+    nw3 = (int64_t)nw * 8;
+    ne3 = (int64_t)ne * 8;
+    w3 = (int64_t)w * 8;
+    nn3 = (int64_t)nn * 8;
     sp0 = w3 + ne3 - n3;
     if (sc->default_wp) {
         sp1 = n3 - (((te_w + te_n + te_ne) * 16) >> 5);
@@ -5003,7 +5032,7 @@ static void sc_predict(const jxl_sc_pred *sc, int32_t n, int32_t nw, int32_t ne,
 }
 
 static void sc_record(jxl_sc_pred *sc, const jxl_sc_result *pred, int32_t sample) {
-    int64_t s = (int64_t)sample << 3;
+    int64_t s = (int64_t)sample * 8;
     int64_t true_err = pred->prediction - s;
     uint32_t subpred_err[4];
     uint32_t x = sc->x;
@@ -5060,7 +5089,7 @@ static void sc_record(jxl_sc_pred *sc, const jxl_sc_result *pred, int32_t sample
 
 static JXL_INLINE_HINT void
 sc_record_nec(jxl_sc_pred *sc, const jxl_sc_result *pred, int32_t sample) {
-    int64_t s = (int64_t)sample << 3;
+    int64_t s = (int64_t)sample * 8;
     int64_t true_err = pred->prediction - s;
     uint32_t subpred_err0, subpred_err1, subpred_err2, subpred_err3;
     uint32_t x = sc->x;
@@ -5508,6 +5537,10 @@ static int squeeze_default_params(jxl_ctx *ctx, jxl_transform *tr,
     }
 #undef JXL_SQ_PUSH
 
+    if (n == 0) {
+        jxl_free(ctx, sp);
+        return 0;
+    }
     tr->sp = sp;
     tr->nsp = n;
     return 0;
@@ -6366,6 +6399,23 @@ static int palette_inverse(jxl_ctx *ctx, jxl_transform *tr, jxl_chanlist *cl,
     width = targets[0].w;
     height = targets[0].h;
 
+    if (num_c == 1 && nb_deltas == 0 && tr->d_pred == JXL_PRED_ZERO &&
+        pal.w > 0) {
+        int32_t last = (int32_t)pal.w - 1;
+        for (y = 0; y < height; y++) {
+            int32_t *row0 = targets[0].data + (size_t)y * targets[0].stride;
+            for (x = 0; x < width; x++) {
+                int32_t index = row0[x];
+                if (index < 0) index = 0;
+                else if (index > last) index = last;
+                row0[x] = pal.data[index];
+            }
+        }
+        cl->chans[begin] = targets[0];
+        rc = 0;
+        goto done;
+    }
+
     for (y = 0; y < height; y++) {
         int32_t *row0 = targets[0].data + (size_t)y * targets[0].stride;
         for (x = 0; x < width; x++) {
@@ -7090,7 +7140,7 @@ modular_decode_grad_wp_nec(jxl_mchan *ch, jxl_pred_state *ps,
 
                         uint32_t *se = se_row + (size_t)x * 4;
                         int64_t true_err =
-                            ((int64_t)v << 3) - ((int64_t)value << 3);
+                            ((int64_t)v * 8) - ((int64_t)value * 8);
                         int64_t d = true_err < 0 ? -true_err : true_err;
                         uint32_t e = (uint32_t)((d + 3) >> 3);
                         te_row[x] = (int32_t)true_err;
@@ -9205,6 +9255,9 @@ static void build_kernel(float *kernel, uint32_t shift, const float *w) {
 #include <emmintrin.h>
 #include <immintrin.h>
 #endif
+#if defined(JXL_HAVE_NEON) && !defined(JXL_UPSAMPLE_FORCE_SCALAR)
+#define JXL_UPSAMPLE_NEON 1
+#endif
 
 static void up_minmax25(const float *a, float *out_lo, float *out_hi) {
     float lo = a[0], hi = a[0];
@@ -9589,6 +9642,54 @@ static void up_block8(const float *const *srow, uint32_t x, uint32_t N,
 }
 #endif
 
+#ifdef JXL_UPSAMPLE_NEON
+
+static void up_block4_neon(const float *const *srow, uint32_t x, uint32_t n,
+                           const float *kernel, float *const *dst_rows) {
+    float32x4_t taps[25];
+    float32x4_t lo = vld1q_f32(srow[0] + x - 2), hi = lo;
+    uint32_t oy, ox;
+    int py, px, t = 0;
+
+    for (py = 0; py < 5; py++) {
+        const float *r = srow[py] + x - 2;
+        for (px = 0; px < 5; px++, t++) {
+            float32x4_t v = vld1q_f32(r + px);
+            taps[t] = v;
+            lo = vbslq_f32(vcltq_f32(v, lo), v, lo);
+            hi = vbslq_f32(vcgtq_f32(v, hi), v, hi);
+        }
+    }
+    for (oy = 0; oy < n; oy++) {
+        float *dst = dst_rows[oy] + (size_t)x * n;
+        float32x4_t out[8];
+        for (ox = 0; ox < n; ox++, kernel += 25) {
+            float32x4_t sum = vdupq_n_f32(0.0f);
+            for (t = 0; t < 25; t++)
+                sum += taps[t] * kernel[t];
+            sum = vbslq_f32(vcltq_f32(sum, lo), lo, sum);
+            out[ox] = vbslq_f32(vcgtq_f32(sum, hi), hi, sum);
+        }
+        if (n == 2) {
+            float32x4x2_t pixels = {{out[0], out[1]}};
+            vst2q_f32(dst, pixels);
+        } else if (n == 4) {
+            float32x4x4_t pixels = {{out[0], out[1], out[2], out[3]}};
+            vst4q_f32(dst, pixels);
+        } else {
+
+            float32x4x4_t lo_pixels = {0}, hi_pixels = {0};
+            for (ox = 0; ox < 4; ox++) {
+                lo_pixels.val[ox] = vzip1q_f32(out[ox], out[ox + 4]);
+                hi_pixels.val[ox] = vzip2q_f32(out[ox], out[ox + 4]);
+            }
+            vst4q_f32(dst, lo_pixels);
+            vst4q_f32(dst + 16, hi_pixels);
+        }
+    }
+}
+#endif
+
 static const float *weights_for(const jxl_image_metadata *meta, uint32_t shift) {
     if (shift == 1) return meta->up2;
     if (shift == 2) return meta->up4;
@@ -9612,6 +9713,8 @@ void jxl_upsample_rows(const jxl_fplane *p, uint32_t shift,
     uint32_t w = p->w, h = p->h, x;
 #ifdef JXL_UPSAMPLE_SSE2
     const int use_avx2 = jxl_has_avx2();
+#endif
+#if defined(JXL_UPSAMPLE_SSE2) || defined(JXL_UPSAMPLE_NEON)
 
     const int y_full = (uint64_t)(y + 1) * N <= out_h;
 #endif
@@ -9629,17 +9732,23 @@ void jxl_upsample_rows(const jxl_fplane *p, uint32_t shift,
         int ix;
         int n = 0;
 
-#ifdef JXL_UPSAMPLE_SSE2
+#if defined(JXL_UPSAMPLE_SSE2) || defined(JXL_UPSAMPLE_NEON)
 
         if (y_full) {
+#ifdef JXL_UPSAMPLE_SSE2
             if (use_avx2 && x >= 2 && x + 10 <= w &&
                 (uint64_t)(x + 8) * N <= out_w) {
                 up_block8(srow, x, N, kernel, drows, N);
                 x += 8;
                 continue;
             }
+#endif
             if (x >= 2 && x + 6 <= w && (uint64_t)(x + 4) * N <= out_w) {
+#ifdef JXL_UPSAMPLE_NEON
+                up_block4_neon(srow, x, N, kernel, drows);
+#else
                 up_block4(srow, x, N, kernel, drows, N);
+#endif
                 x += 4;
                 continue;
             }
@@ -10040,6 +10149,14 @@ typedef struct {
     int single;
 } jxl_sections;
 
+static void section_open(jxl_sections *s, uint32_t idx) {
+    const jxl_toc_entry *e = &s->toc->entries[idx];
+    size_t end = e->offset + e->size;
+    if (end < e->offset || end > s->cs_len) end = s->cs_len;
+    jxl_br_init(&s->br, s->cs, end);
+    jxl_br_seek_byte(&s->br, e->offset);
+}
+
 static void sections_init(jxl_sections *s, const uint8_t *cs, size_t cs_len,
                           const jxl_toc *toc) {
     s->cs = cs;
@@ -10047,7 +10164,7 @@ static void sections_init(jxl_sections *s, const uint8_t *cs, size_t cs_len,
     s->toc = toc;
     s->single = toc->count <= 1;
     jxl_br_init(&s->br, cs, cs_len);
-    if (s->single) jxl_br_seek_byte(&s->br, toc->entries[0].offset);
+    if (s->single) section_open(s, 0);
 }
 
 static jxl_br *section_reader(jxl_sections *s, jxl_toc_kind kind,
@@ -10056,8 +10173,7 @@ static jxl_br *section_reader(jxl_sections *s, jxl_toc_kind kind,
     if (s->single) return &s->br;
     idx = jxl_toc_index(s->toc, kind, pass_idx, group_idx);
     if (idx >= s->toc->count) return NULL;
-    jxl_br_init(&s->br, s->cs, s->cs_len);
-    jxl_br_seek_byte(&s->br, s->toc->entries[idx].offset);
+    section_open(s, idx);
     return &s->br;
 }
 
@@ -10510,6 +10626,9 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
 
     int late_ec_upsample = fh->upsampling != 1;
     int defer_up = 0;
+#ifdef JXL_FUZZ_SEEDS
+    size_t gm_bitpos = 0;
+#endif
     int any_ec_upsample = 0;
     uint32_t nspecs = 0, i, split;
     uint32_t color_w, color_h, group_dim, group_dim_shift;
@@ -10605,6 +10724,9 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
         }
     }
 
+#ifdef JXL_FUZZ_SEEDS
+    gm_bitpos = jxl_br_bits_read(br);
+#endif
     if (jxl_br_bool(br)) {
         uint64_t num_channels = ncolor + meta->num_extra;
         uint64_t limit = 1024 + (uint64_t)fh->width * fh->height * num_channels / 16;
@@ -10646,6 +10768,22 @@ int jxl_frame_decode(jxl_ctx *ctx, jxl_doc *doc, const jxl_frame_header *fh,
         specs[base + i].vshift = actual;
     }
 
+#ifdef JXL_FUZZ_SEEDS
+
+    if (nspecs > 0 && nspecs <= 8) {
+        uint8_t p[2 + 8 * 5];
+        p[0] = (uint8_t)nspecs;
+        p[1] = (uint8_t)bits;
+        for (i = 0; i < nspecs; i++) {
+            p[2 + i * 5] = (uint8_t)specs[i].w;
+            p[3 + i * 5] = (uint8_t)(specs[i].w >> 8);
+            p[4 + i * 5] = (uint8_t)specs[i].h;
+            p[5 + i * 5] = (uint8_t)(specs[i].h >> 8);
+            p[6 + i * 5] = (uint8_t)specs[i].hshift;
+        }
+        JXL_FUZZ_SEED(JXL_SEED_MODULAR, br, gm_bitpos, p, 2 + nspecs * 5);
+    }
+#endif
     if (jxl_modular_init(ctx, &gmod, br, specs, nspecs,
                          has_global_ma ? &global_ma : NULL, bits) != 0)
         goto done;
@@ -13355,6 +13493,40 @@ void jxl_ycbcr_to_gray(float *gray, const float *y, const float *cr, size_t n) {
 #include <immintrin.h>
 #endif
 
+#if defined(JXL_HAVE_NEON) && !defined(JXL_DCT_FORCE_SCALAR)
+#define JXL_DCT_NEON 1
+#endif
+
+#if defined(JXL_DCT_SSE2)
+typedef __m128 dct_vec4;
+#define DCT_V4_SPLAT _mm_set1_ps
+#define DCT_V4_ADD _mm_add_ps
+#define DCT_V4_SUB _mm_sub_ps
+#define DCT_V4_MUL _mm_mul_ps
+#define DCT_V4_LOAD _mm_loadu_ps
+#define DCT_V4_STORE _mm_storeu_ps
+#define DCT_V4_TRANSPOSE _MM_TRANSPOSE4_PS
+#elif defined(JXL_DCT_NEON)
+typedef float32x4_t dct_vec4;
+#define DCT_V4_SPLAT vdupq_n_f32
+#define DCT_V4_ADD vaddq_f32
+#define DCT_V4_SUB vsubq_f32
+#define DCT_V4_MUL vmulq_f32
+#define DCT_V4_LOAD vld1q_f32
+#define DCT_V4_STORE vst1q_f32
+#define DCT_V4_TRANSPOSE(a, b, c, d) dct_transpose4_neon(&(a), &(b), &(c), &(d))
+
+static inline void dct_transpose4_neon(dct_vec4 *a, dct_vec4 *b,
+                                       dct_vec4 *c, dct_vec4 *d) {
+    float32x4x2_t ab = vtrnq_f32(*a, *b);
+    float32x4x2_t cd = vtrnq_f32(*c, *d);
+    *a = vcombine_f32(vget_low_f32(ab.val[0]), vget_low_f32(cd.val[0]));
+    *b = vcombine_f32(vget_low_f32(ab.val[1]), vget_low_f32(cd.val[1]));
+    *c = vcombine_f32(vget_high_f32(ab.val[0]), vget_high_f32(cd.val[0]));
+    *d = vcombine_f32(vget_high_f32(ab.val[1]), vget_high_f32(cd.val[1]));
+}
+#endif
+
 #define JXL_SQRT2 1.4142135623730951f
 
 static const float sec_half_4[2] = {0.541196100146197f, 1.3065629648763764f};
@@ -13582,87 +13754,92 @@ static void dct_1d(float *io, int n, float *scratch, int inverse) {
     }
 }
 
-#ifdef JXL_DCT_SSE2
+#if defined(JXL_DCT_SSE2) || defined(JXL_DCT_NEON)
 
-static void dct4_v4(const __m128 in[4], __m128 out[4], int inverse) {
-    const __m128 sec0 = _mm_set1_ps(0.5411961f);
-    const __m128 sec1 = _mm_set1_ps(1.306563f);
-    const __m128 sqrt2 = _mm_set1_ps(JXL_SQRT2);
-    const __m128 quarter = _mm_set1_ps(0.25f);
+static void dct4_v4(const dct_vec4 in[4], dct_vec4 out[4], int inverse) {
+    const dct_vec4 sec0 = DCT_V4_SPLAT(0.5411961f);
+    const dct_vec4 sec1 = DCT_V4_SPLAT(1.306563f);
+    const dct_vec4 sqrt2 = DCT_V4_SPLAT(JXL_SQRT2);
+    const dct_vec4 quarter = DCT_V4_SPLAT(0.25f);
     if (!inverse) {
-        __m128 sum03 = _mm_add_ps(in[0], in[3]);
-        __m128 sum12 = _mm_add_ps(in[1], in[2]);
-        __m128 tmp0 = _mm_mul_ps(_mm_sub_ps(in[0], in[3]), sec0);
-        __m128 tmp1 = _mm_mul_ps(_mm_sub_ps(in[1], in[2]), sec1);
-        __m128 out0 = _mm_mul_ps(_mm_add_ps(tmp0, tmp1), quarter);
-        __m128 out1 = _mm_mul_ps(_mm_sub_ps(tmp0, tmp1), quarter);
-        out[0] = _mm_mul_ps(_mm_add_ps(sum03, sum12), quarter);
-        out[1] = _mm_add_ps(_mm_mul_ps(out0, sqrt2), out1);
-        out[2] = _mm_mul_ps(_mm_sub_ps(sum03, sum12), quarter);
+        dct_vec4 sum03 = DCT_V4_ADD(in[0], in[3]);
+        dct_vec4 sum12 = DCT_V4_ADD(in[1], in[2]);
+        dct_vec4 tmp0 = DCT_V4_MUL(DCT_V4_SUB(in[0], in[3]), sec0);
+        dct_vec4 tmp1 = DCT_V4_MUL(DCT_V4_SUB(in[1], in[2]), sec1);
+        dct_vec4 out0 = DCT_V4_MUL(DCT_V4_ADD(tmp0, tmp1), quarter);
+        dct_vec4 out1 = DCT_V4_MUL(DCT_V4_SUB(tmp0, tmp1), quarter);
+        out[0] = DCT_V4_MUL(DCT_V4_ADD(sum03, sum12), quarter);
+#ifdef JXL_DCT_NEON
+
+        out[1] = out0 * sqrt2 + out1;
+#else
+        out[1] = DCT_V4_ADD(DCT_V4_MUL(out0, sqrt2), out1);
+#endif
+        out[2] = DCT_V4_MUL(DCT_V4_SUB(sum03, sum12), quarter);
         out[3] = out1;
     } else {
-        __m128 tmp0 = _mm_mul_ps(in[1], sqrt2);
-        __m128 tmp1 = _mm_add_ps(in[1], in[3]);
-        __m128 out0 = _mm_mul_ps(_mm_add_ps(tmp0, tmp1), sec0);
-        __m128 out1 = _mm_mul_ps(_mm_sub_ps(tmp0, tmp1), sec1);
-        __m128 sum02 = _mm_add_ps(in[0], in[2]);
-        __m128 sub02 = _mm_sub_ps(in[0], in[2]);
-        out[0] = _mm_add_ps(sum02, out0);
-        out[1] = _mm_add_ps(sub02, out1);
-        out[2] = _mm_sub_ps(sub02, out1);
-        out[3] = _mm_sub_ps(sum02, out0);
+        dct_vec4 tmp0 = DCT_V4_MUL(in[1], sqrt2);
+        dct_vec4 tmp1 = DCT_V4_ADD(in[1], in[3]);
+        dct_vec4 out0 = DCT_V4_MUL(DCT_V4_ADD(tmp0, tmp1), sec0);
+        dct_vec4 out1 = DCT_V4_MUL(DCT_V4_SUB(tmp0, tmp1), sec1);
+        dct_vec4 sum02 = DCT_V4_ADD(in[0], in[2]);
+        dct_vec4 sub02 = DCT_V4_SUB(in[0], in[2]);
+        out[0] = DCT_V4_ADD(sum02, out0);
+        out[1] = DCT_V4_ADD(sub02, out1);
+        out[2] = DCT_V4_SUB(sub02, out1);
+        out[3] = DCT_V4_SUB(sum02, out0);
     }
 }
 
-static void dct_1d_v4(__m128 *io, int n, __m128 *scratch, int inverse) {
-    const __m128 sqrt2 = _mm_set1_ps(JXL_SQRT2);
-    const __m128 half_v = _mm_set1_ps(0.5f);
+static void dct_1d_v4(dct_vec4 *io, int n, dct_vec4 *scratch, int inverse) {
+    const dct_vec4 sqrt2 = DCT_V4_SPLAT(JXL_SQRT2);
+    const dct_vec4 half_v = DCT_V4_SPLAT(0.5f);
     int i;
     if (n <= 1) return;
     if (n == 2) {
-        __m128 t0 = _mm_add_ps(io[0], io[1]);
-        __m128 t1 = _mm_sub_ps(io[0], io[1]);
-        if (!inverse) { io[0] = _mm_mul_ps(t0, half_v); io[1] = _mm_mul_ps(t1, half_v); }
+        dct_vec4 t0 = DCT_V4_ADD(io[0], io[1]);
+        dct_vec4 t1 = DCT_V4_SUB(io[0], io[1]);
+        if (!inverse) { io[0] = DCT_V4_MUL(t0, half_v); io[1] = DCT_V4_MUL(t1, half_v); }
         else { io[0] = t0; io[1] = t1; }
         return;
     }
     if (n == 4) {
-        __m128 in[4], out[4];
+        dct_vec4 in[4], out[4];
         for (i = 0; i < 4; i++) in[i] = io[i];
         dct4_v4(in, out, inverse);
         for (i = 0; i < 4; i++) io[i] = out[i];
         return;
     }
     if (n == 8) {
-        __m128 in0[4], in1[4], out0[4], out1[4];
+        dct_vec4 in0[4], in1[4], out0[4], out1[4];
         if (!inverse) {
             for (i = 0; i < 4; i++) {
-                in0[i] = _mm_mul_ps(_mm_add_ps(io[i], io[7 - i]), half_v);
-                in1[i] = _mm_mul_ps(
-                    _mm_mul_ps(_mm_sub_ps(io[i], io[7 - i]),
-                               _mm_set1_ps(sec_half_8[i])),
+                in0[i] = DCT_V4_MUL(DCT_V4_ADD(io[i], io[7 - i]), half_v);
+                in1[i] = DCT_V4_MUL(
+                    DCT_V4_MUL(DCT_V4_SUB(io[i], io[7 - i]),
+                               DCT_V4_SPLAT(sec_half_8[i])),
                     half_v);
             }
             dct4_v4(in0, out0, 0);
             dct4_v4(in1, out1, 0);
             for (i = 0; i < 4; i++) io[i * 2] = out0[i];
-            out1[0] = _mm_mul_ps(out1[0], sqrt2);
+            out1[0] = DCT_V4_MUL(out1[0], sqrt2);
             for (i = 0; i < 3; i++)
-                io[i * 2 + 1] = _mm_add_ps(out1[i], out1[i + 1]);
+                io[i * 2 + 1] = DCT_V4_ADD(out1[i], out1[i + 1]);
             io[7] = out1[3];
         } else {
             in0[0] = io[0]; in0[1] = io[2];
             in0[2] = io[4]; in0[3] = io[6];
-            in1[0] = _mm_mul_ps(io[1], sqrt2);
-            in1[1] = _mm_add_ps(io[3], io[1]);
-            in1[2] = _mm_add_ps(io[5], io[3]);
-            in1[3] = _mm_add_ps(io[7], io[5]);
+            in1[0] = DCT_V4_MUL(io[1], sqrt2);
+            in1[1] = DCT_V4_ADD(io[3], io[1]);
+            in1[2] = DCT_V4_ADD(io[5], io[3]);
+            in1[3] = DCT_V4_ADD(io[7], io[5]);
             dct4_v4(in0, out0, 1);
             dct4_v4(in1, out1, 1);
             for (i = 0; i < 4; i++) {
-                __m128 r = _mm_mul_ps(out1[i], _mm_set1_ps(sec_half_8[i]));
-                io[i] = _mm_add_ps(out0[i], r);
-                io[7 - i] = _mm_sub_ps(out0[i], r);
+                dct_vec4 r = DCT_V4_MUL(out1[i], DCT_V4_SPLAT(sec_half_8[i]));
+                io[i] = DCT_V4_ADD(out0[i], r);
+                io[7 - i] = DCT_V4_SUB(out0[i], r);
             }
         }
         return;
@@ -13670,19 +13847,19 @@ static void dct_1d_v4(__m128 *io, int n, __m128 *scratch, int inverse) {
     {
         const float *sec = sec_half(n);
         int hn = n / 2;
-        __m128 *in0 = scratch;
-        __m128 *in1 = scratch + hn;
+        dct_vec4 *in0 = scratch;
+        dct_vec4 *in1 = scratch + hn;
         if (!inverse) {
             for (i = 0; i < hn; i++) {
-                in0[i] = _mm_mul_ps(_mm_add_ps(io[i], io[n - i - 1]), half_v);
-                in1[i] = _mm_mul_ps(_mm_sub_ps(io[i], io[n - i - 1]), half_v);
+                in0[i] = DCT_V4_MUL(DCT_V4_ADD(io[i], io[n - i - 1]), half_v);
+                in1[i] = DCT_V4_MUL(DCT_V4_SUB(io[i], io[n - i - 1]), half_v);
             }
             for (i = 0; i < hn; i++)
-                in1[i] = _mm_mul_ps(in1[i], _mm_set1_ps(sec[i]));
+                in1[i] = DCT_V4_MUL(in1[i], DCT_V4_SPLAT(sec[i]));
             dct_1d_v4(in0, hn, io, 0);
             dct_1d_v4(in1, hn, io + hn, 0);
-            in1[0] = _mm_mul_ps(in1[0], sqrt2);
-            for (i = 0; i < hn - 1; i++) in1[i] = _mm_add_ps(in1[i], in1[i + 1]);
+            in1[0] = DCT_V4_MUL(in1[0], sqrt2);
+            for (i = 0; i < hn - 1; i++) in1[i] = DCT_V4_ADD(in1[i], in1[i + 1]);
             for (i = 0; i < hn; i++) io[i * 2] = in0[i];
             for (i = 0; i < hn; i++) io[i * 2 + 1] = in1[i];
         } else {
@@ -13691,21 +13868,24 @@ static void dct_1d_v4(__m128 *io, int n, __m128 *scratch, int inverse) {
                 in1[i] = io[i * 2 + 1];
             }
             for (i = 1; i < hn; i++)
-                in1[hn - i] = _mm_add_ps(in1[hn - i], in1[hn - i - 1]);
-            in1[0] = _mm_mul_ps(in1[0], sqrt2);
+                in1[hn - i] = DCT_V4_ADD(in1[hn - i], in1[hn - i - 1]);
+            in1[0] = DCT_V4_MUL(in1[0], sqrt2);
             dct_1d_v4(in0, hn, io, 1);
             dct_1d_v4(in1, hn, io + hn, 1);
             for (i = 0; i < hn; i++)
-                in1[i] = _mm_mul_ps(in1[i], _mm_set1_ps(sec[i]));
+                in1[i] = DCT_V4_MUL(in1[i], DCT_V4_SPLAT(sec[i]));
             for (i = 0; i < hn; i++) {
-                __m128 a = scratch[i];
-                __m128 b = scratch[i + hn];
-                io[i] = _mm_add_ps(a, b);
-                io[n - i - 1] = _mm_sub_ps(a, b);
+                dct_vec4 a = scratch[i];
+                dct_vec4 b = scratch[i + hn];
+                io[i] = DCT_V4_ADD(a, b);
+                io[n - i - 1] = DCT_V4_SUB(a, b);
             }
         }
     }
 }
+#endif
+
+#ifdef JXL_DCT_SSE2
 
 JXL_TARGET_AVX2
 static void dct4_v8(const __m256 in[4], __m256 out[4], int inverse) {
@@ -14098,39 +14278,6 @@ static void dct_rows8(float *data, size_t stride, int w, int inverse) {
     _mm256_zeroupper();
 }
 
-static void dct_rows4(float *data, size_t stride, int w, int inverse) {
-    __m128 vrow[256], vscratch[256];
-    int j;
-    for (j = 0; j + 4 <= w; j += 4) {
-        __m128 r0 = _mm_loadu_ps(data + j);
-        __m128 r1 = _mm_loadu_ps(data + stride + j);
-        __m128 r2 = _mm_loadu_ps(data + 2 * stride + j);
-        __m128 r3 = _mm_loadu_ps(data + 3 * stride + j);
-        _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
-        vrow[j] = r0; vrow[j + 1] = r1; vrow[j + 2] = r2; vrow[j + 3] = r3;
-    }
-    for (; j < w; j++) {
-        vrow[j] = _mm_setr_ps(data[j], data[stride + j],
-                              data[2 * stride + j], data[3 * stride + j]);
-    }
-    dct_1d_v4(vrow, w, vscratch, inverse);
-    for (j = 0; j + 4 <= w; j += 4) {
-        __m128 r0 = vrow[j], r1 = vrow[j + 1], r2 = vrow[j + 2], r3 = vrow[j + 3];
-        _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
-        _mm_storeu_ps(data + j, r0);
-        _mm_storeu_ps(data + stride + j, r1);
-        _mm_storeu_ps(data + 2 * stride + j, r2);
-        _mm_storeu_ps(data + 3 * stride + j, r3);
-    }
-    for (; j < w; j++) {
-        float t[4];
-        _mm_storeu_ps(t, vrow[j]);
-        data[j] = t[0];
-        data[stride + j] = t[1];
-        data[2 * stride + j] = t[2];
-        data[3 * stride + j] = t[3];
-    }
-}
 #else
 
 void jxl_idct8x8_plane(float *data, size_t stride,
@@ -14142,6 +14289,44 @@ void jxl_idct8x8_plane(float *data, size_t stride,
     (void)channel;
     (void)blocks_w;
     (void)blocks_h;
+}
+#endif
+
+#if defined(JXL_DCT_SSE2) || defined(JXL_DCT_NEON)
+
+static void dct_rows4(float *data, size_t stride, int w, int inverse) {
+    dct_vec4 vrow[256], vscratch[256];
+    int j;
+    for (j = 0; j + 4 <= w; j += 4) {
+        dct_vec4 r0 = DCT_V4_LOAD(data + j);
+        dct_vec4 r1 = DCT_V4_LOAD(data + stride + j);
+        dct_vec4 r2 = DCT_V4_LOAD(data + 2 * stride + j);
+        dct_vec4 r3 = DCT_V4_LOAD(data + 3 * stride + j);
+        DCT_V4_TRANSPOSE(r0, r1, r2, r3);
+        vrow[j] = r0; vrow[j + 1] = r1; vrow[j + 2] = r2; vrow[j + 3] = r3;
+    }
+    for (; j < w; j++) {
+        float t[4] = {data[j], data[stride + j], data[2 * stride + j],
+                      data[3 * stride + j]};
+        vrow[j] = DCT_V4_LOAD(t);
+    }
+    dct_1d_v4(vrow, w, vscratch, inverse);
+    for (j = 0; j + 4 <= w; j += 4) {
+        dct_vec4 r0 = vrow[j], r1 = vrow[j + 1], r2 = vrow[j + 2], r3 = vrow[j + 3];
+        DCT_V4_TRANSPOSE(r0, r1, r2, r3);
+        DCT_V4_STORE(data + j, r0);
+        DCT_V4_STORE(data + stride + j, r1);
+        DCT_V4_STORE(data + 2 * stride + j, r2);
+        DCT_V4_STORE(data + 3 * stride + j, r3);
+    }
+    for (; j < w; j++) {
+        float t[4];
+        DCT_V4_STORE(t, vrow[j]);
+        data[j] = t[0];
+        data[stride + j] = t[1];
+        data[2 * stride + j] = t[2];
+        data[3 * stride + j] = t[3];
+    }
 }
 #endif
 
@@ -14218,6 +14403,8 @@ static void dct_2d_rows(float *data, size_t stride, int w, int h, int inverse,
         for (; y + 8 <= h && y < nz_rows; y += 8)
             dct_rows8(data + (size_t)y * stride, stride, w, inverse);
     }
+#endif
+#if defined(JXL_DCT_SSE2) || defined(JXL_DCT_NEON)
     for (; y + 4 <= h && y < nz_rows; y += 4)
         dct_rows4(data + (size_t)y * stride, stride, w, inverse);
 #endif
@@ -14226,14 +14413,16 @@ static void dct_2d_rows(float *data, size_t stride, int w, int h, int inverse,
     x = 0;
 #ifdef JXL_DCT_SSE2
     if (use_avx2) x = dct_cols8(data, stride, w, h, inverse);
+#endif
+#if defined(JXL_DCT_SSE2) || defined(JXL_DCT_NEON)
     {
-        __m128 vcol[256], vscratch[256];
+        dct_vec4 vcol[256], vscratch[256];
         for (; x + 4 <= w; x += 4) {
             for (y = 0; y < h; y++)
-                vcol[y] = _mm_loadu_ps(data + (size_t)y * stride + x);
+                vcol[y] = DCT_V4_LOAD(data + (size_t)y * stride + x);
             dct_1d_v4(vcol, h, vscratch, inverse);
             for (y = 0; y < h; y++)
-                _mm_storeu_ps(data + (size_t)y * stride + x, vcol[y]);
+                DCT_V4_STORE(data + (size_t)y * stride + x, vcol[y]);
         }
     }
 #endif
@@ -14417,6 +14606,51 @@ static const int8_t epf_dist_1[5][2] = {{0,-1},{0,0},{0,1},{-1,0},{1,0}};
 static const int8_t epf_dist_2[1][2] = {{0,0}};
 
 #define JXL_EPF_NCH(gray) ((gray) ? 1 : 3)
+#if defined(JXL_HAVE_NEON) && !defined(JXL_EPF_FORCE_SCALAR)
+#define JXL_EPF_NEON 1
+
+static JXL_INLINE_HINT void epf_quad_neon(
+    float *in[3], float *out[3], size_t offset, const ptrdiff_t *koff,
+    const ptrdiff_t *doff, int nkernel, int ndist, const float cscale[3],
+    float32x4_t nis, int gray) {
+    const float32x4_t zero = vdupq_n_f32(0.0f);
+    const float32x4_t one = vdupq_n_f32(1.0f);
+    float32x4_t center[3][5], sum[3], weights = one;
+    int c, d, k;
+
+    for (c = 0; c < JXL_EPF_NCH(gray); c++) {
+        const float *p = in[c] + offset;
+        sum[c] = vld1q_f32(p);
+        for (d = 0; d < ndist; d++) center[c][d] = vld1q_f32(p + doff[d]);
+    }
+    for (k = 0; k < nkernel; k++) {
+        float32x4_t dist = zero, tap[3];
+        float32x4_t weight;
+        for (c = 0; c < JXL_EPF_NCH(gray); c++) {
+            const float *p = in[c] + offset + koff[k];
+            float32x4_t sad = zero;
+            for (d = 0; d < ndist; d++) {
+                float32x4_t diff = vabdq_f32(vld1q_f32(p + doff[d]), center[c][d]);
+                sad = vaddq_f32(sad, diff);
+            }
+            dist += sad * cscale[c];
+            if (gray) {
+                dist += sad * cscale[1];
+                dist += sad * cscale[2];
+            }
+            tap[c] = vld1q_f32(p);
+        }
+        weight = vmaxq_f32(one + dist * nis, zero);
+        weights = vaddq_f32(weights, weight);
+        for (c = 0; c < JXL_EPF_NCH(gray); c++)
+            sum[c] += weight * tap[c];
+    }
+    weights = vdivq_f32(one, weights);
+    for (c = 0; c < JXL_EPF_NCH(gray); c++)
+        vst1q_f32(out[c] + offset, vmulq_f32(sum[c], weights));
+}
+#endif
+
 #ifdef JXL_EPF_SSE2
 
 JXL_TARGET_AVX2
@@ -15266,6 +15500,34 @@ static JXL_INLINE_HINT int epf_pass_impl(
                 continue;
             }
 #endif
+#ifdef JXL_EPF_NEON
+            if (y_inside && (x & 3u) == 0 &&
+                x >= (uint32_t)pad && x + 3 + (uint32_t)pad < w) {
+                if (sigma_val != 0.0f) {
+                    float32x4_t sm = vdupq_n_f32(step_mul);
+                    float32x4_t nis;
+                    if (is_y_border) sm = vdupq_n_f32(border_mul);
+                    else if (x & 4u) sm = vsetq_lane_f32(border_mul, sm, 3);
+                    else sm = vsetq_lane_f32(border_mul, sm, 0);
+                    nis = vmulq_n_f32(sm, sigma_val);
+                    if (step == 0)
+                        epf_quad_neon(in, out, row + x, koff, doff, 12, 5,
+                                      cscale, nis, gray);
+                    else if (step == 1)
+                        epf_quad_neon(in, out, row + x, koff, doff, 4, 5,
+                                      cscale, nis, gray);
+                    else
+                        epf_quad_neon(in, out, row + x, koff, doff, 4, 1,
+                                      cscale, nis, gray);
+                } else if (copy_row[x / 8]) {
+                    for (c = 0; c < JXL_EPF_NCH(gray); c++)
+                        memcpy(out[c] + row + x, in[c] + row + x,
+                               4 * sizeof(float));
+                }
+                x += 4;
+                continue;
+            }
+#endif
             float dist[12];
             size_t soff[12];
             float sum[3];
@@ -15553,6 +15815,9 @@ done:
 #include <emmintrin.h>
 #include <immintrin.h>
 #endif
+#if defined(JXL_HAVE_NEON) && !defined(JXL_COLOR_FORCE_SCALAR)
+#define JXL_COLOR_NEON 1
+#endif
 
 #ifdef JXL_COLOR_SSE2
 JXL_TARGET_AVX2
@@ -15724,6 +15989,41 @@ static float tf_srgb(float s) {
     return bits_to_float(float_to_bits(out) | sign);
 }
 
+#ifdef JXL_COLOR_NEON
+static size_t tf_srgb_neon(float *v, size_t n) {
+    const uint8x16_t upper = vld1q_u8(srgb_powtable_upper);
+    const uint8x16_t lower = vld1q_u8(srgb_powtable_lower);
+    size_t i;
+    for (i = 0; i + 4 <= n; i += 4) {
+        uint32x4_t bits = vreinterpretq_u32_f32(vld1q_f32(v + i));
+        uint32x4_t sign = vandq_u32(bits, vdupq_n_u32(0x80000000u));
+        uint32x4_t mag = veorq_u32(bits, sign);
+        float32x4_t f = vreinterpretq_f32_u32(mag);
+        float32x4_t adj = vreinterpretq_f32_u32(vandq_u32(
+            vorrq_u32(mag, vdupq_n_u32(0x3e800000u)), vdupq_n_u32(0x3effffffu)));
+        float32x4_t p;
+        uint32x4_t index = vandq_u32(vsubq_u32(vshrq_n_u32(mag, 23),
+                                            vdupq_n_u32(118)), vdupq_n_u32(15));
+
+        uint8x16_t lookup = vreinterpretq_u8_u32(
+            vorrq_u32(index, vdupq_n_u32(0x80808000u)));
+        uint32x4_t hi = vreinterpretq_u32_u8(vqtbl1q_u8(upper, lookup));
+        uint32x4_t lo = vreinterpretq_u32_u8(vqtbl1q_u8(lower, lookup));
+        uint32x4_t mul = vorrq_u32(vdupq_n_u32(0x40000000u),
+                                  vorrq_u32(vshlq_n_u32(hi, 18), vshlq_n_u32(lo, 10)));
+        p = adj * 0.059914046f - 0.10889456f;
+        p = p * adj + 0.107963754f;
+        p = p * adj + 0.018092343f;
+        p = p * vreinterpretq_f32_u32(mul) - 0.055f;
+        p = vbslq_f32(vcleq_f32(f, vdupq_n_f32(0.0031308f)),
+                      vmulq_n_f32(f, 12.92f), p);
+        vst1q_f32(v + i, vreinterpretq_f32_u32(
+            vorrq_u32(vreinterpretq_u32_f32(p), sign)));
+    }
+    return i;
+}
+#endif
+
 static float fast_log2f(float x) {
     const float p0 = -1.8503833400518310E-06f, p1 = 1.4287160470083755E+00f;
     const float p2 = 7.4245873327820566E-01f;
@@ -15799,9 +16099,10 @@ static float tf_hlg(float v) {
 
 static float hlg_ootf_ratio(float y, float e) {
     float a, ratio;
-    if (!(y > 0.0f)) return 0.0f;
+    if (y != y) return 0.0f;
     a = fast_log2f(y) * e;
     if (a < -126.0f) a = -126.0f;
+    if (a > 30.0f) a = 30.0f;
     ratio = fast_pow2f(a);
     return ratio < 1e9f ? ratio : 1e9f;
 }
@@ -16079,17 +16380,18 @@ static void hlg_ootf_x4(float *r, float *g, float *b, size_t n,
                         const float lum[3], float e, size_t *pos) {
     const __m128 l0 = _mm_set1_ps(lum[0]), l1 = _mm_set1_ps(lum[1]);
     const __m128 l2 = _mm_set1_ps(lum[2]), ve = _mm_set1_ps(e);
-    const __m128 lo = _mm_set1_ps(-126.0f), cap = _mm_set1_ps(1e9f);
-    const __m128 zero = _mm_setzero_ps();
+    const __m128 lo = _mm_set1_ps(-126.0f), hi = _mm_set1_ps(30.0f);
+    const __m128 cap = _mm_set1_ps(1e9f);
     size_t i = *pos;
     for (; i + 4 <= n; i += 4) {
         __m128 vr = _mm_loadu_ps(r + i), vg = _mm_loadu_ps(g + i);
         __m128 vb = _mm_loadu_ps(b + i);
         __m128 y = _mm_add_ps(_mm_add_ps(_mm_mul_ps(l0, vr), _mm_mul_ps(l1, vg)),
                               _mm_mul_ps(l2, vb));
-        __m128 a = _mm_max_ps(_mm_mul_ps(fast_log2f_x4(y), ve), lo);
+        __m128 a = _mm_min_ps(_mm_max_ps(_mm_mul_ps(fast_log2f_x4(y), ve), lo),
+                              hi);
         __m128 ratio = _mm_min_ps(fast_pow2f_x4(a), cap);
-        ratio = _mm_and_ps(_mm_cmpgt_ps(y, zero), ratio);
+        ratio = _mm_and_ps(_mm_cmpord_ps(y, y), ratio);
         _mm_storeu_ps(r + i, _mm_mul_ps(vr, ratio));
         _mm_storeu_ps(g + i, _mm_mul_ps(vg, ratio));
         _mm_storeu_ps(b + i, _mm_mul_ps(vb, ratio));
@@ -16164,8 +16466,8 @@ static void hlg_ootf_x8(float *r, float *g, float *b, size_t n,
                         const float lum[3], float e, size_t *pos) {
     const __m256 l0 = _mm256_set1_ps(lum[0]), l1 = _mm256_set1_ps(lum[1]);
     const __m256 l2 = _mm256_set1_ps(lum[2]), ve = _mm256_set1_ps(e);
-    const __m256 lo = _mm256_set1_ps(-126.0f), cap = _mm256_set1_ps(1e9f);
-    const __m256 zero = _mm256_setzero_ps();
+    const __m256 lo = _mm256_set1_ps(-126.0f), hi = _mm256_set1_ps(30.0f);
+    const __m256 cap = _mm256_set1_ps(1e9f);
     size_t i = *pos;
     for (; i + 8 <= n; i += 8) {
         __m256 vr = _mm256_loadu_ps(r + i), vg = _mm256_loadu_ps(g + i);
@@ -16173,9 +16475,10 @@ static void hlg_ootf_x8(float *r, float *g, float *b, size_t n,
         __m256 y = _mm256_add_ps(
             _mm256_add_ps(_mm256_mul_ps(l0, vr), _mm256_mul_ps(l1, vg)),
             _mm256_mul_ps(l2, vb));
-        __m256 a = _mm256_max_ps(_mm256_mul_ps(fast_log2f_x8(y), ve), lo);
+        __m256 a = _mm256_min_ps(
+            _mm256_max_ps(_mm256_mul_ps(fast_log2f_x8(y), ve), lo), hi);
         __m256 ratio = _mm256_min_ps(fast_pow2f_x8(a), cap);
-        ratio = _mm256_and_ps(_mm256_cmp_ps(y, zero, _CMP_GT_OQ), ratio);
+        ratio = _mm256_and_ps(_mm256_cmp_ps(y, y, _CMP_ORD_Q), ratio);
         _mm256_storeu_ps(r + i, _mm256_mul_ps(vr, ratio));
         _mm256_storeu_ps(g + i, _mm256_mul_ps(vg, ratio));
         _mm256_storeu_ps(b + i, _mm256_mul_ps(vb, ratio));
@@ -16262,6 +16565,8 @@ void jxl_linear_to_tf(float *v, size_t n, const jxl_colour_encoding *enc,
             if (jxl_has_avx2()) tf_srgb_x8(v, n, &i);
 #endif
             tf_srgb_x4(v, n, &i);
+#elif defined(JXL_COLOR_NEON)
+            i = tf_srgb_neon(v, n);
 #endif
             for (; i < n; i++) v[i] = tf_srgb(v[i]);
             break;
@@ -16494,6 +16799,53 @@ static uint32_t quantize(float v, uint32_t maxval) {
     if (s >= (float)maxval) return maxval;
     return (uint32_t)s;
 }
+
+#if defined(JXL_HAVE_NEON) && !defined(JXL_RENDER_FORCE_SCALAR)
+#define JXL_RENDER_NEON 1
+
+static inline uint16x4_t quantize4_neon(const float *p) {
+    float32x4_t s = vld1q_f32(p) * 255.0f + 0.5f;
+
+    s = vmaxnmq_f32(s, vdupq_n_f32(0.0f));
+    return vmovn_u32(vcvtq_u32_f32(vminnmq_f32(s, vdupq_n_f32(255.0f))));
+}
+
+static inline uint8x8_t quantize8_neon(const float *p, int reverse) {
+    uint16x8_t samples = vcombine_u16(quantize4_neon(p), quantize4_neon(p + 4));
+    uint8x8_t v = vmovn_u16(samples);
+    return reverse ? vrev64_u8(v) : v;
+}
+
+static JXL_INLINE_HINT uint32_t write_row8_neon(
+    const float *r, const float *g, const float *b, const float *a,
+    uint8_t *dst, uint32_t w, int ncomp, int reverse) {
+    uint32_t x;
+    for (x = 0; x + 8 <= w; x += 8) {
+        uint32_t sx = reverse ? w - x - 8 : x;
+        uint8x8_t rv = quantize8_neon(r + sx, reverse);
+        uint8x8_t av = vdup_n_u8(255);
+        if ((ncomp == 2 || ncomp == 4) && a)
+            av = quantize8_neon(a + sx, reverse);
+        if (ncomp == 1) {
+            vst1_u8(dst + x, rv);
+        } else if (ncomp == 2) {
+            uint8x8x2_t pixels = {{rv, av}};
+            vst2_u8(dst + (size_t)x * 2, pixels);
+        } else {
+            uint8x8_t gv = quantize8_neon(g + sx, reverse);
+            uint8x8_t bv = quantize8_neon(b + sx, reverse);
+            if (ncomp == 3) {
+                uint8x8x3_t pixels = {{rv, gv, bv}};
+                vst3_u8(dst + (size_t)x * 3, pixels);
+            } else {
+                uint8x8x4_t pixels = {{rv, gv, bv, av}};
+                vst4_u8(dst + (size_t)x * 4, pixels);
+            }
+        }
+    }
+    return x;
+}
+#endif
 
 #if !defined(JXL_RENDER_FORCE_SCALAR) && \
     (defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || \
@@ -17016,6 +17368,20 @@ static int write_pixels(jxl_ctx *ctx, jxl_doc *doc, jxl_fimage *img,
             }
         }
         ox = 0;
+#ifdef JXL_RENDER_NEON
+        if (direct && !wide && !transposed) {
+            const float *first = !gray && bgr ? pb : pr;
+            const float *third = bgr ? pr : pb;
+            if (ncomp == 1)
+                ox = write_row8_neon(first, pg, third, pa, row8, ow, 1, reverse_x);
+            else if (ncomp == 2)
+                ox = write_row8_neon(first, pg, third, pa, row8, ow, 2, reverse_x);
+            else if (ncomp == 3)
+                ox = write_row8_neon(first, pg, third, pa, row8, ow, 3, reverse_x);
+            else
+                ox = write_row8_neon(first, pg, third, pa, row8, ow, 4, reverse_x);
+        }
+#endif
 #ifdef JXL_RENDER_SSE2
 
         if (direct && !wide && gray && ncomp == 1 &&

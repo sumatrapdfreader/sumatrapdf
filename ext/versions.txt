@@ -140,7 +140,7 @@ darkmodelib     0.76.0     2026-08-23
 
 jxldec          dist       2026-11-24
   https://github.com/kjk/jxldec
-  commit 883d2dacf91230e9bf6e19a58a70dca55248025e
+  commit 569c239e61aa75b50e5489745f346f3af0d165eb
   amalgamated dist/jxl.c + dist/jxl.h only
   Replaces libjxl + highway + skcms for JPEG XL decode.
 
