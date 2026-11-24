@@ -667,12 +667,18 @@ bool GetShowLineWeights() {
     return gShowLineWeights;
 }
 
+struct HairlineDevice {
+    fz_device super;
+    float deviceScale;
+};
+
 // one device pixel wide: a width of 0 draws thinner, too faint with anti-aliasing
 static void hairline_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path, const fz_stroke_state* stroke,
                                  fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
                                  fz_color_params color_params) {
+    auto* hdev = (HairlineDevice*)dev;
     fz_stroke_state* thin = fz_clone_stroke_state(ctx, stroke);
-    float expansion = fz_matrix_expansion(ctm);
+    float expansion = fz_matrix_expansion(ctm) * hdev->deviceScale;
     thin->linewidth = expansion > 0 ? 1.f / expansion : 0;
     fz_try(ctx) {
         fz_stroke_path(ctx, dev->passthrough, path, thin, ctm, colorspace, color, alpha, color_params);
@@ -687,11 +693,14 @@ static void hairline_stroke_path(fz_context* ctx, fz_device* dev, const fz_path*
 
 // Wrap <inner> so that strokes ignore their width, like Acrobat's Line Weights
 // turned off. Takes ownership of <inner>: dropping the wrapper drops it.
-fz_device* PdfHairlineWrapDevice(fz_context* ctx, fz_device* inner) {
-    fz_device* dev = fz_new_passthrough_device_of_size(ctx, inner, sizeof(fz_device));
+// <deviceScale> is the draw device's CTM expansion (zoom), which is not in the
+// per-call CTM when running a display list with fz_identity.
+fz_device* PdfHairlineWrapDevice(fz_context* ctx, fz_device* inner, float deviceScale) {
+    auto* hdev = (HairlineDevice*)fz_new_passthrough_device_of_size(ctx, inner, sizeof(HairlineDevice));
     fz_drop_device(ctx, inner);
-    dev->stroke_path = hairline_stroke_path;
-    return dev;
+    hdev->deviceScale = deviceScale > 0 ? deviceScale : 1.f;
+    hdev->super.stroke_path = hairline_stroke_path;
+    return &hdev->super;
 }
 
 static unsigned char CadClampByte(float v) {

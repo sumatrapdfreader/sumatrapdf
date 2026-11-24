@@ -43,8 +43,8 @@ function buildPdf(): Buffer {
 const VIEW = 1;
 const EXPORT = 0;
 
-async function darkPixels(client: ControlClient, pdf: string, target: number): Promise<number> {
-  const res = await client.request(ControlCommand.TestRenderPageColors, [pdf, 1, 100, target]);
+async function darkPixels(client: ControlClient, pdf: string, target: number, zoom = 100): Promise<number> {
+  const res = await client.request(ControlCommand.TestRenderPageColors, [pdf, 1, zoom, target]);
   const raw = String(res[1] ?? "");
   const m = /nonwhite=(\d+)/.exec(raw);
   if (res[0] !== 0 || !m) {
@@ -76,6 +76,15 @@ export async function testit(): Promise<void> {
 
     await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleLineWeights"]);
     await waitView(client, pdf, (n) => n > 0 && n <= THIN_MAX, "line weights off: line should be a hairline");
+    // zoomed in 4x: length scales 4x, thickness must stay ~1px (not 4px)
+    const zoomedZoom = 400;
+    const zoomedThinMax = LINE_DX * (zoomedZoom / 100) * 2.5;
+    const zoomed = await darkPixels(client, pdf, VIEW, zoomedZoom);
+    if (zoomed <= 0 || zoomed > zoomedThinMax) {
+      throw new Error(
+        `issue-6567: line weights off at ${zoomedZoom}% must stay 1px thick (<= ${zoomedThinMax}), got ${zoomed} dark pixels`,
+      );
+    }
     const exported = await darkPixels(client, pdf, EXPORT);
     if (exported < THICK_MIN) {
       throw new Error(`issue-6567: export must keep the line width, got ${exported} dark pixels`);

@@ -7892,7 +7892,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 dev = PdfCadEnhanceWrapDevice(ctx, dev);
             }
             if (args.target == RenderTarget::View && !GetShowLineWeights()) {
-                dev = PdfHairlineWrapDevice(ctx, dev);
+                dev = PdfHairlineWrapDevice(ctx, dev, fz_matrix_expansion(ctm));
             }
             fz_run_display_list(ctx, keptList, dev, fz_identity, pRect, fzcookie);
             if (RenderAborted(fzcookie)) {
@@ -7952,7 +7952,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
             }
             if (args.target == RenderTarget::View && !GetShowLineWeights()) {
-                dev = PdfHairlineWrapDevice(ctx, dev);
+                dev = PdfHairlineWrapDevice(ctx, dev, fz_matrix_expansion(ctm));
             }
             if (hideAnnotations) {
                 pdf_run_page_contents_with_usage(ctx, pdfpage, dev, fz_identity, usageZ, fzcookie);
