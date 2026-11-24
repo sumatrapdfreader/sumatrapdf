@@ -229,15 +229,15 @@ static bool IsCompactable(const StructInfo* info) {
     return info->fieldCount > 0;
 }
 
-static_assert(sizeof(float) == sizeof(int) && sizeof(Color) == sizeof(int),
-              "compact array code can't be simplified if int, float and colorref are of different sizes");
+static_assert(sizeof(float) == sizeof(int),
+              "FloatArray and IntArray share Vec<int> code and require equal element size");
 
 static bool SerializeField(str::Builder& out, const u8* base, const FieldInfo& field) {
     const u8* fieldPtr = base + field.offset;
 
     switch (field.type) {
         case SettingType::Bool:
-            out.Append(Str(*(bool*)fieldPtr ? "true" : "false"));
+            out.Append(*(bool*)fieldPtr ? StrL("true") : StrL("false"));
             return true;
         case SettingType::Int:
             out.Append(fmt("%d", *(int*)fieldPtr));

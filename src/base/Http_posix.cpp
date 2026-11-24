@@ -469,10 +469,11 @@ static bool WasmRequest(const char* what, Str method, Str url, Str contentType, 
     }
     int sc = WasmXhr(method.s, len(method), url.s, len(url), contentType.s, len(contentType), body.s, len(body));
     int n = WasmXhrTextLen();
-    if (n > 0 && n <= kHttpMemBodyCap) {
-        char* buf = AllocArrayTemp<char>(n + 1);
-        WasmXhrTake(buf, n + 1);
-        rspOut->data.Append(Str(buf, n));
+    if (n > 0) {
+        int copy = std::min(n, kHttpMemBodyCap);
+        char* buf = AllocArrayTemp<char>(copy + 1);
+        WasmXhrTake(buf, copy + 1);
+        rspOut->data.Append(Str(buf, copy));
     }
     logf("%s: url: '%s' status: %d\n", Str(what), url, sc);
     if (sc <= 0) {

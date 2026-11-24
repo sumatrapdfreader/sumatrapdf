@@ -66,10 +66,8 @@ Str StrQueue::PopFront() {
     return s;
 }
 
-// is blocking
-// returns false if we finished i.e. there was no more strings to access
-// and we finished adding. In that case fn was called
-// calls fn() and returns false if there are strings available
+// Blocking: returns false without calling fn when finished and empty;
+// otherwise calls fn under the lock and returns true.
 bool StrQueue::Access(const Func1<StrQueue*>& fn) {
     Lock();
     while (len(strings) == 0 && !isFinished) {

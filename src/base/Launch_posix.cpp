@@ -180,7 +180,7 @@ bool LaunchProgram(Str exe, Str cmdLine) {
 }
 
 bool LaunchBrowser(Str url) {
-    if (ExternalLaunchBlocked(url)) {
+    if (len(url) == 0 || ExternalLaunchBlocked(url)) {
         return false;
     }
     StrVec args;

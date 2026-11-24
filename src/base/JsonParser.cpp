@@ -344,7 +344,7 @@ bool Reader::Next() {
         return true;
     }
     started = true;
-    if (data.len >= 3 && str::StartsWith(data, Str(kUtf8Bom))) {
+    if (data.len >= 3 && str::StartsWith(data, StrL(kUtf8Bom))) {
         off = 3;
     }
     return StepValue();

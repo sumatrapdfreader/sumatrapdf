@@ -59,7 +59,7 @@ bool ExternalLaunchBlocked(Str what) {
 }
 
 bool LaunchFileShell(Str path, Str, Str, bool) {
-    if (ExternalLaunchBlocked(path)) {
+    if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return false;
     }
     if (!IsWebUrl(path)) {

@@ -1241,10 +1241,8 @@ FileType GuessFileTypeFromName(Str path, bool notDir) {
 static const FileType gImageTypes[] = {
     FileType::Png,
     FileType::Jpeg,
-    FileType::Jpeg,
     FileType::Gif,
     FileType::Bmp,
-    FileType::Tiff,
     FileType::Tiff,
     FileType::Tga,
     FileType::Jxr,
@@ -1252,23 +1250,23 @@ static const FileType gImageTypes[] = {
     FileType::Jp2,
     FileType::Heic,
     FileType::Avif,
+    FileType::Jxl,
     FileType::Ico
 };
 
 static constexpr SeqStrings gImageFormatExts =
     ".png\0"
     ".jpg\0"
-    ".jpeg\0"
     ".gif\0"
     ".bmp\0"
     ".tif\0"
-    ".tiff\0"
     ".tga\0"
     ".jxr\0"
     ".webp\0"
     ".jp2\0"
     ".heic\0"
     ".avif\0"
+    ".jxl\0"
     ".ico\0"
     "\0";
 // clang-format on

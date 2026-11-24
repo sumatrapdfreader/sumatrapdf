@@ -615,11 +615,6 @@ bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
 
 } // namespace file
 
-int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
-    i64 diff = (i64)FileTimeToU64(ft1) - (i64)FileTimeToU64(ft2);
-    return (int)(diff / (i64)kFileTimeTicksPerSec);
-}
-
 namespace dir {
 
 bool Exists(WStr dir) {
@@ -665,8 +660,8 @@ bool CreateAll(Str dir, int* errOut) {
     return false;
 }
 
-// deletes everything inside dir; also removes dir itself when removeDir.
-// a missing dir counts as success, matching the previous RemoveAll behavior.
+// Deletes everything inside dir; also removes dir itself when removeDir.
+// Continues past per-entry errors to match Windows DeleteDirContents.
 static bool RemoveDirContentsZ(const char* dir, bool removeDir) {
     DIR* d = opendir(dir);
     if (!d) {
@@ -674,6 +669,7 @@ static bool RemoveDirContentsZ(const char* dir, bool removeDir) {
     }
     AutoCall closeDir(closedir, d);
 
+    bool ok = true;
     for (;;) {
         errno = 0;
         dirent* ent = readdir(d);
@@ -687,23 +683,24 @@ static bool RemoveDirContentsZ(const char* dir, bool removeDir) {
         TempStr child = path::JoinTemp(Str(dir), Str(ent->d_name));
         struct stat st;
         if (lstat(child.s, &st) != 0) {
-            return false;
+            ok = false;
+            continue;
         }
         if (S_ISDIR(st.st_mode)) {
             if (!RemoveDirContentsZ(child.s, true)) {
-                return false;
+                ok = false;
             }
         } else if (unlink(child.s) != 0) {
-            return false;
+            ok = false;
         }
     }
     if (errno != 0) {
-        return false;
+        ok = false;
     }
     if (!removeDir) {
-        return true;
+        return ok;
     }
-    return rmdir(dir) == 0;
+    return rmdir(dir) == 0 && ok;
 }
 
 bool RemoveAll(Str dir) {

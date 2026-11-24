@@ -122,15 +122,14 @@ TempStr GetSelfExePathTemp() {
     return ToUtf8Temp(GetModulePathTemp((HMODULE)&__ImageBase, MAX_PATH + 1));
 }
 
-// Directory containing GetSelfExePathTemp().
+#endif
 
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
     i64 diff = (i64)FileTimeToU64(ft1) - (i64)FileTimeToU64(ft2);
     return (int)(diff / (i64)kFileTimeTicksPerSec);
 }
 
-#endif
-
+// Directory containing GetSelfExePathTemp().
 TempStr GetSelfExeDirTemp() {
     TempStr path = GetSelfExePathTemp();
 #if !OS_WIN

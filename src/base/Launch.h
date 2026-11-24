@@ -17,8 +17,10 @@ void SetExternalLaunchAllowDir(Str dir);
 #if !OS_WIN
 // hands `path` to the desktop (xdg-open on Linux, open on mac); params are ignored
 bool LaunchFileShell(Str path, Str params = {}, Str verb = {}, bool hidden = false);
+#if !OS_WASM
 bool LaunchFileShellArgs(const StrVec& args);
 void ProgramArgs(Str exe, Str argsTemplate, const Func1<Str*>& expand, StrVec& args);
+#endif
 bool LaunchProgram(Str exe, Str cmdLine);
 bool LaunchBrowser(Str url);
 // shows the file's directory in the desktop file manager
