@@ -4014,6 +4014,11 @@ int djvu_iw44_decode_chunk(iw_pixmap *pm, const uint8_t *data, size_t len)
             djvu_errorf(ctx, DJVU_SEVERITY_ERROR, "IW44: incompatible codec");
             return -1;
         }
+
+        if (minor > 2) {
+            djvu_errorf(ctx, DJVU_SEVERITY_ERROR, "IW44: recent codec");
+            return -1;
+        }
         w = (data[pos] << 8) | data[pos + 1]; pos += 2;
         h = (data[pos] << 8) | data[pos + 1]; pos += 2;
         if ((major & 0x7f) == 1 && minor >= 2) {
