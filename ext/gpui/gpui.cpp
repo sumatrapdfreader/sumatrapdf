@@ -5024,6 +5024,55 @@ bool AssetsExists(Str relPath) {
 }
 }
 
+#line 1 "src/gpui/bidi.cpp"
+
+namespace gpui {
+
+static ParagraphBidi ParagraphBidiClass(uint32_t scalar) {
+    int lo = 0, hi = dimofi(kParagraphBidiRanges);
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        const auto& range = kParagraphBidiRanges[mid];
+        if (scalar < range.first)
+            hi = mid;
+        else if (scalar > range.last)
+            lo = mid + 1;
+        else
+            return range.kind;
+    }
+    return ParagraphBidi::Left;
+}
+
+ParagraphBidi FirstStrongBidi(Str text) {
+    int isolates = 0;
+    for (int at = 0; at < len(text);) {
+        uint32_t scalar;
+        int bytes = Utf8At(text, at, &scalar);
+        if (bytes <= 0) break;
+        at += bytes;
+        ParagraphBidi kind = ParagraphBidiClass(scalar);
+        switch (kind) {
+            case ParagraphBidi::Isolate:
+                isolates++;
+                break;
+            case ParagraphBidi::EndIsolate:
+                if (isolates > 0) isolates--;
+                break;
+            case ParagraphBidi::Break:
+                return ParagraphBidi::Neutral;
+            case ParagraphBidi::Left:
+            case ParagraphBidi::Right:
+                if (isolates == 0) return kind;
+                break;
+            case ParagraphBidi::Neutral:
+                break;
+        }
+    }
+    return ParagraphBidi::Neutral;
+}
+
+}
+
 #line 1 "src/gpui/drawops.cpp"
 
 namespace gpui {
@@ -44189,49 +44238,6 @@ void InputSetTokenPresentation(InputState* s, InlineTokenRenderer renderer,
 #line 1 "src/base/input.cpp"
 
 namespace gpui {
-
-static ParagraphBidi ParagraphBidiClass(uint32_t scalar) {
-    int lo = 0, hi = dimofi(kParagraphBidiRanges);
-    while (lo < hi) {
-        int mid = lo + (hi - lo) / 2;
-        const auto& range = kParagraphBidiRanges[mid];
-        if (scalar < range.first)
-            hi = mid;
-        else if (scalar > range.last)
-            lo = mid + 1;
-        else
-            return range.kind;
-    }
-    return ParagraphBidi::Left;
-}
-
-static ParagraphBidi FirstStrongBidi(Str text) {
-    int isolates = 0;
-    for (int at = 0; at < len(text);) {
-        uint32_t scalar;
-        int bytes = Utf8At(text, at, &scalar);
-        if (bytes <= 0) break;
-        at += bytes;
-        ParagraphBidi kind = ParagraphBidiClass(scalar);
-        switch (kind) {
-            case ParagraphBidi::Isolate:
-                isolates++;
-                break;
-            case ParagraphBidi::EndIsolate:
-                if (isolates > 0) isolates--;
-                break;
-            case ParagraphBidi::Break:
-                return ParagraphBidi::Neutral;
-            case ParagraphBidi::Left:
-            case ParagraphBidi::Right:
-                if (isolates == 0) return kind;
-                break;
-            case ParagraphBidi::Neutral:
-                break;
-        }
-    }
-    return ParagraphBidi::Neutral;
-}
 
 static TextAlign InputRowAlignment(const InputState* state, Str line,
                                    const int* starts, int rows) {
@@ -247404,16 +247410,26 @@ TextLayout* TextLayoutNew(PaintCtx* ctx, Str s, float fontSize, float maxW,
     layout->SetWordWrapping(wrap && maxW > 0 ? DWRITE_WORD_WRAPPING_WRAP
                                              : DWRITE_WORD_WRAPPING_NO_WRAP);
     ApplyLineHeight(layout, fontSize, lineH);
+
+    bool rtl = FirstStrongBidi(s) == ParagraphBidi::Right;
+    if (rtl) {
+        layout->SetReadingDirection(DWRITE_READING_DIRECTION_RIGHT_TO_LEFT);
+    }
     DWRITE_TEXT_METRICS m = {};
     layout->GetMetrics(&m);
-    if (align != TextAlign::Left) {
+    if (align != TextAlign::Left || rtl) {
 
         if (maxW <= 0) {
             layout->SetMaxWidth(m.widthIncludingTrailingWhitespace);
         }
-        layout->SetTextAlignment(align == TextAlign::Center
-                                     ? DWRITE_TEXT_ALIGNMENT_CENTER
-                                     : DWRITE_TEXT_ALIGNMENT_TRAILING);
+
+        DWRITE_TEXT_ALIGNMENT a = DWRITE_TEXT_ALIGNMENT_LEADING;
+        if (align == TextAlign::Center) {
+            a = DWRITE_TEXT_ALIGNMENT_CENTER;
+        } else if ((align == TextAlign::Right) != rtl) {
+            a = DWRITE_TEXT_ALIGNMENT_TRAILING;
+        }
+        layout->SetTextAlignment(a);
     }
     if (outSize) {
         outSize->w = m.widthIncludingTrailingWhitespace;
