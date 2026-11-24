@@ -202,7 +202,7 @@ static MenuDef menuDefContext[] = {
         CmdShowAnnotationText,
     },
     {
-        TrN("Save Attachment"),
+        TrN("Save Attachment..."),
         CmdSaveAttachment,
     },
     {
@@ -243,7 +243,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefContextAnnotations,
     },
     {
-        TrN("Show Errors"),
+        TrN("Show Errors..."),
         CmdShowErrors,
     },
     {
@@ -1345,11 +1345,11 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             TempStr delText;
             if (ShowChapterUi(win->ctrl)) {
                 Location loc = win->ctrl->LocationFromPageNo(pageNoUnderCursor);
-                addText = fmt(Tr("Add chapter %d page %d to favorites").s, loc.chapter, loc.page);
+                addText = fmt(Tr("Add chapter %d page %d to favorites...").s, loc.chapter, loc.page);
                 delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
             } else {
                 TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);
-                addText = fmt(Tr("Add page %s to favorites").s, pageLabel);
+                addText = fmt(Tr("Add page %s to favorites...").s, pageLabel);
                 delText = fmt(Tr("Remove page %s from favorites").s, pageLabel);
             }
 

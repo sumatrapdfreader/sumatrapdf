@@ -16,7 +16,7 @@ import {
 import { killAndWait, launchControlled, openContextMenu, waitForContextMenu } from "./win-automation";
 
 const kTabsClass = "SumatraTabsCtrlClass";
-// "Properties...", "Show in folder", "Copy File Path"
+// "Document Properties...", "Show in folder", "Copy File Path"
 const kCopyPathDowns = 3;
 
 export async function testit(): Promise<void> {

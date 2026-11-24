@@ -207,7 +207,7 @@ MenuDef menuDefFile[] = {
         0,
     },
     {
-        TrN("P&roperties"),
+        TrN("P&roperties..."),
         CmdProperties,
     },
     {
@@ -606,7 +606,7 @@ MenuDef menuDefSettings[] = {
         CmdAdvancedSettings,
     },
     {
-        TrN("&Open Advanced Settings File..."),
+        TrN("&Open Advanced Settings File"),
         CmdOpenSettingsFile,
     },
     {
@@ -614,7 +614,7 @@ MenuDef menuDefSettings[] = {
         CmdConfigureRestrictedUse,
     },
     {
-        TrN("Change Language"),
+        TrN("Change Language..."),
         CmdChangeLanguage,
     },
     {
@@ -631,11 +631,11 @@ MenuDef menuDefSettings[] = {
 //[ ACCESSKEY_GROUP Favorites Menu
 MenuDef menuDefTabGroups[] = {
     {
-        TrN("Save Tab Group"),
+        TrN("Save Tab Group..."),
         CmdTabGroupSave,
     },
     {
-        TrN("Restore Tab Group"),
+        TrN("Restore Tab Group..."),
         CmdTabGroupRestore,
     },
     {
@@ -646,7 +646,7 @@ MenuDef menuDefTabGroups[] = {
 
 MenuDef menuDefFavorites[] = {
     {
-        TrN("Add to favorites"),
+        TrN("Add to favorites..."),
         CmdFavoriteAdd,
     },
     {
@@ -715,7 +715,7 @@ MenuDef menuDefHelp[] = {
         0,
     },
     {
-        TrN("&About"),
+        TrN("&About..."),
         CmdHelpAbout,
     },
     {
@@ -787,27 +787,27 @@ MenuDef menuDefGoogleLens[] = {
 // shared by the Selection menu and the selection context menu
 MenuDef menuDefTranslateWith[] = {
     {
-        TrN("&Google"),
+        TrN("&Google..."),
         CmdTranslateSelectionWithGoogle,
     },
     {
-        TrN("&DeepL"),
+        TrN("&DeepL..."),
         CmdTranslateSelectionWithDeepL,
     },
     {
-        TrN("G&rok Build"),
+        TrN("G&rok Build..."),
         CmdTranslateSelectionWithGrokBuild,
     },
     {
-        TrN("Claude C&ode"),
+        TrN("Claude C&ode..."),
         CmdTranslateSelectionWithClaudeCode,
     },
     {
-        TrN("OpenAI Code&x"),
+        TrN("OpenAI Code&x..."),
         CmdTranslateSelectionWithOpenAICodex,
     },
     {
-        TrN("A&ntigravity"),
+        TrN("A&ntigravity..."),
         CmdTranslateSelectionWithAntiGravity,
     },
     {
@@ -1039,7 +1039,7 @@ MenuDef menuDefContextAnnotations[] = {
         CmdSaveAnnotations,
     },
     {
-        TrN("Save to new file"),
+        TrN("Save to new file..."),
         CmdSaveAnnotationsNewFile,
     },
     {
@@ -1064,15 +1064,15 @@ MenuDef menuDefContextImage[] = {
         CmdSearchGoogleLensImage,
     },
     {
-        TrN("&Save"),
+        TrN("&Save..."),
         CmdSaveImage,
     },
     {
-        TrN("C&rop"),
+        TrN("C&rop..."),
         CmdCropImage,
     },
     {
-        TrN("R&esize"),
+        TrN("R&esize..."),
         CmdResizeImage,
     },
     {
@@ -1084,7 +1084,7 @@ MenuDef menuDefContextImage[] = {
         CmdEditImageExternally,
     },
     {
-        TrN("Convert page to &PDF"),
+        TrN("Convert page to &PDF..."),
         CmdConvertImageToPdf,
     },
     {
@@ -1130,23 +1130,23 @@ MenuDef menuDefDocumentAIChat[] = {
 //[ ACCESSKEY_GROUP Context Menu (Document)
 MenuDef menuDefDocumentOperations[] = {
     {
-        TrN("P&roperties"),
+        TrN("P&roperties..."),
         CmdProperties,
     },
     {
-        TrN("Show PDF Info"),
+        TrN("Show PDF Info..."),
         CmdPdfShowInfo,
     },
     {
-        TrN("Show Document Table Of Contents"),
+        TrN("Show Document Table Of Contents..."),
         CmdDocumentShowOutline,
     },
     {
-        TrN("Extract Pages"),
+        TrN("Extract Pages..."),
         CmdPdfExtractPages,
     },
     {
-        TrN("Delete Pages From PDF"),
+        TrN("Delete Pages From PDF..."),
         CmdPdfDeletePages,
     },
     {
@@ -1162,11 +1162,11 @@ MenuDef menuDefDocumentOperations[] = {
         CmdRunPDFScript,
     },
     {
-        TrN("Extract Text From Document"),
+        TrN("Extract Text From Document..."),
         CmdDocumentExtractText,
     },
     {
-        TrN("Export as Markdown"),
+        TrN("Export as Markdown..."),
         CmdExportMarkdown,
     },
     {
@@ -1174,23 +1174,23 @@ MenuDef menuDefDocumentOperations[] = {
         CmdExportAnnotations,
     },
     {
-        TrN("Compress PDF"),
+        TrN("Compress PDF..."),
         CmdPdfCompress,
     },
     {
-        TrN("Decompress PDF"),
+        TrN("Decompress PDF..."),
         CmdPdfDecompress,
     },
     {
-        TrN("Encrypt PDF"),
+        TrN("Encrypt PDF..."),
         CmdPdfEncrypt,
     },
     {
-        TrN("Decrypt PDF"),
+        TrN("Decrypt PDF..."),
         CmdPdfDecrypt,
     },
     {
-        TrN("Bake PDF"),
+        TrN("Bake PDF..."),
         CmdPdfBake,
     },
     {
@@ -1297,7 +1297,7 @@ MenuDef menuDefContextTab[] = {
         CmdSaveAnnotations,
     },
     {
-        TrN("Save changes to &new PDF"),
+        TrN("Save changes to &new PDF..."),
         CmdSaveAnnotationsNewFile,
     },
     {
@@ -1309,7 +1309,7 @@ MenuDef menuDefContextTab[] = {
         0,
     },
     {
-        TrN("Properties..."),
+        TrN("Document Properties..."),
         CmdProperties,
     },
     {
@@ -1325,7 +1325,7 @@ MenuDef menuDefContextTab[] = {
         (UINT_PTR)menuDefContextTabDuplicate,
     },
     {
-        TrN("Change Tab Color"),
+        TrN("Change Tab Color..."),
         CmdSetTabColor,
     },
     {
@@ -1370,11 +1370,11 @@ MenuDef menuDefContextTab[] = {
         0,
     },
     {
-        TrN("Save Tab Group"),
+        TrN("Save Tab Group..."),
         CmdTabGroupSave,
     },
     {
-        TrN("Restore Tab Group"),
+        TrN("Restore Tab Group..."),
         CmdTabGroupRestore,
     },
     {

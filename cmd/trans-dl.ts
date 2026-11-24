@@ -12,8 +12,9 @@
  *   3. Fix suspicious translations (trailing whitespace / \n / \r) via /api/edittranslation
  *      as user "ai fix"
  *   4. GET /api/dltranshist (every string the server ever had) and index it by
- *      English text with '&' stripped: a string that only moved or lost its
- *      access key reuses the old translations, submitted as user "ai auto"
+ *      English text with '&' and a trailing "..." stripped: a string that only
+ *      moved or lost its access key, or gained or lost "...", reuses the old
+ *      translations (adding / removing the ellipsis), submitted as user "ai auto"
  *   5. If any language is still missing translations:
  *        - translate with Claude or Grok
  *        - submit each via /api/edittranslation as user "ai claude" / "ai grok"
@@ -573,14 +574,70 @@ async function downloadHistory(server: string): Promise<ServerHistory> {
   return hist;
 }
 
-// translations found under the same English text with '&' removed
+// translations found under the same English text with '&' and a trailing "..." removed
 interface StrippedMatch {
   english: string;
   translation: string;
 }
 
-// lang -> english without '&' -> translated strings that share it
+// lang -> english without '&' and "..." -> translated strings that share it
 type StrippedIndex = Map<string, Map<string, StrippedMatch[]>>;
+
+// "Save As..." / "Loading %s ..."
+const kEnglishDotsRe = /\s*\.\.\.$/;
+// translations end with "..." or "…", sometimes before a CJK access key suffix: "另存為...(&A)"
+const kTransDotsRe = /\s*(?:\.\.\.|…)(&?)(\s*\(&?[^\s()]\))?$/u;
+// Hebrew translators sometimes typed the dots first ("...שמור"), as an LTR editor shows them
+const kTransLeadingDotsRe = /^(?:\.\.\.|…)\s*/u;
+
+function hasEnglishDots(s: string): boolean {
+  return kEnglishDotsRe.test(s);
+}
+
+function stripKey(english: string): string {
+  return stripAmpersand(english).replace(kEnglishDotsRe, "");
+}
+
+function hasTransDots(t: string): boolean {
+  return kTransDotsRe.test(t) || kTransLeadingDotsRe.test(t);
+}
+
+// "&Open..." -> "&Open"; "另存為...(&A)" -> "另存為(&A)"; "...שמור" -> "שמור"
+export function removeTransDots(t: string): string {
+  if (kTransDotsRe.test(t)) {
+    return t.replace(kTransDotsRe, (_m, amp: string, suffix: string | undefined) => amp + (suffix ?? ""));
+  }
+  return t.replace(kTransLeadingDotsRe, "");
+}
+
+// "&Open" -> "&Open..."; "另存為(&A)" -> "另存為(&A)...", as most CJK translations and Windows do.
+// In RTL text the dots go at the logical end too: bidi shows them on the left, where reading ends.
+// A trailing '&' ("حول&") stays last, or the dots would become the access key.
+export function addTransDots(t: string, dots: string): string {
+  if (hasTransDots(t)) return t;
+  if (t.endsWith("&")) return t.slice(0, -1) + dots + "&";
+  return t + dots;
+}
+
+// the language's own ellipsis: "...", "…" or " …" (Slovenian), whichever its translations use most
+function langDots(pt: ParsedTranslations, lang: string): string {
+  const counts = new Map<string, number>();
+  for (const [english, t] of pt.fromServer.get(lang) ?? []) {
+    if (!hasEnglishDots(english)) continue;
+    const m = /(\s*(?:\.\.\.|…))&?(?:\s*\(&?[^\s()]\))?$/u.exec(t);
+    if (!m) continue;
+    counts.set(m[1]!, (counts.get(m[1]!) ?? 0) + 1);
+  }
+  let best = "...";
+  let bestN = 0;
+  for (const [dots, n] of counts) {
+    if (n > bestN) {
+      best = dots;
+      bestN = n;
+    }
+  }
+  return best;
+}
 
 function addToIndex(index: StrippedIndex, lang: string, english: string, translation: string): void {
   if (translation.length === 0) return;
@@ -589,7 +646,7 @@ function addToIndex(index: StrippedIndex, lang: string, english: string, transla
     byStripped = new Map();
     index.set(lang, byStripped);
   }
-  const key = stripAmpersand(english);
+  const key = stripKey(english);
   let matches = byStripped.get(key);
   if (!matches) {
     matches = [];
@@ -617,17 +674,25 @@ function buildStrippedIndex(hist: ServerHistory | null, pt: ParsedTranslations):
 
 // "Show &Toolbar" -> "Sh&ow Toolbar" keeps the translation as is (its own
 // '&' stays where the translator put it); "Show Toolbar" from "Show &Toolbar"
-// drops the '&'. A match whose '&' status equals ours is preferred.
-function pickStrippedMatch(english: string, matches: StrippedMatch[]): string | undefined {
+// drops the '&'. A match whose '&' status equals ours is preferred, the newest
+// among equals. The result ends with the language's ellipsis exactly when the
+// English does, also when the translator dropped or added it: "P&roperties..."
+// from "プロパティ(&R)" is "プロパティ(&R)...".
+export function pickStrippedMatch(english: string, matches: StrippedMatch[], dots = "..."): string | undefined {
   const wantAmp = english.includes("&");
-  const others = matches.filter((m) => m.english !== english);
-  const same = others.filter((m) => m.english.includes("&") === wantAmp);
-  const m = same[same.length - 1] ?? others[others.length - 1];
+  let m: StrippedMatch | undefined;
+  for (const c of matches) {
+    if (c.english === english) continue;
+    const better = !m || c.english.includes("&") === wantAmp || m.english.includes("&") !== wantAmp;
+    if (better) m = c;
+  }
   if (!m) return undefined;
-  return wantAmp ? m.translation : stripAmpersand(m.translation);
+
+  const t = wantAmp ? m.translation : stripAmpersand(m.translation);
+  return hasEnglishDots(english) ? addTransDots(t, dots) : removeTransDots(t);
 }
 
-/** Fill untranslated strings from translations of the same text modulo '&' (local only until submitted). */
+/** Fill untranslated strings from translations of the same text modulo '&' and "..." (local only until submitted). */
 function autoAddStrippedMatches(pt: ParsedTranslations, index: StrippedIndex): Map<string, Map<string, string>> {
   const { perLang, allStrings } = pt;
   const added = new Map<string, Map<string, string>>();
@@ -636,11 +701,12 @@ function autoAddStrippedMatches(pt: ParsedTranslations, index: StrippedIndex): M
     if (lang === "en") continue;
     const byStripped = index.get(lang);
     if (!byStripped) continue;
+    const dots = langDots(pt, lang);
     for (const s of allStrings) {
       if (existingTranslation(perLang, lang, s) !== undefined) continue;
-      const matches = byStripped.get(stripAmpersand(s));
+      const matches = byStripped.get(stripKey(s));
       if (!matches) continue;
-      const trans = pickStrippedMatch(s, matches);
+      const trans = pickStrippedMatch(s, matches, dots);
       if (!trans) continue;
       translations.set(s, trans);
       let m = added.get(lang);

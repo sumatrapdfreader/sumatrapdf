@@ -174,7 +174,14 @@ Str GetTranslation(Str s) {
     // if we accidentally change language, we want be able to
     // change it back so add ("Change Language") to translation
     if (str::ContainsI(s, StrL("Change Language")) && !str::ContainsI(tr, StrL("Change Language"))) {
-        tr = str::JoinTemp(tr, StrL(" (Change Language)"));
+        // "Sprache wechseln..." => "Sprache wechseln (Change Language)..."
+        Str dots = StrL("...");
+        if (str::EndsWith(tr, dots)) {
+            Str base = Str(tr.s, len(tr) - len(dots));
+            tr = str::JoinTemp(base, StrL(" (Change Language)"), dots);
+        } else {
+            tr = str::JoinTemp(tr, StrL(" (Change Language)"));
+        }
     }
     return tr;
 }
@@ -408,13 +415,16 @@ bool Translations_UnitTestLookup() {
     gTranslationCache = nullptr;
     gTranslationIdx = nullptr;
 
-    Str d = StrL("header\nheader\n:Open\nde:Offnen\n:Close\nfr:Fermer\n:Change Language\nde:Sprache\n:Open\nde:Dup\n");
+    Str d = StrL(
+        "header\nheader\n:Open\nde:Offnen\n:Close\nfr:Fermer\n:Change Language\nde:Sprache\n:Change "
+        "Language...\nde:Sprache...\n:Open\nde:Dup\n");
     ParseTranslationsTxt(d, StrL("de"));
     gCurrLangIdx = FindLangIdx(StrL("de"));
 
     bool ok = str::Eq(GetTranslation(StrL("Open")), StrL("Offnen"));
     ok = ok && str::Eq(GetTranslation(StrL("Close")), StrL("Close"));
     ok = ok && str::Eq(GetTranslation(StrL("Change Language")), StrL("Sprache (Change Language)"));
+    ok = ok && str::Eq(GetTranslation(StrL("Change Language...")), StrL("Sprache (Change Language)..."));
     // a substring of a key must not match
     ok = ok && str::Eq(GetTranslation(Str("Openx", 4)), StrL("Offnen"));
 

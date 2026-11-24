@@ -1093,11 +1093,11 @@ void RebuildFavMenu(MainWindow* win, MenuRef menu) {
         TempStr delText;
         if (ShowChapterUi(ctrl)) {
             Location loc = ctrl->LocationFromPageNo(pageNo);
-            addText = fmt(Tr("Add chapter %d page %d to favorites").s, loc.chapter, loc.page);
+            addText = fmt(Tr("Add chapter %d page %d to favorites...").s, loc.chapter, loc.page);
             delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
         } else {
             TempStr label = ctrl->GetPageLabeTemp(pageNo);
-            addText = fmt(Tr("Add page %s to favorites").s, label);
+            addText = fmt(Tr("Add page %s to favorites...").s, label);
             delText = fmt(Tr("Remove page %s from favorites").s, label);
         }
 
