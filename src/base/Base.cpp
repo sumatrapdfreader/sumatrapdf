@@ -802,8 +802,12 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
         // commit - the whole of it for the next small push.
         u64 reserveChunkSize = arena->reserveChunkSize;
         u64 commitChunkSize = arena->commitChunkSize;
-        if (size + kArenaHeaderSize > reserveChunkSize) {
-            reserveChunkSize = ArenaAlignPow2(size + kArenaHeaderSize, ArenaMax(align, ArenaPageSize()));
+        u64 headerAligned = ArenaAlignPow2(kArenaHeaderSize, align);
+        if (size > UINT64_MAX - headerAligned) {
+            return nullptr;
+        }
+        if (size + headerAligned > reserveChunkSize) {
+            reserveChunkSize = ArenaAlignPow2(size + headerAligned, ArenaMax(align, ArenaPageSize()));
             commitChunkSize = reserveChunkSize;
         }
 
@@ -5086,12 +5090,14 @@ static TempStr ExtractUntilTemp(Str& s, char c) {
     return res;
 }
 
-static bool ParseULongAt(Str& s, int base, unsigned long* val) {
+static bool ParseULongAt(Str& s, int base, unsigned long* val, bool skipWs = true) {
     if (s.len <= 0) {
         return false;
     }
     unsigned long v = 0;
-    str::TrimWs(s);
+    if (skipWs) {
+        str::TrimWs(s);
+    }
     int i = 0;
     if (base == 16 && i + 1 < s.len && s.s[i] == '0' && (s.s[i + 1] == 'x' || s.s[i + 1] == 'X')) {
         i += 2;
@@ -5134,10 +5140,10 @@ static bool ParseLongAt(Str& s, int base, long* val) {
         Eat(rest, 1);
     }
     unsigned long uv = 0;
-    if (!ParseULongAt(rest, base, &uv)) {
+    if (!ParseULongAt(rest, base, &uv, false)) {
         return false;
     }
-    *val = neg ? -(long)uv : (long)uv;
+    *val = neg ? (long)(0UL - uv) : (long)uv;
     s = rest;
     return true;
 }
@@ -5157,13 +5163,14 @@ static bool ParseDoubleAt(Str& s, double* val) {
 }
 
 static int ParseLimitedNumber(Str& s, int formatOff, Str format, const ParseArg& valueOut) {
-    unsigned int width;
+    unsigned int width = 0;
     char f2[] = "% ";
     Str formatAt = Str(format.s + formatOff, format.len - formatOff);
     Str endF = Parse(formatAt, "%u%c", &width, &f2[1]);
-    if (!str::IsNull(endF) && str::ContainsChar(StrL("udx"), f2[1]) && width <= (unsigned)s.len) {
-        char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(Str(limited, std::min((int)width + 1, dimofi(limited))), Str(s.s, (int)width));
+    char limited[16]; // 32-bit integers are at most 11 characters long
+    if (!str::IsNull(endF) && str::ContainsChar(StrL("udx"), f2[1]) && width > 0 && width < (unsigned)dimofi(limited) &&
+        width <= (unsigned)s.len) {
+        str::BufSet(Str(limited, (int)width + 1), Str(s.s, (int)width));
         Str end = ParseArgs(Str(limited), f2, &valueOut, 1);
         if (!str::IsNull(end) && !end.s[0]) {
             Eat(s, (int)width);
@@ -5220,41 +5227,38 @@ Str ParseArgs(Str str, const char* fmt, const ParseArg* args, int nArgs) {
         int lenBefore = s.len;
         if ('u' == spec) {
             unsigned long v = 0;
-            if (!ParseULongAt(s, 10, &v)) {
+            if (!ParseULongAt(s, 10, &v) || ReportIf(argIdx >= nArgs)) {
                 return {};
             }
-            ReportIf(argIdx >= nArgs);
             *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
         } else if ('d' == spec) {
             long v = 0;
-            if (!ParseLongAt(s, 10, &v)) {
+            if (!ParseLongAt(s, 10, &v) || ReportIf(argIdx >= nArgs)) {
                 return {};
             }
-            ReportIf(argIdx >= nArgs);
             *(int*)args[argIdx++].ptr = (int)v;
         } else if ('x' == spec) {
             unsigned long v = 0;
-            if (!ParseULongAt(s, 16, &v)) {
+            if (!ParseULongAt(s, 16, &v) || ReportIf(argIdx >= nArgs)) {
                 return {};
             }
-            ReportIf(argIdx >= nArgs);
             *(unsigned int*)args[argIdx++].ptr = (unsigned int)v;
         } else if ('f' == spec || 'g' == spec) {
             double v = 0;
-            if (!ParseDoubleAt(s, &v)) {
+            if (!ParseDoubleAt(s, &v) || ReportIf(argIdx >= nArgs)) {
                 return {};
             }
-            ReportIf(argIdx >= nArgs);
             *(float*)args[argIdx++].ptr = (float)v;
         } else if ('c' == spec) {
-            if (s.len <= 0) {
+            if (s.len <= 0 || ReportIf(argIdx >= nArgs)) {
                 return {};
             }
-            ReportIf(argIdx >= nArgs);
             *(char*)args[argIdx++].ptr = s.s[0];
             Eat(s, 1);
         } else if ('s' == spec || 'S' == spec) {
-            ReportIf(argIdx >= nArgs);
+            if (ReportIf(argIdx >= nArgs)) {
+                return {};
+            }
             const ParseArg& arg = args[argIdx++];
             TempStr val;
             if (fi + 1 < format.len) {

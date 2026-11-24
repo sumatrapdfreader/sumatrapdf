@@ -201,10 +201,10 @@ TempStr GetExecutableSignerTemp(Str exePath) {
                                                         CERT_FIND_SUBJECT_CERT, &certInfo, nullptr);
     TempStr res = {};
     if (certCtx) {
-        char buf[512];
-        DWORD n = CertGetNameStringA(certCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, buf, dimof(buf));
+        WCHAR buf[512];
+        DWORD n = CertGetNameStringW(certCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, buf, dimof(buf));
         if (n > 1) {
-            res = str::DupTemp(Str(buf));
+            res = ToUtf8Temp(WStr(buf, (int)n - 1));
         }
         CertFreeCertificateContext(certCtx);
     }

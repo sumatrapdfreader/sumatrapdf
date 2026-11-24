@@ -115,6 +115,9 @@ static NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
     symInfo->SizeOfStruct = sizeof(SYMBOL_INFO);
     symInfo->MaxNameLen = kMaxSymLen;
 
+    if (!DynSymFromAddr) {
+        return false;
+    }
     DWORD64 symDisp = 0;
     BOOL ok = DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     if (!ok) {
@@ -158,17 +161,19 @@ bool Initialize(WStr symPathW, bool force) {
         return false;
     }
 
-    if (needsCleanup) {
+    if (needsCleanup && DynSymCleanup) {
         DynSymCleanup(GetCurrentProcess());
     }
 
     // before SymInitialize: it reads every loaded module's symbols unless loads are deferred
-    DWORD symOptions = DynSymGetOptions();
-    symOptions |= (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
-    symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
-    DynSymSetOptions(symOptions);
+    if (DynSymGetOptions && DynSymSetOptions) {
+        DWORD symOptions = DynSymGetOptions();
+        symOptions |= (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
+        symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
+        DynSymSetOptions(symOptions);
+    }
 
-    gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW.s, TRUE);
+    gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), CWStrTemp(symPathW), TRUE);
 
     if (!gSymInitializeOk) {
         log(StrL("dbghelp::Initialize(): DynSymInitializeW() failed"));
@@ -206,7 +211,7 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
         return;
     }
 
-    HANDLE hFile = CreateFileW(crashDumpFilePath.s, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
+    HANDLE hFile = CreateFileW(CWStrTemp(crashDumpFilePath), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS,
                                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
     if (INVALID_HANDLE_VALUE == hFile) {
         logf("WriteMiniDump: CreateFileW failed, err=%u\n", GetLastError());
@@ -232,7 +237,7 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
     if (len(comment) > 0) {
         userStream.Type = CommentStreamA;
         userStream.BufferSize = (ULONG)comment.len + 1;
-        userStream.Buffer = (PVOID)comment.s;
+        userStream.Buffer = (PVOID)CStrTemp(comment);
         userInfo.UserStreamCount = 1;
         userInfo.UserStreamArray = &userStream;
         userParam = &userInfo;
@@ -304,7 +309,7 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
 
     DWORD64 symDisp = 0;
     char* symName = nullptr;
-    BOOL ok = DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
+    BOOL ok = DynSymFromAddr && DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     if (ok) {
         symName = &(symInfo->Name[0]);
     }
@@ -493,7 +498,8 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
 
     s.Append(fmt("Faulting IP: "));
     GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress, false);
-    if ((EXCEPTION_ACCESS_VIOLATION == excCode) || (EXCEPTION_IN_PAGE_ERROR == excCode)) {
+    if (((EXCEPTION_ACCESS_VIOLATION == excCode) || (EXCEPTION_IN_PAGE_ERROR == excCode)) &&
+        excRecord->NumberParameters >= 2) {
         int readWriteFlag = (int)excRecord->ExceptionInformation[0];
         DWORD64 dataVirtAddr = (DWORD64)excRecord->ExceptionInformation[1];
         // 0 = read, 1 = write, 8 = DEP

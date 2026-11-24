@@ -101,13 +101,12 @@ void ApplyExifOrientation(Bitmap* bmp, int exifOrientation) {
 
 // 0 (an invalid gdi+ format) when the pixels aren't ours to read
 static Gdiplus::PixelFormat PixmapToGdiplusPixelFormat(const Pixmap* px) {
-    if (px->format == PixmapFormat::Native) {
+    if (px->format == PixmapFormat::Native || px->format == PixmapFormat::RGBA8) {
         return 0;
     }
     if (px->format == PixmapFormat::BGR8) {
         return PixelFormat24bppRGB;
     }
-    // BGRA8 (RGBA8 isn't produced by our decoders and has no zero-copy GDI+ format)
     return px->premultiplied ? PixelFormat32bppPARGB : PixelFormat32bppARGB;
 }
 
@@ -170,7 +169,7 @@ Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp) {
         return nullptr;
     }
     for (int y = 0; y < h; y++) {
-        memcpy(px->data + ((size_t)y * px->stride), (u8*)bd.Scan0 + ((size_t)y * bd.Stride), (size_t)w * 4);
+        memcpy(px->data + ((size_t)y * px->stride), (u8*)bd.Scan0 + ((ptrdiff_t)y * bd.Stride), (size_t)w * 4);
     }
     bmp->UnlockBits(&bd);
     px->hasAlpha = Gdiplus::IsAlphaPixelFormat(bmp->GetPixelFormat()) != 0;
@@ -330,7 +329,19 @@ static HGLOBAL PixmapToDibV5Global(const Pixmap* p) {
     bi->bV5Intent = LCS_GM_IMAGES;
     u8* dst = (u8*)bi + sizeof(BITMAPV5HEADER);
     for (int y = 0; y < p->height; y++) {
-        memcpy(dst + ((size_t)y * rowBytes), p->data + ((size_t)y * p->stride), rowBytes);
+        u8* dstRow = dst + ((size_t)y * rowBytes);
+        memcpy(dstRow, p->data + ((size_t)y * p->stride), rowBytes);
+        if (p->premultiplied) {
+            for (int x = 0; x < p->width; x++) {
+                u8* px = dstRow + ((size_t)x * 4);
+                u8 a = px[3];
+                if (a > 0 && a < 255) {
+                    px[0] = (u8)std::min<u32>(255, ((u32)px[0] * 255 + (a / 2)) / a);
+                    px[1] = (u8)std::min<u32>(255, ((u32)px[1] * 255 + (a / 2)) / a);
+                    px[2] = (u8)std::min<u32>(255, ((u32)px[2] * 255 + (a / 2)) / a);
+                }
+            }
+        }
     }
     GlobalUnlock(hMem);
     return hMem;

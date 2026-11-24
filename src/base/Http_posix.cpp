@@ -573,9 +573,12 @@ static TempStr NewTempFilePathTemp(Str prefix) {
 static int ReadHttpStatusCode(Str statusPath) {
     Str status = file::ReadFile(statusPath);
     if (len(status) == 0) {
+        str::Free(status);
         return 0;
     }
-    return ParseInt(status);
+    int code = ParseInt(status);
+    str::Free(status);
+    return code;
 }
 
 static bool AppendCurlBase(str::Builder* cmd, Str outPath, Str statusPath) {
@@ -640,6 +643,7 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
         if (body) {
             ok = rspOut->data.Append(body);
         }
+        str::Free(body);
     }
     if (!ok) {
         rspOut->error = kHttpErrorFailure;
@@ -719,6 +723,7 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
         if (out) {
             ok = rspOut->data.Append(out);
         }
+        str::Free(out);
     }
     if (!ok) {
         rspOut->error = kHttpErrorFailure;

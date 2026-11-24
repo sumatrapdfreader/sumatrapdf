@@ -371,12 +371,20 @@ TempStr TrimmedAsciiTemp(ByteReader r, int off, u32 count) {
 
 const ExifEntry* FindEntry(const ExifParser& parser, ExifProp prop) {
     u16 tag = (u16)prop;
+    const ExifEntry* fallback = nullptr;
     for (const ExifEntry& entry : parser.entries) {
-        if (entry.tag == tag) {
+        if (entry.tag != tag) {
+            continue;
+        }
+        // prefer main Image/Exif/Gps tags over Thumbnail/MakerNote duplicates
+        if (entry.group != (u8)IfdGroup::Thumbnail && entry.group != (u8)IfdGroup::MakerNote) {
             return &entry;
         }
+        if (!fallback) {
+            fallback = &entry;
+        }
     }
-    return nullptr;
+    return fallback;
 }
 
 u16 ReadWord(const ExifParser& parser, int off) {
@@ -980,8 +988,9 @@ TempStr ExifParser::GetStringProp(ExifProp prop, ExifProp altProp) const {
         Str bytes((char*)(r.d + entry->dataOff), (int)entry->count);
         if (bytes.len > 8 && MemEq(bytes.s, "ASCII\0\0\0", 8)) {
             res = TrimmedAsciiTemp(r, entry->dataOff + 8, entry->count - 8);
-        } else if (bytes.len > 10 && MemEq(bytes.s, "UNICODE\0", 8)) {
-            res = Utf16LeToUtf8Temp(Str(bytes.s + 8, bytes.len - 8));
+        } else if (bytes.len >= 10 && MemEq(bytes.s, "UNICODE\0", 8)) {
+            strconv::ByteOrder order = isBE ? strconv::ByteOrder::BigEndian : strconv::ByteOrder::LittleEndian;
+            res = strconv::Utf16ToUtf8Temp(Str(bytes.s + 8, bytes.len - 8), order);
         }
     }
     if (str::IsEmptyOrWhiteSpace(res)) {
@@ -992,7 +1001,7 @@ TempStr ExifParser::GetStringProp(ExifProp prop, ExifProp altProp) const {
 
 bool ExifParser::GetIntProp(ExifProp prop, i64* valOut) const {
     const ExifEntry* entry = FindEntry(*this, prop);
-    if (!entry || !valOut) {
+    if (!entry || !valOut || entry->count < 1) {
         return false;
     }
     if (entry->type == TiffByte || entry->type == TiffSByte || entry->type == TiffUndefined) {
@@ -1024,7 +1033,7 @@ bool ExifParser::GetIntProp(ExifProp prop, i64* valOut) const {
 
 bool ExifParser::GetRationalProp(ExifProp prop, ExifRational* valOut) const {
     const ExifEntry* entry = FindEntry(*this, prop);
-    if (!entry || !valOut || (entry->type != TiffRational && entry->type != TiffSRational)) {
+    if (!entry || !valOut || entry->count < 1 || (entry->type != TiffRational && entry->type != TiffSRational)) {
         return false;
     }
     return ReadRational(*this, entry->dataOff, valOut, entry->type == TiffSRational);

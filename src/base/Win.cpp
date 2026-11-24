@@ -631,9 +631,11 @@ void EditGetSelection(HWND hwnd, int& start, int& end) {
     if (!hwnd) {
         return;
     }
-    DWORD sel = (DWORD)Edit_GetSel(hwnd);
-    start = (int)LOWORD(sel);
-    end = (int)HIWORD(sel);
+    DWORD s = 0;
+    DWORD e = 0;
+    SendMessageW(hwnd, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
+    start = (int)s;
+    end = (int)e;
 }
 
 void EditSetCursorPos(HWND hwnd, int pos) {
@@ -1120,20 +1122,30 @@ HBITMAP RenderedBitmap::GetBitmap() const {
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping) {
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    if (size.dx <= 0 || size.dy <= 0 || (i64)size.dx * 4 * size.dy > INT_MAX) {
+        return nullptr;
+    }
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = -size.dy;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biCompression = BI_RGB;
     // trading speed for memory (32 bits yields far better performance)
     bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biSizeImage = size.dx * 4 * size.dy;
+    bmi.bmiHeader.biSizeImage = (DWORD)((i64)size.dx * 4 * size.dy);
 
     void* data = nullptr;
+    bool createdMapping = false;
     if (hDataMapping && !*hDataMapping) {
         *hDataMapping =
             CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, nullptr);
+        createdMapping = *hDataMapping != nullptr;
     }
-    return CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : nullptr, 0);
+    HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : nullptr, 0);
+    if (!hbmp && createdMapping) {
+        CloseHandle(*hDataMapping);
+        *hDataMapping = nullptr;
+    }
+    return hbmp;
 }
 
 //--- double-buffer / deferred window positioning
@@ -1600,11 +1612,9 @@ void SetCursorCached(LPWSTR cursorId) {
 }
 
 void DeleteCachedCursors() {
+    // LoadCursor(nullptr, id) returns shared system cursors that must not be destroyed
     for (HCURSOR& cur : cachedCursors) {
-        if (cur) {
-            DestroyCursor(cur);
-            cur = nullptr;
-        }
+        cur = nullptr;
     }
 }
 
@@ -1948,9 +1958,12 @@ TempStr GetEnvVariableTemp(Str name) {
         cchBufSize = res + 4; // +4 jic
         buf = AllocArrayTemp<WCHAR>((int)cchBufSize);
         res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
-        ReportIf(res == 0 || res > cchBufSize);
+        if (res == 0 || res >= cchBufSize) {
+            ReportIf(true);
+            return {};
+        }
     }
-    return ToUtf8Temp(buf);
+    return ToUtf8Temp(WStr(buf, (int)res));
 }
 
 TempStr GetLastErrorStrTemp(DWORD& err) {
@@ -2061,7 +2074,7 @@ TempStr ResolveLnkTemp(Str path) {
         return {};
     }
 
-    hRes = lnk->Resolve(nullptr, SLR_UPDATE);
+    hRes = lnk->Resolve(nullptr, SLR_NO_UI | SLR_NOSEARCH);
     if (FAILED(hRes)) {
         return {};
     }
@@ -2256,7 +2269,11 @@ void OpenPathInDefaultFileManager(Str path) {
     }
 
     // strip \\?\ prefix — shell APIs (ILCreateFromPath, explorer.exe) don't understand it
-    str::TrimPrefix(path, StrL("\\\\?\\"));
+    if (str::TrimPrefix(path, StrL("\\\\?\\UNC\\"))) {
+        path = str::JoinTemp(StrL("\\\\"), path);
+    } else {
+        str::TrimPrefix(path, StrL("\\\\?\\"));
+    }
 
     // Use SHOpenFolderAndSelectItems which respects the default file manager
     // (e.g. Directory Opus) instead of hardcoding explorer.exe

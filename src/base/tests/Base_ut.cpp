@@ -724,5 +724,12 @@ void BaseUtilTest() {
     utassert(NormalizeRotation(-360000000) == 0);
     utassert(NormalizeRotation(360000090) == 90);
 
+    // str::Parse must reject whitespace between sign and digits
+    {
+        int v = 0;
+        utassert(str::IsNull(str::Parse(StrL("-   123"), "%d", &v)));
+        utassert(!str::IsNull(str::Parse(StrL("  -123"), "%d", &v)) && v == -123);
+    }
+
     GeomTest();
 }

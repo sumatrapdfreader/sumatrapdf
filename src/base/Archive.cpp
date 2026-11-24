@@ -460,7 +460,7 @@ Archive::FileInfo* Archive::GetFileDataById(int fileId) {
 }
 
 Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
-    if (fileId < 0) {
+    if (fileId < 0 || sizeHint < 0) {
         return {};
     }
     if (ReportIf(fileId >= len(fileInfos_))) {
@@ -545,10 +545,15 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     UnrarData* buf = (UnrarData*)userData;
     if (msg == UCM_PROCESSDATA) {
         int bytesGot = (int)bytesProcessed;
-        if (bytesGot > DataLeft(*buf)) {
+        int left = DataLeft(*buf);
+        if (bytesGot > left) {
+            if (left > 0) {
+                memcpy(buf->curr, (char*)rarBuffer, (size_t)left);
+                buf->curr += left;
+            }
             return -1;
         }
-        memcpy(buf->curr, (char*)rarBuffer, bytesGot);
+        memcpy(buf->curr, (char*)rarBuffer, (size_t)bytesGot);
         buf->curr += bytesGot;
         return 1;
     }

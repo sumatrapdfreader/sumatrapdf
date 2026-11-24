@@ -421,7 +421,7 @@ static void ParsePng(ByteReader r, FileTypeInfo& res) {
         } else if (MemEq(type, "IEND", 4)) {
             break;
         }
-        if (chunkLen > (u32)r.len) {
+        if (idx > r.len - 12 || chunkLen > (u32)(r.len - idx - 12)) {
             break;
         }
         idx += 12 + (int)chunkLen; // length + type + data + crc

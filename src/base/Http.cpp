@@ -105,7 +105,11 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
 
     {
         TempWStr host = str::DupTemp(WStr(uc.lpszHostName, (int)uc.dwHostNameLength));
-        TempWStr pathAndQuery = str::DupTemp(WStr(uc.lpszUrlPath, (int)(uc.dwUrlPathLength + uc.dwExtraInfoLength)));
+        DWORD pathLen = uc.dwUrlPathLength == (DWORD)-1 ? 0 : uc.dwUrlPathLength;
+        DWORD extraLen = uc.dwExtraInfoLength == (DWORD)-1 ? 0 : uc.dwExtraInfoLength;
+        TempWStr pathAndQuery = (uc.lpszUrlPath && pathLen + extraLen > 0)
+                                    ? str::DupTemp(WStr(uc.lpszUrlPath, (int)(pathLen + extraLen)))
+                                    : str::DupTemp(WStrL(L"/"));
 
         hSession = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
                                WINHTTP_NO_PROXY_BYPASS, 0);
@@ -147,8 +151,11 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
         }
 
         DWORD scSize = sizeof(sc);
-        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-                            WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX);
+        if (!WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                 WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX)) {
+            rspOut->error = GetLastError();
+            goto Exit2;
+        }
         rspOut->httpStatusCode = sc;
 
         char buf[8192];
@@ -276,8 +283,11 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
         }
 
         DWORD scSize = sizeof(sc);
-        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-                            WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX);
+        if (!WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                 WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX)) {
+            rspOut->error = GetLastError();
+            goto ExitPost;
+        }
         rspOut->httpStatusCode = sc;
 
         char buf[8192];
@@ -785,7 +795,11 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
     TempWStr wide = ToWStrTemp(url);
     if (!WinHttpCrackUrl(wide.s, 0, 0, &parts) || sink->IsCanceled()) return false;
     TempWStr host = str::DupTemp(WStr(parts.lpszHostName, (int)parts.dwHostNameLength));
-    TempWStr path = str::DupTemp(WStr(parts.lpszUrlPath, (int)(parts.dwUrlPathLength + parts.dwExtraInfoLength)));
+    DWORD pathLen = parts.dwUrlPathLength == (DWORD)-1 ? 0 : parts.dwUrlPathLength;
+    DWORD extraLen = parts.dwExtraInfoLength == (DWORD)-1 ? 0 : parts.dwExtraInfoLength;
+    TempWStr path = (parts.lpszUrlPath && pathLen + extraLen > 0)
+                        ? str::DupTemp(WStr(parts.lpszUrlPath, (int)(pathLen + extraLen)))
+                        : str::DupTemp(WStrL(L"/"));
     HINTERNET session = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
                                     WINHTTP_NO_PROXY_BYPASS, WINHTTP_FLAG_ASYNC);
     if (!session) return false;
