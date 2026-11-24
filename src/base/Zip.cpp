@@ -284,12 +284,15 @@ Str Ungzip(const Str& d, int maxSize) {
     u8* dataCompr = (u8*)d.s;
     // aggressive growth for uncompressed buffer because I use this
     // for .syntex files and they compress really well
+    if (maxSize > INT_MAX - 2) {
+        maxSize = INT_MAX - 2;
+    }
     int lenUncr = (int)std::min((i64)maxSize, (i64)n * 2);
 
     bool done = false;
     int res;
 
-    z_stream strm;
+    z_stream strm{};
     strm.next_in = (Bytef*)dataCompr;
     strm.avail_in = (uInt)n;
     strm.total_out = 0;

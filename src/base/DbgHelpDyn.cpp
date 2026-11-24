@@ -333,7 +333,7 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD disp;
-        if (DynSymGetLineFromAddr64(GetCurrentProcess(), addr, &disp, &line)) {
+        if (DynSymGetLineFromAddr64 && DynSymGetLineFromAddr64(GetCurrentProcess(), addr, &disp, &line)) {
             s.Append(fmt(" %s+%d", Str(line.FileName), line.LineNumber));
         }
     } else {
@@ -342,10 +342,14 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool compact) {
     s.Append(StrL("\n"));
 }
 
-#ifdef _WIN64
+#if IS_INTEL_64 == 1
 constexpr int kMachineType = IMAGE_FILE_MACHINE_AMD64;
-#else
+#elif IS_INTEL_32 == 1
 constexpr int kMachineType = IMAGE_FILE_MACHINE_I386;
+#elif IS_ARM_64 == 1
+constexpr int kMachineType = IMAGE_FILE_MACHINE_ARM64;
+#else
+#error "Unsupported CPU architecture"
 #endif
 
 static STACKFRAME64 InitStackFrame(const CONTEXT& ctx) {
@@ -383,10 +387,10 @@ static bool GetStackFrameInfo(str::Builder& s, STACKFRAME64* stackFrame, CONTEXT
 
     DWORD64 addr = stackFrame->AddrPC.Offset;
     if (0 == addr) {
-        return true;
+        return false;
     }
     if (addr == stackFrame->AddrReturn.Offset) {
-        s.Append(StrL("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset"));
+        s.Append(StrL("GetStackFrameInfo(): addr == stackFrame->AddrReturn.Offset\n"));
         return false;
     }
 

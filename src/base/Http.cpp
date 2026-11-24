@@ -23,7 +23,7 @@ bool IsHttpRspOk(const HttpRsp* rsp) {
         logf("HttpRspOk: rsp->error %d, should be 0\n", (int)rsp->error);
         return false;
     }
-    if (rsp->httpStatusCode >= 300) {
+    if (rsp->httpStatusCode < 200 || rsp->httpStatusCode >= 300) {
         logf("HttpRspOk: rsp->httpStatusCode: %d\n", (int)rsp->httpStatusCode);
         return false;
     }

@@ -282,9 +282,15 @@ static HBITMAP PixmapToHbitmapOnWhite(const Pixmap* p) {
             u32 g = s[1];
             u32 r = rgba ? s[0] : s[2];
             u32 inv = 255 - a;
-            d[0] = (u8)std::min<u32>(255, (((b * a) + 127) / 255) + inv);
-            d[1] = (u8)std::min<u32>(255, (((g * a) + 127) / 255) + inv);
-            d[2] = (u8)std::min<u32>(255, (((r * a) + 127) / 255) + inv);
+            if (p->premultiplied) {
+                d[0] = (u8)std::min<u32>(255, b + inv);
+                d[1] = (u8)std::min<u32>(255, g + inv);
+                d[2] = (u8)std::min<u32>(255, r + inv);
+            } else {
+                d[0] = (u8)std::min<u32>(255, (((b * a) + 127) / 255) + inv);
+                d[1] = (u8)std::min<u32>(255, (((g * a) + 127) / 255) + inv);
+                d[2] = (u8)std::min<u32>(255, (((r * a) + 127) / 255) + inv);
+            }
             d[3] = 255;
         }
     }
@@ -335,7 +341,7 @@ static HGLOBAL PixmapToPngGlobal(const Pixmap* p) {
     if (!bmp) {
         return nullptr;
     }
-    CLSID pngClsid = GetGdiPlusEncoderClsid(L"image/png");
+    CLSID pngClsid = GetGdiPlusEncoderClsid(WStrL(L"image/png"));
     IStream* stream = nullptr;
     HRESULT hr = CreateStreamOnHGlobal(nullptr, FALSE, &stream);
     if (FAILED(hr) || !stream) {

@@ -330,4 +330,14 @@ void JsonTest() {
         utassert(r.Ok());
         utassert(n == 3);
     }
+
+    // \uXXXX must require 4 hex digits (no whitespace or 0x prefix)
+    {
+        bool ok = true;
+        CountValues(StrL("\"\\u  41\""), &ok);
+        utassert(!ok);
+        ok = true;
+        CountValues(StrL("\"\\u0x41\""), &ok);
+        utassert(!ok);
+    }
 }

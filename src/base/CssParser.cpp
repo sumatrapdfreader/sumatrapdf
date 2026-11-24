@@ -105,6 +105,8 @@ bool CssPullParser::NextRule() {
             if (!SkipQuotedString(src, currOff)) {
                 break;
             }
+        } else if (src.s[currOff] == '\\' && currOff + 1 < src.len) {
+            currOff += 2;
         } else if (src.s[currOff] == ';') {
             currOff++;
             SkipWsAndComments(src, currOff);
@@ -127,8 +129,9 @@ const CssSelector* CssPullParser::NextSelector() {
     if (currSelOff < 0) {
         return nullptr;
     }
+    Str selSlice(src.s, selEndOff);
     int selOff = currSelOff;
-    SkipWsAndComments(src, selOff);
+    SkipWsAndComments(selSlice, selOff);
     if (selOff >= selEndOff) {
         return nullptr;
     }
@@ -138,13 +141,13 @@ const CssSelector* CssPullParser::NextSelector() {
     int sEnd = selOff;
     while (selOff < selEndOff && src.s[selOff] != ',') {
         if (src.s[selOff] == '"' || src.s[selOff] == '\'') {
-            bool ok = SkipQuotedString(src, selOff);
+            bool ok = SkipQuotedString(selSlice, selOff);
             ReportIf(!ok);
             sEnd = selOff;
         } else if (src.s[selOff] == '\\' && selOff < selEndOff - 1) {
             selOff += 2;
             sEnd = selOff;
-        } else if (!SkipWsAndComments(src, selOff)) {
+        } else if (!SkipWsAndComments(selSlice, selOff)) {
             sEnd = ++selOff;
         }
     }

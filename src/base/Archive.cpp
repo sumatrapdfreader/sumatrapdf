@@ -67,12 +67,15 @@ static bool NextHeader(struct archive* a, struct archive_entry** entry) {
 
 static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
     int size = fileInfo->fileSizeUncompressed;
-    if (size <= 0) {
+    if (size < 0) {
         return;
     }
     fileInfo->data = AllocArray<char>(size + kZeroPaddingCount);
     if (!fileInfo->data) {
         fileInfo->failed = true; // OOM
+        return;
+    }
+    if (size == 0) {
         return;
     }
     la_ssize_t n = archive_read_data(a, (void*)fileInfo->data, (size_t)size);
@@ -124,7 +127,7 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
             return false;
         }
         // entry sizes are ints: skip one over 2 GB, keep the rest of the archive
-        if (entrySize > INT_MAX) {
+        if (entrySize > INT_MAX - kZeroPaddingCount) {
             logf("Archive::ParseEntries: skipping '%s', %d MB\n", entryName, (int)(entrySize >> 20));
             archive_read_data_skip(a);
             continue;
@@ -672,6 +675,9 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
     if (!hArc || arcData.OpenResult != 0) {
+        if (hArc) {
+            RARCloseArchive(hArc);
+        }
         return false;
     }
 
@@ -697,7 +703,7 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         if (rarHeader.Flags & RHDF_ENCRYPTED) {
             isEncrypted = true;
         }
-        bool tooBig = rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize > (unsigned)INT_MAX;
+        bool tooBig = rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize > (unsigned)(INT_MAX - kZeroPaddingCount);
         if (tooBig) {
             nSkipped++;
             RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
@@ -713,7 +719,7 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
 
         WStr nameW(rarHeader.FileNameW);
         wstr::TransCharsInPlace(nameW, WStrL(L"\\"), WStrL(L"/"));
-        auto name = ToUtf8Temp(rarHeader.FileNameW);
+        auto name = ToUtf8Temp(nameW);
 
         FileInfo* i = AllocArray<FileInfo>(a);
         i->fileId = fileId;
@@ -724,8 +730,7 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         i->isDir = (rarHeader.Flags & RHDF_DIRECTORY) != 0;
         i->data = nullptr;
         if (eagerLoad) {
-            // +2 so that it's zero-terminated even when interprted as WCHAR*
-            i->data = AllocArray<char>(i->fileSizeUncompressed + 2);
+            i->data = AllocArray<char>(i->fileSizeUncompressed + kZeroPaddingCount);
             if (i->data) {
                 uncompressedBuf.d = (u8*)i->data;
                 uncompressedBuf.curr = (u8*)i->data;

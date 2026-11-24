@@ -583,9 +583,7 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
                 } else {
                     s.Append(FormatRationalPair((u32)rat.num, (u32)rat.den, true));
                 }
-                if (i < count - 1) {
-                    s.Append(StrL(", "));
-                } else {
+                if (i == count - 1) {
                     s.Append(StrL("]"));
                 }
             } else if (sr) {
@@ -813,6 +811,9 @@ bool ExtractJpegExif(Str d, Str& out) {
             return false;
         }
         int segLen = r.UInt16BE(idx + 2);
+        if (segLen < 2) {
+            return false;
+        }
         if (marker == 0xE1 && idx + 10 <= r.len && memcmp(r.d + idx + 4, "Exif\0\0", 6) == 0) {
             int payload = idx + 4;
             int total = segLen + 2;

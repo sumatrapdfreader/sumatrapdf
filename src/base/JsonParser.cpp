@@ -123,17 +123,34 @@ static int ExtractString(str::Builder& string, Str data, int off) {
             case 't':
                 string.AppendChar('\t');
                 break;
-            case 'u':
+            case 'u': {
+                auto parseHex4 = [](const char* p, int* out) -> bool {
+                    int val = 0;
+                    for (int j = 0; j < 4; j++) {
+                        u8 c = (u8)p[j];
+                        int d;
+                        if (c >= '0' && c <= '9') {
+                            d = c - '0';
+                        } else if (c >= 'a' && c <= 'f') {
+                            d = c - 'a' + 10;
+                        } else if (c >= 'A' && c <= 'F') {
+                            d = c - 'A' + 10;
+                        } else {
+                            return false;
+                        }
+                        val = (val << 4) | d;
+                    }
+                    *out = val;
+                    return true;
+                };
                 // \u0000 is valid JSON; accept the full BMP range 0..0xFFFF.
-                if (off + 4 < data.len && !str::IsNull(str::Parse(Str(data.s + off + 1, 4), "%4x", &i)) &&
-                    i < 0x10000) {
+                if (off + 4 < data.len && parseHex4(data.s + off + 1, &i)) {
                     off += 4;
                     // a high surrogate followed by \uDC00..\uDFFF is one code point
                     int lo;
                     bool isHigh = i >= 0xD800 && i <= 0xDBFF;
                     if (isHigh && off + 6 < data.len && data.s[off + 1] == '\\' && data.s[off + 2] == 'u' &&
-                        !str::IsNull(str::Parse(Str(data.s + off + 3, 4), "%4x", &lo)) && lo >= 0xDC00 &&
-                        lo <= 0xDFFF) {
+                        parseHex4(data.s + off + 3, &lo) && lo >= 0xDC00 && lo <= 0xDFFF) {
                         i = 0x10000 + ((i - 0xD800) << 10) + (lo - 0xDC00);
                         off += 6;
                     }
@@ -143,6 +160,7 @@ static int ExtractString(str::Builder& string, Str data, int off) {
                     string.Append(Str(buf, n));
                     break;
                 }
+            }
                 return kParseFail;
             default:
                 return kParseFail;

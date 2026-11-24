@@ -94,12 +94,6 @@ struct WatchedFile {
     u64 id = 0;
 };
 
-void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
-    if (wf) {
-        wf->ignore = ignore;
-    }
-}
-
 static ThreadHandle gThreadHandle = nullptr;
 
 static HANDLE gThreadControlHandle = nullptr;
@@ -108,6 +102,14 @@ static AtomicBool gShouldExit = 0;
 // protects data structures shared between ui thread and file
 // watcher thread i.e. gWatchedDirs, gWatchedFiles
 static Mutex gFileWatcherMutex;
+
+void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
+    if (!wf) {
+        return;
+    }
+    AutoUnlockMutex cs(&gFileWatcherMutex);
+    wf->ignore = ignore;
+}
 
 static WatchedDir* gWatchedDirs = nullptr;
 static WatchedFile* gWatchedFiles = nullptr;
@@ -126,7 +128,7 @@ static void AwakeWatcherThread() {
     SetEvent(gThreadControlHandle);
 }
 
-static void GetFileState(Str path, FileWatcherState* fs) {
+static bool GetFileState(Str path, FileWatcherState* fs) {
     // Note: in my testing on network drive that is mac volume mounted
     // via parallels, lastWriteTime is not updated. lastAccessTime is,
     // but it's also updated when the file is being read from (e.g.
@@ -140,16 +142,20 @@ static void GetFileState(Str path, FileWatcherState* fs) {
     // without opening the file content, avoiding the scan.
     WCHAR* pathW = CWStrTemp(path);
     WIN32_FILE_ATTRIBUTE_DATA attrs{};
-    if (GetFileAttributesExW(pathW, GetFileExInfoStandard, &attrs)) {
-        fs->time = attrs.ftLastWriteTime;
-        fs->size = (i64)attrs.nFileSizeHigh << 32 | attrs.nFileSizeLow;
+    if (!GetFileAttributesExW(pathW, GetFileExInfoStandard, &attrs)) {
+        return false;
     }
+    fs->time = attrs.ftLastWriteTime;
+    fs->size = (i64)attrs.nFileSizeHigh << 32 | attrs.nFileSizeLow;
+    return true;
 }
 
 // updates fs and returns true when the file's write time or size changed
 static bool FileStateChanged(Str filePath, FileWatcherState* fs) {
     FileWatcherState curr{};
-    GetFileState(filePath, &curr);
+    if (!GetFileState(filePath, &curr)) {
+        return false;
+    }
     if (0 == CompareFileTime(&fs->time, &curr.time) && fs->size == curr.size) {
         return false;
     }
@@ -374,7 +380,7 @@ static void RunManualChecks() {
     {
         AutoUnlockMutex cs(&gFileWatcherMutex);
         for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
-            if (!wf->isManualCheck) {
+            if (!wf->isManualCheck || wf->ignore) {
                 continue;
             }
             ManualCheckItem it;
@@ -407,7 +413,9 @@ static void RunManualChecks() {
                 continue;
             }
             it.wf->fileState = it.state;
-            VecAppend(toNotify, it.wf->onFileChangedCb);
+            if (!it.wf->ignore) {
+                VecAppend(toNotify, it.wf->onFileChangedCb);
+            }
         }
     }
 

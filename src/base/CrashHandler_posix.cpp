@@ -152,6 +152,9 @@ static void FreeReportSlot() {
 
 // index just past the '\n' at or after i, so a cut never splits a UTF-8 sequence
 static int NextLineStart(Str s, int i) {
+    if (i <= 0) {
+        return 0;
+    }
     while (i < len(s) && s.s[i - 1] != '\n') {
         i++;
     }
@@ -166,13 +169,19 @@ static Str TruncateForUpload(Arena* a, Str report) {
     if (len(report) <= kMaxUploadBytes) {
         return report;
     }
+    int cutMarkerLen = (int)sizeof(kCutMarker) - 1;
     int headEnd = NextLineStart(report, kUploadHeadBytes);
-    int tailLen = kMaxUploadBytes - headEnd - (int)sizeof(kCutMarker) + 1;
-    int tailStart = NextLineStart(report, len(report) - tailLen);
+    if (headEnd > kMaxUploadBytes - cutMarkerLen) {
+        headEnd = kMaxUploadBytes - cutMarkerLen;
+    }
+    int tailLen = kMaxUploadBytes - headEnd - cutMarkerLen;
+    int tailStart = tailLen > 0 ? NextLineStart(report, len(report) - tailLen) : len(report);
     str::Builder b(a);
     b.Append(Str(report.s, headEnd));
     b.Append(StrL(kCutMarker));
-    b.Append(Str(report.s + tailStart, len(report) - tailStart));
+    if (tailStart < len(report)) {
+        b.Append(Str(report.s + tailStart, len(report) - tailStart));
+    }
     return ToStr(b);
 }
 

@@ -301,7 +301,7 @@ static bool MatchWildcardsRec(Str fileName, Str filter) {
             return len(fileName) > 0 &&
                    MatchWildcardsRec(Str(fileName.s + 1, fileName.len - 1), Str(filter.s + 1, filter.len - 1));
         default:
-            return tolower((u8)fileName.s[0]) == tolower((u8)filter.s[0]) &&
+            return len(fileName) > 0 && tolower((u8)fileName.s[0]) == tolower((u8)filter.s[0]) &&
                    MatchWildcardsRec(Str(fileName.s + 1, fileName.len - 1), Str(filter.s + 1, filter.len - 1));
     }
 }
@@ -341,7 +341,7 @@ bool IsWslMount(Str path) {
         return false;
     }
     char drive = (char)tolower((unsigned char)path.s[5]);
-    return drive >= 'a' && drive <= 'z' && (IsSep(path.s[6]) || path.s[6] == '\0');
+    return drive >= 'a' && drive <= 'z' && (path.len == 6 || IsSep(path.s[6]));
 }
 
 TempStr WslUncToUnixTemp(Str path) {
@@ -896,8 +896,9 @@ bool IsSame(Str path1, Str path2) {
     WCHAR* path2W = CWStrTemp(path2);
     bool isSame = false;
     bool needFallback = true;
-    HANDLE h1 = CreateFileW(path1W, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-    HANDLE h2 = CreateFileW(path2W, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+    HANDLE h1 = CreateFileW(path1W, 0, share, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    HANDLE h2 = CreateFileW(path2W, 0, share, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 
     if (h1 != INVALID_HANDLE_VALUE && h2 != INVALID_HANDLE_VALUE) {
         BY_HANDLE_FILE_INFORMATION fi1, fi2;
@@ -907,8 +908,12 @@ bool IsSame(Str path1, Str path2) {
         }
     }
 
-    CloseHandle(h1);
-    CloseHandle(h2);
+    if (h1 != INVALID_HANDLE_VALUE) {
+        CloseHandle(h1);
+    }
+    if (h2 != INVALID_HANDLE_VALUE) {
+        CloseHandle(h2);
+    }
 
     if (!needFallback) {
         return isSame;
@@ -920,6 +925,9 @@ bool IsSame(Str path1, Str path2) {
 }
 
 bool HasVariableDriveLetter(Str path) {
+    if (len(path) < 2 || path.s[1] != ':') {
+        return false;
+    }
     char root[] = R"(?:\)";
     root[0] = (char)toupper((u8)path.s[0]);
     if (root[0] < 'A' || 'Z' < root[0]) {
@@ -1665,8 +1673,8 @@ bool SetAttributes(Str path, DWORD attrs) {
 }
 
 bool SetModificationTime(Str path, FILETIME lastMod) {
-    AutoCloseHandle h(
-        CreateFileW(CWStrTemp(path), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr));
+    AutoCloseHandle h(CreateFileW(CWStrTemp(path), FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                  OPEN_EXISTING, 0, nullptr));
     if (!h.IsValid()) {
         return false;
     }
@@ -1827,7 +1835,7 @@ bool Create(Str dir) {
     if (ok) {
         return true;
     }
-    return ERROR_ALREADY_EXISTS == GetLastError();
+    return ERROR_ALREADY_EXISTS == GetLastError() && Exists(dir);
 }
 
 // Create dir and all missing parents (like mkdir -p). Uses SHCreateDirectoryExW

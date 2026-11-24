@@ -213,10 +213,10 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
     for (u32 i = 0; i < filesCount; i++) {
         fi = &archiveOut->files[i];
         // overflow check
-        int compressedSize = (int)fi->compressedSize;
-        if (compressedSize > dataLen || br.Offset() + compressedSize > dataLen) {
+        if (fi->compressedSize > (u32)(dataLen - br.Offset())) {
             return false;
         }
+        int compressedSize = (int)fi->compressedSize;
         fi->compressedData = archiveHeader + br.Offset();
         br.Skip(compressedSize);
     }

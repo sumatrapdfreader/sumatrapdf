@@ -356,7 +356,7 @@ bool HttpDownloadWithHeaders(Str url, Str extraHeaders, Str destPath, HttpRsp* r
     NoteStatus(curl, rspOut);
     DWORD sc = rspOut->httpStatusCode;
     bool ok = code == CURLE_OK && sc == kHttpOk200;
-    if (code != CURLE_OK && sc == kHttpNoStatus) {
+    if (code != CURLE_OK) {
         rspOut->error = (DWORD)code;
     }
     if (pf.tooBig || code == CURLE_FILESIZE_EXCEEDED) {

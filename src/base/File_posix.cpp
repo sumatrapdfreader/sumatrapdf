@@ -363,6 +363,9 @@ bool WriteAll(FileHandle h, Str data) {
             }
             return false;
         }
+        if (n == 0) {
+            return false;
+        }
         d += n;
         left -= (size_t)n;
     }

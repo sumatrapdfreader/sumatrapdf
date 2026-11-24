@@ -77,6 +77,18 @@ void FileUtilTest() {
     utassert(path::Match(StrL("C:\\file.pdf"), StrL("f??e.p?f")));
     utassert(!path::Match(StrL("C:\\file.pdf"), StrL("*.xps;*.djvu")));
     utassert(!path::Match(StrL("C:\\dir.xps\\file.pdf"), StrL("*.xps;*.djvu")));
+    // non-NUL-terminated slice shorter than filter must not over-read
+    {
+        const char* raw = "file.pdf";
+        utassert(!path::Match(Str(raw, 4), StrL("file.pdf")));
+    }
+    // 6-byte non-NUL-terminated slice for /mnt/c
+    {
+        const char* raw = "/mnt/cx";
+        utassert(path::IsWslMount(Str(raw, 6)));
+    }
+    utassert(!path::HasVariableDriveLetter(Str{}));
+    utassert(!path::HasVariableDriveLetter(StrL("e.pdf")));
 
     utassert(path::IsEphemeralHostFile(StrL("C:\\Users\\x\\AppData\\Local\\Microsoft\\OneNote\\16.0\\cache\\a.pdf")));
     utassert(path::IsEphemeralHostFile(StrL("C:\\Users\\x\\AppData\\Local\\Temp\\OneNote\\tmp\\a.pdf")));

@@ -605,8 +605,11 @@ template <typename T>
 inline bool addOverflows(T val, T n) {
     ReportIf(n < 0);
     ReportIf(val < 0);
-    T res = val + n;
-    return val > res;
+    if (n < 0 || val < 0) {
+        return true;
+    }
+    constexpr T maxVal = (T(-1) > T(0)) ? T(-1) : T((u64(1) << (sizeof(T) * 8 - 1)) - 1);
+    return n > maxVal - val;
 }
 
 bool MemEq(const void* s1, const void* s2, int n);
@@ -914,9 +917,13 @@ struct Func1List : Func1<T> {
     }
 
     void Register(Func1List<T>** head) {
-        ReportIf(!head);
+        if (ReportIf(!head)) {
+            return;
+        }
         for (Func1List<T>* p = *head; p; p = p->next) {
-            ReportIf(p == this);
+            if (ReportIf(p == this)) {
+                return;
+            }
         }
         ListInsertFront(head, this);
     }
@@ -1220,7 +1227,7 @@ struct Mutex : NonCopyable {
     pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
     Mutex() = default;
-    ~Mutex() = default;
+    ~Mutex() { pthread_mutex_destroy(&lock); }
 
     LOCK_OWNER_FIELD
 
@@ -1434,7 +1441,6 @@ struct Arena {
     u64 peakBytesSinceReset; // largest total size reached since the last Reset()
 
     void* Alloc(int size);
-    void Free(void* ptr);
     void Reset();
     void* Push(u64 size, u64 align = 8, bool zero = true);
     u64 Pos();
@@ -2663,7 +2669,7 @@ Str ToUtf8(WStr s, Arena* a = nullptr);
 WStr ToWStr(Str s, Arena* a = nullptr);
 
 template <typename T>
-class AutoFree {
+class AutoFree : NonCopyable {
   public:
     T* ptr = nullptr;
 
@@ -2671,6 +2677,9 @@ class AutoFree {
     explicit AutoFree(T* ptr) : ptr(ptr) {}
     ~AutoFree() { free(ptr); }
     void Set(T* newPtr) {
+        if (ptr == newPtr) {
+            return;
+        }
         free(ptr);
         ptr = newPtr;
     }

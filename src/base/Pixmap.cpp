@@ -283,6 +283,7 @@ static Pixmap* CopyHeapPixmapAsBgraDib(const Pixmap* px) {
     }
     dib->xres = px->xres;
     dib->yres = px->yres;
+    dib->hasAlpha = px->hasAlpha;
     return dib;
 }
 
@@ -812,13 +813,17 @@ static void RecolorHbitmap(HBITMAP hbmp, Color textColor, Color bgColor, Color l
         ReportIf(info.dsBmih.biBitCount != 8);
         RGBQUAD palette[256];
         HDC hDC = CreateCompatibleDC(nullptr);
-        DeleteObject(SelectObject(hDC, hbmp));
+        if (!hDC) {
+            return;
+        }
+        HGDIOBJ oldBmp = SelectObject(hDC, hbmp);
         uint num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
         // RGBQUAD is B,G,R,reserved: the same layout a 32-bit pixel has
         RecolorPixels((u8*)palette, (int)num, 1, sizeof(palette), 4, textColor, bgColor, linkColor, nullptr);
         if (num > 0) {
             SetDIBColorTable(hDC, 0, num, palette);
         }
+        SelectObject(hDC, oldBmp);
         DeleteDC(hDC);
         return;
     }
@@ -826,15 +831,22 @@ static void RecolorHbitmap(HBITMAP hbmp, Color textColor, Color bgColor, Color l
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = w;
-    bmi.bmiHeader.biHeight = h;
+    bmi.bmiHeader.biHeight = -h;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
     HDC hDC = CreateCompatibleDC(nullptr);
+    if (!hDC) {
+        return;
+    }
     size_t stride = (size_t)w * 4;
     AutoFree<u8> bmpData((u8*)malloc(stride * h));
-    ReportIf(!bmpData);
+    if (!bmpData) {
+        ReportIf(true);
+        DeleteDC(hDC);
+        return;
+    }
     if (GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS)) {
         RecolorPixels(bmpData, w, h, stride, 4, textColor, bgColor, linkColor, skipRects);
         SetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS);
@@ -848,7 +860,7 @@ void RecolorPixmap(Pixmap* px, Color textColor, Color bgColor, Color linkColor, 
     if (!px) {
         return;
     }
-    if ((textColor & 0xffffff) == kColBlack && (bgColor & 0xffffff) == kColWhite && !linkColor && !skipRects) {
+    if ((textColor & 0xffffff) == kColBlack && (bgColor & 0xffffff) == kColWhite && !linkColor) {
         return;
     }
 #if OS_WIN

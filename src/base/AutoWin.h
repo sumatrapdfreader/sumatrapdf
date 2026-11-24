@@ -20,8 +20,12 @@ class AutoCloseHandle {
     }
 
     AutoCloseHandle& operator=(HANDLE h) {
-        ReportIf(handle != nullptr);
-        ReportIf(h == nullptr);
+        if (handle == h) {
+            return *this;
+        }
+        if (IsValid()) {
+            CloseHandle(handle);
+        }
         handle = h;
         return *this;
     }
@@ -62,6 +66,9 @@ class AutoReleaseComPtr {
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
     AutoReleaseComPtr<T>& operator=(T* newPtr) {
+        if (ptr == newPtr) {
+            return *this;
+        }
         if (ptr) {
             ptr->Release();
         }
@@ -79,9 +86,11 @@ class AutoReleaseComQIPtr {
     AutoReleaseComQIPtr() = default;
 
     explicit AutoReleaseComQIPtr(IUnknown* unk) {
-        HRESULT hr = unk->QueryInterface(&ptr);
-        if (FAILED(hr)) {
-            ptr = nullptr;
+        if (unk) {
+            HRESULT hr = unk->QueryInterface(&ptr);
+            if (FAILED(hr)) {
+                ptr = nullptr;
+            }
         }
     }
     ~AutoReleaseComQIPtr() {
@@ -96,13 +105,14 @@ class AutoReleaseComQIPtr {
         return SUCCEEDED(hr);
     }
     AutoReleaseComQIPtr<T>& operator=(IUnknown* newUnk) {
+        T* next = nullptr;
+        if (newUnk && FAILED(newUnk->QueryInterface(&next))) {
+            next = nullptr;
+        }
         if (ptr) {
             ptr->Release();
         }
-        HRESULT hr = newUnk->QueryInterface(&ptr);
-        if (FAILED(hr)) {
-            ptr = nullptr;
-        }
+        ptr = next;
         return *this;
     }
     operator T*() const { // NOLINT
@@ -111,6 +121,9 @@ class AutoReleaseComQIPtr {
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
     AutoReleaseComQIPtr<T>& operator=(T* newPtr) {
+        if (ptr == newPtr) {
+            return *this;
+        }
         if (ptr) {
             ptr->Release();
         }
@@ -253,10 +266,11 @@ class AutoOleUninitialize {
 class AutoGdiPlusShutdown {
   protected:
     Gdiplus::GdiplusStartupInput si;
-    Gdiplus::GdiplusStartupOutput so;
+    Gdiplus::GdiplusStartupOutput so{};
     ULONG_PTR token = 0;
     ULONG_PTR hookToken = 0;
     bool noBgThread = false;
+    bool started = false;
 
   public:
     // suppress the GDI+ background thread when initiating in WinMain,
@@ -264,13 +278,18 @@ class AutoGdiPlusShutdown {
     // thus causes unexpected timeouts
     explicit AutoGdiPlusShutdown(bool inWinMain = false) : noBgThread(inWinMain) {
         si.SuppressBackgroundThread = noBgThread;
-        Gdiplus::GdiplusStartup(&token, &si, &so);
-        if (noBgThread) {
-            so.NotificationHook(&hookToken);
+        if (Gdiplus::GdiplusStartup(&token, &si, &so) == Gdiplus::Ok) {
+            started = true;
+            if (noBgThread && so.NotificationHook) {
+                so.NotificationHook(&hookToken);
+            }
         }
     }
     ~AutoGdiPlusShutdown() {
-        if (noBgThread) {
+        if (!started) {
+            return;
+        }
+        if (noBgThread && so.NotificationUnhook) {
             so.NotificationUnhook(hookToken);
         }
         Gdiplus::GdiplusShutdown(token);

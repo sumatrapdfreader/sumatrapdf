@@ -197,6 +197,26 @@ static void Test09() {
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, StrL("red")));
 }
 
+static void Test10() {
+    utassert(!IsTagSelfClosing(kTagAny));
+    utassert(!IsInlineTag(kTagAny));
+
+    // unclosed quote after escaped quote must not produce a corrupted selector
+    {
+        Str css = StrL("a\\\"foo\" { color: red; }");
+        CssPullParser parser{css};
+        utassert(!parser.NextRule());
+    }
+    // valid selector with escaped quote
+    {
+        Str css = StrL("a\\\"foo { color: red; }");
+        CssPullParser parser{css};
+        utassert(parser.NextRule());
+        const CssSelector* sel = parser.NextSelector();
+        utassert(sel && !str::ContainsChar(sel->s, '{'));
+    }
+}
+
 void CssParser_UnitTests() {
     Test01();
     Test02();
@@ -207,4 +227,5 @@ void CssParser_UnitTests() {
     Test07();
     Test08();
     Test09();
+    Test10();
 }

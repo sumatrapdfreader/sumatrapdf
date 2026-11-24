@@ -1160,12 +1160,12 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, Rect rect) : hTarget(hwnd), hdcCanvas(::Ge
         XFORM ctm = {1.0, 0, 0, 1.0, (float)-rect.x, (float)-rect.y};
         SetWorldTransform(hdcBuffer, &ctm);
     }
-    DeleteObject(SelectObject(hdcBuffer, doubleBuffer));
+    SelectObject(hdcBuffer, doubleBuffer);
 }
 
 DoubleBuffer::~DoubleBuffer() {
-    DeleteObject(doubleBuffer);
     DeleteDC(hdcBuffer);
+    DeleteObject(doubleBuffer);
     ReleaseDC(hTarget, hdcCanvas);
 }
 
@@ -1428,7 +1428,7 @@ void MenuSetText(HMENU m, int id, WStr s) {
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
-    mii.dwTypeData = s.s;
+    mii.dwTypeData = CWStrTemp(s);
     mii.cch = (uint)s.len;
     if (MenuSetTextRec(m, id, &mii)) {
         return;
@@ -2517,10 +2517,9 @@ void LogConsole(Str s) {
     if (StdoutRedirected()) {
         if (gOriginalStdout != INVALID_HANDLE_VALUE) {
             DWORD written;
-            BOOL ok = WriteFile(gOriginalStdout, s.s, s.len, &written, nullptr);
-            if (!ok) {
-                logf("error: %s\n", GetLastErrorAsStr(GetTempArena()));
-            }
+            // Don't call logf() on failure: LogConsole() is invoked from log()
+            // and would recurse infinitely on a broken stdout pipe.
+            WriteFile(gOriginalStdout, s.s, s.len, &written, nullptr);
         }
         return;
     }
@@ -2572,14 +2571,22 @@ TempStr ReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
 TryAgainWOW64:
     LONG res = RegOpenKeyEx(keySub, keyNameW, 0, access, &hKey);
     if (ERROR_SUCCESS == res) {
-        DWORD valLen;
-        res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, nullptr, &valLen);
-        if (ERROR_SUCCESS == res) {
-            val = WStr(AllocArray<WCHAR>((int)(valLen / sizeof(WCHAR)) + 1));
-            res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val.s, &valLen);
-            if (ERROR_SUCCESS != res) {
-                wstr::FreePtr(&val);
+        DWORD valLen = 0;
+        DWORD valType = 0;
+        res = RegQueryValueEx(hKey, valNameW, nullptr, &valType, nullptr, &valLen);
+        if (ERROR_SUCCESS == res && (valType == REG_SZ || valType == REG_EXPAND_SZ)) {
+            int cch = (int)(valLen / sizeof(WCHAR));
+            WCHAR* buf = AllocArrayTemp<WCHAR>(cch + 1);
+            res = RegQueryValueEx(hKey, valNameW, nullptr, &valType, (LPBYTE)buf, &valLen);
+            if (ERROR_SUCCESS == res) {
+                int gotCch = (int)(valLen / sizeof(WCHAR));
+                while (gotCch > 0 && buf[gotCch - 1] == 0) {
+                    gotCch--;
+                }
+                val = WStr(buf, gotCch);
             }
+        } else if (ERROR_SUCCESS == res) {
+            res = ERROR_INVALID_DATATYPE;
         }
         RegCloseKey(hKey);
     }
@@ -2593,9 +2600,7 @@ TryAgainWOW64:
 #endif
         goto TryAgainWOW64;
     }
-    TempStr resv = ToUtf8Temp(val.s);
-    wstr::Free(val);
-    return resv;
+    return ToUtf8Temp(val);
 }
 
 TempStr LoggedReadRegStrTemp(HKEY keySub, Str keyName, Str valName) {
@@ -2879,11 +2884,11 @@ bool DDEExecute(WStr server, WStr topic, WStr command) {
         return false;
     }
 
-    hszServer = DdeCreateStringHandleW(inst, server.s, CP_WINNEUTRAL);
+    hszServer = DdeCreateStringHandleW(inst, CWStrTemp(server), CP_WINNEUTRAL);
     if (!hszServer) {
         goto Exit;
     }
-    hszTopic = DdeCreateStringHandleW(inst, topic.s, CP_WINNEUTRAL);
+    hszTopic = DdeCreateStringHandleW(inst, CWStrTemp(topic), CP_WINNEUTRAL);
     if (!hszTopic) {
         goto Exit;
     }
@@ -2893,8 +2898,8 @@ bool DDEExecute(WStr server, WStr topic, WStr command) {
     }
 
     cbLen = ((DWORD)command.len + 1) * sizeof(WCHAR);
-    answer =
-        DdeClientTransaction((BYTE*)command.s, cbLen, hconv, nullptr, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
+    answer = DdeClientTransaction((BYTE*)CWStrTemp(command), cbLen, hconv, nullptr, CF_UNICODETEXT, XTYP_EXECUTE, 10000,
+                                  nullptr);
     if (answer) {
         DdeFreeDataHandle(answer);
         ok = true;
@@ -3065,9 +3070,11 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags) {
         return nullptr;
     }
     void* d = GlobalLock(h);
-    if (d) {
-        memcpy(d, src, n);
+    if (!d) {
+        GlobalFree(h);
+        return nullptr;
     }
+    memcpy(d, src, n);
     GlobalUnlock(h);
     return h;
 }
@@ -3115,7 +3122,7 @@ TempStr NormalizeString(Str strA, int /* NORM_FORM */ form) {
     if (sizeEst <= 0) {
         return {};
     }
-    return ToUtf8Temp(WStr(res));
+    return ToUtf8Temp(WStr(res, sizeEst));
 }
 
 // Get the name of default printer or nullptr if not exists.

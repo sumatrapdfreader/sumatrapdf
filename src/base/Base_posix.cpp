@@ -90,7 +90,7 @@ bool GetPhysMemoryInfo(u64* availPhysOut, int* loadPercentOut, u64* totalPhysOut
         return false;
     }
     *availPhysOut = (u64)avail * (u64)pageSize;
-    *loadPercentOut = (int)(100 - (avail * 100 / total));
+    *loadPercentOut = (int)(100 - ((u64)avail * 100 / (u64)total));
     if (totalPhysOut) {
         *totalPhysOut = (u64)total * (u64)pageSize;
     }

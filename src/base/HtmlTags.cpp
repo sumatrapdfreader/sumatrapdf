@@ -54,7 +54,7 @@ static const u8 gTagFlags[Tag_NotFound] = {2, 2, 2, 1, 2, 2, 1, 1, 0, 0, 1, 0, 2
 // clang-format on
 
 bool IsTagSelfClosing(HtmlTag tag) {
-    return tag < Tag_NotFound && (gTagFlags[tag] & kSelfClosing) != 0;
+    return tag >= 0 && tag < Tag_NotFound && (gTagFlags[tag] & kSelfClosing) != 0;
 }
 
 bool IsHeadingTag(HtmlTag tag) {
@@ -62,7 +62,7 @@ bool IsHeadingTag(HtmlTag tag) {
 }
 
 bool IsInlineTag(HtmlTag tag) {
-    return tag < Tag_NotFound && (gTagFlags[tag] & kInline) != 0;
+    return tag >= 0 && tag < Tag_NotFound && (gTagFlags[tag] & kInline) != 0;
 }
 
 // entity names to their Unicode runes, sorted for binary search (str::Cmp order), cf.

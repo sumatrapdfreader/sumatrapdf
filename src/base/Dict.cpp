@@ -156,8 +156,9 @@ bool StrToInt::Insert(Str key, int val, int* existingValOut) {
         return false;
     }
     u32 hash = MurmurHash2(key);
+    int i = -1;
     if (nSlots > 0) {
-        int i = Find(key, hash);
+        i = Find(key, hash);
         if (slots[i].keyOff != 0) {
             if (existingValOut) {
                 *existingValOut = slots[i].val;
@@ -170,12 +171,12 @@ bool StrToInt::Insert(Str key, int val, int* existingValOut) {
         if (!Grow()) {
             return false;
         }
+        i = Find(key, hash);
     }
     u32 off = AppendKey(key);
     if (off == 0) {
         return false;
     }
-    int i = Find(key, hash);
     slots[i] = MapSlot{hash, off, val};
     nUsed++;
     return true;

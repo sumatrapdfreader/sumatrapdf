@@ -386,12 +386,11 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
                     Str token;
                     if (!str::IsNull(value)) {
                         off = SkipWhitespaceOff(value, off);
-                        token = off < value.len ? Str(value.s + off, value.len - off) : Str{};
+                        int end = SkipNonWhitespaceOff(value, off);
+                        token = off < end ? Str(value.s + off, end - off) : Str{};
+                        off = end;
                     }
                     deserializeField(GetSubstruct(field)->fields[i], fieldPtr, token);
-                    if (!str::IsNull(value)) {
-                        off = SkipNonWhitespaceOff(value, off);
-                    }
                 }
             }
             break;
@@ -419,7 +418,9 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             v = new Vec<Str>();
             *(Vec<Str>**)fieldPtr = v;
             if (!str::IsNull(value)) {
-                DeserializeUtf8StringArray(v, UnescapeStr(value));
+                Str unescaped = UnescapeStr(value);
+                DeserializeUtf8StringArray(v, unescaped);
+                str::Free(unescaped);
             } else if (field.value) {
                 DeserializeUtf8StringArray(v, FieldDefaultStr(field));
             }
@@ -648,6 +649,7 @@ static void FreeStructData(const StructInfo* info, u8* base) {
             case SettingType::Comment:
                 // nothing to free
                 break;
+            case SettingType::Compact:
             case SettingType::Struct: {
                 const StructInfo* substruct = GetSubstruct(field);
                 FreeStructData(substruct, fieldPtr);

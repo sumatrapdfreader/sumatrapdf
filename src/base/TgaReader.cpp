@@ -310,6 +310,7 @@ Pixmap* PixmapFromData(Str d) {
     if (!pixmap) {
         return nullptr;
     }
+    pixmap->hasAlpha = (bits == 32 || (bits == 16 && alphaBits > 0)) && alphaType != Alpha_Ignore;
     for (int y = 0; y < h; y++) {
         u8* rowOut = pixmap->data + ((size_t)pixmap->stride * (invertY ? y : h - 1 - y));
         for (int x = 0; x < w; x++) {
@@ -395,7 +396,7 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
     tgaData.Append(Str((char*)&footerLE, sizeofi(footerLE)));
 
     // don't compress the image data if that increases the file size
-    if ((size_t)len(tgaData) > sizeof(headerLE) + (size_t)(w * h * 3) + sizeof(footerLE)) {
+    if ((size_t)len(tgaData) > sizeof(headerLE) + ((size_t)w * (size_t)h * 3) + sizeof(footerLE)) {
         tgaData.RemoveAt(0, len(tgaData));
         headerLE.imageType = Type_Truecolor;
         tgaData.Append(Str((char*)&headerLE, sizeofi(headerLE)));
@@ -413,9 +414,3 @@ Str PixmapToTgaFormat(Pixmap* pixmap) {
     return tgaData.TakeStr();
 }
 } // namespace tga
-
-#if OS_WIN
-
-namespace tga {} // namespace tga
-
-#endif

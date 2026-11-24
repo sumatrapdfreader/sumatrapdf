@@ -62,8 +62,11 @@ bool CouldBeArg(Str s) {
 StrNode* ParseCmdLine(WStr cmdLine) {
     StrNode* root = nullptr;
     StrNode* tail = nullptr;
-    int nArgs;
+    int nArgs = 0;
     WCHAR** argsArr = CommandLineToArgvW(CWStrTemp(cmdLine), &nArgs);
+    if (!argsArr) {
+        return nullptr;
+    }
     for (int i = 0; i < nArgs; i++) {
         TempStr arg = ToUtf8Temp(argsArr[i]);
         if (len(arg) == 0) {

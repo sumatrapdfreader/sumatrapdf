@@ -97,8 +97,15 @@ static void exifIfdCycleTest() {
     utassert(v == 100);
 }
 
+static void exifCorruptJpegSegLenTest() {
+    u8 d[] = {0xFF, 0xD8, 0xFF, 0xE1, 0x00, 0x01, 'E', 'x', 'i', 'f', 0x00, 0x00};
+    ExifParser parser;
+    utassert(!parser.Parse(Str((char*)d, dimofi(d))));
+}
+
 void ExifTest() {
     exifValidTiffTest();
     exifHugeIfdOffsetTest();
     exifIfdCycleTest();
+    exifCorruptJpegSegLenTest();
 }

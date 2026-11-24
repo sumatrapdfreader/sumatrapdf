@@ -82,7 +82,7 @@ ByteReader::ByteReader(const u8* data, int n) : d(data), len(n) {}
 // true if n bytes at off are inside the buffer. Compares against len - n
 // rather than off + n, which overflows for an off near INT_MAX
 bool ByteReader::CanRead(int off, int n) const {
-    return off >= 0 && n <= len && off <= len - n;
+    return off >= 0 && n >= 0 && n <= len && off <= len - n;
 }
 
 u8 ByteReader::UInt8(int off) const {
@@ -112,14 +112,14 @@ u16 ByteReader::UInt16(int off, bool isBE) const {
 
 u32 ByteReader::UInt32LE(int off) const {
     if (CanRead(off, 4)) {
-        return d[off] | (d[off + 1] << 8) | (d[off + 2] << 16) | (d[off + 3] << 24);
+        return (u32)d[off] | ((u32)d[off + 1] << 8) | ((u32)d[off + 2] << 16) | ((u32)d[off + 3] << 24);
     }
     return 0;
 }
 
 u32 ByteReader::UInt32BE(int off) const {
     if (CanRead(off, 4)) {
-        return (d[off] << 24) | (d[off + 1] << 16) | (d[off + 2] << 8) | d[off + 3];
+        return ((u32)d[off] << 24) | ((u32)d[off + 1] << 16) | ((u32)d[off + 2] << 8) | (u32)d[off + 3];
     }
     return 0;
 }
@@ -183,7 +183,9 @@ void ByteReader::Bytes(void* dst, int n) {
         ok = false;
         return;
     }
-    memcpy(dst, d + off, (size_t)n);
+    if (n > 0) {
+        memcpy(dst, d + off, (size_t)n);
+    }
     off += n;
 }
 
@@ -212,7 +214,7 @@ bool ByteReader::IsOk() const {
 }
 
 const u8* ByteReader::Find(int off, u8 byte) const {
-    if (off >= len) {
+    if (off < 0 || off >= len) {
         return nullptr;
     }
     return (const u8*)memchr(d + off, byte, (size_t)(len - off));
@@ -227,11 +229,11 @@ u16 UInt16LE(const u8* d) {
 }
 
 u32 UInt32BE(const u8* d) {
-    return d[3] | (d[2] << 8) | (d[1] << 16) | (d[0] << 24);
+    return (u32)d[3] | ((u32)d[2] << 8) | ((u32)d[1] << 16) | ((u32)d[0] << 24);
 }
 
 u32 UInt32LE(const u8* d) {
-    return d[0] | (d[1] << 8) | (d[2] << 16) | (d[3] << 24);
+    return (u32)d[0] | ((u32)d[1] << 8) | ((u32)d[2] << 16) | ((u32)d[3] << 24);
 }
 
 // --- ByteWriter

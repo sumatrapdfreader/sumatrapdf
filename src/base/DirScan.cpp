@@ -18,12 +18,14 @@ DirIter::DirIter(Str dir) : dir(dir) {}
 
 DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
     this->di = di;
-    this->dirsToVisit.Append(di->dir);
     this->didFinish = didFinish;
 #if OS_WIN
     this->data.fd = &this->fd;
 #endif
-    AdvanceDirIter(this, 1);
+    if (!didFinish) {
+        this->dirsToVisit.Append(di->dir);
+        AdvanceDirIter(this, 1);
+    }
 }
 
 DirIter::iterator::iterator(const iterator& that) {

@@ -52,7 +52,10 @@ void* AllocZero(int count, int size) {
 }
 
 bool MemEq(const void* s1, const void* s2, int n) {
-    return 0 == memcmp(s1, s2, n);
+    if (n <= 0) {
+        return true;
+    }
+    return 0 == memcmp(s1, s2, (size_t)n);
 }
 
 int RoundUp(int n, int rounding) {
@@ -111,7 +114,8 @@ u32 MurmurHash2(const void* key, int n) {
     const u8* data = (const u8*)key;
 
     while (n >= 4) {
-        u32 k = *(u32*)data;
+        u32 k;
+        memcpy(&k, data, 4);
 
         k *= m;
         k ^= k >> r;
@@ -359,11 +363,9 @@ Gdiplus::RectF ToGdipRectF(const RectF& r) {
 #endif
 
 int NormalizeRotation(int rotation) {
-    while (rotation < 0) {
+    rotation %= 360;
+    if (rotation < 0) {
         rotation += 360;
-    }
-    while (rotation >= 360) {
-        rotation -= 360;
     }
     if ((rotation % 90) != 0) {
         ReportIf(true);
@@ -646,7 +648,8 @@ bool WaitThread(ThreadHandle h, int timeoutMs) {
         return false;
     }
 #if OS_WIN
-    return WaitForSingleObject(h, (DWORD)timeoutMs) == WAIT_OBJECT_0;
+    DWORD waitMs = timeoutMs < 0 ? INFINITE : (DWORD)timeoutMs;
+    return WaitForSingleObject(h, waitMs) == WAIT_OBJECT_0;
 #elif OS_WASM
     // it already ran to completion inside StartThread()
     return true;
@@ -665,7 +668,8 @@ bool JoinThread(ThreadHandle* hPtr, int timeoutMs) {
         *hPtr = nullptr;
         return false;
     }
-    DWORD res = WaitForSingleObject(h, (DWORD)timeoutMs);
+    DWORD waitMs = timeoutMs < 0 ? INFINITE : (DWORD)timeoutMs;
+    DWORD res = WaitForSingleObject(h, waitMs);
     SafeCloseThreadHandle(hPtr);
     return res == WAIT_OBJECT_0;
 #else
@@ -933,6 +937,7 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
     arena->allocationSiteLine = params.allocationSiteLine;
     arena->name = params.name;
     arena->usesExternalBuffer = usesExternalBuffer;
+    new (&arena->lock) Mutex();
     arena->nAllocsLifetime = 0;
     arena->peakBytesLifetime = 0;
     arena->nAllocsSinceReset = 0;
@@ -945,6 +950,7 @@ void ArenaDelete(Arena* arena) {
         return;
     }
 
+    arena->lock.~Mutex();
     Arena* node = arena->current;
     while (node) {
         Arena* prev = node->prev;
@@ -1231,7 +1237,8 @@ static int VecNextCap(int cap, int wanted, int elSize) {
         int floorCap = elSize == 1 ? 8 : elSize <= 1024 ? 4 : 1;
         return std::max(floorCap, wanted);
     }
-    return std::max(cap * 2, wanted);
+    int doubled = cap > INT_MAX / 2 ? INT_MAX : cap * 2;
+    return std::max(doubled, wanted);
 }
 
 // The bodies below take the element type erased in a VecNonTemplated, so they
@@ -1487,17 +1494,12 @@ template <typename S>
 static void TransCharsInPlaceT(S& s, S oldChars, S newChars) {
     int nDiff = len(oldChars) - len(newChars);
     ReportIf(nDiff < 0);
-    int nChanged = 0;
     for (int i = 0; i < s.len; i++) {
         int idx = IndexOfCharT(oldChars, s.s[i]);
         if (idx >= 0) {
             // oldChars past the end of newChars map to NUL
             s.s[i] = idx < len(newChars) ? newChars.s[idx] : 0;
-            nChanged++;
         }
-    }
-    if (nChanged * nDiff > 0) {
-        s.s[s.len] = 0;
     }
 }
 
@@ -1512,7 +1514,9 @@ static int RemoveCharsInPlaceT(S s, S toRemove) {
             s.s[dst++] = s.s[src];
         }
     }
-    s.s[dst] = 0;
+    if (dst < s.len) {
+        s.s[dst] = 0;
+    }
     return s.len - dst;
 }
 
@@ -1538,7 +1542,9 @@ static int NormalizeWSInPlaceT(S s, bool (*isWs)(C)) {
     if (dst > 0 && isWs(s.s[dst - 1])) {
         dst--;
     }
-    s.s[dst] = 0;
+    if (dst < s.len) {
+        s.s[dst] = 0;
+    }
     return s.len - dst;
 }
 
@@ -1841,16 +1847,16 @@ int FoldDiacriticsRune(int c) {
 static void FoldCaseWInPlace(WStr s) {
 #if OS_WIN
     CharLowerBuffW(s.s, (DWORD)s.len);
-#else
-    for (int i = 0; i < s.len; i++) {
-        s.s[i] = WCharToLower(s.s[i]);
-    }
-#endif
     for (int i = 0; i < s.len; i++) {
         if (s.s[i] == 0x0130) {
             s.s[i] = L'i';
         }
     }
+#else
+    for (int i = 0; i < s.len; i++) {
+        s.s[i] = s.s[i] == 0x0130 ? L'i' : WCharToLower(s.s[i]);
+    }
+#endif
 }
 
 static int Utf8ByteOffsetForWCharOffset(Str s, int wcharOff) {
@@ -1956,22 +1962,19 @@ bool Eq(Str s1, Str s2) {
 
 // return true if s1 == s2, case insensitive
 bool EqI(Str s1, Str s2) {
-    if (s1.s == s2.s) {
-        return true;
-    }
     if (s1.len != s2.len) {
         return false;
+    }
+    if (s1.s == s2.s) {
+        return true;
     }
     return len(s1) == 0 || (s1.s && s2.s && 0 == _strnicmp(s1.s, s2.s, (size_t)s1.len));
 }
 
 // compares two strings ignoring case and whitespace
 bool EqIS(Str s1, Str s2) {
-    if (s1.s == s2.s) {
+    if (s1.s == s2.s && s1.len == s2.len) {
         return true;
-    }
-    if (len(s1) == 0 || len(s2) == 0) {
-        return false;
     }
 
     int i1 = 0;
@@ -2002,27 +2005,27 @@ bool EqIS(Str s1, Str s2) {
 }
 
 bool EqN(Str s1, Str s2, int n) {
-    if (s1.s == s2.s) {
-        return true;
-    }
-    if (len(s1) == 0 || len(s2) == 0 || n == 0) {
+    if (n <= 0) {
         return n == 0;
     }
     if (s1.len < n || s2.len < n) {
         return false;
+    }
+    if (s1.s == s2.s) {
+        return true;
     }
     return MemEq(s1.s, s2.s, n);
 }
 
 bool EqNI(Str s1, Str s2, int n) {
-    if (s1.s == s2.s) {
-        return true;
-    }
-    if (len(s1) == 0 || len(s2) == 0 || n == 0) {
+    if (n <= 0) {
         return n == 0;
     }
     if (s1.len < n || s2.len < n) {
         return false;
+    }
+    if (s1.s == s2.s) {
+        return true;
     }
     for (int i = 0; i < n; i++) {
         if (tolower((u8)s1.s[i]) != tolower((u8)s2.s[i])) {
@@ -2144,8 +2147,7 @@ int IndexOfI(Str s, Str toFind) {
     // palette filtering every item) don't grow the arena unbounded.
     AutoArenaSavepoint scratch;
 
-    TempWStr ws = ToWStrTemp(s); // unfolded, used to map the match back to bytes
-    TempWStr wsLo = str::DupTemp(ws);
+    TempWStr wsLo = ToWStrTemp(s);
     TempWStr wfLo = ToWStrTemp(toFind);
     FoldCaseWInPlace(wsLo);
     FoldCaseWInPlace(wfLo);
@@ -2181,18 +2183,31 @@ Str Join(Arena* a, Str s1, Str s2, Str s3, Str s4, Str s5) {
     int s5Len = len(s5);
     int n = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
     char* res = (char*)Alloc(a, n);
+    if (!res) {
+        return {};
+    }
 
     char* s = res;
-    memcpy(s, s1.s, s1Len);
-    s += s1Len;
-    memcpy(s, s2.s, s2Len);
-    s += s2Len;
-    memcpy(s, s3.s, s3Len);
-    s += s3Len;
-    memcpy(s, s4.s, s4Len);
-    s += s4Len;
-    memcpy(s, s5.s, s5Len);
-    s += s5Len;
+    if (s1Len > 0) {
+        memcpy(s, s1.s, (size_t)s1Len);
+        s += s1Len;
+    }
+    if (s2Len > 0) {
+        memcpy(s, s2.s, (size_t)s2Len);
+        s += s2Len;
+    }
+    if (s3Len > 0) {
+        memcpy(s, s3.s, (size_t)s3Len);
+        s += s3Len;
+    }
+    if (s4Len > 0) {
+        memcpy(s, s4.s, (size_t)s4Len);
+        s += s4Len;
+    }
+    if (s5Len > 0) {
+        memcpy(s, s5.s, (size_t)s5Len);
+        s += s5Len;
+    }
     *s = 0;
 
     return Str(res, n - 1);
@@ -2238,14 +2253,25 @@ namespace wstr {
 /* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
 WStr Join(Arena* a, WStr s1, WStr s2, WStr s3) {
-    int s1Len = s1.len, s2Len = s2.len, s3Len = s3.len;
+    int s1Len = len(s1);
+    int s2Len = len(s2);
+    int s3Len = len(s3);
     int n = s1Len + s2Len + s3Len + 1;
     WCHAR* res = (WCHAR*)Alloc(a, n * sizeofi(WCHAR));
-    memcpy(res, s1.s, (size_t)s1Len * sizeof(WCHAR));
-    memcpy(res + s1Len, s2.s, (size_t)s2Len * sizeof(WCHAR));
-    memcpy(res + s1Len + s2Len, s3.s, (size_t)s3Len * sizeof(WCHAR));
+    if (!res) {
+        return {};
+    }
+    if (s1Len > 0) {
+        memcpy(res, s1.s, (size_t)s1Len * sizeof(WCHAR));
+    }
+    if (s2Len > 0) {
+        memcpy(res + s1Len, s2.s, (size_t)s2Len * sizeof(WCHAR));
+    }
+    if (s3Len > 0) {
+        memcpy(res + s1Len + s2Len, s3.s, (size_t)s3Len * sizeof(WCHAR));
+    }
     res[s1Len + s2Len + s3Len] = '\0';
-    return WStr(res);
+    return WStr(res, n - 1);
 }
 
 WStr Join(WStr s1, WStr s2, WStr s3) {
@@ -2971,7 +2997,9 @@ int SeqStrIndexIS(SeqStrings strs, Str toFind) {
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
 TempStr SeqStrByIndex(SeqStrings strs, int idx) {
-    ReportIf(idx < 0);
+    if (ReportIf(idx < 0)) {
+        return {};
+    }
     Str s = SeqStrFirst(strs);
     while (idx > 0 && len(s) > 0) {
         s = SeqStrNext(s);
@@ -3002,14 +3030,14 @@ static SeqStrings gMimeTypes =
 // detected from the file's data) is given, imgExt's type wins over the ext's.
 TempStr MimeTypeFromExtTemp(Str ext, Str imgExt) {
     int idx = SeqStrIndexIS(gMimeTypes, ext);
-    if (idx < 0) {
+    if (idx < 0 || (idx & 1) != 0) {
         return {};
     }
     Str mime = SeqStrByIndex(gMimeTypes, idx + 1);
     // trust an image's actual data over its extension
     if (imgExt && str::StartsWith(mime, StrL("image/"))) {
         int j = SeqStrIndex(gMimeTypes, imgExt);
-        if (j >= 0) {
+        if (j >= 0 && (j & 1) == 0) {
             return SeqStrByIndex(gMimeTypes, j + 1);
         }
     }
@@ -3170,6 +3198,9 @@ void BuilderT<C>::UseExternalBuffer(S buf) {
 
 template <typename C>
 bool BuilderT<C>::Reserve(int cap) {
+    if (cap <= 0) {
+        return true;
+    }
     if (!BuilderEnsureCap(*this, cap)) {
         return false;
     }
@@ -3299,17 +3330,14 @@ bool Eq(WStr s1, WStr s2) {
 }
 
 bool EqNI(WStr s1, WStr s2, int n) {
-    if (s1.s == s2.s) {
-        return true;
-    }
-    if (len(s1) == 0 || len(s2) == 0) {
+    if (n <= 0) {
         return n == 0;
-    }
-    if (n == 0) {
-        return true;
     }
     if (s1.len < n || s2.len < n) {
         return false;
+    }
+    if (s1.s == s2.s) {
+        return true;
     }
     for (int i = 0; i < n; i++) {
         WCHAR c1 = s1.s[i];
@@ -3323,24 +3351,24 @@ bool EqNI(WStr s1, WStr s2, int n) {
 
 // return true if s1 == s2, case insensitive
 bool EqI(WStr s1, WStr s2) {
-    if (s1.s == s2.s) {
-        return true;
-    }
     if (s1.len != s2.len) {
         return false;
+    }
+    if (s1.s == s2.s) {
+        return true;
     }
     return len(s1) == 0 || (s1.s && s2.s && EqNI(s1, s2, s1.len));
 }
 
 bool EqN(WStr s1, WStr s2, int n) {
-    if (s1.s == s2.s) {
-        return true;
-    }
-    if (len(s1) == 0 || len(s2) == 0 || n == 0) {
+    if (n <= 0) {
         return n == 0;
     }
     if (s1.len < n || s2.len < n) {
         return false;
+    }
+    if (s1.s == s2.s) {
+        return true;
     }
     return MemEq(s1.s, s2.s, n * (int)sizeof(WCHAR));
 }
@@ -3357,14 +3385,14 @@ bool StartsWith(WStr str, WStr prefix) {
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(WStr str, WStr prefix) {
-    if (str.s == prefix.s) {
-        return true;
-    }
     if (len(prefix) == 0) {
         return true;
     }
     if (len(str) == 0 || prefix.len > str.len) {
         return false;
+    }
+    if (str.s == prefix.s) {
+        return true;
     }
     return EqNI(str, prefix, prefix.len);
 }
@@ -3573,7 +3601,7 @@ int CompareProgramVersion(Str ver1, Str ver2) {
         unsigned int v1 = ExtractNextNumber(ver1, off1);
         unsigned int v2 = ExtractNextNumber(ver2, off2);
         if (v1 != v2) {
-            return (int)v1 - (int)v2;
+            return v1 < v2 ? -1 : 1;
         }
     }
     return 0;
@@ -4240,8 +4268,11 @@ static TempStr ShortenStringTemp(Str s, int maxLen) {
     if (sLen <= maxLen) {
         return s;
     }
+    if (maxLen < 4) {
+        return StrL("...");
+    }
     // the "..." in the middle needs a few characters on each side
-    const int half = std::max(maxLen / 2, 2);
+    const int half = maxLen / 2;
     char* ret = AllocArrayTemp<char>((2 * half) + 1);
     for (int i = 0; i < half; i++) {
         ret[i] = s.s[i];
@@ -4261,7 +4292,9 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
         int keep = maxRunes - 3;
         keep = std::max(keep, 0);
         char* ret = AllocArrayTemp<char>(keep + 4);
-        memcpy(ret, s.s, keep);
+        if (keep > 0) {
+            memcpy(ret, s.s, (size_t)keep);
+        }
         ret[keep] = '.';
         ret[keep + 1] = '.';
         ret[keep + 2] = '.';
@@ -4273,7 +4306,7 @@ TempStr ShortenStringUtf8Temp(Str s, int maxRunes) {
     }
     int keep = maxRunes - 3;
     keep = std::max(keep, 0);
-    char* ret = AllocArrayTemp<char>((maxRunes * 4) + 1);
+    char* ret = AllocArrayTemp<char>((keep * 4) + 4);
     int src = 0;
     int tmp = 0;
     int n;
@@ -4298,6 +4331,9 @@ TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes) {
     }
     if (nRunes <= maxRunes) {
         return s;
+    }
+    if (maxRunes <= 3) {
+        return StrL("...");
     }
     int toRemove = (nRunes - maxRunes) + 3;
     int removeStartingAt = (nRunes / 2) - (toRemove / 2);
@@ -4654,8 +4690,8 @@ static const struct {
     const char* mod;
     int bits;
 } kLenMods[] = {
-    {"I64", 64}, {"I32", 32}, {"ll", 64}, {"hh", 32}, {"l", 32}, {"h", 32},
-    {"L", 32},   {"w", 32},   {"z", 64},  {"j", 64},  {"t", 64}, {"I", 64},
+    {"I64", 64}, {"I32", 32}, {"ll", 64}, {"hh", 32}, {"l", (int)sizeof(long) * 8}, {"h", 32},
+    {"L", 32},   {"w", 32},   {"z", 64},  {"j", 64},  {"t", 64},                    {"I", 64},
 };
     // clang-format on
     int bits = 32;
@@ -4893,7 +4929,6 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
         fbuf[k++] = fmt.format.s[inst.fwpOff + j];
     }
     char conv = inst.conv;
-    i64 ival = argToI64(arg);
     bool ok = true;
     switch (conv) {
         case 'd':
@@ -4902,6 +4937,7 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
         case 'o':
         case 'x':
         case 'X': {
+            i64 ival = argToI64(arg);
             bool isSigned = conv == 'd' || conv == 'i';
             bool is64 = inst.intBits == 64;
             if (is64) {
@@ -4920,7 +4956,7 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
         case 'c':
             fbuf[k++] = 'c';
             fbuf[k] = 0;
-            ok = appendConv(fmt, fbuf, (int)ival);
+            ok = appendConv(fmt, fbuf, (int)argToI64(arg));
             break;
         case 'f':
         case 'F':
@@ -4937,7 +4973,7 @@ static bool evalPercInst(Fmt& fmt, const Inst& inst, const FmtArg& arg) {
         } break;
         case 'p': {
             // flags/width are uncommon (and platform-specific) for %p; emit plain
-            const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)ival;
+            const void* pv = (arg.t == FmtArg::Kind::Ptr) ? arg.ptr : (const void*)(intptr_t)argToI64(arg);
             ok = appendConv(fmt, "%p", pv);
         } break;
         default:
@@ -5322,25 +5358,25 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 // Caller needs to free the result.
 TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTrailingZero) {
     i64 num = (i64)llround(number * 100);
+    bool neg = num < 0;
+    u64 absNum = neg ? (u64)0 - (u64)num : (u64)num;
 
-    TempStr tmp = FormatNumWithThousandSepTemp(num / 100, locale);
+    TempStr tmp = FormatNumWithThousandSepTemp((i64)(absNum / 100), locale);
+    if (neg) {
+        tmp = str::JoinTemp(StrL("-"), tmp);
+    }
 #if OS_WIN
     WCHAR decimalW[4] = {};
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
         decimalW[1] = 0;
     }
-    char decimal[4];
-    int i = 0;
-    for (WCHAR c : decimalW) {
-        decimal[i++] = (char)c;
-    }
-
+    TempStr decimal = ToUtf8Temp(WStr(decimalW));
 #else
-    char decimal[4] = {'.', 0};
+    TempStr decimal = StrL(".");
 #endif
     // add between one and two decimals after the point
-    TempStr buf = str::FormatTemp("%s%s%02d", tmp, Str(decimal), num % 100);
+    TempStr buf = str::FormatTemp("%s%s%02d", tmp, decimal, (int)(absNum % 100));
     if (stripTrailingZero && str::EndsWith(buf, StrL("0"))) {
         buf.s[buf.len - 1] = '\0';
         buf.len--;
@@ -5872,7 +5908,7 @@ static Str SetOrInsertAt(StrVec* v, int idx, Str s, PageOpResult (StrVecPage::*o
         if (!str::IsNull(s)) {
             s = str::DupTemp(s);
         }
-        CompactPages(v, RoundUp(s.len + 1, 2048));
+        CompactPages(v, RoundUp(s.len + 1 + cbIndexSize(v->dataSize), 2048));
         res = (v->first->*op)(idx, s);
         ReportIf(res.noSpace);
     }
@@ -6511,19 +6547,19 @@ TempStr Utf16ToUtf8Temp(Str bytes, ByteOrder order) {
 // as it can
 // caller has to free() it
 TempStr UnknownToUtf8Temp(Str s) {
-    if (s.len < 3) {
+    if (len(s) == 0) {
         return str::DupTemp(s);
     }
 
-    if (str::TrimPrefix(s, Str(kUtf8Bom))) {
+    if (str::TrimPrefix(s, StrL(kUtf8Bom))) {
         return str::DupTemp(s);
     }
 
-    if (str::TrimPrefix(s, Str(kUtf16Bom))) {
+    if (str::TrimPrefix(s, StrL(kUtf16Bom))) {
         return Utf16ToUtf8Temp(s, ByteOrder::LittleEndian);
     }
 
-    if (str::TrimPrefix(s, Str(kUtf16BeBom))) {
+    if (str::TrimPrefix(s, StrL(kUtf16BeBom))) {
         return Utf16ToUtf8Temp(s, ByteOrder::BigEndian);
     }
 
@@ -6894,7 +6930,7 @@ DWORD PremultiplyPixel(Color c, u8 alpha) {
     r = (u8)((r * alpha) / 255);
     g = (u8)((g * alpha) / 255);
     b = (u8)((b * alpha) / 255);
-    return (alpha << 24) | (r << 16) | (g << 8) | b;
+    return ((DWORD)alpha << 24) | (r << 16) | (g << 8) | b;
 }
 
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.

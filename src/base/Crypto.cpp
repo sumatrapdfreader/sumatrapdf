@@ -23,21 +23,20 @@ static NO_INLINE void CalcDigestWin(Str d, u8* digest, DWORD digestSize, const W
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
     BOOL ok = CryptAcquireContextW(&hProv, nullptr, provider, type, CRYPT_VERIFYCONTEXT);
-    ReportIf(!ok);
-    ok = CryptCreateHash(hProv, alg, 0, 0, &hHash);
-    ReportIf(!ok);
-
-    // Hash in DWORD-sized chunks when the payload is larger than DWORD_MAX
-    // (only possible with size_t-sized lengths; our API uses int).
-    const BYTE* p = (const BYTE*)data;
-    size_t remaining = (size_t)(dataSize < 0 ? 0 : dataSize);
-    while (remaining > (size_t)DWORD_MAX) {
-        ok = CryptHashData(hHash, p, DWORD_MAX, 0);
-        ReportIf(!ok);
-        p += DWORD_MAX;
-        remaining -= (size_t)DWORD_MAX;
+    if (ReportIf(!ok)) {
+        memset(digest, 0, digestSize);
+        return;
     }
-    ok = CryptHashData(hHash, p, (DWORD)remaining, 0);
+    ok = CryptCreateHash(hProv, alg, 0, 0, &hHash);
+    if (ReportIf(!ok)) {
+        CryptReleaseContext(hProv, 0);
+        memset(digest, 0, digestSize);
+        return;
+    }
+
+    const BYTE* p = (const BYTE*)data;
+    DWORD remaining = (DWORD)(dataSize < 0 ? 0 : dataSize);
+    ok = CryptHashData(hHash, p, remaining, 0);
     ReportIf(!ok);
 
     DWORD hashLen = 0;
@@ -45,9 +44,7 @@ static NO_INLINE void CalcDigestWin(Str d, u8* digest, DWORD digestSize, const W
     ok = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE*)&hashLen, &argSize, 0);
     ReportIf(sizeof(DWORD) != argSize);
     ReportIf(!ok);
-    if (digestSize != hashLen) {
-        ReportIf(digestSize != hashLen);
-    }
+    ReportIf(digestSize != hashLen);
     ok = CryptGetHashParam(hHash, HP_HASHVAL, digest, &hashLen, 0);
     ReportIf(!ok);
     ReportIf(digestSize != hashLen);

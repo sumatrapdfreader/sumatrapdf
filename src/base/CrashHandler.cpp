@@ -534,8 +534,8 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
 
 static void GetOsVersion() {
     OSVERSIONINFOEX ver{};
-    bool ok = GetOsVersion(ver);
     ver.dwOSVersionInfoSize = sizeof(ver);
+    bool ok = GetOsVersion(ver);
     if (!ok) {
         return;
     }
