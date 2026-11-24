@@ -352,7 +352,7 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     uitask::Post(MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateFinish, data), "TaskShowAutoUpdateDialog");
 }
 
-// pre-release builds surface an available update with a bottom-left notification
+// an automatic check surfaces an available update with a bottom-left notification
 // whose "Update" link triggers a one-click download + install
 static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateInfo) {
     if (!win || !updateInfo) {
@@ -378,7 +378,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
     ShowNotification(args);
 }
 
-// download + install the update surfaced by the pre-release update notification
+// download + install the update surfaced by the update notification
 void DownloadAndInstallPendingUpdate(MainWindow* win) {
     if (!win || !gPendingUpdate) {
         return;
@@ -391,9 +391,16 @@ void DownloadAndInstallPendingUpdate(MainWindow* win) {
     }
     UpdateInfo* updateInfo = gPendingUpdate;
     gPendingUpdate = nullptr;
+    RemoveNotificationsForGroup(win, kNotifUpdateAvailable);
+
+    // nothing this build can install (e.g. run from the disk image)
+    if (len(updateInfo->dlURL) == 0) {
+        OpenDownloadPage(updateInfo);
+        delete updateInfo;
+        return;
+    }
     gUpdateAutoInstall = true;
     updateInfo->win = win;
-    RemoveNotificationsForGroup(win, kNotifUpdateAvailable);
 
     // progress notification updated by UpdateDownloadProgressNotif (same group)
     NotificationCreateArgs nargs;
@@ -508,28 +515,29 @@ static DWORD MaybeStartUpdateDownload(MainWindow* win, HttpRsp* rsp, UpdateCheck
     }
 #endif
 
-    if (len(updateInfo->dlURL) == 0) {
-        // currently for release builds we don't set this and redirect to a website instead
-        logf("MaybeStartUpdateDownload: didn't find download url\n");
-        RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
-        NotifyUserOfUpdate(updateInfo);
-        return 0;
-    }
-
-    if (!IsTrustedUpdateDlUrl(updateInfo->dlURL)) {
+    if (len(updateInfo->dlURL) > 0 && !IsTrustedUpdateDlUrl(updateInfo->dlURL)) {
         RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
         NotifySuspiciousUpdate(win, updateInfo->dlURL);
         delete updateInfo;
         return 0;
     }
 
-    // pre-release automatic check: don't download yet. Show a bottom-left
-    // notification whose "Update" link does the download + install.
-    if (updateCheckType == UpdateCheck::Automatic && gIsPreReleaseBuild) {
+    // ng: every build is dated like orig's pre-release ones, so an automatic
+    // check doesn't download yet. A bottom-left notification's "Update" link
+    // does the download + install, or opens the download page.
+    if (updateCheckType == UpdateCheck::Automatic) {
         RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
         delete gPendingUpdate;       // drop any update from a previous check
         gPendingUpdate = updateInfo; // take ownership (freed when installed/replaced)
         ShowUpdateAvailableNotification(win, updateInfo);
+        return 0;
+    }
+
+    if (len(updateInfo->dlURL) == 0) {
+        // currently for release builds we don't set this and redirect to a website instead
+        logf("MaybeStartUpdateDownload: didn't find download url\n");
+        RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
+        NotifyUserOfUpdate(updateInfo);
         return 0;
     }
 
