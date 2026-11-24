@@ -13,6 +13,7 @@
 #include "VirtKeys.h"
 
 #include "base/GuessFileType.h"
+#include "base/UITask.h"
 #include "base/Win.h"
 #if OS_WIN
 #include "../../../ext/webview2/WebView2.h"
@@ -101,6 +102,32 @@ static const char* kFindNotifyJs = R"JS(window.__sumatraFindNotify = function() 
   if (wv && wv.postMessage) { wv.postMessage(s); return; }
   if (window.ipc && window.ipc.postMessage) { window.ipc.postMessage(s); }
 };)JS";
+
+#if OS_WIN
+// ng: orig's AcceleratorKeyPressed handler (WebView.cpp). gpui's webview has
+// none, so the page posts "key <vk> <mods>" for what WebView2 treats as an
+// accelerator (Ctrl / Alt combos, F-keys, Esc) and the frame runs it.
+// Clipboard and select-all stay with the page. mods: 1 shift, 2 ctrl, 4 alt.
+static const char* kForwardKeysJs = R"JS((function(){
+  if (window.__sumatraKeysHooked) { return; }
+  window.__sumatraKeysHooked = true;
+  var pageKeys = { 65: 1, 67: 1, 86: 1, 88: 1, 89: 1, 90: 1 };
+  window.addEventListener("keydown", function(e) {
+    var vk = e.keyCode;
+    if (vk === 16 || vk === 17 || vk === 18 || vk === 91 || vk === 92) { return; }
+    var fkey = vk >= 112 && vk <= 135;
+    if (!e.ctrlKey && !e.altKey && !fkey && vk !== 27) { return; }
+    if (e.ctrlKey && !e.altKey && !e.shiftKey && pageKeys[vk]) { return; }
+    var mods = (e.shiftKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.altKey ? 4 : 0);
+    try {
+      var wv = window.chrome && window.chrome.webview;
+      if (wv && wv.postMessage) { wv.postMessage("key " + vk + " " + mods); }
+    } catch (ex) {}
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+})();)JS";
+#endif
 
 struct BrowserView {
     MainWindow* win = nullptr;
@@ -353,6 +380,34 @@ static void OnPageLoad(void* ctx, wry::PageLoadEvent ev, gp::Str url) {
 }
 
 // the notifications kReportScrollJs / kFindInPageJs post back
+struct PageKeyData {
+    MainWindow* win = nullptr;
+    int vk = 0;
+    int mods = 0;
+};
+
+// a shortcut pressed in the page, run by the frame as if pressed there.
+// Posted: the IPC callback runs inside WebView2's event dispatch.
+static void RunPageKey(PageKeyData* d) {
+    AutoDelete delData(d);
+    if (!IsMainWindowValidAndNotClosing(d->win) || !d->win->gpuiWin) {
+        return;
+    }
+    gp::Window* gw = d->win->gpuiWin;
+    gp::WindowKeyDown(gw, d->vk, (d->mods & 1) != 0, (d->mods & 2) != 0, (d->mods & 4) != 0);
+    // no WM_CHAR follows a key that didn't come from the keyboard
+    gw->eatChar = false;
+    gp::AppInvalidate(gw);
+}
+
+static void ForwardPageKey(BrowserView* bv, int vk, int mods) {
+    auto* d = new PageKeyData;
+    d->win = bv->win;
+    d->vk = vk;
+    d->mods = mods;
+    uitask::Post(MkFunc0<PageKeyData>(RunPageKey, d), "BrowserViewPageKey");
+}
+
 static void OnIpcMessage(void* ctx, gp::Str, gp::Str body) {
     auto* bv = (BrowserView*)ctx;
     if (!bv) {
@@ -369,6 +424,11 @@ static void OnIpcMessage(void* ctx, gp::Str, gp::Str body) {
         if (bv->cb) {
             bv->cb->OnFindResult(gen, current, total);
         }
+        return;
+    }
+    int vk = 0, mods = 0;
+    if (!str::IsNull(str::Parse(msg, "key %d %d", &vk, &mods))) {
+        ForwardPageKey(bv, vk, mods);
         return;
     }
     Str payload = msg;
@@ -752,11 +812,15 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
     bv->app = cx->app;
     bv->createTries++;
 
-    wry::InitializationScript scripts[4];
-    scripts[0].script = ToGpui(Str(kReportScrollJs));
-    scripts[1].script = ToGpui(Str(kFindInPageJs));
-    scripts[2].script = ToGpui(Str(kJsNotifyJs));
-    scripts[3].script = ToGpui(Str(kFindNotifyJs));
+    wry::InitializationScript scripts[5];
+    int nScripts = 0;
+    scripts[nScripts++].script = ToGpui(Str(kReportScrollJs));
+    scripts[nScripts++].script = ToGpui(Str(kFindInPageJs));
+    scripts[nScripts++].script = ToGpui(Str(kJsNotifyJs));
+    scripts[nScripts++].script = ToGpui(Str(kFindNotifyJs));
+#if OS_WIN
+    scripts[nScripts++].script = ToGpui(Str(kForwardKeysJs));
+#endif
 
     wry::CustomProtocol protocol;
     protocol.name = ToGpui(Str(kProtocolName));
@@ -771,7 +835,7 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
     attrs.customProtocols = &protocol;
     attrs.customProtocolCount = 1;
     attrs.initializationScripts = scripts;
-    attrs.initializationScriptCount = dimofi(scripts);
+    attrs.initializationScriptCount = nScripts;
     attrs.ctx = bv;
     attrs.navigationHandler = OnNavigationStarting;
     attrs.onPageLoadHandler = OnPageLoad;

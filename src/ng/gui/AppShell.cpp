@@ -2126,10 +2126,22 @@ static bool FailedTabFileExists(WindowTab* tab) {
 
 // a fixed-page document draws through DocCanvas, the Home tab through
 // HomePage, a CHM or markdown document through the browser view
+// a popup menu open in the frame: the tab, toolbar and context menus or a menu bar drop-down
+static bool PopupMenuUp(ShellView* self, gp::Ctx* cx) {
+    if (IsTrackedPopupOpen(cx)) {
+        return true;
+    }
+    auto* mb = (gpc::AppMenuBarState*)gp::EntityGet(cx->app, self->menuBarState.id);
+    return mb && mb->selected >= 0;
+}
+
 static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     MainWindow* win = self->win;
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    BrowserView* browser = UpdateBrowserViews(win, overlayUp);
+    // ng: gpui draws a popup menu in the frame, under the browser's child
+    // window (orig's menus are windows of their own), so it steps aside too
+    bool popupUp = PopupMenuUp(self, cx);
+    BrowserView* browser = UpdateBrowserViews(win, overlayUp || popupUp);
     if (win->AsFixed()) {
         return DocCanvasBuild(win, cx);
     }
@@ -2142,6 +2154,9 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     }
     if (currTab && currTab->IsHexTab()) {
         return HexViewBuild(win, cx);
+    }
+    if (popupUp && currTab && currTab->AsBrowser()) {
+        return gp::Div(cx->a)->Flex1()->W(gp::kFill)->Bg(ThemeGpuiCanvasBg());
     }
     if (browser && !overlayUp) {
         gp::El* box = gp::Div(cx->a)->Flex1()->W(gp::kFill)->Bg(ThemeGpuiCanvasBg());
