@@ -688,6 +688,8 @@ import { testit as editFavoritesReload } from "./edit-favorites-reload.ts";
 import { testit as annotResizeEscape } from "./annot-resize-escape.ts";
 import { testit as ctxMenuScroll } from "./ctx-menu-scroll.ts";
 
+import { testit as issue6587 } from "./issue-6587.ts";
+
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
   try {
@@ -1370,6 +1372,7 @@ export const tests: NamedTest[] = [
   ["edit-favorites-reload", editFavoritesReload],
   ["annot-resize-escape", annotResizeEscape],
   ["ctx-menu-scroll", ctxMenuScroll],
+  ["issue-6587", issue6587],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
