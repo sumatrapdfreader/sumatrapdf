@@ -3861,6 +3861,20 @@ void ToggleCaption(CustomCommand* cmd) {
     }
 }
 
+static void OnDontShowDocErrors(bool checked) {
+    gSettings->showDocumentErrors = !checked;
+    ScheduleSaveSettings();
+}
+
+// the Show Errors window's checkbox, the inverse of ShowDocumentErrors
+TextWindowOption DocErrorsWindowOption() {
+    TextWindowOption opt;
+    opt.label = Tr("Don't show document errors");
+    opt.checked = !gSettings->showDocumentErrors;
+    opt.onChanged = OnDontShowDocErrors;
+    return opt;
+}
+
 void ToggleSidebarAutoHide(CustomCommand* cmd) {
     bool on = GetCommandBoolArg(cmd, kCmdArgState, !gSettings->sidebarAutoHide);
     if (on != gSettings->sidebarAutoHide) {

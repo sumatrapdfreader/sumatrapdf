@@ -11828,7 +11828,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 // GetErrorsTextTemp is the engine's internal buffer; ShowTextInWindow
                 // copies it before returning, so it must not be kept past this frame.
                 TempStr text = engine->GetErrorsTextTemp();
-                ShowTextInWindow(StrL("Errors"), text);
+                TextWindowOption opt = DocErrorsWindowOption();
+                ShowTextInWindow(StrL("Errors"), text, nullptr, &opt);
             }
             break;
         }

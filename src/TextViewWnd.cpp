@@ -18,8 +18,10 @@ struct TextViewWnd : WindowBase {
     Edit* edit = nullptr;
     PlatformFont* monoFont = nullptr;
     HWND* hwndPtr = nullptr;
+    Checkbox* optionCheck = nullptr;
+    void (*onOptionChanged)(bool checked) = nullptr;
 
-    bool Create(Str title, Str text);
+    bool Create(Str title, Str text, const TextWindowOption* option);
     void UpdateTheme() override;
     void ApplyDarkMode() override;
     static Str FormatTextForEdit(Str text);
@@ -48,7 +50,13 @@ Str TextViewWnd::FormatTextForEdit(Str text) {
     return ToStrTemp(crlfText);
 }
 
-bool TextViewWnd::Create(Str title, Str text) {
+static void OnTextViewOptionChanged(TextViewWnd* w) {
+    if (w->onOptionChanged) {
+        w->onOptionChanged(w->optionCheck->GetState() == Checkbox::State::Checked);
+    }
+}
+
+bool TextViewWnd::Create(Str title, Str text, const TextWindowOption* option) {
     {
         CreateCustomArgs args;
         args.title = title;
@@ -84,6 +92,24 @@ bool TextViewWnd::Create(Str title, Str text) {
     edit->SetText(FormatTextForEdit(text));
     SendMessageW(edit->hwnd, EM_SETSEL, 0, 0);
     layout = edit;
+    if (option) {
+        // the text takes the space, the checkbox row sits under it
+        auto* vbox = new VBox();
+        vbox->alignCross = CrossAxisAlign::Stretch;
+        vbox->AddChild(edit, 1);
+        Checkbox::CreateArgs cbArgs;
+        cbArgs.parent = hwnd;
+        cbArgs.text = option->label;
+        cbArgs.font = GetDefaultGuiFont();
+        cbArgs.initialState = option->checked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
+        optionCheck = new Checkbox();
+        optionCheck->Create(cbArgs);
+        optionCheck->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+        optionCheck->onStateChanged = MkFunc0(OnTextViewOptionChanged, this);
+        onOptionChanged = option->onChanged;
+        vbox->AddChild(new Padding(optionCheck, DpiScaledInsets(6, 8)));
+        layout = vbox;
+    }
 
     int winW = DpiScale(800);
     int winH = DpiScale(600);
@@ -112,13 +138,13 @@ static void OnTextViewDestroy(WindowBase::DestroyEvent* ev) {
     TeardownTextViewWnd((TextViewWnd*)ev->e->self);
 }
 
-HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr) {
+HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr, const TextWindowOption* option) {
     auto* wnd = new TextViewWnd();
     wnd->hwndPtr = hwndPtr;
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    if (!wnd->Create(title, text)) {
+    if (!wnd->Create(title, text, option)) {
         delete wnd;
         return nullptr;
     }
@@ -130,7 +156,7 @@ void ShowTextInWindowDialog(Str title, Str text) {
     wnd->closeOnEsc = true;
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnTextViewClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnTextViewDestroy);
-    if (!wnd->Create(title, text)) {
+    if (!wnd->Create(title, text, nullptr)) {
         delete wnd;
         return;
     }

@@ -168,7 +168,7 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subt
 
 int MsgBox(HWND, Str text, Str caption, UINT flags);
 void MsgBoxWarning(HWND hwnd, Str msg, Str title = Str());
-HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr = nullptr);
+HWND ShowTextInWindow(Str title, Str text, HWND* hwndPtr = nullptr, const TextWindowOption* option = nullptr);
 void ShowTextInWindowDialog(Str title, Str text);
 
 //--- GDI: draw / measure

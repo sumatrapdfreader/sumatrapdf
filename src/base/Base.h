@@ -1103,6 +1103,13 @@ ThreadId GetCurrentThreadId();
 #endif
 u64 GetCurrProcessId();
 
+// an optional checkbox row under a text window's text (ShowTextInWindow)
+struct TextWindowOption {
+    Str label;
+    bool checked = false;
+    void (*onChanged)(bool checked) = nullptr;
+};
+
 // Debug builds record which thread holds a Mutex / RecursiveMutex so code can
 // check a "caller holds X" precondition:
 // ReportDebugIf(!e->docLock.IsHeldByCurrentThread());

@@ -124,7 +124,7 @@ bool ShowTransparencyGrid() {
 void GetPrintersInfo(str::Builder&) {}
 
 void ShowTextInWindowDialog(Str, Str) {}
-void ShowTextInWindow(MainWindow*, Str, Str) {}
+void ShowTextInWindow(MainWindow*, Str, Str, const TextWindowOption*) {}
 void SetTextViewWindowText(Str) {}
 bool IsTextViewWindowTitle(Str) {
     return false;

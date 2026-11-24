@@ -4,7 +4,7 @@
 struct MainWindow;
 
 // A top-level window with a read-only, scrollable multi-line text editor.
-void ShowTextInWindow(MainWindow* win, Str title, Str text);
+void ShowTextInWindow(MainWindow* win, Str title, Str text, const TextWindowOption* option = nullptr);
 void SetTextViewWindowText(Str text);
 bool IsTextViewWindowTitle(Str title);
 void CloseTextViewWindow();

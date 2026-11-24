@@ -15,9 +15,16 @@
 
 struct TextViewView {
     gp::InputState text;
+    // the optional checkbox row under the text (Show Errors)
+    bool hasOption = false;
+    Str optionLabel; // owned
+    bool optionChecked = false;
+    void (*onOptionChanged)(bool checked) = nullptr;
 
+    ~TextViewView() { str::Free(optionLabel); }
     static gp::El* Render(TextViewView* self, gp::Ctx* cx);
     static void OnKey(TextViewView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
+    static void OnOption(TextViewView* self, gp::Ctx* cx, const gp::ClickEvent* ev);
 };
 
 static gp::Entity<TextViewView> gTextViewView;
@@ -75,13 +82,33 @@ gp::El* TextViewView::Render(TextViewView* self, gp::Ctx* cx) {
     cx->win->input = &self->text;
     gp::WinSize size = gp::WindowSize(cx->win);
     const gp::Theme& theme = gp::ThemeNow(cx->app);
+    // the checkbox row under the text takes this much of the window's height
+    constexpr float kOptionRowDy = 32;
+    float editorDy = self->hasOption ? size.dipH - kOptionRowDy : size.dipH;
     gp::El* editor = gpc::Textarea::New(cx, GStrL("text-view"), &self->text)
-                         ->H(size.dipH)
+                         ->H(editorDy)
                          ->SoftWrap(false)
                          ->Readonly()
                          ->IntoEl()
                          ->Mono();
-    return gp::Div(cx->a)->SizeFull()->Bg(theme.tokens.background)->Child(editor);
+    gp::El* root = gp::Div(cx->a)->SizeFull()->FlexCol()->Bg(theme.tokens.background)->Child(editor);
+    if (self->hasOption) {
+        gp::El* check = gpc::Checkbox::New(cx, GStrL("text-view-option"))
+                            ->Label(ToGpui(self->optionLabel))
+                            ->Checked(self->optionChecked)
+                            ->OnClick(gp::ListenTo(gTextViewView, &TextViewView::OnOption))
+                            ->IntoEl();
+        root->Child(gp::Div(cx->a)->H(kOptionRowDy)->FlexRow()->ItemsCenter()->Pad(6)->Child(check));
+    }
+    return root;
+}
+
+void TextViewView::OnOption(TextViewView* self, gp::Ctx* cx, const gp::ClickEvent*) {
+    self->optionChecked = !self->optionChecked;
+    if (self->onOptionChanged) {
+        self->onOptionChanged(self->optionChecked);
+    }
+    gp::AppInvalidate(cx->win);
 }
 
 void TextViewView::OnKey(TextViewView*, gp::Ctx* cx, const gp::KeyEvent* ev) {
@@ -92,7 +119,7 @@ void TextViewView::OnKey(TextViewView*, gp::Ctx* cx, const gp::KeyEvent* ev) {
     }
 }
 
-void ShowTextInWindow(MainWindow* win, Str title, Str text) {
+void ShowTextInWindow(MainWindow* win, Str title, Str text, const TextWindowOption* option) {
     if (win && !IsMainWindowValidAndNotClosing(win)) {
         return;
     }
@@ -110,6 +137,12 @@ void ShowTextInWindow(MainWindow* win, Str title, Str text) {
     view->text.softWrap = false;
     view->text.readonly = true;
     gp::InputSetValue(&view->text, ToGpui(text));
+    if (option) {
+        view->hasOption = true;
+        view->optionLabel = str::Dup(option->label);
+        view->optionChecked = option->checked;
+        view->onOptionChanged = option->onChanged;
+    }
 
     gTextViewWin = gp::KitOpenWindow(app, ToGpui(title), 800, 600, gTextViewView.id, gp::WinOpts{});
     if (!gTextViewWin) {

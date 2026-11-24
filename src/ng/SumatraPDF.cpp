@@ -7600,7 +7600,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
                 // GetErrorsTextTemp is the engine's internal buffer; ShowTextInWindow
                 // copies it before returning, so it must not be kept past this frame.
                 TempStr text = engine->GetErrorsTextTemp();
-                ShowTextInWindow(win, StrL("Errors"), text);
+                TextWindowOption opt = DocErrorsWindowOption();
+                ShowTextInWindow(win, StrL("Errors"), text, &opt);
             }
             break;
         }

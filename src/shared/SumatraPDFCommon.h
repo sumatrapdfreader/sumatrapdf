@@ -46,6 +46,7 @@ struct CustomCommand;
 bool RunDocColorsFollowThemeCmd(CustomCommand* cmd);
 void ToggleCaption(CustomCommand* cmd);
 void ToggleSidebarAutoHide(CustomCommand* cmd);
+TextWindowOption DocErrorsWindowOption();
 bool showTocByDefault(Str path, EngineBase* engine);
 bool IsEbookFileType(FileType ft);
 DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine);
