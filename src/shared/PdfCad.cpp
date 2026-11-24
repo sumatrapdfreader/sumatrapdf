@@ -669,21 +669,90 @@ bool GetShowLineWeights() {
 
 struct HairlineDevice {
     fz_device super;
-    float deviceScale;
+    // the draw device's transform: page space to device pixels
+    fz_matrix deviceCtm;
+    fz_matrix deviceInv;
 };
 
-// one device pixel wide: a width of 0 draws thinner, too faint with anti-aliasing
+// copies a path into device space, the points it passes through on pixel centers
+struct HairlineSnap {
+    fz_path* out;
+    fz_matrix toDevice;
+};
+
+static fz_point HairlineDevicePt(HairlineSnap* s, float x, float y) {
+    return fz_transform_point(fz_make_point(x, y), s->toDevice);
+}
+
+// the middle of the pixel: a 1px line there fills one pixel row (or column)
+// instead of spreading over two half-gray ones (#6567)
+static fz_point HairlineSnapPt(HairlineSnap* s, float x, float y) {
+    fz_point p = HairlineDevicePt(s, x, y);
+    return fz_make_point(floorf(p.x) + 0.5f, floorf(p.y) + 0.5f);
+}
+
+static void hairline_moveto(fz_context* ctx, void* arg, float x, float y) {
+    auto* s = (HairlineSnap*)arg;
+    fz_point p = HairlineSnapPt(s, x, y);
+    fz_moveto(ctx, s->out, p.x, p.y);
+}
+
+static void hairline_lineto(fz_context* ctx, void* arg, float x, float y) {
+    auto* s = (HairlineSnap*)arg;
+    fz_point p = HairlineSnapPt(s, x, y);
+    fz_lineto(ctx, s->out, p.x, p.y);
+}
+
+// control points keep their place: snapping them would bend the curve
+static void hairline_curveto(fz_context* ctx, void* arg, float x1, float y1, float x2, float y2, float x3, float y3) {
+    auto* s = (HairlineSnap*)arg;
+    fz_point c1 = HairlineDevicePt(s, x1, y1);
+    fz_point c2 = HairlineDevicePt(s, x2, y2);
+    fz_point p = HairlineSnapPt(s, x3, y3);
+    fz_curveto(ctx, s->out, c1.x, c1.y, c2.x, c2.y, p.x, p.y);
+}
+
+static void hairline_closepath(fz_context* ctx, void* arg) {
+    fz_closepath(ctx, ((HairlineSnap*)arg)->out);
+}
+
+// one device pixel wide, on the pixel grid like Acrobat's Line Weights off: a
+// width of 0 draws thinner, too faint with anti-aliasing
 static void hairline_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path, const fz_stroke_state* stroke,
                                  fz_matrix ctm, fz_colorspace* colorspace, const float* color, float alpha,
                                  fz_color_params color_params) {
     auto* hdev = (HairlineDevice*)dev;
-    fz_stroke_state* thin = fz_clone_stroke_state(ctx, stroke);
-    float expansion = fz_matrix_expansion(ctm) * hdev->deviceScale;
-    thin->linewidth = expansion > 0 ? 1.f / expansion : 0;
+    fz_matrix toDevice = fz_concat(ctm, hdev->deviceCtm);
+    float expansion = fz_matrix_expansion(toDevice);
+
+    fz_path_walker walker{};
+    walker.moveto = hairline_moveto;
+    walker.lineto = hairline_lineto;
+    walker.curveto = hairline_curveto;
+    walker.closepath = hairline_closepath;
+
+    fz_stroke_state* thin = nullptr;
+    fz_path* snapped = nullptr;
+    fz_var(thin);
+    fz_var(snapped);
     fz_try(ctx) {
-        fz_stroke_path(ctx, dev->passthrough, path, thin, ctm, colorspace, color, alpha, color_params);
+        thin = fz_clone_stroke_state(ctx, stroke);
+        thin->linewidth = 1.f;
+        // ends on pixel centers: a square cap reaches the pixel edge, a butt cap stops half a pixel short
+        thin->start_cap = thin->end_cap = thin->dash_cap = FZ_LINECAP_SQUARE;
+        // dashes were in the path's units, the path is now in pixels
+        for (int i = 0; i < thin->dash_len; i++) {
+            thin->dash_list[i] *= expansion;
+        }
+        thin->dash_phase *= expansion;
+        snapped = fz_new_path(ctx);
+        HairlineSnap snap{snapped, toDevice};
+        fz_walk_path(ctx, path, &walker, &snap);
+        // the draw device applies deviceCtm: undo it so the snapped points stay put
+        fz_stroke_path(ctx, dev->passthrough, snapped, thin, hdev->deviceInv, colorspace, color, alpha, color_params);
     }
     fz_always(ctx) {
+        fz_drop_path(ctx, snapped);
         fz_drop_stroke_state(ctx, thin);
     }
     fz_catch(ctx) {
@@ -693,12 +762,15 @@ static void hairline_stroke_path(fz_context* ctx, fz_device* dev, const fz_path*
 
 // Wrap <inner> so that strokes ignore their width, like Acrobat's Line Weights
 // turned off. Takes ownership of <inner>: dropping the wrapper drops it.
-// <deviceScale> is the draw device's CTM expansion (zoom), which is not in the
-// per-call CTM when running a display list with fz_identity.
-fz_device* PdfHairlineWrapDevice(fz_context* ctx, fz_device* inner, float deviceScale) {
+// <deviceCtm> is the draw device's fz_matrix (zoom, rotation) as 6 floats, which
+// is not in the per-call CTM when running a display list with fz_identity.
+// Floats because fz_matrix can't be forward-declared in PdfCad.h.
+fz_device* PdfHairlineWrapDevice(fz_context* ctx, fz_device* inner, const float* deviceCtm) {
     auto* hdev = (HairlineDevice*)fz_new_passthrough_device_of_size(ctx, inner, sizeof(HairlineDevice));
     fz_drop_device(ctx, inner);
-    hdev->deviceScale = deviceScale > 0 ? deviceScale : 1.f;
+    const float* m = deviceCtm;
+    hdev->deviceCtm = fz_make_matrix(m[0], m[1], m[2], m[3], m[4], m[5]);
+    hdev->deviceInv = fz_invert_matrix(hdev->deviceCtm);
     hdev->super.stroke_path = hairline_stroke_path;
     return &hdev->super;
 }
