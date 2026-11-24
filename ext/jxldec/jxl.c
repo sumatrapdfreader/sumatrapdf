@@ -9643,6 +9643,11 @@ static void up_block8(const float *const *srow, uint32_t x, uint32_t N,
 #endif
 
 #ifdef JXL_UPSAMPLE_NEON
+static inline float32x4_t up_clamp4_neon(float32x4_t v, float32x4_t lo,
+                                       float32x4_t hi) {
+    v = vbslq_f32(vcltq_f32(v, lo), lo, v);
+    return vbslq_f32(vcgtq_f32(v, hi), hi, v);
+}
 
 static void up_block4_neon(const float *const *srow, uint32_t x, uint32_t n,
                            const float *kernel, float *const *dst_rows) {
@@ -9660,31 +9665,41 @@ static void up_block4_neon(const float *const *srow, uint32_t x, uint32_t n,
             hi = vbslq_f32(vcgtq_f32(v, hi), v, hi);
         }
     }
+    if (n == 2) {
+        for (oy = 0; oy < 2; oy++, kernel += 2 * 25) {
+            float32x4_t a = vdupq_n_f32(0.0f), b = a;
+            for (t = 0; t < 25; t++) {
+                a += taps[t] * kernel[t];
+                b += taps[t] * kernel[25 + t];
+            }
+            float32x4x2_t pixels = {{up_clamp4_neon(a, lo, hi),
+                                     up_clamp4_neon(b, lo, hi)}};
+            vst2q_f32(dst_rows[oy] + (size_t)x * 2, pixels);
+        }
+        return;
+    }
+
+    kernel += (size_t)n * n * 25;
     for (oy = 0; oy < n; oy++) {
         float *dst = dst_rows[oy] + (size_t)x * n;
-        float32x4_t out[8];
-        for (ox = 0; ox < n; ox++, kernel += 25) {
-            float32x4_t sum = vdupq_n_f32(0.0f);
-            for (t = 0; t < 25; t++)
-                sum += taps[t] * kernel[t];
-            sum = vbslq_f32(vcltq_f32(sum, lo), lo, sum);
-            out[ox] = vbslq_f32(vcgtq_f32(sum, hi), hi, sum);
-        }
-        if (n == 2) {
-            float32x4x2_t pixels = {{out[0], out[1]}};
-            vst2q_f32(dst, pixels);
-        } else if (n == 4) {
-            float32x4x4_t pixels = {{out[0], out[1], out[2], out[3]}};
-            vst4q_f32(dst, pixels);
-        } else {
-
-            float32x4x4_t lo_pixels = {0}, hi_pixels = {0};
-            for (ox = 0; ox < 4; ox++) {
-                lo_pixels.val[ox] = vzip1q_f32(out[ox], out[ox + 4]);
-                hi_pixels.val[ox] = vzip2q_f32(out[ox], out[ox + 4]);
+        for (ox = 0; ox < n; ox += 4, kernel += 4 * 25) {
+            float32x4_t a = vdupq_n_f32(0.0f), b = a, c = a, d = a;
+            for (t = 0; t < 25; t++) {
+                float32x4_t k = vld1q_f32(kernel + 4 * t);
+                float32x4_t v = taps[t];
+                a += k * vgetq_lane_f32(v, 0);
+                b += k * vgetq_lane_f32(v, 1);
+                c += k * vgetq_lane_f32(v, 2);
+                d += k * vgetq_lane_f32(v, 3);
             }
-            vst4q_f32(dst, lo_pixels);
-            vst4q_f32(dst + 16, hi_pixels);
+            vst1q_f32(dst + ox, up_clamp4_neon(a, vdupq_laneq_f32(lo, 0),
+                                                 vdupq_laneq_f32(hi, 0)));
+            vst1q_f32(dst + ox + n, up_clamp4_neon(b, vdupq_laneq_f32(lo, 1),
+                                                     vdupq_laneq_f32(hi, 1)));
+            vst1q_f32(dst + ox + 2 * n, up_clamp4_neon(c, vdupq_laneq_f32(lo, 2),
+                                                         vdupq_laneq_f32(hi, 2)));
+            vst1q_f32(dst + ox + 3 * n, up_clamp4_neon(d, vdupq_laneq_f32(lo, 3),
+                                                         vdupq_laneq_f32(hi, 3)));
         }
     }
 }
@@ -9698,11 +9713,32 @@ static const float *weights_for(const jxl_image_metadata *meta, uint32_t shift) 
 
 float *jxl_upsample_kernel(jxl_ctx *ctx, uint32_t shift,
                             const jxl_image_metadata *meta) {
-    uint32_t N = 1u << shift;
+    uint32_t N;
+    size_t count;
     float *kernel;
     if (shift == 0 || shift > 3) return NULL;
-    kernel = (float *)jxl_calloc(ctx, (size_t)N * N * 25, sizeof(float));
-    if (kernel) build_kernel(kernel, shift, weights_for(meta, shift));
+    N = 1u << shift;
+    count = (size_t)N * N * 25;
+#ifdef JXL_UPSAMPLE_NEON
+    kernel = (float *)jxl_calloc(ctx, shift > 1 ? count * 2 : count, sizeof(float));
+#else
+    kernel = (float *)jxl_calloc(ctx, count, sizeof(float));
+#endif
+    if (!kernel) return NULL;
+    build_kernel(kernel, shift, weights_for(meta, shift));
+#ifdef JXL_UPSAMPLE_NEON
+    if (shift > 1) {
+
+        size_t base;
+        for (base = 0; base < count; base += 4 * 25) {
+            size_t tap, phase;
+            for (tap = 0; tap < 25; tap++)
+                for (phase = 0; phase < 4; phase++)
+                    kernel[count + base + 4 * tap + phase] =
+                        kernel[base + 25 * phase + tap];
+        }
+    }
+#endif
     return kernel;
 }
 
@@ -12926,6 +12962,23 @@ void jxl_dequant_varblock(float *coeff, size_t stride, int tr, int32_t hf_mul,
                 _mm_storeu_ps(row + x, v);
             }
         }
+#elif defined(JXL_HAVE_NEON) && !defined(JXL_VARDCT_FORCE_SCALAR)
+        {
+            const float32x4_t numerator = vdupq_n_f32(quant_bias_numerator);
+            const float32x4_t one = vdupq_n_f32(1.0f);
+            for (; x + 4 <= w; x += 4) {
+
+                int32x4_t qn = vreinterpretq_s32_f32(vld1q_f32(row + x));
+                float32x4_t v = vcvtq_f32_s32(qn);
+                uint32x4_t small = vcleq_f32(vabsq_f32(v), one);
+                float32x4_t biased = v * quant_bias;
+
+                float32x4_t adjusted = v - vdivq_f32(numerator, v);
+                v = vbslq_f32(small, biased, adjusted);
+                v *= vld1q_f32(mrow + x);
+                vst1q_f32(row + x, v * mul);
+            }
+        }
 #endif
         for (; x < w; x++) {
             int32_t qn = *(int32_t *)&row[x];
@@ -13791,6 +13844,43 @@ static void dct4_v4(const dct_vec4 in[4], dct_vec4 out[4], int inverse) {
     }
 }
 
+static JXL_INLINE_HINT void dct8_v4(dct_vec4 io[8], int inverse) {
+    const dct_vec4 sqrt2 = DCT_V4_SPLAT(JXL_SQRT2);
+    const dct_vec4 half_v = DCT_V4_SPLAT(0.5f);
+    int i;
+    dct_vec4 in0[4], in1[4], out0[4], out1[4];
+    if (!inverse) {
+        for (i = 0; i < 4; i++) {
+            in0[i] = DCT_V4_MUL(DCT_V4_ADD(io[i], io[7 - i]), half_v);
+            in1[i] = DCT_V4_MUL(
+                DCT_V4_MUL(DCT_V4_SUB(io[i], io[7 - i]),
+                           DCT_V4_SPLAT(sec_half_8[i])),
+                half_v);
+        }
+        dct4_v4(in0, out0, 0);
+        dct4_v4(in1, out1, 0);
+        for (i = 0; i < 4; i++) io[i * 2] = out0[i];
+        out1[0] = DCT_V4_MUL(out1[0], sqrt2);
+        for (i = 0; i < 3; i++)
+            io[i * 2 + 1] = DCT_V4_ADD(out1[i], out1[i + 1]);
+        io[7] = out1[3];
+    } else {
+        in0[0] = io[0]; in0[1] = io[2];
+        in0[2] = io[4]; in0[3] = io[6];
+        in1[0] = DCT_V4_MUL(io[1], sqrt2);
+        in1[1] = DCT_V4_ADD(io[3], io[1]);
+        in1[2] = DCT_V4_ADD(io[5], io[3]);
+        in1[3] = DCT_V4_ADD(io[7], io[5]);
+        dct4_v4(in0, out0, 1);
+        dct4_v4(in1, out1, 1);
+        for (i = 0; i < 4; i++) {
+            dct_vec4 r = DCT_V4_MUL(out1[i], DCT_V4_SPLAT(sec_half_8[i]));
+            io[i] = DCT_V4_ADD(out0[i], r);
+            io[7 - i] = DCT_V4_SUB(out0[i], r);
+        }
+    }
+}
+
 static void dct_1d_v4(dct_vec4 *io, int n, dct_vec4 *scratch, int inverse) {
     const dct_vec4 sqrt2 = DCT_V4_SPLAT(JXL_SQRT2);
     const dct_vec4 half_v = DCT_V4_SPLAT(0.5f);
@@ -13811,37 +13901,7 @@ static void dct_1d_v4(dct_vec4 *io, int n, dct_vec4 *scratch, int inverse) {
         return;
     }
     if (n == 8) {
-        dct_vec4 in0[4], in1[4], out0[4], out1[4];
-        if (!inverse) {
-            for (i = 0; i < 4; i++) {
-                in0[i] = DCT_V4_MUL(DCT_V4_ADD(io[i], io[7 - i]), half_v);
-                in1[i] = DCT_V4_MUL(
-                    DCT_V4_MUL(DCT_V4_SUB(io[i], io[7 - i]),
-                               DCT_V4_SPLAT(sec_half_8[i])),
-                    half_v);
-            }
-            dct4_v4(in0, out0, 0);
-            dct4_v4(in1, out1, 0);
-            for (i = 0; i < 4; i++) io[i * 2] = out0[i];
-            out1[0] = DCT_V4_MUL(out1[0], sqrt2);
-            for (i = 0; i < 3; i++)
-                io[i * 2 + 1] = DCT_V4_ADD(out1[i], out1[i + 1]);
-            io[7] = out1[3];
-        } else {
-            in0[0] = io[0]; in0[1] = io[2];
-            in0[2] = io[4]; in0[3] = io[6];
-            in1[0] = DCT_V4_MUL(io[1], sqrt2);
-            in1[1] = DCT_V4_ADD(io[3], io[1]);
-            in1[2] = DCT_V4_ADD(io[5], io[3]);
-            in1[3] = DCT_V4_ADD(io[7], io[5]);
-            dct4_v4(in0, out0, 1);
-            dct4_v4(in1, out1, 1);
-            for (i = 0; i < 4; i++) {
-                dct_vec4 r = DCT_V4_MUL(out1[i], DCT_V4_SPLAT(sec_half_8[i]));
-                io[i] = DCT_V4_ADD(out0[i], r);
-                io[7 - i] = DCT_V4_SUB(out0[i], r);
-            }
-        }
+        dct8_v4(io, inverse);
         return;
     }
     {
@@ -14330,6 +14390,32 @@ static void dct_rows4(float *data, size_t stride, int w, int inverse) {
 }
 #endif
 
+#ifdef JXL_DCT_NEON
+
+static JXL_INLINE_HINT void dct8x8_neon(float *data, size_t stride, int inverse) {
+    dct_vec4 cols[2][8];
+    int x, y, i;
+    for (y = 0; y < 8; y += 4) {
+        dct_vec4 rows[8];
+        for (x = 0; x < 8; x += 4) {
+            for (i = 0; i < 4; i++)
+                rows[x + i] = vld1q_f32(data + (size_t)(y + i) * stride + x);
+            dct_transpose4_neon(rows + x, rows + x + 1, rows + x + 2, rows + x + 3);
+        }
+        dct8_v4(rows, inverse);
+        for (x = 0; x < 8; x += 4) {
+            dct_transpose4_neon(rows + x, rows + x + 1, rows + x + 2, rows + x + 3);
+            for (i = 0; i < 4; i++) cols[x / 4][y + i] = rows[x + i];
+        }
+    }
+    for (x = 0; x < 2; x++) {
+        dct8_v4(cols[x], inverse);
+        for (y = 0; y < 8; y++)
+            vst1q_f32(data + (size_t)y * stride + 4 * x, cols[x][y]);
+    }
+}
+#endif
+
 static void dct_2d_rows(float *data, size_t stride, int w, int h, int inverse,
                         int nz_rows) {
     float mul = inverse ? 1.0f : 0.5f;
@@ -14434,6 +14520,13 @@ static void dct_2d_rows(float *data, size_t stride, int w, int h, int inverse,
 }
 
 void jxl_dct_2d(float *data, size_t stride, int w, int h, int inverse) {
+#ifdef JXL_DCT_NEON
+    if (w == 8 && h == 8) {
+        if (inverse) dct8x8_neon(data, stride, 1);
+        else dct8x8_neon(data, stride, 0);
+        return;
+    }
+#endif
     dct_2d_rows(data, stride, w, h, inverse, h);
 }
 
