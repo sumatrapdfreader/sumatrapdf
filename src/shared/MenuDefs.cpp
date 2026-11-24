@@ -257,22 +257,35 @@ MenuDef menuDefShow[] = {
         CmdToggleSidebarAutoHide,
     },
     {
+        StrL(kMenuSeparator),
+        0,
+    },
+    {
+        TrN("&Highlight Form Fields"),
+        CmdToggleHighlightFormFields,
+    },
+    {
+        TrN("Transparency Gri&d"),
+        CmdToggleTransparencyGrid,
+    },
+    {
+        TrN("Page Grid"),
+        CmdTogglePageGrid,
+    },
+    {
+        TrN("Configure Page Grid..."),
+        CmdConfigurePageGrid,
+    },
+    {
         {},
         0,
     },
 };
 //] ACCESSKEY_GROUP Show Menu
 
-//[ ACCESSKEY_GROUP View Menu
-MenuDef menuDefView[] = {
-    {
-        TrN("Command Palette"),
-        CmdCommandPalette,
-    },
-    {
-        TrN("Navigate Thumbnails"),
-        CmdNavigateThumbnail,
-    },
+// how pages are laid out, like Adobe Reader's View > Page Display
+//[ ACCESSKEY_GROUP Page Display Menu
+MenuDef menuDefPageDisplay[] = {
     {
         TrN("&Single Page"),
         CmdSinglePageView,
@@ -286,6 +299,10 @@ MenuDef menuDefView[] = {
         CmdBookView,
     },
     {
+        StrL(kMenuSeparator),
+        0,
+    },
+    {
         TrN("Show &Pages Continuously"),
         CmdToggleContinuousView,
     },
@@ -295,13 +312,63 @@ MenuDef menuDefView[] = {
         CmdToggleMangaMode,
     },
     {
+        TrN("&Uniform Page Width"),
+        CmdToggleUniformPageWidth,
+    },
+    {
         TrN("Auto-Rotate Wide Pages"),
         CmdToggleAutoRotateWidePages,
     },
     {
-        TrN("&Uniform Page Width"),
-        CmdToggleUniformPageWidth,
+        StrL(kMenuSeparator),
+        0,
     },
+    {
+        TrN("Read &Columns"),
+        CmdToggleReadColumns,
+    },
+    {
+        TrN("Read Columns: Show &Whole Page"),
+        CmdToggleColumnsWholePage,
+    },
+    {
+        StrL(kMenuSeparator),
+        0,
+    },
+    {
+        TrN("View As &Hex"),
+        CmdViewAsHex,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Page Display Menu
+
+//[ ACCESSKEY_GROUP Rotate Menu
+MenuDef menuDefRotate[] = {
+    {
+        TrN("Rotate &Left"),
+        CmdRotateLeft,
+    },
+    {
+        TrN("Rotate &Right"),
+        CmdRotateRight,
+    },
+    {
+        TrN("Mirror Pages"),
+        CmdToggleMirror,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Rotate Menu
+
+//[ ACCESSKEY_GROUP Trim Menu
+MenuDef menuDefTrim[] = {
     {
         TrN("&Trim Empty Margins"),
         CmdToggleTrimEmptyMargins,
@@ -315,36 +382,45 @@ MenuDef menuDefView[] = {
         CmdShowWholePages,
     },
     {
+        StrL(kMenuSeparator),
+        0,
+    },
+    {
         TrN("Save Trimmed Pages As..."),
         CmdSaveTrimmedPagesAs,
     },
     {
-        TrN("Read &Columns"),
-        CmdToggleReadColumns,
+        {},
+        0,
     },
+};
+//] ACCESSKEY_GROUP Trim Menu
+
+//[ ACCESSKEY_GROUP View Menu
+MenuDef menuDefView[] = {
     {
-        TrN("Read Columns: Show &Whole Page"),
-        CmdToggleColumnsWholePage,
-    },
-    {
-        TrN("View As &Hex"),
-        CmdViewAsHex,
+        TrN("Command Palette"),
+        CmdCommandPalette,
     },
     {
         StrL(kMenuSeparator),
         0,
     },
     {
-        TrN("Rotate &Left"),
-        CmdRotateLeft,
+        TrN("Page &Display"),
+        (UINT_PTR)menuDefPageDisplay,
     },
     {
-        TrN("Rotate &Right"),
-        CmdRotateRight,
+        TrN("&Rotate"),
+        (UINT_PTR)menuDefRotate,
     },
     {
-        TrN("Mirror Pages"),
-        CmdToggleMirror,
+        TrN("Tri&m"),
+        (UINT_PTR)menuDefTrim,
+    },
+    {
+        TrN("Sh&ow"),
+        (UINT_PTR)menuDefShow,
     },
     {
         StrL(kMenuSeparator),
@@ -367,30 +443,6 @@ MenuDef menuDefView[] = {
         CmdToggleReadingBar,
     },
     {
-        StrL(kMenuSeparator),
-        0,
-    },
-    {
-        TrN("Sh&ow"),
-        (UINT_PTR)menuDefShow,
-    },
-    {
-        TrN("&Highlight Form Fields"),
-        CmdToggleHighlightFormFields,
-    },
-    {
-        TrN("Transparency Gri&d"),
-        CmdToggleTransparencyGrid,
-    },
-    {
-        TrN("Page Grid"),
-        CmdTogglePageGrid,
-    },
-    {
-        TrN("Configure Page Grid..."),
-        CmdConfigurePageGrid,
-    },
-    {
         TrN("Measure"),
         CmdMeasure,
     },
@@ -399,24 +451,8 @@ MenuDef menuDefView[] = {
         0,
     },
     {
-        TrN("Claude chat"),
-        CmdAIChatWithClaudeCode,
-    },
-    {
-        TrN("Grok chat"),
-        CmdAIChatWithGrokBuild,
-    },
-    {
-        TrN("Codex chat"),
-        CmdAIChatWithOpenAICodex,
-    },
-    {
-        TrN("Antigravity chat"),
-        CmdAIChatWithAntiGravity,
-    },
-    {
-        TrN("Custom AI"),
-        CmdAIChatWithCustomAPI,
+        TrN("AI C&hat"),
+        (UINT_PTR)menuDefDocumentAIChat,
     },
     {
         {},
@@ -446,6 +482,10 @@ MenuDef menuDefGoTo[] = {
     {
         TrN("Pa&ge..."),
         CmdGoToPage,
+    },
+    {
+        TrN("Navigate Thumbnails"),
+        CmdNavigateThumbnail,
     },
     {
         TrN("Next &Chapter"),

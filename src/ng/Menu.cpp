@@ -687,8 +687,11 @@ static bool SetFixedLayoutState(MenuItemModel& it, DisplayModel* dm) {
 // the flag and the shell draws the tick
 // the Show submenu's items are on/off toggles: check the ones that are on
 static void SetShowMenuChecks(MenuModel* m, MainWindow* win) {
-    for (MenuDef* d = menuDefShow; d->idOrSubmenu != 0; d++) {
+    for (MenuDef* d = menuDefShow; d->title.s; d++) {
         int cmdId = (int)d->idOrSubmenu;
+        if (cmdId == 0) {
+            continue; // separator
+        }
         bool on = false;
         if (ToggleCmdState(win, nullptr, cmdId, on)) {
             MenuSetChecked(m, cmdId, on);

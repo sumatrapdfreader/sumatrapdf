@@ -1,6 +1,7 @@
 // Main menu state that ng must share with orig: no Read Aloud menu on the home
-// page; View > Show Whole Pages only with a user crop and Read Columns: Show
-// Whole Page only in read-columns mode, so both are disabled on a fresh PDF.
+// page; View > Trim > Show Whole Pages only with a user crop and View > Page
+// Display > Read Columns: Show Whole Page only in read-columns mode, so both are
+// disabled on a fresh PDF.
 //
 // Run: bun tests/main-menu-parity.ts [-ng] [--no-build]
 
