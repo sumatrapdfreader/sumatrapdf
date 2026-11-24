@@ -575,6 +575,7 @@ gp::El* DialogSelect::BuildCombo(gp::Ctx* cx, Str id, gp::InputState* edit, floa
                         ->Disabled(disabled)
                         ->W(gp::kFill)
                         ->IntoEl();
+    EditStyle(cx, field, edit, EditLook::Combo);
     if (dy > 0) {
         field->H(dy);
     }
@@ -1034,6 +1035,19 @@ gp::El* DlgGhostButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick,
     }
     b->Child(gp::TextEl(cx->a, text)->Font(fontPx)->Fg(ToGpui(colText)));
     return DlgAccelUnderline(cx, b, text);
+}
+
+// Gives a gpc::Input / Textarea's field (what IntoEl() returns) orig's edit border.
+// gpui's own look darkens the border and draws a ring around it while focused;
+// orig's edits look the same with and without focus, except an editable
+// DropDown, whose border turns the highlight color (blue).
+gp::El* EditStyle(gp::Ctx* cx, gp::El* field, gp::InputState* edit, EditLook look, float radius) {
+    Color col = ThemeEdgeColor();
+    bool focused = edit && cx->win && gp::FocusHandleIsFocused(cx->win, edit->focus);
+    if (look == EditLook::Combo && focused) {
+        col = SysHighlightBgColor();
+    }
+    return field->Border(1, ToGpui(col))->Radius(radius)->FocusRing(false);
 }
 
 gp::El* DlgUnderlineInput(gp::Ctx* cx, gp::Str id, gp::InputState* edit, float fontPx, Color underline, bool masked,

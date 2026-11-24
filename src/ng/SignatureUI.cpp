@@ -285,7 +285,9 @@ gp::El* SignatureDialogBuild(MainWindow* win, gp::Ctx* cx) {
 
     float footerDy = (2 * kToolDlgFootPadDy) + kDlgBtnDy;
     float editDy = (float)kSigDialogDy - kSigDlgHeadDy - footerDy - (2 * kSigDlgEditPadDy);
-    gp::El* edit = gpc::Textarea::New(cx, GStrL("signature-text"), gSigDlg.edit)->H(editDy)->Readonly()->IntoEl();
+    gp::El* edit =
+        EditStyle(cx, gpc::Textarea::New(cx, GStrL("signature-text"), gSigDlg.edit)->H(editDy)->Readonly()->IntoEl(),
+                  gSigDlg.edit, EditLook::Frame);
     gp::El* text = gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(kToolDlgPadDx)->PadY(kSigDlgEditPadDy)->Child(edit);
 
     gp::El* cert = nullptr;

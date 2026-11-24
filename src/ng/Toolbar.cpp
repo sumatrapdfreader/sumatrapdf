@@ -1267,11 +1267,13 @@ static void AddPageInfo(MainWindow* win, gp::Ctx* cx, gp::El* row) {
         return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(13)->Fg(ToGpui(fg))->PadL(padL)->PadR(padR);
     };
     auto edit = [&](gp::Str id, gp::InputState* st) {
-        return gpc::Input::New(cx, id, st)
-            ->WithSize(gp::UiSize::Small)
-            ->Align(gpc::InputAlign::Right)
-            ->W(editDx)
-            ->IntoEl();
+        return EditStyle(cx,
+                         gpc::Input::New(cx, id, st)
+                             ->WithSize(gp::UiSize::Small)
+                             ->Align(gpc::InputAlign::Right)
+                             ->W(editDx)
+                             ->IntoEl(),
+                         st, EditLook::Frame);
     };
 
     group->Child(text(tb->hasChapters ? Tr("Chapter:") : Tr("Page:"), smallGap, pageGap));

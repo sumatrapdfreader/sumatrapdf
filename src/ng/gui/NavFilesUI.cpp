@@ -1579,12 +1579,14 @@ static gp::El* NavContentEl(gp::Ctx* cx, bool ownWindow) {
     }
     if (gNav.editingPath) {
         gNav.dirEdit->onChange = gp::ListenTo(gNav.view, &NavFilesView::OnDirEdit);
-        top->Child(
-            gp::Div(cx->a)->Flex1()->MinW(0)->PadX(4)->Child(gpc::Input::New(cx, GStrL("nav-dir-edit"), gNav.dirEdit)
-                                                                 ->WithSize(gp::UiSize::Small)
-                                                                 ->W(gp::kFill)
-                                                                 ->IntoEl()
-                                                                 ->H(kNavEditDy)));
+        top->Child(gp::Div(cx->a)->Flex1()->MinW(0)->PadX(4)->Child(
+            EditStyle(cx,
+                      gpc::Input::New(cx, GStrL("nav-dir-edit"), gNav.dirEdit)
+                          ->WithSize(gp::UiSize::Small)
+                          ->W(gp::kFill)
+                          ->IntoEl(),
+                      gNav.dirEdit, EditLook::Frame)
+                ->H(kNavEditDy)));
         if (gNav.focusPathPending) {
             gp::InputFocus(gNav.dirEdit, cx);
             gp::InputSelectAll(gNav.dirEdit, cx);
@@ -1615,11 +1617,14 @@ static gp::El* NavContentEl(gp::Ctx* cx, bool ownWindow) {
     // second row: filters the list below as you type
     gp::InputSetPlaceholder(gNav.filterEdit, ToGpui(Tr("Search")));
     gNav.filterEdit->onChange = gp::ListenTo(gNav.view, &NavFilesView::OnFilter);
-    col->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->Child(gpc::Input::New(cx, GStrL("nav-filter"), gNav.filterEdit)
-                                                                  ->WithSize(gp::UiSize::Small)
-                                                                  ->W(gp::kFill)
-                                                                  ->IntoEl()
-                                                                  ->H(kNavEditDy)));
+    col->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->Child(
+        EditStyle(cx,
+                  gpc::Input::New(cx, GStrL("nav-filter"), gNav.filterEdit)
+                      ->WithSize(gp::UiSize::Small)
+                      ->W(gp::kFill)
+                      ->IntoEl(),
+                  gNav.filterEdit, EditLook::Frame)
+            ->H(kNavEditDy)));
 
     int n = len(gNav.entries);
     auto* rows = gp::ArenaNew<NavRowsUser>(cx->a);

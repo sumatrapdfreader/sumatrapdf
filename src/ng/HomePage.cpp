@@ -201,6 +201,8 @@ constexpr int kHomeSearchFontPx = 14;
 constexpr int kSearchThumbnailsGapY = 28;
 constexpr int kHomeHeaderTopY = 24;
 constexpr int kHomeSearchMaxDx = 340;
+// orig's HomeSearchBorderCtrl::Paint
+constexpr int kHomeSearchRadius = 6;
 constexpr int kHomeTextFontPx = 13;
 constexpr int kHomeMetaFontPx = 12;
 // the home page brand: five stripes in the logo colors and the name
@@ -1730,10 +1732,12 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                             ->Shrink0()
                             ->H((float)borderDy)
                             ->BoundsOut(&h->searchBounds)
-                            ->Child(gpc::Input::New(cx, GStrL("home-search"), h->search)
-                                        ->WithSize(gp::UiSize::Small)
-                                        ->W(gp::kFill)
-                                        ->IntoEl()
+                            ->Child(EditStyle(cx,
+                                              gpc::Input::New(cx, GStrL("home-search"), h->search)
+                                                  ->WithSize(gp::UiSize::Small)
+                                                  ->W(gp::kFill)
+                                                  ->IntoEl(),
+                                              h->search, EditLook::Frame, (float)AppShellDpiPx(win, kHomeSearchRadius))
                                         ->Font((float)AppShellDpiPx(win, kHomeSearchFontPx))
                                         ->H((float)borderDy));
     toolRow->Child(searchBox);

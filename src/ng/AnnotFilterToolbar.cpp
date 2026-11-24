@@ -1323,8 +1323,9 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
                            ->IntoEl());
         card->Child(caption);
     }
-    gp::El* editEl =
-        gpc::Input::New(cx, GStrL("annot-filter"), f->edit)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl();
+    gp::El* editEl = EditStyle(
+        cx, gpc::Input::New(cx, GStrL("annot-filter"), f->edit)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl(),
+        f->edit, EditLook::Frame);
     if (ownWindow) {
         editEl->H(kEditDy);
     }

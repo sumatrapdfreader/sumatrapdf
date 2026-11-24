@@ -1036,8 +1036,9 @@ gp::El* AIChatPanelBuild(MainWindow* win, gp::Ctx* cx) {
 
     // Enter sends, Shift+Enter inserts a line break; Stop appears while working
     gp::El* inputRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->Gap(4);
-    inputRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
-        gpc::Textarea::New(cx, GStrL("aichat-input"), p->input)->Rows(3)->Disabled(!enableInput)->IntoEl()));
+    inputRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(EditStyle(
+        cx, gpc::Textarea::New(cx, GStrL("aichat-input"), p->input)->Rows(3)->Disabled(!enableInput)->IntoEl(),
+        p->input, EditLook::Frame)));
     if (working) {
         gp::El* buttons = gp::Div(cx->a)->FlexCol()->Gap(4);
         buttons->Child(gpc::Button::New(cx, GStrL("aichat-stop"))

@@ -2561,10 +2561,9 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     filter->onChange = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocFilter);
     pane->CaptureKeyDown(gp::ListenTo(Ui(win)->view, &SidebarView::OnFilterKey));
     pane->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(6)->PadB(4)->Child(
-        gpc::Input::New(cx, GStrL("toc-filter"), filter)
-            ->WithSize(gp::UiSize::Small)
-            ->W(gp::kFill)
-            ->IntoEl()
+        EditStyle(cx,
+                  gpc::Input::New(cx, GStrL("toc-filter"), filter)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl(),
+                  filter, EditLook::Frame)
             ->Font((float)ui->filterFontPx)));
 
     float* sizes = nRows > 0 ? (float*)cx->a->Alloc(nRows * (int)sizeof(float)) : nullptr;
@@ -2631,8 +2630,9 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot, bool
     gp::InputState* filter = EnsureInput(win, &ui->favFilter, Tr("Search Favorites"));
     filter->onChange = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavFilter);
     pane->CaptureKeyDown(gp::ListenTo(Ui(win)->view, &SidebarView::OnFilterKey));
-    pane->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(6)->PadB(4)->Child(
-        gpc::Input::New(cx, GStrL("fav-filter"), filter)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl()));
+    pane->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(6)->PadB(4)->Child(EditStyle(
+        cx, gpc::Input::New(cx, GStrL("fav-filter"), filter)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl(),
+        filter, EditLook::Frame)));
 
     struct FavRowsUser {
         MainWindow* win = nullptr;

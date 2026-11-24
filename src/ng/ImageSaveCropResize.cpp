@@ -1769,10 +1769,13 @@ gp::El* ImageEditWindowBuild(MainWindow* win, gp::Ctx* cx) {
     body->Child(gp::TextEl(cx->a, GpuiDup(cx->a, InfoTextTemp()))->Font(12)->Fg(th.mutedFg));
 
     gp::El* destRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    destRow->Child(gp::Div(cx->a)->Flex1()->Child(gpc::Input::New(cx, GStrL("imgedit-dest"), gImgEdit.destEdit)
-                                                      ->WithSize(gp::UiSize::Small)
-                                                      ->W(gp::kFill)
-                                                      ->IntoEl()));
+    destRow->Child(
+        gp::Div(cx->a)->Flex1()->Child(EditStyle(cx,
+                                                 gpc::Input::New(cx, GStrL("imgedit-dest"), gImgEdit.destEdit)
+                                                     ->WithSize(gp::UiSize::Small)
+                                                     ->W(gp::kFill)
+                                                     ->IntoEl(),
+                                                 gImgEdit.destEdit, EditLook::Frame)));
     destRow->Child(gpc::Button::New(cx, GStrL("imgedit-browse"))
                        ->Label(ToGpui(HostTr(StrL("Browse..."))))
                        ->WithSize(gp::UiSize::Small)

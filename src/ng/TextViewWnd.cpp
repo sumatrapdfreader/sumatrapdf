@@ -9,6 +9,7 @@
 
 #include "MainWindow.h"
 #include "gui/AppShell.h"
+#include "gui/DialogWidgets.h"
 #include "TextViewWnd.h"
 
 #include "SumatraLog.h"
@@ -85,12 +86,12 @@ gp::El* TextViewView::Render(TextViewView* self, gp::Ctx* cx) {
     // the checkbox row under the text takes this much of the window's height
     constexpr float kOptionRowDy = 32;
     float editorDy = self->hasOption ? size.dipH - kOptionRowDy : size.dipH;
-    gp::El* editor = gpc::Textarea::New(cx, GStrL("text-view"), &self->text)
-                         ->H(editorDy)
-                         ->SoftWrap(false)
-                         ->Readonly()
-                         ->IntoEl()
-                         ->Mono();
+    gp::El* editor =
+        EditStyle(
+            cx,
+            gpc::Textarea::New(cx, GStrL("text-view"), &self->text)->H(editorDy)->SoftWrap(false)->Readonly()->IntoEl(),
+            &self->text, EditLook::Frame)
+            ->Mono();
     gp::El* root = gp::Div(cx->a)->SizeFull()->FlexCol()->Bg(theme.tokens.background)->Child(editor);
     if (self->hasOption) {
         gp::El* check = gpc::Checkbox::New(cx, GStrL("text-view-option"))

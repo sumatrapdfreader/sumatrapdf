@@ -995,10 +995,12 @@ static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow)
                         ->Font(13)
                         ->Fg(th.foreground)
                         ->Shrink0());
-    pagesRow->Child(gpc::Input::New(cx, GStrL("find-win-pages"), pages)
-                        ->WithSize(gp::UiSize::Small)
-                        ->W((float)DpiScale(kFindWinPagesDx))
-                        ->IntoEl());
+    pagesRow->Child(EditStyle(cx,
+                              gpc::Input::New(cx, GStrL("find-win-pages"), pages)
+                                  ->WithSize(gp::UiSize::Small)
+                                  ->W((float)DpiScale(kFindWinPagesDx))
+                                  ->IntoEl(),
+                              pages, EditLook::Frame));
     card->Child(pagesRow);
 
     card->Child(BuildResults(win, cx));

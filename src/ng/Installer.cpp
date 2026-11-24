@@ -587,11 +587,13 @@ gp::El* InstallerView::Render(InstallerView*, gp::Ctx* cx) {
                         ->Font(13)
                         ->Fg(ToGpui(kColBlack)));
         gp::El* dirRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(6);
-        dirRow->Child(
-            gp::Div(cx->a)->Flex1()->MinW(0)->Child(gpc::Input::New(cx, GStrL("inst-dir"), wnd->editInstallationDir)
-                                                        ->WithSize(gp::UiSize::Small)
-                                                        ->W(gp::kFill)
-                                                        ->IntoEl()));
+        dirRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
+            EditStyle(cx,
+                      gpc::Input::New(cx, GStrL("inst-dir"), wnd->editInstallationDir)
+                          ->WithSize(gp::UiSize::Small)
+                          ->W(gp::kFill)
+                          ->IntoEl(),
+                      wnd->editInstallationDir, EditLook::Frame)));
         dirRow->Child(DlgAccelEl(cx, gpc::Button::New(cx, GStrL("inst-browse"))->WithSize(gp::UiSize::Small),
                                  StrL("&..."), gp::ListenTo(gInstallerView, &InstallerView::OnBrowse)));
         opts->Child(dirRow);

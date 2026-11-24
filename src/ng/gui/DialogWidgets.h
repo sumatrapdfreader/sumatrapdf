@@ -272,6 +272,12 @@ gpui::El* DlgFilledButton(gpui::Ctx* cx, gpui::Str id, Str label, gpui::Listener
 // a quiet one: muted words that fill on hover
 gpui::El* DlgGhostButton(gpui::Ctx* cx, gpui::Str id, Str label, gpui::Listener onClick, bool disabled = false,
                          float fontPx = kDlgBtnFontPx);
+// orig's edit boxes: Edit (withFrame / withBorder) or an editable DropDown
+enum class EditLook {
+    Frame, // a 1px edge that focus doesn't change
+    Combo, // a 1px edge that turns the highlight color while focused
+};
+gpui::El* EditStyle(gpui::Ctx* cx, gpui::El* field, gpui::InputState* edit, EditLook look, float radius = 0);
 // a bare input over a line in `underline`; the caller sizes the box
 gpui::El* DlgUnderlineInput(gpui::Ctx* cx, gpui::Str id, gpui::InputState* edit, float fontPx, Color underline,
                             bool masked = false, bool disabled = false);
