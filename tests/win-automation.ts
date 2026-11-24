@@ -1027,8 +1027,7 @@ export function countPreviewBlue(shot: { w: number; h: number; data: Uint8Array 
   return count;
 }
 
-// A pixel of the filter-match underlay: the accent (yellow) tinted over the
-// row, so it is lighter than the accent but still clearly short of blue.
+// A pixel of the solid yellow filter-match underlay.
 export function isFilterMatchTint(r: number, g: number, b: number): boolean {
-  return r > 225 && g > 200 && b < 215 && r - b > 35;
+  return r > 240 && g > 240 && b < 30;
 }

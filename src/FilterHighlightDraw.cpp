@@ -11,16 +11,18 @@
 
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
-// the underlay of a matched range: a tint of the accent on the default
-// theme, a shade of the row on the others
-constexpr u8 kFilterMatchAlpha = 72;
 
-static void FillFilterMatchRect(Gfx* gfx, const Rect& r, Color bg) {
+// Ink that stays readable on a solid highlight underlay (black on yellow).
+static Color TextColorContrasting(Color bg) {
+    int lum = (GetRValue(bg) * 299 + GetGValue(bg) * 587 + GetBValue(bg) * 114) / 1000;
+    return lum >= 140 ? kColBlack : kColWhite;
+}
+
+static Color FilterMatchBgColor(Color bg) {
     if (IsCurrentThemeDefault()) {
-        gfx->FillRects(&r, 1, ThemeAccentColor(), kFilterMatchAlpha);
-        return;
+        return kColYellow;
     }
-    gfx->FillRect(r, AccentColor(bg, 40));
+    return AccentColor(bg, 40);
 }
 
 // approximate "is this UTF-8 byte part of a word character?": any byte >= 0x80
@@ -123,13 +125,14 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
     }
 
     // draw highlight background rectangles for matches
+    Color highlightCol = FilterMatchBgColor(colBg);
     for (int i = 0; i < nRanges; i++) {
         // highlightRects are computed from the full (untruncated) string, but
         // the text is drawn clipped/ellipsized to rc. Clip to rc so a match
         // in the truncated-away tail doesn't paint a stray box outside the label.
         Rect clipped = highlightRects[i].Intersect(rc);
         if (!clipped.IsEmpty()) {
-            FillFilterMatchRect(gfx, clipped, colBg);
+            gfx->FillRect(clipped, highlightCol);
         }
     }
 
@@ -309,19 +312,21 @@ void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVe
     }
     gfx->FillRect(labelRect, bgCol);
 
+    Color highlightCol = FilterMatchBgColor(bgCol);
     for (int i = 0; i < nRanges; i++) {
         Size sizeStart = MeasureStyledTextPrefix(gfx, text, byteRanges[i].start, font, boldFont, boldStart, boldEnd);
         Size sizeEnd = MeasureStyledTextPrefix(gfx, text, byteRanges[i].end, font, boldFont, boldStart, boldEnd);
         Rect hr{labelRect.x + sizeStart.dx, textTop, sizeEnd.dx - sizeStart.dx, textBottom - textTop};
         Rect clipped = hr.Intersect(labelRect);
         if (!clipped.IsEmpty()) {
-            FillFilterMatchRect(gfx, clipped, bgCol);
+            gfx->FillRect(clipped, highlightCol);
         }
     }
 
-    // the underlay is a tint, so a match keeps the row's text color. Prefix
-    // extents keep run x positions aligned with underlays.
-    Color matchTxtCol = txtCol;
+    // Draw non-match runs in the row text color (white when selected+focused);
+    // match runs use ink that contrasts with the underlay so yellow+white does
+    // not wash out. Prefix extents keep run x positions aligned with underlays.
+    Color matchTxtCol = TextColorContrasting(highlightCol);
     int pos = 0;
     while (pos < textLen) {
         bool isHl = hl[pos] != 0;
