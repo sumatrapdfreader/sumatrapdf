@@ -16,6 +16,32 @@
 #include "EngineBase.h"
 #include "PdfSync.h"
 
+#if OS_WASM
+
+// A browser tab has no TeX editor to sync with, so none of the parser is built.
+
+Synchronizer::Synchronizer(Str syncFilePathIn, Str pdffilename) {
+    syncFilePath = str::Dup(syncFilePathIn);
+    pdfPath = str::Dup(pdffilename);
+}
+
+Synchronizer::~Synchronizer() {
+    str::Free(syncFilePath);
+    str::Free(pdfPath);
+}
+
+int Synchronizer::Create(Str, EngineBase* engine, Synchronizer** sync) {
+    if (!sync || !engine) {
+        return PDFSYNCERR_INVALID_ARGUMENT;
+    }
+    *sync = nullptr;
+    return PDFSYNCERR_SYNCFILE_NOTFOUND;
+}
+
+void DeleteSyncTempFiles() {}
+
+#else
+
 // size of the mark highlighting the location calculated by forward-search
 constexpr int kMarkSize = 10;
 // maximum error in the source file line number when doing forward-search
@@ -138,11 +164,6 @@ int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** syn
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
-#if OS_WASM
-    // a browser tab has no TeX editor to sync with: no LaTeX integration
-    (void)pdffilename;
-    return PDFSYNCERR_SYNCFILE_NOTFOUND;
-#else
     if (!str::EndsWithI(pdffilename, StrL(".pdf"))) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
@@ -168,7 +189,6 @@ int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** syn
     }
 
     return PDFSYNCERR_SYNCFILE_NOTFOUND;
-#endif
 }
 
 // PDFSYNC synchronizer
@@ -851,3 +871,5 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     return PDFSYNCERR_SUCCESS;
 }
 #endif // !OS_WASM
+
+#endif // OS_WASM

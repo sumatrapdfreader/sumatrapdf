@@ -10,6 +10,8 @@
 
 #include "base/tests/UtAssert.h"
 
+#if !OS_WASM
+
 struct TestSync : Synchronizer {
     TestSync(Str syncPath, Str pdfPath) : Synchronizer(syncPath, pdfPath) {}
     int DocToSource(int, Point, Str&, int*, int*) override { return PDFSYNCERR_SUCCESS; }
@@ -23,8 +25,6 @@ static void BumpModTime(Str path) {
     file::SetModificationTime(path, ft);
 }
 
-// Wasm's Synchronizer::Create does not open sync files.
-#if !OS_WASM
 // letter-sized pages; counts mediabox requests for pages that don't exist
 struct SyncTestEngine : EngineBase {
     int badPageRequests = 0;
@@ -85,12 +85,9 @@ static void PdfsyncSheetsTest() {
     SafeEngineRelease(&engine);
     dir::RemoveAll(dir);
 }
-#endif
 
 void PdfSync_UnitTests() {
-#if !OS_WASM
     PdfsyncSheetsTest();
-#endif
 
     TempStr tmp = GetTempFilePathTemp(StrL("synctex-ut"));
     utassert(len(tmp) > 0);
@@ -113,3 +110,9 @@ void PdfSync_UnitTests() {
     file::Delete(syncPath);
     file::Delete(tmp);
 }
+
+#else
+
+void PdfSync_UnitTests() {}
+
+#endif
