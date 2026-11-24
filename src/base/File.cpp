@@ -515,6 +515,8 @@ struct DriveAvailEntry {
 static DriveAvailEntry* gDriveAvailHead = nullptr;
 constexpr u64 kDriveAvailTtlMs = 4ull * 60ull * 1000ull; // 4 minutes
 
+static UINT GetCachedDriveType(char drive);
+
 // Fill keyOut with a non-fixed drive key ("X" or "\\server\share"). Returns
 // false for fixed drives, relative paths, and paths we do not guard.
 static bool GetNonFixedDriveKey(Str path, char* keyOut, int keyCap) {
@@ -591,9 +593,7 @@ static bool GetNonFixedDriveKey(Str path, char* keyOut, int keyCap) {
     if (drive < 'A' || drive > 'Z') {
         return false;
     }
-    WCHAR root[] = LR"(?:\)";
-    root[0] = (WCHAR)drive;
-    UINT type = GetDriveTypeW(root);
+    UINT type = GetCachedDriveType(drive);
     // Guard everything that is not a local fixed disk. DRIVE_NO_ROOT_DIR is a
     // disconnected mapping — still use the availability cache.
     if (type == DRIVE_FIXED || type == DRIVE_UNKNOWN) {
@@ -944,33 +944,37 @@ bool HasVariableDriveLetter(Str path) {
     return false;
 }
 
-// Drive-letter -> is-network cache. Mappings change rarely and
-// IsOnNetworkDrive() runs in front of every cached attribute query, so keep a
-// short TTL rather than querying the drive for each call.
-constexpr u64 kDriveIsNetCacheTtlMs = 60ull * 1000ull;
-static Mutex gDriveIsNetMutex;
-static u64 gDriveIsNetTick[26];
-static bool gDriveIsNet[26];
+// Drive-letter -> GetDriveTypeW cache. Mappings change rarely and
+// IsOnNetworkDrive() / GetNonFixedDriveKey() run in front of every cached
+// attribute query, so keep a short TTL rather than querying the drive each call.
+constexpr u64 kDriveTypeCacheTtlMs = 60ull * 1000ull;
+static Mutex gDriveTypeMutex;
+static u64 gDriveTypeTick[26];
+static UINT gDriveType[26];
 
 // drive is an upper-case letter 'A'..'Z'
-static bool IsNetworkDriveLetter(char drive) {
+static UINT GetCachedDriveType(char drive) {
     int idx = drive - 'A';
     u64 now = GetTickCount64();
     {
-        AutoUnlockMutex lock(&gDriveIsNetMutex);
-        u64 tick = gDriveIsNetTick[idx];
-        if (tick != 0 && (now - tick) <= kDriveIsNetCacheTtlMs) {
-            return gDriveIsNet[idx];
+        AutoUnlockMutex lock(&gDriveTypeMutex);
+        u64 tick = gDriveTypeTick[idx];
+        if (tick != 0 && (now - tick) <= kDriveTypeCacheTtlMs) {
+            return gDriveType[idx];
         }
     }
     WCHAR root[] = LR"(?:\)";
     root[0] = (WCHAR)drive;
     // resolved locally from the mount point, unlike WNetGetConnection
-    bool isNet = GetDriveTypeW(root) == DRIVE_REMOTE;
-    AutoUnlockMutex lock(&gDriveIsNetMutex);
-    gDriveIsNetTick[idx] = now;
-    gDriveIsNet[idx] = isNet;
-    return isNet;
+    UINT type = GetDriveTypeW(root);
+    AutoUnlockMutex lock(&gDriveTypeMutex);
+    gDriveTypeTick[idx] = now;
+    gDriveType[idx] = type;
+    return type;
+}
+
+static bool IsNetworkDriveLetter(char drive) {
+    return GetCachedDriveType(drive) == DRIVE_REMOTE;
 }
 
 // PathIsNetworkPathW() answers this for a drive-letter path by going through

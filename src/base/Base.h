@@ -2276,6 +2276,7 @@ struct BuilderT : Vec<C> {
     // growth allocator; null means the heap. Arena storage is never freed by
     // the Builder (the arena owns it).
     Arena* a = nullptr;
+    bool isExternalBuf = false;
 
     BuilderT() = default;
     explicit BuilderT(Arena* arena) : a(arena) {}

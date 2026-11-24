@@ -2361,7 +2361,9 @@ bool Cut(Str s, Str sep, Str* before, Str* after) {
 
 // like Cut() but splits on the first occurrence of a single char
 bool CutChar(Str s, char c, Str* before, Str* after) {
-    return Cut(s, Str(&c, 1), before, after);
+    // CutChar routes directly through IndexOfChar
+    int idx = IndexOfChar(s, c);
+    return CutAtIdx(s, idx, 1, before, after);
 }
 
 // like CutChar() but splits on the last occurrence of a single char
@@ -3133,13 +3135,6 @@ TempStr SeqStrNumStrByNumber(SeqStrNum strs, i64 num) {
 // kPadding is number of characters needed for terminating character
 static constexpr int kPadding = 1;
 
-// storage that isn't a heap block of ours: a lent buffer, an arena block, or
-// nothing at all
-template <typename C>
-static bool IsNotOurHeapBlock(const BuilderT<C>& b) {
-    return !b.els || b.cap < 0;
-}
-
 // Vec allocates one element past the capacity and zeroes what it isn't using,
 // so there is always room for the NUL. Writing it after every change keeps it
 // right for lent buffers too, which nobody zeroes.
@@ -3155,9 +3150,13 @@ static void Terminate(BuilderT<C>& b) {
 // buffer does.
 template <typename C>
 static C* BuilderEnsureCap(BuilderT<C>& b, int needed) {
+    C* oldEls = b.els;
     C* els = VecReserve(b.a, b, needed);
     if (!els) {
         return nullptr;
+    }
+    if (els != oldEls) {
+        b.isExternalBuf = false;
     }
     if (b.a && b.cap > 0) {
         b.cap = -b.cap;
@@ -3180,6 +3179,7 @@ void BuilderT<C>::UseExternalBuffer(S buf) {
         this->els = buf.s;
         // one char of the caller's buffer is held back for the NUL
         this->cap = -(buf.len - kPadding);
+        this->isExternalBuf = true;
         this->els[0] = 0;
     }
 }
@@ -3260,7 +3260,7 @@ typename BuilderT<C>::S BuilderT<C>::TakeStr() {
         Reset();
         return S{};
     }
-    if (IsNotOurHeapBlock(*this)) {
+    if (this->isExternalBuf) {
         res = (C*)MemDup(a, res, (size_t)(n + kPadding) * sizeof(C));
     } else {
         // hand the block (heap or arena) to the caller and start over
@@ -3696,7 +3696,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
         lenDiff = replLen - findLen;
     }
     // heuristic: allow 6 replacements without reallocating
-    str::Builder result;
+    str::Builder result(GetTempArena());
     result.Reserve(s.len + 1 + (lenDiff * 6));
     bool ok;
     while (idx >= 0) {
@@ -3715,7 +3715,7 @@ TempStr ReplaceTemp(Str s, Str toReplace, Str replaceWith) {
     if (!ok) {
         return {};
     }
-    return ToStrTemp(result);
+    return result.TakeStr();
 }
 
 TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
@@ -3725,7 +3725,7 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
         return s;
     }
     // each match is found separately: "${SELECTION} ${selection}" differ in case
-    str::Builder result;
+    str::Builder result(GetTempArena());
     Str curr = s;
     while (idx >= 0 && idx <= len(curr) - n) {
         result.Append(Str(curr.s, idx));
@@ -3734,7 +3734,7 @@ TempStr ReplaceNoCaseTemp(Str s, Str toReplace, Str replaceWith) {
         idx = str::IndexOfI(curr, toReplace);
     }
     result.Append(curr);
-    return ToStrTemp(result);
+    return result.TakeStr();
 }
 } // namespace str
 
@@ -4040,6 +4040,10 @@ static int Utf8RuneCountChecked(Str s) {
 
 void str::AppendBase64(str::Builder& out, const u8* data, size_t size) {
     static constexpr char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    size_t encodedLen = ((size + 2) / 3) * 4;
+    if (encodedLen > 0 && encodedLen <= (size_t)(INT_MAX - out.len)) {
+        out.Reserve(out.len + (int)encodedLen);
+    }
     for (size_t i = 0; i < size; i += 3) {
         u32 value = (u32)data[i] << 16;
         if (i + 1 < size) {

@@ -118,6 +118,7 @@ static void DirTraverseThread(DirTraverseThreadData* td) {
     di.includeDirs = false;
     di.recurse = td->recurse;
     for (DirIterEntry* de : di) {
+        AutoArenaSavepoint sp;
         td->queue->append(de->filePath);
     }
     td->queue->MarkFinished();

@@ -151,7 +151,13 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
                             WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX);
         rspOut->httpStatusCode = sc;
 
+        char buf[8192];
+        constexpr int kPostBodyCap = 1024 * 1024;
         for (;;) {
+            int room = kPostBodyCap - len(rspOut->data);
+            if (room <= 0) {
+                break;
+            }
             DWORD avail = 0;
             if (!WinHttpQueryDataAvailable(hRequest, &avail)) {
                 rspOut->error = GetLastError();
@@ -160,9 +166,9 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
             if (avail == 0) {
                 break;
             }
-            char* buf = AllocArrayTemp<char>((int)avail + 1);
+            DWORD toRead = std::min<DWORD>(avail, (DWORD)std::min<int>(room, sizeofi(buf)));
             DWORD read = 0;
-            if (!WinHttpReadData(hRequest, buf, avail, &read)) {
+            if (!WinHttpReadData(hRequest, buf, toRead, &read)) {
                 rspOut->error = GetLastError();
                 break;
             }
@@ -170,10 +176,6 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
                 break;
             }
             rspOut->data.Append(Str(buf, (int)read));
-            // a runaway response shouldn't eat memory; callers only show a snippet
-            if (len(rspOut->data) > 1024 * 1024) {
-                break;
-            }
         }
         // a transfer cut short after the status line is a failure
         ok = rspOut->error == ERROR_SUCCESS && sc >= 200 && sc < 300;
@@ -278,7 +280,13 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
                             WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX);
         rspOut->httpStatusCode = sc;
 
+        char buf[8192];
+        constexpr int kPostBodyCap = 1024 * 1024;
         for (;;) {
+            int room = kPostBodyCap - len(rspOut->data);
+            if (room <= 0) {
+                break;
+            }
             DWORD avail = 0;
             if (!WinHttpQueryDataAvailable(hRequest, &avail)) {
                 rspOut->error = GetLastError();
@@ -287,9 +295,9 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
             if (avail == 0) {
                 break;
             }
-            char* buf = AllocArrayTemp<char>((int)avail + 1);
+            DWORD toRead = std::min<DWORD>(avail, (DWORD)std::min<int>(room, sizeofi(buf)));
             DWORD read = 0;
-            if (!WinHttpReadData(hRequest, buf, avail, &read)) {
+            if (!WinHttpReadData(hRequest, buf, toRead, &read)) {
                 rspOut->error = GetLastError();
                 break;
             }
@@ -297,9 +305,6 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
                 break;
             }
             rspOut->data.Append(Str(buf, (int)read));
-            if (len(rspOut->data) > 1024 * 1024) {
-                break;
-            }
         }
         // a transfer cut short after the status line is a failure
         ok = rspOut->error == ERROR_SUCCESS && sc >= 200 && sc < 300;
@@ -454,6 +459,7 @@ static bool InMemoryRequest(const WCHAR* verb, const char* what, Str url, Str ex
         }
         rspOut->httpStatusCode = sc;
 
+        char buf[8192];
         for (;;) {
             int room = kHttpMemBodyCap - len(rspOut->data);
             if (room <= 0) {
@@ -467,12 +473,9 @@ static bool InMemoryRequest(const WCHAR* verb, const char* what, Str url, Str ex
             if (avail == 0) {
                 break;
             }
-            if ((int)avail > room) {
-                avail = (DWORD)room;
-            }
-            char* buf = AllocArrayTemp<char>((int)avail + 1);
+            DWORD toRead = std::min<DWORD>(avail, (DWORD)std::min<int>(room, sizeofi(buf)));
             DWORD read = 0;
-            if (!WinHttpReadData(hRequest, buf, avail, &read)) {
+            if (!WinHttpReadData(hRequest, buf, toRead, &read)) {
                 rspOut->error = GetLastError();
                 break;
             }

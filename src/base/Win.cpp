@@ -209,10 +209,12 @@ void HwndEnsureOnScreen(HWND hwnd) {
 
 // returns available area of the screen i.e. screen minus taskbar area
 Rect GetWorkAreaRect(Rect rect, HWND hwnd) {
-    RECT tmpRect = ToRECT(rect);
-    HMONITOR hmon = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
+    HMONITOR hmon;
     if (hwnd) {
         hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY);
+    } else {
+        RECT tmpRect = ToRECT(rect);
+        hmon = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
     }
     MONITORINFO mi{};
     mi.cbSize = sizeof mi;
@@ -495,7 +497,7 @@ void HwndSetText(HWND hwnd, Str sv) {
     // Every caller is fine with this: those that need a re-search/notification on
     // unchanged text trigger it explicitly, not via the EN_CHANGE side effect.
     TempStr current = HwndGetTextTemp(hwnd);
-    if (current && str::Eq(current, sv)) {
+    if (str::Eq(current, sv)) {
         return;
     }
     WCHAR* ws = CWStrTemp(sv);
@@ -722,7 +724,8 @@ int LbAddString(HWND hwnd, WStr text) {
 }
 
 int LbAddString(HWND hwnd, Str text) {
-    return LbAddString(hwnd, ToWStrTemp(text));
+    TempWStr ws = ToWStrTemp(text);
+    return (int)SendMessageW(hwnd, LB_ADDSTRING, 0, (LPARAM)(ws.s ? ws.s : L""));
 }
 
 int LbGetCurrentSelection(HWND hwnd) {
@@ -1751,16 +1754,16 @@ bool GetOsVersion(OSVERSIONINFOEX& ver) {
 
 TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId) {
-        return str::DupTemp(StrL("9x"));
+        return StrL("9x");
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 3) {
-        return str::DupTemp(StrL("8.1")); // or Server 2012 R2
+        return StrL("8.1"); // or Server 2012 R2
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 2) {
-        return str::DupTemp(StrL("8")); // or Server 2012
+        return StrL("8"); // or Server 2012
     }
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
-        return str::DupTemp(StrL("7")); // or Server 2008 R2
+        return StrL("7"); // or Server 2008 R2
     }
     if (ver.dwMajorVersion == 10) {
         // ver.dwMinorVersion seems to always be 0
@@ -1775,7 +1778,7 @@ TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver) {
 TempStr GetWindowsVerTemp() {
     OSVERSIONINFOEX ver{};
     if (!GetOsVersion(ver)) {
-        return str::DupTemp(StrL("unknown"));
+        return StrL("unknown");
     }
     return OsNameFromVerTemp(ver);
 }

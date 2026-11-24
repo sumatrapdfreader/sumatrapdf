@@ -8,7 +8,25 @@
 #include "base/Base.h"
 #include "base/File.h"
 
+#include <sys/stat.h>
+
 #include "base/FileWatcher.h"
+
+static bool StatFileMeta(Str path, FILETIME* modOut, i64* sizeOut) {
+    if (len(path) == 0) {
+        return false;
+    }
+    struct stat st{};
+    if (stat(CStrTemp(path), &st) != 0 || !S_ISREG(st.st_mode)) {
+        return false;
+    }
+    i64 secs = (i64)st.st_mtimespec.tv_sec;
+    i64 nsecs = (i64)st.st_mtimespec.tv_nsec;
+    u64 ticks = kFileTimeUnixEpoch + (u64)secs * kFileTimeTicksPerSec + (u64)(nsecs / 100);
+    *modOut = FileTimeFromU64(ticks);
+    *sizeOut = (i64)st.st_size;
+    return true;
+}
 
 struct WatchedFile {
     WatchedFile* next = nullptr;
@@ -68,9 +86,11 @@ static void FileWatcherThread() {
             }
         }
         for (Check& c : checks) {
-            c.exists = file::Exists(c.path);
-            c.modified = c.exists ? file::GetModificationTime(c.path) : FILETIME{};
-            c.size = c.exists ? file::GetSize(c.path) : 0;
+            c.exists = StatFileMeta(c.path, &c.modified, &c.size);
+            if (!c.exists) {
+                c.modified = {};
+                c.size = 0;
+            }
             str::Free(c.path);
         }
 
@@ -114,17 +134,14 @@ void FileWatcherSetSkipPath(Str path) {
     str::ReplacePtr(&gSkipPath, str::Dup(path));
 }
 
-void FileWatcherInit(void) {
-    ScopedMutex lock(&gWatcherMutex);
-    StartFileWatcher();
-}
+void FileWatcherInit(void) {}
 
 WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) {
-    if (!file::Exists(path)) {
+    FILETIME modified{};
+    i64 size = 0;
+    if (!StatFileMeta(path, &modified, &size)) {
         return nullptr;
     }
-    FILETIME modified = file::GetModificationTime(path);
-    i64 size = file::GetSize(path);
     ScopedMutex lock(&gWatcherMutex);
     if (path::IsSame(gSkipPath, path) || !StartFileWatcher()) {
         return nullptr;

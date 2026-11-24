@@ -9,8 +9,25 @@
 #include "base/File.h"
 
 #include <emscripten/eventloop.h>
+#include <sys/stat.h>
 
 #include "base/FileWatcher.h"
+
+static bool StatFileMeta(Str path, FILETIME* modOut, i64* sizeOut) {
+    if (len(path) == 0) {
+        return false;
+    }
+    struct stat st{};
+    if (stat(CStrTemp(path), &st) != 0 || !S_ISREG(st.st_mode)) {
+        return false;
+    }
+    i64 secs = (i64)st.st_mtim.tv_sec;
+    i64 nsecs = (i64)st.st_mtim.tv_nsec;
+    u64 ticks = kFileTimeUnixEpoch + (u64)secs * kFileTimeTicksPerSec + (u64)(nsecs / 100);
+    *modOut = FileTimeFromU64(ticks);
+    *sizeOut = (i64)st.st_size;
+    return true;
+}
 
 struct WatchedFile {
     WatchedFile* next = nullptr;
@@ -34,9 +51,9 @@ static void FreeWatchedFile(WatchedFile* file) {
 static void CheckWatchedFiles(void*) {
     Vec<Func0> toNotify;
     for (WatchedFile* file = gWatchedFiles; file; file = file->next) {
-        bool exists = file::Exists(file->path);
-        FILETIME modified = exists ? file::GetModificationTime(file->path) : FILETIME{};
-        i64 size = exists ? file::GetSize(file->path) : 0;
+        FILETIME modified{};
+        i64 size = 0;
+        bool exists = StatFileMeta(file->path, &modified, &size);
         bool changed = exists && (!file->exists || !FileTimeEq(modified, file->modified) || size != file->size);
         file->exists = exists;
         file->modified = modified;
@@ -69,14 +86,16 @@ void FileWatcherSetSkipPath(Str path) {
 void FileWatcherInit(void) {}
 
 WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) {
-    if (!file::Exists(path) || path::IsSame(gSkipPath, path)) {
+    FILETIME modified{};
+    i64 size = 0;
+    if (!StatFileMeta(path, &modified, &size) || path::IsSame(gSkipPath, path)) {
         return nullptr;
     }
     auto* file = new WatchedFile();
     file->path = str::Dup(path);
     file->onFileChanged = onFileChangedCb;
-    file->modified = file::GetModificationTime(path);
-    file->size = file::GetSize(path);
+    file->modified = modified;
+    file->size = size;
     file->exists = true;
     ListInsertFront(&gWatchedFiles, file);
     StartFileWatcher();

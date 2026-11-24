@@ -100,21 +100,22 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
         return false;
     }
 
+    AutoArenaSavepoint sp;
     u16 method = Z_DEFLATED;
-    char* compressed = nullptr;
+    const char* payload = data.s;
     uLongf compressedSize = 0;
-    if (size > 0) {
-        compressed = AllocArrayTemp<char>(size);
+    if (size > 0 && !storeOnly) {
+        char* compressed = AllocArrayTemp<char>(size);
         if (!compressed) {
             return false;
         }
-        compressedSize = storeOnly ? 0 : zip_compress(compressed, (u32)size, data.s, (u32)size);
+        compressedSize = zip_compress(compressed, (u32)size, data.s, (u32)size);
+        if (compressedSize > 0) {
+            payload = compressed;
+        }
     }
     if (!compressedSize) {
         method = 0; // Store
-        if (size > 0) {
-            memcpy(compressed, data.s, size);
-        }
         compressedSize = (u32)size;
     }
 
@@ -141,7 +142,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     Str localHeader = ToStr(local.d);
     bool ok = WriteData(localHeader.s, kHdrSize);
     ok = ok && WriteData(name.s, namelen);
-    ok = ok && WriteData(compressed, compressedSize);
+    ok = ok && WriteData(payload, compressedSize);
 
     constexpr int kCentralSize = 46;
     ByteWriterLE central(kCentralSize);

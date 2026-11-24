@@ -36,19 +36,6 @@ void CopyPixmapRows(Pixmap* dst, const u8* src, int srcStride) {
     }
 }
 
-static void AppendPixmapPixelBGR(str::Builder& data, const Pixmap* pixmap, int x, int y) {
-    const u8* src = pixmap->data + ((size_t)y * pixmap->stride) + ((size_t)x * PixmapBytesPerPixel(pixmap->format));
-    if (pixmap->format == PixmapFormat::RGBA8) {
-        data.AppendChar((char)src[2]);
-        data.AppendChar((char)src[1]);
-        data.AppendChar((char)src[0]);
-        return;
-    }
-    data.AppendChar((char)src[0]);
-    data.AppendChar((char)src[1]);
-    data.AppendChar((char)src[2]);
-}
-
 // create data for a .bmp file from this pixmap. The output matches the classic BMP
 // format accepted by Windows LoadImage(..., LD_LOADFROMFILE): BITMAPFILEHEADER +
 // BITMAPINFOHEADER + bottom-up 24bpp BGR rows.
@@ -90,15 +77,37 @@ Str PixmapToBmpFormat(const Pixmap* pixmap) {
     w2.Write32(0);
     w2.Write32(0);
 
-    int padding = (int)rowStride - (pixmap->width * 3);
-    for (int y = pixmap->height - 1; y >= 0; y--) {
-        for (int x = 0; x < pixmap->width; x++) {
-            AppendPixmapPixelBGR(bmpData, pixmap, x, y);
-        }
-        for (int i = 0; i < padding; i++) {
-            bmpData.AppendChar(0);
-        }
+    size_t pixelBytes = rowStride * h;
+    if (!bmpData.Reserve((int)bmpBytes)) {
+        return {};
     }
+    u8* dst = (u8*)bmpData.els + bmpData.len;
+    memset(dst, 0, pixelBytes);
+    int bpp = PixmapBytesPerPixel(pixmap->format);
+    bool isRgba = pixmap->format == PixmapFormat::RGBA8;
+    for (int y = pixmap->height - 1; y >= 0; y--) {
+        const u8* src = pixmap->data + ((size_t)y * pixmap->stride);
+        if (bpp == 3) {
+            memcpy(dst, src, w * 3);
+        } else if (isRgba) {
+            u8* d = dst;
+            for (int x = 0; x < pixmap->width; x++, src += 4, d += 3) {
+                d[0] = src[2];
+                d[1] = src[1];
+                d[2] = src[0];
+            }
+        } else {
+            u8* d = dst;
+            for (int x = 0; x < pixmap->width; x++, src += 4, d += 3) {
+                d[0] = src[0];
+                d[1] = src[1];
+                d[2] = src[2];
+            }
+        }
+        dst += rowStride;
+    }
+    bmpData.len = (int)bmpBytes;
+    bmpData.els[bmpData.len] = 0;
 
     return bmpData.TakeStr();
 }
