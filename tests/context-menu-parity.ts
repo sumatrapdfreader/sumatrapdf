@@ -13,11 +13,11 @@ import type { MenuItem } from "./winapi.ts";
 const PDF = join(ROOT, "docs", "test", "zlib.3.pdf");
 
 // "depth title" rows, depth-first
-type Row = { depth: number; title: string };
+type Row = { depth: number; title: string; checked: boolean };
 
 function rowsFromTree(items: MenuItem[], depth = 0, out: Row[] = []): Row[] {
   for (const it of items) {
-    out.push({ depth, title: it.text.split("\t")[0]!.replace(/&/g, "") });
+    out.push({ depth, title: it.text.split("\t")[0]!.replace(/&/g, ""), checked: it.checked === true });
     if (it.items) {
       rowsFromTree(it.items, depth + 1, out);
     }
@@ -33,7 +33,7 @@ function rowsFromNg(raw: string): Row[] {
     if (c.length < 6 || c[1] === "-") {
       continue;
     }
-    out.push({ depth: c[0]!.split(".").length - 1, title: c[5]! });
+    out.push({ depth: c[0]!.split(".").length - 1, title: c[5]!, checked: c[4] === "1" });
   }
   return out;
 }
@@ -94,6 +94,24 @@ export async function testit(): Promise<void> {
     }
     if (submenu(rows, "Annotations").includes("Create From Selection")) {
       fail("Annotations shows Create From Selection without a selection");
+    }
+
+    // the settings toggles show their state: the caption is shown by default
+    const isChecked = (rs: Row[], title: string) => rs.find((r) => r.depth === 0 && r.title === title)?.checked;
+    if (isChecked(rows, "Show Caption") !== true) {
+      fail("Show Caption should be checked");
+    }
+    if (isChecked(rows, "Auto-hide Sidebar") !== false) {
+      fail("Auto-hide Sidebar should start unchecked");
+    }
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleSidebarAutoHide"]);
+    try {
+      const rows2 = await contextMenuRows(client, frame);
+      if (isChecked(rows2, "Auto-hide Sidebar") !== true) {
+        fail("Auto-hide Sidebar should be checked once it's on");
+      }
+    } finally {
+      await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleSidebarAutoHide"]);
     }
   } finally {
     client.close();

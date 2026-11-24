@@ -2804,6 +2804,7 @@ export function getMenuItemText(hmenu: bigint, pos: number): string {
 
 export const MF_BYPOSITION = 0x400;
 export const MF_GRAYED = 0x0001;
+export const MF_CHECKED = 0x0008;
 export const MF_DISABLED = 0x0002;
 
 // the shortcut a menu item advertises (the part after the tab), "" if none
@@ -2818,7 +2819,7 @@ export function getMenuItemAccel(hmenu: bigint, pos: number): string {
   return parts.length > 1 ? parts[1]!.replace(/&/g, "") : "";
 }
 
-export type MenuItem = { text: string; accel?: string; items?: MenuItem[]; disabled?: boolean };
+export type MenuItem = { text: string; accel?: string; items?: MenuItem[]; disabled?: boolean; checked?: boolean };
 
 export function getMenuItemDisabled(hmenu: bigint, pos: number): boolean {
   const st = user32.symbols.GetMenuState(hmenu, pos, MF_BYPOSITION);
@@ -2826,6 +2827,11 @@ export function getMenuItemDisabled(hmenu: bigint, pos: number): boolean {
     return false;
   }
   return (st & (MF_GRAYED | MF_DISABLED)) !== 0;
+}
+
+export function getMenuItemChecked(hmenu: bigint, pos: number): boolean {
+  const st = user32.symbols.GetMenuState(hmenu, pos, MF_BYPOSITION);
+  return st !== 0xffffffff && (st & MF_CHECKED) !== 0;
 }
 
 // the whole menu tree, submenus included. Separators (empty labels) are skipped
@@ -2845,6 +2851,9 @@ export function readMenuTree(hmenu: bigint): MenuItem[] {
       }
       if (getMenuItemDisabled(hmenu, i)) {
         item.disabled = true;
+      }
+      if (getMenuItemChecked(hmenu, i)) {
+        item.checked = true;
       }
       out.push(item);
     }

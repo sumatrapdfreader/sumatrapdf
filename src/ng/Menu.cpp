@@ -1172,6 +1172,8 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     MenuSetEnabled(popup, CmdEditFavorites, HasFavorites());
     MenuSetChecked(popup, CmdFavoriteToggle, SidebarContentVisible(win, SidebarContent::Favorites));
+    MenuSetChecked(popup, CmdToggleCaption, gSettings->showCaption);
+    MenuSetChecked(popup, CmdToggleSidebarAutoHide, gSettings->sidebarAutoHide);
 
     Str filePath = win->ctrl->GetFilePath();
     bool favsSupported = HasPermission(Perm::SavePreferences) && CanAccessDisk();
