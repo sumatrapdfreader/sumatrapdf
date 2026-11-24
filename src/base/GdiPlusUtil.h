@@ -2,10 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #if OS_WIN
-struct RenderedBitmap;
 struct Pixmap;
-
-Gdiplus::RectF RectToRectF(Gdiplus::Rect r);
 
 // set a consistent mode on a Graphics so that measuring and drawing text give
 // the same results everywhere

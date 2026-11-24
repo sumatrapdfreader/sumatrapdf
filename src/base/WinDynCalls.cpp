@@ -4,7 +4,6 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "base/Base.h"
 
 #if OS_WIN
-#include "base/ScopedWin.h"
 #include "base/Win.h"
 #include "base/WinDynCalls.h"
 
@@ -18,12 +17,7 @@ DBGHELP_API_LIST(API_DECLARATION)
 #undef API_DECLARATION
 
 // manual definitions for functions not in API lists
-Sig_GetProcessInformation DynGetProcessInformation = nullptr;
-Sig_SetProcessMitigationPolicy DynSetProcessMitigationPolicy = nullptr;
 Sig_GetDpiForWindow DynGetDpiForWindow = nullptr;
-Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext = nullptr;
-Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext = nullptr;
-Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext = nullptr;
 Sig_SystemParametersInfoForDpi DynSystemParametersInfoForDpi = nullptr;
 Sig_GetSystemMetricsForDpi DynGetSystemMetricsForDpi = nullptr;
 Sig_GetDpiForMonitor DynGetDpiForMonitor = nullptr;
@@ -59,18 +53,10 @@ void InitDynCalls() {
     HMODULE h = SafeLoadLibrary(StrL("kernel32.dll"));
     ReportIf(!h);
     KERNEL32_API_LIST(API_LOAD);
-    DynGetProcessInformation = (Sig_GetProcessInformation)GetProcAddress(h, "GetProcessInformation");
-    DynSetProcessMitigationPolicy = (Sig_SetProcessMitigationPolicy)GetProcAddress(h, "SetProcessMitigationPolicy");
 
     h = SafeLoadLibrary(StrL("user32.dll"));
     ReportIf(!h);
     DynGetDpiForWindow = (Sig_GetDpiForWindow)GetProcAddress(h, "GetDpiForWindow");
-    DynGetThreadDpiAwarenessContext =
-        (Sig_GetThreadDpiAwarenessContext)GetProcAddress(h, "GetThreadDpiAwarenessContext");
-    DynGetAwarenessFromDpiAwarenessContext =
-        (Sig_GetAwarenessFromDpiAwarenessContext)GetProcAddress(h, "GetAwarenessFromDpiAwarenessContext");
-    DynSetThreadDpiAwarenessContext =
-        (Sig_SetThreadDpiAwarenessContext)GetProcAddress(h, "SetThreadDpiAwarenessContext");
     DynSystemParametersInfoForDpi = (Sig_SystemParametersInfoForDpi)GetProcAddress(h, "SystemParametersInfoForDpi");
     DynGetSystemMetricsForDpi = (Sig_GetSystemMetricsForDpi)GetProcAddress(h, "GetSystemMetricsForDpi");
 

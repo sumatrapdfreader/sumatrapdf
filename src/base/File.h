@@ -99,14 +99,12 @@ constexpr FileHandle kInvalidFileHandle = -1;
 bool Exists(Str path);
 
 FILE* OpenFILE(Str path);
-FileHandle OpenReadOnly(Str path);
 
 // handle-based i/o, for files kept open across many reads / appends
 FileHandle OpenReadWrite(Str path, bool createIfMissing);
 void Close(FileHandle);
 i64 SeekEnd(FileHandle);
 bool WriteAll(FileHandle, Str data);
-bool Flush(FileHandle);
 
 Str ReadFileWithArena(Str path, Arena*);
 Str ReadFile(Str path);

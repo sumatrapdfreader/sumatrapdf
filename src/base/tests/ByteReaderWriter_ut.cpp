@@ -99,7 +99,6 @@ void ByteOrderTests() {
     {
         ByteReader r(d1, sizeof(d1));
         utassert(!r.CanRead(0, -1));
-        utassert(r.Find(-1, 0) == nullptr);
     }
 }
 

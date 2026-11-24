@@ -325,10 +325,6 @@ FILE* OpenFILE(Str path) {
     return fopen(CStrTemp(path), "rb");
 }
 
-FileHandle OpenReadOnly(Str path) {
-    return open(CStrTemp(path), O_RDONLY);
-}
-
 // Opens path for reading and writing, creating it when createIfMissing.
 FileHandle OpenReadWrite(Str path, bool createIfMissing) {
     int flags = O_RDWR | (createIfMissing ? O_CREAT : 0);
@@ -370,10 +366,6 @@ bool WriteAll(FileHandle h, Str data) {
         left -= (size_t)n;
     }
     return true;
-}
-
-bool Flush(FileHandle h) {
-    return fsync(h) == 0;
 }
 
 bool Exists(Str path) {

@@ -86,7 +86,3 @@ bool LaunchBrowser(Str url) {
 void OpenPathInDefaultFileManager(Str) {
     // there is no file manager to show a path in
 }
-
-ChildProcess* StartChildProcess(Str) {
-    return nullptr;
-}

@@ -10,7 +10,6 @@
 // there is no second copy of the tree to keep in sync.
 
 #include "base/Base.h"
-#include "base/BitManip.h"
 #include "base/File.h"
 #include "base/UITask.h"
 

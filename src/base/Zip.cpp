@@ -14,18 +14,9 @@ extern "C" {
 
 /***** ZipCreator *****/
 
-ZipCreator::ZipCreator(Str zipFilePath) : bytesWritten(0), fileCount(0) {
-    this->zipFilePath = str::Dup(zipFilePath);
-    zipOut = &zipData;
-}
-
 ZipCreator::ZipCreator(str::Builder& zipOut) : bytesWritten(0), fileCount(0) {
     zipOut.Reset();
     this->zipOut = &zipOut;
-}
-
-ZipCreator::~ZipCreator() {
-    str::Free(zipFilePath);
 }
 
 bool ZipCreator::WriteData(const void* data, size_t size) {
@@ -247,9 +238,6 @@ bool ZipCreator::Finish() {
 
     bool ok = WriteData(ToStr(centraldir).s, len(centraldir));
     ok = ok && WriteData(ToStr(eocd.d).s, kDirSize);
-    if (ok && zipFilePath) {
-        ok = file::WriteFile(zipFilePath, ToStr(*zipOut));
-    }
     return ok;
 }
 

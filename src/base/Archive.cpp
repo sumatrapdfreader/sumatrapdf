@@ -796,7 +796,3 @@ bool Archive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
 }
 
 #endif
-
-#if OS_WIN
-#else
-#endif

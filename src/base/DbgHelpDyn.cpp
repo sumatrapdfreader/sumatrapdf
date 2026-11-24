@@ -451,38 +451,6 @@ int GetSuspendedThreadCallstackAddrs(ThreadHandle hThread, u64* addrs, int maxAd
     return n;
 }
 
-void GetThreadCallstack(str::Builder& s, ThreadId threadId) {
-    if (threadId == GetCurrentThreadId()) {
-        return;
-    }
-
-    s.Append(fmt("\nThread: %x\n", threadId));
-
-    DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
-    ThreadHandle hThread = OpenThread(access, false, threadId);
-    if (!hThread) {
-        s.Append(StrL("Failed to OpenThread()\n"));
-        return;
-    }
-
-    DWORD res = SuspendThread(hThread);
-    if ((DWORD)(-1) == res) {
-        s.Append(StrL("Failed to SuspendThread()\n"));
-    } else {
-        CONTEXT ctx{};
-        ctx.ContextFlags = CONTEXT_FULL;
-        BOOL ok = GetThreadContext(hThread, &ctx);
-        if (ok) {
-            GetCallstack(s, ctx, hThread);
-        } else {
-            s.Append(StrL("Failed to GetThreadContext()\n"));
-        }
-
-        ResumeThread(hThread);
-    }
-    SafeCloseThreadHandle(&hThread);
-}
-
 // we disable optimizations for this function as it calls RtlCaptureContext()
 // which cannot deal with Omit Frame Pointers optimization (/Oy explicitly, turned
 // implicitly by e.g. /O2)
@@ -573,8 +541,6 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
     // it's not really for current thread, but it seems to work
     GetCallstack(s, *ctx, GetCurrentThread());
 }
-
-static str::Builder* gCallstackLogs = nullptr;
 
 } // namespace dbghelp
 

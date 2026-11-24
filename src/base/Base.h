@@ -738,8 +738,6 @@ inline bool isOfKindHelper(Kind k1, Kind k2) {
 
 #define IsOfKind(o, wantedKind) ((o) && isOfKindHelper((o)->kind, (wantedKind)))
 
-extern Kind kindNone; // unknown kind
-
 // from https://pastebin.com/3YvWQa5c
 // In my testing, in debug build defer { } creates somewhat bloated code
 // but in release it seems to be optimized to optimally small code
@@ -1445,7 +1443,6 @@ struct Arena {
     void* Push(u64 size, u64 align = 8, bool zero = true);
     u64 Pos();
     void PopTo(u64 pos);
-    void Pop(u64 amt);
 
     Arena() = delete;  // use ArenaNew()
     ~Arena() = delete; // use ArenaDelete()
@@ -2309,7 +2306,6 @@ bool Contains(const Builder& b, Str sub);
 namespace wstr {
 using Builder = BuilderT<WCHAR>;
 void BuilderUseExternalBuffer(Builder& b, WStr buf);
-bool BuilderReserve(Builder& b, int cap);
 } // namespace wstr
 
 int ParseInt(Str s);

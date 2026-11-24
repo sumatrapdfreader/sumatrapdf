@@ -1375,7 +1375,7 @@ bool WriteFile(Str path, Str d) {
     return true;
 }
 
-FileHandle OpenReadOnly(Str path) {
+static FileHandle OpenReadOnly(Str path) {
     return CreateFileW(CWStrTemp(path), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
                        nullptr);
 }
@@ -1384,10 +1384,6 @@ void Close(FileHandle h) {
     if (h != kInvalidFileHandle && h != nullptr) {
         CloseHandle(h);
     }
-}
-
-bool Flush(FileHandle h) {
-    return FlushFileBuffers(h) != 0;
 }
 
 // Reads up to toRead bytes from the front of the file, zero-filling the rest of

@@ -8,8 +8,6 @@
 #include <iconv.h>
 #endif
 
-Kind kindNone = "none";
-
 // if > 1 we won't crash when memory allocation fails
 AtomicInt gAllowAllocFailure = 0;
 
@@ -1007,16 +1005,6 @@ void Arena::PopTo(u64 pos) {
 
     ScopedMutex cs(&lock);
     ArenaPopToLocked(this, pos);
-}
-
-void Arena::Pop(u64 amt) {
-    if (!this) {
-        return;
-    }
-    ScopedMutex cs(&lock);
-    u64 posOld = current->basePos + current->pos;
-    u64 posNew = (amt < posOld) ? (posOld - amt) : 0;
-    ArenaPopToLocked(this, posNew);
 }
 
 ArenaSavepoint GetArenaSavepoint(Arena* arena) {
@@ -4549,7 +4537,6 @@ struct Fmt {
     Inst instructions[32]{}; // 32 should be big enough for everybody
     int nInst = 0;
 
-    int currArgNo = 0;
     int currPercArgNo = 0;
     str::Builder res;
 
@@ -4758,7 +4745,6 @@ static bool ParseFormat(Fmt& o, Str fmtStr) {
     o.format = fmtStr;
     o.nInst = 0;
     o.currPercArgNo = 0;
-    o.currArgNo = 0;
     o.res.Reset();
 
     // parse formatting string, until a %$c, %{} or %{$n}
@@ -7039,9 +7025,6 @@ bool str::BuilderReserve(Builder& b, int cap) {
 
 void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
     b.UseExternalBuffer(buf);
-}
-bool wstr::BuilderReserve(Builder& b, int cap) {
-    return b.Reserve(cap);
 }
 
 namespace str {

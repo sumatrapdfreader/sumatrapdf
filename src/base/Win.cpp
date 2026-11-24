@@ -2326,20 +2326,6 @@ bool CreateProcessHelper(Str exe, Str args) {
     return process != nullptr;
 }
 
-struct ChildProcess {
-    HANDLE process = nullptr;
-};
-
-ChildProcess* StartChildProcess(Str cmdLine) {
-    HANDLE h = LaunchProcessInDir(cmdLine);
-    if (!h) {
-        return nullptr;
-    }
-    auto* p = new ChildProcess();
-    p->process = h;
-    return p;
-}
-
 bool LaunchElevated(Str path, Str cmdline) {
     return LaunchFileShell(path, cmdline, StrL("runas"));
 }
@@ -2380,15 +2366,12 @@ enum class ConsoleState {
 static ConsoleState gConsoleState = ConsoleState::Uninitialized;
 static HANDLE gOriginalStdout = INVALID_HANDLE_VALUE;
 static HANDLE gOriginalStderr = INVALID_HANDLE_VALUE;
-static HWND gStartupForegroundWindow = nullptr;
-static bool gLoggedToConsole = false;
 
 static void InitConsoleState() {
     if (gConsoleState != ConsoleState::Uninitialized) {
         return;
     }
 
-    gStartupForegroundWindow = GetForegroundWindow();
     gOriginalStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     gOriginalStderr = GetStdHandle(STD_ERROR_HANDLE);
     if (gOriginalStdout != INVALID_HANDLE_VALUE && gOriginalStdout != nullptr) {
@@ -2535,9 +2518,7 @@ void LogConsole(Str s) {
     }
     DWORD written;
     // fails harmlessly if the handle is not a console (e.g. a pipe we chose not to write to)
-    if (WriteConsoleA(hConsole, s.s, s.len, &written, nullptr)) {
-        gLoggedToConsole = true;
-    }
+    WriteConsoleA(hConsole, s.s, s.len, &written, nullptr);
 }
 
 //--- registry
@@ -3147,14 +3128,6 @@ void MaskFpExceptions() {
     _controlfp_s(&unused, _MCW_EM, _MCW_EM);
 }
 
-static const DWORD groupsToCheck[] = {
-    DOMAIN_ALIAS_RID_USERS,
-    // every user belongs to the users group, hence users come before guests
-    DOMAIN_ALIAS_RID_GUESTS,
-    DOMAIN_ALIAS_RID_POWER_USERS,
-    DOMAIN_ALIAS_RID_ADMINS,
-};
-
 void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags) {
     hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
 }
@@ -3162,45 +3135,6 @@ void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int
 void DeferWinPosHelper::SetWindowPos(HWND hwnd, const Rect rc) {
     uint flags = SWP_NOZORDER;
     hdwp = ::DeferWindowPos(hdwp, hwnd, nullptr, rc.x, rc.y, rc.dx, rc.dy, flags);
-}
-
-bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target) {
-    HDC bmpDC = CreateCompatibleDC(hdc);
-    if (!bmpDC) {
-        return false;
-    }
-
-    BITMAP bi{};
-    GetObject(hbmp, sizeof(BITMAP), &bi);
-    int dx = bi.bmWidth;
-    int dy = bi.bmHeight;
-
-    HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
-    if (!oldBmp) {
-        DeleteDC(bmpDC);
-        return false;
-    }
-    int x = target.x;
-    int y = target.y;
-    int tdx = target.dx;
-    int tdy = target.dy;
-    bool ok = false;
-    // StretchBlt(HALFTONE) even at 1:1 smears scanlines; some printer drivers
-    // (Xerox PCL) turn that into regular white stripes (issue #919).
-    if (tdx == dx && tdy == dy) {
-        ok = BitBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, SRCCOPY) != 0;
-    } else {
-        if (IsPrinterDC(hdc)) {
-            SetStretchBltMode(hdc, COLORONCOLOR);
-        } else {
-            SetStretchBltMode(hdc, HALFTONE);
-            SetBrushOrgEx(hdc, 0, 0, nullptr);
-        }
-        ok = StretchBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, dx, dy, SRCCOPY) != 0;
-    }
-    SelectObject(bmpDC, oldBmp);
-    DeleteDC(bmpDC);
-    return ok;
 }
 
 LARGE_INTEGER TimeNow() {

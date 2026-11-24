@@ -633,8 +633,6 @@ Pixmap* PixmapToBgr(Pixmap* p) {
 //
 // Only 1:1 blits are composited; a scaling blit falls back to the opaque path.
 #if OS_WIN
-static bool BlitPixmapRegionComposited(Pixmap* p, HDC hdc, Rect target, Rect source);
-
 bool BlitPixmapAlpha(Pixmap* p, HDC hdc, Rect target) {
     if (!p || !p->data || target.IsEmpty()) {
         return false;

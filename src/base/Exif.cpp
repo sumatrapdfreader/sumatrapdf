@@ -604,12 +604,6 @@ TempStr FormatValuesTemp(const ExifParser& parser, IfdGroup g, u16 tag, u16 type
                  type == TiffSLong;
     if (isInt) {
         bool isSigned = type == TiffSByte || type == TiffSShort || type == TiffSLong;
-        if (type == TiffShort && g == IfdGroup::Exif && tag == (u16)ExifProp::Flash && count == 1) {
-            Str fs = LookupEnumName(g, tag, ReadWord(parser, off));
-            if (fs) {
-                return fs;
-            }
-        }
         // byte arrays and SubjectArea (0x9214) are shown in brackets
         bool brackets = elemSize == 1 || (count > 1 && tag == 0x9214);
         char sScratch[256]{};
@@ -946,7 +940,6 @@ ExifParser::~ExifParser() {
 }
 
 void ExifParser::Reset() {
-    data = {};
     dumpLines.Reset();
     VecReset(entries);
     VecReset(parsedIfds);
@@ -960,7 +953,6 @@ void ExifParser::Reset() {
 
 bool ExifParser::Parse(Str imageData) {
     Reset();
-    data = imageData;
     if (!ExtractExifBlob(imageData, exifBlob, &ownedExif)) {
         return false;
     }

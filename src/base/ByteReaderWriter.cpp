@@ -142,10 +142,6 @@ u64 ByteReader::UInt64BE(int off) const {
     return 0;
 }
 
-u64 ByteReader::UInt64(int off, bool isBE) const {
-    return isBE ? UInt64BE(off) : UInt64LE(off);
-}
-
 u8 ByteReader::UInt8() {
     if (!ok || off >= len) {
         ok = false;
@@ -173,8 +169,6 @@ SEQUENTIAL_READ(UInt16LE, u16, 2)
 SEQUENTIAL_READ(UInt16BE, u16, 2)
 SEQUENTIAL_READ(UInt32LE, u32, 4)
 SEQUENTIAL_READ(UInt32BE, u32, 4)
-SEQUENTIAL_READ(UInt64LE, u64, 8)
-SEQUENTIAL_READ(UInt64BE, u64, 8)
 
 #undef SEQUENTIAL_READ
 
@@ -213,13 +207,6 @@ bool ByteReader::IsOk() const {
     return ok;
 }
 
-const u8* ByteReader::Find(int off, u8 byte) const {
-    if (off < 0 || off >= len) {
-        return nullptr;
-    }
-    return (const u8*)memchr(d + off, byte, (size_t)(len - off));
-}
-
 u16 UInt16BE(const u8* d) {
     return d[1] | (d[0] << 8);
 }
@@ -230,10 +217,6 @@ u16 UInt16LE(const u8* d) {
 
 u32 UInt32BE(const u8* d) {
     return (u32)d[3] | ((u32)d[2] << 8) | ((u32)d[1] << 16) | ((u32)d[0] << 24);
-}
-
-u32 UInt32LE(const u8* d) {
-    return (u32)d[0] | ((u32)d[1] << 8) | ((u32)d[2] << 16) | ((u32)d[3] << 24);
 }
 
 // --- ByteWriter

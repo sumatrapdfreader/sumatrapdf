@@ -37,7 +37,6 @@ struct ByteReader {
     u32 UInt32(int off, bool isBE) const;
     u64 UInt64LE(int off) const;
     u64 UInt64BE(int off) const;
-    u64 UInt64(int off, bool isBE) const;
 
     u8 UInt8();
     char Char();
@@ -45,21 +44,16 @@ struct ByteReader {
     u16 UInt16BE();
     u32 UInt32LE();
     u32 UInt32BE();
-    u64 UInt64LE();
-    u64 UInt64BE();
     void Bytes(void* dst, int n);
     void Skip(int n);
     void Unskip(int n);
     int Offset() const;
     bool IsOk() const;
-
-    const u8* Find(int off, u8 byte) const;
 };
 
 u16 UInt16BE(const u8* d);
 u16 UInt16LE(const u8* d);
 u32 UInt32BE(const u8* d);
-u32 UInt32LE(const u8* d);
 
 struct ByteWriter {
     bool isLE = false;

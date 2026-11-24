@@ -3,9 +3,7 @@
 
 class ZipCreator {
     str::Builder centraldir;
-    str::Builder zipData;
     str::Builder* zipOut;
-    Str zipFilePath;
     size_t bytesWritten;
     size_t fileCount;
 
@@ -15,9 +13,7 @@ class ZipCreator {
     bool storeOnly = false;
 
     bool AddFileData(Str name, Str data, u32 dosdate = 0);
-    explicit ZipCreator(Str zipFilePath);
     explicit ZipCreator(str::Builder& zipOut);
-    ~ZipCreator();
 
     ZipCreator(ZipCreator const&) = delete;
     ZipCreator& operator=(ZipCreator const&) = delete;

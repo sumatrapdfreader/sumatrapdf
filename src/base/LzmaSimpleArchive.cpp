@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/ByteReaderWriter.h"
-#include "base/File.h"
 
 #include <LzmaDec.h>
 #include <Bra.h>

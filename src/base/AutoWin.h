@@ -226,15 +226,6 @@ struct AutoRestorePen {
     ~AutoRestorePen() { SelectObject(hdc, prevPen); }
 };
 
-class AutoRestoreBrush {
-    HDC hdc = nullptr;
-    HBRUSH prevBrush = nullptr;
-
-  public:
-    explicit AutoRestoreBrush(HDC hdc, HBRUSH brush) : hdc(hdc) { prevBrush = (HBRUSH)SelectObject(hdc, brush); }
-
-    ~AutoRestoreBrush() { SelectObject(hdc, prevBrush); }
-};
 // CoUninitialize() / OleUninitialize() must only be called when the matching
 // Initialize succeeded. On failure (RPC_E_CHANGED_MODE when the thread is
 // already in the other apartment kind) it would decrement an apartment count

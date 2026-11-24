@@ -10,7 +10,6 @@
 
 #include "gui/GpuiBridge.h"
 #include "VirtKeys.h"
-#include "base/BitManip.h"
 #include "base/Pixmap.h"
 #include "base/UITask.h"
 

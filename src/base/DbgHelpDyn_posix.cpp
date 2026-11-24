@@ -22,8 +22,6 @@ void GetAddressInfo(str::Builder& s, DWORD64 addr, bool /*compact*/) {
 void WriteMiniDump(WStr /*crashDumpFilePath*/, MINIDUMP_EXCEPTION_INFORMATION* /*mei*/, bool /*fullDump*/,
                    Str /*comment*/) {}
 
-void GetThreadCallstack(str::Builder& /*s*/, ThreadId /*threadId*/) {}
-
 int GetSuspendedThreadCallstackAddrs(ThreadHandle /*hThread*/, u64* /*addrs*/, int /*maxAddrs*/) {
     return 0;
 }

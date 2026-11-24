@@ -104,23 +104,6 @@ static bool SpawnDetached(const StrVec& args) {
     return pid != 0;
 }
 
-struct ChildProcess {
-    pid_t pid = 0;
-    bool exited = false;
-};
-
-ChildProcess* StartChildProcess(Str cmdLine) {
-    StrVec args;
-    SplitCmdLine(cmdLine, args);
-    pid_t pid = SpawnArgs(args);
-    if (pid == 0) {
-        return nullptr;
-    }
-    auto* p = new ChildProcess();
-    p->pid = pid;
-    return p;
-}
-
 bool gBlockExternalLaunch = false;
 int gExternalLaunchesBlocked = 0;
 static Str gExternalLaunchAllowDir;

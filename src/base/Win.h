@@ -214,7 +214,6 @@ struct RenderedBitmap {
 };
 
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
-bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 
 inline bool IsPrinterDC(HDC hdc) {
     int tech = GetDeviceCaps(hdc, TECHNOLOGY);
@@ -251,14 +250,6 @@ class DeferWinPosHelper {
     void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
     void MoveWindow(HWND hWnd, Rect r);
     void MoveWindowNoCopyBits(HWND hWnd, Rect r);
-};
-
-//--- DC state
-
-struct SavedDCState {
-    HWND hwnd;
-    HDC hdc;
-    HFONT oldFont;
 };
 
 //--- clipboard
@@ -440,7 +431,6 @@ LARGE_INTEGER TimeNow();
 //--- misc
 
 TempStr GetDefaultPrinterNameTemp();
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // IUnknown::Release() for a COM object with an AtomicInt refCount: calls `del` at 0
 // (a lambda, so the object's private destructor stays reachable)

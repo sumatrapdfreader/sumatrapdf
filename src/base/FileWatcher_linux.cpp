@@ -21,7 +21,6 @@ struct WatchedDir {
 struct WatchedFile {
     WatchedFile* next = nullptr;
     WatchedDir* dir = nullptr;
-    Str path;
     Str name;
     Func0 onFileChanged;
     bool ignore = false;
@@ -43,7 +42,6 @@ static void FreeWatchedDir(WatchedDir* dir) {
 }
 
 static void FreeWatchedFile(WatchedFile* file) {
-    str::Free(file->path);
     str::Free(file->name);
     delete file;
 }
@@ -219,7 +217,6 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) 
 
     auto* file = new WatchedFile();
     file->dir = dir;
-    file->path = str::Dup(path);
     file->name = str::Dup(name);
     file->onFileChanged = onFileChangedCb;
     ListInsertFront(&gWatchedFiles, file);
