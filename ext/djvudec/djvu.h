@@ -80,8 +80,10 @@ void djvu_ctx_set_iw_max_chunks(djvu_ctx *ctx, int max_chunks);
 /* When enabled, color render output (DJVU_FORMAT_RGB24) is written in B,G,R
    byte order instead of R,G,B. The image is still tagged DJVU_FORMAT_RGB24
    (3 bytes/pixel); only the channel order changes. Lets a caller whose target
-   wants BGR (e.g. a Windows DIB) skip a separate RGB->BGR pass -- the swap is
-   folded into the decoder's final output copy at no extra cost. */
+   wants BGR (e.g. a Windows DIB) skip a separate RGB->BGR pass: the decoder
+   produces B,G,R from the start (IW44 color conversion, palette), at no
+   extra cost. Set before djvu_doc_open and do not change it afterwards
+   (cached page layers are stored in the context's byte order). */
 void djvu_ctx_set_bgr(djvu_ctx *ctx, int enable);
 /* Bump the cooperative render-abort epoch on ctx. ALL in-flight page renders
    on this ctx that already entered via djvu_page_render / djvu_page_render_into
