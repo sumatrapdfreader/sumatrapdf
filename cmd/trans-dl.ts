@@ -12,9 +12,10 @@
  *   3. Fix suspicious translations (trailing whitespace / \n / \r) via /api/edittranslation
  *      as user "ai fix"
  *   4. GET /api/dltranshist (every string the server ever had) and index it by
- *      English text with '&' and a trailing "..." stripped: a string that only
- *      moved or lost its access key, or gained or lost "...", reuses the old
- *      translations (adding / removing the ellipsis), submitted as user "ai auto"
+ *      English text with '&' and a trailing "..." stripped, case-insensitive: a
+ *      string that only moved or lost its access key, gained or lost "...", or
+ *      changed case ("Foo Bar" -> "Foo bar") reuses the old translations (adding /
+ *      removing the ellipsis, matching the case), submitted as user "ai auto"
  *   5. If any language is still missing translations:
  *        - translate with Claude or Grok
  *        - submit each via /api/edittranslation as user "ai claude" / "ai grok"
@@ -541,13 +542,13 @@ async function downloadHistory(server: string): Promise<ServerHistory> {
   return hist;
 }
 
-// translations found under the same English text with '&' and a trailing "..." removed
+// translations found under the same English text with '&' and a trailing "..." removed, ignoring case
 interface StrippedMatch {
   english: string;
   translation: string;
 }
 
-// lang -> english without '&' and "..." -> translated strings that share it
+// lang -> lower-cased english without '&' and "..." -> translated strings that share it
 type StrippedIndex = Map<string, Map<string, StrippedMatch[]>>;
 
 // "Save As..." / "Loading %s ..."
@@ -561,8 +562,84 @@ function hasEnglishDots(s: string): boolean {
   return kEnglishDotsRe.test(s);
 }
 
-function stripKey(english: string): string {
+function stripCaseKey(english: string): string {
   return stripAmpersand(english).replace(kEnglishDotsRe, "");
+}
+
+function stripKey(english: string): string {
+  return stripCaseKey(english).toLowerCase();
+}
+
+// languages that capitalize nouns: a word's case there isn't English title case
+const kNounCapsLangs = new Set(["de"]);
+
+function isCased(ch: string): boolean {
+  return ch.toUpperCase() !== ch.toLowerCase();
+}
+
+function isUpper(ch: string): boolean {
+  return isCased(ch) && ch === ch.toUpperCase();
+}
+
+function setCharCase(s: string, i: number, upper: boolean): string {
+  const ch = s[i]!;
+  return s.slice(0, i) + (upper ? ch.toUpperCase() : ch.toLowerCase()) + s.slice(i + 1);
+}
+
+// words with their offsets; '&' may sit inside a word ("&Datei", "Spei&chern")
+function findWords(s: string): { word: string; start: number }[] {
+  return [...s.matchAll(/[\p{L}\p{M}&]+/gu)].map((m) => ({ word: m[0], start: m.index! }));
+}
+
+// index of the word's first letter, -1 if none
+function firstLetterIdx(word: string): number {
+  return word.search(/\p{L}/u);
+}
+
+// Re-case a translation of srcEnglish for dstEnglish, which differs only in
+// case. The first letter follows the English one. When English lowered later
+// words ("Foo Bar" -> "Foo bar"), title-cased translation words are lowered
+// too, except names English kept ("Open in Windows") and all-caps or mixed-case
+// words ("PDF", "SumatraPDF"). Uncased scripts (CJK, Arabic) are unchanged.
+export function matchTransCase(srcEnglish: string, dstEnglish: string, t: string, lang = ""): string {
+  const srcWords = findWords(stripAmpersand(srcEnglish));
+  const dstWords = findWords(stripAmpersand(dstEnglish));
+  if (srcWords.length === 0 || srcWords.length !== dstWords.length) return t;
+  const nounCaps = kNounCapsLangs.has(lang);
+
+  // first letter of the whole string
+  const srcFirst = srcWords[0]!.word[0]!;
+  const dstFirst = dstWords[0]!.word[0]!;
+  const transWords = findWords(t);
+  if (transWords.length === 0) return t;
+  const tw0 = transWords[0]!;
+  const i0 = tw0.start + firstLetterIdx(tw0.word);
+  const wantUpper = isUpper(dstFirst);
+  const firstChanged = isUpper(srcFirst) !== wantUpper;
+  if (firstChanged && isCased(t[i0]!) && (wantUpper || !nounCaps)) {
+    t = setCharCase(t, i0, wantUpper);
+  }
+
+  // later words English lowered, and capitalized words it kept (names)
+  let lowered = false;
+  const keptCaps = new Set<string>();
+  for (let i = 1; i < srcWords.length; i++) {
+    const src = srcWords[i]!.word;
+    const dst = dstWords[i]!.word;
+    if (isUpper(src[0]!) && !isUpper(dst[0]!)) lowered = true;
+    if (isUpper(dst[0]!)) keptCaps.add(dst.toLowerCase());
+  }
+  if (!lowered || nounCaps) return t;
+
+  for (let i = 1; i < transWords.length; i++) {
+    const { word, start } = transWords[i]!;
+    const letters = stripAmpersand(word);
+    if (letters.length < 2 || !isUpper(letters[0]!)) continue;
+    if ([...letters.slice(1)].some(isUpper)) continue;
+    if (keptCaps.has(letters.toLowerCase())) continue;
+    t = setCharCase(t, start + firstLetterIdx(word), false);
+  }
+  return t;
 }
 
 function hasTransDots(t: string): boolean {
@@ -641,25 +718,36 @@ function buildStrippedIndex(hist: ServerHistory | null, pt: ParsedTranslations):
 
 // "Show &Toolbar" -> "Sh&ow Toolbar" keeps the translation as is (its own
 // '&' stays where the translator put it); "Show Toolbar" from "Show &Toolbar"
-// drops the '&'. A match whose '&' status equals ours is preferred, the newest
-// among equals. The result ends with the language's ellipsis exactly when the
-// English does, also when the translator dropped or added it: "P&roperties..."
+// drops the '&'. A match with our case is preferred, then one whose '&' status
+// equals ours, the newest among equals; a match in another case is re-cased
+// (matchTransCase). The result ends with the language's ellipsis exactly when
+// the English does, also when the translator dropped or added it: "P&roperties..."
 // from "プロパティ(&R)" is "プロパティ(&R)...".
-export function pickStrippedMatch(english: string, matches: StrippedMatch[], dots = "..."): string | undefined {
+export function pickStrippedMatch(
+  english: string,
+  matches: StrippedMatch[],
+  dots = "...",
+  lang = "",
+): string | undefined {
   const wantAmp = english.includes("&");
+  const caseKey = stripCaseKey(english);
+  const score = (c: StrippedMatch) =>
+    (stripCaseKey(c.english) === caseKey ? 2 : 0) + (c.english.includes("&") === wantAmp ? 1 : 0);
   let m: StrippedMatch | undefined;
   for (const c of matches) {
     if (c.english === english) continue;
-    const better = !m || c.english.includes("&") === wantAmp || m.english.includes("&") !== wantAmp;
-    if (better) m = c;
+    if (!m || score(c) >= score(m)) m = c;
   }
   if (!m) return undefined;
 
-  const t = wantAmp ? m.translation : stripAmpersand(m.translation);
+  let t = wantAmp ? m.translation : stripAmpersand(m.translation);
+  if (stripCaseKey(m.english) !== caseKey) {
+    t = matchTransCase(m.english, english, t, lang);
+  }
   return hasEnglishDots(english) ? addTransDots(t, dots) : removeTransDots(t);
 }
 
-/** Fill untranslated strings from translations of the same text modulo '&' and "..." (local only until submitted). */
+/** Fill untranslated strings from translations of the same text modulo '&', "..." and case (local only until submitted). */
 function autoAddStrippedMatches(pt: ParsedTranslations, index: StrippedIndex): Map<string, Map<string, string>> {
   const { perLang, allStrings } = pt;
   const added = new Map<string, Map<string, string>>();
@@ -673,7 +761,7 @@ function autoAddStrippedMatches(pt: ParsedTranslations, index: StrippedIndex): M
       if (existingTranslation(perLang, lang, s) !== undefined) continue;
       const matches = byStripped.get(stripKey(s));
       if (!matches) continue;
-      const trans = pickStrippedMatch(s, matches, dots);
+      const trans = pickStrippedMatch(s, matches, dots, lang);
       if (!trans) continue;
       translations.set(s, trans);
       let m = added.get(lang);
