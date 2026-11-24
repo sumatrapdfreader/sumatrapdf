@@ -568,7 +568,7 @@ const fixedPageUI: Field[] = [
   struct(
     "PageGrid",
     pageGrid,
-    "measurement grid overlay (View > Page Grid). Spacing, slant and style are saved; showing the grid is session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize cells with equal width and height",
+    "measurement grid overlay (View > Show > Page Grid). Spacing, slant and style are saved; showing the grid is session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize cells with equal width and height",
   ).ver("3.7"),
 ];
 
@@ -1511,7 +1511,7 @@ const globalPrefs: Field[] = [
     "EnableTeXEnhancements",
     Bool,
     false,
-    "if true, show the SyncTeX inverse search command line in Settings -> Options, so a " +
+    "if true, show the SyncTeX inverse search command line in Settings -> Settings..., so a " +
       "double-click in the document can jump to the matching line in a LaTeX editor",
   ),
   field(

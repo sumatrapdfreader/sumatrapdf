@@ -111,8 +111,8 @@ static const StructInfo gFixedPageUIInfo = {
     "continuous view)\0experimental: instead of a single background color, fade through these colors from the top of "
     "the document to the bottom (stops are spread evenly, at most 3 colors). The shifting background is meant to give "
     "a subconscious sense of reading progress. Suggested values: #2828aa #28aa28 #aa2828\0if given, sets the canvas "
-    "background color for PDF, DjVu and XPS files\0measurement grid overlay (View > Page Grid). Spacing, slant and "
-    "style are saved; showing the grid is session-only. Drag a grid line while Configure Page Grid is open, or "
+    "background color for PDF, DjVu and XPS files\0measurement grid overlay (View > Show > Page Grid). Spacing, slant "
+    "and style are saved; showing the grid is session-only. Drag a grid line while Configure Page Grid is open, or "
     "Alt+drag, to resize cells with equal width and height",
     false};
 static_assert(dimof(gFixedPageUIFields) == 9);
@@ -1329,7 +1329,7 @@ const StructInfo gSettingsInfo = {
     "100%\0if true, JavaScript in PDF documents is disabled (e.g. form-field calculations won't run)\0if true, a PDF "
     "may load an image stored in a separate file referenced by name (an external image stream); the file must sit next "
     "to the PDF. Off by default for security (matches Acrobat)\0if true, show the SyncTeX inverse search command line "
-    "in Settings -> Options, so a double-click in the document can jump to the matching line in a LaTeX editor\0if "
+    "in Settings -> Settings..., so a double-click in the document can jump to the matching line in a LaTeX editor\0if "
     "true, Esc key closes SumatraPDF. In presentation or fullscreen mode, Esc leaves that mode first\0if true, show "
     "the full path to the document in the title bar\0pattern used to launch the LaTeX editor when doing inverse "
     "search\0if true, restoring a session delays loading each document, and any access to its file, until its tab is "

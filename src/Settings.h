@@ -736,10 +736,10 @@ struct ComicBookUI {
     bool landscapeAsSpread;
 };
 
-// measurement grid overlay (View > Page Grid). Spacing, slant and style
-// are saved; showing the grid is session-only. Drag a grid line while
-// Configure Page Grid is open, or Alt+drag, to resize cells with equal
-// width and height
+// measurement grid overlay (View > Show > Page Grid). Spacing, slant
+// and style are saved; showing the grid is session-only. Drag a grid
+// line while Configure Page Grid is open, or Alt+drag, to resize cells
+// with equal width and height
 struct PageGrid {
     // distance between major vertical grid lines, in PDF points (1/72
     // inch)
@@ -794,10 +794,10 @@ struct FixedPageUI {
     // if given, sets the canvas background color for PDF, DjVu and XPS
     // files
     ParsedColor windowBgCol;
-    // measurement grid overlay (View > Page Grid). Spacing, slant and
-    // style are saved; showing the grid is session-only. Drag a grid line
-    // while Configure Page Grid is open, or Alt+drag, to resize cells with
-    // equal width and height
+    // measurement grid overlay (View > Show > Page Grid). Spacing, slant
+    // and style are saved; showing the grid is session-only. Drag a grid
+    // line while Configure Page Grid is open, or Alt+drag, to resize cells
+    // with equal width and height
     PageGrid pageGrid;
 };
 
@@ -1232,8 +1232,8 @@ struct Settings {
     // next to the PDF. Off by default for security (matches Acrobat)
     bool allowExternalImages;
     // if true, show the SyncTeX inverse search command line in Settings ->
-    // Options, so a double-click in the document can jump to the matching
-    // line in a LaTeX editor
+    // Settings..., so a double-click in the document can jump to the
+    // matching line in a LaTeX editor
     bool enableTeXEnhancements;
     // if true, Esc key closes SumatraPDF. In presentation or fullscreen
     // mode, Esc leaves that mode first
