@@ -2375,11 +2375,18 @@ static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
 // canvas it belongs to, with orig's five NotifCorner anchors, its close box
 // and the tip markup ([text](CmdFoo), **bold**, (Kbd/..)) as real spans.
 
-constexpr int kNotifPadX = 10;
-constexpr int kNotifPadY = 6;
+// orig's NotificationWnd::BuildTree padding and kCloseLeftMargin - padding
+constexpr int kNotifPadX = 12;
+constexpr int kNotifPadY = 8;
 // orig's kTopLeftMargin
 constexpr int kNotifTopLeftMargin = 8;
-constexpr int kNotifCloseGap = 8;
+constexpr int kNotifCloseGap = 4;
+// orig's kProgressDy
+constexpr int kNotifProgressDy = 5;
+// orig's kPadding between stacked notifications
+constexpr int kNotifStackGap = 6;
+// orig's VirtCloseButton x (kColCloseXDef)
+constexpr Color kNotifCloseCol = MkRgb(0xa0, 0xa0, 0xa0);
 constexpr int kNotifCloseDx = 16;
 
 static bool NotifShownNow(MainWindow* win, NotificationWnd* n);
@@ -2404,8 +2411,8 @@ static bool NotifShownNow(MainWindow* win, NotificationWnd* n) {
 // close box stays reachable even for a very long message (issue #2916)
 static float NotifMaxTextDx(MainWindow* win) {
     int dx = win->canvasRc.dx - 2 * DpiScale(kNotifTopLeftMargin);
-    // the card's border, its padding and the close box after the text
-    dx -= 2 + 2 * kNotifPadX + kNotifCloseGap + kNotifCloseDx;
+    // the card's padding and the close box after the text
+    dx -= 2 * kNotifPadX + kNotifCloseGap + kNotifCloseDx;
     return dx > 0 ? (float)dx : (float)(1 << 20);
 }
 
@@ -2452,12 +2459,7 @@ static gp::El* BuildNotifCard(gp::Ctx* cx, NotificationWnd* n) {
     Color colText = n->warning ? ThemeNotificationsHighlightTextColor() : ThemeNotificationsTextColor();
     Color colLink = n->warning ? ThemeNotificationsHighlightLinkColor() : ThemeWindowLinkColor();
     bool isBar = n->corner == NotifCorner::BottomBar;
-    gp::El* card = gp::Div(cx->a)
-                       ->FlexCol()
-                       ->PadX((float)kNotifPadX)
-                       ->PadY((float)kNotifPadY)
-                       ->Bg(ToGpui(colBg))
-                       ->Border(1, ToGpui(ThemeWindowTextColor()));
+    gp::El* card = gp::Div(cx->a)->FlexCol()->PadX((float)kNotifPadX)->PadY((float)kNotifPadY)->Bg(ToGpui(colBg));
     gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap((float)kNotifCloseGap);
     if (isBar) {
         card->W(gp::kFill);
@@ -2465,16 +2467,18 @@ static gp::El* BuildNotifCard(gp::Ctx* cx, NotificationWnd* n) {
     }
     row->Child(BuildNotifSpans(cx, n, colText, colLink));
     row->Child(gp::TextEl(cx->a, GStrL("\xc3\x97"))
-                   ->Font(14)
-                   ->Fg(ToGpui(colText))
+                   ->Font(18)
+                   ->Fg(ToGpui(kNotifCloseCol))
                    ->Cursor(gp::CursorKind::Pointer)
                    ->PathClick(GpuiDup(cx->a, fmt("notif-%d-close", (int)n->key)))
                    ->OnClick(gp::ListenTo(ShellViewOf(n->win), &ShellView::OnNotifClose, (intptr_t)n->key)));
     card->Child(row);
+    // flat: a light track with the done part in the progress color over it
     if (n->progressPerc >= 0) {
-        gp::Rgba col = ToGpui(ThemeNotificationsProgressColor());
-        gp::El* progress = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->H(5)->Border(1, col);
-        progress->Child(gp::Div(cx->a)->WFrac((float)n->progressPerc / 100.f)->H(gp::kFill)->Bg(col));
+        float frac = (float)std::clamp(n->progressPerc, 0, 100) / 100.f;
+        gp::El* progress = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->H((float)kNotifProgressDy);
+        progress->Bg(ToGpui(ThemeNotificationsProgressTrackColor(colBg)));
+        progress->Child(gp::Div(cx->a)->WFrac(frac)->H(gp::kFill)->Bg(ToGpui(ThemeNotificationsProgressColor())));
         card->Gap((float)kNotifPadY)->Child(progress);
     }
     return card;
@@ -2494,16 +2498,17 @@ static void BuildNotifications(MainWindow* win, gp::Ctx* cx, gp::El* parent) {
         if (!stacks[ci]) {
             bool atRight = n->corner == NotifCorner::TopRight || n->corner == NotifCorner::BottomRight;
             bool atBottom = n->corner != NotifCorner::TopLeft && n->corner != NotifCorner::TopRight;
-            gp::El* st = gp::Div(cx->a)->FlexCol()->Gap(4)->Absolute();
+            gp::El* st = gp::Div(cx->a)->FlexCol()->Gap((float)kNotifStackGap)->Absolute();
             if (n->corner == NotifCorner::BottomBar) {
                 st->Left(0)->Right(0)->Bottom(0);
             } else {
                 float mx = (float)DpiScale(n->xMargin);
                 float my = (float)DpiScale(n->yMargin);
+                // each card as wide as its own message, as orig sizes each window
                 if (atRight) {
                     st->Right(mx)->ItemsEnd();
                 } else {
-                    st->Left(mx);
+                    st->Left(mx)->ItemsStart();
                 }
                 if (atBottom) {
                     st->Bottom(my);

@@ -54,6 +54,7 @@ Color ThemeHoverPreviewBackgroundColor();
 Color ThemeHoverPreviewEdgeColor();
 Color ThemeNotificationsHighlightLinkColor();
 Color ThemeNotificationsProgressColor();
+Color ThemeNotificationsProgressTrackColor(Color bg);
 bool ThemeColorizeControls();
 bool IsCurrentThemeDefault();
 void FreeThemes();

@@ -5750,10 +5750,9 @@ static void ShowDebugNotifications(MainWindow* win) {
         NotificationCreateArgs args;
         args.win = win;
         args.groupId = kNotifAdHoc;
-        args.corner = NotifCorner::BottomRight;
-        args.msg = StrL("Progress");
         args.timeoutMs = kNotifNoTimeout;
-        ShowNotification(args);
+        NotificationWnd* wnd = ShowNotification(args);
+        UpdateNotificationProgress(wnd, StrL("Progress"), 50);
     }
 }
 

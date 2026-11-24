@@ -1168,6 +1168,17 @@ Color ThemeNotificationsProgressColor() {
     return ThemeWindowLinkColor();
 }
 
+// the unfilled part of a notification's progress bar: the progress color,
+// faded into the background (a very light blue in a light theme)
+Color ThemeNotificationsProgressTrackColor(Color bg) {
+    constexpr int kTrackAlpha = 50; // of 255
+    u8 r, g, b, br, bgG, bb;
+    UnpackColor(ThemeNotificationsProgressColor(), r, g, b);
+    UnpackColor(bg, br, bgG, bb);
+    auto mix = [](u8 fg, u8 back) { return (u8)((fg * kTrackAlpha + back * (255 - kTrackAlpha)) / 255); };
+    return MkRgb(mix(r, br), mix(g, bgG), mix(b, bb));
+}
+
 bool ThemeColorizeControls() {
     if (gCurrentTheme->colorizeControls) {
         return true;
