@@ -1,537 +1,95 @@
-The original SumatraPDF is a Windows-only C++ program using Win32. Its old
-macOS/Linux ports were removed. SumatraPDF ng in `src/ng/` targets macOS,
-Linux and WebAssembly; its Windows build is for testing and comparison.
+# SumatraPDF
+
+- The original app is Win32 C++ in `src/`. SumatraPDF ng (`src/ng/`) targets macOS, Linux and Wasm, with a Windows build for testing and comparison.
+- Use the string, container and helper types in `src/base/`. Avoid STL. Write all helper scripts, including temporary ones, in Bun TypeScript.
+- Dependencies live in `ext/`. For each change to `ext/mupdf`, include one patch per logical change in `ext/patches/` in the same commit, against the revision in `ext/versions.txt`. See `ext/patches/README.md`. Put our own files compiled into MuPDF in `src/mupdf/`.
+- Update `ext/a-*` amalgamations with the relevant `.claude/skills/update-*/SKILL.md` and `cmd/amalgam.ts`. Never hand-edit them.
+
+## Build and format
+
+- Original app: `bun cmd/build.ts -dbg` builds `out/dbg64/SumatraPDF.exe`. See `-help` for other modes, including `-rel` and `-asan`. Keep `cmd/build.ts` and `cmd/ng-build.ts` as the public build entry points. Build internals live in `cmd/helper/`. Assume Visual Studio tools are on `PATH`.
+- `SumatraPDF-static` builds `out/<config>/SumatraPDF-static.exe`. Debug with `windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe`. Always pass `-for-testing` for ad-hoc app launches to isolate the instance and settings and skip session restore.
+- Original unit tests are debug-only. Run `bun cmd/run-unit-tests.ts -dbg` (also `-32` or `-asan`) for `-unit-tests -for-ai` and diagnostics in `out/<config>/unit-tests-*.txt`.
+- Before building, clang-format touched `.cpp`, `.c` and `.h` files under `src/`. Use `bun cmd/ng-format.ts` for ng C/C++. Keep vendor edits minimal and follow local style without running clang-format there.
+- After editing TypeScript under `cmd/` or `tests/`, run `bun cmd/format.ts` or `bun cmd/format.ts -ts` for Prettier only. Run `bunx prettier --write <files>` on other touched Prettier-owned files.
+
+## Coding and commits
+
+- Keep changes focused. Use early returns and `continue`, blank lines between logical blocks, function names under 30 characters and enum parameters in place of booleans.
+- Name recurring or meaningful constants and all spec-defined values. Leave self-explanatory one-offs inline.
+- Keep low-level I/O in its own abstraction. Each layer calls only the layer immediately below it and works with domain concepts.
+- Keep prose concise. Use rare one- or two-line comments that explain what and why. Put function comments at the `.cpp` definition. Header comments can cover types, constants, macros, sections and definitions that live in the header.
+- Include order in `.cpp` and `.c`: `base/Base.h`, other base headers, project headers, the file's own header, then `SumatraLog.h` if used. Headers rely on this order. Avoid `#pragma once`.
+- Use `StrL` and `WStrL` for literals, `Str` and `WStr` for runtime pointers, and `len(x)` except when assigning the length.
+- `fmt()` and `logf()` take a C format string and typed arguments. Use `fmt(Tr("page %d").s, n)` for a translated format and pass `Str` or `WStr` objects to `%s`. Wrap literal arguments in `StrL`. Format before passing text to `str::Builder::Append`, `dbglayout` or `MaybeDelayedWarningNotification`.
+- `Str` and `WStr` views may lack a NUL terminator. Use `CStrTemp` or `CWStrTemp` for C and Win32 APIs. `ToWStrTemp` and `ToUtf8Temp` already terminate their output. Pass the input view itself. Keep stable storage for anything that outlives the temp arena.
+- Commit only on explicit request. Use a capitalized imperative subject without a period, aiming for 50 characters with a 72-character maximum. End an issue fix subject with `(fixes #<number>)`. Separate the body with a blank line, wrap at 72, and explain what changed and why. For AI-assisted work, end the message with one `prompt: ...` line containing the substantive request, omitting workflow instructions.
+
+## Tests and bug fixes
+
+- Before fixing a bug, find the existing repro in `C:\Users\kjk\OneDrive\!sumatra\bugs\`, write a test and observe it fail. Verify it passes with the fix. Save new repros there as `bug-<number><rest>` files or directories.
+- Run focused checks only. Use `bun tests/issue-<number>.ts` for issue fixes, search `tests/` for affected features, and use `bun cmd/run-unit-tests.ts -dbg` for base or unit-test work. If there is no test, use a targeted manual check and report the gap. Run full suites only on explicit request.
+- For a reported failing test, verify that test alone several times. For suspected unrelated flakes, compare repeated standalone runs on a clean tree and with the change. Never skip tests to get a suite further.
+- After fixing a failing or flaky test, move its array entry in `tests/run-almost-all.ts` just below `issue-5978`, which stays first. For a test registered directly in `tests/run-pre-release.ts`, move it above `runAlmostAll`.
+- Name issue tests `tests/issue-<number>.ts`, with one or two sibling fixtures named `issue-<number>.<rest>` or a directory `issue-<number>-data/` for larger sets. Include source and regeneration instructions for generated binary fixtures. Use `tmpPath()` from `tests/util.ts` for scratch files under `tests/tmp/`, or clean up OS temp files.
+- Export `async function testit(): Promise<void>` and throw on failure. Keep builds and exits in the standalone runner from `tests/util.ts`:
 
-We don't use STL but our own string / helper / container functions implemented in src\base directory
-
-Assume that Visual Studio command-line tools are available in the PATH environment variable (cl.exe, msbuild.exe etc.)
-
-Our code is in src/ directory. External dependencies are in ext/ directory
-
-`ext/mupdf` is vendored and we edit it in place. Every change we make there must
-also be recorded as a patch in `ext/patches/` (one logical change per `.patch`,
-against the mupdf revision in `ext/versions.txt`) in the **same commit** — see
-`ext/patches/README.md`. A change that only lives in the vendored tree is one
-the next mupdf update silently drops. Whole files of our own that get compiled
-into mupdf (as opposed to patches to mupdf files) live in `src/mupdf/`, not in
-`ext/mupdf` — see `src/mupdf/README.md`.
-
-The `ext/a-*` directories are amalgamations generated by `cmd/amalgam.ts` — never
-hand-edit them. To update one, use its `/update-<library>` skill
-(`.claude/skills/update-*`), which carries that library's quirks.
-
-To build run: `bun cmd/build.ts -dbg` (or `-rel`, `-asan`, and the other modes shown by `bun cmd/build.ts -help`). Called with no options it prints usage and exits; unknown options print an error plus usage and exit unsuccessfully.
-
-Keep `cmd/build.ts` as the original app's build entry point and `cmd/ng-build.ts`
-as ng's. Build internals live under `cmd/helper/` and are not invoked directly.
-
-This creates ./out/dbg64/SumatraPDF.exe executable. The static build target is SumatraPDF-static and produces ./out/<config>/SumatraPDF-static.exe.
-
-Write every helper script, saved or temporary, in Bun TypeScript: not Python,
-PowerShell or shell scripts.
-
-MinGW/Wine builds are retired. Use the native ng Linux build, including WSL
-Ubuntu from Windows: `bun cmd/ng-build.ts -linux -dbg`.
-
-Unit tests are compiled into `SumatraPDF.exe` in **debug builds only** and run with `-unit-tests`. To run them with AI-friendly diagnostics, run `bun cmd/run-unit-tests.ts -dbg` (or `-32` / `-asan`). It builds the debug exe, runs it with `-unit-tests -for-ai`, captures output under the matching `out/<config>/unit-tests-*.txt`, and prints assertion/crash callstacks without waiting for debugger UI.
-
-To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe`
-
-When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing` cmd-line flag. It starts a new instance (won't interfere with an already running SumatraPDF), doesn't restore the previous session (only loads files given on the cmd-line) and doesn't save settings (won't overwrite the settings of the user).
-
-After making a change to a .cpp, .c or .h file under `src/` (and before running build.ts), run clang-format on those files to reformat them in place. Do **not** clang-format third-party / vendored code (`ext/`, etc.) — keep edits there minimal and match the existing local style.
-
-After changing a .ts file under `cmd/` or `tests/`, run `bun cmd/format.ts` — it runs prettier over `cmd/**/*.ts` and `tests/**/*.ts` and then clang-formats the C/C++ sources. Use `bun cmd/format.ts -ts` to run only the prettier pass (no Visual Studio / clang-format needed). Prettier settings live in `.prettierrc.json` (`printWidth` 120, `endOfLine` lf) and `.prettierignore` (vendored code, build output, scratch `tmp/` dirs). For other prettier-owned files (.js / .json / .md) run `bunx prettier --write <files>` on the files you touched.
-
-Never commit changes automatically. Always wait for explicit command to commit changes.
-
-When committing a fix for a GitHub issue, end the commit message's **first line** with `(fixes #<issue-no>)`, e.g. `fix crash on committing an empty zoom value (fixes #5909)`. That is the line GitHub shows everywhere, so the link belongs there, not buried in the body.
-
-When committing work done with AI assistance, append the user prompt(s) that produced the change at the very end of the commit message as a single line: `prompt: ...`. If there were multiple prompts, squash them into one concise line. Record the substantive request only — omit meta-instructions such as "commit", "push", "check work", or "verify".
-
-# Generic coding rules
-
-- When writing something intended for human consumption, (comment, commit message, reply to prompt) use as few words as possible. Pick every word meticulously to reduce the volume to a strict minimum. Be down to the point. Less is more.
-
-- Avoid superlatives and praise. Stop telling me I am absolutely right. Give me the cold hard truth.
-
-- Avoid magic numbers and strings by extracting recurring or meaningful values into descriptive constants (const) or enums. Keep self-explanatory, one-off values inline to avoid clutter. If a value comes from a spec (e.g. HTTP 200 OK), use a constant regardless.
-
-- Reduce code indentation. Avoid Arrow Anti-Pattern. Leverage early return and continue.
-
-- Keep function names short. Less than 30 characters.
-
-- Use enums instead of booleans for function parameters.
-
-- Let the reader of the code breathe. Add empty lines between logical blocks of code.
-
-- Add a small, to the point, comment to explain _what_ the block does and _why_. Use examples when possible. Propose ASCII drawings to explain complete systems.
-
-- Program to levels of abstraction. Lower-level mechanics (e.g., raw hardware I/O, sector parsing, direct socket streams) must be encapsulated in a dedicated driver/abstraction layer. Expose clean, high-level APIs to the rest of the application so calling code works with domain concepts, not raw implementation details.
-
-- Don't touch blocks of code unrelated to the feature you implement. e.g. Don't add comments to a block of code if you did not create it or modify it. As much as possible try to minimize the number of changed lines when implementing a feature.
-
-- Strictly adhere to the layered boundary hierarchy: each layer may only communicate with its immediate neighbor directly below it. Never "punch holes" through layers (e.g., controllers or UI components must never directly call database queries, raw hardware drivers, or low-level network clients; always route through the intermediate service/abstraction layer).
-
-When you write a commit message, follow these 7 rules:
-Rule 1: Separate the subject line from the body with a single blank line.
-Rule 2: Limit the subject line to 50 characters (72 is the absolute hard limit).
-Rule 3: Capitalize the first letter of the subject line.
-Rule 4: Do not end the subject line with a period.
-Rule 5: Use the imperative mood in the subject line (e.g., "Fix bug," "Add feature,"
-not "Fixed" or "Adds"). Test formula: It must complete the sentence: "If applied,
-this commit will [your subject line here]".
-Rule 6: Wrap the body text manually at 72 characters to prevent Git formatting issues.
-Rule 7: Use the body to explain what and why vs. how. Assume the code explains the how;
-the message must explain the context and reasoning.
-
-- If the prompt indicates that a bug is being fixed, don't write the fix right away. First write the test. Observe it failing. Then write the fix. And observe the test passing
-
-## SumatraPDF ng
-
-- Ng uses GPUI on every platform: menus, tabs, trees, scrollbars, dialogs,
-  notifications, command palette and tooltips. Do not add native toolkit UI.
-- Match the original Windows UI: menu order, toolbar, tabs, TOC/favorites,
-  find bar, dialogs, shortcuts and mouse behavior. Record unavoidable UI
-  differences and GPUI gaps in feature documentation.
-- Preserve document engines, settings format and shortcut syntax. Keep
-  commands aligned with the original where possible; use ng's generators
-  for its differing commands/settings.
-- Keep code recognizable. Prefer `*_win.cpp`, `*_posix.cpp`, `*_wasm.cpp`
-  siblings and `OS_WIN` / `OS_POSIX` / `OS_WASM` gates. Retain Windows-only
-  features on Windows until they can be ported.
-- Both versions share `ext/`. Identical source files, headers, tests and
-  assets live only in the original tree; `cmd/helper/ng-shared.ts` lists them.
-  The build stages them under `out/<platform>/<config>/generated/shared/`
-  so quoted includes select ng's differing headers. Never edit staged files.
-  To diverge a shared file, copy it into `src/ng/`, remove its shared entry
-  and update the target in `cmd/helper/ng-targets.ts`.
-- When `src/Foo.cpp` and `src/ng/Foo.cpp` differ, the functions they have in
-  common live in `src/shared/FooCommon.cpp`, built by both. `FooCommon.h`
-  declares what crosses the split: shared helpers the apps call, and the
-  functions each app implements for the shared code (`// implemented by each
-  app`). Put a function there instead of writing it twice. A new shared file
-  goes in `premake5.files.lua`, `ng-shared.ts` and `ng-targets.ts`.
-- Ng follows the same coding and commit rules, including **no automatic commits**.
-
-Build with `bun cmd/ng-build.ts -dbg` or `-rel`; the host platform is implied.
-Use `-linux`, `-mac` or `-wasm` to select a platform. Outputs are
-`out/win/<config>`, `out/linux/<config>`, `out/mac/<config>` and
-`out/wasm/<config>`, with `dbg` / `rel` and optional `-clang`, `-asan`,
-`-profile` suffixes. `-clang` has no effect on macOS output naming.
-Use `-clean`, `-all`, `-run` or a target name as needed. `-run` and
-`ng-dbg` are normal launches: they save settings and restore the
-session. Pass `-- -for-testing` for a throwaway run. `ng-dbg-control`
-still passes `-for-testing`. Helpers use the `ng-` prefix.
-
-Windows needs Visual Studio C++ tools; `-clang` selects clang-cl. Linux needs
-bun, g++/clang++, pkg-config and development packages for X11, Cairo, Pango,
-GDK Pixbuf, GLib and OpenSSL. WSL Ubuntu needs bun in `~/.bun/bin` and:
-
-```sh
-sudo apt install build-essential pkg-config libx11-dev libxcursor-dev libxi-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev
-```
-
-WSLg needs a working `DISPLAY` to run the GUI. macOS needs bun and Xcode
-command line tools. GPUI compiles as ARC Objective-C++ there, linking Cocoa,
-CoreText, CoreGraphics, IOKit and WebKit; libarchive uses system iconv.
-Dav1d/heicdec build flags follow the host architecture.
-
-Wasm needs Emscripten (`em++`). Windows builds install emsdk in `.work/emsdk`
-on first use; other hosts need an installed SDK. The toolchain also checks
-`$EMSDK`, `~/emsdk`, `C:\emsdk`, `/opt/emsdk` and `/usr/local/emsdk`.
-`-wasm -rel -run` serves the app at `http://localhost:8085/`, with GPUI's web
-shell and `src/ng/gui/WasmShell.js`. Sample documents live in MEMFS `/docs`,
-settings in OPFS `/settings` (mirrored in MEMFS); fonts are embedded. Wasm embeds no manual
-(help opens the website) and stores the embedded archive uncompressed
-(`MakeLZSA -store`): the web server compresses the `.wasm`. Wasm has no pthreads:
-`StartThread()` runs inline and render loops drain in main-thread slices.
-Console targets use Node and NODERAWFS. A page embedding the app can take over
-browser operations through `window.sumatraHost`; see `docs/wasm-host-api.md`.
-
-Ng unit tests are the `test_util` target:
-`bun cmd/ng-build.ts -dbg test_util -run -- -for-ai`.
-`test_engines` opens documents and renders pages; `test_mupdf` probes MuPDF;
-`plugin-test` hosts plugin mode. Use `cmd/ng-dbg-control.ts` with
-`-dbg-control <pipe>` for automation and `cmd/ng-dbg.ts` for a debug ASan
-build under a debugger (cdb or WinDbg on Windows, lldb or gdb on macOS
-and Linux). Format ng C/C++ with `bun cmd/ng-format.ts`; format TypeScript
-with `bun cmd/format.ts -ts`.
-
-Ng's version is the day of the build, `yy.mm.dd[.n]` (`26.10.03.1`), not
-orig's `3.7.1`; `-rev <n>` sets `.n`. `cmd/helper/ng-version.ts` computes it
-and the build passes it as defines (`SUMATRA_VER`, `GIT_COMMIT_ID`) to
-`SumatraConfig.cpp` alone, so a new day recompiles one file. Code reads
-`currentVersion`, `BuiltOnDate()` (from `__DATE__`) and `gitCommidId`. `src/ng/Version.h` is ng's own. The macOS release script is
-`build-ng-mac.ts` in `../hack/sumatrapdf/build`: it uploads the app and its
-`.dSYM` to R2 `software/sumatrapdfng/mac/<ver>/`. The Linux release script
-is `build-ng-linux.ts` there: it starts the manual
-`.github/workflows/ng-linux-release.yml` workflow for the pushed master
-commit, waits for it, downloads its artifacts and uploads them with their
-`.debug` symbols, an `index.html` and the update-check file to
-`software/sumatrapdfng/linux/<ver>/`. The workflow runs `cmd/ng-linux-ci.sh`
-in a distro container per package: `cmd/ng-deb.ts` (Ubuntu, Debian),
-`cmd/ng-rpm.ts` (Fedora), `cmd/ng-tar.ts` (portable), for x86_64 and arm64, and
-`cmd/ng-arch.ts` (Arch Linux, x86_64). The package's desktop entry, MIME
-types and icons live in `src/ng/linux/`; `cmd/update-linux-icons.ts`
-regenerates the icons from the Windows artwork.
-
-Ng on macOS has no minidumps. A crash writes a text report (every thread's
-stack as module + offset, Mach-O UUIDs, log, settings) to
-`crashinfo/sumatrapdfcrash.txt` in the app data dir and uploads it on the
-next start (`src/base/CrashHandler_posix.cpp`, `CrashHandler_mac.cpp`).
-`bun cmd/sumatra-mac-crashes.ts` in `../hack/daily` (the crash scripts live in
-the hack repo) lists, downloads and symbolicates them with `atos`
-and the build's `.dSYM` (downloaded from R2 for an uploaded build); `-file
-<path>` symbolicates a local report. ASan
-builds and `-for-testing` runs don't upload.
-
-Use `cmd/ng-gen-commands.ts` and `cmd/ng-gen-settings.ts` for ng generated
-files. `ng-gen-embedded.ts` generates ignored `src/ng/EmbeddedData*.cpp`;
-Translations come from `bun cmd/trans-dl.ts`, which writes
-`.work/translations.txt` from apptranslator and needs the maintainer's
-`TRANS_UPLOAD_SECRET`; without it the file is empty and the build is
-English only, by design. The manual uses the original website checkout
-and `.work/docs` staging; CI skips it when that checkout is absent.
-
-Standard Windows CI builds ng x64 release and runs its unit tests. Daily Windows CI builds debug
-and release; Linux/macOS daily CI builds ng and runs unit tests. Linux also
-checks rendering/printing and hosts the separate Wasm CI job.
-
-### GPUI integration
-
-For a file needing GPUI and base, include `gui/GpuiBridge.h` **first**, instead
-of `base/Base.h`. It handles Winsock/Windows include order and conflicting
-macros. Our `Str`, `Vec`, `Rect`, `Point`, `Size` remain global; GPUI's are
-qualified with `gp::` (`gpui`) or `gpc::` (`gpui::component`). Never use
-`using namespace gpui` with base. Use `GStrL`, `ToGpui`, `FromGpui` and
-`GpuiDup` for conversions and frame-arena strings.
-
-Check APIs in `ext/gpui/gpui.h`; `bun cmd/ng-update-gpui.ts -examples` keeps
-examples in `out/gpui-dist/`. `gpui.cpp` and `gpui.h` are published amalgams:
-never hand-edit or patch them in the updater. Framework changes belong in
-`../gpui-kit-cpp/src/gpui/`. With explicit commit/push authorization, publish
-that repo's main, run `bun cmd/update-dist.ts` there, then vendor here with
-`bun cmd/ng-update-gpui.ts`. The updater records the dist commit in
-`ext/gpui/VERSION.txt`; `-commit <sha>` selects a revision.
-
-## SumatraPDF Web (server files)
-
-Both apps show the linked account's files on the home page; the logic is
-shared in `src/shared/ServerFiles.cpp` (list, badges, upload / delete),
-`ContentHash.cpp` (hashes) and `SumatraPDFWebCommon.cpp` (HTTP). The server is
-`../hack/webapps/sumatra-web` (`server/store_files.go`): content stored once per
-sha1, `GET /api/files` lists `name, size, sha1, uploadedAt`.
-
-```
-GET /api/files ──> list ──> <appdata>/SumatraPDF-web-files.txt (cache, per account)
-history file ──> same size as a server file? ──> background sha1 ──> FileState.ContentSha1
-match: sha1 equal = Server; same name, other sha1 = Server ≠; not hashed yet = name + size
-```
-
-- `FileState.ContentSha1` is `<sha1> <size> <mtime>`, valid while the file keeps
-  that size and mtime; uploads and downloads store it too.
-- Hashing runs on a coordinator thread with one I/O thread per file. A file
-  with no progress for 5 s is cancelled and abandoned, and its share (`X:`,
-  `\\server\share`, first two posix path parts) is skipped for 10 minutes.
-- The list is fetched on the first home page, after a transfer, and again when
-  older than 5 minutes (home page layout, window activation). A failed fetch
-  keeps the last list unless the key was rejected.
-- Wasm doesn't hash or cache: its documents live in `/uploads` under their
-  server names.
-- Tests: `sumatrapdf-web-home`, `server-sync-hash`, `server-sync-match`,
-  `server-sync-cache` (a local server on port 9332, the allowed loopback origin);
-  `-dbg-control` `TestContentHash` exposes hash states and test hooks.
-
-## C/C++ #include conventions
-
-We rely on a controlled include order rather than self-sufficient headers (this is the inverse of the common "own header first" advice). In a `.cpp`/`.c` file:
-
-- `#include "base/Base.h"` comes **first**. It pulls in `<windows.h>` plus many common C/C++ headers and our base string / container / `ByteSlice` helpers, which most other headers assume are already available.
-- Then the remaining includes (other `base/` headers, then the rest of the project headers).
-- The file's **own header goes at the end** of the include list (after the headers it depends on, since headers are not self-sufficient) — only `SumatraLog.h` may come after it.
-- `SumatraLog.h`, if present, is the **last** include.
-
-Do **not** use `#pragma once` in `.h` files.
-
-## Comments
-
-Use comments rarely. Most comments should be at the request of the user. When something warrants a comment, keep it to one or two lines: what the code does and why it's necessary. No background narrative, no replaying the investigation or failure mode, nothing a test name or the commit message already says. Applies to specs too. If a comment needs a paragraph, make the code clearer instead
-
-## Put explanatory comments in `.cpp`, not `.h`
-
-**Do not put prose function comments in headers.** Headers are re-parsed by every
-translation unit that includes them, so comments in a `.h` cost compilation time
-on every include. Keep the header declaration terse (ideally a single line) and
-put the explaining comment on the **definition** in the corresponding `.cpp`.
-
-For a function declared in `Foo.h` and defined in `Foo.cpp`,
-the doc comment lives **only** above the definition in the `.cpp` — not on the
-declaration in the `.h`.
-
-```cpp
-// Foo.h — declaration only, no prose comment
-void CollectNonDefaultRegisteredExtensions(StrVec& out);
-
-// Foo.cpp — comment on the definition
-// Extensions we registered for Open With where something else is the default.
-void CollectNonDefaultRegisteredExtensions(StrVec& out) {
-    ...
-}
-```
-
-Comments that have no `.cpp` counterpart stay in the header: those documenting a
-struct/class, an `enum`, a macro, a constant, a section banner (`//--- …`), or an
-`inline`/templated function that is _defined_ in the header (there is nowhere
-else to put them). When in doubt for a free function or method with a `.cpp`
-body: put the comment in the `.cpp`.
-
-## `fmt()` is the type-safe formatter
-
-We use our own `Str` value type (a `char*` + `int len`) for strings instead of
-raw `char*` / `std::string`. The most-used formatter is `fmt()`, a macro
-`#define fmt(...) str::FormatTemp(__VA_ARGS__)` (base/Base.h). It formats into
-the temp arena and returns a `TempStr`, so call sites read `fmt("page %d", n)`.
-
-`fmt()` is **type-safe**, not a raw `vsnprintf` wrapper:
-
-- The **format string** is a plain `const char*` (almost always a string
-  literal). When it's a `Str` instead — most commonly a `Tr("...")`
-  translation, which returns a `Str` — pass its `.s`, e.g.
-  `fmt(Tr("page %d").s, n)`.
-- Each **variadic arg** is wrapped in a `str::FmtArg`, which has explicit
-  constructors for `Str`, `WStr`, `char`, the integer/float types, and
-  `const void*`. Raw `char*` / `const char*` / `wchar_t*` constructors are
-  `= delete`d. So for a `%s` you pass the `Str`/`WStr` **object**, never a
-  `char*` — e.g. `fmt("%s", name)` where `name` is a `Str`, and writing
-  `fmt("%s", name.s)` is a compile error, not a footgun. `%s` accepts both
-  `Str` and `WStr` (a `WStr` is auto-converted to UTF-8).
-- Because args carry their own `.len`, a `Str` arg need not be NUL-terminated.
-
-For a `%s` fed a **string literal**, wrap it with `StrL(...)` (see next section)
-so the length is computed at compile time: `fmt("%s", StrL("done"))`.
-
-`logf` is a variadic function template in `base/Base.h` that formats via
-`str::FormatTemp(...)` and routes the result through `log()`, so it follows the
-same type-safe rules. Base only declares `log()`; the app implements it
-(`SumatraLog.cpp`, declared in `SumatraLog.h`).
-
-Functions that take an already-formatted `Str` (so the caller formats with
-`fmt(...)`): `str::Builder::Append`, `dbglayout`, `MaybeDelayedWarningNotification`.
-
-## Make a `Str`/`WStr` from a string literal with `StrL` / `WStrL`
-
-When constructing a `Str`/`WStr` from a **string literal**, use `StrL("...")` /
-`WStrL(L"...")`, not `Str("...")` / `WStr(L"...")`. `StrL`/`WStrL` compute the
-length at compile time (`sizeof(lit) - 1`), while `Str("...")` / `WStr(L"...")`
-do a runtime `strlen`/`wcslen`. So e.g. `fmt("%s", StrL("done"))`, not
-`fmt("%s", Str("done"))`. Use `Str(x)` / `WStr(x)` only when `x` is a runtime
-`char*` / `wchar_t*` whose length isn't known at compile time.
-
-## Use `len(x)`, not `x.len`
-
-`Str`, `WStr`, `Vec<T>`, `StrVec`, `StrQueue` and `str::Builder` all expose a
-`.len` field, and there is a free `len()` overload for each. Prefer the free
-function:
-
-    for (int i = 0; i < len(s); i++)     // yes
-    for (int i = 0; i < s.len; i++)      // no
-
-It reads the same for every container, it works for the ones whose `.len` is not
-an `int` (`str::Builder::len` is a `u32`, so `.len` drags unsigned arithmetic
-into comparisons), and a type that later hides or renames the field keeps
-working. Reach for `.len` only when you need to **assign** to it.
-
-## NUL-terminate `Str`/`WStr` before C/Win32 APIs
-
-A `Str`/`WStr` is a `{ptr, len}` view and may be a **substring that is not
-NUL-terminated** at `s[len]`. Passing its `.s` to a C runtime or Win32 API that
-reads a NUL-terminated string (e.g. `CreateFileW`, `GetFileAttributesW`,
-`CommandLineToArgvW`, `strlen`, `_wfopen`, `%s` in raw `printf`) can read past
-the intended end.
-
-To get a guaranteed NUL-terminated C-string, use `CStrTemp(Str)` → `char*` or
-`CWStrTemp(WStr)` → `WCHAR*` (both copy into the temp arena). Prefer these over
-`str::DupTemp(x).s` at the call site — the name states the intent:
-
-    BOOL ok = GetFileAttributesEx(CWStrTemp(dir), GetFileExInfoStandard, &fi);
-
-The encoding converters `ToWStrTemp(Str)` / `ToUtf8Temp(WStr)` already return
-length-aware, NUL-terminated output — pass the **object** (`ToWStrTemp(path)`),
-never `.s` (`ToWStrTemp(path.s)` re-introduces the `strlen`/over-read footgun).
-
-Caveat: a `*Temp` result lives in the temp arena (reset each message loop), so
-don't stash its pointer for later use (e.g. a `WNDCLASS::lpszClassName` kept
-across calls) — keep the caller's stable string instead.
-
-## Adding a new advanced setting
-
-To add a new advanced setting:
-
-- add definition in cmd/gen-settings.ts (and cmd/ng-gen-settings.ts). A string setting with a fixed set of values gets `.enum([...])`, plus `.emptyMeans("...")` when empty is allowed: the docs list the values, the dialog and the command palette offer them, and loading replaces anything else with the default
-- run "bun cmd/gen-code.ts" (or "bun cmd/gen-settings.ts") to regenerate src/Settings.h and src/Settings.cpp (it also re-emits the settings docs)
-
-## Adding a new command
-
-To add a new command:
-
-- add to cmd/gen-commands.ts, always at the very end of the list (after the last command, not before "CmdNone"): ids are assigned by position, so inserting earlier renumbers every command after it and bloats the src/Commands.h diff
-- run "bun cmd/gen-code.ts" (or "bun cmd/gen-commands.ts") to regenerate src/Commands.h and src/Commands.cpp
-- document in `www/docs/Commands.md`
-- add an entry to the **New commands** list at the end of the **next** section in `www/docs/Version-history.md` (see below)
-
-## DocProp name maps are generated
-
-The name↔`DocProp` `SeqStrNum` maps (`epubPropsMap`, `pdfCreatorPropsMap`, `mupdfPropsMap`, `pdfPropNames`) are generated by `cmd/gen-code.ts` between `// @gen-start docprop-*` / `// @gen-end docprop-*` markers — **don't hand-edit them**. Each `SeqStrNum` entry's number must be zigzag-LEB128 encoded (`varIntCString`); hand-writing raw bytes silently broke every lookup (title read as author, etc.). To change a mapping, edit the `docPropMaps` data in `cmd/gen-code.ts` and run `bun cmd/gen-code.ts`; it re-emits the maps with correct encoding and self-verifies first/middle/last of each. The same applies to `gVirtKeysNum` in `ShortcutParse.cpp` (`// @gen-start virt-keys-num`).
-
-## Adding a new cmd-line flag
-
-To add a new cmd-line flag:
-
-- add to cmd/gen-flags.ts
-- run "bun cmd/gen-code.ts" (or "bun cmd/gen-flags.ts") to regenerate src/Flags.cpp
-- implement handling in Flags.cpp
-- document in `www/docs/Command-line-arguments.md` when appropriate
-- add an entry to the **New command-line arguments** list at the end of the **next** section in `www/docs/Version-history.md` (see below)
-
-## User docs (www/docs)
-
-User docs live in the sumatra-website repo, in `../hack/webapps/sumatra-website/www/docs` (called `www/docs` below); it is the source of truth. `bun cmd/gen-docs.ts` copies the pages reachable from `SumatraPDF-documentation.md` into `.work/docs` for the in-app manual; without a website checkout (CI) it skips and the exe ships without the manual. `cmd/gen-settings.ts` and `cmd/gen-js-reference-md.ts` write their generated pages there. Commit doc changes in the website repo, with `sumatra-website:` prepended to the commit message (`sumatra-website: document CAJ files`).
-
-PDF example scripts live only in `sumatra-website/www/docs/scripts`. Edit and commit them in the website repo; do not keep copies in `docs/scripts` here. `cmd/gen-pdf-scripts.ts` bundles them into `.work/scripts.js` for embedding, and `cmd/gen-docs.ts` stages the scripts listed in `Tool-run-javascript-examples.md` into `.work/docs/scripts`. Without the website checkout, builds omit both the manual and example scripts.
-
-When writing or restructuring a feature page in `www/docs`, follow `docs/writing-docs.md`.
-
-## Version history (www/docs/Version-history.md)
-
-When documenting a release (usually the **next** section at the top):
-
-- **Do not document bug fixes.** Version history is for features and behavior changes, not a changelog of defects. A plain `fix <something>` bullet does not belong there — the commit message and the GitHub issue already record it. Only mention a fix when it comes with a user-visible change worth describing on its own (a new setting, a new command, a different default), and then describe _that_, not the bug.
-- Main bullets describe features and behavior changes in prose. Mention menus, shortcuts, and user-visible effects — not a stream of `add CmdFoo` / `add -flag` bullets.
-- At the **end** of the version section, add consolidated lists (only for things **new** in that version):
-
-  **New commands:**
-
-  - `CmdFoo` : "Foo" — optional note (shortcut, palette-only, etc.)
-
-  **New command-line arguments:**
-
-  - `-foo <arg>` : brief description (include `(fixes #N)` here if relevant)
-
-- New `-print-settings` tokens belong under **New command-line arguments** (e.g. `-print-settings` tokens: `stretch`, `center`, …).
-- Command **changes** (renames, removals, new arguments on existing commands, shortcut rebinding) stay in the main bullets, not in **New commands**.
-- Removed flags can be noted in the main bullets; do not list them under **New command-line arguments**.
-- **Embedded app data (`IDR_EMBEDDED_PAK`):** everything the exe embeds is one LzSA archive, staged and packed by the VS / ninja prebuild `cmd/pack-embedded-prebuild.cmd <staging dir> <archive> [file[:name] ...]` (cmd + `MakeLZSA.exe` only, no bun). It copies `.work/translations.txt`, `ext/marked.min.js`, `ext/pele.min.js` and the in-app manual from `.work/docs/` (gen-docs output; skipped with a note when missing) into the staging dir and packs it (in-archive names are relative to the staging dir). `SumatraPDF-static` stages `out/<cfg>/embedded-static/` and packs `out/<cfg>/embedded-static.lzsa`; `SumatraPDF` stages `out/<cfg>/embedded/` and packs `out/<cfg>/embedded.lzsa` = staging + `libsumatrapdf.dll`, `PdfFilter.dll`, `PdfPreview.dll`, `sumatrapdf-tool.exe` (the installer payload, passed as extra files). `src/SumatraPDF.rc` gets the archive path via the `EMBEDDED_PAK` resource define set in `premake5.lua` (and `cmd/ninja.ts`) and errors without it. `MakeLZSA.exe out.lzsa <dir> [file[:name] ...]` packs a directory plus extra files. `bun cmd/build.ts` (and `cmd/run-unit-tests.ts`, `cmd/dbg.ts`, the CI / daily builds) runs gen-docs before building, so a rebuilt exe always embeds the current manual; only a raw msbuild / ninja invocation packs whatever `.work/docs` holds. gen-docs writes to `.work/docs.tmp` and swaps it in, so a concurrent prebuild never sees a missing or half-written manual. The ninja build re-packs the archive on every invocation (`cmd/ninja.ts` adds an always-dirty pack edge with `restat`; the premake prebuild stamp alone ran once per clean build and left a stale archive). The app renders markdown on demand in WebView2 via `docs/gen_docs.render.js` and markdown-it.
-
-## Bug reproduction / test files
-
-We keep test and reproduction files for bugs in `C:\Users\kjk\OneDrive\!sumatra\bugs\`, named after the GitHub issue number:
-
-- a single file is `bug-<bug-no><rest>` (e.g. `bug-534.pdf`)
-- if a repro needs more than one file, use a directory `bug-<bug-no><rest>\`
-
-When fixing a bug, look there first for an existing repro file for that issue and use it. When you create a test/repro file while working on a bug, save it there (using the naming above) after fixing the bug.
-
-## Writing tests
-
-Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Naming convention, keyed by the GitHub issue number being tested:
-
-- the test script is `tests/issue-<number>.ts`
-- if it needs a small number (one or two) of extra files, name them `tests/issue-<number>.<rest>`
-- if it needs more files, or a file must live in a directory, put them in `tests/issue-<number>-data/`
-
-### Which tests to run after a change
-
-Do **not** run the full suites (`tests/run-almost-all.ts`, `tests/run-all.ts`, `tests/run-pre-release.ts`, or unrelated
-unit tests) to verify a change. The release process runs them; that is what it is for.
-A full run costs ~4-5 minutes and tells you almost nothing about the ten lines you just
-edited. Run broader suites only when the user explicitly asks.
-
-Instead, run only what the change can plausibly break:
-
-- a named issue fix → `bun tests/issue-<number>.ts`
-- a change to code an existing test covers → that test, found by grepping `tests/` for the
-  feature, command id, or setting name involved
-- base/unit-test work → `bun cmd/run-unit-tests.ts -dbg`
-- nothing covers it → say so instead of running everything as a substitute. A targeted
-  manual check (launch with `-for-testing`, screenshot, probe log) is worth more than a
-  green suite that never touched the code.
-
-When the user reports a failing test (from a release run or their own run), fix and verify **that test alone**: run it
-by itself several times in a row, since the failures that reach you this way are usually intermittent. Do not run a
-full suite afterwards to see what fails next - each run costs minutes and drags you into unrelated flakes. Fix the one
-test, say what you found, and let the next release run surface anything else.
-
-Never edit `tests/run-almost-all.ts` or `tests/run-all.ts` to skip tests so a run gets further. If a test fails and you
-suspect it is unrelated, check it out on a clean tree (`git stash`) and run it standalone
-several times - some are environment- and focus-dependent and fail intermittently
-regardless of the change (`issue-1136` and `issue-2254` have both done this). One passing
-run and one failing run is not evidence; compare several runs on each side.
-
-After fixing a failing or flaky test, move it to the beginning of `tests/run-pre-release.ts`,
-so the next pre-release run retries it in the first seconds rather than minutes in. That run
-is the only thing that can tell you the fix held, and a re-flake should be cheap to reach.
-
-`run-pre-release.ts` opens with `runAlmostAll`, so "the beginning" is the top of the `tests`
-array in `tests/run-almost-all.ts`: move the test's entry there (its import stays where it
-is), below `issue-5978`, which has to stay first because it is the one test that cares what
-the machine was doing before it. `tests/run-all.ts` splices that same array in and
-`tests/run-github-ci.ts` filters `run-all.ts`, so the one move covers every suite. A test
-registered in `run-pre-release.ts` itself (`issue-5842`, `issue-6003`, `latex`) moves above
-the `runAlmostAll` call instead.
-
-Structure of each test (so they compose in tests/run-almost-all.ts / tests/run-all.ts):
-
-- each `tests/issue-<number>.ts` exports `export async function testit(): Promise<void>` that runs the test logic and THROWS on failure (returns normally on success). It must NOT call `process.exit` or build the app itself.
-- end the file with a standalone runner so it can still be run directly:
   ```ts
   if (import.meta.main) {
     await runStandalone(testit);
   }
   ```
-  `runStandalone` (from `tests/util.ts`) builds the app (unless `--no-build`), runs `testit()`, and exits 0 on pass / 1 on failure.
-- shared helpers (`EXE` path, `buildApp`, `runStandalone`) live in `tests/util.ts` — use them instead of re-implementing per file.
-- register every new test in `tests/run-almost-all.ts` (import its `testit` and add it to the `tests` array). If the test cannot be made faster (print-to-PDF, LaTeX, a measured wait, high-zoom tile settle, a huge fixture, copying the exe next to restrict.ini), add it to `slowTests` in `tests/run-all.ts` instead. `bun tests/run-almost-all.ts` is the fast suite; `bun tests/run-all.ts` runs that then the slow tests, stopping at the first failure.
-- the daily GitHub Actions job (`.github/workflows/windows-daily.yml`) builds the debug ASan target and runs `bun tests/run-github-ci.ts`. That runner takes the `run-all.ts` list minus `excludedTests` (each with the reason it can't run on a hosted runner), runs **all** of them instead of stopping at the first failure, prints the failures at the end and exits non-zero. It doesn't build: the workflow does, and points `SUMATRA_TEST_EXE` at `out/dbg64_asan/SumatraPDF-static.exe` (`tests/util.ts` `EXE` reads that env var at import time). If a test can't work on a runner, add it to `excludedTests` with the reason rather than deleting it.
-- the runner picks the window layout with `setTestWindowLayout()` (`tests/winapi.ts`): `"quarter"` (the default, what `run-almost-all.ts` asks for) keeps the window out of a developer's way and renders/captures fewer pixels; `"workArea"` (what `run-github-ci.ts` asks for) uses the whole work area, because a runner's screen is small and nobody is looking at it. Every launch path (`launchSumatra`, `launchControlled`, `withControlledSumatra`) takes its geometry from `testWindowPos()`, so that one call covers all of them.
-- an ASan build is 2-3x slower, so a test that sleeps a fixed number of ms for a repaint or a layout passes locally and fails in CI. Poll for the condition (see `sampleStableChrome` / `waitForChromeRestored` in `tests/issue-5866.ts`) instead of sleeping longer.
-- a test that reads pixels off the document should call `client.setNotificationsEnabled(false)` (`-dbg-control`) first: notifications are drawn over the page and linger ~2s, so otherwise the test waits them out. Disabling also takes down any already on screen (e.g. the `Zoom: N%` one that `-zoom` shows). It was 8 of the 15 seconds `tests/issue-1195.ts` used to take.
 
-### Ad-hoc tests
+- Reuse `EXE`, `buildApp` and `runStandalone` from `tests/util.ts`. Standalone tests build unless passed `--no-build`. Print installation instructions and skip the affected check when an optional external tool is missing.
+- Register new tests in `tests/run-almost-all.ts`, or in `slowTests` in `tests/run-all.ts` if inherently slow. Put checks that need large external corpora, git, network or excessive runtime in `tests/ad-hoc-<name>.ts` with the same runner and no suite registration.
+- Windows daily CI builds the debug ASan static exe and points `SUMATRA_TEST_EXE` at it. If a test cannot run on the hosted runner, give the reason in `excludedTests` in `tests/run-github-ci.ts`. Poll for readiness to accommodate ASan. Runners select `quarter` or `workArea` geometry with `setTestWindowLayout()` in `tests/winapi.ts`.
+- Prefer `tests/control.ts` and `-dbg-control <unique-pipe>` to drive and quit the app. Disable notifications with `client.setNotificationsEnabled(false)` before sampling document pixels. Use `-log-to-file <path>` to capture logs, including in runs that need to save settings.
+- For GUI automation, reuse or extend raw Win32 wrappers in `tests/winapi.ts` and higher-level actions in `tests/win-automation.ts`. This machine supports cross-process window messages but drops `SendInput` and lacks an interactive desktop. Check suspicious GUI results against a clean build.
+- Resolve commands with `cmdId("CmdName")` from `tests/util.ts`. `tests/lint-command-ids.ts` rejects hardcoded IDs.
 
-Some checks are too slow, need large external corpora, or require network/git and should **not** run on every `tests/run-almost-all.ts` invocation. Put those in `tests/ad-hoc-<name>.ts` (not `issue-<n>.ts`):
+## Generated code and docs
 
-- export `async function testit()` the same way as regular tests
-- end with the usual `if (import.meta.main) { await runStandalone(testit); }` standalone runner
-- do **not** register them in `tests/run-almost-all.ts` or `tests/run-all.ts`
-- run ad-hoc tests directly when working on that area: `bun tests/ad-hoc-<name>.ts`
-- the pre-release suite is `bun tests/run-pre-release.ts` (run-almost-all + LaTeX)
+- Settings: edit `cmd/gen-settings.ts` and `cmd/ng-gen-settings.ts`. Use `.enum([...])` for fixed choices and `.emptyMeans("...")` when empty is valid. Run `bun cmd/gen-code.ts` or `bun cmd/gen-settings.ts` for original settings and docs, and the ng generator for ng.
+- Commands: append to the end of `cmd/gen-commands.ts` to preserve IDs. Run `bun cmd/gen-code.ts` or `bun cmd/gen-commands.ts`. Document in `Commands.md` and add a **New commands** entry in the next `Version-history.md` section.
+- Flags: edit `cmd/gen-flags.ts`, run it or `bun cmd/gen-code.ts`, and implement handling in `src/Flags.cpp`. Update `Command-line-arguments.md` as appropriate and add a **New command-line arguments** entry in the next version section.
+- Edit the generator inputs in `cmd/gen-code.ts` for `docprop-*` and `virt-keys-num` maps. The generator handles zigzag-LEB128 encoding via `varIntCString`. Never hand-edit the generated blocks.
+- User docs live in `../hack/webapps/sumatra-website/www/docs`. Follow `docs/writing-docs.md` for feature pages. Commit website changes there with the `sumatra-website:` prefix when authorized. Keep PDF example scripts only in the website's `www/docs/scripts/`.
+- Version history describes features and behavior changes in user-facing prose. Omit plain bug fixes. End each section with lists for new commands (`CmdFoo`, label, optional shortcut or note) and flags (`-foo <arg>`, description, issue if relevant). Include new `-print-settings` tokens with new flags. Describe changes to existing commands or flags in the main bullets.
+- `cmd/gen-docs.ts` stages pages reachable from `SumatraPDF-documentation.md` and scripts listed in `Tool-run-javascript-examples.md` into `.work/docs`. `cmd/gen-pdf-scripts.ts` bundles scripts into `.work/scripts.js`. Builds without the website checkout omit the manual and examples.
+- The original app embeds `IDR_EMBEDDED_PAK` via `EMBEDDED_PAK` in `src/SumatraPDF.rc`. `cmd/pack-embedded-prebuild.cmd` uses `MakeLZSA.exe` to pack translations, JS and the staged manual into `embedded-static.lzsa` or `embedded.lzsa` with the installer payload. Build entry points refresh docs. Raw MSBuild and Ninja use the current staging.
 
-Example: `tests/ad-hoc-exif.ts` clones/updates `../exif-py` and compares `-dump-exif` output to exif-py's `dump.txt`.
+## SumatraPDF ng
 
-Guidelines for test scripts:
+- Use GPUI for all UI. Match the original Windows UI and behavior, and document unavoidable differences and GPUI gaps. Preserve engines, settings format, shortcut syntax and command alignment. Prefer `*_win.cpp`, `*_posix.cpp`, `*_wasm.cpp` and `OS_WIN` / `OS_POSIX` / `OS_WASM` gates. Retain Windows-only features there until ported.
+- Both apps share `ext/`. Reuse identical sources, tests and assets through `cmd/helper/ng-shared.ts`. Never edit files staged in `out/<platform>/<config>/generated/shared/`. To diverge one, copy it to `src/ng/`, remove its shared entry and update `cmd/helper/ng-targets.ts`.
+- Put common code from differing app files in `src/shared/FooCommon.cpp`. Declare shared helpers and app callbacks (`// implemented by each app`) in `FooCommon.h`. Register new shared files in `premake5.files.lua`, `ng-shared.ts` and `ng-targets.ts`.
+- Build with `bun cmd/ng-build.ts -dbg` or `-rel`. Select `-linux`, `-mac` or `-wasm` as needed. Outputs are under `out/<platform>/<config>` with optional `-clang`, `-asan` and `-profile` suffixes. `-clang` selects clang-cl on Windows and does not affect macOS output naming.
+- `-run` and `cmd/ng-dbg.ts` save settings and restore the session. Pass `-- -for-testing` for an isolated launch. `cmd/ng-dbg-control.ts` already passes it and uses `-dbg-control <pipe>`.
+- Run ng unit tests with `bun cmd/ng-build.ts -dbg test_util -run -- -for-ai`. Other targets include `test_engines` (open and render), `test_mupdf` and `plugin-test`. `cmd/ng-dbg.ts` runs an ASan debugger build.
+- Use `cmd/ng-gen-commands.ts`, `cmd/ng-gen-settings.ts` and `cmd/ng-gen-embedded.ts`. `bun cmd/trans-dl.ts` writes `.work/translations.txt` and requires `TRANS_UPLOAD_SECRET` for translations. Without it builds are English-only.
+- Linux builds use the native toolchain, including WSL Ubuntu (`bun cmd/ng-build.ts -linux -dbg`). WSLg needs `DISPLAY`. Install Bun and these Ubuntu packages:
 
-- build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF.exe
-- if a needed external tool (e.g. MiKTeX) isn't installed, don't fail the test: print a clear message (with instructions to install it) and skip that part, returning normally so `tests/run-almost-all.ts` continues
-- a good test fails when the fix is reverted (verify this) — not just passes with the fix present
-- write ad-hoc GUI automation (driving the app via window messages, screenshots) in **Bun TypeScript, not PowerShell** — bun has FFI. Put raw Win32 wrappers in `tests/winapi.ts` and higher-level actions in `tests/win-automation.ts`; extend and reuse those rather than re-declaring FFI per script. The ad-hoc scripts themselves don't need to be checked in, but the reusable helpers in those two files do.
-  - `tests/winapi.ts` = raw winapi: FFI bindings + thin wrappers + constants (enum/find windows, SendMessage/PostMessage, getWindow{Text,Rect}, sendText, `captureWindowToPng` which uses PrintWindow+GDI+ so it works on occluded/background windows).
-  - `tests/win-automation.ts` = high-level actions built on winapi: `launchSumatra` (passes `-for-testing`), `waitForFrame`/`findCanvas`, `clickAt`, `pressEnter/Tab/Escape`, `typeIntoInput` / `fillFormFieldAt`, `openContextMenu`/`waitForContextMenu`, `sendCommand`.
-  - on this machine injected SendInput mouse/keyboard is dropped, but posting (and sending) window messages cross-process works. There is no interactive desktop, so real-cursor probes prove nothing, and a canvas text selection can't be driven at all — check a suspicious result against a clean build before blaming your change.
-- resolve command ids by name with `cmdId("CmdName")` (from `tests/util.ts`), never hardcode the numeric id. Command ids are auto-numbered in `src/Commands.h` and shift whenever commands are added or removed, so a hardcoded constant silently starts sending a _different_ command. This broke `tests/issue-5780.ts` (it sent `CmdCommandPalette` instead of `CmdOpenNextFileInFolder` after ids shifted) and had stale ids lurking in several ad-hoc tests. `tests/lint-command-ids.ts` (runs first in `tests/run-almost-all.ts`) enforces this — it fails the suite on any hardcoded `const Cmd... = <number>` or numeric `sendCommand(win, <number>)`.
-- to read the app's log from a test, pass `-log-to-file <path>`. On exit the app shell-opens the log it wrote unless the path came from `-log-to-file`, the run is `-for-testing`, or it's the debug build's automatic `sumlog.txt` — so a bare `-log` in a release build pops an editor window (Notepad) per run, and before that exception existed `-log-to-file` did too. That is easy to miss because `-for-testing` hides it, and a test that needs settings saved (`saveSettings: true`) or ReuseInstance cannot pass that flag. A stray Notepad per run is not just noise: depending on the .txt association it could launch another non-testing SumatraPDF that saves settings.
-- prefer driving the app through `-dbg-control <named-pipe>` and `tests/control.ts` over GUI automation or adding new test-only command-line flags. Tests should pick a unique pipe name, launch `SumatraPDF.exe -for-testing -dbg-control <name>`, send binary request/response commands, and quit the app through the control client.
-- `-dbg-control` protocol: requests are `[u32 payloadSize][u16 command][u16 requestId][args...]`; responses are `[u32 payloadSize][u16 requestId][results...]`. Arguments/results are encoded as `[u16 type]` where `0=end`, `1=i32` plus 4 bytes, `2=bytes` plus u32 length and data, `3=utf8 string` plus u32 length, bytes, and a zero terminator, and `4=list` plus u16 element count followed by encoded elements.
-- never write runtime scratch / result files directly into `tests/` — that leaves the repo dirty. Write them under `tests/tmp/` (gitignored), using `tmpPath("name")` from `tests/util.ts` (it creates the dir on demand); the OS temp dir (`os.tmpdir()`) is also fine if you clean up after
-- if a binary test fixture (e.g. a .pdf) is generated from source (LaTeX, a script, etc.), commit the source alongside it (e.g. `tests/issue-<number>.tex` next to `tests/issue-<number>.pdf`) with a comment on how to regenerate it, so the fixture can be modified later
+  ```sh
+  sudo apt install build-essential pkg-config libx11-dev libxcursor-dev libxi-dev libcairo2-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libglib2.0-dev libssl-dev
+  ```
 
-## Windows Shell Safety
+- macOS needs Bun and Xcode command-line tools. Wasm needs Emscripten. Windows bootstraps `.work/emsdk` on first build. `-wasm -rel -run` serves `http://localhost:8085/`. Wasm runs threads inline and slices rendering on the main thread. Console targets use Node and NODERAWFS. See `docs/wasm-host-api.md` for browser integration.
+- Ng uses `yy.mm.dd[.n]` from `cmd/helper/ng-version.ts`. `-rev <n>` sets the suffix. Version defines go to `SumatraConfig.cpp` only.
+- Release scripts are in `../hack/sumatrapdf/build/` (`build-ng-mac.ts`, `build-ng-linux.ts`). Linux packages use `.github/workflows/ng-linux-release.yml`, `cmd/ng-linux-ci.sh` and the `cmd/ng-{deb,rpm,tar,arch}.ts` scripts. Desktop assets live in `src/ng/linux/` and `cmd/update-linux-icons.ts` regenerates icons.
+- macOS writes `crashinfo/sumatrapdfcrash.txt` in app data and uploads on next launch, except in ASan and `-for-testing` runs. Use `bun cmd/sumatra-mac-crashes.ts` from `../hack/daily` to symbolicate reports with `.dSYM`, or pass `-file <path>` for a local report.
 
-The Bash tool runs under Git Bash (MSYS2), **not** cmd.exe. This causes critical issues with Windows-style commands:
+### GPUI
 
-- **NEVER use `2>nul`** — Bash interprets this literally and creates a file called `nul`. On Windows NTFS, `nul` is a reserved device name, making the file extremely difficult to delete (requires UAC/admin privileges). Use `2>/dev/null` instead.
-- **NEVER use `rmdir /s /q`** — Bash `rmdir` does not understand cmd.exe flags. Use `rm -rf` instead.
-- **NEVER use `del`** — Not available in Bash. Use `rm` instead.
-- **NEVER use `dir`** — Use `ls` instead.
-- **For Windows-native commands**, wrap in `cmd /c "..."` explicitly.
-- In general, always use Unix-style commands and paths in the Bash tool.
+- Include `gui/GpuiBridge.h` first in files using both GPUI and base. Qualify GPUI types with `gp::` or `gpc::` and avoid `using namespace gpui`. Use `GStrL`, `ToGpui`, `FromGpui` and `GpuiDup`.
+- Check APIs in `ext/gpui/gpui.h` and fetch examples with `bun cmd/ng-update-gpui.ts -examples`. Edit framework code in `../gpui-kit-cpp/src/gpui/`, never in the amalgams or updater patches. With explicit authorization to commit and push, publish framework main, run `bun cmd/update-dist.ts` there and vendor with `bun cmd/ng-update-gpui.ts`. Use `-commit <sha>` to pin a dist revision.
+
+## SumatraPDF Web
+
+- Home-page account files share `src/shared/ServerFiles.cpp`, `ContentHash.cpp` and `SumatraPDFWebCommon.cpp`. The server is `../hack/webapps/sumatra-web` (`server/store_files.go`). `GET /api/files` lists `name`, `size`, `sha1` and `uploadedAt`.
+- Cache the list per account in `<appdata>/SumatraPDF-web-files.txt`. Fetch on first home page, after transfers and when older than five minutes on layout or activation. Retain the last list on failure unless the key was rejected.
+- Hash history files with matching size in the background. `FileState.ContentSha1` stores `<sha1> <size> <mtime>` and is valid while size and mtime match. Transfers also populate it. Equal hashes match, same-name different hashes show `Server ≠`, and unhashed files use name and size. Cancel stalled I/O after five seconds and skip its share for ten minutes. Wasm uses server names under `/uploads` without hashing or caching.
+- Tests include `sumatrapdf-web-home`, `server-sync-hash`, `server-sync-match` and `server-sync-cache`. The allowed test origin is loopback port 9332. Use `TestContentHash` via `-dbg-control` for hash test hooks.
+
+## Windows shell
+
+Git Bash uses Unix commands and paths. Redirect errors with `2>/dev/null`. `2>nul` creates a reserved Windows filename. Run Windows-native commands in their own shell.
