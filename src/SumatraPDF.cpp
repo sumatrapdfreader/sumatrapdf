@@ -9926,6 +9926,7 @@ static void DebugCorruptMemory() {
     free(s);
 }
 #endif
+#endif
 
 // a VirtImage doesn't own the Pixmap it shows, so a notification that
 // generates one needs a wnd that frees it when the tree goes away
@@ -9969,7 +9970,6 @@ static ILayout* MakeDebugPixmapNotifContent(HWND hwnd) {
     box->AddChild(new VirtText(StrL("a VirtCtrl-drawn Pixmap"), font));
     return box;
 }
-#endif
 
 constexpr const WCHAR* kManualVirtualHostW = L"https://sumatrapdf.manual/";
 
@@ -12195,7 +12195,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             f.stressTestMax = 25;
             StartStressTest(&f, win);
         } break;
+#endif
 
+        // the Debug menu is also in pre-release builds
         case CmdDebugShowNotif: {
             {
                 NotificationCreateArgs args;
@@ -12240,6 +12242,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowCustomNotification(win->hwndCanvas, MakeDebugPixmapNotifContent(win->hwndCanvas));
         } break;
 
+#if IS_DEBUG
         case CmdDebugCrashMe:
             CrashMe();
             break;

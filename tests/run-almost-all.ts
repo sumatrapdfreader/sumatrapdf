@@ -516,6 +516,7 @@ import { testit as paletteDeleteAnnotation } from "./palette-delete-annotation.t
 import { testit as paletteCommandAvailability } from "./palette-command-availability.ts";
 import { testit as recentFilesMenu } from "./recent-files-menu.ts";
 import { testit as contextMenuParity } from "./context-menu-parity.ts";
+import { testit as debugShowNotif } from "./debug-show-notif.ts";
 import { testit as mainMenuParity } from "./main-menu-parity.ts";
 import { testit as menuRebuildBurst } from "./menu-rebuild-burst.ts";
 import { testit as commandPaletteRowsBuilt } from "./command-palette-rows-built.ts";
@@ -1146,6 +1147,7 @@ export const tests: NamedTest[] = [
   ["palette-command-availability", paletteCommandAvailability],
   ["recent-files-menu", recentFilesMenu],
   ["context-menu-parity", contextMenuParity],
+  ["debug-show-notif", debugShowNotif],
   ["main-menu-parity", mainMenuParity],
   ["menu-rebuild-burst", menuRebuildBurst],
   ["command-palette-rows-built", commandPaletteRowsBuilt],
