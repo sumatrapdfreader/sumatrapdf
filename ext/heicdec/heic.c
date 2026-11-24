@@ -166,6 +166,12 @@ const char *heic_version(void);
 #include <stdarg.h>
 #include <limits.h>
 
+#if !defined(HEIC_NO_SIMD) && defined(__aarch64__) && defined(__ARM_NEON)
+#define HEIC_NEON 1
+#else
+#define HEIC_NEON 0
+#endif
+
 #ifndef HEIC_MIN
 #define HEIC_MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
@@ -1197,6 +1203,16 @@ int  heic_simd_sao_edge_h_row(const uint16_t *srow, uint16_t *drow, int x0, int 
 
 int  heic_simd_sao_edge_v_row(const uint16_t *src, uint16_t *dst, int stride, int y,
                               int x0, int x1, const int offset_table[5], int max_val);
+#if HEIC_NEON
+void heic_neon_transform4(const int16_t *coeffs, int16_t *out, int bit_depth, int dst);
+int  heic_neon_intra_ang_horizontal(uint16_t *dst, int stride, const int32_t *ref,
+                                    int n, int angle, int max_val);
+void heic_neon_sao_edge(const uint16_t *src, const uint16_t *n0, const uint16_t *n1,
+                        uint16_t *dst, int stride, int width, int height,
+                        const int offset_table[5], int max_val);
+int  heic_neon_sao_band(uint16_t *dst, int stride, int width, int height, int band_pos,
+                        const int16_t offs[4], int band_shift, int max_val);
+#endif
 
 typedef struct {
     uint32_t slice_address;
@@ -9859,6 +9875,12 @@ void heic_idst4(const int16_t *coeffs, int16_t *output, int bit_depth)
     int add1 = 1 << (shift1 - 1), add2 = 1 << (shift2 - 1);
     int32_t tmp[16];
     int i, j, k;
+#if HEIC_NEON
+    if (heic_transform_clip_bits == 15) {
+        heic_neon_transform4(coeffs, output, bit_depth, 1);
+        return;
+    }
+#endif
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             int32_t sum = 0;
@@ -9883,6 +9905,12 @@ void heic_idct4(const int16_t *coeffs, int16_t *output, int bit_depth)
     int add1 = 1 << (shift1 - 1), add2 = 1 << (shift2 - 1);
     int32_t tmp[16];
     int i, j, k;
+#if HEIC_NEON
+    if (heic_transform_clip_bits == 15) {
+        heic_neon_transform4(coeffs, output, bit_depth, 0);
+        return;
+    }
+#endif
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             int32_t sum = 0;
@@ -10494,11 +10522,8 @@ void heic_add_residual(uint16_t *plane, int stride, int x0, int y0,
 #define HEIC_X86 0
 #endif
 
-#if !defined(HEIC_NO_SIMD) && defined(__aarch64__) && defined(__ARM_NEON)
-#define HEIC_NEON 1
+#if HEIC_NEON
 #include <arm_neon.h>
-#else
-#define HEIC_NEON 0
 #endif
 
 #if HEIC_X86
@@ -11980,6 +12005,64 @@ static inline int32x4_t hn_widen_u16(uint16x4_t v)
     return vreinterpretq_s32_u32(vmovl_u16(v));
 }
 
+static inline int16x4x4_t hn_transpose4_s16(int16x4_t a, int16x4_t b,
+                                           int16x4_t c, int16x4_t d)
+{
+    int16x4x2_t ab = vtrn_s16(a, b);
+    int16x4x2_t cd = vtrn_s16(c, d);
+    int32x2_t even_ab = vreinterpret_s32_s16(ab.val[0]);
+    int32x2_t odd_ab = vreinterpret_s32_s16(ab.val[1]);
+    int32x2_t even_cd = vreinterpret_s32_s16(cd.val[0]);
+    int32x2_t odd_cd = vreinterpret_s32_s16(cd.val[1]);
+    int16x4x4_t rows = {{
+        vreinterpret_s16_s32(vzip1_s32(even_ab, even_cd)),
+        vreinterpret_s16_s32(vzip1_s32(odd_ab, odd_cd)),
+        vreinterpret_s16_s32(vzip2_s32(even_ab, even_cd)),
+        vreinterpret_s16_s32(vzip2_s32(odd_ab, odd_cd))
+    }};
+    return rows;
+}
+
+static inline void hn_transform4_1d(int16x4x4_t s, int32x4_t d[4], int dst)
+{
+    int16x4_t a = s.val[0], b = s.val[1], c = s.val[2], e = s.val[3];
+    if (dst) {
+        int32x4_t ac = vaddl_s16(a, c), ce = vaddl_s16(c, e);
+        int32x4_t ae = vsubl_s16(a, e), b74 = vmull_n_s16(b, 74);
+        d[0] = vmlaq_n_s32(vmlaq_n_s32(b74, ac, 29), ce, 55);
+        d[1] = vmlsq_n_s32(vmlaq_n_s32(b74, ae, 55), ce, 29);
+        d[2] = vmulq_n_s32(vsubq_s32(vaddl_s16(a, e), vmovl_s16(c)), 74);
+        d[3] = vmlaq_n_s32(vmlaq_n_s32(vnegq_s32(b74), ac, 55), ae, 29);
+    } else {
+        int32x4_t even0 = vshlq_n_s32(vaddl_s16(a, c), 6);
+        int32x4_t even1 = vshlq_n_s32(vsubl_s16(a, c), 6);
+        int32x4_t odd0 = vmlal_n_s16(vmull_n_s16(b, 83), e, 36);
+        int32x4_t odd1 = vmlsl_n_s16(vmull_n_s16(b, 36), e, 83);
+        d[0] = vaddq_s32(even0, odd0);
+        d[1] = vaddq_s32(even1, odd1);
+        d[2] = vsubq_s32(even1, odd1);
+        d[3] = vsubq_s32(even0, odd0);
+    }
+}
+
+void heic_neon_transform4(const int16_t *coeffs, int16_t *out, int bit_depth, int dst)
+{
+    int32x4_t d[4];
+    int32x4_t shift = vdupq_n_s32(bit_depth - 20);
+    int16x4x4_t s = {{vld1_s16(coeffs), vld1_s16(coeffs + 4),
+                      vld1_s16(coeffs + 8), vld1_s16(coeffs + 12)}};
+    hn_transform4_1d(s, d, dst);
+    s = hn_transpose4_s16(vqrshrn_n_s32(d[0], 7), vqrshrn_n_s32(d[1], 7),
+                          vqrshrn_n_s32(d[2], 7), vqrshrn_n_s32(d[3], 7));
+    hn_transform4_1d(s, d, dst);
+
+    s = hn_transpose4_s16(vmovn_s32(vrshlq_s32(d[0], shift)),
+                          vmovn_s32(vrshlq_s32(d[1], shift)),
+                          vmovn_s32(vrshlq_s32(d[2], shift)),
+                          vmovn_s32(vrshlq_s32(d[3], shift)));
+    vst1_s16_x4(out, s);
+}
+
 int heic_simd_add_residual(uint16_t *plane, int stride, int x0, int y0,
                            const int16_t *residual, int size, int max_val)
 {
@@ -12024,6 +12107,17 @@ int heic_simd_dequant(int16_t *coeffs, int n, int32_t combined, int shift)
     return 1;
 }
 
+static inline uint16x4_t hn_intra_ang4(const int32_t *ref, int fraction, uint16x4_t max)
+{
+    int32x4_t v = vld1q_s32(ref);
+    if (fraction) {
+        v = vmulq_n_s32(v, 32 - fraction);
+        v = vmlaq_n_s32(v, vld1q_s32(ref + 1), fraction);
+        return vmin_u16(vqrshrun_n_s32(v, 5), max);
+    }
+    return vmin_u16(vqmovun_s32(v), max);
+}
+
 int heic_simd_intra_ang_row(uint16_t *dst, const int32_t *ref, int n,
                             int a, int b, int max_val)
 {
@@ -12034,6 +12128,44 @@ int heic_simd_intra_ang_row(uint16_t *dst, const int32_t *ref, int n,
         int32x4_t v = vmulq_n_s32(vld1q_s32(ref + i), a);
         v = vmlaq_n_s32(v, vld1q_s32(ref + i + 1), b);
         vst1_u16(dst + i, vmin_u16(vqrshrun_n_s32(v, 5), mx));
+    }
+    return 1;
+}
+
+int heic_neon_intra_ang_horizontal(uint16_t *dst, int stride, const int32_t *ref,
+                                   int n, int angle, int max_val)
+{
+    uint16x4_t max = vdup_n_u16((uint16_t)max_val);
+    int x, y, k;
+    if (n < 4 || (n & 3)) return 0;
+    if (!angle) {
+        for (y = 0; y < n; y++) {
+            uint16_t *p = dst + (size_t)y * (size_t)stride;
+            uint16x4_t row = vmin_u16(vqmovun_s32(vdupq_n_s32(ref[y])), max);
+            for (x = 0; x < n; x += 4) vst1_u16(p + x, row);
+        }
+        return 1;
+    }
+
+    for (x = 0; x < n; x += 4) {
+        const int32_t *cols[4];
+        int frac[4];
+        for (k = 0; k < 4; k++) {
+            int delta = (x + k + 1) * angle;
+            cols[k] = ref + (delta >> 5);
+            frac[k] = delta & 31;
+        }
+        for (y = 0; y < n; y += 4) {
+            uint16_t *p = dst + (size_t)y * (size_t)stride + x;
+            int16x4x4_t rows = hn_transpose4_s16(
+                vreinterpret_s16_u16(hn_intra_ang4(cols[0] + y, frac[0], max)),
+                vreinterpret_s16_u16(hn_intra_ang4(cols[1] + y, frac[1], max)),
+                vreinterpret_s16_u16(hn_intra_ang4(cols[2] + y, frac[2], max)),
+                vreinterpret_s16_u16(hn_intra_ang4(cols[3] + y, frac[3], max)));
+            for (k = 0; k < 4; k++)
+                vst1_u16(p + (size_t)k * (size_t)stride,
+                          vreinterpret_u16_s16(rows.val[k]));
+        }
     }
     return 1;
 }
@@ -12317,37 +12449,67 @@ static inline uint16x8_t hn_sao_sign(uint16x8_t s, uint16x8_t n)
     return vsubq_u16(vcltq_u16(s, n), vcgtq_u16(s, n));
 }
 
-static inline int hn_sao_edge_row(const uint16_t *srow, const uint16_t *n0,
-                                   const uint16_t *n1, uint16_t *drow, int count,
-                                   const int offset_table[5], int max_val)
+static inline uint16x8_t hn_sao_add(uint16x8_t sample, int16x8_t offset, uint16x8_t max)
 {
-    uint8_t table[16] = {0};
-    uint8x16_t lut;
-    uint16x8_t mx = vdupq_n_u16((uint16_t)max_val);
-    int x, k;
-    if (count < 8) return 0;
+    uint16x8_t bias = vdupq_n_u16(0x8000);
+    int16x8_t sum = vqaddq_s16(vreinterpretq_s16_u16(veorq_u16(sample, bias)), offset);
+    return vminq_u16(veorq_u16(vreinterpretq_u16_s16(sum), bias), max);
+}
 
-    for (k = 0; k < 5; k++) {
-        uint16_t off = (uint16_t)offset_table[k];
-        table[k] = (uint8_t)off;
-        table[k + 8] = (uint8_t)(off >> 8);
+static inline uint16x8_t hn_sao_offset(uint8x16_t lut, uint16x8_t idx)
+{
+    uint16x8_t pair = vmlaq_u16(vdupq_n_u16(0x0100), idx, vdupq_n_u16(0x0202));
+    return vreinterpretq_u16_u8(vqtbl1q_u8(lut, vreinterpretq_u8_u16(pair)));
+}
+
+int heic_neon_sao_band(uint16_t *dst, int stride, int width, int height, int band_pos,
+                       const int16_t offs[4], int band_shift, int max_val)
+{
+    uint16x8_t max = vdupq_n_u16((uint16_t)max_val);
+    uint16x8_t pos = vdupq_n_u16((uint16_t)band_pos);
+    int16x8_t shift = vdupq_n_s16((int16_t)-band_shift);
+    uint16x8_t table = vreinterpretq_u16_s16(vcombine_s16(vld1_s16(offs), vdup_n_s16(0)));
+    uint8x16_t lut = vreinterpretq_u8_u16(table);
+    int x, y;
+    if (width < 8) return 0;
+    for (y = 0; y < height; y++) {
+        uint16_t *row = dst + (size_t)y * (size_t)stride;
+        for (x = 0; x + 8 <= width; x += 8) {
+            uint16x8_t orig = vld1q_u16(row + x);
+            uint16x8_t sample = vminq_u16(orig, max);
+            uint16x8_t band = vshlq_u16(sample, shift);
+            uint16x8_t idx = vandq_u16(vsubq_u16(band, pos), vdupq_n_u16(31));
+            uint16x8_t bits = hn_sao_offset(lut, idx);
+            uint16x8_t filtered = hn_sao_add(sample, vreinterpretq_s16_u16(bits), max);
+            vst1q_u16(row + x, vbslq_u16(vceqzq_u16(bits), orig, filtered));
+        }
+        for (; x < width; x++) {
+            int sample = row[x] > max_val ? max_val : row[x];
+            int idx = ((sample >> band_shift) - band_pos) & 31;
+            if (idx < 4 && offs[idx]) {
+                int v = sample + offs[idx];
+                row[x] = (uint16_t)(v < 0 ? 0 : v > max_val ? max_val : v);
+            }
+        }
     }
-    lut = vld1q_u8(table);
-    for (x = 0; x + 8 <= count; x += 8) {
+    return 1;
+}
+
+static inline void hn_sao_edge_row(const uint16_t *srow, const uint16_t *n0,
+                                    const uint16_t *n1, uint16_t *drow, int width,
+                                    uint8x16_t lut, const int offset_table[5], int max_val)
+{
+    uint16x8_t mx = vdupq_n_u16((uint16_t)max_val);
+    int x;
+    for (x = 0; x + 8 <= width; x += 8) {
         uint16x8_t s = vld1q_u16(srow + x);
         uint16x8_t signs = vaddq_u16(hn_sao_sign(s, vld1q_u16(n0 + x)),
                                      hn_sao_sign(s, vld1q_u16(n1 + x)));
-        uint8x8_t idx = vmovn_u16(vaddq_u16(signs, vdupq_n_u16(2)));
-        uint8x8_t lo = vqtbl1_u8(lut, idx);
-        uint8x8_t hi = vqtbl1_u8(lut, vadd_u8(idx, vdup_n_u8(8)));
-        uint16x8_t bits = vorrq_u16(vmovl_u8(lo), vshll_n_u8(hi, 8));
-        int16x8_t off = vreinterpretq_s16_u16(bits);
-        int32x4_t low = vaddw_s16(hn_widen_u16(vget_low_u16(s)), vget_low_s16(off));
-        int32x4_t high = vaddw_high_s16(hn_widen_u16(vget_high_u16(s)), off);
-        uint16x8_t v = vminq_u16(vqmovun_high_s32(vqmovun_s32(low), high), mx);
+        uint16x8_t bits = hn_sao_offset(lut, vaddq_u16(signs, vdupq_n_u16(2)));
+        uint16x8_t v = hn_sao_add(s, vreinterpretq_s16_u16(bits), mx);
         vst1q_u16(drow + x, vbslq_u16(vceqzq_u16(bits), vld1q_u16(drow + x), v));
     }
-    for (; x < count; x++) {
+    for (; x < width; x++) {
         int s = srow[x];
         int idx = 2 + (s > n0[x]) - (s < n0[x]) + (s > n1[x]) - (s < n1[x]);
         int off = offset_table[idx];
@@ -12356,53 +12518,96 @@ static inline int hn_sao_edge_row(const uint16_t *srow, const uint16_t *n0,
             drow[x] = (uint16_t)(v < 0 ? 0 : v > max_val ? max_val : v);
         }
     }
-    return 1;
 }
 
-int heic_simd_sao_edge_h_row(const uint16_t *srow, uint16_t *drow, int x0, int x1,
-                             const int offset_table[5], int max_val)
+void heic_neon_sao_edge(const uint16_t *src, const uint16_t *n0, const uint16_t *n1,
+                        uint16_t *dst, int stride, int width, int height,
+                        const int offset_table[5], int max_val)
 {
-    if (x1 - x0 < 8) return 0;
-    return hn_sao_edge_row(srow + x0, srow + x0 - 1, srow + x0 + 1, drow + x0,
-                           x1 - x0, offset_table, max_val);
+    int16_t table[8] = {0};
+    uint8x16_t lut;
+    int y;
+    for (y = 0; y < 5; y++) table[y] = (int16_t)offset_table[y];
+    lut = vreinterpretq_u8_s16(vld1q_s16(table));
+    for (y = 0; y < height; y++) {
+        size_t row = (size_t)y * (size_t)stride;
+        hn_sao_edge_row(src + row, n0 + row, n1 + row, dst + row, width, lut,
+                         offset_table, max_val);
+    }
 }
 
-int heic_simd_sao_edge_v_row(const uint16_t *src, uint16_t *dst, int stride, int y,
-                             int x0, int x1, const int offset_table[5], int max_val)
+static inline int32x4_t hn_mc_sum4(const int16_t *p, ptrdiff_t step, int16x4_t coef)
 {
-    size_t pos = (size_t)y * (size_t)stride + (size_t)x0;
-    if (x1 - x0 < 8) return 0;
-    return hn_sao_edge_row(src + pos, src + pos - stride, src + pos + stride, dst + pos,
-                           x1 - x0, offset_table, max_val);
+    int32x4_t sum = vmull_lane_s16(vld1_s16(p), coef, 0);
+    sum = vmlal_lane_s16(sum, vld1_s16(p + step), coef, 1);
+    sum = vmlal_lane_s16(sum, vld1_s16(p + 2 * step), coef, 2);
+    return vmlal_lane_s16(sum, vld1_s16(p + 3 * step), coef, 3);
+}
+
+static inline int32x4x2_t hn_mc_sum8(const int16_t *p, ptrdiff_t step, int16x4_t coef)
+{
+    int16x8_t a = vld1q_s16(p), b = vld1q_s16(p + step);
+    int16x8_t c = vld1q_s16(p + 2 * step), d = vld1q_s16(p + 3 * step);
+    int32x4_t lo = vmull_lane_s16(vget_low_s16(a), coef, 0);
+    int32x4_t hi = vmull_high_lane_s16(a, coef, 0);
+    lo = vmlal_lane_s16(lo, vget_low_s16(b), coef, 1);
+    hi = vmlal_high_lane_s16(hi, b, coef, 1);
+    lo = vmlal_lane_s16(lo, vget_low_s16(c), coef, 2);
+    hi = vmlal_high_lane_s16(hi, c, coef, 2);
+    lo = vmlal_lane_s16(lo, vget_low_s16(d), coef, 3);
+    hi = vmlal_high_lane_s16(hi, d, coef, 3);
+    int32x4x2_t sum = {{lo, hi}};
+    return sum;
+}
+
+static inline __attribute__((always_inline)) void hn_mc_filter(
+    const int16_t *src, ptrdiff_t step, ptrdiff_t row_step, const int16_t *coef,
+    int taps, int w, int h, int shift, int16_t *out, ptrdiff_t out_stride)
+{
+    int16x4_t first = vld1_s16(coef);
+    int16x4_t last = taps == 8 ? vld1_s16(coef + 4) : vdup_n_s16(0);
+    int32x4_t sh = vdupq_n_s32(-shift);
+    int x, y;
+    for (y = 0; y < h; y++) {
+        const int16_t *s = src + y * row_step;
+        int16_t *o = out + y * out_stride;
+        if (w >= 8) {
+            for (x = 0; x < w; x += 8) {
+                int32x4x2_t sum;
+                if (x + 8 > w) x = w - 8;
+                sum = hn_mc_sum8(s + x, step, first);
+                if (taps == 8) {
+                    int32x4x2_t tail = hn_mc_sum8(s + x + 4 * step, step, last);
+                    sum.val[0] = vaddq_s32(sum.val[0], tail.val[0]);
+                    sum.val[1] = vaddq_s32(sum.val[1], tail.val[1]);
+                }
+                vst1q_s16(o + x, vmovn_high_s32(vmovn_s32(vshlq_s32(sum.val[0], sh)),
+                                                vshlq_s32(sum.val[1], sh)));
+            }
+        } else {
+            for (x = 0; x < w; x += 4) {
+                int32x4_t sum;
+                if (x + 4 > w) x = w - 4;
+                sum = hn_mc_sum4(s + x, step, first);
+                if (taps == 8)
+                    sum = vaddq_s32(sum, hn_mc_sum4(s + x + 4 * step, step, last));
+                vst1_s16(o + x, vmovn_s32(vshlq_s32(sum, sh)));
+            }
+        }
+    }
 }
 
 int heic_simd_mc_filter(const void *src, ptrdiff_t tap_step, ptrdiff_t row_step,
                         const int16_t *coef, int taps, int w, int h, int shift,
                         int16_t *out, ptrdiff_t out_stride)
 {
-    int32x4_t sh = vdupq_n_s32(-shift);
-    int x, y, k;
-    if ((taps != 4 && taps != 8) || w < 4) return 0;
-    for (y = 0; y < h; y++) {
-        const int16_t *s = (const int16_t *)src + y * row_step;
-        int16_t *o = out + y * out_stride;
-        for (x = 0; x + 8 <= w; x += 8) {
-            int32x4_t lo = vdupq_n_s32(0), hi = vdupq_n_s32(0);
-            for (k = 0; k < taps; k++) {
-                int16x8_t v = vld1q_s16(s + x + k * tap_step);
-                lo = vmlal_n_s16(lo, vget_low_s16(v), coef[k]);
-                hi = vmlal_high_n_s16(hi, v, coef[k]);
-            }
-            vst1q_s16(o + x, vmovn_high_s32(vmovn_s32(vshlq_s32(lo, sh)), vshlq_s32(hi, sh)));
-        }
-        for (; x < w; x += 4) {
-            int32x4_t sum = vdupq_n_s32(0);
-            if (x + 4 > w) x = w - 4;
-            for (k = 0; k < taps; k++)
-                sum = vmlal_n_s16(sum, vld1_s16(s + x + k * tap_step), coef[k]);
-            vst1_s16(o + x, vmovn_s32(vshlq_s32(sum, sh)));
-        }
-    }
+    if (w < 4) return 0;
+    if (taps == 4)
+        hn_mc_filter(src, tap_step, row_step, coef, 4, w, h, shift, out, out_stride);
+    else if (taps == 8)
+        hn_mc_filter(src, tap_step, row_step, coef, 8, w, h, shift, out, out_stride);
+    else
+        return 0;
     return 1;
 }
 
@@ -13331,6 +13536,7 @@ static void predict_angular(uint16_t *plane, int stride, uint32_t x, uint32_t y,
         }
     } else {
         int i;
+        uint16_t *block = plane + (size_t)y * (size_t)stride + (size_t)x;
         for (i = 0; i <= n; i++)
             ref_arr[rc + i] = border[center - i];
         if (angle < 0) {
@@ -13348,22 +13554,27 @@ static void predict_angular(uint16_t *plane, int stride, uint32_t x, uint32_t y,
             for (i = n + 1; i <= 2 * n; i++)
                 ref_arr[rc + i] = border[center - i];
         }
-        for (py = 0; py < n; py++) {
-            int row_base = rc + py + 1;
-            uint16_t *dst =
-                plane + ((size_t)y + (size_t)py) * (size_t)stride + (size_t)x;
-            for (px = 0; px < n; px++) {
-                int32_t i_idx = ((px + 1) * angle) >> 5;
-                int32_t i_fact = ((px + 1) * angle) & 31;
-                int idx = row_base + (int)i_idx;
-                int32_t pred;
-                if (i_fact != 0)
-                    pred = ((32 - i_fact) * ref_arr[idx] + i_fact * ref_arr[idx + 1] + 16) >> 5;
-                else
-                    pred = ref_arr[idx];
-                if (pred < 0) pred = 0;
-                if (pred > max_val) pred = max_val;
-                dst[px] = (uint16_t)pred;
+#if HEIC_NEON
+        if (!heic_neon_intra_ang_horizontal(block, stride, &ref_arr[rc + 1], n,
+                                             angle, max_val))
+#endif
+        {
+            for (py = 0; py < n; py++) {
+                int row_base = rc + py + 1;
+                uint16_t *dst = block + (size_t)py * (size_t)stride;
+                for (px = 0; px < n; px++) {
+                    int32_t i_idx = ((px + 1) * angle) >> 5;
+                    int32_t i_fact = ((px + 1) * angle) & 31;
+                    int idx = row_base + (int)i_idx;
+                    int32_t pred;
+                    if (i_fact != 0)
+                        pred = ((32 - i_fact) * ref_arr[idx] + i_fact * ref_arr[idx + 1] + 16) >> 5;
+                    else
+                        pred = ref_arr[idx];
+                    if (pred < 0) pred = 0;
+                    if (pred > max_val) pred = max_val;
+                    dst[px] = (uint16_t)pred;
+                }
             }
         }
         if (mode == 10 && c_idx == 0 && size < 32 && !disable_boundary_filter) {
@@ -17809,11 +18020,17 @@ static void apply_sao_band(uint16_t *plane, int stride, int x0, int y0, int x1,
     int16_t band_table[32];
     int k, y, x;
 
+    if (stride <= 0) return;
+#if HEIC_NEON
+    if (x1 <= x0 || y1 <= y0) return;
+    if (heic_neon_sao_band(plane + (size_t)y0 * (size_t)stride + x0, stride,
+                            x1 - x0, y1 - y0, band_pos, offs, band_shift, max_val))
+        return;
+#endif
     memset(band_table, 0, sizeof(band_table));
     for (k = 0; k < 4; k++)
         band_table[(band_pos + k) & 31] = offs[k];
 
-    if (stride <= 0) return;
     for (y = y0; y < y1; y++) {
         uint16_t *row = plane + (size_t)y * (size_t)stride;
         for (x = x0; x < x1; x++) {
@@ -17918,24 +18135,38 @@ static void apply_sao_edge(const uint16_t *src, uint16_t *dst, int stride,
     if (safe_x1 < safe_x0) safe_x1 = safe_x0;
     if (safe_y1 < safe_y0) safe_y1 = safe_y0;
 
-    for (y = safe_y0; y < safe_y1; y++) {
-        const uint16_t *srow = src + (size_t)y * (size_t)stride;
-        uint16_t *drow = dst + (size_t)y * (size_t)stride;
-        if (cls == 0 &&
-            heic_simd_sao_edge_h_row(srow, drow, safe_x0, safe_x1, offset_table, max_val))
-            continue;
-        if (cls == 1 &&
-            heic_simd_sao_edge_v_row(src, dst, stride, y, safe_x0, safe_x1, offset_table,
-                                     max_val))
-            continue;
-        for (x = safe_x0; x < safe_x1; x++) {
-            int sample = (int)srow[x];
-            int n0 = (int)src[(size_t)(y + dy0) * (size_t)stride + (size_t)(x + dx0)];
-            int n1 = (int)src[(size_t)(y + dy1) * (size_t)stride + (size_t)(x + dx1)];
-            int edge_idx = 2 + isignum(sample - n0) + isignum(sample - n1);
-            int offset = offset_table[edge_idx];
-            if (offset)
-                drow[x] = (uint16_t)heic_sao_clampi(sample + offset, 0, max_val);
+#if HEIC_NEON
+    if (safe_x1 - safe_x0 >= 8 && safe_y1 > safe_y0) {
+        size_t base = (size_t)safe_y0 * (size_t)stride + safe_x0;
+        heic_neon_sao_edge(src + base,
+            src + (size_t)(safe_y0 + dy0) * (size_t)stride + (safe_x0 + dx0),
+            src + (size_t)(safe_y0 + dy1) * (size_t)stride + (safe_x0 + dx1),
+            dst + base, stride, safe_x1 - safe_x0, safe_y1 - safe_y0,
+            offset_table, max_val);
+    } else
+#endif
+    {
+        for (y = safe_y0; y < safe_y1; y++) {
+            const uint16_t *srow = src + (size_t)y * (size_t)stride;
+            uint16_t *drow = dst + (size_t)y * (size_t)stride;
+#if !HEIC_NEON
+            if (cls == 0 &&
+                heic_simd_sao_edge_h_row(srow, drow, safe_x0, safe_x1, offset_table, max_val))
+                continue;
+            if (cls == 1 &&
+                heic_simd_sao_edge_v_row(src, dst, stride, y, safe_x0, safe_x1, offset_table,
+                                         max_val))
+                continue;
+#endif
+            for (x = safe_x0; x < safe_x1; x++) {
+                int sample = (int)srow[x];
+                int n0 = (int)src[(size_t)(y + dy0) * (size_t)stride + (size_t)(x + dx0)];
+                int n1 = (int)src[(size_t)(y + dy1) * (size_t)stride + (size_t)(x + dx1)];
+                int edge_idx = 2 + isignum(sample - n0) + isignum(sample - n1);
+                int offset = offset_table[edge_idx];
+                if (offset)
+                    drow[x] = (uint16_t)heic_sao_clampi(sample + offset, 0, max_val);
+            }
         }
     }
 
