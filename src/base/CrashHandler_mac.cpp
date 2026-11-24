@@ -120,6 +120,9 @@ static void AppendHex(str::Builder& b, u64 v, int minDigits = 1) {
 }
 
 static Str BaseName(const char* path) {
+    if (!path) {
+        return StrL("???");
+    }
     const char* slash = strrchr(path, '/');
     return Str(slash ? slash + 1 : path);
 }
@@ -244,7 +247,7 @@ static void AppendModules(str::Builder& b) {
             b.Append(StrL("(no uuid)"));
         }
         b.AppendChar(' ');
-        b.Append(Str(m.path));
+        b.Append(m.path ? Str(m.path) : StrL("???"));
         b.AppendChar('\n');
     }
 }
@@ -335,8 +338,14 @@ bool MacCrashAlert(Str title, Str msg, Str otherButton, int timeoutSecs) {
     CFOptionFlags rsp = 0;
     SInt32 err = CFUserNotificationDisplayAlert(timeoutSecs, kCFUserNotificationStopAlertLevel, nullptr, nullptr,
                                                 nullptr, cfTitle, cfMsg, nullptr, cfOther, nullptr, &rsp);
-    CFRelease(cfTitle);
-    CFRelease(cfMsg);
-    CFRelease(cfOther);
+    if (cfTitle) {
+        CFRelease(cfTitle);
+    }
+    if (cfMsg) {
+        CFRelease(cfMsg);
+    }
+    if (cfOther) {
+        CFRelease(cfOther);
+    }
     return err == 0 && (rsp & 3) == kCFUserNotificationAlternateResponse;
 }

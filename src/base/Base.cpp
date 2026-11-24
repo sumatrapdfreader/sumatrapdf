@@ -1144,17 +1144,24 @@ void DestroyTempArena() {
 }
 
 Arena* gPermArena = nullptr;
+static Mutex gPermArenaMutex;
 
 Arena* GetPermArena() {
+    Arena* a = (Arena*)AtomicPtrGet((AtomicPtr*)&gPermArena);
+    if (a) {
+        return a;
+    }
+    ScopedMutex lock(&gPermArenaMutex);
     if (!gPermArena) {
-        gPermArena = ArenaNew();
+        AtomicPtrSet((AtomicPtr*)&gPermArena, ArenaNew());
     }
     return gPermArena;
 }
 
 void DestroyPermArena() {
-    ArenaDelete(gPermArena);
-    gPermArena = nullptr;
+    ScopedMutex lock(&gPermArenaMutex);
+    Arena* a = (Arena*)AtomicPtrExchange((AtomicPtr*)&gPermArena, nullptr);
+    ArenaDelete(a);
 }
 
 void* AllocTemp(int size, u64 align) {
@@ -6989,6 +6996,14 @@ int AtomicIntDec(AtomicInt* p) {
 }
 
 // stores v and returns what was there before
+void* AtomicPtrGet(AtomicPtr* p) {
+    return InterlockedCompareExchangePointer(p, nullptr, nullptr);
+}
+
+void AtomicPtrSet(AtomicPtr* p, void* v) {
+    InterlockedExchangePointer(p, v);
+}
+
 void* AtomicPtrExchange(AtomicPtr* p, void* v) {
     return InterlockedExchangePointer(p, v);
 }

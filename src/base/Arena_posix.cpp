@@ -11,11 +11,10 @@
 #endif
 
 u64 ArenaPageSize() {
-    static u64 pageSize = 0;
-    if (pageSize == 0) {
+    static const u64 pageSize = []() -> u64 {
         long size = sysconf(_SC_PAGESIZE);
-        pageSize = size > 0 ? (u64)size : 4096;
-    }
+        return size > 0 ? (u64)size : 4096;
+    }();
     return pageSize;
 }
 

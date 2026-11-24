@@ -46,6 +46,14 @@ int AtomicIntDec(AtomicInt* p) {
 }
 
 // stores v and returns what was there before
+void* AtomicPtrGet(AtomicPtr* p) {
+    return __atomic_load_n(p, __ATOMIC_SEQ_CST);
+}
+
+void AtomicPtrSet(AtomicPtr* p, void* v) {
+    __atomic_store_n(p, v, __ATOMIC_SEQ_CST);
+}
+
 void* AtomicPtrExchange(AtomicPtr* p, void* v) {
     return __atomic_exchange_n(p, v, __ATOMIC_SEQ_CST);
 }

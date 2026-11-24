@@ -45,11 +45,10 @@ struct ISzAllocatorAlloc : ISzAlloc {
 };
 
 /* code adapted from https://gnunet.org/svn/gnunet/src/util/crypto_crc.c (public domain) */
-static bool crc_table_ready = false;
 static u32 crc_table[256];
 
 static u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
-    if (!crc_table_ready) {
+    static const bool crc_table_ready = []() {
         u32 i, j;
         u32 h = 1;
         crc_table[0] = 0;
@@ -59,8 +58,9 @@ static u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
                 crc_table[i + j] = crc_table[j] ^ h;
             }
         }
-        crc_table_ready = true;
-    }
+        return true;
+    }();
+    (void)crc_table_ready;
 
     crc32 = crc32 ^ 0xFFFFFFFF;
     while (data_len-- > 0) {

@@ -6,21 +6,19 @@
 #if OS_WIN
 
 u64 ArenaPageSize() {
-    static u64 pageSize = 0;
-    if (pageSize == 0) {
+    static const u64 pageSize = []() -> u64 {
         SYSTEM_INFO info = {};
         GetSystemInfo(&info);
-        pageSize = info.dwPageSize;
-    }
+        return info.dwPageSize;
+    }();
     return pageSize;
 }
 
 u64 ArenaLargePageSize() {
-    static u64 largePageSize = 0;
-    if (largePageSize == 0) {
+    static const u64 largePageSize = []() -> u64 {
         SIZE_T size = GetLargePageMinimum();
-        largePageSize = size ? (u64)size : ArenaPageSize();
-    }
+        return size ? (u64)size : ArenaPageSize();
+    }();
     return largePageSize;
 }
 

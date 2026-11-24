@@ -10,12 +10,13 @@
 
 namespace uitask {
 static ThreadId gMainUIThreadId = 0;
-static bool gInitialized = false;
-static bool gWasDestroyed = false;
+static AtomicBool gInitialized = 0;
+static AtomicBool gWasDestroyed = 0;
 static Dispatch gDispatch = Dispatch::Queue;
+// protected by gQueueMutex
 static void (*gWakeupFn)() = nullptr;
 #if OS_WIN
-static HWND gTaskDispatchHwnd = nullptr;
+static AtomicPtr gTaskDispatchHwnd = nullptr;
 static UINT gExecuteTaskMessage = 0;
 #endif
 
@@ -116,7 +117,7 @@ constexpr const WCHAR* kUiTaskClassName = L"UITask_Wnd_Class";
 
 void Initialize(Dispatch dispatch) {
     gMainUIThreadId = GetCurrentThreadId();
-    gWasDestroyed = false;
+    AtomicBoolSet(&gWasDestroyed, false);
 #if OS_WIN
     gDispatch = dispatch;
     if (gDispatch == Dispatch::Native) {
@@ -126,33 +127,48 @@ void Initialize(Dispatch dispatch) {
         FillWndClassEx(wcex, kUiTaskClassName, WndProcTaskDispatch);
         RegisterClassEx(&wcex);
 
-        ReportIf(gTaskDispatchHwnd);
+        ReportIf(AtomicPtrGet(&gTaskDispatchHwnd) != nullptr);
         const auto* cls = kUiTaskClassName;
         const auto* title = L"UITask Dispatch Window";
         auto* m = GetModuleHandleW(nullptr);
         DWORD style = WS_OVERLAPPED;
-        gTaskDispatchHwnd = CreateWindowExW(0, cls, title, style, 0, 0, 0, 0, HWND_MESSAGE, nullptr, m, nullptr);
+        HWND hwnd = CreateWindowExW(0, cls, title, style, 0, 0, 0, 0, HWND_MESSAGE, nullptr, m, nullptr);
+        if (!hwnd) {
+            gExecuteTaskMessage = 0;
+            AtomicBoolSet(&gInitialized, false);
+            return;
+        }
+        AtomicPtrSet(&gTaskDispatchHwnd, hwnd);
 
-        gQueue = new Vec<TaskInfo*>();
-        gInitialized = gTaskDispatchHwnd != nullptr;
+        {
+            AutoUnlockMutex lock(&gQueueMutex);
+            gQueue = new Vec<TaskInfo*>();
+        }
+        AtomicBoolSet(&gInitialized, true);
         return;
     }
 #else
     (void)dispatch;
 #endif
-    ReportIf(gQueue);
-    gQueue = new Vec<TaskInfo*>();
-    gInitialized = true;
+    {
+        AutoUnlockMutex lock(&gQueueMutex);
+        ReportIf(gQueue);
+        gQueue = new Vec<TaskInfo*>();
+    }
+    AtomicBoolSet(&gInitialized, true);
 }
 
 void DrainQueue() {
-    if (!gInitialized) return;
+    if (!AtomicBoolGet(&gInitialized)) return;
 #if OS_WIN
     if (gDispatch == Dispatch::Native) {
-        MSG msg;
-        UINT wmExecTask = gExecuteTaskMessage;
-        while (PeekMessage(&msg, gTaskDispatchHwnd, wmExecTask, wmExecTask, PM_REMOVE)) {
-            DispatchMessage(&msg);
+        HWND hwnd = (HWND)AtomicPtrGet(&gTaskDispatchHwnd);
+        if (hwnd) {
+            MSG msg;
+            UINT wmExecTask = gExecuteTaskMessage;
+            while (PeekMessage(&msg, hwnd, wmExecTask, wmExecTask, PM_REMOVE)) {
+                DispatchMessage(&msg);
+            }
         }
     }
 #endif
@@ -161,12 +177,20 @@ void DrainQueue() {
 
 void Destroy() {
     DrainQueue();
-    gInitialized = false;
-    gWasDestroyed = true;
+    AtomicBoolSet(&gInitialized, false);
+    AtomicBoolSet(&gWasDestroyed, true);
 #if OS_WIN
     if (gDispatch == Dispatch::Native) {
-        DestroyWindow(gTaskDispatchHwnd);
-        gTaskDispatchHwnd = nullptr;
+        HWND hwnd = (HWND)AtomicPtrExchange(&gTaskDispatchHwnd, nullptr);
+        if (hwnd) {
+            MSG msg;
+            UINT wmExecTask = gExecuteTaskMessage;
+            while (PeekMessage(&msg, hwnd, wmExecTask, wmExecTask, PM_REMOVE)) {
+                DispatchMessage(&msg);
+            }
+            DestroyWindow(hwnd);
+        }
+        gExecuteTaskMessage = 0;
     }
 #endif
     Vec<TaskInfo*>* q;
@@ -174,22 +198,23 @@ void Destroy() {
         AutoUnlockMutex lock(&gQueueMutex);
         q = gQueue;
         gQueue = nullptr;
+        gWakeupFn = nullptr;
     }
     if (q) {
         for (TaskInfo* ti : *q) FreeTaskInfo(ti);
         delete q;
     }
     delete (TaskInfo*)AtomicPtrExchange(&gTaskInfoCache, nullptr);
-    gWakeupFn = nullptr;
 }
 
 void SetWakeupFn(void (*fn)()) {
+    AutoUnlockMutex lock(&gQueueMutex);
     gWakeupFn = fn;
 }
 
 void Post(const Func0& f, Kind kind) {
-    if (!gInitialized) {
-        ReportIf(!gWasDestroyed);
+    if (!AtomicBoolGet(&gInitialized)) {
+        ReportIf(!AtomicBoolGet(&gWasDestroyed));
         return;
     }
     TaskInfo* ti = AllocTaskInfo();
@@ -198,7 +223,8 @@ void Post(const Func0& f, Kind kind) {
     ti->queueTime = TimeGet();
 #if OS_WIN
     if (gDispatch == Dispatch::Native) {
-        if (PostMessageW(gTaskDispatchHwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) {
+        HWND hwnd = (HWND)AtomicPtrGet(&gTaskDispatchHwnd);
+        if (hwnd && PostMessageW(hwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) {
             return;
         }
         // a dropped task never calls back, and whatever it owns leaks: keep it
@@ -206,6 +232,7 @@ void Post(const Func0& f, Kind kind) {
         logf("uitask::Post: PostMessage failed for '%s', queueing\n", kind ? Str(kind) : StrL("(no kind)"));
     }
 #endif
+    void (*wakeup)() = nullptr;
     {
         AutoUnlockMutex lock(&gQueueMutex);
         // Destroy() ran since the gInitialized check above
@@ -214,8 +241,9 @@ void Post(const Func0& f, Kind kind) {
             return;
         }
         VecAppend(*gQueue, ti);
+        wakeup = gWakeupFn;
     }
-    if (gWakeupFn) gWakeupFn();
+    if (wakeup) wakeup();
 }
 
 bool IsMainUIThread() {

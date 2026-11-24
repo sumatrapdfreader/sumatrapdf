@@ -299,6 +299,8 @@ int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
 int AtomicRefCountAdd(AtomicRefCount* v);
 int AtomicRefCountDec(AtomicRefCount* v);
+void* AtomicPtrGet(AtomicPtr* p);
+void AtomicPtrSet(AtomicPtr* p, void* v);
 void* AtomicPtrExchange(AtomicPtr* p, void* v);
 
 #if !OS_WIN
@@ -1122,19 +1124,39 @@ struct TextWindowOption {
 #if IS_DEBUG
 // only the holder writes it; depth > 1 for a re-entered RecursiveMutex
 struct LockOwner {
-    volatile ThreadId thread = 0;
+#if OS_WIN
+    volatile LONG thread = 0;
+#else
+    ThreadId thread = 0;
+#endif
     int depth = 0;
 
     void Enter() {
-        thread = GetCurrentThreadId();
+        ThreadId tid = GetCurrentThreadId();
+#if OS_WIN
+        InterlockedExchange(&thread, (LONG)tid);
+#else
+        __atomic_store_n(&thread, tid, __ATOMIC_RELAXED);
+#endif
         depth++;
     }
     void Leave() {
         if (--depth == 0) {
-            thread = 0;
+#if OS_WIN
+            InterlockedExchange(&thread, 0);
+#else
+            __atomic_store_n(&thread, (ThreadId)0, __ATOMIC_RELAXED);
+#endif
         }
     }
-    bool IsCurrentThread() const { return thread == GetCurrentThreadId(); }
+    bool IsCurrentThread() const {
+        ThreadId tid = GetCurrentThreadId();
+#if OS_WIN
+        return (ThreadId)InterlockedCompareExchange(const_cast<volatile LONG*>(&thread), 0, 0) == tid;
+#else
+        return __atomic_load_n(&thread, __ATOMIC_RELAXED) == tid;
+#endif
+    }
 };
 #define LOCK_OWNER_FIELD LockOwner owner;
 #define LOCK_OWNER_ENTER() owner.Enter()

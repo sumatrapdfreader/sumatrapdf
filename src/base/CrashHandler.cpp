@@ -320,6 +320,9 @@ static void WriteAndUploadDebugReportMinidump(Str logText, bool shouldUpload, vo
 // NO_INLINE because _ReturnAddress() below must be our caller, i.e. the
 // ReportIf() that fired
 NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
+    if (!gCrashHandlerArena) {
+        return;
+    }
     // in release builds ReportIf() will break if running under
     // the debugger. In other builds it sends a debug report
     if (condStr) {
@@ -332,12 +335,11 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
 
     // a ReportIf in a hot path would walk the stack and copy log and settings
     // into the never-reset crash arena on every hit: build one per session
-    static bool didBuildDebugReport = false;
+    static AtomicInt didBuildDebugReport = 0;
     if (!isCrash && !IsDebuggerPresent()) {
-        if (didBuildDebugReport) {
+        if (AtomicIntInc(&didBuildDebugReport) > 1) {
             return;
         }
-        didBuildDebugReport = true;
     }
 
     if (gCfg.localOnly) {
@@ -376,7 +378,7 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     // we want to avoid submitting multiple reports for the same
     // condition. I'm too lazy to implement tracking this granularly
     // so only allow once submission in a given session
-    static bool didSubmitDebugReport = false;
+    static AtomicInt didSubmitDebugReport = 0;
 
     // don't send report if this is me debugging
     if (IsDebuggerPresent()) {
@@ -385,10 +387,9 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
         return;
     }
 
-    if (didSubmitDebugReport) {
+    if (AtomicIntInc(&didSubmitDebugReport) > 1) {
         return;
     }
-    didSubmitDebugReport = true;
 
     logf("_uploadDebugReport: isCrash: %d\n", (int)isCrash);
 
@@ -726,11 +727,23 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {
         log(StrL("InstallCrashHandler: skipping because !gDumpEvent\n"));
+        gSystemInfo = {};
+        gCfg = {};
+        ArenaDelete(gCrashHandlerArena);
+        gCrashInfo = nullptr;
+        gCrashHandlerArena = nullptr;
         return;
     }
     gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, &gDumpThreadId);
     if (!gDumpThread) {
         log(StrL("InstallCrashHandler: skipping because !gDumpThread\n"));
+        CloseHandle(gDumpEvent);
+        gDumpEvent = nullptr;
+        gSystemInfo = {};
+        gCfg = {};
+        ArenaDelete(gCrashHandlerArena);
+        gCrashInfo = nullptr;
+        gCrashHandlerArena = nullptr;
         return;
     }
     gPrevExceptionFilter = SetUnhandledExceptionFilter(CrashDumpExceptionHandler);
@@ -792,7 +805,11 @@ void UninstallCrashHandler() {
 
     // those are allocated from gCrashHandlerArena so are freed by ArenaDelete()
     gSystemInfo = {};
+    gDumpPath = {};
+    gEndedThreadLogText = {};
     gCfg = {};
+    gCrashed = false;
+    gEndedCrashedThread = false;
     ArenaDelete(gCrashHandlerArena);
     gCrashInfo = nullptr;
     gCrashHandlerArena = nullptr;

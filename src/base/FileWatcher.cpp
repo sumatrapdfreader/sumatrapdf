@@ -9,18 +9,6 @@
 #include "base/Win.h"
 #include "base/FileWatcher.h"
 
-// Log file path we must not reload-on-change (set by SumatraLog).
-static Str gFileWatcherSkipPath;
-
-void FileWatcherSetSkipPath(Str path) {
-    str::Free(gFileWatcherSkipPath);
-    gFileWatcherSkipPath = str::Dup(path);
-}
-
-static Str FileWatcherGetSkipPath() {
-    return gFileWatcherSkipPath;
-}
-
 /*
 This code is tricky, so here's a high-level overview. More info at:
 http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
@@ -100,8 +88,22 @@ static HANDLE gThreadControlHandle = nullptr;
 static AtomicBool gShouldExit = 0;
 
 // protects data structures shared between ui thread and file
-// watcher thread i.e. gWatchedDirs, gWatchedFiles
+// watcher thread i.e. gWatchedDirs, gWatchedFiles, gFileWatcherSkipPath
 static Mutex gFileWatcherMutex;
+
+// Log file path we must not reload-on-change (set by SumatraLog).
+static Str gFileWatcherSkipPath;
+
+void FileWatcherSetSkipPath(Str path) {
+    AutoUnlockMutex cs(&gFileWatcherMutex);
+    str::Free(gFileWatcherSkipPath);
+    gFileWatcherSkipPath = str::Dup(path);
+}
+
+static TempStr FileWatcherGetSkipPathTemp() {
+    AutoUnlockMutex cs(&gFileWatcherMutex);
+    return str::DupTemp(gFileWatcherSkipPath);
+}
 
 void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
     if (!wf) {
@@ -582,7 +584,7 @@ WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool e
         return nullptr;
     }
 
-    if (path::IsSame(FileWatcherGetSkipPath(), path)) {
+    if (path::IsSame(FileWatcherGetSkipPathTemp(), path)) {
         logf("FileWatcherSubscribe: '%s' is our own log file\n", path);
         return nullptr;
     }

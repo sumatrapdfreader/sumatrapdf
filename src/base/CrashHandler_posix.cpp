@@ -243,10 +243,20 @@ static void WriteCrashReport(Str condStr, Str fileLine, bool isCrash, int sig, v
 
 static void RestoreDefaultSignals();
 
+static void UnblockAndRaise(int sig) {
+#if !OS_WASM
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, sig);
+    sigprocmask(SIG_UNBLOCK, &set, nullptr);
+#endif
+    raise(sig);
+}
+
 static void SignalHandler(int sig, siginfo_t* info, void* uctx) {
     if (TakeReportSlot() == ReportSlot::Nested) {
         RestoreDefaultSignals();
-        raise(sig);
+        UnblockAndRaise(sig);
         return;
     }
     // restore the default so a fault while reporting terminates us
@@ -260,7 +270,7 @@ static void SignalHandler(int sig, siginfo_t* info, void* uctx) {
         alarm(kCrashMessageTimeoutSecs);
         gCfg.showCrashMessage();
     }
-    raise(sig);
+    UnblockAndRaise(sig);
 }
 
 NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
@@ -447,6 +457,8 @@ void UninstallCrashHandler() {
         return;
     }
     RestoreDefaultSignals();
+    gCfg = {};
+    gSysInfo = {};
     ArenaDelete(gCrashHandlerArena);
     gCrashHandlerArena = nullptr;
 }
