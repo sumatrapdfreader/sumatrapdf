@@ -23,6 +23,8 @@
 #define IDC_PRINT_ROTATE_LABEL 1068
 #define IDC_PRINT_ROTATE 1069
 #define IDC_PRINT_AUTO_ROTATE 1071
+#define IDC_PRINT_ORIENTATION_LABEL 1072
+#define IDC_PRINT_ORIENTATION 1073
 
 // Document-type icons (resource id = registry DefaultIcon ,-N).
 #define IDI_DOCTYPE_EPUB 3

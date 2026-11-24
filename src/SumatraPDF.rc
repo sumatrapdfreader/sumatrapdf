@@ -95,7 +95,7 @@ IDB_RELOADING_CUE       BITMAP                  "reloading.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 
-IDD_PROPSHEET_PRINT_ADVANCED DIALOGEX 0, 0, 292, 207
+IDD_PROPSHEET_PRINT_ADVANCED DIALOGEX 0, 0, 292, 223
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Advanced"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -122,6 +122,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,172,278,10
     LTEXT           "&Rotate printout:",IDC_PRINT_ROTATE_LABEL,7,188,72,9
     COMBOBOX        IDC_PRINT_ROTATE,82,186,90,60,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Orientation:",IDC_PRINT_ORIENTATION_LABEL,7,204,72,9
+    COMBOBOX        IDC_PRINT_ORIENTATION,82,202,90,60,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 /////////////////////////////////////////////////////////////////////////////

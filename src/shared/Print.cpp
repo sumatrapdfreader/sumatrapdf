@@ -1486,6 +1486,15 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 int rotIdx = (data->extraRotation / 90) % 4;
                 CbSetCurrentSelection(hwndCb, rotIdx);
             }
+            // Auto: the printer's orientation; the others force it (#6589)
+            HwndSetDlgItemText(hDlg, IDC_PRINT_ORIENTATION_LABEL, Tr("Orientation:"));
+            {
+                HWND hwndCb = GetDlgItem(hDlg, IDC_PRINT_ORIENTATION);
+                CbAddString(hwndCb, Tr("Automatic"));
+                CbAddString(hwndCb, Tr("Portrait"));
+                CbAddString(hwndCb, Tr("Landscape"));
+                CbSetCurrentSelection(hwndCb, (int)data->rotation);
+            }
 
             {
                 int rangeId = IDC_PRINT_RANGE_ALL;
@@ -1542,6 +1551,14 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 data->autoRotate = IsDlgButtonChecked(hDlg, IDC_PRINT_AUTO_ROTATE) != 0;
                 int rotIdx = (int)SendDlgItemMessage(hDlg, IDC_PRINT_ROTATE, CB_GETCURSEL, 0, 0);
                 data->extraRotation = rotIdx > 0 ? rotIdx * 90 : 0;
+                int orientIdx = (int)SendDlgItemMessage(hDlg, IDC_PRINT_ORIENTATION, CB_GETCURSEL, 0, 0);
+                if (orientIdx == (int)PrintRotationAdv::Portrait) {
+                    data->rotation = PrintRotationAdv::Portrait;
+                } else if (orientIdx == (int)PrintRotationAdv::Landscape) {
+                    data->rotation = PrintRotationAdv::Landscape;
+                } else {
+                    data->rotation = PrintRotationAdv::Auto;
+                }
                 return TRUE;
             }
             break;
@@ -1563,6 +1580,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                     EnableWindow(hApplyButton, TRUE);
                 } break;
                 case IDC_PRINT_ROTATE:
+                case IDC_PRINT_ORIENTATION:
                     if (HIWORD(wp) == CBN_SELCHANGE) {
                         EnableWindow(GetDlgItem(GetParent(hDlg), ID_APPLY_NOW), TRUE);
                     }
@@ -1859,6 +1877,15 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
             defaultDevMode.Set((DEVMODEW*)MemDup(nullptr, devMode, (size_t)(devMode->dmSize + devMode->dmDriverExtra)));
         }
         defaultScaleAdv = advanced.scale;
+    }
+
+    // a forced orientation goes to the printer too, as -print-settings
+    // portrait/landscape does; after the settings are remembered above, so the
+    // next dialog starts from the printer's own (#6589)
+    if (devMode && advanced.rotation != PrintRotationAdv::Auto) {
+        bool portrait = advanced.rotation == PrintRotationAdv::Portrait;
+        devMode->dmOrientation = portrait ? DMORIENT_PORTRAIT : DMORIENT_LANDSCAPE;
+        devMode->dmFields |= DM_ORIENTATION;
     }
 
     if (devMode && advanced.paperSourceByPageSize) {

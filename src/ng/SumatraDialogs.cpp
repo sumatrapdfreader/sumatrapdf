@@ -1703,7 +1703,7 @@ static DLGTEMPLATE* BuildPrintAdvancedTemplate() {
     t.U16(0);
     t.U16(0);
     t.U16(292);
-    t.U16(207);
+    t.U16(223);
     t.U16(0); // no menu
     t.U16(0); // default dialog class
     t.Sz(L"Advanced");
@@ -1727,6 +1727,8 @@ static DLGTEMPLATE* BuildPrintAdvancedTemplate() {
     t.Item(check, 7, 172, 278, 10, IDC_PRINT_AUTO_ROTATE, kAtomButton);
     t.Item(SS_LEFT, 7, 188, 72, 9, IDC_PRINT_ROTATE_LABEL, kAtomStatic);
     t.Item(CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 82, 186, 90, 60, IDC_PRINT_ROTATE, kAtomComboBox);
+    t.Item(SS_LEFT, 7, 204, 72, 9, IDC_PRINT_ORIENTATION_LABEL, kAtomStatic);
+    t.Item(CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 82, 202, 90, 60, IDC_PRINT_ORIENTATION, kAtomComboBox);
 
     u16 cdit = (u16)t.nItems;
     memcpy(t.buf + cditPos, &cdit, sizeof(cdit));
