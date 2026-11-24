@@ -249,6 +249,24 @@ bool IsTrackedPopupOpen(gp::Ctx* cx) {
     return OpenTrackedPopup(cx) != nullptr || OpenTrackedSelect(cx) != nullptr || OpenCombo() != nullptr;
 }
 
+// an open popup menu and its open submenus, in window dips as last laid out
+void AppendPopupMenuBounds(gp::Ctx* cx, gp::PopupMenuState* st, Vec<gp::Bounds>& out) {
+    if (!st || !st->open) {
+        return;
+    }
+    VecAppend(out, st->bounds);
+    int sub = st->openSubmenu;
+    if (sub >= 0 && sub < len(st->rows)) {
+        AppendPopupMenuBounds(cx, st->rows[sub].submenuState.Get(cx), out);
+    }
+}
+
+void TrackedPopupBounds(gp::Ctx* cx, Vec<gp::Bounds>& out) {
+    for (auto& e : gTrackedPopups) {
+        AppendPopupMenuBounds(cx, e.Get(cx), out);
+    }
+}
+
 bool IsTrackedPopupOpenInApp(gp::App* app) {
     for (auto& e : gTrackedPopups) {
         auto* st = (gp::PopupMenuState*)gp::EntityGet(app, e.id);

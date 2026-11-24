@@ -345,6 +345,8 @@ void TabsView::OnTabUp(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev, 
 
 // ng: keeps a right press from gpui's ContextMenu, which would open from it
 void TabsView::OnBarDown(TabsView*, gp::Ctx* cx, const gp::MouseDownEvent* ev) {
+    // a press hides a tab's tooltip, as a Win32 tooltip does
+    HoverTooltipHide(cx);
     if (IsContextClick(ev->button, ev->modifiers)) {
         gp::WindowStopPropagation(cx);
     }

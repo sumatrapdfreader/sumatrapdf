@@ -95,6 +95,8 @@ gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx*, int) {
     return nullptr;
 }
 
+void BrowserViewSetHoles(BrowserView*, const Vec<Rect>&) {}
+
 void BrowserViewCreatePending(MainWindow*, gpui::Ctx*) {}
 void BrowserViewSetOwnHost(BrowserView*) {}
 void BrowserViewCreatePendingIn(BrowserView*, gpui::Ctx*) {}

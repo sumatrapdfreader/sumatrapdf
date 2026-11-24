@@ -2126,22 +2126,32 @@ static bool FailedTabFileExists(WindowTab* tab) {
 
 // a fixed-page document draws through DocCanvas, the Home tab through
 // HomePage, a CHM or markdown document through the browser view
-// a popup menu open in the frame: the tab, toolbar and context menus or a menu bar drop-down
-static bool PopupMenuUp(ShellView* self, gp::Ctx* cx) {
-    if (IsTrackedPopupOpen(cx)) {
-        return true;
-    }
+// the popup menus open in the frame (tab, toolbar and context menus, a menu
+// bar drop-down), in frame client pixels. A popup not laid out yet asks for
+// another frame.
+static void PopupMenuRects(ShellView* self, gp::Ctx* cx, Vec<Rect>& out) {
+    Vec<gp::Bounds> bounds;
+    TrackedPopupBounds(cx, bounds);
     auto* mb = (gpc::AppMenuBarState*)gp::EntityGet(cx->app, self->menuBarState.id);
-    return mb && mb->selected >= 0;
+    if (mb && mb->selected >= 0 && self->menuPopupIdx >= 0) {
+        AppendPopupMenuBounds(cx, self->menuPopupState.Get(cx), bounds);
+    }
+    float k = gp::WindowScaleFactor(cx->win);
+    for (const gp::Bounds& b : bounds) {
+        if (b.w <= 0 || b.h <= 0) {
+            AppShellInvalidate(self->win);
+            continue;
+        }
+        int x = (int)floorf(b.x * k);
+        int y = (int)floorf(b.y * k);
+        VecAppend(out, Rect(x, y, (int)ceilf((b.x + b.w) * k) - x, (int)ceilf((b.y + b.h) * k) - y));
+    }
 }
 
 static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     MainWindow* win = self->win;
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    // ng: gpui draws a popup menu in the frame, under the browser's child
-    // window (orig's menus are windows of their own), so it steps aside too
-    bool popupUp = PopupMenuUp(self, cx);
-    BrowserView* browser = UpdateBrowserViews(win, overlayUp || popupUp);
+    BrowserView* browser = UpdateBrowserViews(win, overlayUp);
     if (win->AsFixed()) {
         return DocCanvasBuild(win, cx);
     }
@@ -2155,15 +2165,15 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     if (currTab && currTab->IsHexTab()) {
         return HexViewBuild(win, cx);
     }
-    if (popupUp && currTab && currTab->AsBrowser()) {
-        return gp::Div(cx->a)->Flex1()->W(gp::kFill)->Bg(ThemeGpuiCanvasBg());
-    }
     if (browser && !overlayUp) {
         gp::El* box = gp::Div(cx->a)->Flex1()->W(gp::kFill)->Bg(ThemeGpuiCanvasBg());
         int clipTop = 0;
         if (win->captionOverlayShown && ShowCaption(win) && !gSettings->showCaption) {
             clipTop = std::max(0, CaptionDy(win, win->isMenuBarVisible, TabsAreVisible(win)) - win->canvasRc.y);
         }
+        Vec<Rect> holes;
+        PopupMenuRects(self, cx, holes);
+        BrowserViewSetHoles(browser, holes);
         box->Child(BrowserViewBuild(browser, cx, clipTop));
         return box;
     }

@@ -92,6 +92,7 @@ bool BrowserViewCreateInProgress();
 
 // the element the webview is positioned over; asked once a frame by the shell
 gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx* cx, int clipTop = 0);
+void BrowserViewSetHoles(BrowserView*, const Vec<Rect>& holes);
 // the shell's tick: makes the views BrowserViewBuild() asked for
 void BrowserViewCreatePending(MainWindow* win, gpui::Ctx* cx);
 // ng: for a view shown in a tool window (the F1 manual): the frame's tick

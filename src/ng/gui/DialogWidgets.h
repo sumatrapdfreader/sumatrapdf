@@ -61,6 +61,8 @@ gpui::component::PopupMenu* TrackPopup(gpui::Ctx* cx, gpui::component::PopupMenu
 bool IsTrackedPopupOpen(gpui::Ctx* cx);
 // for -dbg-control's TestUiState, which has no frame context
 bool IsTrackedPopupOpenInApp(gpui::App* app);
+void AppendPopupMenuBounds(gpui::Ctx* cx, gpui::PopupMenuState* st, Vec<gpui::Bounds>& out);
+void TrackedPopupBounds(gpui::Ctx* cx, Vec<gpui::Bounds>& out);
 // ng: component::ContextMenu opens its popup from its own right-button press.
 // orig's context menus open when the button is released, or from the keyboard,
 // so the wrapped element stops that press (gpui::WindowStopPropagation) and

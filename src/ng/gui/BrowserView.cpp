@@ -146,6 +146,9 @@ struct BrowserView {
     bool ownHost = false;
     bool visible = false;
     int clipTop = 0;
+    // popups drawn over the view: wanted, and what the window region cuts out
+    Vec<Rect> holes;
+    Vec<Rect> clipHoles;
     // composition color; unset keeps the white host chm and markdown use
     Color background = kColorUnset;
     int zoomPercent = 100;
@@ -948,9 +951,33 @@ void BrowserViewCreatePendingIn(BrowserView* bv, gp::Ctx* cx) {
     AppShellInvalidate(bv->win);
 }
 
+// ng: gpui draws a popup menu in the frame, under the web view's native
+// window (orig's menus are windows of their own), so the region cuts it out
+void BrowserViewSetHoles(BrowserView* bv, const Vec<Rect>& holes) {
+    if (!bv) {
+        return;
+    }
+    VecReset(bv->holes);
+    for (const Rect& r : holes) {
+        VecAppend(bv->holes, r);
+    }
+}
+
+static bool SameRects(const Vec<Rect>& a, const Vec<Rect>& b) {
+    if (len(a) != len(b)) {
+        return false;
+    }
+    for (int i = 0; i < len(a); i++) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static void ClipBrowserTop(BrowserView* bv, int top) {
 #if OS_WIN
-    if (top == bv->clipTop) {
+    if (top == bv->clipTop && SameRects(bv->holes, bv->clipHoles)) {
         return;
     }
     auto* controller = (ICoreWebView2Controller*)wry::WebViewControllerRaw(Raw(bv));
@@ -960,9 +987,18 @@ static void ClipBrowserTop(BrowserView* bv, int top) {
     }
     // Clip the native surface without changing the page's viewport or scroll position.
     HRGN region = nullptr;
-    if (top > 0) {
-        Rect frame = HwndClientRect(AppShellNativeHwnd(bv->win));
+    if (top > 0 || len(bv->holes) > 0) {
+        HWND frameHwnd = AppShellNativeHwnd(bv->win);
+        Rect frame = HwndClientRect(frameHwnd);
         region = CreateRectRgn(0, AppShellDpiPx(bv->win, top), frame.dx, frame.dy);
+        // holes are in frame client pixels, the region in the host window's
+        for (const Rect& r : bv->holes) {
+            POINT pts[2] = {{r.x, r.y}, {r.x + r.dx, r.y + r.dy}};
+            MapWindowPoints(frameHwnd, hwnd, pts, 2);
+            HRGN hole = CreateRectRgn(pts[0].x, pts[0].y, pts[1].x, pts[1].y);
+            CombineRgn(region, region, hole, RGN_DIFF);
+            DeleteObject(hole);
+        }
     }
     if (!SetWindowRgn(hwnd, region, TRUE)) {
         if (region) {
@@ -971,6 +1007,10 @@ static void ClipBrowserTop(BrowserView* bv, int top) {
         return;
     }
     bv->clipTop = top;
+    VecReset(bv->clipHoles);
+    for (const Rect& r : bv->holes) {
+        VecAppend(bv->clipHoles, r);
+    }
 #endif
 }
 
