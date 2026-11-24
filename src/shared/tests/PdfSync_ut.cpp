@@ -23,6 +23,8 @@ static void BumpModTime(Str path) {
     file::SetModificationTime(path, ft);
 }
 
+// Wasm's Synchronizer::Create does not open sync files.
+#if !OS_WASM
 // letter-sized pages; counts mediabox requests for pages that don't exist
 struct SyncTestEngine : EngineBase {
     int badPageRequests = 0;
@@ -83,9 +85,12 @@ static void PdfsyncSheetsTest() {
     SafeEngineRelease(&engine);
     dir::RemoveAll(dir);
 }
+#endif
 
 void PdfSync_UnitTests() {
+#if !OS_WASM
     PdfsyncSheetsTest();
+#endif
 
     TempStr tmp = GetTempFilePathTemp(StrL("synctex-ut"));
     utassert(len(tmp) > 0);
