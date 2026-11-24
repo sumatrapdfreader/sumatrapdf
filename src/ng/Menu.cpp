@@ -162,28 +162,8 @@ static MenuDef menuDefContext[] = {
         CmdFavoriteDel,
     },
     {
-        TrN("Show &Favorites"),
-        CmdFavoriteToggle,
-    },
-    {
-        TrN("Show &Bookmarks"),
-        CmdToggleBookmarks,
-    },
-    {
-        TrN("Show &Thumbnails"),
-        CmdToggleThumbnails,
-    },
-    {
-        TrN("Sh&ow Toolbar"),
-        CmdToggleToolbar,
-    },
-    {
-        TrN("Show Caption"),
-        CmdToggleCaption,
-    },
-    {
-        TrN("Auto-hide Sidebar"),
-        CmdToggleSidebarAutoHide,
+        TrN("Sh&ow"),
+        (UINT_PTR)menuDefShow,
     },
     {
         StrL(kMenuSeparator),
@@ -705,6 +685,17 @@ static bool SetFixedLayoutState(MenuItemModel& it, DisplayModel* dm) {
 
 // ng: orig checks the radio items through MENUITEMINFO; here the model carries
 // the flag and the shell draws the tick
+// the Show submenu's items are on/off toggles: check the ones that are on
+static void SetShowMenuChecks(MenuModel* m, MainWindow* win) {
+    for (MenuDef* d = menuDefShow; d->idOrSubmenu != 0; d++) {
+        int cmdId = (int)d->idOrSubmenu;
+        bool on = false;
+        if (ToggleCmdState(win, nullptr, cmdId, on)) {
+            MenuSetChecked(m, cmdId, on);
+        }
+    }
+}
+
 static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
     DocController* ctrl = win->ctrl;
     DisplayMode displayMode = gSettings->defaultDisplayModeEnum;
@@ -913,6 +904,7 @@ MenuModel* BuildMenu(MainWindow* win) {
     }
 #endif
     SetMenuChecks(menu, win);
+    SetShowMenuChecks(menu, win);
     return menu;
 }
 
@@ -1097,12 +1089,15 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
 
     BuildMenuCtx* ctx = NewBuildMenuCtx(tab, cursorPos);
     MenuModel* popup = BuildMenuFromDef(menuDefContext, ctx);
+    // before the fullscreen menu bar goes in front: MenuSetChecked sets the first match
+    SetShowMenuChecks(popup, win);
 
     // in fullscreen, add "Menu" as first item containing the full menu bar
     bool isFullScreen = win->IsFullScreenOrPresentation();
     if (isFullScreen) {
         MenuModel* bar = BuildMenuFromDef(menuDefMenubar, ctx);
         SetMenuChecks(bar, win);
+        SetShowMenuChecks(bar, win);
         PrependMenuBarSubmenu(popup, bar);
     }
 
@@ -1172,8 +1167,6 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     MenuSetEnabled(popup, CmdEditFavorites, HasFavorites());
     MenuSetChecked(popup, CmdFavoriteToggle, SidebarContentVisible(win, SidebarContent::Favorites));
-    MenuSetChecked(popup, CmdToggleCaption, gSettings->showCaption);
-    MenuSetChecked(popup, CmdToggleSidebarAutoHide, gSettings->sidebarAutoHide);
 
     Str filePath = win->ctrl->GetFilePath();
     bool favsSupported = HasPermission(Perm::SavePreferences) && CanAccessDisk();
@@ -1206,10 +1199,6 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
         }
     }
 
-    // if toolbar is not shown, add option to show it
-    if (gSettings->showToolbar) {
-        MenuRemove(popup, CmdToggleToolbar);
-    }
     MenuRemoveEmptySubmenus(popup);
     RemoveBadMenuSeparators(popup);
     DeleteBuildMenuCtx(ctx);

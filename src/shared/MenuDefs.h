@@ -9,6 +9,7 @@ constexpr uint kMenuSeparatorID = (uint)-13;
 
 extern MenuDef menuDefFileOpen[];
 extern MenuDef menuDefFile[];
+extern MenuDef menuDefShow[];
 extern MenuDef menuDefView[];
 extern MenuDef menuDefGoTo[];
 extern MenuDef menuDefZoom[];

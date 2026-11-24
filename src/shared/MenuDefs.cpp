@@ -225,6 +225,44 @@ MenuDef menuDefFile[] = {
 };
 //] ACCESSKEY_GROUP File Menu
 
+// the parts of the window to show; in View and the document context menu
+//[ ACCESSKEY_GROUP Show Menu
+MenuDef menuDefShow[] = {
+    {
+        TrN("&Bookmarks"),
+        CmdToggleBookmarks,
+    },
+    {
+        TrN("&Thumbnails"),
+        CmdToggleThumbnails,
+    },
+    {
+        TrN("&Favorites"),
+        CmdFavoriteToggle,
+    },
+    {
+        TrN("T&oolbar"),
+        CmdToggleToolbar,
+    },
+    {
+        TrN("&Menu Bar"),
+        CmdToggleMenuBar,
+    },
+    {
+        TrN("&Caption"),
+        CmdToggleCaption,
+    },
+    {
+        TrN("&Auto-hide Sidebar"),
+        CmdToggleSidebarAutoHide,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Show Menu
+
 //[ ACCESSKEY_GROUP View Menu
 MenuDef menuDefView[] = {
     {
@@ -333,24 +371,8 @@ MenuDef menuDefView[] = {
         0,
     },
     {
-        TrN("Show Book&marks"),
-        CmdToggleBookmarks,
-    },
-    {
-        TrN("Sho&w Thumbnails"),
-        CmdToggleThumbnails,
-    },
-    {
-        TrN("Show Me&nu"),
-        CmdToggleMenuBar,
-    },
-    {
-        TrN("Sh&ow Toolbar"),
-        CmdToggleToolbar,
-    },
-    {
-        TrN("Show Caption"),
-        CmdToggleCaption,
+        TrN("Sh&ow"),
+        (UINT_PTR)menuDefShow,
     },
     {
         TrN("&Highlight Form Fields"),

@@ -1,6 +1,7 @@
 // The page context menu without a selection has orig's rows in ng too: Selection
 // lists Select All once and Trim Pages To Selection, hides the selection-only
-// commands; the menu has Show Thumbnails and no Annotations > Create From Selection.
+// commands; the menu has Show > Thumbnails and no Annotations > Create From Selection.
+// The Show submenu checks the parts of the window that are shown.
 //
 // Run: bun tests/context-menu-parity.ts [-ng] [--no-build]
 
@@ -89,26 +90,35 @@ export async function testit(): Promise<void> {
         fail(`Selection shows '${t}' without a selection`);
       }
     }
-    if (!rows.some((r) => r.depth === 0 && r.title === "Show Thumbnails")) {
-      fail("no Show Thumbnails");
+    if (!submenu(rows, "Show").includes("Thumbnails")) {
+      fail("no Show > Thumbnails");
     }
     if (submenu(rows, "Annotations").includes("Create From Selection")) {
       fail("Annotations shows Create From Selection without a selection");
     }
 
     // the settings toggles show their state: the caption is shown by default
-    const isChecked = (rs: Row[], title: string) => rs.find((r) => r.depth === 0 && r.title === title)?.checked;
-    if (isChecked(rows, "Show Caption") !== true) {
-      fail("Show Caption should be checked");
+    // an item of the top-level Show submenu
+    const isChecked = (rs: Row[], title: string) => {
+      const i = rs.findIndex((r) => r.depth === 0 && r.title === "Show");
+      for (let j = i + 1; i >= 0 && j < rs.length && rs[j]!.depth > 0; j++) {
+        if (rs[j]!.depth === 1 && rs[j]!.title === title) {
+          return rs[j]!.checked;
+        }
+      }
+      return undefined;
+    };
+    if (isChecked(rows, "Caption") !== true) {
+      fail("Show > Caption should be checked");
     }
     if (isChecked(rows, "Auto-hide Sidebar") !== false) {
-      fail("Auto-hide Sidebar should start unchecked");
+      fail("Show > Auto-hide Sidebar should start unchecked");
     }
     await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleSidebarAutoHide"]);
     try {
       const rows2 = await contextMenuRows(client, frame);
       if (isChecked(rows2, "Auto-hide Sidebar") !== true) {
-        fail("Auto-hide Sidebar should be checked once it's on");
+        fail("Show > Auto-hide Sidebar should be checked once it's on");
       }
     } finally {
       await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleSidebarAutoHide"]);
