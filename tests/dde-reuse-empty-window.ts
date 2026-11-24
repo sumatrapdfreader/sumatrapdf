@@ -4,23 +4,18 @@
 import { join } from "node:path";
 import { IS_WIN } from "./host.ts";
 import { runStandalone } from "./util.ts";
-import {
-  enumWindows,
-  getClassName,
-  getWindowPid,
-  getWindowText,
-  isWindowVisible,
-  sendCopyDataW,
-  sleep,
-} from "./winapi.ts";
+import { enumWindows, getClassName, getWindowPid, getWindowText, sendCopyDataW, sleep } from "./winapi.ts";
 import { FRAME_CLASS, killAndWait, launchControlled } from "./win-automation.ts";
 
 const kCopyDataDdeW = 0x44646557;
 
+// Relayout sends WM_SETREDRAW, which clears WS_VISIBLE until it finishes.
+// The frame is still the one window; only a second frame, or this one
+// going away, means the empty window was not reused.
 function countFrames(pid: number): number {
   let n = 0;
   enumWindows((hwnd) => {
-    if (getWindowPid(hwnd) === pid && getClassName(hwnd) === FRAME_CLASS && isWindowVisible(hwnd)) {
+    if (getWindowPid(hwnd) === pid && getClassName(hwnd) === FRAME_CLASS) {
       n++;
     }
     return true;
