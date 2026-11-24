@@ -378,6 +378,14 @@ LRESULT HwndBase::FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam) {
     return ::DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
+static HICON gDefaultWindowIcon = nullptr;
+
+// Caption icon for top-level windows that don't set CreateCustomArgs::icon,
+// so a new dialog can't end up without the app icon.
+void SetDefaultWindowIcon(HICON icon) {
+    gDefaultWindowIcon = icon;
+}
+
 HWND HwndBase::CreateCustomHwnd(const CreateCustomArgs& args, WStr defaultClassName) {
     font = args.font;
 
@@ -441,9 +449,11 @@ HWND HwndBase::CreateCustomHwnd(const CreateCustomArgs& args, WStr defaultClassN
     DpiSetFromHwnd(hwnd);
     // trigger creating a backgroundBrush
     SetColors(kColorNoChange, args.bgColor);
-    if (args.icon) {
-        HwndSetIcon(hwnd, args.icon);
+    HICON icon = args.icon;
+    if (!icon && !args.parent) {
+        icon = gDefaultWindowIcon;
     }
+    HwndSetIcon(hwnd, icon);
     if (style & WS_VISIBLE) {
         if (style & WS_MAXIMIZE)
             ::ShowWindow(hwnd, SW_MAXIMIZE);

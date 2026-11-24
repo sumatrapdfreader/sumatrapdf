@@ -70,11 +70,6 @@ static void ShowToolOutput(Str path) {
     OpenPathInDefaultFileManager(path);
 }
 
-// the Sumatra app icon, shown in each tool dialog's title bar / taskbar
-static HICON GetAppIcon() {
-    return LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-}
-
 // shared "Save As" browse used by the layout-based PDF tool dialogs below.
 // Seeds the dialog with the edit's current text and writes the chosen path back.
 static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
@@ -304,7 +299,6 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     cargs.font = GetDefaultGuiFont();
     cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
     cargs.visible = false;
-    cargs.icon = GetAppIcon();
     cargs.bgColor = colBg;
     onGetMinMaxInfo = MkMethod1<PdfToolDialog, WindowBase::GetMinMaxInfoEvent*, &PdfToolDialog::OnGetMinMaxInfo>(this);
     onSize = MkMethod1<PdfToolDialog, WindowBase::SizeEvent*, &PdfToolDialog::OnSize>(this);

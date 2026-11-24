@@ -487,7 +487,6 @@ bool SelectionTranslateWnd::Create(HWND owner, Str selText, Str title) {
         args.font = fontText;
         args.isRtl = isRtl;
         args.bgColor = colBg;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {

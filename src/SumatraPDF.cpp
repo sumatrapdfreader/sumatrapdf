@@ -16852,6 +16852,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     // that are not mounted (e.g. a: drive without floppy or cd rom drive
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+    SetDefaultWindowIcon(LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID())));
 
     srand((unsigned int)time(nullptr));
 

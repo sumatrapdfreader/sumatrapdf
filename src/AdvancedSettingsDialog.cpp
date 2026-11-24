@@ -1136,7 +1136,6 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME;
         args.font = GetFont();
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -1745,7 +1744,6 @@ bool RestrictedUseWnd::Create(MainWindow* mainWin) {
     args.visible = false;
     args.style = WS_POPUPWINDOW | WS_CAPTION;
     args.font = GetFont();
-    args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
     CreateCustom(args);
     if (!hwnd) {
         return false;

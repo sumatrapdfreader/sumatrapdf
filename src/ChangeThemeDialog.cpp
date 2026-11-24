@@ -247,7 +247,6 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         args.font = fontText;
         args.isRtl = isRtl;
         args.bgColor = ThemeWindowControlBackgroundColor();
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {

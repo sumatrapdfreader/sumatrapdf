@@ -419,7 +419,6 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     ca.owner = win->hwndFrame;
     ca.title = Tr("Run PDF Script");
     ca.font = fontText;
-    ca.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
     ca.style = WS_OVERLAPPEDWINDOW;
     ca.visible = false;
     ca.bgColor = colBg;

@@ -830,7 +830,6 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
         args.exStyle = WS_EX_TOOLWINDOW;
         args.isRtl = IsUIRtl();
         args.pos = AnnotFilterWindowPlacementRect(win, {});
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         args.bgColor = colBg;
         CreateCustom(args);
     }

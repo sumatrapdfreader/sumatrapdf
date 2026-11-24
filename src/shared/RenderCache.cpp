@@ -1841,7 +1841,6 @@ bool DebugTextWnd::Create(Str title, int fontSize) {
         args.title = title;
         args.visible = false;
         args.style = WS_OVERLAPPEDWINDOW;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {

@@ -66,10 +66,12 @@ struct CreateCustomArgs {
     int cmdId = 0; // command sent on click
     bool visible = true;
     PlatformFont* font = nullptr;
-    HICON icon = nullptr;
+    HICON icon = nullptr; // nullptr: top-level windows get the default icon
     Color bgColor = kColorUnset;
     bool isRtl = false;
 };
+
+void SetDefaultWindowIcon(HICON);
 
 struct WmEvent {
     HWND hwnd = nullptr;

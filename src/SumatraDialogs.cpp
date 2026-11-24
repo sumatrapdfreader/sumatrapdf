@@ -142,7 +142,6 @@ bool CreateToolDialog(WindowBase* w, HWND owner, Str title, PlatformFont* font, 
     args.font = font;
     args.isRtl = IsUIRtl();
     args.bgColor = bg;
-    args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
     w->CreateCustom(args);
     if (!w->hwnd) {
         return false;

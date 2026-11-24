@@ -1150,7 +1150,6 @@ bool NavFilesInFolderWnd::Create(MainWindow* mainWin, Str filePath) {
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
         args.title = Tr("Navigate Files in Folder");
         args.font = GetFont();
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         args.isRtl = IsUIRtl();
         CreateCustom(args);
     }

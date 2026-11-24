@@ -382,7 +382,6 @@ bool PropertiesWnd::Create(HWND parent) {
         args.style = WS_OVERLAPPEDWINDOW;
         args.font = DlgUiFont(kToolDlgTextFontPx);
         args.isRtl = isRtl;
-        args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         args.bgColor = colBg;
         CreateCustom(args);
     }

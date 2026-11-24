@@ -2076,7 +2076,6 @@ bool MergePdfWnd::Create(MainWindow* w, WindowTab* tab) {
     cargs.style = WS_OVERLAPPEDWINDOW;
     cargs.visible = false;
     cargs.isRtl = IsUIRtl();
-    cargs.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
     cargs.bgColor = colBg;
     CreateCustom(cargs);
     if (!hwnd) {

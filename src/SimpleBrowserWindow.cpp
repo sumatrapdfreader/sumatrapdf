@@ -177,9 +177,6 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         if (len(cargs.title) == 0) {
             cargs.title = StrL("Browser Window");
         }
-        HMODULE h = GetModuleHandleW(nullptr);
-        WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
-        cargs.icon = LoadIconW(h, iconName);
         cargs.bgColor = backgroundColor;
         // Build the child host before exposing the frame; otherwise the white
         // window-class brush can be presented before either window paints.
