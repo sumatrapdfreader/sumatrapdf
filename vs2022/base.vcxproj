@@ -1134,7 +1134,6 @@
     <ClInclude Include="..\src\base\HtmlTags.h" />
     <ClInclude Include="..\src\base\Http.h" />
     <ClInclude Include="..\src\base\JsonParser.h" />
-    <ClInclude Include="..\src\base\Log.h" />
     <ClInclude Include="..\src\base\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\base\Pixmap.h" />
     <ClInclude Include="..\src\base\SettingsUtil.h" />

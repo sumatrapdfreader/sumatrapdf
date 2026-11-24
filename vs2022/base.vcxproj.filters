@@ -78,9 +78,6 @@
     <ClInclude Include="..\src\base\JsonParser.h">
       <Filter>src\base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\Log.h">
-      <Filter>src\base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\LzmaSimpleArchive.h">
       <Filter>src\base</Filter>
     </ClInclude>

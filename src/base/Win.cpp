@@ -2630,29 +2630,33 @@ TempStr LoggedReadRegStr2Temp(Str keyName, Str valName) {
 }
 
 // the Logged* registry writers do the plain call and log it when enabled
-static void LogRegCall(bool ok, TempStr call) {
+static void LogRegCall(bool ok, LSTATUS err, TempStr call) {
     if (!gLogRegistryCalls) {
         return;
     }
     logf("%s => %s\n", call, ok ? StrL("ok") : StrL("failed"));
     if (!ok) {
-        LogLastError();
+        LogLastError((DWORD)err);
     }
 }
 
-bool WriteRegStr(HKEY keySub, Str keyName, Str valName, Str value) {
+static LSTATUS WriteRegStrStatus(HKEY keySub, Str keyName, Str valName, Str value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
     int cch;
     WCHAR* valueW = CWStrTemp(value, cch);
     DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
-    return ERROR_SUCCESS == res;
+    return SHSetValueW(keySub, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
+}
+
+bool WriteRegStr(HKEY keySub, Str keyName, Str valName, Str value) {
+    return ERROR_SUCCESS == WriteRegStrStatus(keySub, keyName, valName, value);
 }
 
 bool LoggedWriteRegStr(HKEY keySub, Str keyName, Str valName, Str value) {
-    bool ok = WriteRegStr(keySub, keyName, valName, value);
-    LogRegCall(ok, fmt("WriteRegStr(%s, %s, %s, %s)", RegKeyNameTemp(keySub), keyName, valName, value));
+    LSTATUS res = WriteRegStrStatus(keySub, keyName, valName, value);
+    bool ok = ERROR_SUCCESS == res;
+    LogRegCall(ok, res, fmt("WriteRegStr(%s, %s, %s, %s)", RegKeyNameTemp(keySub), keyName, valName, value));
     return ok;
 }
 
@@ -2664,29 +2668,33 @@ bool ReadRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD& value) {
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
+static LSTATUS WriteRegDWORDStatus(HKEY keySub, Str keyName, Str valName, DWORD value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    LSTATUS res = SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
-    return ERROR_SUCCESS == res;
+    return SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
 }
 
-static bool WriteRegNone(HKEY hkey, Str key, Str valName) {
+bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
+    return ERROR_SUCCESS == WriteRegDWORDStatus(keySub, keyName, valName, value);
+}
+
+static LSTATUS WriteRegNoneStatus(HKEY hkey, Str key, Str valName) {
     WCHAR* keyW = CWStrTemp(key);
     WCHAR* valNameW = CWStrTemp(valName);
-    LSTATUS res = SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
-    return ERROR_SUCCESS == res;
+    return SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
 }
 
 bool LoggedWriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
-    bool ok = WriteRegDWORD(keySub, keyName, valName, value);
-    LogRegCall(ok, fmt("WriteRegDWORD(%s, %s, %s, %d)", RegKeyNameTemp(keySub), keyName, valName, (int)value));
+    LSTATUS res = WriteRegDWORDStatus(keySub, keyName, valName, value);
+    bool ok = ERROR_SUCCESS == res;
+    LogRegCall(ok, res, fmt("WriteRegDWORD(%s, %s, %s, %d)", RegKeyNameTemp(keySub), keyName, valName, (int)value));
     return ok;
 }
 
 bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName) {
-    bool ok = WriteRegNone(hkey, key, valName);
-    LogRegCall(ok, fmt("WriteRegNone(%s, %s, %s)", RegKeyNameTemp(hkey), key, valName));
+    LSTATUS res = WriteRegNoneStatus(hkey, key, valName);
+    bool ok = ERROR_SUCCESS == res;
+    LogRegCall(ok, res, fmt("WriteRegNone(%s, %s, %s)", RegKeyNameTemp(hkey), key, valName));
     return ok;
 }
 
@@ -2756,32 +2764,41 @@ static void ResetRegKeyAcl(HKEY hkey, Str keyName) {
     RegCloseKey(hKey);
 }
 
-bool DeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
+static LSTATUS DeleteRegKeyStatus(HKEY keySub, Str keyName, bool resetACLFirst) {
     if (resetACLFirst) {
         ResetRegKeyAcl(keySub, keyName);
     }
     WCHAR* keyNameW = CWStrTemp(keyName);
-    LSTATUS res = SHDeleteKeyW(keySub, keyNameW);
+    return SHDeleteKeyW(keySub, keyNameW);
+}
+
+bool DeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
+    LSTATUS res = DeleteRegKeyStatus(keySub, keyName, resetACLFirst);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
 bool LoggedDeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst) {
-    bool ok = DeleteRegKey(keySub, keyName, resetACLFirst);
-    LogRegCall(ok, fmt("DeleteRegKey(%s, %s, %d)", RegKeyNameTemp(keySub), keyName, resetACLFirst));
+    LSTATUS res = DeleteRegKeyStatus(keySub, keyName, resetACLFirst);
+    bool ok = ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
+    LogRegCall(ok, res, fmt("DeleteRegKey(%s, %s, %d)", RegKeyNameTemp(keySub), keyName, resetACLFirst));
     return ok;
 }
 
-bool DeleteRegValue(HKEY keySub, Str keyName, Str val) {
+static LSTATUS DeleteRegValueStatus(HKEY keySub, Str keyName, Str val) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valW = CWStrTemp(val);
+    return SHDeleteValueW(keySub, keyNameW, valW);
+}
 
-    auto res = SHDeleteValueW(keySub, keyNameW, valW);
+bool DeleteRegValue(HKEY keySub, Str keyName, Str val) {
+    LSTATUS res = DeleteRegValueStatus(keySub, keyName, val);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
 bool LoggedDeleteRegValue(HKEY keySub, Str keyName, Str val) {
-    bool ok = DeleteRegValue(keySub, keyName, val);
-    LogRegCall(ok, fmt("DeleteRegValue(%s, %s, %s)", RegKeyNameTemp(keySub), keyName, val));
+    LSTATUS res = DeleteRegValueStatus(keySub, keyName, val);
+    bool ok = ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
+    LogRegCall(ok, res, fmt("DeleteRegValue(%s, %s, %s)", RegKeyNameTemp(keySub), keyName, val));
     return ok;
 }
 

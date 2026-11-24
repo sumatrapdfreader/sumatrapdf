@@ -736,7 +736,6 @@ u64 gArenaDefaultReserveSize = 1ull * 1024ull * 1024ull;
 u64 gArenaDefaultReserveSize = 64ull * 1024ull * 1024ull;
 #endif
 u64 gArenaDefaultCommitSize = 64ull * 1024ull;
-ArenaFlags gArenaDefaultFlags = 0;
 
 static u64 ArenaAlignPow2(u64 value, u64 align) {
     if (align <= 1) {
@@ -763,10 +762,8 @@ static u64 ArenaClampBot(u64 minValue, u64 value) {
 }
 
 u64 ArenaPageSize();
-u64 ArenaLargePageSize();
-bool ArenaCommit(void* base, u64 size, bool largePages);
+bool ArenaCommit(void* base, u64 size);
 void* ArenaReserve(u64 size);
-void* ArenaReserveAndCommit(u64 size, bool largePages);
 void ArenaReleaseMemory(void* base, u64 size);
 
 static void ArenaRelease(Arena* arena) {
@@ -794,7 +791,7 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
         sizeToZero = ArenaMin(current->committed, posPost) - posPre;
     }
 
-    if (current->reserved < posPost && !(arena->flags & ArenaFlagNoChain)) {
+    if (current->reserved < posPost) {
         // from the head, not from `current`: a block made to hold one
         // oversized allocation carries that allocation's size as its chunk
         // size, and it stays `current` afterwards. Taking the next block's
@@ -812,7 +809,6 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
         }
 
         ArenaParams newParams = {};
-        newParams.flags = current->flags;
         newParams.reserveSize = reserveChunkSize;
         newParams.commitSize = commitChunkSize;
         newParams.allocationSiteFile = current->allocationSiteFile;
@@ -834,15 +830,11 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     }
 
     if (current->committed < posPost) {
-        if (current->flags & ArenaFlagLargePages) {
-            return nullptr;
-        }
-
         u64 commitEnd = ArenaAlignPow2(posPost, current->commitChunkSize);
         u64 commitClamped = ArenaClampTop(commitEnd, current->reserved);
         u64 commitSize = commitClamped - current->committed;
         void* commitPtr = (char*)current + current->committed;
-        if (!ArenaCommit(commitPtr, commitSize, false)) {
+        if (!ArenaCommit(commitPtr, commitSize)) {
             return nullptr;
         }
         current->committed = commitClamped;
@@ -871,7 +863,6 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
 
 ArenaParams ArenaDefaultParams() {
     ArenaParams params = {};
-    params.flags = gArenaDefaultFlags;
     params.reserveSize = gArenaDefaultReserveSize;
     params.commitSize = gArenaDefaultCommitSize;
     return params;
@@ -886,38 +877,15 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
         params.commitSize = gArenaDefaultCommitSize;
     }
 
-    bool useLargePages = (params.flags & ArenaFlagLargePages) != 0;
-    const u64 pageSize = useLargePages ? ArenaLargePageSize() : ArenaPageSize();
+    const u64 pageSize = ArenaPageSize();
     u64 reserveSize = ArenaAlignPow2(ArenaMax(params.reserveSize, kArenaHeaderSize), pageSize);
     u64 commitSize = ArenaAlignPow2(ArenaMax(params.commitSize, kArenaHeaderSize), pageSize);
     commitSize = ArenaClampTop(commitSize, reserveSize);
 
-    void* base = params.optionalBackingBuffer;
-    bool usesExternalBuffer = (base != nullptr);
-    ArenaFlags actualFlags = params.flags;
-
-    if (!usesExternalBuffer) {
-        if (useLargePages) {
-            base = ArenaReserveAndCommit(reserveSize, true);
-            if (base) {
-                commitSize = reserveSize;
-            } else {
-                actualFlags &= ~ArenaFlagLargePages;
-                useLargePages = false;
-                reserveSize = ArenaAlignPow2(reserveSize, ArenaPageSize());
-                commitSize = ArenaAlignPow2(commitSize, ArenaPageSize());
-            }
-        }
-
-        if (!base) {
-            base = ArenaReserve(reserveSize);
-            if (base && !ArenaCommit(base, commitSize, false)) {
-                ArenaReleaseMemory(base, reserveSize);
-                base = nullptr;
-            }
-        }
-    } else {
-        commitSize = reserveSize;
+    void* base = ArenaReserve(reserveSize);
+    if (base && !ArenaCommit(base, commitSize)) {
+        ArenaReleaseMemory(base, reserveSize);
+        base = nullptr;
     }
 
     if (!base) {
@@ -928,8 +896,7 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
     Arena* arena = (Arena*)base;
     arena->prev = nullptr;
     arena->current = arena;
-    arena->flags = actualFlags;
-    arena->commitChunkSize = useLargePages ? reserveSize : commitSize;
+    arena->commitChunkSize = commitSize;
     arena->reserveChunkSize = reserveSize;
     arena->basePos = 0;
     arena->pos = kArenaHeaderSize;
@@ -938,7 +905,6 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
     arena->allocationSiteFile = params.allocationSiteFile;
     arena->allocationSiteLine = params.allocationSiteLine;
     arena->name = params.name;
-    arena->usesExternalBuffer = usesExternalBuffer;
     new (&arena->lock) Mutex();
     arena->nAllocsLifetime = 0;
     arena->peakBytesLifetime = 0;
@@ -956,9 +922,7 @@ void ArenaDelete(Arena* arena) {
     Arena* node = arena->current;
     while (node) {
         Arena* prev = node->prev;
-        if (!node->usesExternalBuffer) {
-            ArenaRelease(node);
-        }
+        ArenaRelease(node);
         node = prev;
     }
 }
@@ -984,11 +948,7 @@ static void ArenaPopToLocked(Arena* arena, u64 pos) {
     Arena* current = arena->current;
     while (current && current->basePos >= bigPos) {
         Arena* prev = current->prev;
-        if (!current->usesExternalBuffer) {
-            ArenaRelease(current);
-        } else {
-            current->pos = kArenaHeaderSize;
-        }
+        ArenaRelease(current);
         current = prev;
     }
 

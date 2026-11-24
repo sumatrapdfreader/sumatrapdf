@@ -68,20 +68,8 @@ DirIterEntry* DirIter::iterator::operator*() {
     return &data;
 }
 
-// postfix increment
-DirIter::iterator DirIter::iterator::operator++(int) {
-    auto res = *this;
-    AdvanceDirIter(this, 1);
-    return res;
-}
-
 DirIter::iterator& DirIter::iterator::operator++() {
     AdvanceDirIter(this, 1);
-    return *this;
-}
-
-DirIter::iterator& DirIter::iterator::operator+(int n) {
-    AdvanceDirIter(this, n);
     return *this;
 }
 

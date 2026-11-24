@@ -20,11 +20,7 @@ u64 ArenaPageSize() {
     return kWasmPageSize;
 }
 
-u64 ArenaLargePageSize() {
-    return kWasmPageSize;
-}
-
-bool ArenaCommit(void*, u64, bool) {
+bool ArenaCommit(void*, u64) {
     return true;
 }
 
@@ -37,10 +33,6 @@ void* ArenaReserve(u64 size) {
         memset(base, 0, (size_t)size);
     }
     return base;
-}
-
-void* ArenaReserveAndCommit(u64 size, bool) {
-    return ArenaReserve(size);
 }
 
 void ArenaReleaseMemory(void* base, u64) {

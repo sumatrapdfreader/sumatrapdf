@@ -1413,17 +1413,9 @@ using ScopedRecursiveMutex = AutoUnlockRecursiveMutex;
 // 256 (not 128) to leave room in the header for the allocation stats below
 static const u64 kArenaHeaderSize = 256;
 
-typedef u64 ArenaFlags;
-enum : ArenaFlags {
-    ArenaFlagNoChain = 1ull << 0,
-    ArenaFlagLargePages = 1ull << 1,
-};
-
 struct ArenaParams {
-    ArenaFlags flags = 0;
     u64 reserveSize = 0;
     u64 commitSize = 0;
-    void* optionalBackingBuffer = nullptr;
     const char* allocationSiteFile = nullptr;
     int allocationSiteLine = 0;
     const char* name = nullptr;
@@ -1439,7 +1431,6 @@ struct ArenaSavepoint {
 struct Arena {
     Arena* prev;    // Previous arena in chain
     Arena* current; // Current arena in chain
-    ArenaFlags flags;
     u64 commitChunkSize;
     u64 reserveChunkSize;
     u64 basePos;
@@ -1449,7 +1440,6 @@ struct Arena {
     const char* allocationSiteFile;
     int allocationSiteLine;
     const char* name;
-    bool usesExternalBuffer;
     Mutex lock;
 
     // allocation statistics, updated after every successful allocation
@@ -1474,7 +1464,6 @@ static_assert(sizeof(Arena) <= kArenaHeaderSize, "Arena header must fit in reser
 
 extern u64 gArenaDefaultReserveSize;
 extern u64 gArenaDefaultCommitSize;
-extern ArenaFlags gArenaDefaultFlags;
 
 ArenaParams ArenaDefaultParams();
 Arena* ArenaNew(const ArenaParams& params = ArenaDefaultParams());

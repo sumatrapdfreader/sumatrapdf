@@ -18,26 +18,15 @@ u64 ArenaPageSize() {
     return pageSize;
 }
 
-u64 ArenaLargePageSize() {
-    return ArenaPageSize();
-}
-
-bool ArenaCommit(void* base, u64 size, bool largePages) {
+bool ArenaCommit(void* base, u64 size) {
     if (size == 0) {
         return true;
     }
-    (void)largePages;
     return mprotect(base, (size_t)size, PROT_READ | PROT_WRITE) == 0;
 }
 
 void* ArenaReserve(u64 size) {
     void* base = mmap(nullptr, (size_t)size, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0);
-    return base == MAP_FAILED ? nullptr : base;
-}
-
-void* ArenaReserveAndCommit(u64 size, bool largePages) {
-    (void)largePages;
-    void* base = mmap(nullptr, (size_t)size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     return base == MAP_FAILED ? nullptr : base;
 }
 
