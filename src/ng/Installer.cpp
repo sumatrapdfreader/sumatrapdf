@@ -617,7 +617,11 @@ gp::El* InstallerView::Render(InstallerView*, gp::Ctx* cx) {
         bottom->Child(gpc::Progress::New(cx)->Value(pct)->W((float)GetInstallerWinDx() / 2)->IntoEl());
     } else if (!wnd->finished) {
         //[ ACCESSKEY_ALTERNATIVE // ideally, the same access key is used for both
-        Str optsLabel = wnd->showOptions ? Tr("Hide &Options") : Tr("&Options");
+        Str optsLabel = Tr("&Options");
+        if (wnd->showOptions) {
+            //| ACCESSKEY_ALTERNATIVE
+            optsLabel = Tr("Hide &Options");
+        }
         //] ACCESSKEY_ALTERNATIVE
         bottom->Child(DlgAccelEl(cx, gpc::Button::New(cx, GStrL("inst-options"))->WithSize(gp::UiSize::Small),
                                  optsLabel, gp::ListenTo(gInstallerView, &InstallerView::OnOptions))

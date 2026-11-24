@@ -4,7 +4,7 @@ import { join } from "path";
 // by Windows SDK (LANG_* and SUBLANG_*_*).
 // See https://msdn.microsoft.com/en-us/library/dd318693.aspx for the full list.
 // [code, name, msLangID, optional "RTL"]
-const gLangs: string[][] = [
+export const gLangs: string[][] = [
   ["af", "Afrikaans", "_LANGID(LANG_AFRIKAANS)"],
   ["am", "Armenian (Հայերեն)", "_LANGID(LANG_ARMENIAN)"],
   ["ar", "Arabic (الْعَرَبيّة)", "_LANGID(LANG_ARABIC)", "RTL"],
@@ -234,4 +234,6 @@ function genTranslationInfoCpp() {
   Bun.write(path, fileContent);
 }
 
-genTranslationInfoCpp();
+if (import.meta.main) {
+  genTranslationInfoCpp();
+}

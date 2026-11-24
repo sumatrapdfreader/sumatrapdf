@@ -11,85 +11,13 @@
 //   //| ACCESSKEY_ALTERNATIVE
 //   ... TrN("&Bar") ...
 //   //] ACCESSKEY_ALTERNATIVE
+// ng's own files (src/ng) have their own groups, apart from orig's same-named ones.
+//
+// Usage: bun cmd/check-access-keys.ts [-all]
+//   -all: also list translations that dropped the original's access key
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
-
-// [iso_code, display_name, ...]
-const gLangs: string[][] = [
-  ["af", "Afrikaans"],
-  ["am", "Armenian (Հայերեն)"],
-  ["ar", "Arabic (الْعَرَبيّة)"],
-  ["az", "Azerbaijani (Azərbaycanca)"],
-  ["bg", "Bulgarian (Български)"],
-  ["bn", "Bengali (বাংলা)"],
-  ["co", "Corsican (Corsu)"],
-  ["br", "Portuguese - Brazil (Português)"],
-  ["bs", "Bosnian (Bosanski)"],
-  ["by", "Belarusian (Беларуская)"],
-  ["ca", "Catalan (Català)"],
-  ["ca-xv", "Catalan-Valencian (Català-Valencià)"],
-  ["cn", "Chinese Simplified (简体中文)"],
-  ["cy", "Welsh (Cymraeg)"],
-  ["cz", "Czech (Čeština)"],
-  ["de", "German (Deutsch)"],
-  ["dk", "Danish (Dansk)"],
-  ["el", "Greek (Ελληνικά)"],
-  ["en", "English"],
-  ["es", "Spanish (Español)"],
-  ["et", "Estonian (Eesti)"],
-  ["eu", "Basque (Euskara)"],
-  ["fa", "Persian (فارسی)"],
-  ["fi", "Finnish (Suomi)"],
-  ["fr", "French (Français)"],
-  ["fo", "Faroese (Føroyskt)"],
-  ["fy-nl", "Frisian (Frysk)"],
-  ["ga", "Irish (Gaeilge)"],
-  ["gl", "Galician (Galego)"],
-  ["he", "Hebrew (עברית)"],
-  ["hi", "Hindi (हिंदी)"],
-  ["hr", "Croatian (Hrvatski)"],
-  ["hu", "Hungarian (Magyar)"],
-  ["id", "Indonesian (Bahasa Indonesia)"],
-  ["it", "Italian (Italiano)"],
-  ["ja", "Japanese (日本語)"],
-  ["jv", "Javanese (ꦧꦱꦗꦮ)"],
-  ["ka", "Georgian (ქართული)"],
-  ["kr", "Korean (한국어)"],
-  ["ku", "Kurdish (كوردی)"],
-  ["kw", "Cornish (Kernewek)"],
-  ["lt", "Lithuanian (Lietuvių)"],
-  ["lv", "Latvian (latviešu valoda)"],
-  ["mk", "Macedonian (македонски)"],
-  ["ml", "Malayalam (മലയാളം)"],
-  ["mm", "Burmese (ဗမာ စာ)"],
-  ["my", "Malaysian (Bahasa Melayu)"],
-  ["ne", "Nepali (नेपाली)"],
-  ["nl", "Dutch (Nederlands)"],
-  ["nn", "Norwegian Neo-Norwegian (Norsk nynorsk)"],
-  ["no", "Norwegian (Norsk)"],
-  ["pa", "Punjabi (ਪੰਜਾਬੀ)"],
-  ["pl", "Polish (Polski)"],
-  ["pt", "Portuguese - Portugal (Português)"],
-  ["ro", "Romanian (Română)"],
-  ["ru", "Russian (Русский)"],
-  ["sat", "Santali (ᱥᱟᱱᱛᱟᱲᱤ)"],
-  ["si", "Sinhala (සිංහල)"],
-  ["sk", "Slovak (Slovenčina)"],
-  ["sl", "Slovenian (Slovenščina)"],
-  ["sn", "Shona (Shona)"],
-  ["sp-rs", "Serbian (Latin)"],
-  ["sq", "Albanian (Shqip)"],
-  ["sr-rs", "Serbian (Cyrillic)"],
-  ["sv", "Swedish (Svenska)"],
-  ["ta", "Tamil (தமிழ்)"],
-  ["th", "Thai (ภาษาไทย)"],
-  ["tl", "Tagalog (Tagalog)"],
-  ["tr", "Turkish (Türkçe)"],
-  ["tw", "Chinese Traditional (繁體中文)"],
-  ["uk", "Ukrainian (Українська)"],
-  ["uz", "Uzbek (O'zbek)"],
-  ["vn", "Vietnamese (Việt Nam)"],
-];
+import { gLangs } from "./trans-gen.ts";
 
 interface Translation {
   text: string;
@@ -140,18 +68,23 @@ function extractTranslationStrings(s: string): string[] {
   return res;
 }
 
-function getFilesToProcess(): string[] {
-  const res: string[] = [];
-  // src/shared has what orig and ng have in common, e.g. MenuDefs.cpp
-  for (const dir of ["src", join("src", "shared")]) {
-    const entries = readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isFile() && extname(entry.name).toLowerCase() === ".cpp") {
-        res.push(join(dir, entry.name));
-      }
+function getFilesToProcess(dir = "src", res: string[] = []): string[] {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      getFilesToProcess(path, res);
+    } else if (extname(entry.name).toLowerCase() === ".cpp") {
+      res.push(path);
     }
   }
   return res;
+}
+
+// orig and ng both use src/shared; ng's own menus (src/ng) reuse orig's group
+// names, e.g. "Context Menu (Main)", and must not be merged with them
+function groupKey(path: string, name: string): string {
+  const isNg = path.split(/[\\/]/)[1] === "ng";
+  return isNg ? `${name} (ng)` : name;
 }
 
 // [alternative block index, branch index] of a string within its group
@@ -174,11 +107,13 @@ function markerKind(line: string, marker: string): string | null {
   return kind;
 }
 
+// numbers ACCESSKEY_ALTERNATIVE blocks; a group can span files, so per file isn't enough
+let gAltBlocks = 0;
+
 function extractAccesskeyGroups(path: string, groups: Map<string, AccessGroup>): void {
   const lines = readFileSync(path, "utf-8").split(/\r?\n/);
   let groupName = "";
   let group: AccessGroup | null = null;
-  let altIdx = -1;
   let branch: Alternative | null = null;
 
   for (let line of lines) {
@@ -189,8 +124,9 @@ function extractAccesskeyGroups(path: string, groups: Map<string, AccessGroup>):
       if (groupKind === "[") {
         if (group) throw new Error(`${path}: group '${groupName}' doesn't end before group '${newName}' starts`);
         groupName = newName;
-        group = groups.get(groupName) || { strings: [], alternatives: new Map() };
-        groups.set(groupName, group);
+        const key = groupKey(path, groupName);
+        group = groups.get(key) || { strings: [], alternatives: new Map() };
+        groups.set(key, group);
         continue;
       }
       if (!group) throw new Error(`${path}: unexpected end of group '${newName}'`);
@@ -207,13 +143,15 @@ function extractAccesskeyGroups(path: string, groups: Map<string, AccessGroup>):
       if (next !== undefined && !/\s/.test(next)) throw new Error(`${path}: typo in '${line}'?`);
       if (altKind === "[") {
         if (branch) throw new Error(`${path}: nested ${kAltMarker} isn't supported`);
-        altIdx++;
-        branch = [altIdx, 0];
+        gAltBlocks++;
+        branch = [gAltBlocks, 0];
       } else if (altKind === "|") {
         if (!branch) throw new Error(`${path}: unexpected '//| ${kAltMarker}'`);
         branch = [branch[0], branch[1] + 1];
       } else {
         if (!branch) throw new Error(`${path}: unexpected '//] ${kAltMarker}'`);
+        // without a '//|' every string is in the same branch: nothing is exclusive
+        if (branch[1] === 0) throw new Error(`${path}: ${kAltMarker} block without '//| ${kAltMarker}'`);
         branch = null;
       }
       continue;
@@ -234,8 +172,8 @@ function extractAccesskeyGroups(path: string, groups: Map<string, AccessGroup>):
   if (group) throw new Error(`${path}: group '${groupName}' isn't closed`);
 }
 
-function isAlnum(s: string): boolean {
-  return /^[A-Za-z0-9]$/.test(s);
+function isLetterOrDigit(s: string): boolean {
+  return /^[\p{L}\p{N}]$/u.test(s);
 }
 
 // sharing a key is fine only between different branches of the same
@@ -262,31 +200,40 @@ function checkGroup(
   group: AccessGroup,
   langCode: string,
   translations: Map<string, Translation[]>,
+  showDropped: boolean,
 ): string[] {
   const warnings: string[] = [];
   const clashes: string[] = [];
   const usedKeys = new Map<string, KeyUse[]>();
+  // the letters the items are written with: what a translator can move a key to
+  const letters = new Set<string>();
 
   for (const str of group.strings) {
     const trans = translate(str, langCode, translations);
+    for (const ch of trans.toUpperCase()) {
+      if (isLetterOrDigit(ch)) letters.add(ch);
+    }
     const ix = trans.indexOf("&");
     if (ix === -1) {
-      if (str.includes("&")) {
+      if (showDropped && str.includes("&")) {
         warnings.push(`no access key where the original has one: "${str}" -> "${trans}"`);
       }
       continue;
     }
     if (ix === trans.length - 1) {
-      warnings.push(`'&' must be followed by a letter: "${trans}"`);
+      warnings.push(`'&' must be followed by a letter or digit: "${trans}"`);
       continue;
     }
     if (!str.includes("&")) {
       warnings.push(`access key where the original has none: "${str}" -> "${trans}"`);
     }
 
-    const key = trans[ix + 1].toUpperCase();
-    if (!isAlnum(key)) {
-      warnings.push(`access key '${key}' might not work on all keyboards: "${trans}"`);
+    // a whole code point: a key outside the BMP is two UTF-16 units
+    const key = String.fromCodePoint(trans.codePointAt(ix + 1)!).toUpperCase();
+    if (!isLetterOrDigit(key)) {
+      // "Fit & Content": the '&' was meant literally, and no key works
+      warnings.push(`'&' must be followed by a letter or digit, not '${key}': "${trans}"`);
+      continue;
     }
     const uses = usedKeys.get(key) || [];
     const mine = group.alternatives.get(str);
@@ -303,11 +250,7 @@ function checkGroup(
   if (clashes.length > 0) {
     res.push(`  clashes in group '${name}':`);
     for (const c of clashes) res.push(`    * ${c}`);
-    const available: string[] = [];
-    for (let c = "A".charCodeAt(0); c <= "Z".charCodeAt(0); c++) {
-      const key = String.fromCharCode(c);
-      if (!usedKeys.has(key)) available.push(key);
-    }
+    const available = [...letters].filter((k) => !usedKeys.has(k)).sort();
     res.push(`      (available keys: ${available.join("")})`);
   }
   for (const w of warnings) res.push(`  ${w}`);
@@ -315,6 +258,7 @@ function checkGroup(
 }
 
 function main() {
+  const showDropped = process.argv.slice(2).includes("-all");
   const translationsTxtPath = join(".work", "translations.txt");
   if (!existsSync(translationsTxtPath)) {
     console.error(`Missing ${translationsTxtPath}. Run: bun cmd/trans-dl.ts`);
@@ -332,7 +276,7 @@ function main() {
   for (const [langCode, langName] of gLangs) {
     const issues: string[] = [];
     for (const [name, group] of groups) {
-      issues.push(...checkGroup(name, group, langCode, translations));
+      issues.push(...checkGroup(name, group, langCode, translations, showDropped));
     }
     if (issues.length === 0) continue;
     nLangsWithIssues++;
@@ -345,6 +289,9 @@ function main() {
   console.log(
     `checked ${nStrings} strings in ${groups.size} groups, ${nLangsWithIssues} of ${gLangs.length} languages have issues`,
   );
+  if (!showDropped) {
+    console.log("translations that dropped the original's access key are not listed; -all lists them");
+  }
   // English is what the sources say; the rest is up to translators
   process.exit(englishHasIssues ? 1 : 0);
 }
