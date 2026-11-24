@@ -104,6 +104,8 @@ constexpr int kAboutPadTop = 28;
 constexpr int kAboutPadSide = 32;
 constexpr int kAboutPadBottom = 24;
 constexpr int kAboutVersionGap = 2;
+// About links: the underline just below the baseline, clear of descenders
+constexpr int kAboutLinkUnderlineDy = -1;
 constexpr int kAboutGroupGap = 22;
 constexpr int kAboutRowGap = 7;
 constexpr int kAboutColGap = 20;
@@ -284,7 +286,7 @@ AboutCtrl::AboutCtrl() {
     copyLink = new VirtLink(Tr("Copy program and machine info"));
     copyLink->name = StrL("aboutCopy");
     copyLink->withUnderline = true;
-    copyLink->underlineOffsetY = -3;
+    copyLink->underlineOffsetY = kAboutLinkUnderlineDy;
     copyLink->onClick = MkFunc1Void(OnCopyProgramInfo);
     AddChild(copyLink);
     AboutRow& software = gAboutRows[kAboutSoftwareRow];
@@ -295,7 +297,7 @@ AboutCtrl::AboutCtrl() {
         link->SetTarget(gAboutRows[i].url);
         link->SetTooltip(gAboutRows[i].url);
         link->withUnderline = true;
-        link->underlineOffsetY = -3;
+        link->underlineOffsetY = kAboutLinkUnderlineDy;
         link->onClick = MkFunc1Void(OpenAboutUrl);
         AddChild(link);
         VecAppend(softwareLinks, link);
@@ -336,7 +338,7 @@ void AboutCtrl::Sync() {
             auto* link = new VirtLink(el->rightTxt);
             link->SetTarget(el->url);
             link->SetTooltip(el->url);
-            link->underlineOffsetY = -3;
+            link->underlineOffsetY = kAboutLinkUnderlineDy;
             link->onClick = MkFunc1Void(OpenAboutUrl);
             AddChild(link);
             VecAppend(values, link);

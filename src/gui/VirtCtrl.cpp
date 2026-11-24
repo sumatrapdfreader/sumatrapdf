@@ -4402,6 +4402,9 @@ void VirtRichText::WrapToBounds() {
     }
 }
 
+// how far above a word's bottom its link underline is: low enough to clear descenders
+constexpr int kTipLinkUnderlineInset = 1;
+
 // one underline per line the link's words wrapped onto, in word coordinates
 void TipLinkUnderlines(TipLink* link, Vec<Rect>& out) {
     TipWord* last = link->lastWord;
@@ -4415,7 +4418,7 @@ void TipLinkUnderlines(TipLink* link, Vec<Rect>& out) {
         if (!lineEnds) {
             continue;
         }
-        int y = lineStart->y + lineStart->dy - 3;
+        int y = lineStart->y + lineStart->dy - kTipLinkUnderlineInset;
         VecAppend(out, Rect(lineStart->x, y, w->x + w->dx - lineStart->x, 0));
         if (w == last) {
             break;

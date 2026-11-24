@@ -257,10 +257,10 @@ static void TipLinkUnderlines_Test() {
     Vec<Rect> lines;
     TipLinkUnderlines(link, lines);
     utassert(len(lines) == 3);
-    // underline sits 3px above the word's bottom
-    utassert(VirtCtrlRectEq(lines[0], 60, 13, 25, 0));
-    utassert(VirtCtrlRectEq(lines[1], 0, 33, 85, 0));
-    utassert(VirtCtrlRectEq(lines[2], 0, 53, 25, 0));
+    // underline sits 1px above the word's bottom
+    utassert(VirtCtrlRectEq(lines[0], 60, 15, 25, 0));
+    utassert(VirtCtrlRectEq(lines[1], 0, 35, 85, 0));
+    utassert(VirtCtrlRectEq(lines[2], 0, 55, 25, 0));
     delete tip;
 }
 
