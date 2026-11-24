@@ -228,6 +228,11 @@ static void LoadFromTarget() {
 
 // orig's ReadControls
 static void ReadControls(EbookVals& out) {
+    // the Select reports the pick at once; sel is copied from it on the next
+    // frame, and OK can be pressed before that frame
+    if (gEbook.ddPage.app) {
+        gEbook.ddPage.PollChanged(gEbook.ddPage.app);
+    }
     out.fontName = EbookFontNameFromSetting(FontNameFromControls());
     out.fontSize = ParseFloatTemp(gEbook.editSize);
     ParseMargin(InputTextTemp(gEbook.editMargin), out.margin);
