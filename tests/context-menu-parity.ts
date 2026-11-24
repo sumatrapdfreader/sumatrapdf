@@ -7,6 +7,7 @@
 
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
+import { IS_WIN } from "./host.ts";
 import { ROOT, runStandalone, USE_NG } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled, readContextMenuTree } from "./win-automation.ts";
 import type { MenuItem } from "./winapi.ts";
@@ -108,7 +109,8 @@ export async function testit(): Promise<void> {
       }
       return undefined;
     };
-    if (isChecked(rows, "Caption") !== true) {
+    // no client title bar off Windows, so CmdToggleCaption is not in the menu
+    if (IS_WIN && isChecked(rows, "Caption") !== true) {
       fail("Show > Caption should be checked");
     }
     if (isChecked(rows, "Auto-Hide Sidebar") !== false) {
