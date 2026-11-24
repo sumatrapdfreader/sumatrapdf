@@ -1172,7 +1172,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, continuousScrollFollowsRotation), SettingType::Bool, false},
     {offsetof(Settings, ignoreDestinationZoom), SettingType::Bool, false},
     {offsetof(Settings, highlightLinkDestination), SettingType::Bool, false},
-    {offsetof(Settings, flashFindMatch), SettingType::Bool, true},
+    {offsetof(Settings, flashFindMatch), SettingType::Int, 1},
     {offsetof(Settings, citationHoverDelay), SettingType::Int, -1},
     {offsetof(Settings, readAloudVoiceId), SettingType::String, 0},
     {offsetof(Settings, readAloudSpeed), SettingType::Float, (intptr_t)"1"},
@@ -1433,9 +1433,9 @@ const StructInfo gSettingsInfo = {
     "change of the current zoom factor during execution of Go to Destination actions'\0if true, following an internal "
     "link or bookmark flashes a highlight at the destination so you can see where you landed (a bibliography entry, "
     "figure, or named destination). The color and fade match ForwardSearch. Off when the destination is only a page "
-    "with no position\0if true, Find Next / Find Previous blinks a ring around the found text a few times, so it's "
-    "easy to spot on a busy page. The color matches ForwardSearch\0how long an internal-document link has to be "
-    "hovered, in milliseconds, before a popup rendering the destination region (citation entry, figure, footnote) "
+    "with no position\0how many times Find Next / Find Previous blinks a ring around the found text, so it's easy to "
+    "spot on a busy page; 0 turns it off. The color matches ForwardSearch\0how long an internal-document link has to "
+    "be hovered, in milliseconds, before a popup rendering the destination region (citation entry, figure, footnote) "
     "appears. -1 (the default) disables the popup; set a positive value like 300 to enable it\0voice id for Read Aloud "
     "text-to-speech; empty or unset means system default. Voice ids match those used internally by the Read Aloud "
     "Voice menu (WinRT voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. "

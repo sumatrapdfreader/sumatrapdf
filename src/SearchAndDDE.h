@@ -46,8 +46,6 @@ constexpr int kHideLinkDestMarkDelayInMs = 2000;
 constexpr int kHideFwdSearchMarkDecayIntervalInMs = 100;
 constexpr int kHideFwdSearchMarkSteps = 5;
 constexpr int kFindFlashTimerID = 19;
-// the found-match ring blinks kFindFlashSteps / 2 times
-constexpr int kFindFlashSteps = 6;
 constexpr int kFindFlashIntervalMs = 200;
 
 // find-as-you-type debounce timer (lives on hwndFrame); see SearchAndDDE.cpp

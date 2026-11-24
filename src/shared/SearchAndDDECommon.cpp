@@ -1175,11 +1175,17 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wp, LPARAM lp) {
 
 // Blink a ring around the match: a highlight on a busy page (a PCB drawing)
 // is easy to miss, a blinking one isn't (#6536)
+// on, off per blink; FlashFindMatch is the number of blinks (0: none)
+static int FindFlashSteps() {
+    constexpr int kMaxBlinks = 10;
+    return 2 * limitValue(gSettings->flashFindMatch, 0, kMaxBlinks);
+}
+
 static void StartFindFlash(MainWindow* win, Vec<TextSel>* result) {
     auto& ff = win->findFlash;
     ff.show = false;
     VecReset(ff.rects);
-    if (!gSettings->flashFindMatch) {
+    if (FindFlashSteps() == 0) {
         return;
     }
     // a match spanning pages rings only its first part
@@ -1199,7 +1205,7 @@ static void StartFindFlash(MainWindow* win, Vec<TextSel>* result) {
 bool FindFlashStep(MainWindow* win) {
     auto& ff = win->findFlash;
     ff.step++;
-    if (ff.step >= kFindFlashSteps || len(ff.rects) == 0) {
+    if (ff.step >= FindFlashSteps() || len(ff.rects) == 0) {
         ff.show = false;
         return false;
     }

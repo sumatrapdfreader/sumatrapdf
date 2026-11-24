@@ -1995,10 +1995,10 @@ const globalPrefs: Field[] = [
   ).ver("3.7"),
   field(
     "FlashFindMatch",
-    Bool,
-    true,
-    "if true, Find Next / Find Previous blinks a ring around the found text a few times, " +
-      "so it's easy to spot on a busy page. The color matches ForwardSearch",
+    Int,
+    1,
+    "how many times Find Next / Find Previous blinks a ring around the found text, " +
+      "so it's easy to spot on a busy page; 0 turns it off. The color matches ForwardSearch",
   ).ver("3.7"),
   field(
     "CitationHoverDelay",
