@@ -38,14 +38,18 @@ import { join, extname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { commands, commandAltDescs } from "./gen-commands";
+import {
+  APP_NAME,
+  DEFAULT_SERVER,
+  LOCAL_SERVER,
+  readSecret,
+  submitTranslation,
+  tryGetTransSecret,
+} from "./helper/apptranslator.ts";
 
 // strings that should not be sent for translation
 // (e.g. command names whose display text is set dynamically)
 const translationBlacklist: string[] = ["Toggle Windows Previewer", "Toggle Windows Search Filter"];
-
-const DEFAULT_SERVER = "https://www.apptranslator.org";
-const LOCAL_SERVER = "http://127.0.0.1:9311";
-const APP_NAME = "SumatraPDF";
 
 const workDir = ".work";
 const translationsTxtPath = join(workDir, "translations.txt");
@@ -208,43 +212,6 @@ export function extractStringsToTranslate(): string[] {
     `${filtered.length} unique strings to translate (including command descriptions, ${translationBlacklist.length} blacklisted)`,
   );
   return filtered;
-}
-
-function readSecret(name: string, required: boolean): string {
-  const secretsPath = join("..", "hack", "secrets", "sumatrapdf.env");
-  try {
-    const content = readFileSync(secretsPath, "utf-8");
-    for (const line of content.split("\n")) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith(name)) {
-        const eqIdx = trimmed.indexOf("=");
-        if (eqIdx !== -1) {
-          const val = trimmed.substring(eqIdx + 1).trim();
-          if (val.length >= 4) {
-            return val;
-          }
-        }
-      }
-    }
-  } catch {
-    // fall through
-  }
-  const val = process.env[name] ?? "";
-  if (val.length >= 4) {
-    return val;
-  }
-  if (required) {
-    throw new Error(`must set ${name} env variable or in secrets file`);
-  }
-  return "";
-}
-
-function tryGetTransSecret(): string {
-  const s = readSecret("TRANS_UPLOAD_SECRET", false);
-  if (s) {
-    console.log("Got TRANS_UPLOAD_SECRET");
-  }
-  return s;
 }
 
 /** Minimal empty cache when we cannot talk to apptranslator (no secret). */
@@ -953,34 +920,6 @@ function findMissing(
     }
   }
   return missing;
-}
-
-async function submitTranslation(
-  server: string,
-  secret: string,
-  user: string,
-  lang: string,
-  english: string,
-  translation: string,
-): Promise<void> {
-  const params = new URLSearchParams({
-    app: APP_NAME,
-    lang,
-    string: english,
-    translation,
-    secret,
-    user,
-  });
-  const uri = `${server}/api/edittranslation?${params.toString()}`;
-  const resp = await fetch(uri, { method: "GET" });
-  if (!resp.ok) {
-    const body = await resp.text();
-    throw new Error(`edittranslation HTTP ${resp.status}: ${body.slice(0, 300)}`);
-  }
-  const text = await resp.text();
-  if (!text.includes("OK")) {
-    throw new Error(`edittranslation unexpected response: ${text.slice(0, 200)}`);
-  }
 }
 
 function previewEnglish(s: string): string {
