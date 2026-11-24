@@ -13583,7 +13583,10 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 }
             }
             if (btnIdx >= 0) {
-                TrackMouseLeave(hwnd);
+                // the revealed caption forwards its moves here, but the cursor is
+                // over it, not the frame: tracking the frame got an immediate
+                // WM_MOUSELEAVE, toggling the highlight on every move (#6587)
+                TrackMouseLeave(win->captionOverlayShown ? win->hwndCaptionOverlay : hwnd);
             }
         } break;
 
@@ -13734,16 +13737,29 @@ static LRESULT CALLBACK CaptionOverlayProc(HWND hwnd, UINT msg, WPARAM wp, LPARA
     if (msg == WM_MOUSEACTIVATE) {
         return MA_NOACTIVATE;
     }
+    if (msg == WM_ERASEBKGND) {
+        return 1; // WM_PAINT covers the whole window
+    }
     if (msg == WM_PAINT) {
+        // double-buffered like the frame's caption: painting the background and
+        // then the buttons straight to the screen flickered on every hover (#6587)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
+        Rect rc = HwndClientRect(hwnd);
+        DoubleBuffer buffer(hwnd, rc);
+        HDC memDC = buffer.GetDC();
         HBRUSH bg = CreateSolidBrush(ThemeControlBackgroundColor());
-        HdcFillRect(hdc, HwndClientRect(hwnd), bg);
+        HdcFillRect(memDC, rc, bg);
         DeleteObject(bg);
         for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-            DrawCaptionButton(win, hdc, &win->captionBtn[i]);
+            DrawCaptionButton(win, memDC, &win->captionBtn[i]);
         }
+        buffer.Flush(hdc);
         EndPaint(hwnd, &ps);
+        return 0;
+    }
+    if (msg == WM_MOUSELEAVE) {
+        ClearAllHighlights(win);
         return 0;
     }
     if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) {
