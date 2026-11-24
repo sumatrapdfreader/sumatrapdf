@@ -60,15 +60,15 @@
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
     {
-        TrN("&Copy To Clipboard"),
+        TrN("&Copy to Clipboard"),
         CmdCopySelection,
     },
     {
-        TrN("Copy As &Image To Clipboard"),
+        TrN("Copy as &Image to Clipboard"),
         CmdCopySelectionAsImage,
     },
     {
-        TrN("&Save As Image..."),
+        TrN("&Save as Image..."),
         CmdSaveSelectionAsImage,
     },
     {
@@ -76,15 +76,15 @@ static MenuDef menuDefSelection[] = {
         CmdPrintSelection,
     },
     {
-        TrN("Visual Search With Google &Lens"),
+        TrN("Visual Search with Google &Lens"),
         CmdSearchGoogleLens,
     },
     {
-        TrN("&Zoom To Selection"),
+        TrN("&Zoom to Selection"),
         CmdZoomToSelection,
     },
     {
-        TrN("&Trim Pages To Selection"),
+        TrN("&Trim Pages to Selection"),
         CmdTrimPagesToSelection,
     },
     {
@@ -100,11 +100,11 @@ static MenuDef menuDefSelection[] = {
         kMenuSeparatorID,
     },
     {
-        TrN("&Translate with"),
+        TrN("&Translate With"),
         (UINT_PTR)menuDefTranslateWith,
     },
     {
-        TrN("S&earch with"),
+        TrN("S&earch With"),
         (UINT_PTR)menuDefSearchWith,
     },
     {
@@ -129,7 +129,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefSelection,
     },
     {
-        TrN("Visual Search With Google &Lens"),
+        TrN("Visual Search with Google &Lens"),
         (UINT_PTR)menuDefGoogleLens,
     },
     {
@@ -170,7 +170,7 @@ static MenuDef menuDefContext[] = {
         kMenuSeparatorID,
     },
     {
-        TrN("AI chat with document using"),
+        TrN("AI Chat with Document Using"),
         (UINT_PTR)menuDefDocumentAIChat,
     },
     {
@@ -876,7 +876,7 @@ static void AdaptMenuToMac(MenuModel* menu, BuildMenuCtx* ctx) {
         MenuRemove(menu, cmdId);
     }
     MenuSetText(menu, CmdShowInFolder, Tr("Show in Finder"));
-    MenuSetText(menu, CmdOpenFileWithOSFilePicker, Tr("Open using macOS File Picker..."));
+    MenuSetText(menu, CmdOpenFileWithOSFilePicker, Tr("Open Using macOS File Picker..."));
     for (MenuItemModel& it : menu->items) {
         if (it.submenu) {
             RemoveBadMenuSeparators(it.submenu);
@@ -1181,12 +1181,12 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
             TempStr delText;
             if (ShowChapterUi(win->ctrl)) {
                 Location loc = win->ctrl->LocationFromPageNo(pageNoUnderCursor);
-                addText = fmt(Tr("Add chapter %d page %d to favorites...").s, loc.chapter, loc.page);
-                delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
+                addText = fmt(Tr("Add Chapter %d Page %d to Favorites...").s, loc.chapter, loc.page);
+                delText = fmt(Tr("Remove Chapter %d Page %d from Favorites").s, loc.chapter, loc.page);
             } else {
                 TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);
-                addText = fmt(Tr("Add page %s to favorites...").s, pageLabel);
-                delText = fmt(Tr("Remove page %s from favorites").s, pageLabel);
+                addText = fmt(Tr("Add Page %s to Favorites...").s, pageLabel);
+                delText = fmt(Tr("Remove Page %s from Favorites").s, pageLabel);
             }
 
             if (isBookmarked) {
@@ -1437,14 +1437,14 @@ static void AppendServerItems(MenuModel* popup, Str filePath) {
     if (!ServerFilesListed()) {
         return;
     }
-    MenuSetText(popup, CmdDeleteFile, Tr("Delete local"));
+    MenuSetText(popup, CmdDeleteFile, Tr("Delete Local"));
     MenuAppendSeparator(popup);
     ServerFileState st = GetServerFileState(filePath, file::GetSize(filePath));
     if (st != ServerFileState::Same) {
-        MenuAppendString(popup, Tr("Upload to server"), CmdUploadToServer);
+        MenuAppendString(popup, Tr("Upload to Server"), CmdUploadToServer);
     }
     if (st != ServerFileState::None) {
-        MenuAppendString(popup, Tr("Delete from server"), CmdDeleteFromServer);
+        MenuAppendString(popup, Tr("Delete from Server"), CmdDeleteFromServer);
     }
 }
 
@@ -1460,7 +1460,7 @@ MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
     if (IsServerOnlyFile(filePath)) {
         auto* popup = new MenuModel();
         MenuAppendString(popup, Tr("&Open Document"), CmdOpenSelectedDocument);
-        MenuAppendString(popup, Tr("Delete from server"), CmdDeleteFromServer);
+        MenuAppendString(popup, Tr("Delete from Server"), CmdDeleteFromServer);
         return popup;
     }
     FileState* fs = FileHistoryFindByPath(filePath);

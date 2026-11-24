@@ -291,13 +291,13 @@ export async function testit(): Promise<void> {
     requireAccel(menu, "Cut Annotation", shortcutLabel("Ctrl + X"));
     requireAccel(menu, "Copy Annotation", shortcutLabel("Ctrl + C"));
     requireAccel(menu, "Paste Annotation", shortcutLabel("Ctrl + V"));
-    for (const name of ["Apply Redactions", "Save changes", "Save to new file...", "Discard changes"]) {
+    for (const name of ["Apply Redactions", "Save Changes", "Save to New File...", "Discard Changes"]) {
       if (!findMenuItem(menu, name)) {
         throw new Error(`annot-cut-paste: "${name}" is not in the Annotations submenu`);
       }
     }
     // nothing has been edited yet and there are no redaction marks
-    for (const name of ["Apply Redactions", "Save changes", "Save to new file...", "Discard changes"]) {
+    for (const name of ["Apply Redactions", "Save Changes", "Save to New File...", "Discard Changes"]) {
       if (!findMenuItem(menu, name)!.disabled) {
         throw new Error(`annot-cut-paste: "${name}" must be disabled with nothing to act on`);
       }

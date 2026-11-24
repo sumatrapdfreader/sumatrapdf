@@ -68,13 +68,13 @@ void AnnotListMenuItems(MainWindow* win, Annotation* annot, int nSel, Vec<AnnotL
     if (nSel == 1 && type != AnnotationType::Widget && win->pdfAnnotationsToolbarEnabled) {
         AnnotListMenuItem edit;
         edit.id = AnnotListMenu::Edit;
-        edit.title = type == AnnotationType::FreeText ? Tr("Edit text") : Tr("Edit Note");
+        edit.title = type == AnnotationType::FreeText ? Tr("Edit Text") : Tr("Edit Note");
         VecAppend(out, edit);
     }
 
     AnnotListMenuItem del;
     del.id = AnnotListMenu::Delete;
-    del.title = nSel > 1 ? fmt(Tr("Delete %d annotations").s, nSel) : Tr("Delete Annotation");
+    del.title = nSel > 1 ? fmt(Tr("Delete %d Annotations").s, nSel) : Tr("Delete Annotation");
     VecAppend(out, del);
 }
 

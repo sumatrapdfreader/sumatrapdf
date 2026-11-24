@@ -82,10 +82,10 @@ export async function testit(): Promise<void> {
     if (sel.filter((t) => t === "Select All").length !== 1) {
       fail("Selection should list Select All once");
     }
-    if (!sel.includes("Trim Pages To Selection")) {
-      fail("Selection lacks Trim Pages To Selection");
+    if (!sel.includes("Trim Pages to Selection")) {
+      fail("Selection lacks Trim Pages to Selection");
     }
-    for (const t of ["Copy To Clipboard", "Visual Search With Google Lens", "Zoom To Selection"]) {
+    for (const t of ["Copy to Clipboard", "Visual Search with Google Lens", "Zoom to Selection"]) {
       if (sel.includes(t)) {
         fail(`Selection shows '${t}' without a selection`);
       }
@@ -93,8 +93,8 @@ export async function testit(): Promise<void> {
     if (!submenu(rows, "Show").includes("Thumbnails")) {
       fail("no Show > Thumbnails");
     }
-    if (submenu(rows, "Annotations").includes("Create From Selection")) {
-      fail("Annotations shows Create From Selection without a selection");
+    if (submenu(rows, "Annotations").includes("Create from Selection")) {
+      fail("Annotations shows Create from Selection without a selection");
     }
 
     // the settings toggles show their state: the caption is shown by default
@@ -111,14 +111,14 @@ export async function testit(): Promise<void> {
     if (isChecked(rows, "Caption") !== true) {
       fail("Show > Caption should be checked");
     }
-    if (isChecked(rows, "Auto-hide Sidebar") !== false) {
-      fail("Show > Auto-hide Sidebar should start unchecked");
+    if (isChecked(rows, "Auto-Hide Sidebar") !== false) {
+      fail("Show > Auto-Hide Sidebar should start unchecked");
     }
     await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleSidebarAutoHide"]);
     try {
       const rows2 = await contextMenuRows(client, frame);
-      if (isChecked(rows2, "Auto-hide Sidebar") !== true) {
-        fail("Show > Auto-hide Sidebar should be checked once it's on");
+      if (isChecked(rows2, "Auto-Hide Sidebar") !== true) {
+        fail("Show > Auto-Hide Sidebar should be checked once it's on");
       }
     } finally {
       await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleSidebarAutoHide"]);

@@ -490,7 +490,7 @@ static TempStr GroupMenuTitleTemp(StripGroup* g, int n) {
     if (len(g->name) > 0) {
         return str::DupTemp(g->name);
     }
-    return fmt(Tr("Unnamed group %d").s, n);
+    return fmt(Tr("Unnamed Group %d").s, n);
 }
 
 // "Add Tab to Group": one item per group the tab isn't in

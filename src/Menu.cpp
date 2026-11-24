@@ -93,7 +93,7 @@ static MenuDef menuDefZoomShort[] = {
         CmdZoomFitVisible,
     },
     {
-        TrN("&Shrink To Fit"),
+        TrN("&Shrink to Fit"),
         CmdZoomShrinkToFit,
     },
     {
@@ -117,15 +117,15 @@ static MenuDef menuDefZoomShort[] = {
 //[ ACCESSKEY_GROUP Context Menu (Selection)
 static MenuDef menuDefSelection[] = {
     {
-        TrN("&Copy To Clipboard"),
+        TrN("&Copy to Clipboard"),
         CmdCopySelection,
     },
     {
-        TrN("Copy As &Image To Clipboard"),
+        TrN("Copy as &Image to Clipboard"),
         CmdCopySelectionAsImage,
     },
     {
-        TrN("&Save As Image..."),
+        TrN("&Save as Image..."),
         CmdSaveSelectionAsImage,
     },
     {
@@ -133,15 +133,15 @@ static MenuDef menuDefSelection[] = {
         CmdPrintSelection,
     },
     {
-        TrN("Visual Search With Google &Lens"),
+        TrN("Visual Search with Google &Lens"),
         CmdSearchGoogleLens,
     },
     {
-        TrN("&Zoom To Selection"),
+        TrN("&Zoom to Selection"),
         CmdZoomToSelection,
     },
     {
-        TrN("&Trim Pages To Selection"),
+        TrN("&Trim Pages to Selection"),
         CmdTrimPagesToSelection,
     },
     {
@@ -157,11 +157,11 @@ static MenuDef menuDefSelection[] = {
         kMenuSeparatorID,
     },
     {
-        TrN("&Translate with"),
+        TrN("&Translate With"),
         (UINT_PTR)menuDefTranslateWith,
     },
     {
-        TrN("S&earch with"),
+        TrN("S&earch With"),
         (UINT_PTR)menuDefSearchWith,
     },
     {
@@ -186,7 +186,7 @@ static MenuDef menuDefContext[] = {
         (UINT_PTR)menuDefSelection,
     },
     {
-        TrN("Visual Search With Google &Lens"),
+        TrN("Visual Search with Google &Lens"),
         (UINT_PTR)menuDefGoogleLens,
     },
     {
@@ -227,7 +227,7 @@ static MenuDef menuDefContext[] = {
         kMenuSeparatorID,
     },
     {
-        TrN("AI chat with document using"),
+        TrN("AI Chat with Document Using"),
         (UINT_PTR)menuDefDocumentAIChat,
     },
     {
@@ -775,7 +775,7 @@ static void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = 
         }
         TempStr printItem = trans::GetTranslation(def.title);
         if (!filePrintAllowed) {
-            printItem = Tr("&Print... (denied)");
+            printItem = Tr("&Print... (Denied)");
         } else {
             printItem = AppendAccelKeyToMenuStringTemp(printItem, CmdPrint);
         }
@@ -966,14 +966,14 @@ static void AppendServerItems(HMENU popup, Str filePath) {
     if (!ServerFilesListed()) {
         return;
     }
-    MenuSetText(popup, CmdDeleteFile, Tr("Delete local"));
+    MenuSetText(popup, CmdDeleteFile, Tr("Delete Local"));
     AppendMenuW(popup, MF_SEPARATOR, kMenuSeparatorID, nullptr);
     ServerFileState st = GetServerFileState(filePath, file::GetSize(filePath));
     if (st != ServerFileState::Same) {
-        AppendMenuW(popup, MF_STRING, CmdUploadToServer, ToWStrTemp(Tr("Upload to server")).s);
+        AppendMenuW(popup, MF_STRING, CmdUploadToServer, ToWStrTemp(Tr("Upload to Server")).s);
     }
     if (st != ServerFileState::None) {
-        AppendMenuW(popup, MF_STRING, CmdDeleteFromServer, ToWStrTemp(Tr("Delete from server")).s);
+        AppendMenuW(popup, MF_STRING, CmdDeleteFromServer, ToWStrTemp(Tr("Delete from Server")).s);
     }
 }
 
@@ -990,7 +990,7 @@ HMENU BuildHomeContextMenu(MainWindow* win, Str path) {
     if (IsServerOnlyFile(path)) {
         HMENU popup = CreatePopupMenu();
         AppendMenuW(popup, MF_STRING, CmdOpenSelectedDocument, ToWStrTemp(Tr("&Open Document")).s);
-        AppendMenuW(popup, MF_STRING, CmdDeleteFromServer, ToWStrTemp(Tr("Delete from server")).s);
+        AppendMenuW(popup, MF_STRING, CmdDeleteFromServer, ToWStrTemp(Tr("Delete from Server")).s);
         return popup;
     }
     FileState* fs = FileHistoryFindByPath(path);
@@ -1005,7 +1005,7 @@ HMENU BuildHomeContextMenu(MainWindow* win, Str path) {
     MenuSetChecked(popup, CmdPinSelectedDocument, fs->isPinned);
     // Del is home-page-only (not a global accelerator), so AppendAccelKey won't
     // pick it up — show it next to Remove From History explicitly
-    MenuSetText(popup, CmdForgetSelectedDocument, str::JoinTemp(Tr("&Remove From History"), StrL("\tDel")));
+    MenuSetText(popup, CmdForgetSelectedDocument, str::JoinTemp(Tr("&Remove from History"), StrL("\tDel")));
     AppendServerItems(popup, path);
     // the file moved: point its history entry at where it is now
     if (!file::Exists(path)) {
@@ -1348,12 +1348,12 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             TempStr delText;
             if (ShowChapterUi(win->ctrl)) {
                 Location loc = win->ctrl->LocationFromPageNo(pageNoUnderCursor);
-                addText = fmt(Tr("Add chapter %d page %d to favorites...").s, loc.chapter, loc.page);
-                delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
+                addText = fmt(Tr("Add Chapter %d Page %d to Favorites...").s, loc.chapter, loc.page);
+                delText = fmt(Tr("Remove Chapter %d Page %d from Favorites").s, loc.chapter, loc.page);
             } else {
                 TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);
-                addText = fmt(Tr("Add page %s to favorites...").s, pageLabel);
-                delText = fmt(Tr("Remove page %s from favorites").s, pageLabel);
+                addText = fmt(Tr("Add Page %s to Favorites...").s, pageLabel);
+                delText = fmt(Tr("Remove Page %s from Favorites").s, pageLabel);
             }
 
             if (isBookmarked) {

@@ -553,12 +553,12 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         TempStr delText;
         if (win->ctrl->HasChapters()) {
             Location loc = win->ctrl->LocationFromPageNo(pageNo);
-            addText = fmt(Tr("Add chapter %d page %d to favorites").s, loc.chapter, loc.page);
-            delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
+            addText = fmt(Tr("Add Chapter %d Page %d to Favorites").s, loc.chapter, loc.page);
+            delText = fmt(Tr("Remove Chapter %d Page %d from Favorites").s, loc.chapter, loc.page);
         } else {
             TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
-            addText = fmt(Tr("Add page %s to favorites").s, pageLabel);
-            delText = fmt(Tr("Remove page %s from favorites").s, pageLabel);
+            addText = fmt(Tr("Add Page %s to Favorites").s, pageLabel);
+            delText = fmt(Tr("Remove Page %s from Favorites").s, pageLabel);
         }
 
         if (isBookmarked) {

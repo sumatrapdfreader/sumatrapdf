@@ -872,13 +872,13 @@ export async function testit(): Promise<void> {
       throw new Error("toolbar-hover-dropdown: the button kept its tooltip under the drop-down");
     }
 
-    // the third row is Discard changes: clicking it runs that command, which
+    // the third row is Discard Changes: clicking it runs that command, which
     // proves there are three rows and that a click reaches the right one
     const discard = cmdId("CmdDiscardChanges");
     const saveRows = await dropdownItems(client);
     if (saveRows.length !== 3 || saveRows[2]!.cmd !== discard) {
       throw new Error(
-        `toolbar-hover-dropdown: expected Discard changes on the third row, got [${saveRows.map((it) => it.text).join(" | ")}]`,
+        `toolbar-hover-dropdown: expected Discard Changes on the third row, got [${saveRows.map((it) => it.text).join(" | ")}]`,
       );
     }
     await clickMenuItem(client, frame, pid, discard, "clicking a row did not close the drop-down");

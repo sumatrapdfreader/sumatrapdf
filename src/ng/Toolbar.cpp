@@ -782,15 +782,15 @@ static gp::El* BuildSaveHoverMenu(MainWindow* win, gp::Ctx* cx) {
     bool dirty = ctx->hasUnsavedAnnotations;
 
     TempStr base = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
-    Str saveText = Tr("Save changes to existing PDF");
+    Str saveText = Tr("Save Changes to Existing PDF");
     if (len(base) > 0) {
-        saveText = fmt(Tr("Save changes to %s").s, base);
+        saveText = fmt(Tr("Save Changes to %s").s, base);
     }
 
     Vec<ToolbarHoverMenuItem> items;
     VecAppend(items, {Str(gIconSave), saveText, CmdSaveAnnotations, dirty});
-    VecAppend(items, {Str(gIconSaveToNewFile), Tr("Save changes to a new PDF"), CmdSaveAnnotationsNewFile, dirty});
-    VecAppend(items, {Str(gIconTrash), Tr("Discard changes"), CmdDiscardChanges, dirty});
+    VecAppend(items, {Str(gIconSaveToNewFile), Tr("Save Changes to a New PDF"), CmdSaveAnnotationsNewFile, dirty});
+    VecAppend(items, {Str(gIconTrash), Tr("Discard Changes"), CmdDiscardChanges, dirty});
     gp::El* box = NewToolbarHoverMenu(win, cx, items);
     // under the button, left edges aligned
     box->Left((float)anchor.x)->Top((float)anchor.Bottom());

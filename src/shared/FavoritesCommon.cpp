@@ -652,7 +652,7 @@ TempStr FavReadableNameTemp(Favorite* fn) {
 TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isCurrent) {
     TempStr rn = FavReadableNameTemp(fn);
     if (isCurrent) {
-        return fmt("%s : %s", Tr("Current file"), rn);
+        return fmt("%s : %s", Tr("Current File"), rn);
     }
     TempStr fp = path::GetBaseNameTemp(fav->filePath);
     // Keep the favorite's name first in compact menu entries so a long file
@@ -1093,12 +1093,12 @@ void RebuildFavMenu(MainWindow* win, MenuRef menu) {
         TempStr delText;
         if (ShowChapterUi(ctrl)) {
             Location loc = ctrl->LocationFromPageNo(pageNo);
-            addText = fmt(Tr("Add chapter %d page %d to favorites...").s, loc.chapter, loc.page);
-            delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
+            addText = fmt(Tr("Add Chapter %d Page %d to Favorites...").s, loc.chapter, loc.page);
+            delText = fmt(Tr("Remove Chapter %d Page %d from Favorites").s, loc.chapter, loc.page);
         } else {
             TempStr label = ctrl->GetPageLabeTemp(pageNo);
-            addText = fmt(Tr("Add page %s to favorites...").s, label);
-            delText = fmt(Tr("Remove page %s from favorites").s, label);
+            addText = fmt(Tr("Add Page %s to Favorites...").s, label);
+            delText = fmt(Tr("Remove Page %s from Favorites").s, label);
         }
 
         if (isBookmarked) {

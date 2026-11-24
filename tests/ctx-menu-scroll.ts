@@ -59,7 +59,7 @@ export async function testit(): Promise<void> {
 
     // open the menu on page 1, scroll so page 2 is under that point, then pick
     // a command that acts at the menu's point (a stamp is created right away)
-    await menuAt(client, x, y, "Add page 1 to favorites");
+    await menuAt(client, x, y, "Add Page 1 to Favorites");
     await client.request(ControlCommand.TestInvokeCommand, ["WM_VSCROLL", kThumbTrack, kScrollPx]);
     await client.waitForRenderIdle();
     const ran = await str(client, ControlCommand.TestUiState, ["ctxcmd", cmdId("CmdCreateAnnotStamp")]);
@@ -67,7 +67,7 @@ export async function testit(): Promise<void> {
       throw new Error(`ctx-menu-scroll: ctxcmd failed: ${ran}`);
     }
     await client.waitForRenderIdle();
-    await menuAt(client, x, y, "Add page 2 to favorites");
+    await menuAt(client, x, y, "Add Page 2 to Favorites");
 
     const annots = await str(client, ControlCommand.TestMarkupAnnots, []);
     const m = /type=Stamp page=(\d+)/.exec(annots);

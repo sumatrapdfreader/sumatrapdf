@@ -105,7 +105,7 @@ void AppendFavMenus(MenuRef m, Str currFilePath) {
             AppendFavMenuItems(m, f, favs, favIdx, true, f == currFileFav);
             continue;
         }
-        Str s = Tr("Current file");
+        Str s = Tr("Current File");
         if (f != currFileFav) {
             s = path::GetBaseNameTemp(filePath);
         }

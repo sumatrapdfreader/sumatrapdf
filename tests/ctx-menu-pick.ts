@@ -25,7 +25,7 @@ async function uiState(client: ControlClient): Promise<string> {
 const kMenuItemDx = 90;
 const kFirstRowDy = 18;
 const kRowDy = 28;
-// Selection >, Visual Search With Google Lens >, Add page 1 to favorites
+// Selection >, Visual Search with Google Lens >, Add Page 1 to Favorites
 const kAddFavoriteRow = 2;
 
 async function toolList(client: ControlClient): Promise<string> {
@@ -76,7 +76,7 @@ async function waitAddFavorite(client: ControlClient, how: string): Promise<void
   const until = Date.now() + 3000;
   while (!(await addFavoriteOpen(client))) {
     if (Date.now() > until) {
-      throw new Error(`ctx-menu-pick: ${how} 'Add page 1 to favorites' did not open Add Favorite`);
+      throw new Error(`ctx-menu-pick: ${how} 'Add Page 1 to Favorites' did not open Add Favorite`);
     }
     await sleep(50);
   }
@@ -97,7 +97,7 @@ async function pickByKey(client: ControlClient): Promise<void> {
   if (/addfavorite made=1/.test(await toolList(client))) {
     throw new Error("ctx-menu-pick: Add Favorite was already open before Enter");
   }
-  // Selection >, Visual Search With Google Lens >, Add page 1 to favorites
+  // Selection >, Visual Search with Google Lens >, Add Page 1 to Favorites
   for (let i = 0; i < 3; i++) {
     await client.request(ControlCommand.TestInput, ["key", VK_DOWN, 0, 0, 0]);
   }
@@ -105,7 +105,7 @@ async function pickByKey(client: ControlClient): Promise<void> {
   const until = Date.now() + 3000;
   while (!/addfavorite made=1/.test(await toolList(client))) {
     if (Date.now() > until) {
-      throw new Error("ctx-menu-pick: Enter on 'Add page 1 to favorites' did not open Add Favorite");
+      throw new Error("ctx-menu-pick: Enter on 'Add Page 1 to Favorites' did not open Add Favorite");
     }
     await sleep(50);
   }

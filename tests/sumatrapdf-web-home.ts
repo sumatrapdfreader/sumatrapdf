@@ -185,9 +185,9 @@ export async function testit(): Promise<void> {
           );
         const menuIs = async (upload: boolean, del: boolean) => {
           const menu = await homeMenu(client);
-          requireRow(menu, "CmdDeleteFile\tDelete local", true);
-          requireRow(menu, "CmdUploadToServer\tUpload to server", upload);
-          requireRow(menu, "CmdDeleteFromServer\tDelete from server", del);
+          requireRow(menu, "CmdDeleteFile\tDelete Local", true);
+          requireRow(menu, "CmdUploadToServer\tUpload to Server", upload);
+          requireRow(menu, "CmdDeleteFromServer\tDelete from Server", del);
         };
 
         // a different size: Server ≠, the server copy can be replaced or deleted
@@ -240,9 +240,9 @@ export async function testit(): Promise<void> {
         await pressKey(frame, VK_DOWN);
         const menu = await homeMenu(client);
         requireRow(menu, "CmdOpenSelectedDocument\tOpen Document", true);
-        requireRow(menu, "CmdDeleteFromServer\tDelete from server", true);
-        requireRow(menu, "CmdDeleteFile\tDelete local", false);
-        requireRow(menu, "CmdForgetSelectedDocument\tRemove From History", false);
+        requireRow(menu, "CmdDeleteFromServer\tDelete from Server", true);
+        requireRow(menu, "CmdDeleteFile\tDelete Local", false);
+        requireRow(menu, "CmdForgetSelectedDocument\tRemove from History", false);
 
         // opening it downloads it next to the app's data and opens it
         await pressEnter(frame);

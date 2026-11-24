@@ -607,7 +607,7 @@ static void BuildReadAloudVoiceMenuItems(HMENU voiceMenu) {
         defaultFlags |= MF_CHECKED;
     }
 
-    AppendMenuW(voiceMenu, defaultFlags, CmdTtsVoiceDefault, CWStrTemp(Tr("System default")));
+    AppendMenuW(voiceMenu, defaultFlags, CmdTtsVoiceDefault, CWStrTemp(Tr("System Default")));
     AppendMenuW(voiceMenu, MF_SEPARATOR, 0, nullptr);
 
     Vec<TtsVoiceInfo> voices = TtsGetVoices();
@@ -661,10 +661,10 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
     }
     AppendMenuW(menu, stopFlags, CmdTtsMenuStopReading, CWStrTemp(Tr("Stop Reading")));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
-    AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, CWStrTemp(Tr("Start Reading From Top")));
+    AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, CWStrTemp(Tr("Start Reading from Top")));
     if (includeCursorItem) {
         AppendMenuW(menu, canReadFromCursor ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadFromCursor,
-                    CWStrTemp(Tr("Start Reading From Cursor Position")));
+                    CWStrTemp(Tr("Start Reading from Cursor Position")));
     }
     AppendMenuW(menu, hasSelection ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadSelection,
                 CWStrTemp(Tr("Start Reading Selection")));
@@ -695,7 +695,7 @@ static void BuildReadAloudMenuItems(HMENU menu, MainWindow* win, bool includeCur
     if (gSettings->toolbarShowReadAloud) {
         showFlags |= MF_CHECKED;
     }
-    AppendMenuW(menu, showFlags, CmdToggleToolbarShowReadAloud, CWStrTemp(Tr("Show In Toolbar")));
+    AppendMenuW(menu, showFlags, CmdToggleToolbarShowReadAloud, CWStrTemp(Tr("Show in Toolbar")));
 }
 
 void RebuildReadAloudMenu(MainWindow* win, HMENU menu, bool includeCursorItem, bool canReadFromCursor) {

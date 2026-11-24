@@ -737,7 +737,7 @@ static void MenuAppendItem(MenuModel* menu, Str title, int cmdId, bool enabled, 
 static void BuildReadAloudVoiceMenuItems(MenuModel* voiceMenu) {
     Str currentVoiceId = TtsGetVoiceId();
 
-    MenuAppendItem(voiceMenu, Tr("System default"), CmdTtsVoiceDefault, true, len(currentVoiceId) == 0);
+    MenuAppendItem(voiceMenu, Tr("System Default"), CmdTtsVoiceDefault, true, len(currentVoiceId) == 0);
     MenuAppendSeparator(voiceMenu);
 
     // a native menu bar (macOS) must hold the voices before it opens
@@ -785,9 +785,9 @@ static void BuildReadAloudMenuItems(MenuModel* menu, MainWindow* win, bool inclu
     // always listed: the playback bar can be off-screen or lose z-order (issue #6053)
     MenuAppendItem(menu, Tr("Stop Reading"), CmdTtsMenuStopReading, isSpeaking || canContinue, false);
     MenuAppendSeparator(menu);
-    MenuAppendItem(menu, Tr("Start Reading From Top"), CmdTtsMenuReadCurrentPage, true, false);
+    MenuAppendItem(menu, Tr("Start Reading from Top"), CmdTtsMenuReadCurrentPage, true, false);
     if (includeCursorItem) {
-        MenuAppendItem(menu, Tr("Start Reading From Cursor Position"), CmdTtsMenuReadFromCursor, canReadFromCursor,
+        MenuAppendItem(menu, Tr("Start Reading from Cursor Position"), CmdTtsMenuReadFromCursor, canReadFromCursor,
                        false);
     }
     MenuAppendItem(menu, Tr("Start Reading Selection"), CmdTtsMenuReadSelection, hasSelection, false);
@@ -804,7 +804,7 @@ static void BuildReadAloudMenuItems(MenuModel* menu, MainWindow* win, bool inclu
     }
 
     MenuAppendSeparator(menu);
-    MenuAppendItem(menu, Tr("Show In Toolbar"), CmdToggleToolbarShowReadAloud, true,
+    MenuAppendItem(menu, Tr("Show in Toolbar"), CmdToggleToolbarShowReadAloud, true,
                    gSettings && gSettings->toolbarShowReadAloud);
 }
 

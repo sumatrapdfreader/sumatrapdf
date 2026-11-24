@@ -50,7 +50,7 @@ async function checkHome(): Promise<void> {
   const { proc, client, frame } = await launchControlled([]);
   try {
     const rows = await menuRows(client, frame);
-    if (rows.some((r) => r.title === "Start Reading From Top")) {
+    if (rows.some((r) => r.title === "Start Reading from Top")) {
       throw new Error(`main-menu-parity: home page has a Read Aloud menu\n${dump(rows)}`);
     }
   } finally {

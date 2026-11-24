@@ -47,11 +47,11 @@ MenuDef menuDefFileOpen[] = {
         CmdOpenFile,
     },
     {
-        TrN("Open using &Windows File Picker..."),
+        TrN("Open Using &Windows File Picker..."),
         CmdOpenFileWithOSFilePicker,
     },
     {
-        TrN("Open using &SumatraPDF File Picker..."),
+        TrN("Open Using &SumatraPDF File Picker..."),
         CmdOpenFileWithSumatraFilePicker,
     },
     {
@@ -82,15 +82,15 @@ MenuDef menuDefFileOpen[] = {
     },
 #else
     {
-        TrN("&Next File In Folder"),
+        TrN("&Next File in Folder"),
         CmdOpenNextFileInFolder,
     },
     {
-        TrN("&Previous File In Folder"),
+        TrN("&Previous File in Folder"),
         CmdOpenPrevFileInFolder,
     },
     {
-        TrN("&Browse Files In Folder..."),
+        TrN("&Browse Files in Folder..."),
         CmdNavigateFilesInFolder,
     },
 #endif
@@ -104,7 +104,7 @@ MenuDef menuDefFileOpen[] = {
 //[ ACCESSKEY_GROUP File Menu
 MenuDef menuDefFile[] = {
     {
-        TrN("New &window"),
+        TrN("New &Window"),
         CmdNewWindow,
     },
     {
@@ -116,7 +116,7 @@ MenuDef menuDefFile[] = {
         CmdClose,
     },
     {
-        TrN("Show in fo&lder"),
+        TrN("Show in Fo&lder"),
         CmdShowInFolder,
     },
     {
@@ -253,7 +253,7 @@ MenuDef menuDefShow[] = {
         CmdToggleCaption,
     },
     {
-        TrN("&Auto-hide Sidebar"),
+        TrN("&Auto-Hide Sidebar"),
         CmdToggleSidebarAutoHide,
     },
     {
@@ -336,7 +336,7 @@ MenuDef menuDefPageDisplay[] = {
         0,
     },
     {
-        TrN("View As &Hex"),
+        TrN("View as &Hex"),
         CmdViewAsHex,
     },
     {
@@ -374,7 +374,7 @@ MenuDef menuDefTrim[] = {
         CmdToggleTrimEmptyMargins,
     },
     {
-        TrN("Trim Pages To Selection"),
+        TrN("Trim Pages to Selection"),
         CmdTrimPagesToSelection,
     },
     {
@@ -553,7 +553,7 @@ MenuDef menuDefZoom[] = {
         CmdZoomFitVisible,
     },
     {
-        TrN("&Shrink To Fit"),
+        TrN("&Shrink to Fit"),
         CmdZoomShrinkToFit,
     },
     {
@@ -686,11 +686,11 @@ MenuDef menuDefTabGroups[] = {
 
 MenuDef menuDefFavorites[] = {
     {
-        TrN("Add to favorites..."),
+        TrN("Add to Favorites..."),
         CmdFavoriteAdd,
     },
     {
-        TrN("Remove from favorites"),
+        TrN("Remove from Favorites"),
         CmdFavoriteDel,
     },
     {
@@ -731,7 +731,7 @@ MenuDef menuDefHelp[] = {
         CmdHelpOpenKeyboardShortcuts
     },
     {
-        TrN("Manual On Website"),
+        TrN("Manual on Website"),
         CmdHelpOpenManualOnWebsite,
     },
     {
@@ -805,7 +805,7 @@ MenuDef menuDefDebug[] = {
 //[ ACCESSKEY_GROUP Context Menu (Google Lens)
 MenuDef menuDefGoogleLens[] = {
     {
-        TrN("&Selection As Image"),
+        TrN("&Selection as Image"),
         CmdSearchGoogleLens,
     },
     {
@@ -885,15 +885,15 @@ MenuDef menuDefSearchWith[] = {
 //[ ACCESSKEY_GROUP Menu (Selection)
 MenuDef menuDefMainSelection[] = {
     {
-        TrN("&Copy To Clipboard"),
+        TrN("&Copy to Clipboard"),
         CmdCopySelection,
     },
     {
-        TrN("&Translate with"),
+        TrN("&Translate With"),
         (UINT_PTR)menuDefTranslateWith,
     },
     {
-        TrN("S&earch with"),
+        TrN("S&earch With"),
         (UINT_PTR)menuDefSearchWith,
     },
     {
@@ -921,7 +921,7 @@ MenuDef menuDefReadAloud[] = {
         CmdStopReadAloud,
     },
     {
-        TrN("Start Reading From Top"),
+        TrN("Start Reading from Top"),
         CmdReadAloudFromTopPage,
     },
     {
@@ -938,7 +938,7 @@ MenuDef menuDefContextReadAloud[] = {
         CmdStopReadAloud,
     },
     {
-        TrN("Start Reading From Top"),
+        TrN("Start Reading from Top"),
         CmdReadAloudFromTopPage,
     },
     {
@@ -1031,7 +1031,7 @@ MenuDef menuDefCreateAnnotFromSelection[] = {
 // menu itself stays short
 MenuDef menuDefContextAnnotations[] = {
     {
-        TrN("Create From Selection"),
+        TrN("Create from Selection"),
         (UINT_PTR)menuDefCreateAnnotFromSelection,
     },
     {
@@ -1075,15 +1075,15 @@ MenuDef menuDefContextAnnotations[] = {
         kMenuSeparatorID,
     },
     {
-        TrN("Save changes"),
+        TrN("Save Changes"),
         CmdSaveAnnotations,
     },
     {
-        TrN("Save to new file..."),
+        TrN("Save to New File..."),
         CmdSaveAnnotationsNewFile,
     },
     {
-        TrN("Discard changes"),
+        TrN("Discard Changes"),
         CmdDiscardChanges,
     },
     {
@@ -1096,11 +1096,11 @@ MenuDef menuDefContextAnnotations[] = {
 //[ ACCESSKEY_GROUP Context Menu (Image)
 MenuDef menuDefContextImage[] = {
     {
-        TrN("C&opy To Clipboard"),
+        TrN("C&opy to Clipboard"),
         CmdCopyImage,
     },
     {
-        TrN("Visual Search With Google &Lens"),
+        TrN("Visual Search with Google &Lens"),
         CmdSearchGoogleLensImage,
     },
     {
@@ -1124,7 +1124,7 @@ MenuDef menuDefContextImage[] = {
         CmdEditImageExternally,
     },
     {
-        TrN("Convert page to &PDF..."),
+        TrN("Convert Page to &PDF..."),
         CmdConvertImageToPdf,
     },
     {
@@ -1178,7 +1178,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdPdfShowInfo,
     },
     {
-        TrN("Show Document Table Of Contents..."),
+        TrN("Show Document Table of Contents..."),
         CmdDocumentShowOutline,
     },
     {
@@ -1186,7 +1186,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdPdfExtractPages,
     },
     {
-        TrN("Delete Pages From PDF..."),
+        TrN("Delete Pages from PDF..."),
         CmdPdfDeletePages,
     },
     {
@@ -1194,7 +1194,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdMergePDF,
     },
     {
-        TrN("Make PDF From Images..."),
+        TrN("Make PDF from Images..."),
         CmdImagesToPdf,
     },
     {
@@ -1202,7 +1202,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdRunPDFScript,
     },
     {
-        TrN("Extract Text From Document..."),
+        TrN("Extract Text from Document..."),
         CmdDocumentExtractText,
     },
     {
@@ -1246,7 +1246,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdInsertImage,
     },
     {
-        TrN("Sign With Image"),
+        TrN("Sign with Image"),
         CmdSignWithImage,
     },
     {
@@ -1270,7 +1270,7 @@ MenuDef menuDefDocumentOperations[] = {
         CmdConvertCajToPDF,
     },
     {
-        TrN("Show in fo&lder"),
+        TrN("Show in Fo&lder"),
         CmdShowInFolder,
     },
     {
@@ -1287,7 +1287,7 @@ MenuDef menuDefContextStart[] = {
         CmdOpenSelectedDocument,
     },
     {
-        TrN("Show in folder"),
+        TrN("Show in Folder"),
         CmdShowInFolder,
     },
     {
@@ -1299,7 +1299,7 @@ MenuDef menuDefContextStart[] = {
         0,
     },
     {
-        TrN("&Remove From History"),
+        TrN("&Remove from History"),
         CmdForgetSelectedDocument,
     },
     {
@@ -1333,15 +1333,15 @@ MenuDef menuDefContextTab[] = {
     // these top items are removed unless the document has unsaved changes;
     // text matches the "Unsaved changes" close dialog
     {
-        TrN("&Save changes to existing PDF"),
+        TrN("&Save Changes to Existing PDF"),
         CmdSaveAnnotations,
     },
     {
-        TrN("Save changes to &new PDF..."),
+        TrN("Save Changes to &New PDF..."),
         CmdSaveAnnotationsNewFile,
     },
     {
-        TrN("&Discard changes"),
+        TrN("&Discard Changes"),
         CmdDiscardChanges,
     },
     {
@@ -1353,7 +1353,7 @@ MenuDef menuDefContextTab[] = {
         CmdProperties,
     },
     {
-        TrN("Show in folder"),
+        TrN("Show in Folder"),
         CmdShowInFolder,
     },
     {
@@ -1381,11 +1381,11 @@ MenuDef menuDefContextTab[] = {
         CmdCloseOtherTabs,
     },
     {
-        TrN("Close Tabs To The Right"),
+        TrN("Close Tabs to the Right"),
         CmdCloseTabsToTheRight,
     },
     {
-        TrN("Close Tabs To The Left"),
+        TrN("Close Tabs to the Left"),
         CmdCloseTabsToTheLeft,
     },
     {
@@ -1526,7 +1526,7 @@ MenuDef menuDefContextToc[] = {
 
 MenuDef menuDefContextFav[] = {
     {
-        TrN("Sort By Name"),
+        TrN("Sort by Name"),
         CmdToggleFavoritesSort,
     },
     {
@@ -1538,7 +1538,7 @@ MenuDef menuDefContextFav[] = {
         0,
     },
     {
-        TrN("Remove from favorites"),
+        TrN("Remove from Favorites"),
         CmdFavoriteDel,
     },
     {
@@ -1566,15 +1566,15 @@ MenuDef menuDefCreateAnnotUnderCursor[] = {
         CmdCreateAnnotStamp,
     },
     {
-        TrN("&Image From Clipboard"),
+        TrN("&Image from Clipboard"),
         CmdCreateAnnotImageFromClipboard,
     },
     {
-        TrN("Image From Fi&le..."),
+        TrN("Image from Fi&le..."),
         CmdInsertImage,
     },
     {
-        TrN("Si&gn With Image"),
+        TrN("Si&gn with Image"),
         CmdSignWithImage,
     },
     {
