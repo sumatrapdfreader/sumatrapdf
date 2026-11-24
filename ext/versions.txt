@@ -43,7 +43,7 @@ bzip2           1.0.8      2019-07-21
 
 chmdec          dist       2026-11-24
   https://github.com/kjk/chmdec
-  commit e81822d285a2b0190b34a6e64f15c73ca765411e
+  commit f25914d664515887bd6fa880f83ad618580318e0
   amalgamated dist/chm.c + dist/chm.h only (was ext/libchm)
 
 freetype        2.14.3
