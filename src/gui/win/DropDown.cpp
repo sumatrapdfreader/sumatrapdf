@@ -49,7 +49,14 @@ static void ReplaceDropDownItems(HWND hwnd, StrVec& items) {
 // leaves all of it selected. Any relayout around us - the find bar's "n / m"
 // slot widening as the count comes in - would then wipe out what the user is
 // typing, so put the caret back where it was (issue #6068).
-static LRESULT CALLBACK DropDownProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+static LRESULT CALLBACK DropDownProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR dwRefData) {
+    if (msg == WM_SETCURSOR) {
+        auto* dd = (DropDown*)dwRefData;
+        if (dd && dd->cursorId) {
+            SetCursor(GetCachedCursor(dd->cursorId));
+            return TRUE;
+        }
+    }
     if (msg != WM_SIZE) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
@@ -60,7 +67,14 @@ static LRESULT CALLBACK DropDownProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, 
     return res;
 }
 
-static LRESULT CALLBACK DropDownEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+static LRESULT CALLBACK DropDownEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR dwRefData) {
+    if (msg == WM_SETCURSOR) {
+        auto* dd = (DropDown*)dwRefData;
+        if (dd && dd->cursorId) {
+            SetCursor(GetCachedCursor(dd->cursorId));
+            return TRUE;
+        }
+    }
     if (msg == WM_CHAR && EditHandleCtrlBack(hwnd, wp)) {
         return 0;
     }
@@ -204,10 +218,9 @@ HWND DropDown::Create(const CreateArgs& args) {
         return nullptr;
     }
 
-    // SetDropDownItems(hwnd, items);
+    SetWindowSubclass(hwnd, DropDownProc, 0, (DWORD_PTR)this);
     if (HWND hwndEdit = CbEditHwnd(hwnd)) {
-        SetWindowSubclass(hwnd, DropDownProc, 0, 0);
-        SetWindowSubclass(hwndEdit, DropDownEditProc, 0, 0);
+        SetWindowSubclass(hwndEdit, DropDownEditProc, 0, (DWORD_PTR)this);
     }
     CbSetCurrentSelection(hwnd, -1);
     CbSetMinVisible(hwnd, 10);

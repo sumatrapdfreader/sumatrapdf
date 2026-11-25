@@ -50,6 +50,7 @@ class HtmlWindow {
     IOleInPlaceObject* oleInPlaceObject = nullptr;
     IViewObject* viewObject = nullptr;
     IConnectionPoint* connectionPoint = nullptr;
+    FrameSite* frameSite = nullptr;
     HtmlMoniker* htmlContent = nullptr;
     HWND oleObjectHwnd = nullptr;
     int zoomDPI = 96;

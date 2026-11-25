@@ -214,7 +214,6 @@ void BrowserDocView::SubclassParent() {
         subclassId = 0;
         return;
     }
-    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
 }
 
 void BrowserDocView::UnsubclassParent() {
@@ -222,10 +221,6 @@ void BrowserDocView::UnsubclassParent() {
         return;
     }
     RemoveWindowSubclass(hwndParent, ParentWndProc, subclassId);
-    auto* curr = (BrowserDocView*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
-    if (curr == this) {
-        SetWindowLongPtr(hwndParent, GWLP_USERDATA, 0);
-    }
     subclassId = 0;
 }
 

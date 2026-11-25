@@ -409,8 +409,13 @@ Size VBox::Layout(const Constraints bc) {
     auto cbc = bc;
 
     if (alignMain == MainAxisAlign::Homogeneous) {
-        int childDy = Scale(cbc.max.dy, 1, count) - Scale(gap, count - 1, count);
-        cbc = cbc.TightenHeight(std::max(childDy, 0));
+        if (cbc.HasBoundedHeight()) {
+            int childDy = Scale(cbc.max.dy, 1, count) - Scale(gap, count - 1, count);
+            cbc = cbc.TightenHeight(std::max(childDy, 0));
+        } else {
+            cbc.min.dy = 0;
+            cbc.max.dy = Inf;
+        }
     } else {
         cbc.min.dy = 0;
         cbc.max.dy = Inf;
@@ -495,6 +500,15 @@ Size VBox::Layout(const Constraints bc) {
 
     if (alignCross == CrossAxisAlign::Stretch) {
         return bc.Constrain(Size{cbc.min.dx, height});
+    }
+
+    if (totalFlex > 0) {
+        width = 0;
+        for (const auto& v : children) {
+            if (!IsCollapsed(v.layout)) {
+                width = std::max(width, v.size.dx);
+            }
+        }
     }
 
     return bc.Constrain(Size{width, height});
@@ -703,9 +717,14 @@ Size HBox::Layout(const Constraints bc) {
     // Determine the constraints for layout of child elements.
     auto cbc = bc;
     if (alignMain == MainAxisAlign::Homogeneous) {
-        auto maxw = cbc.max.dx;
-        int childDx = Scale(maxw, 1, count) - Scale(gap, count - 1, count);
-        cbc = cbc.TightenWidth(std::max(childDx, 0));
+        if (cbc.HasBoundedWidth()) {
+            auto maxw = cbc.max.dx;
+            int childDx = Scale(maxw, 1, count) - Scale(gap, count - 1, count);
+            cbc = cbc.TightenWidth(std::max(childDx, 0));
+        } else {
+            cbc.min.dx = 0;
+            cbc.max.dx = Inf;
+        }
     } else {
         cbc.min.dx = 0;
         cbc.max.dx = Inf;
@@ -793,6 +812,14 @@ Size HBox::Layout(const Constraints bc) {
 
     if (alignCross == CrossAxisAlign::Stretch) {
         return bc.Constrain(Size{width, std::max(cbc.min.dy, minDy)});
+    }
+    if (totalFlex > 0) {
+        height = 0;
+        for (const auto& v : children) {
+            if (!IsCollapsed(v.layout)) {
+                height = std::max(height, v.size.dy);
+            }
+        }
     }
     return bc.Constrain(Size{width, std::max(height, minDy)});
 }
@@ -1163,25 +1190,6 @@ ILayout* Table::LayoutChildAt(int idx) {
     return nullptr;
 }
 
-// a cell spanning several tracks needs those tracks (plus the gaps between
-// them) to be at least as big as the cell; grow them evenly if they aren't
-static void GrowTracks(Vec<int>& tracks, int start, int span, int gap, int needed) {
-    int have = gap * (span - 1);
-    for (int i = start; i < start + span; i++) {
-        have += tracks[i];
-    }
-    int missing = needed - have;
-    if (missing <= 0) {
-        return;
-    }
-    for (int i = 0; i < span; i++) {
-        // the last track gets what rounding left over
-        int add = missing / (span - i);
-        tracks[start + i] += add;
-        missing -= add;
-    }
-}
-
 static int TracksSize(Vec<int>& tracks, int start, int span, int gap) {
     if (span < 1) {
         return 0;
@@ -1199,6 +1207,22 @@ static int TracksSize(Vec<int>& tracks, int start, int span, int gap) {
         n++;
     }
     return size;
+}
+
+// a cell spanning several tracks needs those tracks (plus the gaps between
+// them) to be at least as big as the cell; grow them evenly if they aren't
+static void GrowTracks(Vec<int>& tracks, int start, int span, int gap, int needed) {
+    int have = TracksSize(tracks, start, span, gap);
+    int missing = needed - have;
+    if (missing <= 0) {
+        return;
+    }
+    for (int i = 0; i < span; i++) {
+        // the last track gets what rounding left over
+        int add = missing / (span - i);
+        tracks[start + i] += add;
+        missing -= add;
+    }
 }
 
 // where track idx starts, relative to the first track
@@ -1326,6 +1350,7 @@ void Table::SetBounds(Rect r) {
         // SetBounds() without a preceding Layout()
         Measure();
     }
+    int savedLastCol = cols > 0 ? colWidths[cols - 1] : 0;
     int extraDx = ContentRect().dx - TracksSize(colWidths, 0, cols, colGap);
     if (extraDx > 0 && cols > 0) {
         colWidths[cols - 1] += extraDx;
@@ -1339,6 +1364,9 @@ void Table::SetBounds(Rect r) {
             Rect cellRc = CellRect(row, col);
             cell.child->SetBounds(AlignInCell(cellRc, cell.childSize, cell.alignH, cell.alignV));
         }
+    }
+    if (cols > 0) {
+        colWidths[cols - 1] = savedLastCol;
     }
 }
 
@@ -1680,6 +1708,7 @@ int Wrap::MinIntrinsicHeight(int width) {
     int x = 0;
     int rowH = 0;
     int total = 0;
+    int rowCount = 0;
     bool have = false;
     for (int i = 0; i < n; i++) {
         auto& v = children[i];
@@ -1690,10 +1719,11 @@ int Wrap::MinIntrinsicHeight(int width) {
         int ch = v.layout->MinIntrinsicHeight(width);
         int next = have ? (x + colGap + cw) : cw;
         if (have && next > width) {
-            if (total > 0) {
+            if (rowCount > 0) {
                 total += rowGap;
             }
             total += rowH;
+            rowCount++;
             x = 0;
             rowH = 0;
             have = false;
@@ -1704,7 +1734,7 @@ int Wrap::MinIntrinsicHeight(int width) {
         have = true;
     }
     if (have) {
-        if (total > 0) {
+        if (rowCount > 0) {
             total += rowGap;
         }
         total += rowH;
@@ -1824,8 +1854,9 @@ ILayout* MinDxBox::LayoutChildAt(int) {
     return child;
 }
 
-int MinDxBox::MinIntrinsicWidth(int) {
-    return dx;
+int MinDxBox::MinIntrinsicWidth(int height) {
+    int cw = child ? child->MinIntrinsicWidth(height) : 0;
+    return std::max(dx, cw);
 }
 
 int MinDxBox::MinIntrinsicHeight(int width) {
@@ -1833,15 +1864,17 @@ int MinDxBox::MinIntrinsicHeight(int width) {
 }
 
 Size MinDxBox::Layout(const Constraints bc) {
-    int w = MinIntrinsicWidth(0);
-    if (bc.min.dx > w) {
-        w = bc.min.dx;
+    int minW = dx;
+    if (bc.min.dx > minW) {
+        minW = bc.min.dx;
     }
-    if (bc.HasBoundedWidth() && bc.max.dx < w) {
-        w = bc.max.dx;
+    if (bc.HasBoundedWidth() && bc.max.dx < minW) {
+        minW = bc.max.dx;
     }
-    Size s = child ? child->Layout(bc.TightenWidth(w)) : Size{};
-    return {w, s.dy};
+    Constraints cc = bc;
+    cc.min.dx = minW;
+    Size s = child ? child->Layout(cc) : Size{minW, 0};
+    return bc.Constrain({std::max(minW, s.dx), s.dy});
 }
 
 void MinDxBox::SetBounds(Rect r) {

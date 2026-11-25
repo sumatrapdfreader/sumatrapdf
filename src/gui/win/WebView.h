@@ -162,6 +162,7 @@ struct WebviewWnd : WindowBase {
     // callback flipping it visible again. Default true matches hosts that call
     // SetIsVisible(true) after Create; BrowserDocView clears it until show.
     bool desiredVisible = true;
+    int desiredZoomPercent = 100;
     bool isVisible = true;
     bool isSuspended = false;
     bool isInSizeMove = false;

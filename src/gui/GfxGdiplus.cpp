@@ -132,7 +132,7 @@ void GfxGdiplus::DrawDashedRect(const Rect& r, Color col) {
     pen.SetDashStyle(Gdiplus::DashStyleDash);
     Gdiplus::SmoothingMode prev = gfx->GetSmoothingMode();
     gfx->SetSmoothingMode(Gdiplus::SmoothingModeNone);
-    gfx->DrawRectangle(&pen, r.x, r.y, r.dx, r.dy);
+    gfx->DrawRectangle(&pen, r.x, r.y, r.dx - 1, r.dy - 1);
     gfx->SetSmoothingMode(prev);
 }
 
@@ -351,15 +351,53 @@ Size GfxGdiplus::MeasureText(Str s, PlatformFont* font) {
 }
 
 void GfxGdiplus::DrawPixmap(Pixmap* px, const Rect& r) {
-    if (!px || r.IsEmpty()) {
+    if (!px || px->width <= 0 || px->height <= 0 || r.IsEmpty()) {
         return;
     }
-    Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(px);
-    if (!bmp) {
-        return;
+    Pixmap* src = px;
+    Pixmap* owned = nullptr;
+    Vec<u8> bgra;
+    Pixmap tmp{};
+    if (px->format == PixmapFormat::Native || !px->data) {
+        owned = PixmapCopyAs32bppDIB(px);
+        if (!owned || !owned->data) {
+            FreePixmap(owned);
+            return;
+        }
+        src = owned;
+    } else if (px->format == PixmapFormat::RGBA8) {
+        i64 stride64 = (i64)px->width * 4;
+        i64 nBytes = stride64 * px->height;
+        if (stride64 <= 0 || stride64 > INT_MAX || nBytes <= 0 || nBytes > INT_MAX) {
+            return;
+        }
+        u8* dst = VecGrow(bgra, (int)nBytes);
+        if (!dst) {
+            return;
+        }
+        int stride = (int)stride64;
+        for (int y = 0; y < px->height; y++) {
+            const u8* sp = px->data + ((size_t)y * px->stride);
+            u8* dp = dst + ((size_t)y * stride);
+            for (int x = 0; x < px->width; x++, sp += 4, dp += 4) {
+                dp[0] = sp[2];
+                dp[1] = sp[1];
+                dp[2] = sp[0];
+                dp[3] = px->hasAlpha ? sp[3] : 255;
+            }
+        }
+        tmp = *px;
+        tmp.format = PixmapFormat::BGRA8;
+        tmp.stride = stride;
+        tmp.data = dst;
+        src = &tmp;
     }
-    gfx->DrawImage(bmp, ToGdipRect(r), 0, 0, px->width, px->height, Gdiplus::UnitPixel);
-    delete bmp;
+    Gdiplus::Bitmap* bmp = WrapPixmapGdiplus(src);
+    if (bmp) {
+        gfx->DrawImage(bmp, ToGdipRect(r), 0, 0, src->width, src->height, Gdiplus::UnitPixel);
+        delete bmp;
+    }
+    FreePixmap(owned);
 }
 
 void GfxGdiplus::PushClip(const Rect& r) {

@@ -268,10 +268,10 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
   public:
     webview2_com_handler(HWND hwnd, WebViewMsgCb& msgCb, webview2_com_handler_cb_t cb, bool allowClipboardRead)
         : m_window(hwnd), msgCb(msgCb), m_cb(cb), allowClipboardRead(allowClipboardRead) {}
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
 
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -349,16 +349,16 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCom
     WebViewMsgCb msgCb;
     webview2_com_handler_cb_t m_cb;
     bool allowClipboardRead;
-    ULONG m_refCount = 1;
+    AtomicInt m_refCount = 1;
 };
 
 // Intercept accelerator keys so the host can handle app shortcuts.
 class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHandler {
   public:
-    webview2_accel_handler(HWND hwnd, WebviewWnd* wnd) : m_hwnd(hwnd), m_wnd(wnd) {}
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    explicit webview2_accel_handler(HWND hwnd) : m_hwnd(hwnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -395,7 +395,8 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
             return S_OK;
         }
 
-        if (m_wnd && m_wnd->forwardAppAccelerators) {
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
+        if (wnd && wnd->forwardAppAccelerators) {
             bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
             bool alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
@@ -420,10 +421,10 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
                     return S_OK;
                 }
             }
-            if (!m_wnd->events.resolveAccelCmd) {
+            if (!wnd->events.resolveAccelCmd) {
                 return S_OK;
             }
-            int cmd = m_wnd->events.resolveAccelCmd(m_wnd->events.ctx, (u16)vk, ctrl, shift, alt);
+            int cmd = wnd->events.resolveAccelCmd(wnd->events.ctx, (u16)vk, ctrl, shift, alt);
             if (cmd != 0) {
                 args->put_Handled(TRUE);
                 if (root && ::IsWindow(root)) {
@@ -444,9 +445,8 @@ class webview2_accel_handler : public ICoreWebView2AcceleratorKeyPressedEventHan
     }
 
   private:
-    ULONG m_refCount = 1;
+    AtomicInt m_refCount = 1;
     HWND m_hwnd = nullptr;
-    WebviewWnd* m_wnd = nullptr;
 };
 
 static TempWStr UriPathFromPrefix(WStr uri, WStr prefix, bool keepQueryAndFragment = false);
@@ -481,10 +481,10 @@ static void UpdateWebViewHistory(WebviewWnd* wnd) {
 
 class webview2_navigation_starting_handler : public ICoreWebView2NavigationStartingEventHandler {
   public:
-    explicit webview2_navigation_starting_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    explicit webview2_navigation_starting_handler(HWND hwnd) : m_hwnd(hwnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -503,19 +503,20 @@ class webview2_navigation_starting_handler : public ICoreWebView2NavigationStart
         return E_NOINTERFACE;
     }
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2NavigationStartingEventArgs* args) {
-        if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
+        if (!args || !wnd || !wnd->events.navigationStarting) {
             return S_OK;
         }
         WCHAR* uri = nullptr;
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
-        TempStr url = UrlForWebViewEvent(WStr(uri), m_wnd->resourceUriPrefix);
+        TempStr url = UrlForWebViewEvent(WStr(uri), wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
         if (len(url) == 0) {
             return S_OK;
         }
-        bool allow = m_wnd->events.navigationStarting(m_wnd->events.ctx, url, false);
+        bool allow = wnd->events.navigationStarting(wnd->events.ctx, url, false);
         if (!allow) {
             args->put_Cancel(TRUE);
         }
@@ -523,16 +524,16 @@ class webview2_navigation_starting_handler : public ICoreWebView2NavigationStart
     }
 
   private:
-    WebviewWnd* m_wnd = nullptr;
-    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+    AtomicInt m_refCount = 1;
 };
 
 class webview2_navigation_completed_handler : public ICoreWebView2NavigationCompletedEventHandler {
   public:
-    explicit webview2_navigation_completed_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    explicit webview2_navigation_completed_handler(HWND hwnd) : m_hwnd(hwnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -551,38 +552,39 @@ class webview2_navigation_completed_handler : public ICoreWebView2NavigationComp
         return E_NOINTERFACE;
     }
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2NavigationCompletedEventArgs* args) {
-        if (!args || !m_wnd || !m_wnd->events.navigationCompleted) {
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
+        if (!args || !wnd || !wnd->events.navigationCompleted) {
             return S_OK;
         }
         BOOL success = FALSE;
         args->get_IsSuccess(&success);
         WCHAR* uri = nullptr;
-        ICoreWebView2* webview = m_wnd->webview;
+        ICoreWebView2* webview = wnd->webview;
         if (webview) {
             webview->get_Source(&uri);
         }
-        TempStr url = UrlForWebViewEvent(WStr(uri), m_wnd->resourceUriPrefix);
+        TempStr url = UrlForWebViewEvent(WStr(uri), wnd->resourceUriPrefix);
         if (uri) {
             CoTaskMemFree(uri);
         }
         if (url) {
-            m_wnd->events.navigationCompleted(m_wnd->events.ctx, url, success != FALSE);
+            wnd->events.navigationCompleted(wnd->events.ctx, url, success != FALSE);
         }
-        UpdateWebViewHistory(m_wnd);
+        UpdateWebViewHistory(wnd);
         return S_OK;
     }
 
   private:
-    WebviewWnd* m_wnd = nullptr;
-    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+    AtomicInt m_refCount = 1;
 };
 
 class webview2_history_changed_handler : public ICoreWebView2HistoryChangedEventHandler {
   public:
-    explicit webview2_history_changed_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    explicit webview2_history_changed_handler(HWND hwnd) : m_hwnd(hwnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -601,21 +603,22 @@ class webview2_history_changed_handler : public ICoreWebView2HistoryChangedEvent
         return E_NOINTERFACE;
     }
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, IUnknown* /*args*/) {
-        UpdateWebViewHistory(m_wnd);
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
+        UpdateWebViewHistory(wnd);
         return S_OK;
     }
 
   private:
-    WebviewWnd* m_wnd = nullptr;
-    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+    AtomicInt m_refCount = 1;
 };
 
 class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventHandler {
   public:
-    explicit webview2_new_window_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    explicit webview2_new_window_handler(HWND hwnd) : m_hwnd(hwnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -634,25 +637,26 @@ class webview2_new_window_handler : public ICoreWebView2NewWindowRequestedEventH
         return E_NOINTERFACE;
     }
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2NewWindowRequestedEventArgs* args) {
-        if (!args || !m_wnd || !m_wnd->events.navigationStarting) {
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
+        if (!args || !wnd || !wnd->events.navigationStarting) {
             return S_OK;
         }
         WCHAR* uri = nullptr;
         if (FAILED(args->get_Uri(&uri)) || !uri) {
             return S_OK;
         }
-        TempStr url = UrlForWebViewEvent(WStr(uri), m_wnd->resourceUriPrefix);
+        TempStr url = UrlForWebViewEvent(WStr(uri), wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
         args->put_Handled(TRUE);
         if (url) {
-            m_wnd->events.navigationStarting(m_wnd->events.ctx, url, true);
+            wnd->events.navigationStarting(wnd->events.ctx, url, true);
         }
         return S_OK;
     }
 
   private:
-    WebviewWnd* m_wnd = nullptr;
-    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+    AtomicInt m_refCount = 1;
 };
 
 // Used when routeDownloadsToOsBrowser is set: cancel the in-webview download
@@ -671,10 +675,10 @@ static bool ShouldOpenWebViewDownloadInOsBrowser(WStr uri, WStr resourceUriPrefi
 
 class webview2_download_starting_handler : public ICoreWebView2DownloadStartingEventHandler {
   public:
-    explicit webview2_download_starting_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    explicit webview2_download_starting_handler(HWND hwnd) : m_hwnd(hwnd) {}
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -710,8 +714,9 @@ class webview2_download_starting_handler : public ICoreWebView2DownloadStartingE
         if (FAILED(hr) || !uri) {
             return S_OK;
         }
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
         WStr uriW = WStr(uri);
-        WStr prefix = m_wnd ? m_wnd->resourceUriPrefix : WStr{};
+        WStr prefix = wnd ? wnd->resourceUriPrefix : WStr{};
         if (ShouldOpenWebViewDownloadInOsBrowser(uriW, prefix)) {
             TempStr url = ToUtf8Temp(uriW);
             logf("WebView2: routing download to OS browser: '%s'\n", url);
@@ -724,8 +729,8 @@ class webview2_download_starting_handler : public ICoreWebView2DownloadStartingE
     }
 
   private:
-    WebviewWnd* m_wnd = nullptr;
-    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+    AtomicInt m_refCount = 1;
 };
 
 class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler {
@@ -734,10 +739,10 @@ class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
 
     explicit webview2_env_handler(env_ready_cb_t cb) : m_cb(cb) {}
 
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
 
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -766,7 +771,7 @@ class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
 
   private:
     env_ready_cb_t m_cb;
-    ULONG m_refCount = 1;
+    AtomicInt m_refCount = 1;
 };
 
 static TempWStr MimeHeaderFromContentType(Str contentType) {
@@ -845,11 +850,11 @@ static bool CreateWebResourceResponseFromData(ICoreWebView2WebResourceRequestedE
 
 class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventHandler {
   public:
-    explicit webview2_resource_handler(WebviewWnd* wnd) : m_wnd(wnd) {}
+    explicit webview2_resource_handler(HWND hwnd) : m_hwnd(hwnd) {}
 
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -869,7 +874,8 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
     }
 
     HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2WebResourceRequestedEventArgs* args) {
-        if (!args || !m_wnd || !m_wnd->resourceProvider.getResource || len(m_wnd->resourceUriPrefix) == 0) {
+        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
+        if (!args || !wnd || !wnd->resourceProvider.getResource || len(wnd->resourceUriPrefix) == 0) {
             return S_OK;
         }
 
@@ -886,7 +892,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
             return S_OK;
         }
 
-        TempWStr pathW = UriPathFromPrefix(WStr(uri), m_wnd->resourceUriPrefix);
+        TempWStr pathW = UriPathFromPrefix(WStr(uri), wnd->resourceUriPrefix);
         CoTaskMemFree(uri);
         if (len(pathW) == 0) {
             return S_OK;
@@ -894,7 +900,7 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
 
         TempStr path = ToUtf8Temp(pathW);
         WebViewResourceResult res;
-        if (!m_wnd->resourceProvider.getResource(m_wnd->resourceProvider.ctx, path, &res)) {
+        if (!wnd->resourceProvider.getResource(wnd->resourceProvider.ctx, path, &res)) {
             CreateWebResourceResponseFromData(args, {}, StrL("text/plain"), 404);
             return S_OK;
         }
@@ -908,16 +914,16 @@ class webview2_resource_handler : public ICoreWebView2WebResourceRequestedEventH
     }
 
   private:
-    WebviewWnd* m_wnd = nullptr;
-    ULONG m_refCount = 1;
+    HWND m_hwnd = nullptr;
+    AtomicInt m_refCount = 1;
 };
 
 class webview2_try_suspend_handler : public ICoreWebView2TrySuspendCompletedHandler {
   public:
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
 
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -940,15 +946,15 @@ class webview2_try_suspend_handler : public ICoreWebView2TrySuspendCompletedHand
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT /*errorCode*/, BOOL /*isSuccessful*/) { return S_OK; }
 
   private:
-    ULONG m_refCount = 1;
+    AtomicInt m_refCount = 1;
 };
 
 // trivial completion handler for ICoreWebView2Find::Start (we don't need the result)
 class webview2_find_start_handler : public ICoreWebView2FindStartCompletedHandler {
   public:
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -969,7 +975,7 @@ class webview2_find_start_handler : public ICoreWebView2FindStartCompletedHandle
     HRESULT STDMETHODCALLTYPE Invoke(HRESULT /*errorCode*/) { return S_OK; }
 
   private:
-    ULONG m_refCount = 1;
+    AtomicInt m_refCount = 1;
 };
 
 // Receives the id WebView2 assigns to a script passed to
@@ -981,9 +987,9 @@ class webview2_add_script_handler : public ICoreWebView2AddScriptToExecuteOnDocu
   public:
     webview2_add_script_handler(HWND hwnd, int token) : m_hwnd(hwnd), m_token(token) {}
 
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -1015,7 +1021,7 @@ class webview2_add_script_handler : public ICoreWebView2AddScriptToExecuteOnDocu
     }
 
   private:
-    ULONG m_refCount = 1;
+    AtomicInt m_refCount = 1;
     HWND m_hwnd = nullptr;
     int m_token = 0;
 };
@@ -1027,9 +1033,9 @@ class webview2_process_failed_handler : public ICoreWebView2ProcessFailedEventHa
   public:
     explicit webview2_process_failed_handler(HWND hwnd) : m_hwnd(hwnd) {}
 
-    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
     ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = --m_refCount;
+        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
         if (n == 0) {
             delete this;
         }
@@ -1073,7 +1079,7 @@ class webview2_process_failed_handler : public ICoreWebView2ProcessFailedEventHa
     }
 
   private:
-    ULONG m_refCount = 1;
+    AtomicInt m_refCount = 1;
     HWND m_hwnd = nullptr;
 };
 
@@ -1284,7 +1290,7 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     }
 
     {
-        webview2_accel_handler* accelHandler = new webview2_accel_handler(hwnd, this);
+        webview2_accel_handler* accelHandler = new webview2_accel_handler(hwnd);
         ::EventRegistrationToken token = {};
         controller->add_AcceleratorKeyPressed(accelHandler, &token);
         accelHandler->Release();
@@ -1300,7 +1306,7 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
         } else {
             webview->AddWebResourceRequestedFilter(filter.s, COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
         }
-        auto* resourceHandler = new webview2_resource_handler(this);
+        auto* resourceHandler = new webview2_resource_handler(hwnd);
         ::EventRegistrationToken resourceToken = {};
         webview->add_WebResourceRequested(resourceHandler, &resourceToken);
         resourceHandler->Release();
@@ -1309,20 +1315,20 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     if (events.navigationStarting || events.navigationCompleted || events.historyChanged) {
         ::EventRegistrationToken token = {};
         if (events.navigationStarting) {
-            auto* handler = new webview2_navigation_starting_handler(this);
+            auto* handler = new webview2_navigation_starting_handler(hwnd);
             webview->add_NavigationStarting(handler, &token);
             handler->Release();
-            auto* newWindowHandler = new webview2_new_window_handler(this);
+            auto* newWindowHandler = new webview2_new_window_handler(hwnd);
             webview->add_NewWindowRequested(newWindowHandler, &token);
             newWindowHandler->Release();
         }
         if (events.navigationCompleted) {
-            auto* handler = new webview2_navigation_completed_handler(this);
+            auto* handler = new webview2_navigation_completed_handler(hwnd);
             webview->add_NavigationCompleted(handler, &token);
             handler->Release();
         }
         if (events.historyChanged) {
-            auto* handler = new webview2_history_changed_handler(this);
+            auto* handler = new webview2_history_changed_handler(hwnd);
             webview->add_HistoryChanged(handler, &token);
             handler->Release();
         }
@@ -1332,7 +1338,7 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     if (routeDownloadsToOsBrowser) {
         ICoreWebView2_4* wv4 = nullptr;
         if (SUCCEEDED(webview->QueryInterface(IID_PPV_ARGS(&wv4))) && wv4) {
-            auto* handler = new webview2_download_starting_handler(this);
+            auto* handler = new webview2_download_starting_handler(hwnd);
             ::EventRegistrationToken token = {};
             if (FAILED(wv4->add_DownloadStarting(handler, &token))) {
                 logf("WebviewWnd: add_DownloadStarting failed\n");
@@ -1357,6 +1363,10 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
     RebuildBindScript();
     initStarted = true;
     FlushPendingOps();
+
+    if (desiredZoomPercent != 100) {
+        controller->put_ZoomFactor((double)desiredZoomPercent / 100.0);
+    }
 
     // honor desiredVisible (SetControllerVisible) so BrowserDocView can create
     // hidden during a tab probe without the async ready callback showing it
@@ -1660,6 +1670,7 @@ void WebviewWnd::GoForward() {
 }
 
 void WebviewWnd::SetZoomPercent(int zoom) {
+    desiredZoomPercent = zoom;
     if (controller) {
         double factor = (double)zoom / 100.0;
         controller->put_ZoomFactor(factor);
@@ -1668,7 +1679,7 @@ void WebviewWnd::SetZoomPercent(int zoom) {
 
 int WebviewWnd::GetZoomPercent() const {
     if (!controller) {
-        return 100;
+        return desiredZoomPercent;
     }
     double factor = 1.0;
     controller->get_ZoomFactor(&factor);
@@ -2152,7 +2163,13 @@ void WebviewWnd::OnSize(WindowBase::SizeEvent* ev) {
         return;
     }
     if (ev->msg == WM_SIZE) {
-        SetControllerVisible(ev->type != SIZE_MINIMIZED);
+        if (ev->type == SIZE_MINIMIZED) {
+            bool prevDesired = desiredVisible;
+            SetControllerVisible(false);
+            desiredVisible = prevDesired;
+        } else if (desiredVisible && ShouldWebviewBeVisible(hwnd)) {
+            SetControllerVisible(true);
+        }
         if (!isInSizeMove) {
             UpdateWebviewSize();
         }

@@ -219,7 +219,7 @@ struct VirtCtrl : ILayout {
     bool IsHitTestable() const;
     void SetFlag(u32 f, bool on);
     bool HasFlag(u32 f) const;
-    void SetRoot(VirtRoot*);
+    virtual void SetRoot(VirtRoot*);
 
     // input / focus / cursor (wire with MkMethod1 in ctors; paint stays virtual)
     // high-level click: if set and onMouseUp is not, mouse down/up call this
@@ -400,6 +400,7 @@ struct ScrollBox : VirtCtrl {
 
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
+    void SetRoot(VirtRoot*) override;
     Point ScrollOffset() override;
     void Paint(VirtPaintCtx&) override;
     int MinIntrinsicHeight(int width) override;

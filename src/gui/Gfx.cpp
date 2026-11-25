@@ -64,7 +64,7 @@ void GfxHdc::DrawDashedRect(const Rect& r, Color col) {
     AutoDeletePen pen(CreatePen(PS_DASH, 1, col));
     AutoRestoreGdiObject restorePen(hdc, pen);
     AutoRestoreGdiObject restoreBrush(hdc, GetStockObject(HOLLOW_BRUSH));
-    Rectangle(hdc, r.x, r.y, r.Right() + 1, r.Bottom() + 1);
+    Rectangle(hdc, r.x, r.y, r.Right(), r.Bottom());
 }
 
 // how wide the thing the DC draws into is, for mirroring

@@ -1687,6 +1687,18 @@ void ScrollBox::SetBounds(Rect r) {
     UpdateScrollbar();
 }
 
+void ScrollBox::SetRoot(VirtRoot* r) {
+    VirtCtrl::SetRoot(r);
+    if (!child) {
+        return;
+    }
+    Vec<VirtCtrl*> inner;
+    CollectVirtCtrls(child, inner);
+    for (VirtCtrl* w : inner) {
+        w->SetRoot(r);
+    }
+}
+
 Point ScrollBox::ScrollOffset() {
     return {0, scrollY};
 }

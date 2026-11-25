@@ -886,6 +886,10 @@ class HW_IDropTarget : public IDropTarget {
 
     STDMETHODIMP DragEnter(IDataObject* pDataObj, __unused DWORD grfKeyState, __unused POINTL pt,
                            DWORD* pdwEffect) override {
+        if (!fs->htmlWindow) {
+            *pdwEffect = DROPEFFECT_NONE;
+            return S_OK;
+        }
         HRESULT hr = fs->htmlWindow->OnDragEnter(pDataObj);
         if (SUCCEEDED(hr)) {
             *pdwEffect = DROPEFFECT_COPY;
@@ -893,12 +897,16 @@ class HW_IDropTarget : public IDropTarget {
         return hr;
     }
     STDMETHODIMP DragOver(__unused DWORD grfKeyState, __unused POINTL pt, DWORD* pdwEffect) override {
-        *pdwEffect = DROPEFFECT_COPY;
+        *pdwEffect = fs->htmlWindow ? DROPEFFECT_COPY : DROPEFFECT_NONE;
         return S_OK;
     }
     STDMETHODIMP DragLeave() override { return S_OK; }
     STDMETHODIMP Drop(IDataObject* pDataObj, __unused DWORD grfKeyState, __unused POINTL pt,
                       DWORD* pdwEffect) override {
+        if (!fs->htmlWindow) {
+            *pdwEffect = DROPEFFECT_NONE;
+            return S_OK;
+        }
         *pdwEffect = DROPEFFECT_COPY;
         return fs->htmlWindow->OnDragDrop(pDataObj);
     }
@@ -1230,7 +1238,7 @@ void HtmlWindow::SubclassHwnd() {
         logf("HtmlWindow::SubclassHwnd: SetWindowSubclass() failed, err: %d\n", (int)GetLastError());
         subclassId = 0;
     }
-    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
+    // subclassId already holds this via SetWindowSubclass dwRefData
 }
 
 void HtmlWindow::UnsubclassHwnd() {
@@ -1238,10 +1246,6 @@ void HtmlWindow::UnsubclassHwnd() {
         return;
     }
     RemoveWindowSubclass(hwndParent, WndProcParent2, subclassId);
-    auto* curr = (HtmlWindow*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
-    if (curr == this) {
-        SetWindowLongPtr(hwndParent, GWLP_USERDATA, 0);
-    }
     subclassId = 0;
 }
 
@@ -1279,7 +1283,7 @@ bool HtmlWindow::CreateBrowser() {
     bool invisibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
 
     FrameSite* fs = new FrameSite(this);
-    AutoReleaseComPtr<IUnknown> fsScope(fs);
+    frameSite = fs;
 
     if (setClientSiteFirst) {
         oleObject->SetClientSite(fs->oleClientSite);
@@ -1420,6 +1424,12 @@ HtmlWindow::~HtmlWindow() {
         browser->Release();
     }
 
+    if (frameSite) {
+        frameSite->htmlWindow = nullptr;
+        frameSite->Release();
+        frameSite = nullptr;
+    }
+
     FreeWindowId(windowId);
     UnregisterInternetProtocolFactory();
     FreeHtmlSetInProgressData();
@@ -1492,24 +1502,33 @@ void HtmlWindow::GoForward() {
 }
 
 int HtmlWindow::GetZoomPercent() {
+    if (!webBrowser) {
+        return 100;
+    }
     VARIANT vtOut{};
     HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, nullptr, &vtOut);
-    if (FAILED(hr)) {
+    if (FAILED(hr) || vtOut.vt != VT_I4) {
+        VariantClear(&vtOut);
         return 100;
     }
     int zoom = vtOut.lVal;
+    VariantClear(&vtOut);
     ReportIf(zoomDPI < 96);
     zoom = (zoom * 96) / zoomDPI; // undo what we do in SetZoomPercent()
     return zoom;
 }
 
 void HtmlWindow::SetZoomPercent(int zoom) {
+    if (!webBrowser) {
+        return;
+    }
     VARIANT vtIn{};
     VARIANT vtOut{};
     ReportIf(zoomDPI < 96);
     zoom = (zoom * zoomDPI) / 96;
     VariantSetLong(&vtIn, zoom);
     webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vtIn, &vtOut);
+    VariantClear(&vtOut);
 }
 
 void HtmlWindow::PrintCurrentPage(bool showUI) {
@@ -2008,6 +2027,9 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
                                       __unused unsigned int* puArgErr) {
     if (flags & DISPATCH_PROPERTYGET) {
         return DispatchPropGet(dispIdMember, pVarResult);
+    }
+    if (!fs->htmlWindow) {
+        return S_OK;
     }
 
     switch (dispIdMember) {
