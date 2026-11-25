@@ -45,13 +45,3 @@ void Progress::SetMax(int newMax) {
 void Progress::SetCurrent(int newCurrent) {
     SendMessageW(hwnd, PBM_SETPOS, newCurrent, 0);
 }
-
-int Progress::GetMax() {
-    auto max = (int)SendMessageW(hwnd, PBM_GETRANGE, FALSE /* get high limit */, 0);
-    return max;
-}
-
-int Progress::GetCurrent() {
-    auto current = (int)SendMessageW(hwnd, PBM_GETPOS, 0, 0);
-    return current;
-}

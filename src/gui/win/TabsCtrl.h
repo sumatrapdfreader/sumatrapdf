@@ -17,8 +17,6 @@ struct VirtRoot;
 struct VirtCloseButton;
 struct VirtMouseEvent;
 
-constexpr Color kTabDefaultBgCol = (Color)-1;
-
 struct TabInfo {
     Str text;
     Str tooltip;
@@ -194,7 +192,6 @@ struct TabsCtrl : VirtCtrl {
     int InsertTab(int idx, TabInfo*, bool update = true);
     TabInfo* GetTab(int idx);
     int TabDx(int idx);
-    void SwapTabs(int idx1, int idx2);
 
     void SetTextAndTooltip(int idx, Str text, Str tooltip);
     void SetPageText(int idx, Str);

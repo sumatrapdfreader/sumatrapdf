@@ -582,19 +582,6 @@ void TreeView::SetTreeModel(TreeModel* tm) {
     RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
-void TreeView::SetState(TreeItem item, bool enable) {
-    HTREEITEM hi = GetHandleByTreeItem(item);
-    ReportIf(!hi);
-    TreeView_SetCheckState(hwnd, hi, enable);
-}
-
-bool TreeView::GetState(TreeItem item) {
-    HTREEITEM hi = GetHandleByTreeItem(item);
-    ReportIf(!hi);
-    auto res = TreeView_GetCheckState(hwnd, hi);
-    return res != 0;
-}
-
 // if context menu invoked via keyboard, get selected item
 // if via right-click, selects the item under the cursor
 // in both cases can return null

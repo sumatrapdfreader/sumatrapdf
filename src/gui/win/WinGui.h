@@ -179,9 +179,6 @@ struct WindowBase : HwndBase {
     struct DestroyEvent {
         WmEvent* e = nullptr;
     };
-    struct AttachEvent {
-        WindowBase* w = nullptr;
-    };
     struct FocusEvent {
         WindowBase* w = nullptr;
     };
@@ -230,11 +227,6 @@ struct WindowBase : HwndBase {
         LPARAM lparam = 0;
         bool didHandle = false;
     };
-    struct CreateEvent {
-        WindowBase* w = nullptr;
-        CREATESTRUCT* cs = nullptr;
-        int result = 0;
-    };
     struct DropFilesEvent {
         WindowBase* w = nullptr;
         HDROP dropInfo = nullptr;
@@ -242,14 +234,6 @@ struct WindowBase : HwndBase {
     struct GetMinMaxInfoEvent {
         WindowBase* w = nullptr;
         MINMAXINFO* mmi = nullptr;
-    };
-    struct MouseEvent {
-        WindowBase* w = nullptr;
-        UINT msg = 0;
-        WPARAM wparam = 0;
-        LPARAM lparam = 0;
-        LRESULT result = 0;
-        bool didHandle = false;
     };
     struct MoveEvent {
         WindowBase* w = nullptr;
@@ -265,11 +249,6 @@ struct WindowBase : HwndBase {
         UINT msg = 0;
         UINT type = 0;
         Size size;
-    };
-    struct TaskbarCallbackEvent {
-        WindowBase* w = nullptr;
-        UINT msg = 0;
-        LPARAM lparam = 0;
     };
     struct TimerEvent {
         WindowBase* w = nullptr;
@@ -302,7 +281,6 @@ struct WindowBase : HwndBase {
 
     using CloseHandler = Func1<CloseEvent*>;
     using DestroyHandler = Func1<DestroyEvent*>;
-    using AttachHandler = Func1<AttachEvent*>;
     using FocusHandler = Func1<FocusEvent*>;
     using ActivateHandler = Func1<ActivateEvent*>;
     using DpiChangedHandler = Func1<DpiChangedEvent*>;
@@ -310,14 +288,11 @@ struct WindowBase : HwndBase {
     using NcHitTestHandler = Func1<NcHitTestEvent*>;
     using ShowWindowHandler = Func1<ShowWindowEvent*>;
     using CommandHandler = Func1<CommandEvent*>;
-    using CreateHandler = Func1<CreateEvent*>;
     using DropFilesHandler = Func1<DropFilesEvent*>;
     using GetMinMaxInfoHandler = Func1<GetMinMaxInfoEvent*>;
-    using MouseHandler = Func1<MouseEvent*>;
     using MoveHandler = Func1<MoveEvent*>;
     using PaintHandler = Func1<PaintEvent*>;
     using SizeHandler = Func1<SizeEvent*>;
-    using TaskbarCallbackHandler = Func1<TaskbarCallbackEvent*>;
     using TimerHandler = Func1<TimerEvent*>;
     using WindowPosChangingHandler = Func1<WindowPosChangingEvent*>;
     using WndProcHandler = Func1<WndProcEvent*>;
@@ -458,9 +433,6 @@ struct ControlBase : ILayout, HwndBase {
     struct DestroyEvent {
         WmEvent* e = nullptr;
     };
-    struct AttachEvent {
-        ControlBase* w = nullptr;
-    };
     struct FocusEvent {
         ControlBase* w = nullptr;
     };
@@ -468,19 +440,6 @@ struct ControlBase : ILayout, HwndBase {
         ControlBase* w = nullptr;
         WPARAM wparam = 0;
         LPARAM lparam = 0;
-        bool didHandle = false;
-    };
-    struct CreateEvent {
-        ControlBase* w = nullptr;
-        CREATESTRUCT* cs = nullptr;
-        int result = 0;
-    };
-    struct MouseEvent {
-        ControlBase* w = nullptr;
-        UINT msg = 0;
-        WPARAM wparam = 0;
-        LPARAM lparam = 0;
-        LRESULT result = 0;
         bool didHandle = false;
     };
     struct PaintEvent {
@@ -528,11 +487,8 @@ struct ControlBase : ILayout, HwndBase {
     };
 
     using DestroyHandler = Func1<DestroyEvent*>;
-    using AttachHandler = Func1<AttachEvent*>;
     using FocusHandler = Func1<FocusEvent*>;
     using CommandHandler = Func1<CommandEvent*>;
-    using CreateHandler = Func1<CreateEvent*>;
-    using MouseHandler = Func1<MouseEvent*>;
     using PaintHandler = Func1<PaintEvent*>;
     using SizeHandler = Func1<SizeEvent*>;
     using TimerHandler = Func1<TimerEvent*>;
@@ -663,7 +619,6 @@ struct Tooltip : ControlBase {
     TempStr GetTextTemp(int id = 0);
 
     void SetDelayTime(int type, int timeInMs);
-    void SetMaxWidth(int dx);
 
     // window this tooltip is associated with
     HWND parent = nullptr;
@@ -850,8 +805,6 @@ struct Progress : ControlBase {
 
     void SetMax(int);
     void SetCurrent(int);
-    int GetMax();
-    int GetCurrent();
 
     Size GetIdealSize() override;
 };
@@ -1019,8 +972,6 @@ struct TreeView : ControlBase {
     TreeItem GetItemAt(int x, int y);
     TreeItem GetTreeItemByHandle(HTREEITEM item);
     void SetTreeModel(TreeModel* tm);
-    void SetState(TreeItem item, bool enable);
-    bool GetState(TreeItem item);
     void SetWrapText(bool wrap);
     void RemeasureItems();
     int ItemLines(TreeItem ti, int depth);

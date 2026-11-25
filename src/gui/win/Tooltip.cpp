@@ -239,10 +239,6 @@ Size Tooltip::GetIdealSize() {
     return {100, 32};
 }
 
-void Tooltip::SetMaxWidth(int dx) {
-    SendMessageW(hwnd, TTM_SETMAXTIPWIDTH, 0, dx);
-}
-
 int Tooltip::Add(Str s, const Rect& rc, bool multiline) {
     TooltipApplyColors(hwnd);
     int id = GetNextTooltipID();

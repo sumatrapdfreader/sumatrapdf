@@ -80,10 +80,6 @@ static void HwndListAdd(HwndBase* w) {
 
 //- Taskbar.cpp
 
-constexpr DWORD kWmTaskbarCallback = WM_APP + 0x15;
-const DWORD kWmTaskbarCreated = ::RegisterWindowMessage(L"TaskbarCreated");
-const DWORD kWmTaskbarButtonCreated = ::RegisterWindowMessage(L"TaskbarButtonCreated");
-
 //--- HwndBase
 
 static LRESULT CALLBACK WndBaseWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
