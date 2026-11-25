@@ -120,8 +120,21 @@ static LRESULT CALLBACK WndBaseWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
 }
 
 static LRESULT CALLBACK WndBaseSubclassedWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
-                                                    DWORD_PTR /*data*/) {
-    return WndBaseWindowProc(hwnd, msg, wp, lp);
+                                                    DWORD_PTR data) {
+    if (!IsWindow(hwnd)) {
+        return 0;
+    }
+    auto* w = (HwndBase*)data;
+    if (!w || w->hwnd != hwnd) {
+        return ::DefSubclassProc(hwnd, msg, wp, lp);
+    }
+    LRESULT res = w->OnMessage(hwnd, msg, wp, lp);
+    if (msg == WM_NCDESTROY && w->hwnd == hwnd) {
+        HwndListRemove(w);
+        w->subclassId = 0;
+        w->hwnd = nullptr;
+    }
+    return res;
 }
 
 static void RegisterWndClass(WStr className) {

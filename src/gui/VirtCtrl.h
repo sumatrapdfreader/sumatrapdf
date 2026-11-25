@@ -872,6 +872,12 @@ struct VirtRichText : VirtCtrl {
     int totalDy = 0;
     // the width the words were last laid out for
     int layoutDx = -1;
+    // word measurements cached for (measuredFont, measuredDpi) so width-only
+    // relayouts skip re-measuring every word
+    bool wordsMeasured = false;
+    PlatformFont* measuredFont = nullptr;
+    int measuredDpi = 0;
+    int measuredSpaceWidth = 0;
 
     PlatformFont* font = nullptr; // not owned
     // colors: kColRich*

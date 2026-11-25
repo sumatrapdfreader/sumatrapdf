@@ -146,41 +146,44 @@ static void D2DNoteBind(ID2D1DCRenderTarget* t, int dx, int dy) {
 static ID2D1DCRenderTarget* D2DAcquireDcTarget(int dx, int dy, bool* owned) {
     *owned = true;
     int empty = -1;
-    int wrongSize = -1;
+    int reuse = -1;
     for (int i = 0; i < kD2DTargetPool; i++) {
         if (gD2DSlots[i].inUse) {
             continue;
         }
-        if (gD2DSlots[i].target && gD2DSlots[i].dx == dx && gD2DSlots[i].dy == dy) {
-            gD2DSlots[i].inUse = true;
-            *owned = false;
-            return gD2DSlots[i].target;
-        }
-        if (!gD2DSlots[i].target) {
-            if (empty < 0) {
-                empty = i;
+        if (gD2DSlots[i].target) {
+            if (gD2DSlots[i].dx == dx && gD2DSlots[i].dy == dy) {
+                gD2DSlots[i].inUse = true;
+                *owned = false;
+                return gD2DSlots[i].target;
             }
-        } else if (wrongSize < 0) {
-            wrongSize = i;
+            if (reuse < 0) {
+                reuse = i;
+            }
+        } else if (empty < 0) {
+            empty = i;
         }
+    }
+    if (reuse >= 0) {
+        gD2DSlots[reuse].inUse = true;
+        gD2DSlots[reuse].dx = dx;
+        gD2DSlots[reuse].dy = dy;
+        *owned = false;
+        return gD2DSlots[reuse].target;
     }
 
     ID2D1DCRenderTarget* t = D2DCreateDcTarget();
     if (!t) {
         return nullptr;
     }
-    int slot = empty >= 0 ? empty : wrongSize;
-    if (slot < 0) {
+    if (empty < 0) {
         *owned = true;
         return t;
     }
-    if (gD2DSlots[slot].target) {
-        gD2DSlots[slot].target->Release();
-    }
-    gD2DSlots[slot].target = t;
-    gD2DSlots[slot].inUse = true;
-    gD2DSlots[slot].dx = dx;
-    gD2DSlots[slot].dy = dy;
+    gD2DSlots[empty].target = t;
+    gD2DSlots[empty].inUse = true;
+    gD2DSlots[empty].dx = dx;
+    gD2DSlots[empty].dy = dy;
     *owned = false;
     return t;
 }
@@ -411,6 +414,10 @@ GfxDirect2D::~GfxDirect2D() {
         dottedStroke->Release();
         dottedStroke = nullptr;
     }
+    if (dashedStroke) {
+        dashedStroke->Release();
+        dashedStroke = nullptr;
+    }
     if (!target) {
         return;
     }
@@ -593,17 +600,15 @@ void GfxDirect2D::DrawDashedRect(const Rect& r, Color col) {
     if (!br) {
         return;
     }
-    D2D1_STROKE_STYLE_PROPERTIES props = D2D1::StrokeStyleProperties();
-    props.dashStyle = D2D1_DASH_STYLE_DASH;
-    ID2D1StrokeStyle* stroke = nullptr;
-    gD2DFactory->CreateStrokeStyle(props, nullptr, 0, &stroke);
+    if (!dashedStroke) {
+        D2D1_STROKE_STYLE_PROPERTIES props = D2D1::StrokeStyleProperties();
+        props.dashStyle = D2D1_DASH_STYLE_DASH;
+        gD2DFactory->CreateStrokeStyle(props, nullptr, 0, &dashedStroke);
+    }
     D2D1_RECT_F rf =
         D2D1::RectF((float)r.x + 0.5f, (float)r.y + 0.5f, (float)r.Right() - 0.5f, (float)r.Bottom() - 0.5f);
     target->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
-    target->DrawRectangle(rf, br, 1.0f, stroke);
-    if (stroke) {
-        stroke->Release();
-    }
+    target->DrawRectangle(rf, br, 1.0f, dashedStroke);
 }
 
 void GfxDirect2D::FillRoundedRect(const Rect& r, int radius, Color fill, Color border) {

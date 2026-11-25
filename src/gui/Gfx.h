@@ -190,6 +190,7 @@ struct GfxDirect2D : Gfx {
     bool ownsTarget = true;                // false when borrowed from the DC-target pool
     ID2D1SolidColorBrush* brush = nullptr; // owned, re-colored per draw
     ID2D1StrokeStyle* dottedStroke = nullptr;
+    ID2D1StrokeStyle* dashedStroke = nullptr;
     bool drawing = false; // between BeginDraw() and EndDraw()
     // d2d has no "current text color", so kColorUnset resolves to this
     Color textColor = 0;

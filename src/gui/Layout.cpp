@@ -1309,6 +1309,26 @@ Rect Table::CellRect(int row, int col) {
     return {x, y, dx, dy};
 }
 
+static void ComputeTrackStarts(const Vec<int>& tracks, int gap, Vec<int>& out) {
+    int nTracks = len(tracks);
+    VecClear(out);
+    VecAppendBlanks(out, nTracks);
+    int pos = 0;
+    int nonEmpty = 0;
+    for (int i = 0; i < nTracks; i++) {
+        if (tracks[i] > 0) {
+            if (nonEmpty > 0) {
+                pos += gap;
+            }
+            out[i] = pos;
+            pos += tracks[i];
+            nonEmpty++;
+        } else {
+            out[i] = pos;
+        }
+    }
+}
+
 void Table::SetBounds(Rect r) {
     lastBounds = r;
     if (len(colWidths) != cols || len(rowHeights) != rows) {
@@ -1316,17 +1336,26 @@ void Table::SetBounds(Rect r) {
         Measure();
     }
     int savedLastCol = cols > 0 ? colWidths[cols - 1] : 0;
-    int extraDx = ContentRect().dx - TracksSize(colWidths, 0, cols, colGap);
+    Rect content = ContentRect();
+    int extraDx = content.dx - TracksSize(colWidths, 0, cols, colGap);
     if (extraDx > 0 && cols > 0) {
         colWidths[cols - 1] += extraDx;
     }
+    Vec<int> colX;
+    Vec<int> rowY;
+    ComputeTrackStarts(colWidths, colGap, colX);
+    ComputeTrackStarts(rowHeights, rowGap, rowY);
     for (int row = 0; row < rows; row++) {
         for (int col = 0; col < cols; col++) {
             TableCell& cell = cells[CellIdx(row, col)];
             if (!cell.child || IsCollapsed(cell.child)) {
                 continue;
             }
-            Rect cellRc = CellRect(row, col);
+            int x = content.x + colX[col];
+            int y = content.y + rowY[row];
+            int dx = cell.colSpan == 1 ? colWidths[col] : TracksSize(colWidths, col, cell.colSpan, colGap);
+            int dy = cell.rowSpan == 1 ? rowHeights[row] : TracksSize(rowHeights, row, cell.rowSpan, rowGap);
+            Rect cellRc{x, y, dx, dy};
             cell.child->SetBounds(AlignInCell(cellRc, cell.childSize, cell.alignH, cell.alignV));
         }
     }

@@ -123,9 +123,11 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         case WM_MOUSEMOVE: {
             // posted moves (tests) are not the real cursor; TME_LEAVE would
             // fire at once and cancel a hover the move just started
-            if (HwndWindowRect(hwnd).Contains(GetCursorPosition())) {
+            if (!host->trackingMouse && HwndWindowRect(hwnd).Contains(GetCursorPosition())) {
                 TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT), TME_LEAVE, hwnd, 0};
-                TrackMouseEvent(&tme);
+                if (TrackMouseEvent(&tme)) {
+                    host->trackingMouse = true;
+                }
             }
             Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
             UnmirrorRtl(hwnd, pt);
@@ -136,6 +138,7 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             break;
         }
         case WM_MOUSELEAVE:
+            host->trackingMouse = false;
             // SetCursorPos inside the window still posts leave. Re-arming from
             // this message posts leave again and starves timers; the next move re-arms.
             if (HwndWindowRect(hwnd).Contains(GetCursorPosition())) {

@@ -1638,8 +1638,13 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject* dataObj) {
 }
 
 LRESULT HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
-    HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
-    return SendMessageW(hwndBrowser, msg, wp, lp);
+    if (!browserControlHwnd || !::IsWindow(browserControlHwnd)) {
+        browserControlHwnd = GetBrowserControlHwnd(hwndParent);
+    }
+    if (!browserControlHwnd) {
+        return 0;
+    }
+    return SendMessageW(browserControlHwnd, msg, wp, lp);
 }
 
 FrameSite::FrameSite(HtmlWindow* win) {

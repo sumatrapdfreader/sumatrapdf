@@ -394,29 +394,48 @@ static int ItemDepth(HWND hwnd, HTREEITEM h) {
     return depth;
 }
 
+struct TreeMeasureMetrics {
+    int clientDx = 0;
+    int indent = 0;
+    int left0 = 0;
+};
+
+static TreeMeasureMetrics GetTreeMeasureMetrics(HWND hwnd) {
+    TreeMeasureMetrics m;
+    m.clientDx = HwndClientRect(hwnd).dx;
+    if (m.clientDx <= 0) {
+        return m;
+    }
+    m.indent = TreeView_GetIndent(hwnd);
+    m.left0 = m.indent;
+    HTREEITEM root = TreeView_GetRoot(hwnd);
+    RECT rc{};
+    if (root && TreeView_GetItemRect(hwnd, root, &rc, TRUE)) {
+        m.left0 = rc.left;
+    }
+    return m;
+}
+
+static int MeasureItemLinesWithMetrics(TreeView* tv, TreeItem ti, int depth, const TreeMeasureMetrics& m) {
+    if (m.clientDx <= 0) {
+        return 1;
+    }
+    TreeView::MeasureLinesEvent ev;
+    ev.treeView = tv;
+    ev.treeItem = ti;
+    ev.availDx = m.clientDx - (m.left0 + depth * m.indent);
+    tv->onMeasureLines.Call(&ev);
+    return std::max(ev.lines, 1);
+}
+
 // wrapText: the rows an item at this depth needs at the tree's width. The text
 // starts one indent further per level than a top-level item's
 int TreeView::ItemLines(TreeItem ti, int depth) {
     if (!wrapText || !onMeasureLines.IsValid()) {
         return 1;
     }
-    Rect cr = HwndClientRect(hwnd);
-    if (cr.dx <= 0) {
-        return 1;
-    }
-    int indent = TreeView_GetIndent(hwnd);
-    int left0 = indent;
-    HTREEITEM root = TreeView_GetRoot(hwnd);
-    RECT rc{};
-    if (root && TreeView_GetItemRect(hwnd, root, &rc, TRUE)) {
-        left0 = rc.left;
-    }
-    MeasureLinesEvent ev;
-    ev.treeView = this;
-    ev.treeItem = ti;
-    ev.availDx = cr.dx - (left0 + depth * indent);
-    onMeasureLines.Call(&ev);
-    return std::max(ev.lines, 1);
+    TreeMeasureMetrics m = GetTreeMeasureMetrics(hwnd);
+    return MeasureItemLinesWithMetrics(this, ti, depth, m);
 }
 
 // inserting in front is faster:
@@ -443,7 +462,7 @@ static HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM pare
     return res;
 }
 
-static void RemeasureSiblings(TreeView* tv, HTREEITEM first, int depth) {
+static void RemeasureSiblings(TreeView* tv, HTREEITEM first, int depth, const TreeMeasureMetrics& m) {
     HWND hwnd = tv->hwnd;
     for (HTREEITEM h = first; h; h = TreeView_GetNextSibling(hwnd, h)) {
         TVITEMEXW it{};
@@ -452,23 +471,27 @@ static void RemeasureSiblings(TreeView* tv, HTREEITEM first, int depth) {
         if (!TreeView_GetItem(hwnd, &it)) {
             continue;
         }
-        int lines = tv->ItemLines((TreeItem)it.lParam, depth);
+        int lines = MeasureItemLinesWithMetrics(tv, (TreeItem)it.lParam, depth, m);
         if (lines != it.iIntegral) {
             it.mask = TVIF_INTEGRAL;
             it.iIntegral = lines;
             TreeView_SetItem(hwnd, &it);
         }
-        RemeasureSiblings(tv, TreeView_GetChild(hwnd, h), depth + 1);
+        RemeasureSiblings(tv, TreeView_GetChild(hwnd, h), depth + 1, m);
     }
 }
 
 // the width changed: items wrap differently (only the inserted ones, a lazy
 // tree measures the rest when they're inserted)
 void TreeView::RemeasureItems() {
-    if (!wrapText || !hwnd) {
+    if (!wrapText || !hwnd || !onMeasureLines.IsValid()) {
         return;
     }
-    RemeasureSiblings(this, TreeView_GetRoot(hwnd), 0);
+    TreeMeasureMetrics m = GetTreeMeasureMetrics(hwnd);
+    if (m.clientDx <= 0) {
+        return;
+    }
+    RemeasureSiblings(this, TreeView_GetRoot(hwnd), 0, m);
 }
 
 // wrapping rows are several lines tall and never scroll sideways. Takes

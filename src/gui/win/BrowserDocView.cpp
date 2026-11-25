@@ -38,6 +38,7 @@ constexpr const char* kReportScrollJs = R"JS((function(){
       wv.postMessage(JSON.stringify({__sumatraNotify:1,method:"scroll",params:JSON.stringify([x,y])}));
     } catch (e) {}
   };
+  window.__sumatraReportScroll = post;
   if (!window.__sumatraScrollHooked) {
     window.__sumatraScrollHooked = true;
     window.addEventListener("scroll", post, true);
@@ -671,7 +672,7 @@ static Str ScrollJsForKey(WPARAM key) {
 // Scrolls and reports the new position at once: the 'scroll' event waits for a
 // rendering frame, which Chromium skips when the view is occluded or busy.
 void BrowserDocView::EvalScroll(Str js) {
-    wv->Eval(fmt("%s;%s", js, Str(kReportScrollJs)));
+    wv->Eval(fmt("%s;if(window.__sumatraReportScroll)window.__sumatraReportScroll();", js));
 }
 
 LRESULT BrowserDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {

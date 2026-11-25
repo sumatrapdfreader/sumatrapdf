@@ -71,6 +71,7 @@ struct VirtHost {
     Color bgColor = kColorUnset;
     bool noActivate = false;
     bool isPopup = false;
+    bool trackingMouse = false;
     void* userData = nullptr;
 
     // fills the background; the host fills it with bgColor when this is not set

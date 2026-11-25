@@ -48,6 +48,7 @@ class HtmlWindow {
     IConnectionPoint* connectionPoint = nullptr;
     FrameSite* frameSite = nullptr;
     HWND oleObjectHwnd = nullptr;
+    HWND browserControlHwnd = nullptr;
     int zoomDPI = 96;
 
     DWORD adviseCookie = 0;

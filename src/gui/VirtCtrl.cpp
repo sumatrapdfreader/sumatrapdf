@@ -1475,10 +1475,10 @@ Size ScrollBox::Layout(Constraints bc) {
 
 void ScrollBox::SetBounds(Rect r) {
     VirtCtrl::SetBounds(r);
+    scrollY = ClampI(scrollY, 0, MaxScrollY());
     if (child) {
         child->SetBounds({r.x, r.y - scrollY, r.dx, contentSize.dy});
     }
-    ScrollTo(scrollY);
     UpdateScrollbar();
 }
 
@@ -3735,6 +3735,7 @@ static TipWord* AppendTipWord(VirtRichText& tip, Str text) {
         tip.words.next = w;
     }
     tip.lastWord = w;
+    tip.wordsMeasured = false;
     return w;
 }
 
@@ -4124,23 +4125,35 @@ void ParseTipInto(VirtRichText* tipIn, Str s) {
 // measures every word and wraps them into areaWidth. Positions are relative to
 // the control's content origin, so they survive the control being moved
 void VirtRichText::LayoutText(int areaWidth) {
-    if (areaWidth == layoutDx) {
+    int dpi = DpiGet();
+    bool needMeasure = !wordsMeasured || measuredFont != font || measuredDpi != dpi;
+    if (areaWidth == layoutDx && !needMeasure) {
         return;
     }
     layoutDx = areaWidth;
-    PlatformFont* boldFont = nullptr;
-    int kbdPadX = DpiScale(7);
-    // a pixel above/below so descenders and the key-cap border stay inside the
-    // box; both kinds of word get it so they share a baseline when VCentered
-    int padY = DpiScale(1);
-    for (TipWord* w = words.next; w; w = w->next) {
-        if (w->isBold && !boldFont) {
-            boldFont = GetBoldPlatformFont(font);
+    if (needMeasure) {
+        PlatformFont* boldFont = nullptr;
+        int kbdPadX = DpiScale(7);
+        // a pixel above/below so descenders and the key-cap border stay inside the
+        // box; both kinds of word get it so they share a baseline when VCentered
+        int padY = DpiScale(1);
+        for (TipWord* w = words.next; w; w = w->next) {
+            if (w->isBold && !boldFont) {
+                boldFont = GetBoldPlatformFont(font);
+            }
+            PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
+            Size sz = GfxMeasureText(use, w->text);
+            w->dx = sz.dx + (w->isKbd ? (2 * kbdPadX) : 0);
+            w->dy = sz.dy + (2 * padY);
         }
-        PlatformFont* use = (w->isBold && boldFont) ? boldFont : font;
-        Size sz = GfxMeasureText(use, w->text);
-        w->dx = sz.dx + (w->isKbd ? (2 * kbdPadX) : 0);
-        w->dy = sz.dy + (2 * padY);
+        // the font's own space advance: a fixed value doesn't scale with dpi
+        measuredSpaceWidth = GfxMeasureText(font, StrL(" ")).dx;
+        if (measuredSpaceWidth <= 0) {
+            measuredSpaceWidth = DpiScale(4);
+        }
+        measuredFont = font;
+        measuredDpi = dpi;
+        wordsMeasured = true;
     }
 
     int startX = 0;
@@ -4148,11 +4161,7 @@ void VirtRichText::LayoutText(int areaWidth) {
     int x = startX;
     int y = startY;
     int lineHeight = 0;
-    // the font's own space advance: a fixed value doesn't scale with dpi
-    int spaceWidth = GfxMeasureText(font, StrL(" ")).dx;
-    if (spaceWidth <= 0) {
-        spaceWidth = DpiScale(4);
-    }
+    int spaceWidth = measuredSpaceWidth;
     int maxX = startX;
     for (TipWord* w = words.next; w; w = w->next) {
         // space goes before the word, so words abutting the previous token
