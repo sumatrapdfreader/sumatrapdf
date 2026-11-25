@@ -2474,13 +2474,16 @@ static int SplitArchivePath(Str path, Str* parts, int maxParts) {
     return n;
 }
 
-static void TocAppendChild(TocItem* parent, TocItem* child) {
-    child->parent = parent;
-    if (!parent->child) {
-        parent->child = child;
-        return;
-    }
-    parent->child->AddSiblingAtEnd(child);
+struct CbxTocFolder {
+    TocItem* item;
+    TocItem** nextChild;
+    Str name;
+};
+
+static void TocAppendChild(CbxTocFolder& parent, TocItem* child) {
+    child->parent = parent.item;
+    *parent.nextChild = child;
+    parent.nextChild = &child->next;
 }
 
 // Folder-aware ToC from archive member paths (issue #5317). A directory
@@ -2518,8 +2521,9 @@ static TocItem* BuildCbxFolderToc(Arena* arena, const Vec<Archive::FileInfo*>& f
     }
 
     auto* realRoot = AllocTocItem(arena, {}, 0);
-    Vec<TocItem*> stack;
-    Vec<Str> stackNames;
+    CbxTocFolder stack[kMaxArchivePathParts];
+    stack[0] = {realRoot, &realRoot->child, {}};
+    int depth = 0;
     int idCounter = 0;
 
     for (int i = 0; i < nFiles; i++) {
@@ -2530,26 +2534,22 @@ static TocItem* BuildCbxFolderToc(Arena* arena, const Vec<Archive::FileInfo*>& f
         }
         int nDir = n - 1;
         int match = 0;
-        while (match < len(stack) && (common + match) < nDir && str::Eq(stackNames[match], parts[common + match])) {
+        while (match < depth && common + match < nDir && str::Eq(stack[match + 1].name, parts[common + match])) {
             match++;
         }
-        VecRemoveAtN(stack, match, len(stack) - match);
-        VecRemoveAtN(stackNames, match, len(stackNames) - match);
+        depth = match;
 
         for (int k = common + match; k < nDir; k++) {
-            TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);
             TocItem* folder = AllocTocItem(arena, parts[k], i + 1);
             folder->isOpenDefault = true;
             folder->id = ++idCounter;
-            TocAppendChild(parent, folder);
-            VecAppend(stack, folder);
-            VecAppend(stackNames, parts[k]);
+            TocAppendChild(stack[depth], folder);
+            stack[++depth] = {folder, &folder->child, parts[k]};
         }
 
-        TocItem* parent = len(stack) == 0 ? realRoot : VecLast(stack);
         TocItem* leaf = AllocTocItem(arena, parts[n - 1], i + 1);
         leaf->id = ++idCounter;
-        TocAppendChild(parent, leaf);
+        TocAppendChild(stack[depth], leaf);
     }
 
     if (!realRoot->child) {
