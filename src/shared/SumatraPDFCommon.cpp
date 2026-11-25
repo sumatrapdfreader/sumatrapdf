@@ -196,9 +196,7 @@ void InitializePolicies(bool restrict) {
     }
 
     Str restrictData = file::ReadFile(restrictPath);
-    defer {
-        str::Free(restrictData);
-    };
+    AutoFree freeRestrictData(restrictData.s);
     SquareTreeNode* root = ParseSquareTree(restrictData);
     AutoDelete delRoot(root);
     SquareTreeNode* polsec = root ? root->GetChild(StrL("Policies")) : nullptr;

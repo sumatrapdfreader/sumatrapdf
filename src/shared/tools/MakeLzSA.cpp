@@ -222,9 +222,7 @@ static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
 int mainVerify(Str archivePath) {
     int errorStep = 1;
     Str fileData = file::ReadFile(archivePath);
-    defer {
-        str::Free(fileData);
-    };
+    AutoFree freeFileData(fileData.s);
     FailIf(!(u8*)fileData.s, "Failed to read \"%s\"", archivePath.s);
     errorStep++;
 

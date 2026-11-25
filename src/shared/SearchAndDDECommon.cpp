@@ -679,9 +679,7 @@ static Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
     // a heap copy: in ng, selecting or reloading the document renders, which
     // resets the temp arena
     term = str::Dup(term);
-    defer {
-        str::Free(term);
-    };
+    AutoFree freeTerm(term.s);
     MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
@@ -711,9 +709,7 @@ static Str HandleGotoPageWordCmd(HWND hwnd, Str cmd, bool* ack) {
     // a heap copy: in ng, selecting or reloading the document renders, which
     // resets the temp arena
     term = str::Dup(term);
-    defer {
-        str::Free(term);
-    };
+    AutoFree freeTerm(term.s);
     MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
         return next;
@@ -755,9 +751,7 @@ static Str HandleGotoCmd(HWND hwnd, Str cmd, bool* ack) {
     // a heap copy: in ng, selecting or reloading the document renders, which
     // resets the temp arena
     destName = str::Dup(destName);
-    defer {
-        str::Free(destName);
-    };
+    AutoFree freeDestName(destName.s);
 
     MainWindow* win = FindDdeTargetWindow(hwnd, pdfFile, true);
     if (!win) {
@@ -820,9 +814,7 @@ static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
 
     // ReloadDocument can reset the temp arena; copy viewMode to stable storage
     Str viewModeOwned = str::Dup(viewMode);
-    defer {
-        str::Free(viewModeOwned);
-    };
+    AutoFree freeViewMode(viewModeOwned.s);
 
     MainWindow* win = FindDdeTargetWindow(hwnd, filePath, true);
     if (!win) {
@@ -1378,10 +1370,8 @@ static Str HandleSyncCmd(Str cmd, bool* ack) {
     // heap copies: in ng, opening a window renders, which resets the temp arena
     pdfFile = str::Dup(pdfFile);
     srcFile = str::Dup(srcFile);
-    defer {
-        str::Free(pdfFile);
-        str::Free(srcFile);
-    };
+    AutoFree freePdfFile(pdfFile.s);
+    AutoFree freeSrcFile(srcFile.s);
 
     MainWindow* win = nullptr;
     if (pdfFile) {
@@ -2798,9 +2788,7 @@ bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     // a copy: cmd is often a TempStr, and opening a window can render and reset
     // the temp arena while the handlers still parse the rest of it
     Str ownedCmd = str::Dup(cmd);
-    defer {
-        str::Free(ownedCmd);
-    };
+    AutoFree freeOwnedCmd(ownedCmd.s);
     cmd = ownedCmd;
 
     bool didHandle = false;

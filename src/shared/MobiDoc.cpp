@@ -1204,13 +1204,10 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
 // Cheap peek so regular MOBI files are not fully re-read just to reject them.
 static bool FileMightBePrintReplica(Str path) {
     constexpr int kPeek = 256 * 1024;
-    u8* buf = AllocArray<u8>(kPeek);
+    AutoFree<u8> buf(AllocArray<u8>(kPeek));
     if (!buf) {
         return false;
     }
-    defer {
-        free(buf);
-    };
     int n = file::ReadN(path, buf, kPeek);
     if (n < 80) {
         return false;

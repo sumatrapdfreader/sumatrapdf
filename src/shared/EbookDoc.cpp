@@ -1261,9 +1261,7 @@ HtmlDoc::~HtmlDoc() {
 bool HtmlDoc::Load() {
     {
         Str data = file::ReadFile(fileName);
-        defer {
-            str::Free(data);
-        };
+        AutoFree freeData(data.s);
         if (len(data) == 0) {
             return false;
         }
