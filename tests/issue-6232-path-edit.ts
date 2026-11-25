@@ -152,6 +152,7 @@ export async function testit(): Promise<void> {
     await expectEdit(client, `path-text:"${join(root, "b.pdf")}"`, 1, "set text 4");
     await expectEdit(client, "path-commit", 0, "commit 4");
     await waitNav(client, "commit file path", (s) => sameDir(s.dir, root) && s.name === "b.pdf");
+    await raw(client, "close");
   } finally {
     client.close();
     await killAndWait(proc);

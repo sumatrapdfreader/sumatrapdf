@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6232-path-edit", issue6232PathEdit],
   ["issue-6355", issue6355],
   ["issue-6259", issue6259],
   ["issue-6261", issue6261],
@@ -719,7 +720,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["annot-text-popup-reload", annotTextPopupReload],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["selection-toolbar-move", selectionToolbarMove],
-  ["issue-6232-path-edit", issue6232PathEdit],
   ["issue-6070", issue6070],
   ["issue-6371", issue6371],
   ["issue-6372", issue6372],
