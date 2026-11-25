@@ -11,6 +11,7 @@ import {
   findChildWindow,
   getClassName,
   isWindowVisible,
+  raiseProcessWindows,
   setCursorPos,
   sleep,
   windowFromPoint,
@@ -188,6 +189,7 @@ export async function testit(): Promise<void> {
     }
     const hidden = await barLayout(browser.client, false);
     if (hover) {
+      raiseProcessWindows(browser.proc.pid);
       const top = clientToScreen(browser.frame, Math.floor(hidden.items.frame.rect.dx / 2), 4);
       setCursorPos(top.x, top.y);
       const overlay = await barLayout(browser.client, true);

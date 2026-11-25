@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6355", issue6355],
   ["issue-6259", issue6259],
   ["issue-6261", issue6261],
   ["issue-3472", issue3472],
@@ -711,7 +712,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6352", issue6352],
   ["issue-6354", issue6354],
-  ["issue-6355", issue6355],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["shape-annotation-placement", shapeAnnotationPlacement],
