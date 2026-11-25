@@ -413,20 +413,6 @@ pdf_pkcs7_verifier* pkcs7_windows_new_verifier(fz_context* ctx) {
     return vf;
 }
 
-// ---- flat convenience wrappers (mirror the openssl helper surface) -------
-
-pdf_signature_error pkcs7_windows_check_certificate(char* sig, size_t sig_len) {
-    return windows_check_certificate(NULL, NULL, (unsigned char*)sig, sig_len);
-}
-
-pdf_signature_error pkcs7_windows_check_digest(fz_context* ctx, fz_stream* stm, char* sig, size_t sig_len) {
-    return windows_check_digest(ctx, NULL, stm, (unsigned char*)sig, sig_len);
-}
-
-pdf_pkcs7_distinguished_name* pkcs7_windows_distinguished_name(fz_context* ctx, char* sig, size_t sig_len) {
-    return windows_get_signatory(ctx, NULL, (unsigned char*)sig, sig_len);
-}
-
 // ---- signing -------------------------------------------------------------
 
 typedef struct {

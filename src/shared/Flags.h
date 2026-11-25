@@ -68,7 +68,6 @@ struct Flags {
     int stressParallelCount = 1;
     int stressTestMax = 0;
     int maxFiles = 0;
-    int testPageNo = 0;
     int sleepMs = 0;
     Point startScroll = {-1, -1};
     // -window-pos <width>x<height>@<x>x<y>: open every window exactly there,

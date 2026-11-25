@@ -80,18 +80,6 @@ const char* gIconLayoutSinglePage =
   <rect x="4" y="4" width="16" height="16" rx="2" />
 </svg>)";
 
-// https://github.com/tabler/tabler-icons/blob/main/icons/outline/chevron-left.svg
-const char* gIconSearchPrev =
-    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <polyline points="15 6 9 12 15 18" />
-</svg>)";
-
-// https://github.com/tabler/tabler-icons/blob/main/icons/outline/chevron-right.svg
-const char* gIconSearchNext =
-    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <polyline points="9 6 15 12 9 18" />
-</svg>)";
-
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/letter-case.svg
 const char* gIconMatchCase =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -244,12 +232,6 @@ const char* gIconFindAnnotation =
   <line x1="3" y1="6" x2="20" y2="6" />
   <line x1="3" y1="12" x2="8" y2="12" />
   <line x1="3" y1="18" x2="8" y2="18" />
-</svg>)";
-
-// https://github.com/tabler/tabler-icons/blob/main/icons/outline/command.svg
-const char* gIconCommandPalette =
-    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M7 9a2 2 0 1 1 2 -2v10a2 2 0 1 1 -2 -2h10a2 2 0 1 1 -2 2v-10a2 2 0 1 1 2 2h-10" />
 </svg>)";
 
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/chevron-up.svg

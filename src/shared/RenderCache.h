@@ -272,7 +272,6 @@ struct RenderCache {
 #endif
     int PaintTile(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                   bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
-    void LogCacheSize();
     i64 CacheBytes(int& nEntriesOut);
 
     void RecordFinishedRequest(PageRenderRequest* req);

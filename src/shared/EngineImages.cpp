@@ -2879,7 +2879,6 @@ fz_image* EngineCbx::LoadFzImageForPage(fz_context* ctx, int pageNo) {
 
 Pixmap* EngineCbx::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
     auto timeStart = TimeGet();
-    defer{};
     Str img = GetImageData(pageNo);
     if (len(img) == 0) {
         logf("EngineCbx::LoadPixmapForPage(page: %d) failed\n", pageNo);

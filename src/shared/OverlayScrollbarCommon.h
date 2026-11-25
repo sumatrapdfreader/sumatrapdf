@@ -35,9 +35,6 @@ void GetFindMarkerRects(OverlayScrollbar* sb, Vec<Rect>& others, Rect* current);
 bool IsAlwaysThickMode(OverlayScrollbar* sb);
 Rect ClientRect(OverlayScrollbar* sb);
 void SetState(OverlayScrollbar* sb, State newState);
-
-// implemented by each app
-bool IsAlwaysThickMode(OverlayScrollbar* sb);
 void RestartSmartThinAutoHide(OverlayScrollbar* sb);
 
 static constexpr int kMinThumbSize = 20;

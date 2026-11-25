@@ -16,10 +16,6 @@
 extern "C" {
 #endif
 
-pdf_signature_error pkcs7_windows_check_digest(fz_context* ctx, fz_stream* stm, char* sig, size_t sig_len);
-pdf_signature_error pkcs7_windows_check_certificate(char* sig, size_t sig_len);
-pdf_pkcs7_distinguished_name* pkcs7_windows_distinguished_name(fz_context* ctx, char* sig, size_t sig_len);
-
 pdf_pkcs7_verifier* pkcs7_windows_new_verifier(fz_context* ctx);
 
 pdf_pkcs7_signer* pkcs7_windows_read_pfx(fz_context* ctx, const char* pfile, const char* pw);

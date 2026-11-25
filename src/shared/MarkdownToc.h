@@ -9,7 +9,6 @@ struct MarkdownHeadingItem {
 
 struct MarkdownFileToc {
     Str filePath;
-    Str relPath;
     Vec<MarkdownHeadingItem>* headings; // owned; a pointer so Vec<MarkdownFileToc> stays memcpy-safe
 };
 

@@ -37,7 +37,6 @@ int GetAppFontSizeForDpi(int dpi);
 PlatformFont* GetAppFont();
 PlatformFont* GetAppFontForDpi(int dpi);
 int GetAppMenuFontSizeForDpi(int dpi);
-bool IsAppFontSizeDefault();
 PlatformFont* GetAppMenuFont();
 PlatformFont* GetAppMenuFontForDpi(int dpi);
 PlatformFont* GetAppBiggerFont();

@@ -829,8 +829,6 @@ void UpdateTextSelection(MainWindow* win, bool select) {
         return;
     }
 
-#if !defined(SUMATRA_NG)
-#endif
     DisplayModel* dm = win->AsFixed();
     if (select) {
         int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());

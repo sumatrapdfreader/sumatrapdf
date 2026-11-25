@@ -1791,12 +1791,6 @@ i64 RenderCache::CacheBytes(int& nEntriesOut) {
     return size;
 }
 
-void RenderCache::LogCacheSize() {
-    int count = 0;
-    i64 size = CacheBytes(count);
-    rcLogf("RenderCache::LogCacheSize: %d entries, %lld bytes\n", count, (long long)size);
-}
-
 // --------- render queue debug window (CmdDebugToggleRenderInfo) ---------
 
 extern RenderCache* gRenderCache;

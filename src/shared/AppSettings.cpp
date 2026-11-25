@@ -19,8 +19,6 @@
 
 #include "gui/UIModels.h"
 
-#if defined(SUMATRA_NG)
-#endif
 #include "Settings.h"
 #include "Commands.h"
 #include "DisplayMode.h"
@@ -1171,11 +1169,6 @@ PlatformFont* GetAppMenuFont() {
 }
 
 bool IsMenuFontSizeDefault() {
-    auto fntSize = gSettings->uIFontSize;
-    return fntSize < kMinFontSize;
-}
-
-bool IsAppFontSizeDefault() {
     auto fntSize = gSettings->uIFontSize;
     return fntSize < kMinFontSize;
 }
