@@ -24,6 +24,8 @@
 #include "SelectionToolbar.h"
 #include "SelectionToolbarCommon.h"
 
+Kind kNotifCopiedToClipboard = "notifCopiedToClipboard";
+
 // candidate buttons; per-window visibility/enabled state comes from
 // GetCommandVisibility (hidden buttons are dropped, disabled ones grayed)
 static const SelectionToolbarButton gCandidateButtons[] = {

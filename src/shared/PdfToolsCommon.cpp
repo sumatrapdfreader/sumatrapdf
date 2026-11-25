@@ -33,10 +33,7 @@
 #include "PdfTools.h"
 #include "PdfToolsCommon.h"
 
-extern "C" int pdfbake_main(int argc, char** argv);
-extern "C" int pdfclean_main(int argc, char** argv);
-extern "C" int muconvert_main(int argc, char** argv);
-extern "C" void fz_set_optind(int val);
+Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
 
 // a usable page range: Delete Pages cannot take every page
 // the value of -p for a tool re-opening srcPath, the current tab's file

@@ -24,6 +24,8 @@
 #include "SumatraDialogs.h"
 #include "SignDocumentDialogCommon.h"
 
+Kind kNotifSignPlacement = "notifSignPlacement";
+
 // Default size of a new signature when the user clicks rather than dragging
 // a rectangle. 2" x 0.75" at 72 pt/in — enough for name, date and reason.
 constexpr float kDefaultSignatureDx = 144;

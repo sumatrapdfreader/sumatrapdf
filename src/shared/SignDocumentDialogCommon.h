@@ -19,7 +19,7 @@ void ApplySignatureType(PdfSignArgs& args, int code);
 bool SignTypeLocksDocument(const PdfSignArgs& args);
 Str LockDocumentWarning();
 
-static Kind kNotifSignPlacement = "notifSignPlacement";
+extern Kind kNotifSignPlacement;
 NotifCorner SignPlacementNotifCorner();
 
 void ShowSignaturePlacementNotif(MainWindow* win);

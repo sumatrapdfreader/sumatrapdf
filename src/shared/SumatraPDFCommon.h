@@ -221,11 +221,11 @@ constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 // Cap how many extension links we put in the bar
 constexpr int kMaxDefaultAppLinks = 8;
 
-static Kind kNotifPersistentWarning = "persistentWarning";
-static Kind kNotifDocErrors = "docErrors";
+extern Kind kNotifPersistentWarning;
+extern Kind kNotifDocErrors;
 // Kind used so only one default-app bar is shown at a time
-static Kind kNotifDefaultApp = "defaultApp";
-static Kind kNotifThumbnailProgress = "thumbnailProgress";
+extern Kind kNotifDefaultApp;
+extern Kind kNotifThumbnailProgress;
 int SidebarNativeDx(MainWindow* win);
 void ToggleLineWeights();
 

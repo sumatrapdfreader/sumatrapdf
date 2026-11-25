@@ -118,6 +118,11 @@
 #include "RestrictedUseConfig.h"
 #include "VirtualDesktop.h"
 
+Kind kNotifPersistentWarning = "persistentWarning";
+Kind kNotifDocErrors = "docErrors";
+Kind kNotifDefaultApp = "defaultApp";
+Kind kNotifThumbnailProgress = "thumbnailProgress";
+
 #include "SumatraLog.h"
 
 static void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine);

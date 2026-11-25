@@ -131,7 +131,7 @@ int EbookPdfFontSizeFromText(Str s);
 
 // rectangular selection → PNG / JPEG / BMP at a chosen DPI, independent of
 // the current zoom (issue #6127)
-static Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
+extern Kind kNotifSaveSelectionAsImage;
 
 // entry points of the mupdf command line tools we link in
 extern "C" int pdfbake_main(int argc, char** argv);

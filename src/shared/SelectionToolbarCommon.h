@@ -32,4 +32,4 @@ bool GetSelectionBounds(MainWindow* win, Rect& out);
 
 constexpr int kCopiedNotifTimeoutMs = 1500;
 
-static Kind kNotifCopiedToClipboard = "notifCopiedToClipboard";
+extern Kind kNotifCopiedToClipboard;

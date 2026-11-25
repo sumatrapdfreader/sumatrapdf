@@ -374,7 +374,11 @@ static Str ChmInjectStyle(Str raw, Str style) {
 // returns a heap copy of `raw` (the CHM resource for a url), with a theme
 // <style> injected when `raw` is an HTML page and the color mode wants
 // non-default page colors
-static Str ChmThemeApplyToData(Str raw) {
+static Str ChmThemeApplyToData(Str url, Str raw) {
+    if (str::EndsWithI(url, StrL(".js")) || str::EndsWithI(url, StrL(".css")) || str::EndsWithI(url, StrL(".json")) ||
+        str::EndsWithI(url, StrL(".svg")) || str::EndsWithI(url, StrL(".xml"))) {
+        return str::Dup(raw);
+    }
     TempStr style = ChmThemeStyleTemp();
     if (len(style) == 0) {
         return str::Dup(raw);
@@ -398,7 +402,7 @@ Str ChmModel::GetDataForUrl(Str url) {
     if (len(raw) == 0) {
         return {};
     }
-    return CacheData(plainUrl, ChmThemeApplyToData(raw));
+    return CacheData(plainUrl, ChmThemeApplyToData(plainUrl, raw));
 }
 
 // named destinations are either in-document URLs or Alias topic IDs.
