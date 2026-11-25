@@ -978,54 +978,6 @@ class webview2_find_start_handler : public ICoreWebView2FindStartCompletedHandle
     AtomicInt m_refCount = 1;
 };
 
-// Receives the id WebView2 assigns to a script passed to
-// AddScriptToExecuteOnDocumentCreated. The id is the only handle to that script
-// and is needed by RemoveScriptToExecuteOnDocumentCreated, so without capturing
-// it here init scripts could never be removed or replaced. Looks the window up
-// by hwnd because the completion is asynchronous and the window may be gone.
-class webview2_add_script_handler : public ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler {
-  public:
-    webview2_add_script_handler(HWND hwnd, int token) : m_hwnd(hwnd), m_token(token) {}
-
-    ULONG STDMETHODCALLTYPE AddRef() { return (ULONG)AtomicIntInc(&m_refCount); }
-    ULONG STDMETHODCALLTYPE Release() {
-        ULONG n = (ULONG)AtomicIntDec(&m_refCount);
-        if (n == 0) {
-            delete this;
-        }
-        return n;
-    }
-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
-        if (!ppv) {
-            return E_POINTER;
-        }
-        *ppv = nullptr;
-        if (riid == IID_IUnknown ||
-            riid == __uuidof(ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler)) {
-            *ppv = static_cast<ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler*>(this);
-            AddRef();
-            return S_OK;
-        }
-        return E_NOINTERFACE;
-    }
-
-    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, LPCWSTR id) {
-        if (FAILED(res) || !id) {
-            return S_OK;
-        }
-        auto* wnd = (WebviewWnd*)WindowBaseFromHwnd(m_hwnd);
-        if (wnd) {
-            wnd->OnInitScriptAdded(m_token, id);
-        }
-        return S_OK;
-    }
-
-  private:
-    AtomicInt m_refCount = 1;
-    HWND m_hwnd = nullptr;
-    int m_token = 0;
-};
-
 // A WebView2 process died. Without this the control just goes blank forever:
 // a dead renderer leaves nothing painting, and a dead browser process takes the
 // whole environment with it.
@@ -1089,9 +1041,6 @@ WebviewWnd::WebviewWnd() {
 
 void WebviewWnd::OnProcessFailed(WebViewProcessFailure kind) {
     logf("WebviewWnd::OnProcessFailed: kind=%d\n", (int)kind);
-    if (events.processFailed && events.processFailed(events.ctx, kind)) {
-        return;
-    }
     switch (kind) {
         case WebViewProcessFailure::RenderExited:
         case WebViewProcessFailure::RenderUnresponsive:
@@ -1113,14 +1062,13 @@ void WebviewWnd::OnProcessFailed(WebViewProcessFailure kind) {
     }
 }
 
-void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, Str text, int token) {
+void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, Str text) {
     if (initFailed) {
         return;
     }
     PendingWebViewOp op;
     op.kind = kind;
     op.text = str::Dup(text ? text : StrL(""));
-    op.token = token;
     VecAppend(pendingOps, op);
 }
 
@@ -1135,11 +1083,7 @@ void WebviewWnd::FlushPendingOps() {
     for (PendingWebViewOp& op : ops) {
         switch (op.kind) {
             case PendingWebViewOp::Init:
-                // keep the token the caller already holds so RemoveInitScript works
-                AddInitScriptWithToken(op.text, op.token);
-                break;
-            case PendingWebViewOp::SetHtml:
-                SetHtml(op.text);
+                Init(op.text);
                 break;
             case PendingWebViewOp::Eval:
                 Eval(op.text);
@@ -1359,8 +1303,6 @@ void WebviewWnd::OnControllerReady(ICoreWebView2Controller* controller) {
 
     Init(StrL("window.external={invoke:s=>window.chrome.webview.postMessage(s)}"));
     Init(Str(kJsBridgeScript));
-    // re-register any names bound before the controller was ready
-    RebuildBindScript();
     initStarted = true;
     FlushPendingOps();
 
@@ -1408,148 +1350,39 @@ void WebviewWnd::Eval(Str js) {
     webview->ExecuteScript(ws, nullptr);
 }
 
-void WebviewWnd::SetHtml(Str html) {
-    if (initFailed || len(html) == 0) {
-        return;
-    }
-    if (!webview) {
-        QueuePendingOp(PendingWebViewOp::SetHtml, html);
-        return;
-    }
-    WCHAR* html2 = CWStrTemp(html);
-    webview->NavigateToString(html2);
-}
-
 void WebviewWnd::Init(Str js) {
-    AddInitScript(js);
-}
-
-// Registers a script to run on every document, returning a token that
-// RemoveInitScript() takes. The token is ours and valid immediately; the
-// WebView2 id it maps to arrives later via OnInitScriptAdded().
-int WebviewWnd::AddInitScript(Str js) {
     if (initFailed || len(js) == 0) {
-        return 0;
-    }
-    int token = nextInitScriptToken++;
-    AddInitScriptWithToken(js, token);
-    return token;
-}
-
-void WebviewWnd::AddInitScriptWithToken(Str js, int token) {
-    if (initFailed || len(js) == 0 || token == 0) {
         return;
     }
     if (!webview) {
-        QueuePendingOp(PendingWebViewOp::Init, js, token);
+        QueuePendingOp(PendingWebViewOp::Init, js);
         return;
     }
-    WebViewInitScript script;
-    script.token = token;
-    VecAppend(initScripts, script);
-
     WCHAR* ws = CWStrTemp(js);
-    auto* handler = new webview2_add_script_handler(hwnd, token);
-    HRESULT hr = webview->AddScriptToExecuteOnDocumentCreated(ws, handler);
-    handler->Release();
-    if (FAILED(hr)) {
-        int idx = FindInitScript(token);
-        if (idx >= 0) {
-            VecRemoveAt(initScripts, idx);
-        }
-    }
+    webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
 }
 
-int WebviewWnd::FindInitScript(int token) const {
-    int n = len(initScripts);
-    for (int i = 0; i < n; i++) {
-        if (initScripts[i].token == token) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-void WebviewWnd::OnInitScriptAdded(int token, const WCHAR* id) {
-    int idx = FindInitScript(token);
-    if (idx < 0) {
-        return;
-    }
-    WebViewInitScript& script = initScripts[idx];
-    // RemoveInitScript() ran before the id arrived; drop it now that we can
-    if (script.removePending) {
-        if (webview) {
-            webview->RemoveScriptToExecuteOnDocumentCreated(id);
-        }
-        VecRemoveAt(initScripts, idx);
-        return;
-    }
-    wstr::Free(script.id);
-    script.id = wstr::Dup(WStr(id));
-}
-
-void WebviewWnd::RemoveInitScript(int token) {
-    if (token == 0) {
-        return;
-    }
-    // still queued: it was never handed to WebView2, so just drop it
-    int n = len(pendingOps);
-    for (int i = 0; i < n; i++) {
-        PendingWebViewOp& op = pendingOps[i];
-        if (op.kind == PendingWebViewOp::Init && op.token == token) {
-            str::Free(op.text);
-            VecRemoveAt(pendingOps, i);
-            return;
-        }
-    }
-    int idx = FindInitScript(token);
-    if (idx < 0) {
-        return;
-    }
-    WebViewInitScript& script = initScripts[idx];
-    if (len(script.id) == 0) {
-        // the id hasn't arrived yet; OnInitScriptAdded will remove it
-        script.removePending = true;
-        return;
-    }
-    if (webview) {
-        webview->RemoveScriptToExecuteOnDocumentCreated(script.id.s);
-    }
-    wstr::Free(script.id);
-    VecRemoveAt(initScripts, idx);
-}
-
-// markers the bridge puts first in its messages; JSON.stringify preserves
-// insertion order, so a prefix test is enough to tell these from raw messages
-static const char* kJsCallPrefix = "{\"__sumatraCall\":1";
 static const char* kJsNotifyPrefix = "{\"__sumatraNotify\":1";
-
-static bool IsJsCallMessage(Str msg) {
-    return str::StartsWith(msg, Str(kJsCallPrefix));
-}
 
 static bool IsJsNotifyMessage(Str msg) {
     return str::StartsWith(msg, Str(kJsNotifyPrefix));
 }
 
 namespace {
-// the string members of a {"id", "method", "params"} message; false if the
+// the string members of a {"method", "params"} message; false if the
 // message isn't JSON. The values are temp-arena copies.
-struct JsCallState {
-    TempStr id;
+struct JsNotifyState {
     TempStr method;
     TempStr params;
 };
 
-static bool ParseJsCall(Str msg, JsCallState& st) {
+static bool ParseJsNotify(Str msg, JsNotifyState& st) {
     json::Reader r(msg);
     for (json::Value& v : r) {
         if (v.type != json::Type::String) {
             continue;
         }
-        if (json::PathMatch(v.path, StrL("/id"))) {
-            st.id = v.value;
-        } else if (json::PathMatch(v.path, StrL("/method"))) {
+        if (json::PathMatch(v.path, StrL("/method"))) {
             st.method = v.value;
         } else if (json::PathMatch(v.path, StrL("/params"))) {
             st.params = v.value;
@@ -1559,30 +1392,12 @@ static bool ParseJsCall(Str msg, JsCallState& st) {
 }
 } // namespace
 
-void WebviewWnd::OnJsCall(Str msg) {
-    JsCallState st;
-    if (!ParseJsCall(msg, st)) {
-        logf("WebviewWnd::OnJsCall: failed to parse '%s'\n", msg);
-        return;
-    }
-    if (len(st.id) == 0 || len(st.method) == 0) {
-        return;
-    }
-    if (!events.jsCall) {
-        // nothing can answer, so reject instead of leaving the promise pending
-        Resolve(st.id, 1, StrL("\"no handler\""));
-        return;
-    }
-    Str params = st.params ? Str(st.params) : StrL("[]");
-    events.jsCall(events.ctx, st.id, st.method, params);
-}
-
 void WebviewWnd::OnJsNotify(Str msg) {
     if (!events.jsNotify) {
         return;
     }
-    JsCallState st;
-    if (!ParseJsCall(msg, st)) {
+    JsNotifyState st;
+    if (!ParseJsNotify(msg, st)) {
         logf("WebviewWnd::OnJsNotify: failed to parse '%s'\n", msg);
         return;
     }
@@ -1591,58 +1406,6 @@ void WebviewWnd::OnJsNotify(Str msg) {
     }
     Str params = st.params ? Str(st.params) : StrL("[]");
     events.jsNotify(events.ctx, st.method, params);
-}
-
-// status 0 resolves the JS promise, non-0 rejects it. resultJson must be
-// valid JSON (or empty for undefined)
-void WebviewWnd::Resolve(Str id, int status, Str resultJson) {
-    if (len(id) == 0) {
-        return;
-    }
-    TempStr js = fmt("if (window.__sumatra__) window.__sumatra__.onReply(\"%s\", %d, \"%s\");", json::EscapeStrTemp(id),
-                     status, json::EscapeStrTemp(resultJson));
-    Eval(js);
-}
-
-// Rebuilds the init script that re-binds every name on each new document, so
-// bindings survive navigation.
-void WebviewWnd::RebuildBindScript() {
-    if (bindScriptToken) {
-        RemoveInitScript(bindScriptToken);
-        bindScriptToken = 0;
-    }
-    if (len(boundNames) == 0) {
-        return;
-    }
-    str::Builder js;
-    js.Append(StrL("(function(){var m=["));
-    bool first = true;
-    for (Str& name : boundNames) {
-        if (!first) {
-            js.Append(StrL(","));
-        }
-        first = false;
-        js.Append(fmt("\"%s\"", json::EscapeStrTemp(name)));
-    }
-    js.Append(StrL("];m.forEach(function(n){window.__sumatra__.onBind(n)})})()"));
-    bindScriptToken = AddInitScript(ToStr(js));
-}
-
-// makes window.<name>(...) available to page JS, returning a promise that
-// WebViewEvents::jsCall resolves via Resolve()
-void WebviewWnd::Bind(Str name) {
-    if (len(name) == 0) {
-        return;
-    }
-    for (Str& n : boundNames) {
-        if (str::Eq(n, name)) {
-            return;
-        }
-    }
-    VecAppend(boundNames, str::Dup(name));
-    RebuildBindScript();
-    // also expose it in the document that's already loaded
-    Eval(fmt("if (window.__sumatra__) window.__sumatra__.onBind(\"%s\");", json::EscapeStrTemp(name)));
 }
 
 void WebviewWnd::Navigate(Str url) {
@@ -2096,12 +1859,6 @@ static void OnBrowserMessageCbHwnd(void* hwndVoid, Str msg) {
     HWND hwnd = (HWND)hwndVoid;
     auto* self = (WebviewWnd*)WindowBaseFromHwnd(hwnd);
     if (self) {
-        // structured calls from the JS bridge don't go to OnBrowserMessage, so
-        // subclasses keep seeing only their own raw messages
-        if (IsJsCallMessage(msg)) {
-            self->OnJsCall(msg);
-            return;
-        }
         if (IsJsNotifyMessage(msg)) {
             self->OnJsNotify(msg);
             return;
@@ -2209,14 +1966,6 @@ void WebviewWnd::OnShowWindow(WindowBase::ShowWindowEvent* ev) {
 WebviewWnd::~WebviewWnd() {
     RemovePendingWebview(this);
     FreePendingOps(pendingOps);
-    for (WebViewInitScript& script : initScripts) {
-        wstr::Free(script.id);
-    }
-    VecReset(initScripts);
-    for (Str& name : boundNames) {
-        str::Free(name);
-    }
-    VecReset(boundNames);
     RevokeForwardingDropTarget();
     // Close() shuts down the browser instance behind this webview and is not
     // optional: releasing the controller only drops our reference, so without

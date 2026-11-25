@@ -12,11 +12,6 @@
 //   handler fills in (e.g. VirtCtrl::onGetTooltip), and there is no didHandle.
 
 LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
-enum WindowBorderStyle {
-    kWindowBorderNone,
-    kWindowBorderClient,
-    kWindowBorderStatic
-};
 
 struct WindowBase;
 struct ControlBase;
@@ -139,7 +134,6 @@ struct HwndBase {
     void Destroy();
     void Subclass();
     void UnSubclass();
-    HWND Detach();
 
     void SetText(Str);
     TempStr GetTextTemp();
@@ -359,8 +353,6 @@ struct WindowBase : HwndBase {
     void SetVisibility(Visibility);
     Visibility GetVisibility();
 
-    void Attach(HWND hwnd);
-
     // PreTranslateMessage: onPreTranslate, then key-down -> onKeyDown, then
     // closeOnEsc / closeOnCtrlW, then Enter (focused or default button), then
     // Tab default
@@ -413,7 +405,6 @@ struct WindowBase : HwndBase {
     // runs right before a ScheduleDelete()-ed window is deleted, so the owner
     // can clear the pointer it keeps to this window
     Func0 onBeforeDelete;
-    AttachHandler onAttach;
     FocusHandler onFocus;
     ActivateHandler onActivate;
     DpiChangedHandler onDpiChanged;
@@ -421,14 +412,11 @@ struct WindowBase : HwndBase {
     NcHitTestHandler onNcHitTest;
     ShowWindowHandler onShowWindow;
     CommandHandler onCommand;
-    CreateHandler onCreate;
     DropFilesHandler onDropFiles;
     GetMinMaxInfoHandler onGetMinMaxInfo;
-    MouseHandler onMouseEvent;
     MoveHandler onMove;
     PaintHandler onPaint;
     SizeHandler onSize;
-    TaskbarCallbackHandler onTaskbarCallback;
     TimerHandler onTimer;
     WindowPosChangingHandler onWindowPosChanging;
     WndProcHandler onWndProc;
@@ -573,8 +561,6 @@ struct ControlBase : ILayout, HwndBase {
     void SetBounds(Rect) override;
     ControlBase* AsControl() override;
 
-    void Attach(HWND hwnd);
-
     // for reflection from parents (WindowBase / ControlBase WndProcDefault)
     bool DispatchCommand(WPARAM wparam, LPARAM lparam);
     LRESULT DispatchMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -600,11 +586,8 @@ struct ControlBase : ILayout, HwndBase {
     // default true: native subclassed controls keep system erase
     bool shouldEraseBackground = true;
 
-    AttachHandler onAttach;
     FocusHandler onFocus;
     CommandHandler onCommand;
-    CreateHandler onCreate;
-    MouseHandler onMouseEvent;
     PaintHandler onPaint;
     SizeHandler onSize;
     TimerHandler onTimer;
@@ -935,47 +918,6 @@ struct DropDown : ControlBase {
     void SetCursorId(LPWSTR);
 };
 
-//--- Trackbar
-
-struct Trackbar;
-
-struct Trackbar : ControlBase {
-    struct CreateArgs {
-        HWND parent = nullptr;
-        bool isHorizontal = true;
-        int rangeMin = 1;
-        int rangeMax = 5;
-        PlatformFont* font = nullptr;
-        bool isRtl = false;
-    };
-
-    struct PositionChangingEvent {
-        Trackbar* trackbar = nullptr;
-        int pos = -1;
-        NMTRBTHUMBPOSCHANGING* info = nullptr;
-    };
-
-    using PositionChangingHandler = Func1<PositionChangingEvent*>;
-
-    Size idealSize;
-
-    // for WM_NOTIFY with TRBN_THUMBPOSCHANGING
-    PositionChangingHandler onPositionChanging;
-
-    Trackbar();
-    ~Trackbar() override = default;
-
-    HWND Create(const CreateArgs&);
-
-    void OnMessageReflect(ControlBase::MessageReflectEvent* ev);
-
-    Size GetIdealSize() override;
-    void SetRange(int min, int max);
-
-    void SetValue(int);
-    int GetValue();
-};
-
 //--- TreeView
 
 struct TreeView;
@@ -1126,7 +1068,6 @@ void DeleteWnd(T** wnd) {
     *wnd = nullptr;
 }
 
-int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 void RunModalWindow(HWND hwndDialog, HWND hwndParent);
 
 HWND GetCurrentModelessDialog();

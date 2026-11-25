@@ -32,7 +32,6 @@ enum VirtFlags : u32 {
     vwfCapturesMouse = 1 << 5,
     vwfClipChildren = 1 << 6,
     // the wnd paints and hit-tests its children itself (virtualized lists)
-    vwfPaintsOwnChildren = 1 << 7,
     // decorative: never a hit-test target (children still are)
     vwfNoHitTest = 1 << 8,
     vwfSkipTabStop = 1 << 9,
@@ -94,11 +93,6 @@ struct VirtCharEvent {
     bool didHandle = false;
 };
 
-struct VirtFocusEvent {
-    VirtCtrl* w = nullptr;
-    bool gotFocus = false;
-};
-
 struct VirtTooltipEvent {
     VirtCtrl* w = nullptr;
     Point ptLocal;
@@ -109,7 +103,6 @@ using VirtMouseHandler = Func1<VirtMouseEvent*>;
 using VirtKeyHandler = Func1<VirtKeyEvent*>;
 using VirtSetCursorHandler = Func1<VirtSetCursorEvent*>;
 using VirtCharHandler = Func1<VirtCharEvent*>;
-using VirtFocusHandler = Func1<VirtFocusEvent*>;
 using VirtTooltipHandler = Func1<VirtTooltipEvent*>;
 using VirtPaintHandler = Func1<VirtPaintCtx*>;
 
@@ -170,8 +163,6 @@ struct VirtCtrl : ILayout {
     void PaintStandalone(Gfx*);
 
     virtual bool HitTest(Point ptLocal);
-    // scroll containers return how much their content is scrolled
-    virtual Point ScrollOffset();
 
     // dispatch to on* handlers; return true to consume (stop bubbling)
     bool OnMouseDown(VirtMouseEvent&);
@@ -186,7 +177,6 @@ struct VirtCtrl : ILayout {
     void OnCaptureLost();
     bool OnKeyDown(VirtKeyEvent&);
     bool OnChar(int c);
-    void OnFocusChanged(bool gotFocus);
     bool OnSetCursor(Point ptLocal);
     TempStr GetTooltipTemp(Point ptLocal);
 
@@ -196,7 +186,6 @@ struct VirtCtrl : ILayout {
     void RemoveAllChildren(bool del = true);
     int ChildCount() const;
     VirtCtrl* ChildAt(int idx) const;
-    VirtCtrl* FindById(int);
 
     Point OriginInWindow();
     Point ChildOriginInWindow();
@@ -236,7 +225,6 @@ struct VirtCtrl : ILayout {
     Func0 onCaptureLost;
     VirtKeyHandler onKeyDown;
     VirtCharHandler onChar;
-    VirtFocusHandler onFocusChanged;
     // dynamic cursor (overrides cursor when set)
     VirtSetCursorHandler onSetCursor;
     // dynamic tip (overrides tooltip when set)
@@ -347,46 +335,6 @@ struct VirtRoot {
 
 //--- containers
 
-// tells the owner which part of the content is visible so it can create
-// only the wnds that are needed (list virtualization)
-struct VirtScrollRange {
-    VirtCtrl* wnd = nullptr;
-    int visibleY = 0;
-    int visibleDy = 0;
-};
-
-struct VirtScroll : VirtCtrl {
-    int scrollY = 0;
-    int contentDy = 0;
-    int lineDy = 16;
-    // when set, syncs the HWND's vertical scrollbar
-    bool syncScrollbar = false;
-    Func1<VirtScrollRange*> onVisibleRangeChanged;
-
-    VirtScroll();
-    ~VirtScroll() override;
-
-    Size Layout(Constraints bc) override;
-    void SetBounds(Rect) override;
-    Point ScrollOffset() override;
-    void OnMouseWheel(VirtMouseEvent*);
-    void OnPan(VirtMouseEvent*);
-
-    int MaxScrollY() const;
-    bool ScrollTo(int y);
-    bool ScrollBy(int dy);
-    bool ScrollPage(int dir);
-    void ScrollIntoView(VirtCtrl*);
-    void OnVScroll(WPARAM);
-
-  private:
-    int lastNotifiedY = -1;
-    int lastNotifiedDy = -1;
-
-    void UpdateScrollbar();
-    void NotifyVisibleRange();
-};
-
 // Scrolls an ILayout child (VBox/HBox/Table) inside a clipped viewport.
 struct ScrollBox : VirtCtrl {
     ILayout* child = nullptr; // owned
@@ -401,7 +349,6 @@ struct ScrollBox : VirtCtrl {
     Size Layout(Constraints bc) override;
     void SetBounds(Rect) override;
     void SetRoot(VirtRoot*) override;
-    Point ScrollOffset() override;
     void Paint(VirtPaintCtx&) override;
     int MinIntrinsicHeight(int width) override;
     int MinIntrinsicWidth(int height) override;
@@ -675,16 +622,11 @@ VirtText* AsVirtText(ILayout*);
 
 struct VirtLink : VirtText {
     Str target; // owned
-    bool underlineOnHover = false;
 
     VirtLink(Str s, PlatformFont* font = nullptr);
     ~VirtLink() override;
 
     void SetTarget(Str);
-
-    void Paint(VirtPaintCtx&) override;
-    void OnMouseEnter();
-    void OnMouseLeave();
 };
 
 struct VirtButton : VirtText {
@@ -731,12 +673,11 @@ struct VirtIconButton : VirtCtrl {
     Pixmap* pixmapDisabled = nullptr;
     // a toggle button (match case, ...) draws bgColorSelected while on
     bool isSelected = false;
-    // split button: a chevron on the right; click there fires onDropdown
+    // split button: a chevron on the right
     bool hasDropdown = false;
     // which half of a split button is hovered (action vs dropdown)
     bool hoverOnDropdown = false;
     // colors: kColIconBtn*
-    VirtMouseHandler onDropdown;
 
     VirtIconButton();
     ~VirtIconButton() override = default;
@@ -790,17 +731,6 @@ struct VirtImage : VirtCtrl {
 
     VirtImage();
     ~VirtImage() override;
-
-    Size GetIdealSize() override;
-    void Paint(VirtPaintCtx&) override;
-};
-
-// colors: kColFillBg
-struct VirtFill : VirtCtrl {
-    Size idealSize;
-
-    VirtFill();
-    ~VirtFill() override;
 
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;

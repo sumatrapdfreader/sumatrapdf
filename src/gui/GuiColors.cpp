@@ -13,7 +13,6 @@ Color gColsIconBtn[kColIconBtnCount];
 Color gColsCloseBtn[kColCloseCount];
 Color gColsListBox[kColListCount];
 Color gColsSplitter[kColSplitterCount];
-Color gColsFill[kColFillCount];
 Color gColsLine[kColLineCount];
 Color gColsSlider[kColSliderCount];
 Color gColsRichText[kColRichCount];
@@ -105,8 +104,6 @@ void GuiSetDefaultColorsFromSystem() {
     gColsListBox[kColListScrollbar] = AccentColor(winBg, 60);
 
     gColsSplitter[kColSplitterBg] = ctlBg;
-
-    gColsFill[kColFillBg] = ctlBg;
 
     gColsLine[kColLineFg] = edge;
 

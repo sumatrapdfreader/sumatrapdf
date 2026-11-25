@@ -124,12 +124,8 @@ static inline void VariantSetLong(VARIANT* res, long val) {
     res->lVal = val;
 }
 
-bool IsBlankUrl(Str url) {
+static bool IsBlankUrl(Str url) {
     return str::EqI(StrL("about:blank"), url);
-}
-
-bool IsBlankUrl(WStr url) {
-    return wstr::EqI(WStrL(L"about:blank"), url);
 }
 
 // HW stands for HtmlWindow
@@ -1008,156 +1004,6 @@ class HW_IServiceProvider : public IServiceProvider {
     }
 };
 
-class HtmlMoniker : public IMoniker {
-  public:
-    HtmlMoniker();
-    virtual ~HtmlMoniker();
-
-    HRESULT SetHtml(Str /*d*/);
-    HRESULT SetBaseUrl(WStr baseUrl);
-
-    // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override;
-    ULONG STDMETHODCALLTYPE AddRef() override;
-    ULONG STDMETHODCALLTYPE Release() override;
-
-    // IMoniker
-    STDMETHODIMP BindToStorage(IBindCtx* pbc, IMoniker* pmkToLeft, REFIID riid, void** ppvObj) override;
-    STDMETHODIMP GetDisplayName(IBindCtx* pbc, IMoniker* pmkToLeft, LPOLESTR* ppszDisplayName) override;
-    STDMETHODIMP BindToObject(__unused IBindCtx* pbc, __unused IMoniker* pmkToLeft, __unused REFIID riidResult,
-                              __unused void** ppvResult) override {
-        return E_NOTIMPL;
-    }
-    STDMETHODIMP Reduce(__unused IBindCtx* pbc, __unused DWORD dwReduceHowFar, __unused IMoniker** ppmkToLeft,
-                        __unused IMoniker** ppmkReduced) override {
-        return E_NOTIMPL;
-    }
-    STDMETHODIMP ComposeWith(__unused IMoniker* pmkRight, __unused BOOL fOnlyIfNotGeneric,
-                             __unused IMoniker** ppmkComposite) override {
-        return E_NOTIMPL;
-    }
-    STDMETHODIMP Enum(__unused BOOL fForward, __unused IEnumMoniker** ppenumMoniker) override { return E_NOTIMPL; }
-    STDMETHODIMP IsEqual(__unused IMoniker* pmkOtherMoniker) override { return E_NOTIMPL; }
-    STDMETHODIMP Hash(__unused DWORD* pdwHash) override { return E_NOTIMPL; }
-    STDMETHODIMP IsRunning(__unused IBindCtx* pbc, __unused IMoniker* pmkToLeft,
-                           __unused IMoniker* pmkNewlyRunning) override {
-        return E_NOTIMPL;
-    }
-    STDMETHODIMP GetTimeOfLastChange(__unused IBindCtx* pbc, __unused IMoniker* pmkToLeft,
-                                     __unused FILETIME* pFileTime) override {
-        return E_NOTIMPL;
-    }
-    STDMETHODIMP Inverse(__unused IMoniker** ppmk) override { return E_NOTIMPL; }
-    STDMETHODIMP CommonPrefixWith(__unused IMoniker* pmkOther, __unused IMoniker** ppmkPrefix) override {
-        return E_NOTIMPL;
-    }
-    STDMETHODIMP RelativePathTo(__unused IMoniker* pmkOther, __unused IMoniker** ppmkRelPath) override {
-        return E_NOTIMPL;
-    }
-    STDMETHODIMP ParseDisplayName(IBindCtx* pbc, IMoniker* pmkToLeft, LPOLESTR pszDisplayName, ULONG* pchEaten,
-                                  IMoniker** ppmkOut) override;
-    STDMETHODIMP IsSystemMoniker(DWORD* pdwMksys) override {
-        if (!pdwMksys) {
-            return E_POINTER;
-        }
-        *pdwMksys = MKSYS_NONE;
-        return S_OK;
-    }
-
-    // IPersistStream methods
-    STDMETHODIMP Save(__unused IStream* pStm, __unused BOOL fClearDirty) override { return E_NOTIMPL; }
-    STDMETHODIMP IsDirty() override { return E_NOTIMPL; }
-    STDMETHODIMP Load(__unused IStream* pStm) override { return E_NOTIMPL; }
-    STDMETHODIMP GetSizeMax(__unused ULARGE_INTEGER* pcbSize) override { return E_NOTIMPL; }
-
-    // IPersist
-    STDMETHODIMP GetClassID(__unused CLSID* pClassID) override { return E_NOTIMPL; }
-
-  private:
-    AtomicInt refCount = 1;
-
-    Str htmlData;
-    IStream* htmlStream = nullptr;
-
-    WStr baseUrl;
-};
-
-HtmlMoniker::HtmlMoniker() = default;
-
-HtmlMoniker::~HtmlMoniker() {
-    if (htmlStream) {
-        htmlStream->Release();
-    }
-
-    str::Free(htmlData);
-    wstr::Free(baseUrl);
-}
-
-HRESULT HtmlMoniker::SetHtml(Str d) {
-    str::ReplaceWithCopy(&htmlData, d);
-    if (htmlStream) {
-        htmlStream->Release();
-    }
-    htmlStream = CreateStreamFromData(Str(htmlData.s, htmlData.len));
-    return S_OK;
-}
-
-HRESULT HtmlMoniker::SetBaseUrl(WStr newBaseUrl) {
-    wstr::Free(baseUrl);
-    baseUrl = wstr::Dup(newBaseUrl);
-    return S_OK;
-}
-
-STDMETHODIMP HtmlMoniker::BindToStorage(__unused IBindCtx* pbc, __unused IMoniker* pmkToLeft, REFIID riid,
-                                        void** ppvObj) {
-    LARGE_INTEGER seek{};
-    htmlStream->Seek(seek, STREAM_SEEK_SET, nullptr);
-    return htmlStream->QueryInterface(riid, ppvObj);
-}
-
-static LPOLESTR OleStrDup(WStr s) {
-    size_t cb = sizeof(WCHAR) * (size_t)(s.len + 1);
-    LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
-    if (ret) {
-        if (s.len > 0 && s.s) {
-            memcpy(ret, s.s, sizeof(WCHAR) * (size_t)s.len);
-        }
-        ret[s.len] = 0;
-    }
-    return ret;
-}
-
-STDMETHODIMP HtmlMoniker::GetDisplayName(__unused IBindCtx* pbc, __unused IMoniker* pmkToLeft,
-                                         LPOLESTR* ppszDisplayName) {
-    if (!ppszDisplayName) {
-        return E_POINTER;
-    }
-    *ppszDisplayName = OleStrDup(baseUrl ? baseUrl : WStr{});
-    return *ppszDisplayName ? S_OK : E_OUTOFMEMORY;
-}
-
-STDMETHODIMP HtmlMoniker::ParseDisplayName(__unused IBindCtx* pbc, __unused __unused IMoniker* pmkToLeft,
-                                           __unused LPOLESTR pszDisplayName, __unused ULONG* pchEaten,
-                                           __unused IMoniker** ppmkOut) {
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void** ppv) {
-    static const QITAB qit[] = {QITABENT(HtmlMoniker, IMoniker),
-                                QITABENT(HtmlMoniker, IPersistStream),
-                                QITABENT(HtmlMoniker, IPersist),
-                                {nullptr}};
-    return QISearch(this, qit, riid, ppv);
-}
-
-ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef() {
-    return AtomicIntInc(&refCount);
-}
-
-ULONG STDMETHODCALLTYPE HtmlMoniker::Release() {
-    return ComRelease(&refCount, [this] { delete this; });
-}
-
 // The window that renders the page and processes its input. It sits under
 // "Shell Embedding" / "Shell DocObject View", but descending into the first
 // child at each level found nothing once the parent had another child before
@@ -1387,13 +1233,11 @@ HtmlWindow::~HtmlWindow() {
     auto* cp = connectionPoint;
     auto* obj = oleObject;
     auto* view = viewObject;
-    auto* content = htmlContent;
     auto* browser = webBrowser;
     oleInPlaceObject = nullptr;
     connectionPoint = nullptr;
     oleObject = nullptr;
     viewObject = nullptr;
-    htmlContent = nullptr;
     webBrowser = nullptr;
 
     if (inPlaceObj) {
@@ -1417,9 +1261,6 @@ HtmlWindow::~HtmlWindow() {
     if (view) {
         view->Release();
     }
-    if (content) {
-        content->Release();
-    }
     if (browser) {
         browser->Release();
     }
@@ -1432,8 +1273,6 @@ HtmlWindow::~HtmlWindow() {
 
     FreeWindowId(windowId);
     UnregisterInternetProtocolFactory();
-    FreeHtmlSetInProgressData();
-    str::Free(currentURL);
 }
 
 void HtmlWindow::OnSize(Size size) {
@@ -1483,8 +1322,6 @@ void HtmlWindow::NavigateToUrl(Str urlA) {
     TempWStr url = ToWStrTemp(urlA);
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
-    str::Free(currentURL);
-    currentURL = {};
     webBrowser->Navigate2(&urlVar, nullptr, nullptr, nullptr, nullptr);
     VariantClear(&urlVar);
 }
@@ -1546,53 +1383,6 @@ void HtmlWindow::SelectAll() {
 
 void HtmlWindow::CopySelection() {
     webBrowser->ExecWB(OLECMDID_COPY, OLECMDEXECOPT_DODEFAULT, nullptr, nullptr);
-}
-
-void HtmlWindow::NavigateToAboutBlank() {
-    NavigateToUrl(StrL("about:blank"));
-}
-
-void HtmlWindow::SetHtml(Str d, Str url) {
-    FreeHtmlSetInProgressData();
-    str::ReplacePtr(&htmlSetInProgress, str::Dup(d));
-    str::ReplacePtr(&htmlSetInProgressUrl, str::Dup(url));
-    NavigateToAboutBlank();
-    // the real work will happen in OnDocumentComplete()
-}
-
-// TODO: we don't call OnDocumentComplete() on this because the url
-// reports "about:blank" and we suppress that. Figure out a way
-// to fix that (change the url somehow?)
-// TODO: IHtmlDocument2->write() seems like a simpler method
-// http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
-// https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
-void HtmlWindow::SetHtmlReal(Str d) {
-    if (htmlContent) {
-        htmlContent->Release();
-    }
-    htmlContent = new HtmlMoniker();
-    htmlContent->SetHtml(d);
-    TempStr baseUrl = fmt(kHwProtoPrefixA "://%d/", windowId);
-    htmlContent->SetBaseUrl(ToWStrTemp(baseUrl));
-
-    AutoReleaseComPtr<IDispatch> docDispatch;
-    HRESULT hr = webBrowser->get_Document(&docDispatch);
-    if (FAILED(hr) || !docDispatch) {
-        return;
-    }
-
-    AutoReleaseComQIPtr<IHTMLDocument2> doc(docDispatch);
-    if (!doc) {
-        return;
-    }
-
-    AutoReleaseComQIPtr<IPersistMoniker> perstMon(doc);
-    if (!perstMon) {
-        return;
-    }
-    AutoReleaseComQIPtr<IMoniker> htmlMon(htmlContent);
-    hr = perstMon->Load(TRUE, htmlMon, nullptr, STGM_READ);
-    ReportIf(FAILED(hr));
 }
 
 // http://stackoverflow.com/questions/9778206/how-i-can-get-information-about-the-scrollbars-of-an-webbrowser-control-instance
@@ -1789,8 +1579,6 @@ HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
 // called before an url is shown. If returns false, will cancel
 // the navigation.
 bool HtmlWindow::OnBeforeNavigate(Str url, bool newWindow) {
-    str::Free(currentURL);
-    currentURL = {};
     if (!htmlWinCb) {
         return true;
     }
@@ -1805,37 +1593,12 @@ bool HtmlWindow::OnBeforeNavigate(Str url, bool newWindow) {
     return shouldNavigate;
 }
 
-void HtmlWindow::FreeHtmlSetInProgressData() {
-    str::Free(htmlSetInProgress);
-    htmlSetInProgress = {};
-    str::Free(htmlSetInProgressUrl);
-    htmlSetInProgressUrl = {};
-}
-
 void HtmlWindow::OnDocumentComplete(Str url) {
-    if (IsBlankUrl(url)) {
-        if (htmlSetInProgress) {
-            // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
-            // which we should ignore?
-            SetHtmlReal(htmlSetInProgress);
-            if (htmlWinCb) {
-                htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
-            }
-
-            FreeHtmlSetInProgressData();
-            SetScrollbarToAuto();
-            return;
-        }
-    }
-
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     TempStr urlReal = UrlWithoutProtoTemp(url, windowId);
-
-    str::Free(currentURL);
-    currentURL = str::Dup(urlReal);
     if (htmlWinCb) {
-        htmlWinCb->OnDocumentComplete(currentURL);
+        htmlWinCb->OnDocumentComplete(urlReal);
     }
     SetScrollbarToAuto();
 }

@@ -22,7 +22,6 @@ struct Constraints {
     bool HasTightHeight() const;
     Constraints Inset(int width, int height) const;
     bool IsTight() const;
-    bool IsZero() const;
     Constraints Loosen() const;
     Constraints LoosenHeight() const;
     Constraints LoosenWidth() const;
@@ -34,8 +33,6 @@ Constraints ExpandInf();
 Constraints ExpandHeight(int width);
 Constraints Loose(Size size);
 Constraints Tight(Size size);
-
-using NeedLayout = Func0;
 
 // works like css visibility property
 enum class Visibility {
@@ -123,8 +120,6 @@ enum class MainAxisAlign : u8 {
     MainCenter,
     // Children will be packed together at the bottom or right of the box
     MainEnd,
-    // Children will be spaced apart
-    SpaceAround,
     // Children will be spaced apart, but the first and last children will but the ends of the box.
     SpaceBetween,
     // Children will be allocated equal space.
@@ -221,8 +216,6 @@ constexpr Alignment AlignEnd = 0x7fff;
 struct Align : ILayout {
     Alignment HAlign = AlignStart; // Horizontal alignment of child widget.
     Alignment VAlign = AlignStart; // Vertical alignment of child widget.
-    float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
-    float HeightFactor = 0;        // If greater than zero, ratio of container height to child height.
     ILayout* Child = nullptr;
     Size childSize;
 
@@ -278,7 +271,6 @@ struct Overlay : ILayout {
 
     OverlayChild& AddChild(ILayout* child);
     OverlayChild& AddChild(ILayout* child, CrossAxisAlign alignH, CrossAxisAlign alignV);
-    int ChildrenCount() const;
 };
 
 // HBox that wraps onto the next row when children do not fit the available width.

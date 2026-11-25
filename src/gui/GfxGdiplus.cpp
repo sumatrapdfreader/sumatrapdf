@@ -38,11 +38,6 @@ GfxGdiplus::GfxGdiplus(HDC hdc) {
     textColor = GetTextColor(hdc);
 }
 
-GfxGdiplus::GfxGdiplus(Graphics* g) {
-    gfx = g;
-    ownsGfx = false;
-}
-
 GfxGdiplus::~GfxGdiplus() {
     if (ownsGfx) {
         delete gfx;

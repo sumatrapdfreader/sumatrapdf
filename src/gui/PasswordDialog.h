@@ -17,12 +17,3 @@ struct PasswordDialogResult {
 };
 
 bool ShowPasswordDialog(const PasswordDialogArgs&, PasswordDialogResult*);
-
-struct DialogPasswordUI : PasswordUI {
-    NativeWnd parent = nullptr;
-    bool showPassword = false;
-    bool canRemember = false;
-
-    explicit DialogPasswordUI(NativeWnd parent);
-    Str GetPassword(Str filePath, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
-};

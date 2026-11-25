@@ -43,14 +43,6 @@ struct WebViewEvents {
     // webview, or kWebViewForwardKey to re-post the key itself. Lets the host
     // forward its keyboard shortcuts that the webview would otherwise swallow.
     int (*resolveAccelCmd)(void* ctx, u16 vk, bool ctrl, bool shift, bool alt) = nullptr;
-    // a WebView2 process died. Return true if handled; returning false runs the
-    // default recovery (reload for a dead renderer, fail the control for a dead
-    // browser process). Called on the UI thread.
-    bool (*processFailed)(void* ctx, WebViewProcessFailure kind) = nullptr;
-    // a JS call made through window.__sumatra__.call(name, ...) / a bound name.
-    // paramsJson is the arguments as a JSON array. Reply with WebviewWnd::Resolve
-    // (may be async); not replying leaves the JS promise pending forever.
-    void (*jsCall)(void* ctx, Str id, Str method, Str paramsJson) = nullptr;
     // window.__sumatra__.notify(name, ...): one-way, no reply and no promise, so
     // it's the right channel for high-frequency events like scrolling
     void (*jsNotify)(void* ctx, Str method, Str paramsJson) = nullptr;
@@ -64,26 +56,12 @@ struct WebViewResourceProvider {
 struct PendingWebViewOp {
     enum Kind {
         Init,
-        SetHtml,
         Eval,
         Navigate,
     };
 
     Kind kind;
     Str text;
-    // for Init: the token AddInitScript() already handed back to the caller, so
-    // the script keeps its identity across the queue
-    int token = 0;
-};
-
-// An init script (AddScriptToExecuteOnDocumentCreated). `id` is assigned
-// asynchronously by WebView2 and is what RemoveScriptToExecuteOnDocumentCreated
-// needs, so a script can only be removed once its id has arrived.
-struct WebViewInitScript {
-    int token = 0;
-    WStr id;
-    // remove as soon as the id arrives (RemoveInitScript ran before that)
-    bool removePending = false;
 };
 
 struct CreateWebViewArgs {
@@ -98,19 +76,9 @@ struct WebviewWnd : WindowBase {
     HWND Create(const CreateWebViewArgs&);
 
     void Eval(Str js);
-    void SetHtml(Str html);
     void Init(Str js);
-    int AddInitScript(Str js);
-    void AddInitScriptWithToken(Str js, int token);
-    int FindInitScript(int token) const;
-    void RemoveInitScript(int token);
-    void OnInitScriptAdded(int token, const WCHAR* id);
     void Navigate(Str url);
-    void Bind(Str name);
-    void Resolve(Str id, int status, Str resultJson);
-    void OnJsCall(Str msg);
     void OnJsNotify(Str msg);
-    void RebuildBindScript();
     void GoBack();
     void GoForward();
     void SetZoomPercent(int zoom);
@@ -127,7 +95,7 @@ struct WebviewWnd : WindowBase {
     void OnControllerReady(ICoreWebView2Controller* controller);
     void OnProcessFailed(WebViewProcessFailure kind);
     void FailInit();
-    void QueuePendingOp(PendingWebViewOp::Kind kind, Str text, int token = 0);
+    void QueuePendingOp(PendingWebViewOp::Kind kind, Str text);
     void FlushPendingOps();
     void SetControllerVisible(bool visible);
     void RefreshControllerSurface();
@@ -182,9 +150,4 @@ struct WebviewWnd : WindowBase {
     // the OS default browser instead of WebView2's download UI (issue #5920)
     bool routeDownloadsToOsBrowser = false;
     Vec<PendingWebViewOp> pendingOps;
-    Vec<WebViewInitScript> initScripts;
-    int nextInitScriptToken = 1;
-    // names exposed to JS via Bind(); the bind script is rebuilt when this changes
-    Vec<Str> boundNames;
-    int bindScriptToken = 0;
 };

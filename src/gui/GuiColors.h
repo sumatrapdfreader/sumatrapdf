@@ -88,13 +88,6 @@ enum {
 };
 extern Color gColsSplitter[kColSplitterCount];
 
-//--- VirtFill
-enum {
-    kColFillBg,
-    kColFillCount,
-};
-extern Color gColsFill[kColFillCount];
-
 //--- VirtLine
 enum {
     kColLineFg,

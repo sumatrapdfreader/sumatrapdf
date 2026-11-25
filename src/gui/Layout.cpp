@@ -169,10 +169,6 @@ bool Constraints::IsTight() const {
     return HasTightWidth() && HasTightHeight();
 }
 
-bool Constraints::IsZero() const {
-    return min.dx == 0 && min.dy == 0 && max.dx == 0 && max.dy == 0;
-}
-
 Constraints Constraints::Loosen() const {
     return Constraints{Size{}, max};
 }
@@ -597,13 +593,6 @@ void VBox::SetBounds(Rect bounds) {
             case MainAxisAlign::MainEnd:
                 bounds.y = bounds.Bottom() - totalHeight;
                 break;
-            case MainAxisAlign::SpaceAround: {
-                int l = (bounds.dy - totalHeight);
-                int extra = Scale(l, 1, i64(count) + 1);
-                bounds.y += extra;
-                between += extra;
-                break;
-            }
             case MainAxisAlign::SpaceBetween:
                 if (count > 1) {
                     int l = (bounds.dy - totalHeight);
@@ -920,12 +909,6 @@ void HBox::SetBounds(Rect bounds) {
             case MainAxisAlign::MainEnd:
                 bounds.x = bounds.Right() - totalWidth;
                 break;
-            case MainAxisAlign::SpaceAround: {
-                auto eg = (bounds.dx - totalWidth);
-                int extra = Scale(eg, 1, i64(count) + 1);
-                bounds.x += extra;
-                between += extra;
-            } break;
             case MainAxisAlign::SpaceBetween:
                 if (count > 1) {
                     auto eg = (bounds.dx - totalWidth);
@@ -1032,33 +1015,15 @@ Size Align::Layout(const Constraints bc) {
 
     Size size = Child->Layout(bc.Loosen());
     childSize = size;
-    auto f = WidthFactor;
-    if (f > 0) {
-        size.dx = i32(float(size.dx) * f);
-    }
-    f = HeightFactor;
-    if (f > 0) {
-        size.dy = i32(float(size.dy) * f);
-    }
     return bc.Constrain(size);
 }
 
 int Align::MinIntrinsicHeight(int width) {
-    int height = Child->MinIntrinsicHeight(width);
-    auto f = HeightFactor;
-    if (f > 0) {
-        return int(float(height) * f);
-    }
-    return height;
+    return Child->MinIntrinsicHeight(width);
 }
 
 int Align::MinIntrinsicWidth(int height) {
-    int width = Child->MinIntrinsicWidth(height);
-    auto f = WidthFactor;
-    if (f > 0) {
-        return int(float(width) * f);
-    }
-    return width;
+    return Child->MinIntrinsicWidth(height);
 }
 
 void Align::SetBounds(Rect bounds) {
@@ -1456,10 +1421,6 @@ int Overlay::LayoutChildCount() {
 
 ILayout* Overlay::LayoutChildAt(int idx) {
     return children[idx].child;
-}
-
-int Overlay::ChildrenCount() const {
-    return len(children);
 }
 
 static OverlayChild gRefusedOverlayChild;

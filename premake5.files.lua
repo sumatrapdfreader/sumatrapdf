@@ -615,7 +615,7 @@ function gui_files()
     "GfxDirect2D.cpp",
     "GuiColors.*",
     "Layout.*",
-    "PasswordDialog.*",
+    "PasswordDialog.h",
     "PlatformFont.*",
     "PlatformText.*",
     "PlatformWindow.h",

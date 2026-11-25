@@ -2,10 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 class FrameSite;
-class HtmlMoniker;
-
-bool IsBlankUrl(Str url);
-bool IsBlankUrl(WStr url);
 
 // HtmlWindowCallback allows HtmlWindow to notify other code about notable
 // events or delegate some of the functionality.
@@ -51,28 +47,18 @@ class HtmlWindow {
     IViewObject* viewObject = nullptr;
     IConnectionPoint* connectionPoint = nullptr;
     FrameSite* frameSite = nullptr;
-    HtmlMoniker* htmlContent = nullptr;
     HWND oleObjectHwnd = nullptr;
     int zoomDPI = 96;
 
-    Str htmlSetInProgress;
-    Str htmlSetInProgressUrl;
-
     DWORD adviseCookie = 0;
-    bool blankWasShown = false;
-
-    Str currentURL;
 
     HtmlWindow(HWND hwndParent, HtmlWindowCallback* cb);
 
-    void NavigateToAboutBlank();
     bool CreateBrowser();
 
     void SubclassHwnd();
     void UnsubclassHwnd();
     void SetScrollbarToAuto();
-    void SetHtmlReal(Str);
-    void FreeHtmlSetInProgressData();
 
     ~HtmlWindow();
 
@@ -80,7 +66,6 @@ class HtmlWindow {
     void SetVisible(bool visible);
     void NavigateToUrl(Str url);
     void NavigateToDataUrl(Str url);
-    void SetHtml(Str, Str url = {});
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);

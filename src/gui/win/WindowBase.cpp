@@ -205,15 +205,6 @@ void HwndBase::UnSubclass() {
     subclassId = 0;
 }
 
-HWND HwndBase::Detach() {
-    UnSubclass();
-
-    HWND wnd = hwnd;
-    HwndListRemove(this);
-    hwnd = nullptr;
-    return wnd;
-}
-
 void HwndBase::SetText(Str s) {
     if (len(s) == 0) {
         s = StrL("");
@@ -558,22 +549,6 @@ static LRESULT DispatchOnMessage(T* self, HWND hwnd, UINT msg, WPARAM wparam, LP
         }
     }
     return self->WndProcDefault(hwnd, msg, wparam, lparam);
-}
-
-// shared by WindowBase and ControlBase: subclass an existing HWND and fire onAttach
-template <typename T>
-static void AttachToHwnd(T* self, HWND hwnd) {
-    ReportIf(!IsWindow(hwnd));
-    ReportIf(HwndBaseFromHwnd(hwnd));
-
-    self->hwnd = hwnd;
-    DpiSetFromHwnd(hwnd);
-    self->Subclass();
-    if (self->onAttach.IsValid()) {
-        typename T::AttachEvent ev;
-        ev.w = self;
-        self->onAttach.Call(&ev);
-    }
 }
 
 LRESULT WindowBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -1117,16 +1092,6 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             }
         } break; // Note: Some MDI commands require default processing.
 
-        case WM_CREATE: {
-            if (onCreate.IsValid()) {
-                CreateEvent ev;
-                ev.w = this;
-                ev.cs = (CREATESTRUCT*)lparam;
-                onCreate.Call(&ev);
-            }
-            break;
-        }
-
         case WM_SETFOCUS: {
             if (onFocus.IsValid()) {
                 FocusEvent ev;
@@ -1362,31 +1327,6 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             }
             break;
         }
-        case WM_LBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_RBUTTONUP:
-        case WM_MOUSEACTIVATE:
-        case WM_MOUSEHOVER:
-        case WM_MOUSEHWHEEL:
-        case WM_MOUSELEAVE:
-        case WM_MOUSEMOVE:
-        case WM_MOUSEWHEEL: {
-            if (onMouseEvent.IsValid()) {
-                MouseEvent ev;
-                ev.w = this;
-                ev.msg = msg;
-                ev.wparam = wparam;
-                ev.lparam = lparam;
-                onMouseEvent.Call(&ev);
-                if (ev.didHandle) {
-                    return ev.result;
-                }
-            }
-            break;
-        }
         case WM_MOVE: {
             if (onMove.IsValid()) {
                 POINTS pts = MAKEPOINTS(lparam);
@@ -1432,20 +1372,6 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 ev.w = this;
                 ev.windowPos = reinterpret_cast<LPWINDOWPOS>(lparam);
                 onWindowPosChanging.Call(&ev);
-            }
-            break;
-        }
-
-        default: {
-            if (msg == kWmTaskbarCreated || msg == kWmTaskbarButtonCreated || msg == kWmTaskbarCallback) {
-                if (onTaskbarCallback.IsValid()) {
-                    TaskbarCallbackEvent ev;
-                    ev.w = this;
-                    ev.msg = msg;
-                    ev.lparam = lparam;
-                    onTaskbarCallback.Call(&ev);
-                }
-                return 0;
             }
             break;
         }
@@ -1532,10 +1458,6 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
         return false;
     }
     return TabNavigate(ev.isShift);
-}
-
-void WindowBase::Attach(HWND hwnd) {
-    AttachToHwnd(this, hwnd);
 }
 
 int WindowBase::GetDpi() const {
@@ -1767,16 +1689,6 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
             }
         } break; // Note: Some MDI commands require default processing.
 
-        case WM_CREATE: {
-            if (onCreate.IsValid()) {
-                CreateEvent ev;
-                ev.w = this;
-                ev.cs = (CREATESTRUCT*)lparam;
-                onCreate.Call(&ev);
-            }
-            break;
-        }
-
         case WM_DPICHANGED: {
             DpiSet((int)LOWORD(wparam), (int)HIWORD(wparam));
             break;
@@ -1899,31 +1811,6 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
             }
             break;
         }
-        case WM_LBUTTONDOWN:
-        case WM_MBUTTONDOWN:
-        case WM_RBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_MBUTTONUP:
-        case WM_RBUTTONUP:
-        case WM_MOUSEACTIVATE:
-        case WM_MOUSEHOVER:
-        case WM_MOUSEHWHEEL:
-        case WM_MOUSELEAVE:
-        case WM_MOUSEMOVE:
-        case WM_MOUSEWHEEL: {
-            if (onMouseEvent.IsValid()) {
-                MouseEvent mev;
-                mev.w = this;
-                mev.msg = msg;
-                mev.wparam = wparam;
-                mev.lparam = lparam;
-                onMouseEvent.Call(&mev);
-                if (mev.didHandle) {
-                    return mev.result;
-                }
-            }
-            break;
-        }
         case WM_CONTEXTMENU: {
             if (onContextMenu.IsValid()) {
                 Point ptScreen = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
@@ -1969,10 +1856,6 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
     return FinalWindowProc(msg, wparam, lparam);
 }
 
-void ControlBase::Attach(HWND hwnd) {
-    AttachToHwnd(this, hwnd);
-}
-
 HWND ControlBase::CreateControl(const CreateControlArgs& args) {
     ReportIf(len(args.className) == 0);
     // TODO: validate that className is one of the known controls?
@@ -2012,11 +1895,6 @@ HWND ControlBase::CreateControl(const CreateControlArgs& args) {
     DpiSetFromHwnd(hwnd);
 
     Subclass();
-    if (onAttach.IsValid()) {
-        AttachEvent ev;
-        ev.w = this;
-        onAttach.Call(&ev);
-    }
 
     if (args.text) {
         SetText(args.text);
@@ -2099,24 +1977,6 @@ bool PreTranslateMessage(MSG& msg) {
         }
     }
     return false;
-}
-
-int RunMessageLoop(HACCEL accelTable, HWND hwndDialog) {
-    MSG msg;
-    while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (PreTranslateMessage(msg)) {
-            continue;
-        }
-        if (TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
-            continue;
-        }
-        if (hwndDialog && IsDialogMessage(hwndDialog, &msg)) {
-            continue;
-        }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-    return (int)msg.wParam;
 }
 
 // Runs a message loop until hwndDialog is destroyed, making it modal to

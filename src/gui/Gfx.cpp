@@ -359,14 +359,9 @@ bool GfxHdc::SetMirrored(bool mirror) {
     return (prev & LAYOUT_RTL) != 0;
 }
 
-bool gUseDirect2D = true;
-
-// The two implementations that draw the same way (anti-aliased shapes, their
-// own text layout), so that flipping gUseDirect2D swaps the backend under
-// whatever is painting and the two can be compared. Direct2D only when the OS
-// actually has it. The caller owns the result.
+// Direct2D when the OS has it, otherwise GDI+. The caller owns the result.
 Gfx* GfxCreate(HDC hdc) {
-    if (gUseDirect2D && Direct2DAvailable()) {
+    if (Direct2DAvailable()) {
         auto* d2d = new GfxDirect2D(hdc);
         // BindDC fails on a 24-bit DDB memory DC; don't return a no-op painter
         if (d2d->target) {
@@ -384,7 +379,7 @@ Size GfxMeasureText(PlatformFont* font, Str s) {
     if (len(s) == 0) {
         return {};
     }
-    if (gUseDirect2D && Direct2DAvailable()) {
+    if (Direct2DAvailable()) {
         Size sz = D2DMeasureText(font, s);
         if (!sz.IsEmpty()) {
             return sz;

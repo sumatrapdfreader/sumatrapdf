@@ -197,7 +197,7 @@ void VirtCtrl::PaintTree(Gfx* gfx, Point origin, Rect clip) {
     ctx.clip = clip;
     Paint(ctx);
 
-    if (HasFlag(vwfPaintsOwnChildren) || ChildCount() == 0) {
+    if (ChildCount() == 0) {
         return;
     }
     if (HasFlag(vwfClipChildren)) {
@@ -210,8 +210,7 @@ void VirtCtrl::PaintTree(Gfx* gfx, Point origin, Rect clip) {
 }
 
 void VirtCtrl::PaintChildren(VirtPaintCtx& ctx) {
-    Point so = ScrollOffset();
-    Point origin{ctx.content.x - so.x, ctx.content.y - so.y};
+    Point origin{ctx.content.x, ctx.content.y};
     for (VirtCtrl* c : children) {
         c->PaintTree(ctx.gfx, origin, ctx.clip);
     }
@@ -226,10 +225,6 @@ void VirtCtrl::PaintStandalone(Gfx* gfx) {
 bool VirtCtrl::HitTest(Point ptLocal) {
     Rect r{0, 0, bounds.dx, bounds.dy};
     return r.Contains(ptLocal);
-}
-
-Point VirtCtrl::ScrollOffset() {
-    return {0, 0};
 }
 
 // Hit-test the ILayout subtree at ptWindow. Topmost (last) child wins.
@@ -249,12 +244,10 @@ ILayout* ElementFromPoint(ILayout* root, Point ptWindow, Point* ptLocalOut, u32 
         if (!b.Contains(ptWindow)) {
             return nullptr;
         }
-        if (!vc->HasFlag(vwfPaintsOwnChildren)) {
-            for (int i = root->LayoutChildCount() - 1; i >= 0; i--) {
-                ILayout* hit = ElementFromPoint(root->LayoutChildAt(i), ptWindow, ptLocalOut, flags);
-                if (hit) {
-                    return hit;
-                }
+        for (int i = root->LayoutChildCount() - 1; i >= 0; i--) {
+            ILayout* hit = ElementFromPoint(root->LayoutChildAt(i), ptWindow, ptLocalOut, flags);
+            if (hit) {
+                return hit;
             }
         }
         if (vc->HasFlag(vwfNoHitTest) || !vc->HitTest({ptWindow.x - b.x, ptWindow.y - b.y})) {
@@ -390,16 +383,6 @@ bool VirtCtrl::OnChar(int c) {
     return ev.didHandle;
 }
 
-void VirtCtrl::OnFocusChanged(bool gotFocus) {
-    if (!onFocusChanged.IsValid()) {
-        return;
-    }
-    VirtFocusEvent ev;
-    ev.w = this;
-    ev.gotFocus = gotFocus;
-    onFocusChanged.Call(&ev);
-}
-
 bool VirtCtrl::OnSetCursor(Point ptLocal) {
     if (onSetCursor.IsValid()) {
         VirtSetCursorEvent ev;
@@ -494,19 +477,6 @@ VirtCtrl* VirtCtrl::ChildAt(int idx) const {
     return children[idx];
 }
 
-VirtCtrl* VirtCtrl::FindById(int wndId) {
-    if (id == wndId) {
-        return this;
-    }
-    for (VirtCtrl* c : children) {
-        VirtCtrl* res = c->FindById(wndId);
-        if (res) {
-            return res;
-        }
-    }
-    return nullptr;
-}
-
 Point VirtCtrl::OriginInWindow() {
     Point p{0, 0};
     if (parent) {
@@ -517,11 +487,10 @@ Point VirtCtrl::OriginInWindow() {
     return {p.x + bounds.x, p.y + bounds.y};
 }
 
-// where children are positioned: our content origin, shifted by our scroll
+// where children are positioned: our content origin
 Point VirtCtrl::ChildOriginInWindow() {
     Point o = OriginInWindow();
-    Point so = ScrollOffset();
-    return {o.x + padding.left - so.x, o.y + padding.top - so.y};
+    return {o.x + padding.left, o.y + padding.top};
 }
 
 Rect VirtCtrl::BoundsInWindow() {
@@ -830,9 +799,6 @@ static void AppendVirtCtrl(str::Builder& out, Str cls, HWND hwnd, VirtCtrl* w, i
         return;
     }
     AppendVirtLine(out, cls, hwnd, w);
-    if (w->HasFlag(vwfPaintsOwnChildren)) {
-        return;
-    }
     for (VirtCtrl* c : w->children) {
         AppendVirtCtrl(out, cls, hwnd, c, depth + 1);
     }
@@ -943,12 +909,10 @@ void VirtRoot::SetFocus(VirtCtrl* w) {
     focused = w;
     if (prev) {
         prev->SetFlag(vwfFocused, false);
-        prev->OnFocusChanged(false);
         prev->Invalidate();
     }
     if (focused) {
         focused->SetFlag(vwfFocused, true);
-        focused->OnFocusChanged(true);
         focused->Invalidate();
     }
 }
@@ -1457,94 +1421,6 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     return false;
 }
 
-//--- VirtScroll
-
-static Kind kindVirtCtrlScroll = "virtCtrlScroll";
-
-VirtScroll::VirtScroll() {
-    onMouseWheel = MkMethod1<VirtScroll, VirtMouseEvent*, &VirtScroll::OnMouseWheel>(this);
-    onPan = MkMethod1<VirtScroll, VirtMouseEvent*, &VirtScroll::OnPan>(this);
-
-    kind = kindVirtCtrlScroll;
-    flags |= vwfClipChildren;
-}
-
-VirtScroll::~VirtScroll() = default;
-
-Size VirtScroll::Layout(Constraints bc) {
-    // a viewport takes whatever it is given; the content decides contentDy
-    Size sz = bc.Constrain({bc.max.dx, bc.max.dy});
-    for (VirtCtrl* c : children) {
-        Constraints cc = bc;
-        cc.min = {0, 0};
-        cc.max.dy = Inf;
-        c->Layout(cc);
-    }
-    return sz;
-}
-
-void VirtScroll::SetBounds(Rect r) {
-    VirtCtrl::SetBounds(r);
-    Rect content = r;
-    content.SubTB(padding.top, padding.bottom);
-    content.SubLR(padding.left, padding.right);
-    int y = content.y - scrollY;
-    for (VirtCtrl* c : children) {
-        int dy = c->MinIntrinsicHeight(content.dx);
-        c->SetBounds({content.x, y, content.dx, dy});
-        y += dy;
-    }
-    ScrollTo(scrollY);
-    NotifyVisibleRange();
-}
-
-Point VirtScroll::ScrollOffset() {
-    return {0, scrollY};
-}
-
-int VirtScroll::MaxScrollY() const {
-    int visible = bounds.dy - padding.top - padding.bottom;
-    int res = contentDy - visible;
-    return res > 0 ? res : 0;
-}
-
-bool VirtScroll::ScrollTo(int y) {
-    int maxY = MaxScrollY();
-    y = ClampI(y, 0, maxY);
-    if (y == scrollY) {
-        return false;
-    }
-    scrollY = y;
-    UpdateScrollbar();
-    NotifyVisibleRange();
-    Invalidate();
-    return true;
-}
-
-bool VirtScroll::ScrollBy(int dy) {
-    return ScrollTo(scrollY + dy);
-}
-
-bool VirtScroll::ScrollPage(int dir) {
-    int visible = bounds.dy - padding.top - padding.bottom;
-    return ScrollBy(dir * visible);
-}
-
-void VirtScroll::ScrollIntoView(VirtCtrl* w) {
-    if (!w) {
-        return;
-    }
-    Rect wr = w->BoundsInWindow();
-    Rect vr = ContentRectInWindow();
-    if (wr.y < vr.y) {
-        ScrollBy(wr.y - vr.y);
-        return;
-    }
-    if (wr.Bottom() > vr.Bottom()) {
-        ScrollBy(wr.Bottom() - vr.Bottom());
-    }
-}
-
 // scrolls `self` three lines per wheel notch
 template <typename T>
 static void WheelScroll(T* self, VirtMouseEvent* ev) {
@@ -1557,93 +1433,12 @@ static void WheelScroll(T* self, VirtMouseEvent* ev) {
     }
 }
 
-void VirtScroll::OnMouseWheel(VirtMouseEvent* ev) {
-    WheelScroll(this, ev);
-}
-
 // the content follows the finger
 template <typename T>
 static void PanByFinger(T* ctrl, VirtMouseEvent* ev) {
     if (ctrl->ScrollBy(-ev->panDy)) {
         ev->didHandle = true;
     }
-}
-
-void VirtScroll::OnPan(VirtMouseEvent* ev) {
-    PanByFinger(this, ev);
-}
-
-void VirtScroll::OnVScroll(WPARAM wp) {
-    int visible = bounds.dy - padding.top - padding.bottom;
-    switch (LOWORD(wp)) {
-        case SB_TOP:
-            ScrollTo(0);
-            break;
-        case SB_BOTTOM:
-            ScrollTo(MaxScrollY());
-            break;
-        case SB_LINEUP:
-            ScrollBy(-lineDy);
-            break;
-        case SB_LINEDOWN:
-            ScrollBy(lineDy);
-            break;
-        case SB_PAGEUP:
-            ScrollBy(-visible);
-            break;
-        case SB_PAGEDOWN:
-            ScrollBy(visible);
-            break;
-        case SB_THUMBTRACK:
-        case SB_THUMBPOSITION: {
-            HWND hwnd = GetHwnd();
-            if (hwnd) {
-                SCROLLINFO si{};
-                si.cbSize = sizeof(si);
-                si.fMask = SIF_TRACKPOS;
-                if (GetScrollInfo(hwnd, SB_VERT, &si)) {
-                    ScrollTo(si.nTrackPos);
-                    break;
-                }
-            }
-            ScrollTo(HIWORD(wp));
-            break;
-        }
-    }
-}
-
-void VirtScroll::UpdateScrollbar() {
-    HWND hwnd = GetHwnd();
-    if (!syncScrollbar || !hwnd) {
-        return;
-    }
-    SCROLLINFO si{};
-    si.cbSize = sizeof(si);
-    si.fMask = SIF_ALL;
-    si.nMin = 0;
-    si.nMax = contentDy > 0 ? contentDy - 1 : 0;
-    si.nPage = (UINT)(bounds.dy - padding.top - padding.bottom);
-    si.nPos = scrollY;
-    SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-}
-
-// only tell the owner when the visible band actually changed, so that
-// virtualized owners can rebuild their children cheaply
-void VirtScroll::NotifyVisibleRange() {
-    if (!onVisibleRangeChanged.IsValid()) {
-        return;
-    }
-    int visible = bounds.dy - padding.top - padding.bottom;
-    if (scrollY == lastNotifiedY && visible == lastNotifiedDy) {
-        return;
-    }
-    lastNotifiedY = scrollY;
-    lastNotifiedDy = visible;
-    VirtScrollRange r;
-    r.wnd = this;
-    r.visibleY = scrollY;
-    r.visibleDy = visible;
-    onVisibleRangeChanged.Call(&r);
 }
 
 //--- ScrollBox
@@ -1697,10 +1492,6 @@ void ScrollBox::SetRoot(VirtRoot* r) {
     for (VirtCtrl* w : inner) {
         w->SetRoot(r);
     }
-}
-
-Point ScrollBox::ScrollOffset() {
-    return {0, scrollY};
 }
 
 void ScrollBox::Paint(VirtPaintCtx& ctx) {
@@ -2934,8 +2725,6 @@ VirtText* NewVirtText(const VirtTextArgs& args) {
 static Kind kindVirtCtrlLink = "virtCtrlLink";
 
 VirtLink::VirtLink(Str str, PlatformFont* f) : VirtText(str, f) {
-    onMouseEnter = MkMethod0<VirtLink, &VirtLink::OnMouseEnter>(this);
-    onMouseLeave = MkMethod0<VirtLink, &VirtLink::OnMouseLeave>(this);
     cursor = CursorId::Hand;
 
     kind = kindVirtCtrlLink;
@@ -2950,29 +2739,6 @@ VirtLink::~VirtLink() {
 
 void VirtLink::SetTarget(Str s2) {
     str::ReplaceWithCopy(&target, s2);
-}
-
-void VirtLink::Paint(VirtPaintCtx& ctx) {
-    bool prevUnderline = withUnderline;
-    if (underlineOnHover) {
-        withUnderline = HasFlag(vwfHovered);
-    }
-    VirtText::Paint(ctx);
-    withUnderline = prevUnderline;
-}
-
-static void RepaintUnderline(VirtLink* link) {
-    if (link->underlineOnHover) {
-        link->Invalidate();
-    }
-}
-
-void VirtLink::OnMouseEnter() {
-    RepaintUnderline(this);
-}
-
-void VirtLink::OnMouseLeave() {
-    RepaintUnderline(this);
 }
 
 //--- VirtButton
@@ -3367,27 +3133,6 @@ void VirtImage::Paint(VirtPaintCtx& ctx) {
         r.dy = sz2.dy;
     }
     ctx.gfx->DrawPixmap(pixmap, r);
-}
-
-//--- VirtFill
-
-static Kind kindVirtCtrlFill = "virtCtrlFill";
-
-VirtFill::VirtFill() {
-    kind = kindVirtCtrlFill;
-    colorDefaults = gColsFill;
-    nColors = kColFillCount;
-    flags |= vwfNoHitTest;
-}
-
-VirtFill::~VirtFill() = default;
-
-Size VirtFill::GetIdealSize() {
-    return idealSize;
-}
-
-void VirtFill::Paint(VirtPaintCtx& ctx) {
-    ctx.gfx->FillRect(ctx.bounds, GetColor(kColFillBg));
 }
 
 //--- VirtLine
