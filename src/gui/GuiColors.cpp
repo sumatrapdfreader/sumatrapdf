@@ -121,6 +121,7 @@ void GuiSetDefaultColorsFromSystem() {
 
     gColsTab[kColTabText] = winText;
     gColsTab[kColTabBg] = ctlBg;
+    gColsTab[kColTabInactiveBg] = AccentColor(ctlBg, 15);
 
     // a custom top-level window's own surface, like the OS paints a window's
     gColsWin[kColWinText] = winText;

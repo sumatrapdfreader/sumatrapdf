@@ -66,6 +66,7 @@ ICoreWebView2Controller4 : public ICoreWebView2Controller3 {
 class ForwardingDropTarget : public IDropTarget {
     AtomicInt refCount = 1;
     HWND forwardTo = nullptr;
+    bool acceptDrop = false;
 
   public:
     explicit ForwardingDropTarget(HWND forwardTo) : forwardTo(forwardTo) {}
@@ -102,14 +103,18 @@ class ForwardingDropTarget : public IDropTarget {
 
     HRESULT STDMETHODCALLTYPE DragEnter(IDataObject* dataObj, DWORD /*grfKeyState*/, POINTL /*pt*/,
                                         DWORD* pdwEffect) override {
-        *pdwEffect = HasFiles(dataObj) ? DROPEFFECT_COPY : DROPEFFECT_NONE;
+        acceptDrop = HasFiles(dataObj);
+        *pdwEffect = acceptDrop ? DROPEFFECT_COPY : DROPEFFECT_NONE;
         return S_OK;
     }
     HRESULT STDMETHODCALLTYPE DragOver(DWORD /*grfKeyState*/, POINTL /*pt*/, DWORD* pdwEffect) override {
-        *pdwEffect = DROPEFFECT_COPY;
+        *pdwEffect = acceptDrop ? DROPEFFECT_COPY : DROPEFFECT_NONE;
         return S_OK;
     }
-    HRESULT STDMETHODCALLTYPE DragLeave() override { return S_OK; }
+    HRESULT STDMETHODCALLTYPE DragLeave() override {
+        acceptDrop = false;
+        return S_OK;
+    }
     HRESULT STDMETHODCALLTYPE Drop(IDataObject* dataObj, DWORD /*grfKeyState*/, POINTL /*pt*/,
                                    DWORD* pdwEffect) override {
         *pdwEffect = DROPEFFECT_COPY;
@@ -1791,6 +1796,11 @@ void WebviewWnd::RegisterForwardingDropTarget() {
     if (!dropTarget) {
         dropTarget = new ForwardingDropTarget(parent);
     }
+    for (int i = len(dropTargetHwnds) - 1; i >= 0; i--) {
+        if (!::IsWindow(dropTargetHwnds[i])) {
+            VecRemoveAt(dropTargetHwnds, i);
+        }
+    }
     Vec<HWND> wnds;
     VecAppend(wnds, hwnd);
     EnumChildWindows(hwnd, CollectChildHwnds, (LPARAM)&wnds);
@@ -1801,7 +1811,9 @@ void WebviewWnd::RegisterForwardingDropTarget() {
 
 void WebviewWnd::RevokeForwardingDropTarget() {
     for (HWND h : dropTargetHwnds) {
-        RevokeDragDrop(h);
+        if (::IsWindow(h)) {
+            RevokeDragDrop(h);
+        }
     }
     VecReset(dropTargetHwnds);
     if (dropTarget) {

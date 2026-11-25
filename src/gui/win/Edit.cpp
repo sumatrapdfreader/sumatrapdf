@@ -482,7 +482,7 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
                     HBRUSH br = CreateSolidBrush(col);
                     FrameRect(hdc, &fr, br);
                     DeleteObject(br);
-                } else {
+                } else if (createdWithBottomBorder) {
                     HPEN pen = CreatePen(PS_SOLID, 1, col);
                     HGDIOBJ old = SelectObject(hdc, pen);
                     MoveToEx(hdc, 0, h - 1, nullptr);

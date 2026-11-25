@@ -83,15 +83,18 @@ VirtCtrl::~VirtCtrl() {
 }
 
 Color VirtCtrl::GetColor(int idx) const {
-    ReportIf(idx >= nColors);
+    if (idx < 0 || idx >= nColors) {
+        ReportIf(true);
+        return kColorUnset;
+    }
     return GetCol(colorDefaults, colors, idx);
 }
 
 // the override array is allocated on the first SetColor(), so the common case
 // of a control that paints in its class's colors costs nothing
 void VirtCtrl::SetColor(int idx, Color col) {
-    ReportIf(idx >= nColors);
-    if (idx >= nColors) {
+    if (idx < 0 || idx >= nColors) {
+        ReportIf(true);
         return;
     }
     if (!colors) {
@@ -578,9 +581,23 @@ void VirtCtrl::SetIsVisible(bool isVisible) {
     if (v == visibility) {
         return;
     }
+    if (!isVisible && root) {
+        if (root->hovered == this) {
+            root->ClearHover();
+        }
+        if (root->pressed == this) {
+            SetFlag(vwfPressed, false);
+            root->pressed = nullptr;
+        }
+        if (root->captured == this) {
+            root->ReleaseCapture();
+        }
+        if (root->focused == this) {
+            root->SetFocus(nullptr);
+        }
+    }
     // the owner re-lays out after showing / hiding; invalidate the space we
     // occupied so a hidden control doesn't stay on screen until it does
-    Invalidate();
     visibility = v;
     Invalidate();
 }
@@ -594,6 +611,21 @@ void VirtCtrl::SetIsEnabled(bool isEnabled) {
         return;
     }
     SetFlag(vwfEnabled, isEnabled);
+    if (!isEnabled && root) {
+        if (root->hovered == this) {
+            root->ClearHover();
+        }
+        if (root->pressed == this) {
+            SetFlag(vwfPressed, false);
+            root->pressed = nullptr;
+        }
+        if (root->captured == this) {
+            root->ReleaseCapture();
+        }
+        if (root->focused == this) {
+            root->SetFocus(nullptr);
+        }
+    }
     Invalidate();
 }
 
@@ -864,9 +896,10 @@ void VirtRoot::UpdateTooltip(Point ptWindow) {
     TempStr tip{};
     Rect tipRc{};
     while (w) {
-        tip = w->GetTooltipTemp(ptLocal);
+        Rect b = w->BoundsInWindow();
+        tip = w->GetTooltipTemp({ptWindow.x - b.x, ptWindow.y - b.y});
         if (tip) {
-            tipRc = w->BoundsInWindow();
+            tipRc = b;
             break;
         }
         w = w->parent;
@@ -1054,7 +1087,9 @@ void VirtRoot::OnWndDestroyed(VirtCtrl* w) {
     if (pressed == w) {
         pressed = nullptr;
     }
-    HideTooltip();
+    if (tooltipWnd == w) {
+        HideTooltip();
+    }
     // it can be one of the tops (the tree is rebuilt by deleting nodes and
     // laying out again), and those we must not paint or hit-test any more
     int idx = VecFind(tops, w);
@@ -1370,6 +1405,7 @@ bool VirtRoot::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
 
         case WM_SETCURSOR: {
             Point pt = HwndGetCursorPos(hwnd);
+            UnmirrorRtl(hwnd, pt);
             VirtCtrl* target = VirtAtPoint(this, pt, &ptLocal);
             while (target) {
                 Rect b = target->BoundsInWindow();
@@ -1559,9 +1595,20 @@ void VirtScroll::OnVScroll(WPARAM wp) {
             ScrollBy(visible);
             break;
         case SB_THUMBTRACK:
-        case SB_THUMBPOSITION:
+        case SB_THUMBPOSITION: {
+            HWND hwnd = GetHwnd();
+            if (hwnd) {
+                SCROLLINFO si{};
+                si.cbSize = sizeof(si);
+                si.fMask = SIF_TRACKPOS;
+                if (GetScrollInfo(hwnd, SB_VERT, &si)) {
+                    ScrollTo(si.nTrackPos);
+                    break;
+                }
+            }
             ScrollTo(HIWORD(wp));
             break;
+        }
     }
 }
 
@@ -1738,9 +1785,20 @@ void ScrollBox::OnVScroll(WPARAM wp) {
             ScrollBy(visible);
             break;
         case SB_THUMBTRACK:
-        case SB_THUMBPOSITION:
+        case SB_THUMBPOSITION: {
+            HWND hwnd = GetHwnd();
+            if (hwnd) {
+                SCROLLINFO si{};
+                si.cbSize = sizeof(si);
+                si.fMask = SIF_TRACKPOS;
+                if (GetScrollInfo(hwnd, SB_VERT, &si)) {
+                    ScrollTo(si.nTrackPos);
+                    break;
+                }
+            }
             ScrollTo(HIWORD(wp));
             break;
+        }
     }
 }
 
@@ -2190,6 +2248,9 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
         items.dx -= ScrollbarDx();
         // whole rows only unless !wholeRows: the strip below the last one stays background
         items.dy = UsableDy();
+        if (items.dy <= 0 || items.dx <= 0) {
+            return;
+        }
         int dy = GetItemHeight();
         int first = scrollY / dy;
         int last = (scrollY + items.dy - 1) / dy;
@@ -2203,6 +2264,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
         }
 
         // rows at the top and bottom of the viewport can be cut in half by it
+        int padX = DpiScaleByDpi(GetDpi(), 4);
         ctx.gfx->PushClip(clip);
         for (int i = first; i <= last; i++) {
             Rect r = {items.x, items.y + (i * dy) - scrollY, items.dx, dy};
@@ -2220,7 +2282,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
                     ctx.gfx->FillRect(r, colSel);
                 }
                 Rect rt = r;
-                rt.SubLR(DpiScaleByDpi(GetDpi(), 4), 0);
+                rt.SubLR(padX, 0);
                 ctx.gfx->DrawText(model->Item(i), rt, gfxTextEllipsis | gfxTextVCenter, font, GetColor(kColListText));
             }
         }
@@ -2728,8 +2790,7 @@ VirtText::~VirtText() {
 }
 
 void VirtText::SetText(Str str) {
-    str::Free(s);
-    s = str::Dup(str);
+    str::ReplaceWithCopy(&s, str);
     sz = {0, 0};
     UpdateMnemonic(this);
 }
@@ -2876,8 +2937,7 @@ VirtLink::~VirtLink() {
 }
 
 void VirtLink::SetTarget(Str s2) {
-    str::Free(target);
-    target = str::Dup(s2);
+    str::ReplaceWithCopy(&target, s2);
 }
 
 void VirtLink::Paint(VirtPaintCtx& ctx) {
@@ -2999,14 +3059,15 @@ void VirtButton::Paint(VirtPaintCtx& ctx) {
 
 // fire onClick as if the button was pressed (keyboard or WindowBase Enter)
 bool VirtButton::Click() {
-    if (!HasFlag(vwfEnabled) || !onClick.IsValid()) {
+    if (!IsVisible() || !HasFlag(vwfEnabled) || !onClick.IsValid()) {
         return false;
     }
     VirtMouseEvent me;
     me.target = this;
     me.hit = this;
     me.pt = {bounds.dx / 2, bounds.dy / 2};
-    me.ptWindow = {bounds.x + me.pt.x, bounds.y + me.pt.y};
+    Point orig = OriginInWindow();
+    me.ptWindow = {orig.x + me.pt.x, orig.y + me.pt.y};
     onClick.Call(&me);
     return true;
 }
@@ -3509,6 +3570,9 @@ void VirtSlider::ApplyFromEvent(const VirtMouseEvent& ev, bool commit) {
 }
 
 void VirtSlider::OnMouseDown(VirtMouseEvent* ev) {
+    if (ev->button != 0) {
+        return;
+    }
     adjusting = true;
     ApplyFromEvent(*ev, false);
     ev->didHandle = true;
@@ -3523,16 +3587,26 @@ void VirtSlider::OnMouseMove(VirtMouseEvent* ev) {
 }
 
 void VirtSlider::OnMouseUp(VirtMouseEvent* ev) {
-    ApplyFromEvent(*ev, true);
-    committed = value;
+    if (!adjusting || ev->button != 0) {
+        return;
+    }
     adjusting = false;
+    ApplyFromEvent(*ev, false);
+    committed = value;
+    if (onValueCommitted.IsValid()) {
+        onValueCommitted.Call();
+    }
     ev->didHandle = true;
 }
 
 void VirtSlider::OnMouseWheel(VirtMouseEvent* ev) {
+    if (ev->wheelDelta == 0) {
+        return;
+    }
+    int prev = value;
     int dir = ev->wheelDelta > 0 ? 1 : -1;
     SetValue(value + dir, true);
-    if (onValueCommitted.IsValid()) {
+    if (value != prev && onValueCommitted.IsValid()) {
         onValueCommitted.Call();
     }
     ev->didHandle = true;
@@ -3576,8 +3650,9 @@ void VirtSlider::OnKeyDown(VirtKeyEvent* ev) {
     if (adjusting) {
         return;
     }
+    int prev = value;
     SetValue(v, true);
-    if (onValueCommitted.IsValid()) {
+    if (value != prev && onValueCommitted.IsValid()) {
         onValueCommitted.Call();
     }
 }
@@ -3819,7 +3894,7 @@ bool VirtTreeOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp
         LPARAM lp2 = inClientCoords ? UnmirrorRtlLparam(hwnd, lp) : lp;
         return root->OnMessage(msg, wp, lp2, res);
     }
-    if (msg == WM_KEYDOWN || msg == WM_CHAR) {
+    if (msg == WM_KEYDOWN || msg == WM_CHAR || msg == WM_CAPTURECHANGED) {
         return root->OnMessage(msg, wp, lp, res);
     }
     return false;
@@ -4253,22 +4328,26 @@ void ParseTipInto(VirtRichText* tipIn, Str s) {
             // not a valid [text](link) — fall through (e.g. "[CIW]" in a filename)
         }
 
-        // regular word; stop at '[', '**', or '(Kbd/' so those stay separate tokens
+        // regular word; stop at '[', '**', or '(Kbd/' so those stay separate tokens.
+        // Only break when i > 0 so malformed markup at offset 0 still consumes a char
+        // instead of looping forever.
         int wordStart = 0;
         int i = 0;
         while (i < p.len && !IsTipWhitespace(p.s[i])) {
-            if (p.s[i] == '*' && i + 1 < p.len && p.s[i + 1] == '*') {
-                break; // start of **bold**
-            }
-            if (p.s[i] == '(' && StartsWithParenPrefix(Str(p.s + i, p.len - i), StrL("Kbd"))) {
-                break;
-            }
-            if (p.s[i] == '[') {
-                Str textStart(p.s + i + 1, p.len - i - 1);
-                Str textEnd = FindMarkdownLinkTextEnd(textStart);
-                if (textEnd && textEnd.len > 1 && textEnd.s[1] == '(' &&
-                    FindMarkdownLinkCmdEnd(Str(textEnd.s + 2, textEnd.len - 2))) {
+            if (i > 0) {
+                if (p.s[i] == '*' && i + 1 < p.len && p.s[i + 1] == '*') {
+                    break; // start of **bold**
+                }
+                if (p.s[i] == '(' && StartsWithParenPrefix(Str(p.s + i, p.len - i), StrL("Kbd"))) {
                     break;
+                }
+                if (p.s[i] == '[') {
+                    Str textStart(p.s + i + 1, p.len - i - 1);
+                    Str textEnd = FindMarkdownLinkTextEnd(textStart);
+                    if (textEnd && textEnd.len > 1 && textEnd.s[1] == '(' &&
+                        FindMarkdownLinkCmdEnd(Str(textEnd.s + 2, textEnd.len - 2))) {
+                        break;
+                    }
                 }
             }
             i++;
@@ -4292,7 +4371,6 @@ void VirtRichText::LayoutText(int areaWidth) {
         return;
     }
     layoutDx = areaWidth;
-    HWND hwnd = GetHwnd();
     PlatformFont* boldFont = nullptr;
     int kbdPadX = DpiScale(7);
     // a pixel above/below so descenders and the key-cap border stay inside the
@@ -4414,7 +4492,7 @@ void TipLinkUnderlines(TipLink* link, Vec<Rect>& out) {
     }
     for (TipWord* w = lineStart; w; w = w->next) {
         // a wrapped word starts back at the left (y differs within a line: VCenter)
-        bool lineEnds = w == last || w->next->x <= w->x;
+        bool lineEnds = w == last || !w->next || w->next->x <= w->x;
         if (!lineEnds) {
             continue;
         }
@@ -4554,12 +4632,18 @@ void VirtFixedLinesText::SetText(Str s) {
 }
 
 void VirtRichText::OnMouseDown(VirtMouseEvent* ev) {
-    if (LinkAt(ev->pt)) {
+    if (ev->button != 0) {
+        return;
+    }
+    if (LinkAt(ev->pt) || onClick.IsValid()) {
         ev->didHandle = true;
     }
 }
 
 void VirtRichText::OnMouseUp(VirtMouseEvent* ev) {
+    if (ev->button != 0) {
+        return;
+    }
     TipLink* link = LinkAt(ev->pt);
     if (!link) {
         if (onClick.IsValid()) {
@@ -4625,7 +4709,7 @@ bool VirtRichText::HasRichContent() {
 TempStr VirtRichText::PlainTextTemp() {
     str::Builder sb;
     for (TipWord* w = words.next; w; w = w->next) {
-        if (w != words.next) {
+        if (w != words.next && !w->noSpaceBefore) {
             sb.AppendChar(' ');
         }
         sb.Append(w->text);

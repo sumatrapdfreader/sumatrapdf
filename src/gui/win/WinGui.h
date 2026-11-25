@@ -144,7 +144,7 @@ struct HwndBase {
     void SetText(Str);
     TempStr GetTextTemp();
     void SetPos(Rect* r);
-    void SetColors(Color textColor, Color bgColor);
+    virtual void SetColors(Color textColor, Color bgColor);
     HBRUSH BackgroundBrush();
     HBRUSH BackgroundBrush(Color);
 
@@ -1055,7 +1055,7 @@ struct TreeView : ControlBase {
 
     HWND Create(const CreateArgs&);
 
-    void SetColors(Color col, Color bgCol);
+    void SetColors(Color col, Color bgCol) override;
 
     void WndProc(ControlBase::WndProcEvent* ev);
     void OnNotifyReflect(ControlBase::NotifyReflectEvent* ev);

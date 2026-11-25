@@ -130,6 +130,9 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
             UnmirrorRtl(hwnd, pt);
             host->onMouseMove.Call(pt);
+            if (!IsWindow(hwnd) || !GetWindowLongPtrW(hwnd, GWLP_USERDATA)) {
+                return 0;
+            }
             break;
         }
         case WM_MOUSELEAVE:
@@ -139,6 +142,9 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
                 break;
             }
             host->onMouseLeave.Call();
+            if (!IsWindow(hwnd) || !GetWindowLongPtrW(hwnd, GWLP_USERDATA)) {
+                return 0;
+            }
             break;
     }
 
@@ -151,6 +157,9 @@ static LRESULT CALLBACK WndProcVirtHost(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         host->onNativeMsg.Call(&ev);
         if (ev.didHandle) {
             return ev.res;
+        }
+        if (!IsWindow(hwnd) || !GetWindowLongPtrW(hwnd, GWLP_USERDATA)) {
+            return 0;
         }
     }
 
@@ -323,6 +332,9 @@ bool VirtHost::ContainsScreenPoint(Point pt) const {
 }
 
 void VirtHost::SetTimer(int id, int delayMs) {
+    if (!native) {
+        return;
+    }
     ::SetTimer(native, (UINT_PTR)id, (UINT)delayMs, nullptr);
 }
 

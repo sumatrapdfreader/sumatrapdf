@@ -45,6 +45,9 @@ HWND Checkbox::Create(const CreateArgs& args) {
     }
 
     ControlBase::CreateControl(cargs);
+    if (!hwnd) {
+        return nullptr;
+    }
     SetButtonState(hwnd, args.initialState);
     SizeToIdealSize(this);
     return hwnd;

@@ -29,28 +29,31 @@ static void LogAppendNum(str::Builder& s, int n, Str suffix) {
 }
 
 void LogConstraints(Constraints c, Str suffix) {
+    if (!gEnableDebugLayout) {
+        return;
+    }
     // Debug-only; "dx: Inf - Inf dy: Inf - Inf <suffix>" is tiny.
     char sScratch[128]{};
     str::Builder s;
     s.UseExternalBuffer(Str(sScratch, sizeofi(sScratch)));
     if (c.min.dx == c.max.dx) {
-        dbglayout(StrL("dx: "));
+        s.Append(StrL("dx: "));
         LogAppendNum(s, c.min.dx, StrL(" "));
     } else {
-        dbglayout(StrL("dx: "));
+        s.Append(StrL("dx: "));
         LogAppendNum(s, c.min.dx, StrL(" - "));
         LogAppendNum(s, c.max.dx, StrL(" "));
     }
     if (c.min.dy == c.max.dy) {
-        dbglayout(StrL("dy: "));
+        s.Append(StrL("dy: "));
         LogAppendNum(s, c.min.dy, StrL(" "));
     } else {
-        dbglayout(StrL("dy: "));
+        s.Append(StrL("dy: "));
         LogAppendNum(s, c.min.dy, StrL(" - "));
         LogAppendNum(s, c.max.dy, StrL(" "));
     }
     s.Append(suffix);
-    dbglayout(fmt("%s", ToStr(s)));
+    dbglayout(ToStr(s));
 }
 
 bool IsCollapsed(ILayout* l) {
@@ -232,37 +235,58 @@ Padding::~Padding() {
 
 // ILayout
 Size Padding::Layout(const Constraints bc) {
-    dbglayout(StrL("Padding::Layout() "));
-    LogConstraints(bc, StrL("\n"));
+    if (gEnableDebugLayout) {
+        dbglayout(StrL("Padding::Layout() "));
+        LogConstraints(bc, StrL("\n"));
+    }
 
     auto hinset = insets.left + insets.right;
     auto vinset = insets.top + insets.bottom;
+    if (!child) {
+        childSize = {0, 0};
+        return bc.Constrain({hinset, vinset});
+    }
 
     auto innerConstraints = bc.Inset(hinset, vinset);
     childSize = child->Layout(innerConstraints);
-    return Size{
+    return bc.Constrain(Size{
         childSize.dx + hinset,
         childSize.dy + vinset,
-    };
+    });
 }
 
 int Padding::MinIntrinsicHeight(int width) {
+    auto hinset = insets.left + insets.right;
     auto vinset = insets.top + insets.bottom;
-    return child->MinIntrinsicHeight(width) + vinset;
+    if (!child) {
+        return vinset;
+    }
+    int innerW = GuardInf(width, std::max(0, width - hinset));
+    return child->MinIntrinsicHeight(innerW) + vinset;
 }
 
 int Padding::MinIntrinsicWidth(int height) {
     auto hinset = insets.left + insets.right;
-    return child->MinIntrinsicWidth(height) + hinset;
+    auto vinset = insets.top + insets.bottom;
+    if (!child) {
+        return hinset;
+    }
+    int innerH = GuardInf(height, std::max(0, height - vinset));
+    return child->MinIntrinsicWidth(innerH) + hinset;
 }
 
 void Padding::SetBounds(Rect bounds) {
-    dbglayout(fmt("Padding:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
+    if (gEnableDebugLayout) {
+        dbglayout(fmt("Padding:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
+    }
     lastBounds = bounds;
+    if (!child) {
+        return;
+    }
     bounds.x += insets.left;
     bounds.y += insets.top;
-    bounds.dx -= (insets.right + insets.left);
-    bounds.dy -= (insets.bottom + insets.top);
+    bounds.dx = std::max(0, bounds.dx - (insets.right + insets.left));
+    bounds.dy = std::max(0, bounds.dy - (insets.bottom + insets.top));
     child->SetBounds(bounds);
 }
 
@@ -508,6 +532,7 @@ int VBox::MinIntrinsicHeight(int width) {
                 size = std::max(size, v.layout->MinIntrinsicHeight(width));
             }
         }
+        size *= count;
     } else {
         for (auto& v : children) {
             if (!IsCollapsed(v.layout)) {
@@ -1010,19 +1035,19 @@ int Align::MinIntrinsicWidth(int height) {
 }
 
 void Align::SetBounds(Rect bounds) {
-    dbglayout(fmt("Align:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
+    if (gEnableDebugLayout) {
+        dbglayout(fmt("Align:SetBounds() %d,%d - %d, %d\n", bounds.x, bounds.y, bounds.dx, bounds.dy));
+    }
 
     lastBounds = bounds;
-    int bminx = bounds.x;
-    int bmaxx = bounds.Right();
+    if (!Child) {
+        return;
+    }
     int cw = childSize.dx;
-    i64 twm = AlignStart - AlignEnd;
-    i64 tw = AlignEnd - AlignStart;
-    int x = Scale(bminx, HAlign - AlignEnd, twm) + Scale(bmaxx - cw, HAlign - AlignStart, tw);
     int ch = childSize.dy;
-    int bminy = bounds.y;
-    int bmaxy = bounds.Bottom();
-    int y = Scale(bminy, VAlign - AlignEnd, twm) + Scale(bmaxy - ch, VAlign - AlignStart, tw);
+    i64 tw = AlignEnd - AlignStart;
+    int x = bounds.x + Scale(bounds.dx - cw, HAlign - AlignStart, tw);
+    int y = bounds.y + Scale(bounds.dy - ch, VAlign - AlignStart, tw);
     Rect b{Point{x, y}, Point{x + cw, y + ch}};
     Child->SetBounds(b);
 }
@@ -1717,8 +1742,10 @@ void Wrap::SetBounds(Rect bounds) {
 }
 
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
-    DpiSetFromHwnd(hwnd);
-    dbglayout(fmt("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy));
+    DpiScope dpiScope(hwnd);
+    if (gEnableDebugLayout) {
+        dbglayout(fmt("\nLayoutAndSizeToContent() %d,%d\n", minDx, minDy));
+    }
 
     Constraints c = ExpandInf();
     c.min = {minDx, minDy};

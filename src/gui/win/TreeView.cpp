@@ -61,6 +61,9 @@ HWND TreeView::Create(const CreateArgs& args) {
     }
 
     ControlBase::CreateControl(cargs);
+    if (!hwnd) {
+        return nullptr;
+    }
 
     if (IsWindowsVistaOrGreater()) {
         SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
@@ -108,6 +111,9 @@ HWND TreeView::GetToolTipsHwnd() {
 }
 
 HTREEITEM TreeView::GetHandleByTreeItem(TreeItem item) {
+    if (!treeModel) {
+        return nullptr;
+    }
     auto h = (HTREEITEM)treeModel->GetUserData(item);
     if (h || !lazyChildren) {
         return h;
@@ -298,7 +304,7 @@ void TreeView::SetColors(Color textCol, Color bgCol) {
     ControlBase::SetColors(textCol, bgCol);
     if (!IsSpecialColor(textCol)) {
         TreeView_SetTextColor(hwnd, textCol);
-    } else if (textColor == kColorUnset) {
+    } else if (textCol == kColorUnset) {
         TreeView_SetTextColor(hwnd, CLR_DEFAULT);
     }
     if (!IsSpecialColor(bgCol)) {
@@ -507,7 +513,7 @@ static void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent
 
 // lazy: insert the item's children if that hasn't happened yet
 void TreeView::EnsureChildrenPopulated(TreeItem item, HTREEITEM h) {
-    if (lazyChildren && h && !TreeView_GetChild(hwnd, h) && treeModel->ChildCount(item) > 0) {
+    if (treeModel && lazyChildren && h && !TreeView_GetChild(hwnd, h) && treeModel->ChildCount(item) > 0) {
         PopulateTreeItem(this, item, h);
     }
 }
@@ -577,7 +583,7 @@ TreeItem GetOrSelectTreeItemAtPos(ContextMenuEvent* args, Point& pt) {
 
     TreeItem ti;
     pt = {args->mouseWindow.x, args->mouseWindow.y};
-    if (pt.x == -1 || pt.y == -1) {
+    if (pt.x == -1 && pt.y == -1) {
         // no mouse position when launched via keyboard shortcut
         // use position of selected item to show menu
         ti = treeView->GetSelection();

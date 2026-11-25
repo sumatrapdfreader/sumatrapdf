@@ -653,6 +653,9 @@ void GfxDirect2D::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 
     if (col == kColorUnset) {
         col = textColor;
     }
+    if (ColorSkipsPaint(col)) {
+        return;
+    }
     ID2D1SolidColorBrush* br = GetBrush(col, alpha);
     if (!br) {
         return;
@@ -805,12 +808,13 @@ static const u8* PixmapAsPremulBgra(Pixmap* px, Vec<u8>& scratch, int* strideOut
         return nullptr;
     }
     int w = src->width, h = src->height;
-    int stride = w * 4;
-    i64 nBytes = (i64)stride * h;
-    if (stride <= 0 || nBytes <= 0 || nBytes > INT_MAX) {
+    i64 stride64 = (i64)w * 4;
+    i64 nBytes = stride64 * h;
+    if (stride64 <= 0 || stride64 > INT_MAX || nBytes <= 0 || nBytes > INT_MAX) {
         FreePixmap(owned);
         return nullptr;
     }
+    int stride = (int)stride64;
     VecReset(scratch);
     u8* dst = VecGrow(scratch, (int)nBytes);
     if (!dst) {
@@ -819,7 +823,7 @@ static const u8* PixmapAsPremulBgra(Pixmap* px, Vec<u8>& scratch, int* strideOut
     }
     int srcBpp = PixmapBytesPerPixel(src->format);
     bool isRgba = src->format == PixmapFormat::RGBA8;
-    bool hasAlpha = src->format != PixmapFormat::BGR8;
+    bool hasAlpha = src->format != PixmapFormat::BGR8 && src->hasAlpha;
     for (int y = 0; y < h; y++) {
         const u8* sp = src->data + ((size_t)y * src->stride);
         u8* dp = dst + ((size_t)y * stride);

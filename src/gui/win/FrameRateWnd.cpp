@@ -33,10 +33,17 @@ static void PositionWindow(FrameRateWnd* w, Size s) {
     MoveWindow(w->hwnd, p.x, p.y, s.dx, s.dy, TRUE);
 }
 
-static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*idSubclass*/,
+static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR idSubclass,
                                                    DWORD_PTR dwRefData) {
+    FrameRateWnd* w = (FrameRateWnd*)dwRefData;
+    if (msg == WM_NCDESTROY) {
+        RemoveWindowSubclass(hwnd, WndProcFrameRateAssociated, idSubclass);
+        if (w) {
+            w->hwndAssociatedWithTopLevel = nullptr;
+        }
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
     if (WM_MOVING == msg || WM_SIZING == msg || WM_SIZE == msg || WM_WINDOWPOSCHANGED == msg || WM_MOVE == msg) {
-        FrameRateWnd* w = (FrameRateWnd*)dwRefData;
         PositionWindow(w, w->maxSizeSoFar);
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
@@ -48,11 +55,8 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
     // if hwndAssociatedWith is a child window, we need to find its top-level parent
     // so that we can intercept moving messages and re-position frame rate window
     // during main window moves
-    HWND topLevel = hwndAssociatedWith;
-    while (GetParent(topLevel) != nullptr) {
-        topLevel = GetParent(topLevel);
-    }
-    hwndAssociatedWithTopLevel = topLevel;
+    HWND topLevel = GetAncestor(hwndAssociatedWith, GA_ROOT);
+    hwndAssociatedWithTopLevel = topLevel ? topLevel : hwndAssociatedWith;
 
     {
         CreateCustomArgs args;
@@ -61,18 +65,15 @@ bool FrameRateWnd::Create(HWND hwndAssociatedWithIn) {
         args.style = WS_POPUP | WS_DISABLED;
         // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
         args.exStyle = WS_EX_LAYERED | WS_EX_TRANSPARENT;
+        args.owner = hwndAssociatedWithTopLevel;
         args.pos = {0, 0, 1, 1};
         args.bgColor = kColBlack;
         CreateCustom(args);
     }
     if (!hwnd) {
+        hwndAssociatedWithTopLevel = nullptr;
         return false;
     }
-    // a WS_POPUP window given a parent at creation would become a child, so the
-    // ownership relationship is established after the fact. An owned window always
-    // shows up on top of its owner in z-order
-    // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
-    SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)hwndAssociatedWith);
 
     text = NewVirtText({
         .s = StrL("0"),
@@ -115,9 +116,19 @@ void FrameRateWnd::ShowFrameRateDur(double durMs) {
 }
 
 FrameRateWnd::~FrameRateWnd() {
-    RemoveWindowSubclass(hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0);
+    if (hwndAssociatedWithTopLevel) {
+        RemoveWindowSubclass(hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0);
+        hwndAssociatedWithTopLevel = nullptr;
+    }
 }
 
 int FrameRateFromDuration(double durMs) {
-    return (int)(double(1000) / durMs);
+    if (durMs <= 0.0) {
+        return 9999;
+    }
+    double fps = double(1000) / durMs;
+    if (fps > 9999.0) {
+        return 9999;
+    }
+    return (int)fps;
 }

@@ -36,6 +36,8 @@ class BrowserDocView {
     void NavigateToDataUrl(Str url);
     void GoBack();
     void GoForward();
+    bool CanGoBack() const;
+    bool CanGoForward() const;
     void SetZoomPercent(int zoom);
     int GetZoomPercent() const;
     // Scroll position is in CSS pixels of the hosted document.

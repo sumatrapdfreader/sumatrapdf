@@ -175,6 +175,9 @@ void GfxGdiplus::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 a
     if (col == kColorUnset) {
         col = textColor;
     }
+    if (ColorSkipsPaint(col)) {
+        return;
+    }
     gfx->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
     Pen pen(ToGdipColor(col, alpha), thickness);
     gfx->DrawLine(&pen, p1.x, p1.y, p2.x, p2.y);

@@ -790,12 +790,26 @@ void BrowserViewGoForward(BrowserView* bv) {
     }
 }
 
+bool BrowserDocView::CanGoBack() const {
+    if (backend == Backend::IE && ie) {
+        return ie->canGoBack;
+    }
+    return canGoBack;
+}
+
+bool BrowserDocView::CanGoForward() const {
+    if (backend == Backend::IE && ie) {
+        return ie->canGoForward;
+    }
+    return canGoForward;
+}
+
 bool BrowserViewCanGoBack(BrowserView* bv) {
-    return bv && bv->view->canGoBack;
+    return bv && bv->view->CanGoBack();
 }
 
 bool BrowserViewCanGoForward(BrowserView* bv) {
-    return bv && bv->view->canGoForward;
+    return bv && bv->view->CanGoForward();
 }
 
 void BrowserViewSetZoomPercent(BrowserView* bv, int zoom) {

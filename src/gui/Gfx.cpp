@@ -153,6 +153,14 @@ void GfxHdc::FillQuads(const Point* pts, int nQuads, Color col, u8 alpha, int ou
 // `d` is the diameter of the corner circles, so it is the radius doubled; the
 // callers pass a value tuned to look right rather than a true radius
 void AddRoundedRectPath(Gdiplus::GraphicsPath& path, const Rect& rc, int d) {
+    int maxD = std::min(rc.dx - 1, rc.dy - 1);
+    if (d > maxD) {
+        d = maxD;
+    }
+    if (d <= 0) {
+        path.AddRectangle(Gdiplus::Rect(rc.x, rc.y, std::max(0, rc.dx - 1), std::max(0, rc.dy - 1)));
+        return;
+    }
     path.AddArc(rc.x, rc.y, d, d, 180, 90);
     path.AddArc(rc.x + rc.dx - d - 1, rc.y, d, d, 270, 90);
     path.AddArc(rc.x + rc.dx - d - 1, rc.y + rc.dy - d - 1, d, d, 0, 90);
@@ -211,18 +219,15 @@ void GfxHdc::DrawLine(const Rect& r, Color col, int thickness) {
     if (col == kColorUnset) {
         col = GetTextColor(hdc);
     }
-    Rect r2 = r;
-    if (r2.dy == 0) {
-        r2.dy = thickness;
-    } else if (r2.dx == 0) {
-        r2.dx = thickness;
-    }
-    HdcFillRect(hdc, r2, col);
+    GfxThinLine(this, r, col, thickness);
 }
 
 void GfxHdc::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 alpha) {
     if (col == kColorUnset) {
         col = GetTextColor(hdc);
+    }
+    if (ColorSkipsPaint(col)) {
+        return;
     }
     GdiplusOnHdc gp(hdc);
     Gdiplus::Pen pen(Gdiplus::Color(alpha, GetRValue(col), GetGValue(col), GetBValue(col)), thickness);

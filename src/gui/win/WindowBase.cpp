@@ -249,7 +249,7 @@ HBRUSH HwndBase::BackgroundBrush() {
 // the brush for `col`, cached in bgBrush; rebuilt when the color changed (a
 // theme change moves a WindowBase's resolved color without SetColors())
 HBRUSH HwndBase::BackgroundBrush(Color col) {
-    if (col == kColorUnset) {
+    if (IsSpecialColor(col)) {
         return nullptr;
     }
     if (bgBrush && bgBrushColor == col) {
@@ -698,7 +698,10 @@ bool WindowBase::TabNavigate(bool backwards) {
 }
 
 void WindowBase::Close() {
-    ReportIf(!::IsWindow(hwnd));
+    if (!::IsWindow(hwnd)) {
+        ReportIf(true);
+        return;
+    }
     PostMessageW(hwnd, WM_CLOSE, 0, 0);
 }
 
@@ -943,7 +946,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             if (hwnd == GetParent(wndFrom->hwnd)) {
                 return wndFrom->DispatchNotifyReflect(wparam, lparam);
             }
-        }
+        } break;
         // A set of messages to be reflected back to the control that generated them.
         case WM_CTLCOLORBTN:
         case WM_CTLCOLOREDIT:
@@ -956,10 +959,14 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_HSCROLL:
         case WM_VSCROLL:
         case WM_PARENTNOTIFY: {
-            ControlBase* pWnd = ControlFromHwnd(reinterpret_cast<HWND>(lparam));
+            HWND target = reinterpret_cast<HWND>(lparam);
+            ControlBase* pWnd = ControlFromHwnd(target);
+            if (!pWnd && msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC && target) {
+                pWnd = ControlFromHwnd(GetParent(target));
+            }
             LRESULT result = 0;
             if (pWnd != nullptr) {
-                result = pWnd->MessageReflect(msg, wparam, lparam);
+                result = pWnd->DispatchMessageReflect(msg, wparam, lparam);
             }
             if (result != 0) {
                 return result;
@@ -994,7 +1001,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             HWND wnd = GetDlgItem(hwnd, static_cast<int>(wparam));
             ControlBase* pWnd = wnd ? ControlFromHwnd(wnd) : nullptr;
             if (pWnd != nullptr) {
-                LRESULT result = pWnd->MessageReflect(msg, wparam, lparam);
+                LRESULT result = pWnd->DispatchMessageReflect(msg, wparam, lparam);
                 if (result != 0) {
                     return result;
                 }
@@ -1631,9 +1638,8 @@ Size ControlBase::Layout(const Constraints bc) {
     auto vinset = insets.top + insets.bottom;
     auto innerConstraints = bc.Inset(hinset, vinset);
 
-    int dx = MinIntrinsicWidth(0);
-    int dy = MinIntrinsicHeight(0);
-    childSize = innerConstraints.Constrain(Size{dx, dy});
+    Size ideal = GetIdealSize();
+    childSize = innerConstraints.Constrain(ideal);
     auto res = Size{
         childSize.dx + hinset,
         childSize.dy + vinset,
@@ -1666,7 +1672,7 @@ void ControlBase::SetBounds(Rect bounds) {
     bounds.dx -= (insets.right + insets.left);
     bounds.dy -= (insets.bottom + insets.top);
 
-    if (mapRtlX) {
+    if (mapRtlX && hwnd) {
         bounds.x = HwndMapChildXForRtlParent(GetParent(hwnd), bounds.x, bounds.dx);
     }
     // Skip a no-op MoveWindow (it still sends WM_WINDOWPOSCHANGED and flashes
@@ -1926,7 +1932,7 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
                 cev.w = this;
                 cev.mouseScreen = ptScreen;
                 Point ptW = ptScreen;
-                if (ptScreen.x != -1) {
+                if (ptScreen.x != -1 || ptScreen.y != -1) {
                     ptW = HwndMapWindowPoint(HWND_DESKTOP, hwnd, ptW);
                 }
                 cev.mouseWindow = ptW;
@@ -2131,9 +2137,11 @@ void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
     MSG msg;
     while (::IsWindow(hwndDialog)) {
         BOOL ok = GetMessage(&msg, nullptr, 0, 0);
-        if (!ok) {
-            // WM_QUIT: leave and let the outer loop see it too
-            PostQuitMessage((int)msg.wParam);
+        if (ok <= 0) {
+            if (ok == 0) {
+                // WM_QUIT: leave and let the outer loop see it too
+                PostQuitMessage((int)msg.wParam);
+            }
             break;
         }
         if (PreTranslateMessage(msg)) {
@@ -2143,7 +2151,7 @@ void RunModalWindow(HWND hwndDialog, HWND hwndParent) {
         DispatchMessage(&msg);
     }
 
-    if (reEnableParent) {
+    if (reEnableParent && ::IsWindow(hwndParent)) {
         EnableWindow(hwndParent, TRUE);
         SetActiveWindow(hwndParent);
     }

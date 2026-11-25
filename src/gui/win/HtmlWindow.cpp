@@ -523,7 +523,10 @@ static void RegisterInternetProtocolFactory() {
 
     AutoReleaseComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
-    ReportIf(FAILED(hr));
+    if (FAILED(hr) || !internetSession) {
+        ReportIf(true);
+        return;
+    }
     ReportIf(nullptr != gInternetProtocolFactory);
     gInternetProtocolFactory = new HW_IInternetProtocolFactory();
     hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, kHwProtoPrefix, 0,
@@ -536,10 +539,14 @@ static void UnregisterInternetProtocolFactory() {
     if (val > 0) {
         return;
     }
+    if (!gInternetProtocolFactory) {
+        return;
+    }
     AutoReleaseComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
-    ReportIf(FAILED(hr));
-    internetSession->UnregisterNameSpace(gInternetProtocolFactory, kHwProtoPrefix);
+    if (SUCCEEDED(hr) && internetSession) {
+        internetSession->UnregisterNameSpace(gInternetProtocolFactory, kHwProtoPrefix);
+    }
     ULONG refCount = gInternetProtocolFactory->Release();
     ReportIf(refCount != 0);
     gInternetProtocolFactory = nullptr;
@@ -950,13 +957,7 @@ class HW_IDownloadManager : public IDownloadManager {
         int htmlWindowId;
         TempStr urlRest;
         bool ok = ParseProtoUrl(ToUtf8Temp(urlToFile), &htmlWindowId, &urlRest);
-        // free urlToFile using IMalloc::Free
-        IMalloc* pMalloc = nullptr;
-        if (SUCCEEDED(CoGetMalloc(1, &pMalloc))) {
-            pMalloc->Free(urlToFile);
-        } else {
-            CoTaskMemFree(urlToFile);
-        }
+        CoTaskMemFree(urlToFile);
 
         if (!ok) {
             return INET_E_INVALID_URL;
@@ -1110,7 +1111,10 @@ static LPOLESTR OleStrDup(WStr s) {
     size_t cb = sizeof(WCHAR) * (size_t)(s.len + 1);
     LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
     if (ret) {
-        memcpy(ret, s.s, cb);
+        if (s.len > 0 && s.s) {
+            memcpy(ret, s.s, sizeof(WCHAR) * (size_t)s.len);
+        }
+        ret[s.len] = 0;
     }
     return ret;
 }
@@ -1927,8 +1931,10 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void** ppv) {
         *ppv = oleItemContainer;
     } else if (riid == IID_IDispatch || riid == DIID_DWebBrowserEvents2) {
         *ppv = hwDWebBrowserEvents2;
-    } else if (riid == IID_IAdviseSink || riid == IID_IAdviseSink2 || riid == IID_IAdviseSinkEx) {
-        *ppv = adviseSink2;
+    } else if (riid == IID_IAdviseSink || riid == IID_IAdviseSink2) {
+        *ppv = static_cast<IAdviseSink2*>(adviseSink2);
+    } else if (riid == IID_IAdviseSinkEx) {
+        *ppv = static_cast<IAdviseSinkEx*>(adviseSink2);
     } else if (riid == IID_IDocHostUIHandler) {
         *ppv = docHostUIHandler;
     } else if (riid == IID_IDropTarget) {
@@ -2048,7 +2054,9 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, __unused REFIID riid,
         case DISPID_NEWWINDOW2:
             // prior to Windows XP SP2, there's no way of getting the URL
             // to be opened, so we have to fail silently
-            *pDispParams->rgvarg[0].pboolVal = VARIANT_FALSE;
+            if (pDispParams && pDispParams->cArgs >= 1 && pDispParams->rgvarg[0].pboolVal) {
+                *pDispParams->rgvarg[0].pboolVal = VARIANT_TRUE;
+            }
             break;
     }
 
