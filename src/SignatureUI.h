@@ -22,10 +22,7 @@ void SigBarSetVisible(MainWindow*, bool);
 void SigBarUpdate(MainWindow*);
 void DeleteSigBar(MainWindow*);
 
-void ShowSignatureDialog(MainWindow*, int entryIdx);
-
 void PaintSignatureMarks(MainWindow*, Gfx*);
-bool SigMarksOnLeftDown(MainWindow*, int x, int y);
 bool SigMarksOnSetCursor(MainWindow*);
 
 TempStr SignatureUiStateTemp(MainWindow*, Str action);

@@ -1262,8 +1262,6 @@ TempStr GetNonVirtualTemp(Str virtualPath) {
 
 namespace file {
 
-thread_local CopyProgressCb gFileCopyProgressCb;
-
 Str ReadFile(Str path) {
     return ReadFileWithArena(path, nullptr);
 }

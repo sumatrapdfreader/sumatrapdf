@@ -224,14 +224,13 @@ void UpdateCheckDecisionTest() {
 }
 
 void ControlFrameActionTest() {
-    utassert(ControlFrameActionFor((u16)ControlFrameCmd::WaitRenderIdle) == ControlFrameAction::WaitRenderIdle);
-    utassert(ControlFrameActionFor((u16)ControlFrameCmd::WaitSessionRestored) ==
-             ControlFrameAction::WaitSessionRestored);
-    utassert(ControlFrameActionFor((u16)ControlFrameCmd::Quit) == ControlFrameAction::RunOnUi);
-    utassert(ControlFrameActionFor((u16)ControlFrameCmd::CrashMe) == ControlFrameAction::RunOnUi);
+    utassert(ControlFrameActionFor((u16)ControlCmd::WaitRenderIdle) == ControlFrameAction::WaitRenderIdle);
+    utassert(ControlFrameActionFor((u16)ControlCmd::WaitSessionRestored) == ControlFrameAction::WaitSessionRestored);
+    utassert(ControlFrameActionFor((u16)ControlCmd::Quit) == ControlFrameAction::RunOnUi);
+    utassert(ControlFrameActionFor((u16)ControlCmd::CrashMe) == ControlFrameAction::RunOnUi);
     utassert(ControlFrameActionFor(1) == ControlFrameAction::RunOnUi);
-    utassert(ControlCmdEndsListener((u16)ControlFrameCmd::Quit));
-    utassert(!ControlCmdEndsListener((u16)ControlFrameCmd::CrashMe));
+    utassert(ControlCmdEndsListener((u16)ControlCmd::Quit));
+    utassert(!ControlCmdEndsListener((u16)ControlCmd::CrashMe));
     utassert(!ControlCmdEndsListener(11));
 }
 

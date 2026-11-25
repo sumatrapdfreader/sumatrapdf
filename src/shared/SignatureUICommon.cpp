@@ -37,6 +37,53 @@ PdfSigResult* CurrentSignatures(MainWindow* win) {
     return win ? TabSignatures(win->CurrentTab()) : nullptr;
 }
 
+DisplayModel* SignatureMarkModel(MainWindow* win) {
+    return win->pdfAnnotationsToolbarEnabled ? nullptr : win->AsFixed();
+}
+
+Rect SignatureScreenRect(DisplayModel* dm, const PdfSigEntry* e) {
+    if (e->rect.IsEmpty() || e->pageNo <= 0 || !dm->ValidPageNo(e->pageNo) || !dm->PageVisible(e->pageNo)) {
+        return {};
+    }
+    return dm->CvtToScreen(e->pageNo, e->rect);
+}
+
+int SignatureAtPoint(MainWindow* win, Point pt) {
+    PdfSigResult* res = CurrentSignatures(win);
+    DisplayModel* dm = SignatureMarkModel(win);
+    if (!res || !dm) {
+        return -1;
+    }
+    for (int i = 0; i < len(res->entries); i++) {
+        if (SignatureScreenRect(dm, res->entries[i]).Contains(pt)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+struct SigMarkClick {
+    MainWindow* win = nullptr;
+    int idx = 0;
+};
+
+static void OnSigMarkClick(SigMarkClick* c) {
+    if (IsMainWindowValid(c->win)) {
+        ShowSignatureDialog(c->win, c->idx);
+    }
+    delete c;
+}
+
+bool SigMarksOnLeftDown(MainWindow* win, int x, int y) {
+    int idx = SignatureAtPoint(win, Point{x, y});
+    if (idx < 0) {
+        return false;
+    }
+    auto* c = new SigMarkClick{win, idx};
+    uitask::Post(MkFunc0<SigMarkClick>(OnSigMarkClick, c), "SigMarkClick");
+    return true;
+}
+
 bool TabHasSignatures(WindowTab* tab) {
     PdfSigResult* res = TabSignatures(tab);
     return res && len(res->entries) > 0;

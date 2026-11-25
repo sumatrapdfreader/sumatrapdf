@@ -9,6 +9,9 @@ struct FileArgs;
 struct AnnotCreateArgs;
 struct PropValue;
 struct djvu_text_zone;
+namespace file {
+struct CopyProgress;
+}
 
 bool IsEngineDjVuSupportedFileType(FileType kind);
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
@@ -420,7 +423,8 @@ void DeleteStaleCajCache();
 
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);
 
-EngineBase* CreateEngineFromFile(Str filePath, PasswordUI* pwdUI, bool enableChmEngine);
+EngineBase* CreateEngineFromFile(Str filePath, PasswordUI* pwdUI, bool enableChmEngine,
+                                 Func1<file::CopyProgress*> copyProgress = {});
 EngineBase* CreateEngineFromData(Str data, Str nameHint, PasswordUI* pwdUI);
 
 bool IsOpenCachePath(Str path);

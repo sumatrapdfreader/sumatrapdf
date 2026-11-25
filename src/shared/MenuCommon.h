@@ -3,6 +3,10 @@
 
 // --- shared by MenuCommon.cpp and each app's Menu.cpp ---
 
+struct MenuDef;
+struct AppCommandCtx;
+
+bool HideContextMenuEntry(const MenuDef* menu, const MenuDef& item, const AppCommandCtx& ctx);
 bool ShowDebugMenu();
 struct FileHistoryEntry {
     Str path;

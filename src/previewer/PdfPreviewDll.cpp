@@ -16,40 +16,9 @@
 
 static AtomicInt g_lRefCount = 0;
 
-static bool IsClsid(REFCLSID clsid, Str s) {
-    CLSID c;
-    WCHAR* ws = CWStrTemp(s);
-    return SUCCEEDED(CLSIDFromString(ws, &c)) && IsEqualCLSID(clsid, c);
-}
-
-static bool PreviewTypeFromClsid(REFCLSID clsid, PreviewType& type) {
-    if (IsClsid(clsid, StrL(kPdfPreviewClsid))) {
-        type = PreviewType::Pdf;
-    } else if (IsClsid(clsid, StrL(kXpsPreviewClsid))) {
-        type = PreviewType::Xps;
-    } else if (IsClsid(clsid, StrL(kDjVuPreviewClsid))) {
-        type = PreviewType::DjVu;
-    } else if (IsClsid(clsid, StrL(kEpubPreviewClsid))) {
-        type = PreviewType::Epub;
-    } else if (IsClsid(clsid, StrL(kFb2PreviewClsid))) {
-        type = PreviewType::Fb2;
-    } else if (IsClsid(clsid, StrL(kMobiPreviewClsid))) {
-        type = PreviewType::Mobi;
-    } else if (IsClsid(clsid, StrL(kCbxPreviewClsid))) {
-        type = PreviewType::Cbx;
-    } else if (IsClsid(clsid, StrL(kTgaPreviewClsid))) {
-        type = PreviewType::Tga;
-    } else if (IsClsid(clsid, StrL(kOfdPreviewClsid))) {
-        type = PreviewType::Ofd;
-    } else {
-        return false;
-    }
-    return true;
-}
-
 class PreviewClassFactory : public IClassFactory {
   public:
-    explicit PreviewClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { AtomicIntInc(&g_lRefCount); }
+    explicit PreviewClassFactory(PreviewType type) : m_lRef(1), m_type(type) { AtomicIntInc(&g_lRefCount); }
 
     ~PreviewClassFactory() { AtomicIntDec(&g_lRefCount); }
 
@@ -82,13 +51,8 @@ class PreviewClassFactory : public IClassFactory {
             return CLASS_E_NOAGGREGATION;
         }
 
-        PreviewType type;
-        if (!PreviewTypeFromClsid(m_clsid, type)) {
-            return E_NOINTERFACE;
-        }
-
         AutoReleaseComPtr<IInitializeWithStream> pObject;
-        pObject = new PdfPreview(&g_lRefCount, type);
+        pObject = new PdfPreview(&g_lRefCount, m_type);
 
         if (!pObject) {
             return E_OUTOFMEMORY;
@@ -108,7 +72,7 @@ class PreviewClassFactory : public IClassFactory {
 
   private:
     AtomicInt m_lRef;
-    CLSID m_clsid;
+    PreviewType m_type;
 };
 
 void UnregisterPreviewWndClass();
@@ -143,10 +107,10 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     StartPdfPreviewLoggingIfEnabled();
     *ppv = nullptr;
     PreviewType type;
-    if (!PreviewTypeFromClsid(rclsid, type)) {
+    if (!FindPreviewType(rclsid, type)) {
         return CLASS_E_CLASSNOTAVAILABLE;
     }
-    AutoReleaseComPtr<PreviewClassFactory> pClassFactory(new PreviewClassFactory(rclsid));
+    AutoReleaseComPtr<PreviewClassFactory> pClassFactory(new PreviewClassFactory(type));
     if (!pClassFactory) {
         return E_OUTOFMEMORY;
     }

@@ -19,6 +19,7 @@
 #include "SvgIcons.h"
 #include "Toolbar.h"
 #include "SearchAndDDE.h"
+#include "SearchAndDDECommon.h"
 #include "FindWindow.h"
 #include "Translations.h"
 #include "FindBar.h"
@@ -87,7 +88,7 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
     if (dm && dm->textSearch && len(dm->textSearch->result) > 0) {
         hitPage = dm->textSearch->result[0].pageNo;
     }
-    bool busy = first->findThread || first->findCountThread || first->findDebouncePending;
+    bool busy = first->findThread || first->findCountThread || FindDebouncePending(first);
     int page = first->ctrl ? first->ctrl->CurrentPageNo() : 0;
     out.Append(
         fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d matches=%d hitPage=%d "

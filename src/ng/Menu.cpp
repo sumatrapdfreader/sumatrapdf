@@ -57,80 +57,15 @@
 #include "SumatraLog.h"
 
 // clang-format off
-//[ ACCESSKEY_GROUP Context Menu (Selection)
-static MenuDef menuDefSelection[] = {
-    {
-        TrN("&Copy to Clipboard"),
-        CmdCopySelection,
-    },
-    {
-        TrN("Copy as &Image to Clipboard"),
-        CmdCopySelectionAsImage,
-    },
-    {
-        TrN("&Save as Image..."),
-        CmdSaveSelectionAsImage,
-    },
-    {
-        TrN("&Print Selection..."),
-        CmdPrintSelection,
-    },
-    {
-        TrN("Visual Search with Google &Lens"),
-        CmdSearchGoogleLens,
-    },
-    {
-        TrN("&Zoom to Selection"),
-        CmdZoomToSelection,
-    },
-    {
-        TrN("&Trim Pages to Selection"),
-        CmdTrimPagesToSelection,
-    },
-    {
-        TrN("Count &Words"),
-        CmdCountWords,
-    },
-    {
-        TrN("Show Selected Te&xt"),
-        CmdShowSelectedText,
-    },
-    {
-        StrL(kMenuSeparator),
-        kMenuSeparatorID,
-    },
-    {
-        TrN("&Translate With"),
-        (UINT_PTR)menuDefTranslateWith,
-    },
-    {
-        TrN("S&earch With"),
-        (UINT_PTR)menuDefSearchWith,
-    },
-    {
-        TrN("Select C&urrent Page"),
-        CmdSelectCurrentPage,
-    },
-    {
-        TrN("Select &All"),
-        CmdSelectAll,
-    },
-    {
-        {},
-        0,
-    },
-};
-//] ACCESSKEY_GROUP Context Menu (Selection)
-
 //[ ACCESSKEY_GROUP Context Menu (Main)
 static MenuDef menuDefContext[] = {
     {
         TrN("S&election"),
-        (UINT_PTR)menuDefSelection,
+        menuDefSelection,
     },
     {
         TrN("Visual Search with Google &Lens"),
-        (UINT_PTR)menuDefGoogleLens,
+        menuDefGoogleLens,
     },
     {
         TrN("Copy Link &Address"),
@@ -150,7 +85,7 @@ static MenuDef menuDefContext[] = {
     },
     {
         TrN("Selected &Image"),
-        (UINT_PTR)menuDefContextImage,
+        menuDefContextImage,
     },
     // note: strings cannot be "" or else items are not there
     {
@@ -163,27 +98,27 @@ static MenuDef menuDefContext[] = {
     },
     {
         TrN("Sh&ow"),
-        (UINT_PTR)menuDefShow,
+        menuDefShow,
     },
     {
         StrL(kMenuSeparator),
-        kMenuSeparatorID,
+        0,
     },
     {
         TrN("AI Chat with Document Using"),
-        (UINT_PTR)menuDefDocumentAIChat,
+        menuDefDocumentAIChat,
     },
     {
         TrN("Document"),
-        (UINT_PTR)menuDefDocumentOperations,
+        menuDefDocumentOperations,
     },
     {
         TrN("Read Aloud"),
-        (UINT_PTR)menuDefContextReadAloud,
+        menuDefContextReadAloud,
     },
     {
         TrN("Annotations"),
-        (UINT_PTR)menuDefContextAnnotations,
+        menuDefContextAnnotations,
     },
     {
         TrN("Show Errors..."),
@@ -514,7 +449,7 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
         }
         i++;
 
-        int cmdId = (int)md.idOrSubmenu;
+        int cmdId = md.cmdId;
         // orig appends the user's external viewers after CmdOpenWithHtmlHelp
         if (addExternalViewersNext && ctx) {
             WindowTab* evTab = ctx->tab;
@@ -525,7 +460,7 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
             addExternalViewersNext = true;
         }
         // custom selection handlers go before the built-in translate / search submenus
-        if (md.idOrSubmenu == (UINT_PTR)menuDefTranslateWith) {
+        if (md.submenu == menuDefTranslateWith) {
             // handlers run on selected text; comics and images have none
             bool canSelectText = !ctx || !ctx->isImageCollection;
             if (canSelectText && menuDef == menuDefMainSelection) {
@@ -543,9 +478,8 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
             AppendRecentFilesToMenu(menu);
         }
 
-        MenuDef* subMenuDef = (MenuDef*)md.idOrSubmenu;
-        // hacky but works: small number is command id, large is submenu (a pointer)
-        bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
+        MenuDef* subMenuDef = md.submenu;
+        bool isSubMenu = subMenuDef != nullptr;
 
         // handle separators before command state checks
         if (str::Eq(md.title, StrL(kMenuSeparator))) {
@@ -553,8 +487,7 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
             continue;
         }
 
-        // Only real commands have a command-state. For submenu entries cmdId is a
-        // truncated pointer (garbage), so don't run it through GetCommandIdState.
+        // Command availability applies to leaf items.
         bool removeMenu = false;
         bool disableMenu = false;
         if (!isSubMenu && ctx) {
@@ -562,31 +495,7 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
         }
         if (ctx) {
             removeMenu |= (menuDef == menuDefMainSelection) && !ctx->hasTextSelection && cmdIdInList(selectionTextCmds);
-            removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
-            // these annotations need text to mark up, except Highlight, which can
-            // fill a drawn rectangle
-            bool canMarkUp = ctx->hasTextSelection || ctx->hasDrawnRectSelection;
-            removeMenu |= (!canMarkUp || !ctx->supportsAnnots) && (subMenuDef == menuDefCreateAnnotFromSelection);
-            // in the context menu only show translate / search items for a text
-            // selection (the menubar variant is live-updated via
-            // SetMenuStateForSelection instead)
-            bool isTextSelSubMenu = (subMenuDef == menuDefTranslateWith) || (subMenuDef == menuDefSearchWith);
-            removeMenu |= (menuDef == menuDefSelection) && !ctx->hasTextSelection && isTextSelSubMenu;
-            bool isRectSel = ctx->hasSelection && !ctx->hasTextSelection;
-            if (menuDef == menuDefSelection) {
-                removeMenu |= !ctx->hasSelection && cmdId == CmdCopySelection;
-                if (!isRectSel) {
-                    removeMenu |= cmdId == CmdCopySelectionAsImage || cmdId == CmdSaveSelectionAsImage ||
-                                  cmdId == CmdPrintSelection || cmdId == CmdSearchGoogleLens ||
-                                  cmdId == CmdZoomToSelection;
-                }
-            }
-            if (menuDef == menuDefGoogleLens) {
-                removeMenu |= cmdId == CmdSearchGoogleLens && !ctx->hasSelection;
-                removeMenu |= cmdId == CmdSearchGoogleLensPage && !ctx->isCursorOnPage;
-                bool onImage = ctx->cursorOnImage || ctx->engineKind == kindEngineImage;
-                removeMenu |= cmdId == CmdSearchGoogleLensImage && !onImage;
-            }
+            removeMenu |= HideContextMenuEntry(menuDef, md, *ctx);
         }
         removeMenu |= !isSubMenu && cmdId == CmdSignWithImage && len(gSettings->annotations.signatureImage) == 0;
         removeMenu |= ((subMenuDef == menuDefDebug) && !ShowDebugMenu());
@@ -597,7 +506,7 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
             continue;
         }
 
-        bool noTranslate = isDebugMenu || cmdIdInList(menusNoTranslate);
+        bool noTranslate = isDebugMenu || (!isSubMenu && cmdIdInList(menusNoTranslate));
         noTranslate |= (subMenuDef == menuDefDebug);
         Str title = md.title;
         if (!noTranslate) {
@@ -688,7 +597,7 @@ static bool SetFixedLayoutState(MenuItemModel& it, DisplayModel* dm) {
 // the Show submenu's items are on/off toggles: check the ones that are on
 static void SetShowMenuChecks(MenuModel* m, MainWindow* win) {
     for (MenuDef* d = menuDefShow; d->title.s; d++) {
-        int cmdId = (int)d->idOrSubmenu;
+        int cmdId = d->cmdId;
         if (cmdId == 0) {
             continue; // separator
         }

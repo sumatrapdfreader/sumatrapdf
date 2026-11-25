@@ -412,8 +412,6 @@ struct MainWindow {
     bool findMatchWholeWord = false;
     // find-as-you-type is debounced: orig arms a WM_TIMER on hwndFrame, here
     // the shell's tick counts this down and fires the deferred search.
-    // findDebouncePending mirrors findDebounce.IsArmed(): shared code reads it
-    bool findDebouncePending = false;
     Countdown findDebounce;
     // the current find session already recorded its starting view
     bool searchStartMarked = false;

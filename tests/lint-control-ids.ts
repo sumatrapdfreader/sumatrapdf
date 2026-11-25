@@ -1,11 +1,7 @@
 // Lint: -dbg-control command ids must mean the same command everywhere.
 //
-// The wire id of a ControlCmd is defined four times: orig's and ng's enums
-// (src/SumatraControl.cpp, src/ng/SumatraControl.cpp), the test client
-// (tests/control.ts) and cmd/ng-dbg-control.ts. ng once gave orig's 101 / 102
-// (StartPerfLog / StopPerfLog) to its own commands, so a test asking for one ran
-// the other with no error. A command may exist in only some of them; when two
-// define the same name or the same id, they must agree.
+// The apps share the ControlCmd enum. Both TypeScript clients must use the
+// same wire ID for any commands they define.
 //
 // Run standalone: bun tests/lint-control-ids.ts  (also runs in run-almost-all.ts)
 
@@ -39,8 +35,7 @@ function parseIds(relPath: string, start: RegExp, sep: "=" | ":"): Map<string, n
 
 export async function testit(): Promise<void> {
   const tables: [string, Map<string, number>][] = [
-    ["orig", parseIds("src/SumatraControl.cpp", /enum class ControlCmd[^{]*\{/, "=")],
-    ["ng", parseIds("src/ng/SumatraControl.cpp", /enum class ControlCmd[^{]*\{/, "=")],
+    ["apps", parseIds("src/shared/SumatraControlCommon.h", /enum class ControlCmd[^{]*\{/, "=")],
     ["tests/control.ts", parseIds("tests/control.ts", /export enum ControlCommand\s*\{/, "=")],
     ["cmd/ng-dbg-control.ts", parseIds("cmd/ng-dbg-control.ts", /controlCommands[^{]*\{/, ":")],
   ];

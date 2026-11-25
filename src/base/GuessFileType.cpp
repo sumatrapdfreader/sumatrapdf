@@ -170,8 +170,6 @@ int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
 }
 
 #define FILE_SIGS(V)                                      \
-    V(0, "Rar!\x1A\x07\x00", FileType::Rar)               \
-    V(0, "Rar!\x1A\x07\x01\x00", FileType::Rar)           \
     V(0, "7z\xBC\xAF\x27\x1C", FileType::SevenZ)          \
     V(0, "PK\x03\x04", FileType::Zip)                     \
     V(0, "ITOLITLS", FileType::Lit)                       \
@@ -338,6 +336,10 @@ static bool HasJxlSignature(Str d) {
 // detect file type based on file content
 static FileType DetectFileTypeFromData(Str d) {
     // TODO: sniff .fb2 content
+    if (HasRarSignature(d)) {
+        return FileType::Rar;
+    }
+
     u8* data = (u8*)d.s;
     int dataLen = d.len;
     int n = dimofi(gFileSigs);
@@ -1377,8 +1379,7 @@ FileType GuessFileTypeFromFile(Str path) {
     if (res != FileType::Zip) {
         return res;
     }
-    ArchiveExtractProgressCb emptyCb;
-    Archive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
+    Archive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false);
     if (!archive) {
         return res;
     }

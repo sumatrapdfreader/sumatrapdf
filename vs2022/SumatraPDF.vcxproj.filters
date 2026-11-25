@@ -636,6 +636,9 @@
     <ClInclude Include="..\src\shared\ServerFiles.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\SessionStateCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\ShortcutParse.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -733,6 +736,9 @@
       <Filter>src\shared\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\gui\PlatformText.h">
+      <Filter>src\shared\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\gui\TabColors.h">
       <Filter>src\shared\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\gui\UIModels.h">
@@ -1593,6 +1599,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ServerFiles.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SessionStateCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ShortcutParse.cpp">

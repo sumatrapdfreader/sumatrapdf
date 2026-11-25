@@ -4,6 +4,7 @@
 // --- shared by SignatureUICommon.cpp and each app's SignatureUI.cpp ---
 
 struct MainWindow;
+struct DisplayModel;
 struct WindowTab;
 struct PdfSigResult;
 struct PdfSigSummary;
@@ -24,6 +25,10 @@ constexpr int kSigStatusFontPx = 16;
 PdfSigResult* TabSignatures(WindowTab*);
 PdfSigResult* CurrentSignatures(MainWindow*);
 bool TabHasSignatures(WindowTab*);
+DisplayModel* SignatureMarkModel(MainWindow*);
+Rect SignatureScreenRect(DisplayModel*, const PdfSigEntry*);
+int SignatureAtPoint(MainWindow*, Point);
+bool SigMarksOnLeftDown(MainWindow*, int x, int y);
 SigVerdict OverallSigVerdict(const PdfSigSummary&);
 Str OverallSigMessage(const PdfSigSummary&);
 const char* SigVerdictIcon(SigVerdict);
@@ -36,3 +41,4 @@ void CheckTabSignatures(WindowTab*);
 
 // implemented by each app
 void OnTabSignaturesChecked(MainWindow*);
+void ShowSignatureDialog(MainWindow*, int entryIdx);

@@ -416,36 +416,11 @@ void ShowSignatureDialog(MainWindow* win, int entryIdx) {
 
 //--- the mark on a visible signature
 
-static bool MarksEnabled(MainWindow* win) {
-    return win->AsFixed() && !win->pdfAnnotationsToolbarEnabled;
-}
-
-static Rect SignatureScreenRect(DisplayModel* dm, const PdfSigEntry* e) {
-    if (e->rect.IsEmpty() || e->pageNo <= 0 || !dm->ValidPageNo(e->pageNo) || !dm->PageVisible(e->pageNo)) {
-        return {};
-    }
-    return dm->CvtToScreen(e->pageNo, e->rect);
-}
-
-static int SignatureAtPoint(MainWindow* win, Point pt) {
-    PdfSigResult* res = CurrentSignatures(win);
-    DisplayModel* dm = win->AsFixed();
-    if (!res || !dm || !MarksEnabled(win)) {
-        return -1;
-    }
-    for (int i = 0; i < len(res->entries); i++) {
-        if (SignatureScreenRect(dm, res->entries[i]).Contains(pt)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 // a visible signature looks signed whatever its state: this says what it is
 void PaintSignatureMarks(MainWindow* win, Gfx* gfx) {
     PdfSigResult* res = CurrentSignatures(win);
-    DisplayModel* dm = win->AsFixed();
-    if (!res || !dm || !MarksEnabled(win)) {
+    DisplayModel* dm = SignatureMarkModel(win);
+    if (!res || !dm) {
         return;
     }
     int dx = DpiScaleByDpi(DpiGetForHwnd(win->hwndCanvas), kSigMarkDx);
@@ -458,28 +433,6 @@ void PaintSignatureMarks(MainWindow* win, Gfx* gfx) {
         gfx->FillEllipse(rc, MkRgb(0xff, 0xff, 0xff));
         gfx->DrawPixmap(VerdictPixmap(e->verdict, dx), rc);
     }
-}
-
-struct SigMarkClick {
-    MainWindow* win = nullptr;
-    int idx = 0;
-};
-
-static void OnSigMarkClick(SigMarkClick* c) {
-    if (IsMainWindowValid(c->win)) {
-        ShowSignatureDialog(c->win, c->idx);
-    }
-    delete c;
-}
-
-bool SigMarksOnLeftDown(MainWindow* win, int x, int y) {
-    int idx = SignatureAtPoint(win, Point{x, y});
-    if (idx < 0) {
-        return false;
-    }
-    auto* c = new SigMarkClick{win, idx};
-    uitask::Post(MkFunc0<SigMarkClick>(OnSigMarkClick, c), "SigMarkClick");
-    return true;
 }
 
 bool SigMarksOnSetCursor(MainWindow* win) {

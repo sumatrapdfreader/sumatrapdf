@@ -5,13 +5,7 @@ struct AppCommandCtx;
 using BuildMenuCtx = AppCommandCtx;
 struct MainWindow;
 
-struct MenuDef {
-    Str title;
-    // ng: UINT_PTR -> uintptr_t (same type, portable spelling)
-    uintptr_t idOrSubmenu = 0;
-};
-
-#define kMenuSeparator "-----"
+struct MenuDef;
 
 // ng: orig builds an HMENU. We build this tree instead and the gpui shell
 // turns it into AppMenuBar / PopupMenu elements. Same labels, same order,

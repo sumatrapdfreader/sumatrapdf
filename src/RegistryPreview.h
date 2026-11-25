@@ -11,6 +11,20 @@
 #define kTgaPreviewClsid "{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}"
 #define kOfdPreviewClsid "{2E2D1999-4830-4C98-A584-99886AA68D41}"
 
+enum class PreviewType {
+    Pdf,
+    Xps,
+    DjVu,
+    Epub,
+    Fb2,
+    Mobi,
+    Cbx,
+    Tga,
+    Ofd,
+};
+
+bool FindPreviewType(REFCLSID clsid, PreviewType& type);
+
 // Explorer handlers of PdfPreview.dll, a bit per extension (see gPreviewers)
 struct PreviewHandlers {
     u32 preview = 0;

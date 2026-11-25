@@ -10385,8 +10385,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
         }
         FreeProps(epubProps);
 
-        ArchiveExtractProgressCb emptyCb;
-        Archive* zip = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
+        Archive* zip = OpenArchiveFromFile(path, /*eagerLoad=*/false);
         if (zip) {
             str::Builder filesStr;
             const auto& fileInfos = zip->GetFileInfos();
@@ -11518,7 +11517,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, P
         return nullptr;
     }
     if (kind == FileType::Fb2z) {
-        AutoDelete archive = OpenArchiveFromFile(path, /*eagerLoad=*/true, gArchiveProgressCb);
+        AutoDelete archive = OpenArchiveFromFile(path, /*eagerLoad=*/true);
         if (!archive) {
             return {};
         }

@@ -4,6 +4,17 @@
 // Menu definitions: tables that orig and ng share live in MenuDefs.cpp, the
 // ones that differ in each app's Menu.cpp. Each ends with an empty entry.
 
+struct MenuDef {
+    Str title;
+    int cmdId = 0;
+    MenuDef* submenu = nullptr;
+
+    constexpr MenuDef(Str title, int cmdId) : title(title), cmdId(cmdId) {}
+    constexpr MenuDef(Str title, MenuDef* submenu) : title(title), submenu(submenu) {}
+};
+
+#define kMenuSeparator "-----"
+
 // id of a separator that has to be addressable
 constexpr uint kMenuSeparatorID = (uint)-13;
 
@@ -23,6 +34,7 @@ extern MenuDef menuDefGoogleLens[];
 extern MenuDef menuDefTranslateWith[];
 extern MenuDef menuDefSearchWith[];
 extern MenuDef menuDefMainSelection[];
+extern MenuDef menuDefSelection[];
 extern MenuDef menuDefReadAloud[];
 extern MenuDef menuDefContextReadAloud[];
 extern MenuDef menuDefMenubar[];

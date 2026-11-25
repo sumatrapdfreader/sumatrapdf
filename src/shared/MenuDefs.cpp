@@ -36,8 +36,7 @@
 #include "Menu.h"
 #include "MenuDefs.h"
 
-// The menus that are the same in orig and ng. An entry is a title and either a
-// command id or, cast to an integer, the table of its submenu.
+// Menu definitions shared by the original app and ng.
 
 // clang-format off
 //[ ACCESSKEY_GROUP File Open Menu
@@ -109,7 +108,7 @@ MenuDef menuDefFile[] = {
     },
     {
         TrN("&Open"),
-        (UINT_PTR)menuDefFileOpen,
+        menuDefFileOpen,
     },
     {
         TrN("&Close"),
@@ -408,19 +407,19 @@ MenuDef menuDefView[] = {
     },
     {
         TrN("Page &Display"),
-        (UINT_PTR)menuDefPageDisplay,
+        menuDefPageDisplay,
     },
     {
         TrN("&Rotate"),
-        (UINT_PTR)menuDefRotate,
+        menuDefRotate,
     },
     {
         TrN("Tri&m"),
-        (UINT_PTR)menuDefTrim,
+        menuDefTrim,
     },
     {
         TrN("Sh&ow"),
-        (UINT_PTR)menuDefShow,
+        menuDefShow,
     },
     {
         StrL(kMenuSeparator),
@@ -452,7 +451,7 @@ MenuDef menuDefView[] = {
     },
     {
         TrN("AI C&hat"),
-        (UINT_PTR)menuDefDocumentAIChat,
+        menuDefDocumentAIChat,
     },
     {
         {},
@@ -659,7 +658,7 @@ MenuDef menuDefSettings[] = {
     },
     {
         TrN("&Theme"),
-        (UINT_PTR)menuDefThemes,
+        menuDefThemes,
     },
     {
         {},
@@ -711,7 +710,7 @@ MenuDef menuDefFavorites[] = {
     },
     {
         TrN("Tab Groups"),
-        (UINT_PTR)menuDefTabGroups,
+        menuDefTabGroups,
     },
     {
         {},
@@ -882,6 +881,71 @@ MenuDef menuDefSearchWith[] = {
 };
 //] ACCESSKEY_GROUP Search With Menu
 
+//[ ACCESSKEY_GROUP Context Menu (Selection)
+MenuDef menuDefSelection[] = {
+    {
+        TrN("&Copy to Clipboard"),
+        CmdCopySelection,
+    },
+    {
+        TrN("Copy as &Image to Clipboard"),
+        CmdCopySelectionAsImage,
+    },
+    {
+        TrN("&Save as Image..."),
+        CmdSaveSelectionAsImage,
+    },
+    {
+        TrN("&Print Selection..."),
+        CmdPrintSelection,
+    },
+    {
+        TrN("Visual Search with Google &Lens"),
+        CmdSearchGoogleLens,
+    },
+    {
+        TrN("&Zoom to Selection"),
+        CmdZoomToSelection,
+    },
+    {
+        TrN("&Trim Pages to Selection"),
+        CmdTrimPagesToSelection,
+    },
+    {
+        TrN("Count &Words"),
+        CmdCountWords,
+    },
+    {
+        TrN("Show Selected Te&xt"),
+        CmdShowSelectedText,
+    },
+    {
+        StrL(kMenuSeparator),
+        0,
+    },
+    {
+        TrN("&Translate With"),
+        menuDefTranslateWith,
+    },
+    {
+        TrN("S&earch With"),
+        menuDefSearchWith,
+    },
+    {
+        TrN("Select C&urrent Page"),
+        CmdSelectCurrentPage,
+    },
+    {
+        TrN("Select &All"),
+        CmdSelectAll,
+    },
+    {
+        {},
+        0,
+    },
+};
+//] ACCESSKEY_GROUP Context Menu (Selection)
+
 //[ ACCESSKEY_GROUP Menu (Selection)
 MenuDef menuDefMainSelection[] = {
     {
@@ -890,11 +954,11 @@ MenuDef menuDefMainSelection[] = {
     },
     {
         TrN("&Translate With"),
-        (UINT_PTR)menuDefTranslateWith,
+        menuDefTranslateWith,
     },
     {
         TrN("S&earch With"),
-        (UINT_PTR)menuDefSearchWith,
+        menuDefSearchWith,
     },
     {
         TrN("Select C&urrent Page"),
@@ -913,8 +977,6 @@ MenuDef menuDefMainSelection[] = {
 
 //[ ACCESSKEY_GROUP Read Aloud Menu
 // Placeholder only: real items are built in RebuildReadAloudMenu().
-// idOrSubmenu must be a normal Cmd* id (not a Tts menu id above CmdLast), or
-// BuildMenuFromDef mis-identifies it as a submenu pointer and crashes.
 MenuDef menuDefReadAloud[] = {
     {
         TrN("Stop Reading"),
@@ -952,43 +1014,43 @@ MenuDef menuDefContextReadAloud[] = {
 MenuDef menuDefMenubar[] = {
     {
         TrN("&File"),
-        (UINT_PTR)menuDefFile,
+        menuDefFile,
     },
     {
         TrN("&View"),
-        (UINT_PTR)menuDefView,
+        menuDefView,
     },
     {
         TrN("&Go To"),
-        (UINT_PTR)menuDefGoTo,
+        menuDefGoTo,
     },
     {
         TrN("&Zoom"),
-        (UINT_PTR)menuDefZoom,
+        menuDefZoom,
     },
     {
         TrN("S&election"),
-        (UINT_PTR)menuDefMainSelection,
+        menuDefMainSelection,
     },
     {
         TrN("Read Aloud"),
-        (UINT_PTR)menuDefReadAloud,
+        menuDefReadAloud,
     },
     {
         TrN("F&avorites"),
-        (UINT_PTR)menuDefFavorites,
+        menuDefFavorites,
     },
     {
         TrN("&Settings"),
-        (UINT_PTR)menuDefSettings,
+        menuDefSettings,
     },
     {
         TrN("&Help"),
-        (UINT_PTR)menuDefHelp,
+        menuDefHelp,
     },
     {
         StrL("Debug"),
-        (UINT_PTR)menuDefDebug,
+        menuDefDebug,
     },
     {
         {},
@@ -1032,15 +1094,15 @@ MenuDef menuDefCreateAnnotFromSelection[] = {
 MenuDef menuDefContextAnnotations[] = {
     {
         TrN("Create from Selection"),
-        (UINT_PTR)menuDefCreateAnnotFromSelection,
+        menuDefCreateAnnotFromSelection,
     },
     {
         TrN("Create &Under Cursor"),
-        (UINT_PTR)menuDefCreateAnnotUnderCursor,
+        menuDefCreateAnnotUnderCursor,
     },
     {
         StrL(kMenuSeparator),
-        kMenuSeparatorID,
+        0,
     },
     {
         TrN("Edit Annotation Text"),
@@ -1064,7 +1126,7 @@ MenuDef menuDefContextAnnotations[] = {
     },
     {
         StrL(kMenuSeparator),
-        kMenuSeparatorID,
+        0,
     },
     {
         TrN("Apply Redactions"),
@@ -1072,7 +1134,7 @@ MenuDef menuDefContextAnnotations[] = {
     },
     {
         StrL(kMenuSeparator),
-        kMenuSeparatorID,
+        0,
     },
     {
         TrN("Save Changes"),
@@ -1362,7 +1424,7 @@ MenuDef menuDefContextTab[] = {
     },
     {
         TrN("Duplicate"),
-        (UINT_PTR)menuDefContextTabDuplicate,
+        menuDefContextTabDuplicate,
     },
     {
         TrN("Change Tab Color..."),

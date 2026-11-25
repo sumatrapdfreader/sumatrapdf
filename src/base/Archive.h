@@ -1,23 +1,10 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-enum class FileType : u8;
-
 struct archive;
 struct archive_entry;
 
-// forward-declared so ArchiveExtractProgress below can reference
-// Archive::FileInfo, which is defined inside the class body.
-struct Archive;
-
-struct ArchiveExtractProgress;
-using ArchiveExtractProgressCb = Func1<ArchiveExtractProgress*>;
-
-// Thread-local progress callback honored by archive opens. Callers set
-// it before triggering a load that may open archives (e.g. cbx / epub /
-// fb2z); cleared afterwards. Archive openers pass it straight through to
-// Archive::Open without further indirection.
-extern thread_local ArchiveExtractProgressCb gArchiveProgressCb;
+bool HasRarSignature(Str data);
 
 struct Archive {
     enum class Format {
@@ -26,6 +13,12 @@ struct Archive {
         Rar,
         SevenZip,
         Tar
+    };
+
+    enum class RarHint {
+        Detect,
+        Rar,
+        Other,
     };
 
     struct FileInfo {
@@ -51,7 +44,7 @@ struct Archive {
 
     Format format = Format::Unknown;
 
-    bool Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExtractProgressCb& cbProgress);
+    bool Open(Str path, bool eagerLoad, RarHint hint = RarHint::Detect);
     bool OpenFromData(Str data, bool eagerLoad = true);
 
     Vec<FileInfo*> const& GetFileInfos();
@@ -83,28 +76,16 @@ struct Archive {
     // only set when we loaded file infos using unrar.dll fallback
     Str rarFilePath_;
 
-    bool OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
-    bool ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+    bool OpenArchive(Str path, bool eagerLoad);
+    bool ParseEntries(struct archive* a, bool eagerLoad);
 
-    bool OpenUnrarFallback(Str rarPathUtf, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+    bool OpenUnrarFallback(Str rarPathUtf, bool eagerLoad);
     Str ReadUnrarEntry(FileInfo* fi, int toRead, bool* permanent);
     Str ReadLibarchiveEntry(FileInfo* fi, int toRead, bool* permanent);
     Str ReadEntry(FileInfo* fi, int toRead, bool* permanent);
     bool LoadedUsingUnrarDll() const { return (bool)rarFilePath_; }
 };
 
-// Progress callback payload. fileInfo points at the FileInfo record for
-// the entry just processed (may have ->failed set). nDecoded is the
-// running count (incremented whether decompression succeeded or failed);
-// nTotal is the total count when known, -1 otherwise (libarchive only
-// knows the total at the end, so most callbacks carry -1 and a final
-// callback carries nDecoded == nTotal).
-struct ArchiveExtractProgress {
-    Archive::FileInfo* fileInfo;
-    int nDecoded;
-    int nTotal;
-};
-
-Archive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
+Archive* OpenArchiveFromFile(Str path, bool eagerLoad);
 
 Archive* OpenArchiveFromData(Str data);

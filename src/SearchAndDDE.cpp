@@ -163,10 +163,8 @@ void FindDebounceTimerFired(MainWindow* win) {
     }
 }
 
-// stops the debounce timer without running the pending search
-void FindDebounceStop(MainWindow* win) {
-    KillTimer(win->hwndFrame, kFindDebounceTimerId);
-    win->findDebouncePending = false;
+bool FindDebouncePending(MainWindow* win) {
+    return win->findDebouncePending;
 }
 
 // the find buttons are disabled while a find runs

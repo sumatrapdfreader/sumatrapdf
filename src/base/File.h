@@ -145,11 +145,6 @@ struct CopyProgress {
 };
 using CopyProgressCb = Func1<CopyProgress*>;
 
-// Thread-local progress callback honored by long-running copies (e.g.
-// caching a network-drive cbx locally). Caller sets it before triggering
-// an operation that may copy large files; clears it afterwards.
-extern thread_local CopyProgressCb gFileCopyProgressCb;
-
 bool Copy(Str dst, Str src, bool dontOverwrite);
 bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress);
 bool Rename(Str newPath, Str oldPath);

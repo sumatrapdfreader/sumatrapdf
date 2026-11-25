@@ -53,6 +53,7 @@ static TempStr GetCbxCachePathTemp(Str path, i64 fileSize) {
 }
 
 struct CbxCopyProgressState {
+    file::CopyProgressCb callback;
     u64 lastUpdate = 0;
 };
 
@@ -65,9 +66,7 @@ static void OnCbxCopyProgress(CbxCopyProgressState* s, file::CopyProgress* p) {
         return;
     }
     s->lastUpdate = now;
-    if (file::gFileCopyProgressCb.IsValid()) {
-        file::gFileCopyProgressCb.Call(p);
-    }
+    s->callback.Call(p);
 }
 
 constexpr i64 kCbxNetworkLoadInMemoryMax = 32LL * 1024 * 1024;
@@ -114,7 +113,7 @@ static EngineBase* MaybeCreateCbxFromMemory(Str path) {
 // the stale-files sweep in DeleteStaleFilesAsync() keeps the file warm.
 // Any failure (copy error, cache dir unavailable, ...) returns nullptr and
 // the caller falls back to opening the original file directly.
-static TempStr MaybeCopyCbxToLocalCache(Str path) {
+static TempStr MaybeCopyCbxToLocalCache(Str path, file::CopyProgressCb copyProgress) {
     if (!path::IsOnNetworkDrive(path)) {
         return {};
     }
@@ -144,8 +143,11 @@ static TempStr MaybeCopyCbxToLocalCache(Str path) {
     }
 
     auto timeStart = TimeGet();
-    CbxCopyProgressState progState{0};
-    auto cb = MkFunc1<CbxCopyProgressState, file::CopyProgress*>(OnCbxCopyProgress, &progState);
+    CbxCopyProgressState progState{copyProgress};
+    file::CopyProgressCb cb;
+    if (copyProgress.IsValid()) {
+        cb = MkFunc1<CbxCopyProgressState, file::CopyProgress*>(OnCbxCopyProgress, &progState);
+    }
     bool ok = file::Copy(cachePath, path, false, cb);
     if (!ok) {
         logf("MaybeCopyCbxToLocalCache: file::Copy('%s' -> '%s') failed\n", path, cachePath);
@@ -351,7 +353,7 @@ bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
 }
 
 static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, Str path, PasswordUI* pwdUI,
-                                       bool enableChmEngine) {
+                                       bool enableChmEngine, file::CopyProgressCb copyProgress) {
     if (kind == FileType::Unknown) {
         return nullptr;
     }
@@ -383,7 +385,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
         if (engine) {
             return engine;
         }
-        TempStr realPath = MaybeCopyCbxToLocalCache(path);
+        TempStr realPath = MaybeCopyCbxToLocalCache(path, copyProgress);
         return CreateEngineCbxFromFile(path, pwdUI, contentHintKind, realPath);
     }
     if (IsEnginePsSupportedFileType(kind)) {
@@ -450,7 +452,7 @@ static void ApplyEngineSettings(EngineBase* engine) {
     engine->disableAutoLinks = gSettings->disableAutoLinks;
 }
 
-EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngine) {
+EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngine, file::CopyProgressCb copyProgress) {
     ReportIf(len(path) == 0);
 
     if (str::EndsWithI(path, StrL(".p7m"))) {
@@ -490,7 +492,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
         }
     }
 
-    EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine);
+    EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine, copyProgress);
     if (engine) {
         ApplyEngineSettings(engine);
         return engine;
@@ -503,7 +505,7 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     // both use the cbx engine, causing duplicate password prompts)
     bool sameCbx = IsEngineCbxSupportedFileType(kind) && IsEngineCbxSupportedFileType(contentHint);
     if (kind != contentHint && !sameCbx) {
-        engine = CreateEngineForKind(contentHint, contentHint, path, pwdUI, enableChmEngine);
+        engine = CreateEngineForKind(contentHint, contentHint, path, pwdUI, enableChmEngine, copyProgress);
     }
     ApplyEngineSettings(engine);
     return engine;

@@ -36,16 +36,9 @@
 #include "gui/WasmBridge.h"
 #endif
 
-struct ServerSha1 {
-    u8 v[kSha1Len]{};
-    bool has = false;
-};
-
 struct ServerFilesState {
-    StrVec names;
-    Vec<i64> sizes;
-    Vec<ServerSha1> sha1s;
-    // names are the account's files
+    Vec<OnlineListedFile> files;
+    // files contains a successful listing, which can be empty
     bool listed = false;
     // a list was started for the current key
     bool tried = false;
@@ -65,10 +58,31 @@ static ServerFilesState gSrv;
 constexpr u64 kRelistMs = 5ULL * 60 * 1000;
 static u64 gRelistMs = kRelistMs;
 
-// stand-ins for server-only files, by name. Never freed: the home page caches
-// thumbnails by FileState*.
-static StrVec gStandInNames;
-static Vec<FileState*> gStandIns;
+struct ServerStandIn {
+    Str name;
+    FileState* state;
+};
+
+// Never freed: the home page caches thumbnails by FileState*.
+static Vec<ServerStandIn> gStandIns;
+
+static int FindServerFile(Str name) {
+    for (int i = 0; i < len(gSrv.files); i++) {
+        if (str::Eq(gSrv.files[i].name, name)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static FileState* FindStandIn(Str name) {
+    for (const ServerStandIn& entry : gStandIns) {
+        if (str::Eq(entry.name, name)) {
+            return entry.state;
+        }
+    }
+    return nullptr;
+}
 
 static void ServerJobDone(OnlineJobResult* res);
 
@@ -109,13 +123,15 @@ static void QueueHistoryHashes(HashScan scan) {
         return;
     }
     lastMs = now;
-    QueueContentHashes(gSrv.sizes, MkFunc0Void(ServerFilesChanged));
+    Vec<i64> sizes;
+    for (const OnlineListedFile& f : gSrv.files) {
+        VecAppend(sizes, f.size);
+    }
+    QueueContentHashes(sizes, MkFunc0Void(ServerFilesChanged));
 }
 
 static void ClearServerList() {
-    gSrv.names.Reset();
-    VecReset(gSrv.sizes);
-    VecReset(gSrv.sha1s);
+    FreeOnlineFiles(gSrv.files);
     gSrv.listed = false;
 }
 
@@ -132,15 +148,8 @@ static bool ApplyServerList(Str body) {
         return false;
     }
     ClearServerList();
-    for (OnlineListedFile& f : parsed) {
-        gSrv.names.Append(f.name);
-        VecAppend(gSrv.sizes, f.size);
-        ServerSha1 sha;
-        memcpy(sha.v, f.sha1, sizeof(sha.v));
-        sha.has = f.hasSha1;
-        VecAppend(gSrv.sha1s, sha);
-    }
-    FreeOnlineFiles(parsed);
+    // The cache takes ownership of the names allocated by the parser.
+    gSrv.files = parsed;
     gSrv.listed = true;
     ForgetContentHashChecks();
     QueueHistoryHashes(HashScan::Now);
@@ -307,14 +316,15 @@ static int MatchServerFile(Str path, i64 localSize, ServerFileState* stOut) {
         return -1;
     }
     Str name = path::GetBaseNameTemp(path);
-    int byName = gSrv.names.Find(name);
+    int byName = FindServerFile(name);
 
     ContentHash h;
     bool known = KnownContentHash(path, h);
     if (known) {
         int byContent = -1;
-        for (int i = 0; i < len(gSrv.sha1s); i++) {
-            if (!gSrv.sha1s[i].has || memcmp(gSrv.sha1s[i].v, h.sha1, kSha1Len) != 0) {
+        for (int i = 0; i < len(gSrv.files); i++) {
+            const OnlineListedFile& f = gSrv.files[i];
+            if (!f.hasSha1 || memcmp(f.sha1, h.sha1, kSha1Len) != 0) {
                 continue;
             }
             if (byContent < 0 || i == byName) {
@@ -329,8 +339,9 @@ static int MatchServerFile(Str path, i64 localSize, ServerFileState* stOut) {
     if (byName < 0) {
         return -1;
     }
-    bool differs = localSize >= 0 && localSize != gSrv.sizes[byName];
-    if (known && gSrv.sha1s[byName].has) {
+    const OnlineListedFile& f = gSrv.files[byName];
+    bool differs = localSize >= 0 && localSize != f.size;
+    if (known && f.hasSha1) {
         differs = true;
     }
     *stOut = differs ? ServerFileState::Differs : ServerFileState::Same;
@@ -348,21 +359,20 @@ ServerFileState GetServerFileState(Str path, i64 localSize) {
 TempStr ServerNameOfTemp(Str path) {
     ServerFileState st;
     int idx = MatchServerFile(path, -1, &st);
-    return idx >= 0 ? str::DupTemp(gSrv.names[idx]) : TempStr{};
+    return idx >= 0 ? str::DupTemp(gSrv.files[idx].name) : TempStr{};
 }
 
 static FileState* StandInFor(Str name) {
-    int idx = gStandInNames.Find(name);
-    if (idx >= 0) {
-        return gStandIns[idx];
+    FileState* fs = FindStandIn(name);
+    if (fs) {
+        return fs;
     }
     TempStr path = OnlineDownloadPathTemp(name);
     if (len(path) == 0) {
         return nullptr;
     }
-    FileState* fs = NewFileState(path);
-    gStandInNames.Append(name);
-    VecAppend(gStandIns, fs);
+    fs = NewFileState(path);
+    VecAppend(gStandIns, ServerStandIn{str::Dup(name), fs});
     return fs;
 }
 
@@ -385,7 +395,7 @@ void ServerOnlyFileStates(Vec<FileState*>& out) {
     Vec<FileState*> history;
     FileHistoryGetRecentlyOpenedOrder(history);
     Vec<bool> covered;
-    for (int i = 0; i < len(gSrv.names); i++) {
+    for (int i = 0; i < len(gSrv.files); i++) {
         VecAppend(covered, false);
     }
     for (FileState* fs : history) {
@@ -398,11 +408,11 @@ void ServerOnlyFileStates(Vec<FileState*>& out) {
             covered[idx] = true;
         }
     }
-    for (int i = 0; i < len(gSrv.names); i++) {
+    for (int i = 0; i < len(gSrv.files); i++) {
         if (covered[i]) {
             continue;
         }
-        FileState* fs = StandInFor(gSrv.names[i]);
+        FileState* fs = StandInFor(gSrv.files[i].name);
         if (fs) {
             VecAppend(out, fs);
         }
@@ -414,14 +424,14 @@ bool IsServerOnlyFile(Str path) {
         return false;
     }
     Str name = path::GetBaseNameTemp(path);
-    int idx = gStandInNames.Find(name);
-    return idx >= 0 && str::Eq(gStandIns[idx]->filePath, path) && gSrv.names.Contains(name);
+    FileState* fs = FindStandIn(name);
+    return fs && str::Eq(fs->filePath, path) && FindServerFile(name) >= 0;
 }
 
 // the size of the server file with path's name; -1 if there is none
 i64 ServerFileSize(Str path) {
-    int idx = gSrv.names.Find(path::GetBaseNameTemp(path));
-    return (idx >= 0 && idx < len(gSrv.sizes)) ? gSrv.sizes[idx] : -1;
+    int idx = FindServerFile(path::GetBaseNameTemp(path));
+    return idx >= 0 ? gSrv.files[idx].size : -1;
 }
 
 static bool CanStartTransfer(MainWindow* win);
@@ -430,11 +440,12 @@ static void TransferStarted(MainWindow* win, Str name);
 // Opens the downloaded copy, downloading it first unless it has the server's size.
 void OpenServerFile(MainWindow* win, Str path) {
     Str name = path::GetBaseNameTemp(path);
-    int idx = gSrv.names.Find(name);
-    if (idx < 0 || idx >= len(gSrv.sizes)) {
+    int idx = FindServerFile(name);
+    if (idx < 0) {
         return;
     }
-    if (file::GetSize(path) == gSrv.sizes[idx]) {
+    i64 size = gSrv.files[idx].size;
+    if (file::GetSize(path) == size) {
         OpenDownloadedServerFile(win, path);
         return;
     }
@@ -443,7 +454,7 @@ void OpenServerFile(MainWindow* win, Str path) {
     }
     TempStr err;
     auto onDone = MkFunc1Void<OnlineJobResult*>(ServerJobDone);
-    if (!StartOnlineDownload(ServerToken(), name, gSrv.sizes[idx], &gSrv.transferId, onDone, &err)) {
+    if (!StartOnlineDownload(ServerToken(), name, size, &gSrv.transferId, onDone, &err)) {
         gSrv.transferId = 0;
         Notify(win, err);
         return;
@@ -517,7 +528,7 @@ void UploadFileToServer(MainWindow* win, Str path) {
         return;
     }
     Str name = path::GetBaseNameTemp(path);
-    if (!gSrv.names.Contains(name)) {
+    if (FindServerFile(name) < 0) {
         StartUpload(win, path);
         return;
     }

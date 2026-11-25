@@ -5,17 +5,7 @@
 
 class PageRenderer;
 
-enum class PreviewType {
-    Pdf,
-    Xps,
-    DjVu,
-    Epub,
-    Fb2,
-    Mobi,
-    Cbx,
-    Tga,
-    Ofd,
-};
+enum class PreviewType;
 
 class PdfPreview : public IThumbnailProvider,
                    public IInitializeWithStream,

@@ -68,6 +68,7 @@
 #include "CanvasCommon.h"
 #include "MainWindowCommon.h"
 #include "SignatureUI.h"
+#include "SignatureUICommon.h"
 
 #include "SumatraLog.h"
 

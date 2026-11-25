@@ -53,6 +53,7 @@ void FindEndTask(FindEndTaskData* d);
 void HighlightRestoredFindTerm(MainWindow* win);
 
 // implemented by each app
+bool FindDebouncePending(MainWindow* win);
 void CancelPendingFind(MainWindow* win);
 void AbortCount(MainWindow* win);
 bool JoinFindThread(MainWindow* win, bool hideMessage);
@@ -143,7 +144,6 @@ void CountThread(CountThreadData* d);
 void FindThread(FindThreadData* ftd);
 
 Str HandleOpenCmd(Str cmd, bool* ack);
-void FindDebounceStop(MainWindow* win);
 void BrowserFindStatusShown(MainWindow* win);
 TempStr FindPagesEditTextTemp(MainWindow* win);
 

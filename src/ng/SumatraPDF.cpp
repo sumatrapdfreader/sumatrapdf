@@ -115,6 +115,7 @@
 #include "PdfDarkMode.h"
 #include "PagePosition.h"
 #include "SessionState.h"
+#include "SessionStateCommon.h"
 #include "TabGroupsManage.h"
 #include "gui/TabSwitcher.h"
 #include "gui/BrowserView.h"
@@ -1255,28 +1256,14 @@ void AutoReloadTick(MainWindow* win, int elapsedMs) {
     if (!tab || !tab->autoReload.Tick(elapsedMs)) {
         return;
     }
-    if (!tab->reloadOnFocus) {
-        return;
-    }
-    if (tab->ignoreNextAutoReload) {
-        // consume the save-triggered watcher event
-        tab->ignoreNextAutoReload = false;
-        tab->reloadOnFocus = false;
-        return;
-    }
-    // an open menu still holds the page element it was built from. Reload
-    // once it is gone, as orig does while TrackPopupMenu is running.
-    if (win->gpuiWin && IsTrackedPopupOpenInApp(win->gpuiWin->app)) {
+    bool menuOpen = win->gpuiWin && IsTrackedPopupOpenInApp(win->gpuiWin->app);
+    auto trigger = menuOpen ? AutoReloadTrigger::TimerInMenu : AutoReloadTrigger::Timer;
+    auto action = DecideAutoReload(tab, trigger);
+    if (action == AutoReloadAction::Retry) {
         tab->autoReload.Arm(kAutoReloadDelayInMs);
-        return;
+    } else if (action == AutoReloadAction::Reload) {
+        ReloadDocument(win, true);
     }
-    if (AutoReloadFileStillChanging(tab)) {
-        // a writer (LaTeX etc.) is still producing the file; wait for it to go
-        // quiet instead of showing a half-written document
-        tab->autoReload.Arm(kAutoReloadDelayInMs);
-        return;
-    }
-    ReloadDocument(win, true);
 }
 
 static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocController* ctrl, LoadPrefs prefs,
@@ -1906,11 +1893,10 @@ static void LazyTabLoadThread(LazyTabLoad* d) {
     if (d->createEngine && DocumentPathExists(d->path)) {
         SetLoadThreadFileEBookUI(d->fileEBookUI);
         float prevAspect = EngineMupdfSetEbookLayoutAspect(d->ebookLayoutAspect);
-        file::gFileCopyProgressCb = MkFunc1<LazyTabLoad, file::CopyProgress*>(OnLoadCopyProgress, d);
+        auto copyProgress = MkFunc1<LazyTabLoad, file::CopyProgress*>(OnLoadCopyProgress, d);
         // no password prompt off the UI thread: FinishLazyTabLoad's regular
         // load asks for it
-        d->engine = CreateEngineFromFile(d->path, nullptr, d->chmInFixedUI);
-        file::gFileCopyProgressCb = {};
+        d->engine = CreateEngineFromFile(d->path, nullptr, d->chmInFixedUI, copyProgress);
         EngineMupdfSetEbookLayoutAspect(prevAspect);
         SetLoadThreadFileEBookUI(nullptr);
         if (d->engine && d->engine->pageCount <= 0) {

@@ -565,7 +565,7 @@ ControlServeResult ServeControlRequest(ControlConn h, ControlExecFn execOnUi) {
     }
     res.hadRequest = true;
     res.isQuit = ControlCmdEndsListener(req->cmd);
-    if (req->cmd == (u16)ControlFrameCmd::CrashMe) {
+    if (req->cmd == (u16)ControlCmd::CrashMe) {
         log(StrL("ControlCmd::CrashMe\n"));
         CrashMe();
     }

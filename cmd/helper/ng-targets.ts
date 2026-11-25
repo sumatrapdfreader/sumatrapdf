@@ -1625,6 +1625,7 @@ export const targets: Target[] = [
       "src/ng/ServerFiles.cpp",
       "src/ng/ContentHash.cpp",
       "src/ng/AppHelpersCommon.cpp",
+      "src/ng/SessionStateCommon.cpp",
       "src/ng/AddFavoriteDialog.cpp",
       "src/ng/Favorites.cpp",
       "src/ng/FavoritesCommon.cpp",

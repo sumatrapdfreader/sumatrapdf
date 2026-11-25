@@ -16,13 +16,11 @@ struct MainWindow;
 int SigBarDy(MainWindow*);
 gpui::El* SigBarBuild(MainWindow*, gpui::Ctx*);
 
-void ShowSignatureDialog(MainWindow*, int entryIdx);
 void CloseSignatureDialog();
 bool IsSignatureDialogVisible();
 gpui::El* SignatureDialogBuild(MainWindow*, gpui::Ctx*);
 
 void PaintSignatureMarks(MainWindow*, gpui::PaintCtx*);
-bool SigMarksOnLeftDown(MainWindow*, int x, int y);
 bool SigMarksOnSetCursor(MainWindow*, Point pt);
 
 TempStr SignatureUiStateTemp(MainWindow*, Str action);

@@ -50,7 +50,7 @@ static int CmpNavEntry(const NavFileEntry* a, const NavFileEntry* b) {
     return str::CmpNatural(a->name, b->name);
 }
 
-void SortNavEntries(Vec<NavFileEntry>& entries, int firstIdx) {
+static void SortNavEntries(Vec<NavFileEntry>& entries, int firstIdx) {
     int n = len(entries) - firstIdx;
     if (n <= 1) {
         return;
@@ -107,7 +107,7 @@ void AppendNavParentEntry(Vec<NavFileEntry>& entries) {
 
 // leaf name for display: find-data names are usually basenames, but some network
 // providers put a relative or full path in cFileName — always show the leaf only.
-TempStr NavLeafNameTemp(DirIterEntry* de) {
+static TempStr NavLeafNameTemp(DirIterEntry* de) {
     TempStr leaf = path::GetBaseNameTemp(de->name);
     if (len(leaf) == 0) {
         leaf = path::GetBaseNameTemp(de->filePath);
@@ -117,9 +117,9 @@ TempStr NavLeafNameTemp(DirIterEntry* de) {
 
 // Explorer's Quick access, fetched once per process because the shell resolves
 // every entry. F5 in the home view drops the cache.
-Mutex gQuickAccessMutex;
+static Mutex gQuickAccessMutex;
 
-bool gQuickAccessCached = false;
+static bool gQuickAccessCached = false;
 
 void ResetQuickAccessCache() {
     gQuickAccessMutex.Lock();
@@ -128,7 +128,7 @@ void ResetQuickAccessCache() {
 }
 
 // home entries show the full path: Quick access has many same-named folders
-void AppendHomeDirEntry(Vec<NavFileEntry>& out, Str path) {
+static void AppendHomeDirEntry(Vec<NavFileEntry>& out, Str path) {
     NavFileEntry e;
     e.isDir = true;
     e.path = str::Dup(path);
@@ -141,7 +141,7 @@ static StrVec gQuickAccessDirs;
 
 static StrVec gQuickAccessFiles;
 
-void GetQuickAccessCached(StrVec& dirsOut, StrVec& filesOut) {
+static void GetQuickAccessCached(StrVec& dirsOut, StrVec& filesOut) {
     gQuickAccessMutex.Lock();
     if (!gQuickAccessCached) {
         gQuickAccessDirs.Reset();
@@ -157,8 +157,32 @@ void GetQuickAccessCached(StrVec& dirsOut, StrVec& filesOut) {
     gQuickAccessMutex.Unlock();
 }
 
+static void AppendHomeFileEntry(Vec<NavFileEntry>& out, Str path) {
+    if (!CanOpenFile(path)) {
+        return;
+    }
+    // Quick access keeps listing files after they are deleted
+#if OS_WIN
+    WIN32_FILE_ATTRIBUTE_DATA fad{};
+    if (!path::GetCachedAttributesEx(path, &fad)) {
+        return;
+    }
+    i64 size = ((i64)fad.nFileSizeHigh << 32) | (i64)fad.nFileSizeLow;
+#else
+    if (!file::Exists(path)) {
+        return;
+    }
+    i64 size = file::GetSize(path);
+#endif
+    NavFileEntry e;
+    e.path = str::Dup(path);
+    e.name = str::Dup(path);
+    e.size = size;
+    VecAppend(out, e);
+}
+
 // Home view: drive roots, then Explorer's Quick access folders and files
-void CollectHomeEntries(Vec<NavFileEntry>& out) {
+static void CollectHomeEntries(Vec<NavFileEntry>& out) {
     StrVec drives;
     ListDriveRoots(drives);
     for (int i = 0; i < len(drives); i++) {
@@ -174,6 +198,67 @@ void CollectHomeEntries(Vec<NavFileEntry>& out) {
     for (int i = 0; i < len(files); i++) {
         AppendHomeFileEntry(out, files[i]);
     }
+}
+
+// Built on a worker thread: listing + filtering + sorting a folder of tens of
+// thousands of files must not freeze the UI (discussion #6014).
+void CollectNavEntriesForDir(Str dir, Vec<NavFileEntry>& out) {
+    if (len(dir) == 0) {
+        CollectHomeEntries(out);
+        return;
+    }
+    // ".." also in a drive root, where it leads to the home view
+    AppendNavParentEntry(out);
+    int firstIdx = 1; // keep ".." at the top when sorting
+
+    DirIter di{dir};
+    di.includeFiles = true;
+    di.includeDirs = true;
+    for (DirIterEntry* de : di) {
+        TempStr leaf = NavLeafNameTemp(de);
+        if (len(leaf) == 0) {
+            continue;
+        }
+#if OS_WIN
+        DWORD attrs = de->fd->dwFileAttributes;
+        if (attrs & FILE_ATTRIBUTE_HIDDEN) {
+            continue;
+        }
+#else
+        if (leaf.s[0] == '.') {
+            continue;
+        }
+#endif
+        // own path/name before any further temp allocations
+        Str fullPath = str::Dup(de->filePath);
+
+        NavFileEntry e;
+        e.path = fullPath;
+        if (IsDirectory(de)) {
+            e.isDir = true;
+            e.name = str::Join(leaf, StrL("\\"));
+        } else {
+            if (!CanOpenFile(leaf)) {
+                str::Free(fullPath);
+                continue;
+            }
+            e.name = str::Dup(leaf);
+            e.size = GetFileSize(de);
+            // FindFirstFile size is sometimes 0 on network/cloud providers even
+            // when the file has content; attributes are cached for network paths.
+#if OS_WIN
+            if (e.size == 0) {
+                WIN32_FILE_ATTRIBUTE_DATA fad{};
+                if (path::GetCachedAttributesEx(fullPath, &fad) && !(fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                    e.size = ((i64)fad.nFileSizeHigh << 32) | (i64)fad.nFileSizeLow;
+                }
+            }
+#endif
+        }
+        VecAppend(out, e);
+    }
+
+    SortNavEntries(out, firstIdx);
 }
 
 // dirs visited ("" for home), kept for the whole session so a re-opened

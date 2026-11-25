@@ -18,29 +18,41 @@
 
 // clang-format off
 static const struct {
+    PreviewType type;
     Str clsid;
     Str ext;
     Str ext2;
 } gPreviewers[] = {
-    {StrL(kPdfPreviewClsid), StrL(".pdf")},
-    {StrL(kCbxPreviewClsid), StrL(".cbz"), StrL(".cbr")},
-    {StrL(kCbxPreviewClsid), StrL(".cb7"), StrL(".cbt")},
-    {StrL(kTgaPreviewClsid), StrL(".tga")},
-    {StrL(kDjVuPreviewClsid), StrL(".djvu")},
-    {StrL(kXpsPreviewClsid), StrL(".xps"), StrL(".oxps")},
-    {StrL(kEpubPreviewClsid), StrL(".epub")},
+    {PreviewType::Pdf, StrL(kPdfPreviewClsid), StrL(".pdf")},
+    {PreviewType::Cbx, StrL(kCbxPreviewClsid), StrL(".cbz"), StrL(".cbr")},
+    {PreviewType::Cbx, StrL(kCbxPreviewClsid), StrL(".cb7"), StrL(".cbt")},
+    {PreviewType::Tga, StrL(kTgaPreviewClsid), StrL(".tga")},
+    {PreviewType::DjVu, StrL(kDjVuPreviewClsid), StrL(".djvu")},
+    {PreviewType::Xps, StrL(kXpsPreviewClsid), StrL(".xps"), StrL(".oxps")},
+    {PreviewType::Epub, StrL(kEpubPreviewClsid), StrL(".epub")},
     // FictionBook: plain .fb2 and common zip containers (.fb2z, .fbz, .zfb2,
     // .fb2.zip). Multi-dot .fb2.zip needs its own Classes key so Explorer does
     // not treat it as a generic .zip (issue #1677).
-    {StrL(kFb2PreviewClsid), StrL(".fb2"), StrL(".fb2z")},
-    {StrL(kFb2PreviewClsid), StrL(".fbz"), StrL(".zfb2")},
-    {StrL(kFb2PreviewClsid), StrL(".fb2.zip")},
-    {StrL(kMobiPreviewClsid), StrL(".mobi")},
-    {StrL(kOfdPreviewClsid), StrL(".ofd")},
+    {PreviewType::Fb2, StrL(kFb2PreviewClsid), StrL(".fb2"), StrL(".fb2z")},
+    {PreviewType::Fb2, StrL(kFb2PreviewClsid), StrL(".fbz"), StrL(".zfb2")},
+    {PreviewType::Fb2, StrL(kFb2PreviewClsid), StrL(".fb2.zip")},
+    {PreviewType::Mobi, StrL(kMobiPreviewClsid), StrL(".mobi")},
+    {PreviewType::Ofd, StrL(kOfdPreviewClsid), StrL(".ofd")},
 };
 // clang-format on
 
 static_assert(dimof(gPreviewers) * 2 <= 32, "a PreviewHandlers mask has a bit per extension");
+
+bool FindPreviewType(REFCLSID clsid, PreviewType& type) {
+    for (const auto& previewer : gPreviewers) {
+        CLSID registered;
+        if (SUCCEEDED(CLSIDFromString(CWStrTemp(previewer.clsid), &registered)) && IsEqualCLSID(clsid, registered)) {
+            type = previewer.type;
+            return true;
+        }
+    }
+    return false;
+}
 
 // bit of gPreviewers[i].ext is 2*i, of .ext2 2*i+1
 static u32 ExtBit(int previewerIdx, int extNo) {

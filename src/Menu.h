@@ -4,12 +4,7 @@
 struct AppCommandCtx;
 using BuildMenuCtx = AppCommandCtx;
 
-struct MenuDef {
-    Str title;
-    UINT_PTR idOrSubmenu = 0;
-};
-
-#define kMenuSeparator "-----"
+struct MenuDef;
 
 HMENU BuildMenuFromDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx);
 void RemoveBadMenuSeparators(HMENU menu);

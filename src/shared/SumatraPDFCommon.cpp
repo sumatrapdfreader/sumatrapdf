@@ -2452,8 +2452,8 @@ void ScheduleReloadTab(WindowTab* tab) {
 // Note: file::GetSize()/GetModificationTime() go through the 1-hour network
 // attribute cache, so on a network drive both values look stable right away
 // and we reload immediately, as before.
-bool AutoReloadFileStillChanging(WindowTab* tab) {
-    if (!tab || len(tab->filePath) == 0) {
+static bool AutoReloadFileStillChanging(WindowTab* tab) {
+    if (len(tab->filePath) == 0) {
         return false;
     }
     u64 now = GetTickCount64();
@@ -2476,6 +2476,26 @@ bool AutoReloadFileStillChanging(WindowTab* tab) {
     }
     AutoReloadResetFileState(tab);
     return false;
+}
+
+AutoReloadAction DecideAutoReload(WindowTab* tab, AutoReloadTrigger trigger) {
+    if (!tab || !tab->reloadOnFocus) {
+        return AutoReloadAction::Nothing;
+    }
+    if (tab->ignoreNextAutoReload) {
+        tab->ignoreNextAutoReload = false;
+        tab->reloadOnFocus = false;
+        return AutoReloadAction::Nothing;
+    }
+    if (trigger == AutoReloadTrigger::TabFocus) {
+        tab->reloadOnFocus = false;
+        return AutoReloadAction::Reload;
+    }
+    // A popup can hold a page element. An active writer can leave a partial document.
+    if (trigger == AutoReloadTrigger::TimerInMenu || AutoReloadFileStillChanging(tab)) {
+        return AutoReloadAction::Retry;
+    }
+    return AutoReloadAction::Reload;
 }
 
 void EnsureNextPrevDirScan(Str filePath) {

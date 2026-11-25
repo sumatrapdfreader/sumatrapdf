@@ -148,7 +148,6 @@ void StealStrVec(StrVec& dst, StrVec& src);
 extern bool gNextPrevDirReady;
 extern bool gNextPrevDirScanning;
 void ScheduleReloadTab(WindowTab* tab);
-bool AutoReloadFileStillChanging(WindowTab* tab);
 void EnsureNextPrevDirScan(Str filePath);
 StrVec* GetNextPrevFilesReady(Str path);
 

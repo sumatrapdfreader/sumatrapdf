@@ -274,3 +274,15 @@ bool IsEpubDoc(WindowTab* tab);
 bool IsMupdfNonPdfDoc(WindowTab* tab);
 bool IsCajDoc(WindowTab* tab);
 TempStr LoadingMessageTemp(WindowTab* tab);
+
+enum class AutoReloadTrigger {
+    TabFocus,
+    Timer,
+    TimerInMenu,
+};
+enum class AutoReloadAction {
+    Nothing,
+    Retry,
+    Reload,
+};
+AutoReloadAction DecideAutoReload(WindowTab* tab, AutoReloadTrigger trigger);

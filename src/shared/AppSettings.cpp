@@ -37,7 +37,6 @@
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "DisplayModel.h"
-#include "VirtualDesktop.h"
 #endif
 #include "AppTools.h"
 #if !defined(SUMATRA_NG)
@@ -67,11 +66,10 @@
 #include "Notifications.h"
 #include "ExplorerQuickLook.h"
 #include "Tabs.h"
-#include "StripGroups.h"
 #include "GlobalHotkeys.h"
 #include "PagePosition.h"
 #include "CachedObjects.h"
-#include "AppHelpersCommon.h"
+#include "SessionStateCommon.h"
 #endif
 #include "AppSettings.h"
 void ReloadSettingsUpdateWindows(bool showToolbarBefore);
@@ -484,7 +482,6 @@ static void UpdateCrashHandlerSettings() {
     str::Free(d);
 }
 
-#if !defined(SUMATRA_NG)
 TabState* CloneTabState(const TabState* src) {
     TabState* dst = (TabState*)AllocStruct<TabState>();
     str::ReplaceWithCopy(&dst->filePath, src->filePath);
@@ -503,20 +500,6 @@ TabState* CloneTabState(const TabState* src) {
     return dst;
 }
 
-static SessionData* CloneSessionData(const SessionData* src) {
-    SessionData* dst = NewSessionData();
-    dst->tabIndex = src->tabIndex;
-    dst->windowState = src->windowState;
-    dst->windowPos = src->windowPos;
-    dst->sidebarDx = src->sidebarDx;
-    str::ReplaceWithCopy(&dst->virtualDesktopId, src->virtualDesktopId);
-    for (TabState* ts : *src->tabStates) {
-        VecAppend(*dst->tabStates, CloneTabState(ts));
-    }
-    return dst;
-}
-
-#endif
 // session snapshot loaded at startup. Also the source of state for re-saving
 // not-yet-loaded (lazy) tabs, kept mirroring the live session by
 // SyncInitialSessionData() so it never carries closed-window entries.
@@ -525,121 +508,9 @@ Vec<SessionData*>* gInitialSessionData = nullptr;
 int gInitialSessionDataGen = 0;
 
 #if defined(SUMATRA_NG)
-// ng: orig's SaveSettings() calls UpdateTabFileDisplayStateForTab() for every
-// tab, then RememberSessionState() + SyncInitialSessionData(). All three need
-// MainWindow / WindowTab, which live in the SumatraPDF target because `app`
-// also links into the console tools, so the shell installs them here.
-// src/SessionState.cpp has orig's code.
+// The ng shell installs the window session save hook. Console tools also link
+// this settings module and have no windows.
 void (*gRememberSessionStateFn)() = nullptr;
-#else
-// keep gInitialSessionData mirroring the just-saved live session, so re-saving
-// not-yet-loaded tabs never feeds stale state from a closed window back into the
-// saved session (fixes #5668). Call after RememberSessionState().
-static void SyncInitialSessionData() {
-    if (!gInitialSessionData) {
-        return;
-    }
-    FreeSessionDataVec(gInitialSessionData);
-    gInitialSessionDataGen++;
-    for (SessionData* sd : *gSettings->sessionData) {
-        VecAppend(*gInitialSessionData, CloneSessionData(sd));
-    }
-    RefreshLazyTabStatePointers();
-}
-
-static void RememberSessionState() {
-    Vec<SessionData*>* sessionState = gSettings->sessionData;
-    if (!SettingsRememberOpenedFiles()) {
-        FreeSessionDataVec(sessionState);
-        return;
-    }
-
-    // which virtual desktop each window is on, so restoring puts it back (#6271).
-    // Asked first: the shell's COM calls can pump messages, and a window closed
-    // (deleted) or a nested SaveSettings() in there must not happen while we
-    // walk gWindows and the session state below.
-    Vec<HWND> desktopHwnds;
-    for (auto* win : gWindows) {
-        VecAppend(desktopHwnds, win->hwndFrame);
-    }
-    StrVec desktopIds;
-    ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
-    for (HWND hwnd : desktopHwnds) {
-        desktopIds.Append(GetWindowDesktopIdTemp(vdm, hwnd));
-    }
-    if (vdm) {
-        vdm->Release();
-    }
-
-    FreeSessionDataVec(sessionState);
-    for (auto* win : gWindows) {
-        if (win->isQuickLook) {
-            continue;
-        }
-        SessionData* windowState = NewSessionData();
-        for (WindowTab* tab : win->Tabs()) {
-            if (len(tab->filePath) == 0 || tab->IsHexTab()) {
-                // home page or hex view tab
-                continue;
-            }
-            Str fp = tab->filePath;
-            if (!tab->ctrl) {
-                // file not loaded into a tab (lazy loading, or a placeholder for
-                // a missing file). Prefer the tab's own remembered state -- it's
-                // authoritative and disambiguates the same file open in multiple
-                // windows -- and only fall back to the (in-sync) startup snapshot.
-                TabState* src = tab->tabState;
-                if (!src) {
-                    src = FindSessionTabState(fp);
-                }
-                if (src) {
-                    TabState* ts = CloneTabState(src);
-                    StripGroupSaveTab(win, tab, ts);
-                    VecAppend(*windowState->tabStates, ts);
-                }
-                continue;
-            }
-            FileState* fs = NewFileState(fp);
-            tab->ctrl->GetDisplayState(fs);
-            fs->showToc = tab->showToc;
-            str::ReplaceWithCopy(&fs->sidebarView, SidebarViewToStr(tab->sidebarView));
-            *fs->tocState = tab->tocState;
-            TabState* ts = NewTabState(fs);
-            StripGroupSaveTab(win, tab, ts);
-            VecAppend(*windowState->tabStates, ts);
-            DeleteFileState(fs);
-        }
-        if (len(*windowState->tabStates) == 0) {
-            FreeSessionData(windowState);
-            continue;
-        }
-        int desktopIdx = VecFind(desktopHwnds, win->hwndFrame);
-        if (desktopIdx >= 0) {
-            str::ReplaceWithCopy(&windowState->virtualDesktopId, desktopIds.At(desktopIdx));
-        }
-        // 1-based index among document tabs only (home / about tab is omitted
-        // from TabStates above). Using the UI tab index would mis-restore when
-        // the home tab was closed at save time but recreated on the next start.
-        int docOrdinal = 0;
-        int selectedDocOrdinal = 1;
-        WindowTab* cur = win->CurrentTab();
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab->IsAboutTab() || tab->IsHexTab() || len(tab->filePath) == 0) {
-                continue;
-            }
-            docOrdinal++;
-            if (tab == cur) {
-                selectedDocOrdinal = docOrdinal;
-            }
-        }
-        windowState->tabIndex = selectedDocOrdinal;
-        RememberDefaultWindowPosition(win);
-        windowState->windowState = gSettings->windowState;
-        windowState->windowPos = gSettings->windowPos;
-        windowState->sidebarDx = gSettings->sidebarDx;
-        VecAppend(*sessionState, windowState);
-    }
-}
 #endif
 
 // Session state and string forms of parsed values, ready to serialize.
@@ -648,21 +519,9 @@ static void SyncSettingsForSerialize() {
     // update display states for all tabs, then snapshot the session
     if (gRememberSessionStateFn) {
         gRememberSessionStateFn();
-#else
-    // update display states for all tabs
-    // we snapshot the list because SaveSettings() can be called re-entrantly
-    // (e.g. from LoadDocumentFinish while other documents are still loading/closing)
-    for (MainWindow* win : gWindows) {
-        Vec<WindowTab*> tabs = win->Tabs();
-        for (WindowTab* tab : tabs) {
-            UpdateTabFileDisplayStateForTab(tab);
-        }
-#endif
     }
-#if !defined(SUMATRA_NG)
-    RememberSessionState();
-    SyncInitialSessionData();
-    SyncTabGroups();
+#else
+    SaveWindowSessionState();
 #endif
 
     // remove entries which should (no longer) be remembered

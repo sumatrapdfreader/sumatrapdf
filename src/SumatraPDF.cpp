@@ -165,6 +165,7 @@
 #include "OpenFileFilters.h"
 #include "OpenFromUrlCommon.h"
 #include "AppHelpersCommon.h"
+#include "SessionStateCommon.h"
 #include "ToolPipe.h"
 #include "SumatraLog.h"
 
@@ -1888,17 +1889,7 @@ static void ApplyPageAspectView(EngineBase* engine, DisplayMode* modeOut, float*
     if (!engine || engine->PageCount() < 1) {
         return;
     }
-    RectF box = engine->PageMediabox(1);
-    if (box.dx <= 0 || box.dy <= 0) {
-        return;
-    }
-    if (box.dx > box.dy) {
-        *modeOut = DisplayMode::SinglePage;
-        *zoomOut = kZoomFitPage;
-    } else {
-        *modeOut = DisplayMode::Continuous;
-        *zoomOut = kZoomFitWidth;
-    }
+    GetPageAspectView(engine->PageMediabox(1), modeOut, zoomOut);
 }
 
 // Document is represented as DocController. Replace current DocController (if any) with ctrl
@@ -3462,8 +3453,6 @@ void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, b
     LoadDocumentMarkNotExist(win, path, noSavePrefs, showWin);
 }
 
-static void SetTabState(WindowTab* tab, TabState* state);
-
 // delete a loaded-but-not-yet-attached controller when its target window went
 // away mid-load. If the window was already destroyed, its cbHandler is gone
 // too, so null cb to keep ~DisplayModel from calling into freed memory
@@ -3994,15 +3983,16 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     // targetTab is only used to post UI tasks; FindMainWindowByTab rejects dead tabs.
     CopyProgressState copyState;
     copyState.targetTab = args->targetTab;
+    file::CopyProgressCb copyProgress;
     if (args->targetTab) {
-        file::gFileCopyProgressCb = MkFunc1<CopyProgressState, file::CopyProgress*>(OnFileCopyProgress, &copyState);
+        copyProgress = MkFunc1<CopyProgressState, file::CopyProgress*>(OnFileCopyProgress, &copyState);
     }
 
     HwndPasswordUI pwdUI(args->hwndPwdParent);
     bool chmInFixedUI = gSettings->chmUI.useFixedPageUI;
     if (!engine) {
         MaybeTestLoadDelay();
-        engine = CreateEngineFromFile(path, &pwdUI, chmInFixedUI);
+        engine = CreateEngineFromFile(path, &pwdUI, chmInFixedUI, copyProgress);
     }
     if (engine && engine->pageCount <= 0) {
         // same guard as CreateControllerForEngineOrFile
@@ -4011,7 +4001,6 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     args->engine = engine;
     // args->ctrl stays null until LoadDocumentAsyncFinish
 
-    file::gFileCopyProgressCb = {};
     SetLoadThreadFileEBookUI(nullptr);
 
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsyncFinish, d);
@@ -4646,17 +4635,8 @@ void LoadModelIntoTab(WindowTab* tab) {
     } else if (!tab->IsAboutTab()) {
         if (gSettings->lazyLoading && !tab->ctrl && tab->loadState == WindowTab::LoadState::None) {
             StartLazyTabLoad(win);
-        } else {
-            if (tab->reloadOnFocus) {
-                tab->reloadOnFocus = false;
-                if (tab->ignoreNextAutoReload) {
-                    // our own save's watcher event, not consumed by the timer
-                    // because the tab lost focus first
-                    tab->ignoreNextAutoReload = false;
-                } else {
-                    ReloadDocument(win, true);
-                }
-            }
+        } else if (DecideAutoReload(tab, AutoReloadTrigger::TabFocus) == AutoReloadAction::Reload) {
+            ReloadDocument(win, true);
         }
     }
     HwndInvalidate(win->hwndCanvas);
@@ -6428,22 +6408,6 @@ static void CreateLnkShortcut(MainWindow* win) {
     TempStr desc = fmt(Tr("Bookmark shortcut to page %s of %s").s, label, path);
     auto exePath = GetSelfExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
-}
-
-static TabState* NewTabStateFromTab(WindowTab* tab) {
-    if (!tab || !tab->ctrl || len(tab->filePath) == 0) {
-        return nullptr;
-    }
-
-    FileState* fs = NewFileState(tab->filePath);
-    tab->ctrl->GetDisplayState(fs);
-    fs->showToc = tab->showToc;
-    str::ReplaceWithCopy(&fs->sidebarView, SidebarViewToStr(tab->sidebarView));
-    *fs->tocState = tab->tocState;
-
-    TabState* state = NewTabState(fs);
-    DeleteFileState(fs);
-    return state;
 }
 
 void DuplicateTabInNewWindow(WindowTab* tab) {
@@ -14891,68 +14855,6 @@ static MainWindow* LoadOnStartup(Str filePath, const Flags& flags, bool isFirstW
     }
     MaybeStartSearch(win, flags.search);
     return win;
-}
-
-static void SetTabState(WindowTab* tab, TabState* state) {
-    if (!tab || !tab->ctrl) {
-        return;
-    }
-
-    auto* win = tab->win;
-    DocController* ctrl = tab->ctrl;
-    DisplayModel* dm = tab->AsFixed();
-
-    // validate page number from session state
-    // TODO: figure out how this happens in the first place i.e.
-    // why TabState->pageNo etc. gets saved as 0
-    if (ctrl->HasChapters()) {
-        MigrateStoredPagePos(ctrl, &state->pageNo);
-    }
-    StoredPagePos storedPos = ParseStoredPagePos(state->pageNo);
-    int pageNo = PageNoFromStoredPagePos(ctrl, state->pageNo);
-    if (pageNo < 1) {
-        pageNo = 1;
-        state->scrollPos = {-1, -1};
-    } else {
-        // PageNoFromStoredPagePos() already synced dm (for a bookmark, via
-        // LookupBookmark -> PageNoFromLocation), so this count is fresh
-        int nPages = ctrl->PageCount();
-        if (pageNo > nPages) {
-            pageNo = nPages;
-            state->scrollPos = {-1, -1};
-        }
-    }
-
-    tab->tocState = *state->tocState;
-    tab->sidebarView = SidebarViewFromStr(state->sidebarView, SidebarView::Bookmarks);
-    SetTocVisibility(win, state->showToc);
-
-    DisplayMode displayMode = DisplayModeFromString(state->displayMode, DisplayMode::Automatic);
-    if (displayMode != DisplayMode::Automatic) {
-        SwitchToDisplayMode(win, displayMode);
-    }
-
-    // zoom first: Relayout keeps the current pixel Y, so doing it after
-    // SetScrollState lands on the wrong page if the load used a different zoom
-    float zoom = ZoomFromString(state->zoom, kInvalidZoom);
-    if (zoom != kInvalidZoom) {
-        if (dm) {
-            dm->Relayout(zoom, state->rotation);
-        } else {
-            ctrl->SetZoomVirtual(zoom, nullptr);
-        }
-    }
-
-    if (dm) {
-        ScrollState scrollState = {pageNo, state->scrollPos.x, state->scrollPos.y};
-        if (storedPos.bookmark) {
-            // legacy plain int stays flat by design; only a bookmark restores by Location
-            scrollState.loc = ctrl->LocationFromPageNo(pageNo);
-        }
-        dm->SetScrollState(scrollState);
-    } else {
-        ctrl->GoToPage(pageNo, true);
-    }
 }
 
 static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state, bool deferTabUpdate) {

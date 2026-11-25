@@ -394,6 +394,7 @@ function sumatrapdf_files()
     "Cli.*",
     "AnnotationsExport.*",
     "AppHelpersCommon.*",
+    "SessionStateCommon.*",
     "BrowserViewCommon.*",
     "Installer.*",
     "InstallerCommon.cpp",
@@ -629,6 +630,7 @@ function gui_files()
     "*.h",
     "*.cpp",
   })
+  files { "src/shared/gui/TabColors.h" }
 end
 
 function engines_files()

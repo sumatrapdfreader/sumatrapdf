@@ -4,7 +4,6 @@
 #include "base/Base.h"
 
 #include "base/File.h"
-#include "base/GuessFileType.h"
 
 #include "libarchive/archive.h"
 #include "libarchive/archive_entry.h"
@@ -21,8 +20,6 @@
 // data is a valid null-terminated string or WCHAR*.
 // 3 is for absolute worst case of WCHAR* where last char was partially written
 constexpr int kZeroPaddingCount = 3;
-
-thread_local ArchiveExtractProgressCb gArchiveProgressCb{};
 
 Archive::Archive() {
     a = ArenaNew();
@@ -87,28 +84,14 @@ static void EagerLoadEntry(struct archive* a, Archive::FileInfo* fileInfo) {
     fileInfo->failed = true;
 }
 
-// final progress callback, now that the total is known
-static void ReportAllDecoded(const ArchiveExtractProgressCb& cb, ArchiveExtractProgress& prog,
-                             Vec<Archive::FileInfo*>& infos, int nDecoded) {
-    if (nDecoded == 0) {
-        return;
-    }
-    prog.fileInfo = infos[nDecoded - 1];
-    prog.nDecoded = nDecoded;
-    prog.nTotal = nDecoded;
-    cb.Call(&prog);
-}
-
 constexpr i64 kMaxEagerArchiveSize = 256LL * 1024 * 1024;
 constexpr int kMaxArchiveEntries = 100'000;
 
-bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::ParseEntries(struct archive* a, bool eagerLoad) {
     struct archive_entry* entry;
     int fileId = 0;
     int nHeaders = 0;
     i64 eagerSize = 0;
-    ArchiveExtractProgress prog{};
-    prog.nTotal = -1; // libarchive streams; total is only known at end
     while (NextHeader(a, &entry)) {
         if (nHeaders >= kMaxArchiveEntries) {
             return false;
@@ -154,56 +137,35 @@ bool Archive::ParseEntries(struct archive* a, bool eagerLoad, const ArchiveExtra
             EagerLoadEntry(a, i);
         }
         fileId++;
-        prog.fileInfo = i;
-        prog.nDecoded = fileId;
-        cbProgress.Call(&prog);
     }
-    ReportAllDecoded(cbProgress, prog, fileInfos_, fileId);
     return fileId > 0;
 }
 
-// unfortunately libarchive's rar support is weak, so rar goes to unrar.dll first
-static bool TryOpenUnrarFallback(Archive* archive, Str path, bool eagerLoad,
-                                 const ArchiveExtractProgressCb& cbProgress) {
-    bool ok = archive->OpenUnrarFallback(path, eagerLoad, cbProgress);
-    if (ok) {
-        archive->format = Archive::Format::Rar;
-    }
-    return ok;
+constexpr Str kRar4Signature = StrL("Rar!\x1A\x07\x00");
+constexpr Str kRar5Signature = StrL("Rar!\x1A\x07\x01\x00");
+
+bool HasRarSignature(Str data) {
+    return (len(data) > len(kRar4Signature) && str::StartsWith(data, kRar4Signature)) ||
+           (len(data) > len(kRar5Signature) && str::StartsWith(data, kRar5Signature));
 }
 
-// hintType is the result of a prior GuessFileTypeFromData() done
-// by the caller. When not Unknown we skip the internal 2 KiB sniff and
-// use it to drive rar-first vs. libarchive routing.
 // eagerLoad = true: decompress every entry at open time and close
 //   the archive so no re-open will ever happen.
-// cbProgress fires after each entry is processed (see
-// ArchiveExtractProgress). Pass a default-constructed Func1 to skip
-// notifications.
-bool Archive::Open(Str path, bool eagerLoad, FileType hintType, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::Open(Str path, bool eagerLoad, RarHint hint) {
     if (len(path) == 0) {
         return false;
     }
-    FileType ft = hintType;
-    if (ft == FileType::Unknown) {
-        // No pre-sniffed hint: peek at the first 2 KiB ourselves so we can
-        // route RAR files through unrar.dll instead of libarchive.
-        char buf[2048 + 1]{};
-        int n = file::ReadN(path, (u8*)buf, dimof(buf) - 1);
-        if (n > 0) {
-            Str d = Str((char*)buf, n);
-            ft = GuessFileTypeFromData(d);
-        }
+    bool isRar = hint == RarHint::Rar;
+    if (hint == RarHint::Detect) {
+        char buf[len(kRar5Signature) + 1];
+        int n = file::ReadN(path, (u8*)buf, dimof(buf));
+        isRar = n > 0 && HasRarSignature(Str(buf, n));
     }
 
-    bool ok = false;
-    if (ft == FileType::Rar) {
-        ok = TryOpenUnrarFallback(this, path, eagerLoad, cbProgress);
-    }
-    if (!ok) {
-        ok = OpenArchive(path, eagerLoad, cbProgress);
-    }
-    if (!ok) {
+    // libarchive cannot read some RAR versions that unrar.dll supports.
+    if (isRar && OpenUnrarFallback(path, eagerLoad)) {
+        format = Format::Rar;
+    } else if (!OpenArchive(path, eagerLoad)) {
         return false;
     }
     if (eagerLoad) {
@@ -303,8 +265,7 @@ bool Archive::OpenFromData(Str data, bool eagerLoad) {
         archiveData_ = {};
         return false;
     }
-    ArchiveExtractProgressCb emptyCb;
-    bool ok = ParseEntries(a, eagerLoad, emptyCb);
+    bool ok = ParseEntries(a, eagerLoad);
     if (ok) {
         format = FormatFromArchive(a);
     }
@@ -319,7 +280,7 @@ bool Archive::OpenFromData(Str data, bool eagerLoad) {
     return ok;
 }
 
-bool Archive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::OpenArchive(Str path, bool eagerLoad) {
     struct archive* a = NewLibarchiveReader(password);
     int r = ArchiveReadOpenFilename(a, path);
     if (r != ARCHIVE_OK) {
@@ -327,7 +288,7 @@ bool Archive::OpenArchive(Str path, bool eagerLoad, const ArchiveExtractProgress
         return false;
     }
     archivePath_ = str::Dup(path);
-    bool ok = ParseEntries(a, eagerLoad, cbProgress);
+    bool ok = ParseEntries(a, eagerLoad);
     if (ok) {
         format = FormatFromArchive(a);
     }
@@ -500,11 +461,9 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
 // archive is then closed. GetFileDataById for a file that failed to
 // decompress returns FileInfo with data=nullptr and never re-opens the
 // file; use FileInfo::failed to tell "not yet loaded" from "failed".
-// cbProgress fires once per entry (see ArchiveExtractProgress); pass a
-// default-constructed Func1 to skip notifications.
-Archive* OpenArchiveFromFile(Str path, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+Archive* OpenArchiveFromFile(Str path, bool eagerLoad) {
     auto* archive = new Archive();
-    if (!archive->Open(path, eagerLoad, FileType::Unknown, cbProgress)) {
+    if (!archive->Open(path, eagerLoad)) {
         delete archive;
         return nullptr;
     }
@@ -662,7 +621,7 @@ Str Archive::ReadUnrarEntry(FileInfo* fi, int toRead, bool* permanent) {
 
 // asan build crashes in UnRAR code
 // see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
-bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress) {
+bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad) {
     if (len(rarPath) == 0) {
         return false;
     }
@@ -686,8 +645,6 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         return false;
     }
 
-    ArchiveExtractProgress prog{};
-    prog.nTotal = -1;
     int fileId = 0;
     int nHeaders = 0;
     int nSkipped = 0;
@@ -767,9 +724,6 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
                 i->failed = true;
             }
         }
-        prog.fileInfo = i;
-        prog.nDecoded = fileId;
-        cbProgress.Call(&prog);
     }
     RARCloseArchive(hArc);
     if (fileId == 0 && nSkipped > 0) {
@@ -783,7 +737,6 @@ bool Archive::OpenUnrarFallback(Str rarPath, bool eagerLoad, const ArchiveExtrac
         isEncrypted = false;
         return false;
     }
-    ReportAllDecoded(cbProgress, prog, fileInfos_, fileId);
 
     rarFilePath_ = str::Dup(a, rarPath);
     return true;
@@ -796,7 +749,7 @@ Str Archive::ReadUnrarEntry(FileInfo*, int, bool* permanent) {
     return {};
 }
 
-bool Archive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
+bool Archive::OpenUnrarFallback(Str, bool) {
     return false;
 }
 

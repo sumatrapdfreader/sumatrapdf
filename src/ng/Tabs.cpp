@@ -53,6 +53,7 @@
 #include "SelectTextKeyboard.h"
 
 #include "SessionState.h"
+#include "SessionStateCommon.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "HomePage.h"

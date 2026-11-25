@@ -12,13 +12,9 @@
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
+#include "gui/TabColors.h"
 #include "gui/VirtCtrl.h"
 #include "gui/win/TabsCtrl.h"
-#include "AppHelpersCommon.h"
-
-// Forward declaration - defined in MainWindow.cpp
-struct MainWindow;
-MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 //--- Tabs
 //
@@ -1086,9 +1082,10 @@ void TabsCtrl::CloseTab(int idx) {
     frozenTabDx = tabSize.dx;
     tabWidthFrozen = true;
     HWND h = hwnd;
+    LONG_PTR owner = (LONG_PTR)this;
     TriggerTabClosed(this, idx);
     // TriggerTabClosed() might have destroyed the window and this TabsCtrl
-    if (!FindMainWindowByHwnd(h)) {
+    if (GetWindowLongPtrW(h, GWLP_USERDATA) != owner) {
         return;
     }
     ScheduleRepaint();

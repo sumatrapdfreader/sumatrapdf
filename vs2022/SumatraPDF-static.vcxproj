@@ -1570,6 +1570,7 @@
     <ClInclude Include="..\src\shared\SelectionTranslate.h" />
     <ClInclude Include="..\src\shared\SelectionTranslateCommon.h" />
     <ClInclude Include="..\src\shared\ServerFiles.h" />
+    <ClInclude Include="..\src\shared\SessionStateCommon.h" />
     <ClInclude Include="..\src\shared\ShortcutParse.h" />
     <ClInclude Include="..\src\shared\SignDocumentDialogCommon.h" />
     <ClInclude Include="..\src\shared\SignatureUICommon.h" />
@@ -1603,6 +1604,7 @@
     <ClInclude Include="..\src\shared\WindowTab.h" />
     <ClInclude Include="..\src\shared\gui\PlatformFont.h" />
     <ClInclude Include="..\src\shared\gui\PlatformText.h" />
+    <ClInclude Include="..\src\shared\gui\TabColors.h" />
     <ClInclude Include="..\src\shared\gui\UIModels.h" />
     <ClInclude Include="..\src\uia\DocumentProvider.h" />
     <ClInclude Include="..\src\uia\PageProvider.h" />
@@ -2266,6 +2268,7 @@
     <ClCompile Include="..\src\shared\SelectionToolbarCommon.cpp" />
     <ClCompile Include="..\src\shared\SelectionTranslateCommon.cpp" />
     <ClCompile Include="..\src\shared\ServerFiles.cpp" />
+    <ClCompile Include="..\src\shared\SessionStateCommon.cpp" />
     <ClCompile Include="..\src\shared\ShortcutParse.cpp" />
     <ClCompile Include="..\src\shared\SignDocumentDialogCommon.cpp" />
     <ClCompile Include="..\src\shared\SignatureUICommon.cpp" />

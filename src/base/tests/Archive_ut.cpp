@@ -3,7 +3,6 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/GuessFileType.h"
 #include "base/Archive.h"
 #include "base/Zip.h"
 
@@ -135,8 +134,7 @@ void ArchiveTarLazyTest() {
     utassert(file::WriteFile(path, tar));
 
     Archive archive;
-    ArchiveExtractProgressCb emptyCb;
-    utassert(archive.Open(path, false, FileType::Tar, emptyCb));
+    utassert(archive.Open(path, false, Archive::RarHint::Other));
     auto& infos = archive.GetFileInfos();
     utassert(len(infos) == 1 && infos[0]->data == nullptr);
     auto* fi = archive.GetFileDataById(0);
@@ -205,12 +203,11 @@ void ArchiveTarHugeEntryTest() {
     Str tar = MakeTarWithHugeEntry();
     TempStr path = GetTempFilePathTemp(StrL("hugetar"));
     utassert(file::WriteFile(path, tar));
-    ArchiveExtractProgressCb emptyCb;
     Archive lazy;
-    utassert(lazy.Open(path, false, FileType::Tar, emptyCb));
+    utassert(lazy.Open(path, false, Archive::RarHint::Other));
     CheckHugeEntrySkipped(lazy);
     Archive eager;
-    utassert(eager.Open(path, true, FileType::Tar, emptyCb));
+    utassert(eager.Open(path, true, Archive::RarHint::Other));
     CheckHugeEntrySkipped(eager);
     file::Delete(path);
     str::Free(tar);
@@ -304,8 +301,7 @@ void ArchiveRarHugeEntryTest() {
     TempStr path = GetTempFilePathTemp(StrL("hugerar"));
     utassert(file::WriteFile(path, rar));
     Archive archive;
-    ArchiveExtractProgressCb emptyCb;
-    bool ok = archive.Open(path, false, FileType::Unknown, emptyCb);
+    bool ok = archive.Open(path, false);
     for (auto* fi : archive.GetFileInfos()) {
         utassert(fi->fileSizeUncompressed >= 0);
     }
@@ -316,7 +312,7 @@ void ArchiveRarHugeEntryTest() {
     rar = MakeRarWithUnpSize(4);
     utassert(file::WriteFile(path, rar));
     Archive sane;
-    utassert(sane.Open(path, false, FileType::Unknown, emptyCb));
+    utassert(sane.Open(path, false));
     utassert(sane.format == Archive::Format::Rar && len(sane.GetFileInfos()) == 1);
 
     // an entry over 2 GB is skipped by unrar; the others stay
@@ -325,7 +321,7 @@ void ArchiveRarHugeEntryTest() {
     rar = MakeRar(sizes, dimofi(sizes));
     utassert(file::WriteFile(path, rar));
     Archive mixed;
-    utassert(mixed.Open(path, false, FileType::Unknown, emptyCb));
+    utassert(mixed.Open(path, false));
     utassert(mixed.format == Archive::Format::Rar);
     auto& infos = mixed.GetFileInfos();
     utassert(len(infos) == 2 && str::Eq(infos[0]->name, StrL("a.txt")) && str::Eq(infos[1]->name, StrL("c.txt")));

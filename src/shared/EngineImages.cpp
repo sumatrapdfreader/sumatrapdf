@@ -2958,11 +2958,6 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
 EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* formatOut, bool* isEncryptedOut,
                                       FileType hintType, Str realPath) {
     auto timeStart = TimeGet();
-    // we sniff the type from content first because the
-    // files can be mis-named e.g. .cbr archive with .cbz ext
-    // we only need the archive format (zip/rar/7z), not the sub-type
-    // (epub/xps/fb2z), so use the Str overload to avoid
-    // opening a full archive just for type detection
     Archive* archive = new Archive();
     archive->password = str::Dup(password);
 
@@ -2973,7 +2968,11 @@ EngineBase* EngineCbx::CreateFromFile(Str path, Str password, Archive::Format* f
 
     // The compressed file size does not bound the memory needed to expand it.
     // Load individual pages on demand instead.
-    if (!archive->Open(openPath, /*eagerLoad=*/false, hintType, gArchiveProgressCb)) {
+    auto hint = Archive::RarHint::Detect;
+    if (hintType != FileType::Unknown) {
+        hint = hintType == FileType::Rar ? Archive::RarHint::Rar : Archive::RarHint::Other;
+    }
+    if (!archive->Open(openPath, /*eagerLoad=*/false, hint)) {
         delete archive;
         return nullptr;
     }

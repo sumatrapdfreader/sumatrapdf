@@ -252,7 +252,7 @@ void FreeImages(Vec<ImageData>& images) {
 /* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(Str fileName) : fileName(str::Dup(fileName)) {
-    archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
+    archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true);
 }
 
 EpubDoc::~EpubDoc() {
@@ -742,7 +742,7 @@ bool EpubDoc::ParseToc(EbookToc& toc) {
 // Only the spine's page-progression-direction. Loading the whole book to read
 // one attribute would mean parsing every chapter.
 EpubReadingDirection EpubGetReadingDirection(Str path) {
-    AutoDelete archive(OpenArchiveFromFile(path, false, gArchiveProgressCb));
+    AutoDelete archive(OpenArchiveFromFile(path, false));
     if (!archive) {
         return {};
     }
@@ -771,7 +771,7 @@ void EpubGetSidecarMetadata(Str epubPath, Props& props) {
 
 // The package's metadata, without building a whole EpubDoc. Free with FreeProps.
 void EpubGetMetadata(Str path, Props& props) {
-    AutoDelete archive(OpenArchiveFromFile(path, false, gArchiveProgressCb));
+    AutoDelete archive(OpenArchiveFromFile(path, false));
     if (!archive) {
         return;
     }
@@ -799,7 +799,7 @@ EpubDoc* EpubDoc::CreateFromData(Str data) {
 // Caller-owned cover bytes from EPUB 2 metadata or EPUB 3 cover-image properties.
 // Empty when no cover is declared.
 Str EpubCoverImageData(Str path) {
-    AutoDelete archive(OpenArchiveFromFile(path, false, gArchiveProgressCb));
+    AutoDelete archive(OpenArchiveFromFile(path, false));
     if (!archive) {
         return {};
     }
@@ -899,7 +899,7 @@ bool Fb2Doc::Load(Str srcData) {
 
     Str data;
     if (len(fileName) > 0) {
-        Archive* archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
+        Archive* archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true);
         data = archive ? ReadFb2Archive(this, archive) : file::ReadFile(fileName);
     } else if (srcData) {
         // Plain FB2 XML must bypass libarchive (#1677).

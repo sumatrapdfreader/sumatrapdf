@@ -957,7 +957,7 @@ void HighlightRestoredFindTerm(MainWindow* win) {
         return;
     }
     // typing (or a copied selection) is about to start its own search
-    if (win->findDebouncePending || len(win->findMatches) > 0) {
+    if (FindDebouncePending(win) || len(win->findMatches) > 0) {
         return;
     }
     EnsureFindSnippets(win);
@@ -1041,7 +1041,7 @@ void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, 
     // document from being searched - that only happens when the find window is
     // closed. Skip the join when idle so stepping through the floating results
     // list stays responsive.
-    if (win->findThread || win->findDebouncePending) {
+    if (win->findThread || FindDebouncePending(win)) {
         CancelPendingFind(win);
         JoinFindThread(win, true);
     }
@@ -2864,11 +2864,10 @@ bool ApplyFindPageRange(MainWindow* win) {
 }
 
 bool FindFlushPendingSearch(MainWindow* win) {
-    if (!win->findDebouncePending) {
+    if (!FindDebouncePending(win)) {
         return false;
     }
-    win->findDebouncePending = false;
-    FindDebounceStop(win);
+    CancelPendingFind(win);
     if (HasFindText(win)) {
         StartIncrementalFind(win);
     }

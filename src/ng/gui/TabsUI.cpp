@@ -38,8 +38,8 @@
 #include "gui/DocCanvas.h"
 #include "gui/TabSwitcher.h"
 #include "gui/DialogWidgets.h"
+#include "gui/TabColors.h"
 #include "gui/TabsUI.h"
-#include "AppHelpersCommon.h"
 #include "SvgIcons.h"
 
 #include "SumatraLog.h"
