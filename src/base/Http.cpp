@@ -39,6 +39,59 @@ bool IsHttpRspOk(const HttpRsp* rsp) {
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";
 
+// Not in the SDK headers when the build targets Windows 7.
+#ifndef WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2
+#define WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2 0x00000800
+#endif
+#ifndef WINHTTP_OPTION_SECURE_PROTOCOLS
+#define WINHTTP_OPTION_SECURE_PROTOCOLS 84
+#endif
+
+static void FreeIeProxyConfig(WINHTTP_CURRENT_USER_IE_PROXY_CONFIG* cfg) {
+    GlobalFree(cfg->lpszAutoConfigUrl);
+    GlobalFree(cfg->lpszProxy);
+    GlobalFree(cfg->lpszProxyBypass);
+}
+
+// Windows 7 rejects WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY with error 0x57.
+// Fall back to the IE proxy WinINet used, and enable TLS 1.2: WinHTTP
+// on that OS still defaults to TLS 1.0 (issue #6592).
+static HINTERNET OpenWinHttpSession(DWORD openFlags) {
+    HINTERNET session = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
+                                    WINHTTP_NO_PROXY_BYPASS, openFlags);
+    if (session) {
+        return session;
+    }
+    DWORD err = GetLastError();
+    if (err != ERROR_INVALID_PARAMETER) {
+        SetLastError(err);
+        return nullptr;
+    }
+
+    DWORD access = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
+    const WCHAR* proxy = WINHTTP_NO_PROXY_NAME;
+    const WCHAR* bypass = WINHTTP_NO_PROXY_BYPASS;
+    WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ie{};
+    bool haveIe = WinHttpGetIEProxyConfigForCurrentUser(&ie);
+    if (haveIe && ie.lpszProxy && ie.lpszProxy[0]) {
+        access = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
+        proxy = ie.lpszProxy;
+        bypass = ie.lpszProxyBypass;
+    }
+    session = WinHttpOpen(kUserAgent, access, proxy, bypass, openFlags);
+    err = session ? ERROR_SUCCESS : GetLastError();
+    if (haveIe) {
+        FreeIeProxyConfig(&ie);
+    }
+    if (!session) {
+        SetLastError(err);
+        return nullptr;
+    }
+    DWORD protocols = WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2;
+    WinHttpSetOption(session, WINHTTP_OPTION_SECURE_PROTOCOLS, &protocols, sizeof(protocols));
+    return session;
+}
+
 #endif // OS_WIN
 
 //--- URL encoding
@@ -111,8 +164,7 @@ bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* 
                                     ? str::DupTemp(WStr(uc.lpszUrlPath, (int)(pathLen + extraLen)))
                                     : str::DupTemp(WStrL(L"/"));
 
-        hSession = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
-                               WINHTTP_NO_PROXY_BYPASS, 0);
+        hSession = OpenWinHttpSession(0);
         if (!hSession) {
             rspOut->error = GetLastError();
             goto Exit2;
@@ -237,8 +289,7 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
             pathAndQuery = str::DupTemp(WStrL(L"/"));
         }
 
-        hSession = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
-                               WINHTTP_NO_PROXY_BYPASS, 0);
+        hSession = OpenWinHttpSession(0);
         if (!hSession) {
             rspOut->error = GetLastError();
             goto ExitPost;
@@ -419,8 +470,7 @@ static bool InMemoryRequest(const WCHAR* verb, const char* what, Str url, Str ex
             pathAndQuery = str::DupTemp(WStrL(L"/"));
         }
 
-        hSession = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
-                               WINHTTP_NO_PROXY_BYPASS, 0);
+        hSession = OpenWinHttpSession(0);
         if (!hSession) {
             rspOut->error = GetLastError();
             goto ExitGet;
@@ -579,8 +629,7 @@ static bool DownloadToFile(const char* what, Str url, Str extraHeaders, Str dest
             pathAndQuery = str::DupTemp(WStrL(L"/"));
         }
 
-        hSession = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
-                               WINHTTP_NO_PROXY_BYPASS, 0);
+        hSession = OpenWinHttpSession(0);
         if (!hSession) {
             rspOut->error = GetLastError();
             goto ExitDl;
@@ -800,8 +849,7 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
     TempWStr path = (parts.lpszUrlPath && pathLen + extraLen > 0)
                         ? str::DupTemp(WStr(parts.lpszUrlPath, (int)(pathLen + extraLen)))
                         : str::DupTemp(WStrL(L"/"));
-    HINTERNET session = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
-                                    WINHTTP_NO_PROXY_BYPASS, WINHTTP_FLAG_ASYNC);
+    HINTERNET session = OpenWinHttpSession(WINHTTP_FLAG_ASYNC);
     if (!session) return false;
     HINTERNET connect = WinHttpConnect(session, host.s, parts.nPort, 0);
     DWORD flags = parts.nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0;
