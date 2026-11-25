@@ -1127,9 +1127,6 @@
     <ClCompile Include="..\src\gui\Layout.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\PasswordDialog.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\UiPlatform.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
@@ -1176,9 +1173,6 @@
       <Filter>src\gui\win</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\win\Tooltip.cpp">
-      <Filter>src\gui\win</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\gui\win\Trackbar.cpp">
       <Filter>src\gui\win</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gui\win\TreeView.cpp">

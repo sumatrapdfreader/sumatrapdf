@@ -2078,7 +2078,6 @@
     <ClCompile Include="..\src\gui\GfxGdiplus.cpp" />
     <ClCompile Include="..\src\gui\GuiColors.cpp" />
     <ClCompile Include="..\src\gui\Layout.cpp" />
-    <ClCompile Include="..\src\gui\PasswordDialog.cpp" />
     <ClCompile Include="..\src\gui\UiPlatform.cpp" />
     <ClCompile Include="..\src\gui\VirtCtrl.cpp" />
     <ClCompile Include="..\src\gui\VirtHost.cpp" />
@@ -2121,7 +2120,6 @@
     <ClCompile Include="..\src\gui\win\Progress.cpp" />
     <ClCompile Include="..\src\gui\win\TabsCtrl.cpp" />
     <ClCompile Include="..\src\gui\win\Tooltip.cpp" />
-    <ClCompile Include="..\src\gui\win\Trackbar.cpp" />
     <ClCompile Include="..\src\gui\win\TreeView.cpp" />
     <ClCompile Include="..\src\gui\win\WebView.cpp" />
     <ClCompile Include="..\src\gui\win\WindowBase.cpp" />
