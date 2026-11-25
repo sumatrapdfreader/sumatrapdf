@@ -289,7 +289,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
             case '(': {
                 TempStr filename = strconv::AnsiToUtf8Temp(Str(line.s + 1, line.len - 1));
-                if (len(filename) > 0 && filename.s[0] == '"' && filename.s[len(filename) - 1] == '"') {
+                if (len(filename) >= 2 && filename.s[0] == '"' && filename.s[len(filename) - 1] == '"') {
                     filename = str::DupTemp(Str(filename.s + 1, len(filename) - 2));
                 }
                 // undecorate the filepath: replace * by space and / by \ (backslash)

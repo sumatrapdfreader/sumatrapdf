@@ -175,13 +175,23 @@ Str GetTranslation(Str s) {
     // change it back so add ("Change Language") to translation
     if (str::ContainsI(s, StrL("Change Language")) && !str::ContainsI(tr, StrL("Change Language"))) {
         // "Sprache wechseln..." => "Sprache wechseln (Change Language)..."
+        // Cache in stable storage (not TempStr) so callers can hold the Str.
+        static Str gChangeLangSrc[2];
+        static Str gChangeLangDst[2];
         Str dots = StrL("...");
-        if (str::EndsWith(tr, dots)) {
-            Str base = Str(tr.s, len(tr) - len(dots));
-            tr = str::JoinTemp(base, StrL(" (Change Language)"), dots);
-        } else {
-            tr = str::JoinTemp(tr, StrL(" (Change Language)"));
+        int slot = str::EndsWith(tr, dots) ? 1 : 0;
+        if (!str::Eq(gChangeLangSrc[slot], tr)) {
+            TempStr full;
+            if (slot == 1) {
+                Str base = Str(tr.s, len(tr) - len(dots));
+                full = str::JoinTemp(base, StrL(" (Change Language)"), dots);
+            } else {
+                full = str::JoinTemp(tr, StrL(" (Change Language)"));
+            }
+            str::ReplaceWithCopy(&gChangeLangSrc[slot], tr);
+            str::ReplaceWithCopy(&gChangeLangDst[slot], full);
         }
+        tr = gChangeLangDst[slot];
     }
     return tr;
 }

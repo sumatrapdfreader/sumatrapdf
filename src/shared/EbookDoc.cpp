@@ -1335,11 +1335,16 @@ Str HtmlDoc::LoadURL(Str url) {
     if (str::StartsWith(url, StrL("data:"))) {
         return str::Dup(DecodeDataURITemp(url));
     }
-    if (str::ContainsChar(url, ':')) {
+    int colon = str::IndexOfChar(url, ':');
+    bool isAlpha0 = len(url) > 0 && ((url.s[0] >= 'A' && url.s[0] <= 'Z') || (url.s[0] >= 'a' && url.s[0] <= 'z'));
+    bool isWinDrive = colon == 1 && isAlpha0 && len(url) > 2 && (url.s[2] == '/' || url.s[2] == '\\');
+    if (colon >= 0 && !isWinDrive) {
         return {};
     }
     TempStr path = str::DupTemp(url);
+#if OS_WIN
     str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
+#endif
     return file::ReadFile(path);
 }
 

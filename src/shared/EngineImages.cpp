@@ -2110,11 +2110,13 @@ TocTree* EngineImageDir::GetToc() {
     TempStr label = GetPageLabelTemp(1);
     TocItem* root = newImageDirTocItem(arena, nullptr, label, 1);
     root->id = 1;
+    TocItem* tail = root;
     for (int i = 2; i <= PageCount(); i++) {
         label = GetPageLabelTemp(i);
-        TocItem* item = newImageDirTocItem(arena, root, label, i);
+        TocItem* item = newImageDirTocItem(arena, nullptr, label, i);
         item->id = i;
-        root->AddSiblingAtEnd(item);
+        tail->next = item;
+        tail = item;
     }
     auto* realRoot = AllocTocItem(arena, {}, 0);
     realRoot->child = root;

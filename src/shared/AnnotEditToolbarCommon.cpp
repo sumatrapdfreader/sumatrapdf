@@ -1153,8 +1153,11 @@ TempStr AnnotEditorLayoutResultTemp(int* exitCodeOut) {
 // a color from the drop-down of the chip that was clicked last; its alpha is
 // the annotation's opacity, kColorUnset means no color at all
 void ChipColorPicked(AnnotEditToolbarBase* tb, Color col) {
-    WindowTab* tab = tb->tab;
-    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
+    WindowTab* tab = tb ? tb->tab : nullptr;
+    if (!tab || !IsMainWindowValidAndNotClosing(tab->win) || !VecContains(tab->win->Tabs(), tab)) {
+        return;
+    }
+    Annotation* annot = tab->selectedAnnotation;
     if (!AnnotationIsLive(annot) || annot != tb->annot) {
         return;
     }

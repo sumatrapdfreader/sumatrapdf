@@ -3249,7 +3249,7 @@ int CliMain(int argc, char** argv) {
         if (str::Eq(a, StrL("--json"))) {
             continue;
         }
-        if (len(a) > 1 && a.s[0] == '-') {
+        if (len(a) > 1 && a.s[0] == '-' && !str::IsDigit(a.s[1])) {
             if (OptTakesValue(a)) {
                 if (i + 1 >= argc) {
                     return Fail(cx, kCliUsage, fmt("%s needs a value", a));
