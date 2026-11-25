@@ -19,7 +19,6 @@ issue-6360
 issue-6431
 issue-5924
 annot-text-popup-reload
-read-aloud-lazy-voices
 issue-6232-path-edit
 issue-6070
 issue-6371
