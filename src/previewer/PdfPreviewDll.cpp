@@ -51,7 +51,7 @@ class PreviewClassFactory : public IClassFactory {
   public:
     explicit PreviewClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { AtomicIntInc(&g_lRefCount); }
 
-    ~PreviewClassFactory() { InterlockedDecrement(&g_lRefCount); }
+    ~PreviewClassFactory() { AtomicIntDec(&g_lRefCount); }
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
@@ -63,7 +63,7 @@ class PreviewClassFactory : public IClassFactory {
     IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
 
     IFACEMETHODIMP_(ULONG) Release() {
-        long cRef = InterlockedDecrement(&m_lRef);
+        int cRef = AtomicIntDec(&m_lRef);
         if (cRef == 0) {
             delete this;
         }
@@ -74,6 +74,9 @@ class PreviewClassFactory : public IClassFactory {
     IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
         log(StrL("PdfPreview: CreateInstance()\n"));
 
+        if (!ppv) {
+            return E_POINTER;
+        }
         *ppv = nullptr;
         if (punkOuter) {
             return CLASS_E_NOAGGREGATION;
@@ -98,7 +101,7 @@ class PreviewClassFactory : public IClassFactory {
         if (bLock) {
             AtomicIntInc(&g_lRefCount);
         } else {
-            InterlockedDecrement(&g_lRefCount);
+            AtomicIntDec(&g_lRefCount);
         }
         return S_OK;
     }
@@ -108,44 +111,33 @@ class PreviewClassFactory : public IClassFactory {
     CLSID m_clsid;
 };
 
-static Str GetReason(DWORD dwReason) {
-    switch (dwReason) {
-        case DLL_PROCESS_ATTACH:
-            return StrL("DLL_PROCESS_ATTACH");
-        case DLL_THREAD_ATTACH:
-            return StrL("DLL_THREAD_ATTACH");
-        case DLL_THREAD_DETACH:
-            return StrL("DLL_THREAD_DETACH");
-        case DLL_PROCESS_DETACH:
-            return StrL("DLL_PROCESS_DETACH");
-    }
-    return StrL("Unknown reason");
-}
-
 void UnregisterPreviewWndClass();
 
-STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void* /*lpReserved*/) {
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void* lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH) {
         ReportIf(hInstance != GetInstance());
+        gLogAppName = StrL("PdfPreview");
+    } else if (dwReason == DLL_PROCESS_DETACH) {
+        // lpReserved is non-null when the process is exiting; skip teardown
+        // then so we don't take locks under the loader as other DLLs die.
+        if (!lpReserved) {
+            UnregisterPreviewWndClass();
+            DestroyLogging();
+            DestroyTempArena();
+            DestroyPermArena();
+        }
     }
-    if (dwReason == DLL_PROCESS_DETACH) {
-        UnregisterPreviewWndClass();
-    }
-    // no logging per thread under the loader lock; DisableThreadLibraryCalls()
-    // isn't safe with the static CRT
-    if (dwReason == DLL_THREAD_ATTACH || dwReason == DLL_THREAD_DETACH) {
-        return TRUE;
-    }
-    gLogAppName = StrL("PdfPreview");
-    logf("PdfPreview: DllMain %s\n", GetReason(dwReason));
     return TRUE;
 }
 
 STDAPI DllCanUnloadNow(VOID) {
-    return g_lRefCount == 0 ? S_OK : S_FALSE;
+    return AtomicIntGet(&g_lRefCount) == 0 ? S_OK : S_FALSE;
 }
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
+    if (!ppv) {
+        return E_POINTER;
+    }
     // route our log to a file if the user enabled it (no-op otherwise). Done
     // here rather than in DllMain to avoid file/registry I/O under loader lock.
     StartPdfPreviewLoggingIfEnabled();

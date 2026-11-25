@@ -24,6 +24,8 @@ class PdfPreview : public IThumbnailProvider,
                    public IOleWindow {
   public:
     PdfPreview(AtomicInt* plRefCount, PreviewType type);
+    PdfPreview(const PdfPreview&) = delete;
+    PdfPreview& operator=(const PdfPreview&) = delete;
     ~PdfPreview();
 
     // IUnknown
@@ -38,7 +40,7 @@ class PdfPreview : public IThumbnailProvider,
     }
     IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
     IFACEMETHODIMP_(ULONG) Release() {
-        long cRef = InterlockedDecrement(&m_lRef);
+        int cRef = AtomicIntDec(&m_lRef);
         if (cRef == 0) {
             delete this;
         }
@@ -125,7 +127,7 @@ class PdfPreview : public IThumbnailProvider,
         }
         m_rcParent = ToRect(*prc);
         if (m_hwnd) {
-            UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE;
+            UINT flags = SWP_NOZORDER | SWP_NOACTIVATE;
             int x = m_rcParent.x;
             int y = m_rcParent.y;
             int dx = m_rcParent.dx;
@@ -141,6 +143,11 @@ class PdfPreview : public IThumbnailProvider,
         if (m_hwnd) {
             DestroyWindow(m_hwnd);
             m_hwnd = nullptr;
+        }
+        if (pageNoFont) {
+            DeleteObject(pageNoFont);
+            pageNoFont = nullptr;
+            pageNoFontDpi = 0;
         }
         userZoom = 0;
         panX = 0;
