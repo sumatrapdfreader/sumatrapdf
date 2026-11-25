@@ -1,12 +1,13 @@
 // Merge PDF: Ctrl+C / Ctrl+X / Ctrl+V on pages, Ctrl+V of PDF files copied
 // in a file manager (whatever was copied last wins) and the count of selected
-// pages in the status. A pasted copy of a page is rotated on its own.
+// pages in the status. A pasted copy of a page is rotated on its own. Rotations
+// accumulate in quarter turns and the saved PDF keeps them (#6371).
 // Discussion #5890.
 //
 // Run: bun tests/issue-5890.ts [--no-build]
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
@@ -109,12 +110,25 @@ export async function testit(): Promise<void> {
     raw = await merge(client, "paste", "0");
     expectItems(raw, "0:2,1:1s,1:2s,0:3,0:4,0:1,0:2,0:1@90", "paste a file");
 
+    await merge(client, "rotate", "0", -90);
+    await merge(client, "rotate", "3", 90);
+    await merge(client, "rotate", "3", 90);
+    await merge(client, "rotate", "4", 90);
+    raw = await merge(client, "rotate", "4", 270);
+    expectItems(raw, "0:2@270,1:1,1:2,0:3@180,0:4s,0:1,0:2,0:1@90", "accumulated rotations");
+
     const res = await client.request(ControlCommand.TestMergePdf, ["saveas", merged, 0]);
     if (String(res[1] ?? "") !== "OK saved=1") {
       throw new Error(`issue-5890: saveas: ${res[1]}`);
     }
-    const want = "602,701,702,603,604,601,602,792";
+    const want = "792,701,702,603,604,601,602,792";
     await waitFor(`the merged PDF didn't open with widths ${want}`, async () => (await widths(client)) === want);
+    const data = readFileSync(merged, "latin1");
+    for (const degrees of [90, 180, 270]) {
+      if (!new RegExp(`/Rotate ${degrees}\\b`).test(data)) {
+        throw new Error(`issue-5890: no /Rotate ${degrees} in the saved PDF`);
+      }
+    }
     console.log("issue-5890: OK");
   } finally {
     client.close();

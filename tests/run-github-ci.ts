@@ -32,7 +32,6 @@ export const excludedTests: Record<string, string> = {
   // "Microsoft Print to PDF" is a Windows client feature; the runner images are
   // Windows Server and don't have it (nor any other printer)
   "issue-4967": "prints through Microsoft Print to PDF",
-  "issue-5065": "prints through Microsoft Print to PDF",
   "issue-5353": "prints through Microsoft Print to PDF",
   "print-auto-rotate": "prints through Microsoft Print to PDF",
   "issue-6150": "prints through Microsoft Print to PDF",

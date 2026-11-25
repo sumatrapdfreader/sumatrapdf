@@ -80,6 +80,10 @@ export async function testit(): Promise<void> {
         throw new Error(`#6421: expected a launchEmbedded link '${w}', got:\n${dump}`);
       }
     }
+    const [pastCode, pastState] = await client.request(ControlCommand.TestPageLinks, [epub, 9999]);
+    if (pastCode === 0 || !String(pastState).includes("page-load-failed")) {
+      throw new Error(`#6421: TestPageLinks should reject an out-of-range page: ${pastState}`);
+    }
   });
 }
 

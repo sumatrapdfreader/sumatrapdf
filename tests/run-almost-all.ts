@@ -100,7 +100,6 @@ import { testit as issue5845 } from "./issue-5845.ts";
 import { testit as issue5870 } from "./issue-5870.ts";
 import { testit as issue6199 } from "./issue-6199.ts";
 import { testit as issue6216 } from "./issue-6216.ts";
-import { testit as issue6217 } from "./issue-6217.ts";
 import { testit as comicFitPageRelayout } from "./comic-fit-page-relayout.ts";
 import { testit as issue6225 } from "./issue-6225.ts";
 import { testit as issue6244 } from "./issue-6244.ts";
@@ -171,7 +170,6 @@ import { testit as issue6269 } from "./issue-6269.ts";
 import { testit as issue6270 } from "./issue-6270.ts";
 import { testit as issue5911 } from "./issue-5911.ts";
 import { testit as issue6088 } from "./issue-6088.ts";
-import { testit as annotContentsClickAway } from "./annot-contents-click-away.ts";
 import { testit as annotColorDropdown } from "./annot-color-dropdown.ts";
 import { testit as inkThickness } from "./ink-thickness.ts";
 import { testit as issue6388 } from "./issue-6388.ts";
@@ -183,7 +181,6 @@ import { testit as issue6476 } from "./issue-6476.ts";
 import { testit as issue6462 } from "./issue-6462.ts";
 import { testit as issue6480 } from "./issue-6480.ts";
 import { testit as issue6481 } from "./issue-6481.ts";
-import { testit as issue6482 } from "./issue-6482.ts";
 import { testit as autoScrollExtras } from "./auto-scroll-extras.ts";
 import { testit as toolbarWrap } from "./toolbar-wrap.ts";
 import { testit as reopenClosedWindow } from "./reopen-closed-window.ts";
@@ -318,7 +315,6 @@ import { testit as issue6151 } from "./issue-6151.ts";
 import { testit as issue6161 } from "./issue-6161.ts";
 import { testit as issue1438 } from "./issue-1438.ts";
 import { testit as issue1136 } from "./issue-1136.ts";
-import { testit as navigateFilesDeleteSelection } from "./navigate-files-delete-selection.ts";
 import { testit as issue893 } from "./issue-893.ts";
 import { testit as findHistoryAltDown } from "./find-history-alt-down.ts";
 import { testit as issue1699 } from "./issue-1699.ts";
@@ -361,7 +357,6 @@ import { testit as issue6043 } from "./issue-6043.ts";
 import { testit as issue6045 } from "./issue-6045.ts";
 import { testit as issue6046 } from "./issue-6046.ts";
 import { testit as issue6048 } from "./issue-6048.ts";
-import { testit as issue6053 } from "./issue-6053.ts";
 import { testit as issue6054 } from "./issue-6054.ts";
 import { testit as favoritesMenu } from "./favorites-menu.ts";
 import { testit as editFavorites } from "./edit-favorites.ts";
@@ -416,9 +411,7 @@ import { testit as commandPaletteAltNames } from "./command-palette-alt-names.ts
 import { testit as commandPaletteThumbnails } from "./command-palette-thumbnails.ts";
 import { testit as sidebarThumbnails } from "./sidebar-thumbnails.ts";
 import { testit as sidebarThumbnailsWheel } from "./sidebar-thumbnails-wheel.ts";
-import { testit as sidebarThumbnailsClose } from "./sidebar-thumbnails-close.ts";
 import { testit as issue6070 } from "./issue-6070.ts";
-import { testit as issue6371 } from "./issue-6371.ts";
 import { testit as issue6372 } from "./issue-6372.ts";
 import { testit as issue5890 } from "./issue-5890.ts";
 import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
@@ -634,6 +627,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6232-path-edit", issue6232PathEdit],
   ["issue-6355", issue6355],
   ["issue-6259", issue6259],
@@ -710,7 +704,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-5924", issue5924],
   ["issue-6388", issue6388],
   ["pdf-script", pdfScript],
-  ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6352", issue6352],
   ["issue-6354", issue6354],
   ["line-annotation-placement", lineAnnotationPlacement],
@@ -721,7 +714,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["selection-toolbar-move", selectionToolbarMove],
   ["issue-6070", issue6070],
-  ["issue-6371", issue6371],
   ["issue-6372", issue6372],
   ["issue-5890", issue5890],
   ["issue-6429", issue6429],
@@ -762,7 +754,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["exit-edit-pdf-deselects", exitEditPdfDeselects],
   ["issue-5933", issue5933],
   ["issue-6117", issue6117],
-  ["annot-contents-click-away", annotContentsClickAway],
   ["issue-2799", issue2799],
   ["ink-thickness", inkThickness],
   ["ink-annotation-placement", inkAnnotationPlacement],
@@ -777,7 +768,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-5870", issue5870],
   ["issue-6199", issue6199],
   ["issue-6216", issue6216],
-  ["issue-6217", issue6217],
   ["comic-fit-page-relayout", comicFitPageRelayout],
   ["issue-6225", issue6225],
   parallelTest("issue-6229"),
@@ -868,7 +858,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6043", issue6043],
   ["issue-6046", issue6046],
   ["issue-6048", issue6048],
-  ["issue-6053", issue6053],
   ["issue-6054", issue6054],
   ["text-annotation-placement", textAnnotationPlacement],
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
@@ -1022,7 +1011,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-1422", issue1422],
   ["issue-1438", issue1438],
   ["issue-1136", issue1136],
-  ["navigate-files-delete-selection", navigateFilesDeleteSelection],
   ["issue-1998", issue1998],
   ["issue-2199", issue2199],
   parallelTest("issue-906"),
@@ -1056,7 +1044,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["command-palette-typing", commandPaletteTyping],
   ["command-palette-alt-names", commandPaletteAltNames],
   ["command-palette-thumbnails", commandPaletteThumbnails],
-  ["sidebar-thumbnails-close", sidebarThumbnailsClose],
   ["wheel-while-closing", wheelWhileClosing],
   ["hwheel-home", hwheelHome],
   ["tab-menu-close", tabMenuClose],
@@ -1190,7 +1177,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6462", issue6462],
   ["issue-6480", issue6480],
   ["issue-6481", issue6481],
-  ["issue-6482", issue6482],
   ["toolbar-wrap", toolbarWrap],
   ["reopen-closed-window", reopenClosedWindow],
   ["tab-group-autosync", tabGroupAutoSync],
@@ -1208,7 +1194,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["next-file-at-end", nextFileAtEnd],
   ["export-markdown", exportMarkdown],
   parallelTest("free-text-valign"),
-  parallelTest("cli-markdown"),
   parallelTest("cli-annotate"),
   parallelTest("cli-sign"),
   ["startup-window-shown", startupWindowShown],
@@ -1287,7 +1272,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["aichat-sessions", aichatSessions],
   ["trackpad-diagonal-scroll", trackpadDiagonalScroll],
   ["trackpad-pinch-zoom", trackpadPinchZoom],
-  parallelTest("page-links-fresh-engine"),
   ["toolbar-right-click", toolbarRightClick],
   ["stale-build-dir-future", staleBuildDirFuture],
   ["save-annots-same-path", saveAnnotsSamePath],

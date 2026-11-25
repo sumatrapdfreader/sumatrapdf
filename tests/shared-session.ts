@@ -21,7 +21,6 @@ issue-5924
 annot-text-popup-reload
 issue-6232-path-edit
 issue-6070
-issue-6371
 issue-6372
 issue-6433
 issue-6435
@@ -51,7 +50,6 @@ issue-3434
 issue-1809
 issue-6037
 issue-6046
-issue-6053
 issue-4973
 issue-6241
 issue-4684
@@ -94,7 +92,6 @@ issue-6324
 issue-6136
 issue-1930
 issue-1422
-navigate-files-delete-selection
 issue-2199
 issue-6470
 issue-6472
@@ -159,7 +156,6 @@ issue-6568
 f7-ends-placement
 trackpad-diagonal-scroll
 trackpad-pinch-zoom
-page-links-fresh-engine
 toolbar-right-click
 save-annots-same-path
 command-palette-toc-reload

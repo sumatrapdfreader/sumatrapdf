@@ -1,13 +1,22 @@
-// One gesture is one undo step (follow-up to issue #6217). Three gestures that
-// wrote several journal operations: applying redaction marks on more than one
-// page, committing a free text edit whose box grew, and picking a color that
-// also sets the opacity.
+// One gesture is one undo step (#6217). Covers highlight creation, redactions
+// on multiple pages, a free text edit that grows its box, and a color pick
+// that also sets the opacity.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { openChipDropdown, pickSwatch } from "./annot-color-dropdown.ts";
-import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import {
+  assemblePdf,
+  cmdId,
+  EXE,
+  ROOT,
+  runStandalone,
+  SLOW_BUILD_FACTOR,
+  tmpPath,
+  USE_NG,
+  makeBlankPdf,
+} from "./util.ts";
 import {
   enumChildWindows,
   getClassName,
@@ -182,6 +191,29 @@ async function launch(name: string, pdfContent: string) {
   return launched;
 }
 
+async function testHighlight(): Promise<void> {
+  const pdf = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+  // The clipboard tests share a process and toggle Edit PDF between documents.
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await client.waitForRenderIdle();
+      await client.setNotificationsEnabled(false);
+      await client.seedTextSelection(1);
+      await client.request(ControlCommand.TestInvokeCommand, ["CmdCreateAnnotHighlight"]);
+      await waitFor(client, (s) => s.annotations === 1 && s.canUndo && s.modified, "the highlight was not created");
+
+      await client.request(ControlCommand.TestInvokeCommand, ["CmdUndo"]);
+      await waitFor(
+        client,
+        (s) => s.annotations === 0 && !s.canUndo && !s.modified,
+        "one undo did not remove the highlight and reset the undo and modified state",
+      );
+    },
+    [pdf],
+  );
+}
+
 // applying marks on two pages is one step
 async function testRedactions(): Promise<void> {
   const { proc, client, frame } = await launch("redact", makeRedactPdf());
@@ -264,8 +296,11 @@ async function testColorPick(): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
-  // ANNOT_UNDO_ONLY=redact|freetext|color runs one part
+  // ANNOT_UNDO_ONLY=highlight|redact|freetext|color runs one part
   const only = process.env.ANNOT_UNDO_ONLY;
+  if (!only || only === "highlight") {
+    await testHighlight();
+  }
   if (!only || only === "redact") {
     await testRedactions();
   }

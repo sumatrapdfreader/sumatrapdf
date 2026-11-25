@@ -86,6 +86,14 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
 
+    const [menuCode, menuState] = await client.request(ControlCommand.TestCommandVisibility, [
+      "CmdStopReadAloud",
+      "menu",
+    ]);
+    if (menuCode !== 0 || !/vis=disable/.test(String(menuState))) {
+      throw new Error(`issue-6106: Stop Reading should be disabled when idle: ${menuState}`);
+    }
+
     let st = await barState(client);
     if (!st || st.voices === 0) {
       console.log("SKIP issue-6106: no TTS voices on this machine");

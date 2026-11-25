@@ -19,7 +19,6 @@ import { tests as almostAllTests, testit as runAlmostAll } from "./run-almost-al
 import { testit as issue5842 } from "./issue-5842.ts";
 import { testit as issue6003 } from "./issue-6003.ts";
 import { testit as issue4967 } from "./issue-4967.ts";
-import { testit as issue5065 } from "./issue-5065.ts";
 import { testit as issue5353 } from "./issue-5353.ts";
 import { testit as printAutoRotate } from "./print-auto-rotate.ts";
 import { testit as issue6150 } from "./issue-6150.ts";
@@ -70,7 +69,6 @@ export const slowTests: NamedTest[] = [
   ["issue-5842", issue5842],
   ["issue-6003", issue6003],
   ["issue-4967", issue4967],
-  ["issue-5065", issue5065],
   ["issue-5353", issue5353],
   ["print-auto-rotate", printAutoRotate],
   ["issue-6150", issue6150],

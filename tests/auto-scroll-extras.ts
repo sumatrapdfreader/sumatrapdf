@@ -1,7 +1,7 @@
 // Automatically Scroll extras: the bar shows the time left to the end of the
 // document, ReadingAutoScrollMinutes pauses scrolling when it runs out,
 // minimizing pauses (restoring resumes) and the speed is remembered per
-// document.
+// document. It also checks the 1 px/s speed floor (#6482).
 //
 // Run: bun tests/auto-scroll-extras.ts [--no-build]
 
@@ -18,12 +18,15 @@ import {
   SW_SHOWMINNOACTIVE,
   SW_SHOWNOACTIVATE,
   VK_DOWN,
+  VK_UP,
   WM_KEYDOWN,
   WM_KEYUP,
 } from "./winapi.ts";
 
 const kSettings = "SumatraPDF-settings.txt";
 const kTimerMinutes = 0.025;
+const kInitialSpeed = 2;
+const kSlowest = 1;
 
 type BarState = { visible: boolean; paused: number; speed: number; scrollY: number; status: string };
 
@@ -68,11 +71,37 @@ function writeSettings(dir: string, globalSpeed: number): void {
   );
 }
 
+function pressSpeedKey(frame: number, key: number): void {
+  postMessage(frame, WM_KEYDOWN, key, 1);
+  postMessage(frame, WM_KEYUP, key, 1);
+}
+
+async function checkSlowestSpeed(client: ControlClient, frame: number, initial: BarState): Promise<void> {
+  if (initial.speed !== kInitialSpeed) {
+    throw new Error(`auto-scroll-extras: expected the configured speed ${kInitialSpeed}, got ${initial.speed}`);
+  }
+  await ensureModifierKeysUp();
+  pressSpeedKey(frame, VK_UP);
+  await waitBar(client, (s) => s.speed === kSlowest, "Up did not slow scrolling to 1 px/s");
+  pressSpeedKey(frame, VK_UP);
+  await sleep(200);
+  const slow = await barState(client);
+  if (slow.speed !== kSlowest) {
+    throw new Error(`auto-scroll-extras: speed fell below 1 px/s: ${slow.speed}`);
+  }
+  await waitBar(client, (s) => s.scrollY > slow.scrollY, "the page did not move at 1 px/s", 4000);
+  pressSpeedKey(frame, VK_DOWN);
+  await waitBar(client, (s) => s.speed === kInitialSpeed, "Down did not restore the initial speed");
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("auto-scroll-extras-appdata");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, kSettings), "ReadingAutoScrollSpeed = 40\nCheckForUpdates = false\nRestoreSession = false\n");
+  writeFileSync(
+    join(dir, kSettings),
+    `ReadingAutoScrollSpeed = ${kInitialSpeed}\nCheckForUpdates = false\nRestoreSession = false\n`,
+  );
   const pdf = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
   let docSpeed = 0;
 
@@ -84,6 +113,7 @@ export async function testit(): Promise<void> {
       throw new Error(`auto-scroll-extras: status should show the time left: "${st.status}"`);
     }
     console.log(`  status: ${st.status}`);
+    await checkSlowestSpeed(client, frame, st);
 
     // the bar hides with the minimized window, so watch the scroll position
     showWindow(frame, SW_SHOWMINNOACTIVE);
@@ -113,9 +143,8 @@ export async function testit(): Promise<void> {
 
     // An RDP client can leave Ctrl down during the timer wait.
     await ensureModifierKeysUp();
-    postMessage(frame, WM_KEYDOWN, VK_DOWN, 1);
-    postMessage(frame, WM_KEYUP, VK_DOWN, 1);
-    st = await waitBar(client, (s) => s.speed > 40, "Down did not change the speed");
+    pressSpeedKey(frame, VK_DOWN);
+    st = await waitBar(client, (s) => s.speed > kInitialSpeed, "Down did not change the speed");
     docSpeed = st.speed;
     await client.quit();
     await proc.exited;
@@ -131,7 +160,7 @@ export async function testit(): Promise<void> {
   }
 
   // run 2: another global speed; the document keeps its own
-  writeSettings(dir, 2);
+  writeSettings(dir, 40);
   ({ proc, client, frame } = await launchControlled(["-appdata", dir, pdf], { saveSettings: true }));
   try {
     const st = await startScroll(client);

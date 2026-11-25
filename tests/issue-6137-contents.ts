@@ -1,6 +1,6 @@
 // #6137: the Contents edit must survive a WM_KILLFOCUS with no new focus
-// (what the on-screen keyboard does on a tablet). Clicking the page still
-// commits, same as annot-contents-click-away.
+// (what the on-screen keyboard does on a tablet). Clicking the page commits
+// the edit and leaves the annotation selected.
 //
 // Run: bun tests/issue-6137-contents.ts [--no-build]
 

@@ -399,6 +399,26 @@ export async function testit(): Promise<void> {
 
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
     await want("Thumbnails didn't hide the sidebar", "-/-");
+
+    // Quit after the top panel has shown Thumbnails and switched to Bookmarks.
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("Bookmarks didn't return", "bookmarks/-");
+    sendCommand(frame, cmdId("CmdFavoriteToggle"));
+    await want("Favorites didn't return", "bookmarks/favorites");
+    sendCommand(frame, cmdId("CmdToggleThumbnails"));
+    await want("Thumbnails didn't open in the middle", "bookmarks/thumbnails/favorites");
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("Thumbnails didn't move to the top", "thumbnails/favorites");
+    sendCommand(frame, cmdId("CmdToggleThumbnails"));
+    await want("Thumbnails didn't hide", "-/favorites");
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("Bookmarks didn't replace Thumbnails on top", "bookmarks/favorites");
+
+    await client.quit();
+    const code = await proc.exited;
+    if (code !== 0) {
+      throw new Error(`sidebar-thumbnails: closing exited with code ${code}`);
+    }
     console.log("sidebar-thumbnails: OK");
   } finally {
     client.close();

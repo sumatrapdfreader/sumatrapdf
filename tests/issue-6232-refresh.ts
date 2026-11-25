@@ -1,5 +1,6 @@
 // Navigate Files in Folder: re-reading the folder (F5, activation) keeps the
 // list on screen instead of flashing ".." and jumping (issue #6232, 3rd item).
+// Deleting the selected file chooses the next row, or the last remaining row.
 import { copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
@@ -66,6 +67,14 @@ export async function testit(): Promise<void> {
       throw new Error(`refresh dropped the list while re-reading: ${JSON.stringify(during2)}`);
     }
     await waitNav(client, "refresh with new file", (s) => s.items === 6 && s.sel === 4 && s.name === "ccc.pdf");
+
+    await navState(client, "select", 3);
+    await navState(client, "delete-refresh");
+    await waitNav(client, "delete a middle row", (s) => s.items === 5 && s.sel === 3 && s.name === "ccc.pdf");
+
+    await navState(client, "select", 4);
+    await navState(client, "delete-refresh");
+    await waitNav(client, "delete the last row", (s) => s.items === 4 && s.sel === 3 && s.name === "ccc.pdf");
   } finally {
     client.close();
     await killAndWait(proc);
