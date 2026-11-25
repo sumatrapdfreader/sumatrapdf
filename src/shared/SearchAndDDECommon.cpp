@@ -2072,6 +2072,11 @@ void StartFindCount(MainWindow* win, Str text, bool matchCase, bool matchWholeWo
     uitask::Post(fn, "FindCountThread");
 #else
     win->findCountThread = StartThread(fn, StrL("FindCountThread"));
+    if (!win->findCountThread) {
+        SafeEngineRelease(&engine);
+        delete d;
+        return;
+    }
 #endif
     d->thread = win->findCountThread;
 }

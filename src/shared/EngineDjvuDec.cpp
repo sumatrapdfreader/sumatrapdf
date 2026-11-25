@@ -134,6 +134,8 @@ struct DjvuDecPageInfo {
     djvu_page_type pageType = DJVU_PAGE_UNKNOWN;
     Vec<IPageElement*> allElements;
     bool gotElements = false;
+
+    ~DjvuDecPageInfo() { DeleteVecMembers(allElements); }
 };
 
 class EngineDjvuDec : public EngineBase {

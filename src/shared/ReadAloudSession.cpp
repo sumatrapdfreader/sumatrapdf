@@ -712,6 +712,9 @@ static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMa
                                Str errMsg) {
     if (len(cleaned) == 0) {
         logf("tts: StartText: empty cleaned text\n");
+        if (newMap) {
+            ReadAloudHighlightFree(newMap);
+        }
         ReadAloudShowNotif(tab, errMsg);
         return;
     }
@@ -732,6 +735,7 @@ static void ReadAloudStartText(WindowTab* tab, Str cleaned, ReadAloudHighlightMa
             newMap->cap = 0;
         } else {
             dbgtts("StartText: highlight map empty (len=%d locs=%p)\n", newMap->len, newMap->locs);
+            ReadAloudHighlightFree(newMap);
         }
     } else if (highlightBase == 0 && tab->readAloudHighlight) {
         ReadAloudHighlightFree(tab->readAloudHighlight);

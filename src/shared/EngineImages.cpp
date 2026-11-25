@@ -2246,7 +2246,7 @@ void ComicInfoParser::AddBookmark(int imageIdx, Str title) {
         return;
     }
     VecAppend(bookmarkImageIdx, imageIdx);
-    bookmarkTitles.Append(str::Dup(title));
+    bookmarkTitles.Append(title);
 }
 
 static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
@@ -2922,7 +2922,12 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
         logf("EngineCbx::LoadMediabox: empty media box from header for page: %d\n", pageNo);
     }
 
-    ImagePage* page = GetPage(pageNo, kMaxImagePageCache == len(pageCache));
+    bool cacheFull = false;
+    {
+        ScopedRecursiveMutex scope(&cacheLock);
+        cacheFull = kMaxImagePageCache == len(pageCache);
+    }
+    ImagePage* page = GetPage(pageNo, cacheFull);
     if (page) {
         int w = 0, h = 0;
         if (page->img) {

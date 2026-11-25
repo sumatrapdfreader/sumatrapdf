@@ -799,6 +799,10 @@ static bool WinTtsInit() {
     hr = factory->ActivateInstance(&inspectable);
     factory->Release();
     if (FAILED(hr) || !inspectable) {
+        if (gWinVoicesStatic) {
+            gWinVoicesStatic->Release();
+            gWinVoicesStatic = nullptr;
+        }
         return false;
     }
 

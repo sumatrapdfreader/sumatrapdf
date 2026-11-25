@@ -1261,6 +1261,9 @@ HtmlDoc::~HtmlDoc() {
 bool HtmlDoc::Load() {
     {
         Str data = file::ReadFile(fileName);
+        defer {
+            str::Free(data);
+        };
         if (len(data) == 0) {
             return false;
         }
@@ -1269,7 +1272,6 @@ bool HtmlDoc::Load() {
             return false;
         }
         htmlData = str::Dup(decoded);
-        str::Free(data);
     }
 
     str::ReplaceWithCopy(&pagePath, fileName);

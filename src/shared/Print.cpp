@@ -1231,6 +1231,7 @@ static void UpdatePrintProgress(UpdatePrintProgressData* d) {
 
 class PrintThreadData {
   public:
+    Mutex wndLock;
     NotificationWnd* wnd = nullptr;
     AbortCookieManager cookie;
     // set on the UI thread, read by the print thread
@@ -1246,10 +1247,15 @@ class PrintThreadData {
     void RemovePrintNotification() {
         AtomicBoolSet(&isCanceled, true);
         cookie.Abort();
-        if (this->wnd && IsMainWindowValid(win)) {
-            RemoveNotification(this->wnd);
+        NotificationWnd* notif = nullptr;
+        {
+            ScopedMutex scope(&wndLock);
+            notif = this->wnd;
+            this->wnd = nullptr;
         }
-        this->wnd = nullptr;
+        if (notif && IsMainWindowValid(win)) {
+            RemoveNotification(notif);
+        }
     }
 
     PrintThreadData(MainWindow* win, PrintData* data) {
@@ -1275,8 +1281,16 @@ class PrintThreadData {
     }
 
     void UpdateProgress(int current, int total) {
+        NotificationWnd* notif = nullptr;
+        {
+            ScopedMutex scope(&wndLock);
+            notif = wnd;
+        }
+        if (!notif) {
+            return;
+        }
         auto* data = new UpdatePrintProgressData;
-        data->wnd = wnd;
+        data->wnd = notif;
         data->current = current;
         data->total = total;
         auto fn = MkFunc0<UpdatePrintProgressData>(UpdatePrintProgress, data);
@@ -1945,6 +1959,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
 
     sel = printSelection ? win->CurrentTab()->selectionOnPage : nullptr;
     pd = new PrintData(pinnedEngine, printer, ranges, advanced, rotation, sel);
+    printer = nullptr;
     pd->mirror = dm->GetMirror();
     SafeEngineRelease(&pinnedEngine);
 
@@ -1956,6 +1971,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     }
 
 Exit:
+    delete printer;
     SafeEngineRelease(&pinnedEngine);
     free(ppr);
     GlobalFree(pdex.hDevNames);

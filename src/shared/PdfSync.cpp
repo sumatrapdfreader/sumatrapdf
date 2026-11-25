@@ -747,7 +747,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, Str& filename, int* line, int* co
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
-    filename = str::Dup(name);
+    str::ReplaceWithCopy(&filename, name);
     if (len(filename) == 0) {
         return PDFSYNCERR_OUTOFMEMORY;
     }

@@ -8294,6 +8294,7 @@ Str EngineMupdf::GetImageDataForPageElement(IPageElement* ipel) {
         return {};
     }
     auto* ctx = Ctx();
+    ScopedMutex renderScope(&renderLock);
     ScopedRecursiveMutex scope(&docLock);
     fz_matrix imgCtm = fz_identity;
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, pel->imageID, &imgCtm);
@@ -8404,6 +8405,7 @@ static fz_pixmap* FzLoadOrientedImage(EngineMupdf* engine, int pageNo, RectF rec
         return nullptr;
     }
 
+    ScopedMutex renderScope(&engine->renderLock);
     ScopedRecursiveMutex scope(&engine->docLock);
 
     fz_matrix imgCtm = fz_identity;
@@ -10294,6 +10296,8 @@ bool EngineMupdfVerifySignatures(EngineBase* engine, Vec<PdfSigCheck*>& out) {
     ScopedRecursiveMutex scope(&e->docLock);
     pdf_pkcs7_verifier* verifier = nullptr;
     Vec<pdf_obj*> fields;
+    StrVec parts;
+    str::Builder signer;
     bool ok = true;
     fz_var(verifier);
     fz_var(ok);
@@ -10314,9 +10318,9 @@ bool EngineMupdfVerifySignatures(EngineBase* engine, Vec<PdfSigCheck*>& out) {
             if (name) {
                 char* formatted = pdf_signature_format_distinguished_name(ctx, name);
                 // without the parts the certificate leaves empty ("o=, ou=")
-                StrVec parts;
+                parts.Reset();
+                signer.Reset();
                 Split(&parts, Str(formatted ? formatted : ""), StrL(", "), true);
-                str::Builder signer;
                 for (Str part : parts) {
                     if (!str::EndsWith(part, StrL("="))) {
                         signer.Append(fmt("%s%s", len(signer) > 0 ? StrL(", ") : StrL(""), part));
@@ -11181,6 +11185,8 @@ bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* 
     Vec<fz_display_list*> lists;
     Vec<StampLine> lines;
     Vec<pdf_obj*> xobjs;
+    str::Builder encoded;
+    Vec<int> cps;
     fz_try(ctx) {
         // one step of the undo journal the document keeps
         pdf_begin_operation(ctx, doc, "Stamp text");
@@ -11192,8 +11198,8 @@ bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* 
         bool anyStory = false;
         for (int i = 0; i < len(stamps) && ok; i++) {
             const PdfStamp& st = stamps[i];
-            str::Builder encoded;
-            Vec<int> cps;
+            encoded.Reset();
+            VecReset(cps);
             fz_display_list* list = nullptr;
             StampLine line;
             if (!StampTextToWinAnsi(st.text, encoded, cps)) {
@@ -11212,8 +11218,8 @@ bool EngineMupdfStampText(EngineBase* engine, const Vec<PdfStamp>& stamps, Str* 
         }
         for (int i = 0; i < len(stamps) && ok; i++) {
             const PdfStamp& st = stamps[i];
-            str::Builder encoded;
-            Vec<int> cps;
+            encoded.Reset();
+            VecReset(cps);
             bool latin = !lists[i];
             if (latin) {
                 StampTextToWinAnsi(st.text, encoded, cps);
@@ -12412,6 +12418,7 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
     Vec<u8> grafted;
     VecAppendBlanks(grafted, nPages);
     bool hasRepeated = false;
+    Vec<u8> used;
     pdf_document* doc = nullptr;
     pdf_document* src = nullptr;
     pdf_graft_map* map = nullptr;
@@ -12423,7 +12430,6 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
     fz_try(ctx) {
         doc = OpenPdfForMerge(ctx, srcs[0]);
         int nBase = pdf_count_pages(ctx, doc);
-        Vec<u8> used;
         VecAppendBlanks(used, nBase);
         for (int i = 0; i < nPages; i++) {
             if (pages[i].src == 0) {

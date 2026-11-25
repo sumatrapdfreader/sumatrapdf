@@ -199,12 +199,19 @@ bool IsOpenWithKnownExternalViewerCmd(CustomCommand* cmd) {
 }
 
 static ExternalViewerInfo* FindKnownExternalViewerInfoByCmdId(int cmdId) {
+    ExternalViewerInfo* first = nullptr;
     for (ExternalViewerInfo& ev : gExternalViewers) {
-        if (ev.cmdId == cmdId) {
+        if (ev.cmdId != cmdId) {
+            continue;
+        }
+        if (len(ev.exeFullPath) > 0) {
             return &ev;
         }
+        if (!first) {
+            first = &ev;
+        }
     }
-    return nullptr;
+    return first;
 }
 
 bool HasKnownExternalViewerForCmd(int cmdId) {
@@ -744,7 +751,8 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
     if (str::IsEmptyOrWhiteSpace(rest)) {
         // no arguments given: pass the document path as the only argument
 #if OS_WIN || OS_WASM
-        return LaunchFileShell(exePath, tab->filePath);
+        TempStr quoted = fmt("\"%s\"", tab->filePath);
+        return LaunchFileShell(exePath, quoted);
 #else
         rest = StrL("%1");
 #endif
@@ -905,10 +913,28 @@ static bool SendAsEmailAttachmentWithMail(Str filePath) {
 }
 #endif
 
+#if !OS_WIN
+static TempStr MailtoEncodeTemp(Str s) {
+    str::Builder out;
+    for (int i = 0; i < len(s); i++) {
+        u8 c = (u8)s.s[i];
+        bool unreserved = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' ||
+                          c == '_' || c == '.' || c == '~';
+        if (unreserved) {
+            out.AppendChar((char)c);
+        } else {
+            out.Append(fmt("%%%02X", (int)c));
+        }
+    }
+    return ToStrTemp(out);
+}
+#endif
+
 #if !OS_WASM
 static bool SendAsEmailAttachmentWithMailto(Str filePath) {
-    TempStr name = path::GetBaseNameTemp(filePath);
-    TempStr url = fmt("mailto:?subject=%s&body=%s", name, filePath);
+    TempStr name = MailtoEncodeTemp(path::GetBaseNameTemp(filePath));
+    TempStr body = MailtoEncodeTemp(filePath);
+    TempStr url = fmt("mailto:?subject=%s&body=%s", name, body);
     return LaunchBrowser(url);
 }
 #endif
@@ -948,7 +974,7 @@ bool SendAsEmailAttachment(WindowTab* tab) {
     if (!WasmDownloadFile(tab->filePath)) {
         return false;
     }
-    TempStr name = path::GetBaseNameTemp(tab->filePath);
+    TempStr name = MailtoEncodeTemp(path::GetBaseNameTemp(tab->filePath));
     return LaunchBrowser(fmt("mailto:?subject=%s", name));
 #endif
 #if !OS_WASM
