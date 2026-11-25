@@ -1508,6 +1508,7 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo, int z
     }
     if (!engine) {
         engine = CreateEngineFromFile(path, nullptr, false);
+        ownEngine = true;
     }
     if (!engine) {
         return fail(fmt("ERROR engine-create-failed path=%s\n", path));

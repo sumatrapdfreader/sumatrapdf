@@ -81,13 +81,13 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-WStr GetSumatraExePath() {
+static TempWStr GetSumatraExePathTemp() {
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
     TempStr path = GetPathInExeDirTemp(StrL("SumatraPDF.exe"));
     if (!file::Exists(path)) {
-        return wstr::Dup(WStrL(L"SumatraPDF.exe"));
+        return wstr::DupTemp(WStrL(L"SumatraPDF.exe"));
     }
-    return ToWStr(path);
+    return ToWStrTemp(path);
 }
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nShowCmd) {
@@ -105,7 +105,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nShowCmd) {
         return 1;
     }
     if (len(args) == 2 || !str::EndsWithI(args[1], StrL(".exe"))) {
-        args.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
+        args.InsertAt(1, ToUtf8Temp(GetSumatraExePathTemp()));
     }
     if (len(args) == 3) {
         // no URL to show in its place

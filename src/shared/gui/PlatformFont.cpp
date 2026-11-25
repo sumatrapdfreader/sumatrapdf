@@ -384,7 +384,11 @@ static PlatformFont* CreateBoldVariant(PlatformFont* f) {
         return f;
     }
     PlatformFont* res = GetPlatformFont(bold);
-    return res ? res : f;
+    if (!res) {
+        DeleteObject(bold);
+        return f;
+    }
+    return res;
 }
 
 // boldVariant is read and set under the lock, but created outside it:

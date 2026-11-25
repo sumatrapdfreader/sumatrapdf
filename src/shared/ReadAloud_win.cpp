@@ -1332,7 +1332,6 @@ static void WinTtsProcessEvents() {
                 gTtsActive = false;
             }
         }
-        return;
     }
 
     // playback finished

@@ -414,7 +414,9 @@ static void AppendDeviceCapabilities(str::Builder& out, const WCHAR* nameW, cons
         DeviceCapabilitiesW(nameW, portW, DC_MEDIATYPES, (WCHAR*)mediaValues, nullptr);
         out.Append(StrL("  media types:\n"));
         for (DWORD j = 0; j < nMedia; j++) {
-            TempStr s = ToUtf8Temp(WStr(mediaNames + (64 * (size_t)j)));
+            const WCHAR* entry = mediaNames + (64 * (size_t)j);
+            int entryLen = (int)wcsnlen(entry, 64);
+            TempStr s = ToUtf8Temp(WStr(entry, entryLen));
             out.Append(fmt("    '%s' (%d)\n", s, (int)mediaValues[j]));
         }
     }

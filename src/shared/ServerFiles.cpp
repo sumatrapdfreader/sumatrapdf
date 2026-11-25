@@ -229,13 +229,13 @@ static void FinishTransfer(OnlineJobResult* res) {
     str::FreePtr(&gSrv.transferName);
     MainWindow* win = gSrv.transferWin;
     gSrv.transferWin = nullptr;
-    RememberOnlineJobHash(res);
     DWORD lastStatus = 0;
     TempStr msg;
     if (OnlineJobFailed(res, &lastStatus, &msg)) {
         Notify(win, msg);
         return;
     }
+    RememberOnlineJobHash(res);
     if (res->job == OnlineJob::Download) {
 #if OS_WASM
         WasmPersistSettings();

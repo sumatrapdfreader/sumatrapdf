@@ -823,7 +823,8 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
 
     int bestIx = -1;
     int bestDist = INT_MAX;
-    int targetBandY = -1;
+    int targetBandY = 0;
+    bool hasTargetBand = false;
 
     bool forward = dir > 0;
     for (int i = 0; i < textLen; i++) {
@@ -834,11 +835,12 @@ static bool MoveFreeEndByLine(EngineBase* engine, int& page, int& glyph, int dir
         if (forward ? cy <= refY + ySlop : cy >= refY - ySlop) {
             continue;
         }
-        if (targetBandY < 0 || (forward ? cy < targetBandY : cy > targetBandY)) {
+        if (!hasTargetBand || (forward ? cy < targetBandY : cy > targetBandY)) {
             targetBandY = cy;
+            hasTargetBand = true;
         }
     }
-    if (targetBandY < 0) {
+    if (!hasTargetBand) {
         return MoveTextPage(engine, page, glyph, dir, nPages);
     }
     for (int i = 0; i < textLen; i++) {

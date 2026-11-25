@@ -352,12 +352,12 @@ static bool ValidAPIURL(Str url) {
     }
     int schemeLen = tls ? 8 : 7;
     Str rest(url.s + schemeLen, len(url) - schemeLen);
-    Str host;
+    Str host = rest;
     if (!str::Cut(rest, StrL("/"), &host, nullptr)) {
         str::Cut(rest, StrL("?"), &host, nullptr);
     }
     if (len(host) == 0) {
-        host = rest;
+        return false;
     }
     for (int i = 0; i < len(url); i++) {
         char c = url.s[i];

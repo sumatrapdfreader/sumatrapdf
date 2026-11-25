@@ -128,12 +128,18 @@ class ImageDropSource : public IDropSource {
 
 class SimpleEnumFormatEtc : public IEnumFORMATETC {
     AtomicInt refCount = 1;
-    const FORMATETC* formats = nullptr;
+    FORMATETC* formats = nullptr;
     ULONG count = 0;
     ULONG index = 0;
 
   public:
-    SimpleEnumFormatEtc(const FORMATETC* fmts, ULONG n) : formats(fmts), count(n) {}
+    SimpleEnumFormatEtc(const FORMATETC* fmts, ULONG n) : count(n) {
+        if (n > 0 && fmts) {
+            formats = AllocArray<FORMATETC>(n);
+            memcpy(formats, fmts, n * sizeof(FORMATETC));
+        }
+    }
+    ~SimpleEnumFormatEtc() { free(formats); }
 
     STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
         if (riid == IID_IUnknown || riid == IID_IEnumFORMATETC) {
