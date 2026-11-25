@@ -53,7 +53,7 @@ These are the third party libraries used by :title:`MuPDF`.
      - HTML5 parser
      - Apache 2.0
    * - `brotli`_
-     - 1.1.0 with upstream and local patches
+     - 1.2.1 with upstream and local patches
      - Brotli compression
      - MIT-style
    * - `cmark-gfm`_
