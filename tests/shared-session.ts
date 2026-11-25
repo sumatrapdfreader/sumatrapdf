@@ -74,7 +74,6 @@ issue-1699
 issue-3585
 issue-1846
 xmp-properties
-issue-3472
 issue-6364
 issue-6380
 markdown-path-traversal

@@ -5,8 +5,8 @@
 // whose shape isn't A5 the height overflows. The layout height is now derived
 // from the window, so one page is one screen.
 //
-// GUI automation rather than -dbg-control: the whole point is what the layout
-// does with the real window size.
+// The startup view flags must be available when the ebook is paginated.
+// Use a fresh process with a real window so the layout sees those dimensions.
 
 import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";

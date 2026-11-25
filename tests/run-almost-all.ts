@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-3472", issue3472],
   ["read-aloud-lazy-voices", readAloudLazyVoices],
   ["issue-6045", issue6045],
   ["installer-desktop-shortcut", installerDesktopShortcut],
@@ -948,7 +949,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["xmp-properties", xmpProperties],
   ["epub-metadata-properties", epubMetadataProperties],
   ["issue-5950", issue5950],
-  ["issue-3472", issue3472],
   ["pdf-tools-encrypted", pdfToolsEncrypted],
   ["pdf-tools-unsaved-annots", pdfToolsUnsavedAnnots],
   ["pdf-decrypt-remembered-key", pdfDecryptRememberedKey],
