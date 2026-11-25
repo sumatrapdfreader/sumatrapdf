@@ -17389,6 +17389,11 @@ ContinueOpenWindow:
         for (SessionData* data : *gInitialSessionData) {
             // create window hidden to avoid flashing the about page
             win = CreateAndShowMainWindow(data, false);
+            if (!win) {
+                // CreateWindowEx failed; the code below creates a window or exits
+                logf("WinMain: CreateAndShowMainWindow() failed while restoring the session, stopping\n");
+                break;
+            }
             int nRestore = 0;
             for (TabState* state : *data->tabStates) {
                 if (len(state->filePath) != 0) {
