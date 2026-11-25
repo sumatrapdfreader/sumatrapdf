@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["installer-desktop-shortcut", installerDesktopShortcut],
   ["issue-6232", issue6232],
   ["text-snippets", textSnippets],
   ["close-tab-during-placement", closeTabDuringPlacement],
@@ -781,7 +782,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6246", issue6246],
   ["issue-6247", issue6247],
   ["issue-6250", issue6250],
-  ["installer-desktop-shortcut", installerDesktopShortcut],
   parallelTest("issue-5803"),
   ["issue-3862", issue3862],
   ["issue-6248", issue6248],
