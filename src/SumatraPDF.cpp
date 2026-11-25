@@ -13780,8 +13780,11 @@ static LRESULT CALLBACK CaptionOverlayProc(HWND hwnd, UINT msg, WPARAM wp, LPARA
     if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) {
         Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
         if (CaptionButtonAt(win, pt) < 0) {
-            return SendMessageW(win->hwndFrame, msg == WM_LBUTTONDBLCLK ? WM_NCLBUTTONDBLCLK : WM_NCLBUTTONDOWN,
-                                HTCAPTION, 0);
+            // the overlay holds the button capture, and lParam is a screen point
+            Point screen = HwndClientToScreen(hwnd, pt);
+            ReleaseCapture();
+            UINT nc = msg == WM_LBUTTONDBLCLK ? WM_NCLBUTTONDBLCLK : WM_NCLBUTTONDOWN;
+            return SendMessageW(win->hwndFrame, nc, HTCAPTION, MAKELPARAM(screen.x, screen.y));
         }
     }
     if (msg == WM_RBUTTONUP) {
