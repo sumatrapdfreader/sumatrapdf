@@ -136,6 +136,7 @@ class EngineImages : public EngineBase {
     Vec<ImagePage*> pageCache;
     Vec<ImagePageInfo*> pageInfos;
     Str sourceData;
+    virtual Str GetSourceData() const { return sourceData; }
 
     // root mupdf context. Each thread that calls into mupdf gets its own
     // cloned context via Ctx() -- mupdf's per-context setjmp/error stack
@@ -1030,7 +1031,7 @@ Str EngineImages::GetFileData() {
     if (path) {
         return file::ReadFile(path);
     }
-    return str::Dup(sourceData);
+    return str::Dup(GetSourceData());
 }
 
 i64 EngineImages::GetImageByteSize(int pageNo) {
@@ -1042,7 +1043,7 @@ i64 EngineImages::GetImageByteSize(int pageNo) {
 }
 
 bool EngineImages::SaveFileAs(Str dstPath) {
-    return SaveFileOrData(FilePath(), sourceData, dstPath);
+    return SaveFileOrData(FilePath(), GetSourceData(), dstPath);
 }
 
 enum class ImagePageTrim {
@@ -2353,7 +2354,7 @@ class EngineCbx : public EngineImages {
     i64 GetImageByteSize(int pageNo) override;
 
     bool LoadFromFile(Str fileName);
-    bool LoadFromData(Str data);
+    Str GetSourceData() const override { return cbxArchive ? cbxArchive->GetCompressedData() : Str{}; }
     bool FinishLoading();
     void PrefetchPageAfter(int pageNo);
 
@@ -2388,8 +2389,9 @@ EngineCbx::~EngineCbx() {
 EngineBase* EngineCbx::Clone() {
     EngineBase* clone = nullptr;
     Str path = FilePath();
-    if (sourceData) {
-        clone = CreateFromData(sourceData);
+    Str data = GetSourceData();
+    if (data) {
+        clone = CreateFromData(data);
         if (!clone) {
             log(StrL("EngineCbx::Clone() failed: CreateFromData() failed\n"));
         }
@@ -2415,15 +2417,6 @@ bool EngineCbx::LoadFromFile(Str file) {
         return false;
     }
     SetFilePath(file);
-    return FinishLoading();
-}
-
-bool EngineCbx::LoadFromData(Str data) {
-    if (len(data) == 0) {
-        return false;
-    }
-    sourceData = str::Dup(data);
-
     return FinishLoading();
 }
 
@@ -3010,7 +3003,7 @@ EngineBase* EngineCbx::CreateFromData(Str data) {
         return nullptr;
     }
     EngineCbx* engine = new EngineCbx(archive);
-    if (engine->LoadFromData(data)) {
+    if (engine->FinishLoading()) {
         return engine;
     }
     SafeEngineRelease(&engine);

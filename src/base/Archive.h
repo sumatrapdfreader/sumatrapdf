@@ -46,6 +46,7 @@ struct Archive {
 
     bool Open(Str path, bool eagerLoad, RarHint hint = RarHint::Detect);
     bool OpenFromData(Str data, bool eagerLoad = true);
+    Str GetCompressedData() const { return archiveData_; }
 
     Vec<FileInfo*> const& GetFileInfos();
 

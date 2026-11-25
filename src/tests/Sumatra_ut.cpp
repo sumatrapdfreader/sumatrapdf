@@ -14,6 +14,7 @@
 #include "base/SettingsUtil.h"
 #include "base/Win.h"
 #include "base/CrashHandler.h"
+#include "base/Zip.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -799,6 +800,39 @@ static void PdfToolRerunTest() {
     file::Delete(dst);
 }
 
+static void TestCbxSourceData() {
+    TempStr dir = GetTempFilePathTemp(StrL("cbx"));
+    file::Delete(dir);
+    utassert(dir::Create(dir));
+    defer {
+        dir::RemoveAll(dir);
+    };
+
+    utassert(file::WriteFile(path::JoinTemp(dir, StrL("page.png")), StrL("image bytes")));
+    Str input = ZipDirToData(dir);
+    utassert(len(input) > 0);
+    Str expected = str::DupTemp(input);
+    EngineBase* engine = CreateEngineCbxFromData(input);
+    str::Free(input);
+    utassert(engine);
+    if (!engine) {
+        return;
+    }
+    defer {
+        engine->Release();
+    };
+
+    Str data = engine->GetFileData();
+    utassert(str::Eq(data, expected));
+    str::Free(data);
+
+    TempStr dst = path::JoinTemp(dir, StrL("copy.cbz"));
+    utassert(engine->SaveFileAs(dst));
+    Str saved = file::ReadFile(dst);
+    utassert(str::Eq(saved, expected));
+    str::Free(saved);
+}
+
 static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* ei) {
     printf("unit tests crash\n");
     str::Builder s;
@@ -827,6 +861,7 @@ int RunAppUnitTests(bool forAi) {
     printf("Running unit tests\n");
 
     ArchiveTest();
+    TestCbxSourceData();
     ZipDirTest();
     ArchiveWarnTest();
     ArchiveTarLazyTest();

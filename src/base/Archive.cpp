@@ -245,21 +245,21 @@ static struct archive* OpenLibarchiveSource(Archive* ar) {
     return nullptr;
 }
 
-// eagerLoad true (the default, used by ebooks): decompress every entry now,
-// then drop the source bytes. False: keep archiveData_ and extract pages
-// later, same as opening a file with lazy load.
+// Borrow the input while decompressing eagerly. Lazy extraction needs its own
+// copy so it can reopen the archive after the caller releases the input.
 bool Archive::OpenFromData(Str data, bool eagerLoad) {
     if (len(data) == 0) {
         return false;
     }
 
-    str::Free(archiveData_);
-    archiveData_ = str::Dup(data);
-    if (len(archiveData_) == 0) {
-        return false;
+    AutoFree oldData(archiveData_.s);
+    archiveData_ = {};
+    if (!eagerLoad) {
+        archiveData_ = str::Dup(data);
+        data = archiveData_;
     }
 
-    struct archive* a = OpenLibarchiveMemory(archiveData_, password);
+    struct archive* a = OpenLibarchiveMemory(data, password);
     if (!a) {
         str::Free(archiveData_);
         archiveData_ = {};
@@ -273,7 +273,7 @@ bool Archive::OpenFromData(Str data, bool eagerLoad) {
         isEncrypted = true;
     }
     archive_read_free(a);
-    if (!ok || eagerLoad) {
+    if (!ok) {
         str::Free(archiveData_);
         archiveData_ = {};
     }
