@@ -221,7 +221,7 @@ function reusableLaunch(
   args: string[],
   opts?: { defaultWindowPos?: boolean; saveSettings?: boolean; env?: object; cwd?: string },
 ): ReusableLaunch | null {
-  if (IS_MAC || opts?.defaultWindowPos || opts?.saveSettings || opts?.env || opts?.cwd) {
+  if (opts?.defaultWindowPos || opts?.saveSettings || opts?.env || opts?.cwd) {
     return null;
   }
   const paths: string[] = [];
@@ -273,14 +273,17 @@ export function canReuseLaunch(
 }
 
 function ddeForLaunch(parsed: ReusableLaunch): string {
-  let cmd = kWindowReset + "[CmdDiscardChanges][CmdCloseAllTabs]";
+  let cmd = "";
   for (const path of parsed.paths) {
     const view = parsed.view && parsed.view !== "automatic" ? parsed.view : "automatic";
-    const zoom = parsed.zoom ?? -1;
-    const page = parsed.page ?? 1;
-    cmd += `[Open("${path}", 0, 1, 0)]`;
-    cmd += `[SetView("${path}", "${view}", ${zoom})]`;
-    cmd += `[GotoPage("${path}", ${page})]`;
+    cmd += `[Open("${path}", 0, ${IS_MAC ? 0 : 1}, 0)]`;
+    if (!IS_MAC || parsed.view !== null || parsed.zoom !== null) {
+      const zoom = parsed.zoom ?? (IS_MAC ? 0 : -1);
+      cmd += `[SetView("${path}", "${view}", ${zoom})]`;
+    }
+    if (!IS_MAC || parsed.page !== null) {
+      cmd += `[GotoPage("${path}", ${parsed.page ?? 1})]`;
+    }
   }
   cmd += kWindowReset;
   return cmd;
@@ -326,29 +329,37 @@ async function releaseSharedDocs(client: ControlClient | null): Promise<void> {
   if (docsReleased || !sharedSession || sharedMode !== "reopen") {
     return;
   }
-  docsReleased = true;
   const session = sharedSession;
   if (session.proc.exitCode !== null) {
+    await abandonShared();
     return;
   }
+  let discard = "[CmdDiscardChanges]";
   if (client && !client.socket.destroyed) {
     try {
       await client.setNotificationsEnabled(false);
       await forgetDocState(client);
       await client.resolveUnsavedChanges("discard");
+      discard = "";
     } catch {
       // CmdDiscardChanges below still drops a dirty document.
     }
   }
-  if (!windowResponds(session.frame, 2000)) {
+  if (!IS_MAC && !windowResponds(session.frame, 2000)) {
     await abandonShared();
     return;
   }
-  postMessage(session.frame, WM_KEYDOWN, VK_ESCAPE, 0);
-  const cmd = kWindowReset + "[CmdDiscardChanges][CmdCloseAllTabs]";
-  if (!sendCopyDataWTimeout(session.frame, kDdeExecute, cmd, 8000 * SLOW_BUILD_FACTOR)) {
-    await abandonShared();
+  const cmd = kWindowReset + discard + "[CmdCloseAllTabs]";
+  try {
+    postMessage(session.frame, WM_KEYDOWN, VK_ESCAPE, 0);
+    if (sendCopyDataWTimeout(session.frame, kDdeExecute, cmd, 8000 * SLOW_BUILD_FACTOR)) {
+      docsReleased = true;
+      return;
+    }
+  } catch {
+    // Fall back to a fresh process after a lost control connection.
   }
+  await abandonShared();
 }
 
 async function reuseOpen(
@@ -358,7 +369,7 @@ async function reuseOpen(
   if (!session || sharedMode !== "reopen") {
     return null;
   }
-  if (session.proc.exitCode !== null || !windowResponds(session.frame, 2000)) {
+  if (session.proc.exitCode !== null || (!IS_MAC && !windowResponds(session.frame, 2000))) {
     await abandonShared();
     return null;
   }
@@ -373,19 +384,21 @@ async function reuseOpen(
       prior?.close();
     }
   }
-  postMessage(session.frame, WM_KEYDOWN, VK_ESCAPE, 0);
-  if (!sendCopyDataWTimeout(session.frame, kDdeExecute, ddeForLaunch(parsed), 8000 * SLOW_BUILD_FACTOR)) {
-    await abandonShared();
-    return null;
-  }
-  docsReleased = false;
+  let client: ControlClient | null = null;
   try {
-    const client = await ControlClient.connect(session.pipe);
+    client = await ControlClient.connect(session.pipe);
+    if (!sendCopyDataWTimeout(session.frame, kDdeExecute, ddeForLaunch(parsed), 8000 * SLOW_BUILD_FACTOR)) {
+      client.close();
+      await abandonShared();
+      return null;
+    }
+    docsReleased = false;
     armDetach(client);
     await client.setNotificationsEnabled(true);
     await client.waitForRenderIdle();
     return { proc: session.proc, client, frame: session.frame };
   } catch {
+    client?.close();
     await abandonShared();
     return null;
   }
@@ -536,8 +549,8 @@ export async function launchControlled(
     await client.waitForRenderIdle();
     return { proc: sharedSession.proc, client, frame: sharedSession.frame };
   }
-  const parsed = !IS_MAC && processReuseWanted() && sharedMode !== "annot" ? reusableLaunch(args, opts) : null;
-  if (!IS_MAC && processReuseWanted() && sharedMode === "reopen") {
+  const parsed = processReuseWanted() && sharedMode !== "annot" ? reusableLaunch(args, opts) : null;
+  if (processReuseWanted() && sharedMode === "reopen") {
     if (parsed) {
       const reused = await reuseOpen(parsed);
       if (reused) {

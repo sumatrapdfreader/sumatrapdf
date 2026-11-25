@@ -54,7 +54,7 @@ export async function testit(): Promise<void> {
   // a thumbnail under the search field
   const { proc, client, frame } = await launchControlled(["-appdata", makeAppDir(), "-window-pos", "820x500@20x20"]);
   try {
-    await waitForHome(
+    let last = await waitForHome(
       client,
       (h) => h.entries === nFiles && h.searchBox && h.search[2]! > 0 && h.outlineFull[3]! > 0,
       "home page never listed the files with a search box and a selection outline",
@@ -74,10 +74,10 @@ export async function testit(): Promise<void> {
     // A notch is applied on a later frame. Two identical reads before that
     // frame are the pre-scroll state, so wait until the outline moves, then
     // until it holds still. ASan often misses a fixed 60ms sample.
-    const settled = async (before?: number[]): Promise<HomeSelection> => {
+    const settled = async (before: number[]): Promise<HomeSelection> => {
       const deadline = Date.now() + 4000;
       let prev = await waitForHome(client, (s) => s.ready && s.entries === nFiles, "home page lost its files");
-      let moved = !!before && !sameRect(prev.outlineFull, before);
+      let moved = !sameRect(prev.outlineFull, before);
       for (;;) {
         if (Date.now() >= deadline) {
           return prev;
@@ -97,7 +97,6 @@ export async function testit(): Promise<void> {
     };
 
     let sawWouldOverlap = false;
-    let last = await settled();
     await ensureModifierKeysUp();
     // the search field is centered, so select a thumbnail in a column that
     // passes under it; the first column may sit entirely left of the field

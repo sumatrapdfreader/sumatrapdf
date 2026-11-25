@@ -4032,7 +4032,27 @@ void SumatraControlThread(ControlThreadArg* arg) {
             logf("poll() failed for control socket, errno=%d\n", errno);
             break;
         }
-        if ((fds[0].revents & POLLIN) != 0) {
+        // Only the connections present at poll() have readiness results.
+        for (int i = nConns - 1; i >= 0 && !stop; i--) {
+            short rev = fds[i + 1].revents;
+            if ((rev & (POLLIN | POLLHUP | POLLERR | POLLNVAL)) == 0) {
+                continue;
+            }
+            bool quit = false;
+            bool keep = (rev & POLLIN) != 0 && HandleControlRequest(conns[i], &quit);
+            if (quit) {
+                stop = true;
+            }
+            if (keep && !stop) {
+                continue;
+            }
+            // The client reads the reply before it sees the close.
+            shutdown(conns[i], SHUT_WR);
+            close(conns[i]);
+            nConns--;
+            conns[i] = conns[nConns];
+        }
+        if (!stop && (fds[0].revents & POLLIN) != 0) {
             int conn = accept(listener, nullptr, nullptr);
             if (conn >= 0) {
                 if (nConns < kMaxConns) {
@@ -4044,30 +4064,6 @@ void SumatraControlThread(ControlThreadArg* arg) {
                 logf("accept() failed for control socket, errno=%d\n", errno);
                 break;
             }
-        }
-        for (int i = 0; i < nConns;) {
-            short rev = fds[i + 1].revents;
-            if ((rev & (POLLIN | POLLHUP | POLLERR | POLLNVAL)) == 0) {
-                i++;
-                continue;
-            }
-            bool quit = false;
-            bool keep = (rev & POLLIN) != 0 && HandleControlRequest(conns[i], &quit);
-            if (quit) {
-                stop = true;
-            }
-            if (keep && !stop) {
-                i++;
-                continue;
-            }
-            // the client reads the reply (to Quit, too) before it sees the close.
-            // fds[] still describes this slot, so the swapped connection waits
-            // for the next poll.
-            shutdown(conns[i], SHUT_WR);
-            close(conns[i]);
-            nConns--;
-            conns[i] = conns[nConns];
-            i++;
         }
     }
     for (int i = 0; i < nConns; i++) {

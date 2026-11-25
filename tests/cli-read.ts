@@ -81,6 +81,8 @@ export async function testit(): Promise<void> {
   expect("no password is 4", r.code === 4, r);
   r = cli(["info", enc, "--password", "bad"]);
   expect("a wrong password is 4", r.code === 4, r);
+  r = cli(["text", enc, "--password", "pw"]);
+  expect("--password", r.code === 0 && r.out.includes("hello cli world"), r);
   r = cli(["text", enc, "--password-env", "CLI_READ_PW"], { CLI_READ_PW: "pw" });
   expect("--password-env", r.code === 0 && r.out.includes("hello cli world"), r);
   // the agent skill names this executable

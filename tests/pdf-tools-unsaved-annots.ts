@@ -8,8 +8,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { join } from "node:path";
 import { type ControlClient, ControlCommand } from "./control.ts";
 import { EXE, USE_NG, cmdId, makeTopBottomPdf, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, pressEnter, sendCommand, waitToolWindow } from "./win-automation.ts";
-import { enumChildWindows, getClassName, getControlText, sendText } from "./winapi.ts";
+import { killAndWait, launchControlled, pressKey, sendCommand, waitToolWindow } from "./win-automation.ts";
+import { enumChildWindows, getClassName, getControlText, sendText, VK_RETURN } from "./winapi.ts";
 
 const name = "pdf-tools-unsaved-annots";
 const kPassword = "secret";
@@ -52,7 +52,7 @@ async function runOrigDialog(pid: number, client: ControlClient, tool: Tool): Pr
   if (text && other) {
     sendText(other, text);
   }
-  await pressEnter(destEdit);
+  await pressKey(destEdit, VK_RETURN, 0);
 }
 
 async function ngLayout(client: ControlClient, tool: Tool): Promise<string[]> {
@@ -115,7 +115,6 @@ async function runTool(dir: string, src: string, launchArgs: string[], tool: Too
     if (stamp[0] !== 0) {
       throw new Error(`${name}: create stamp: ${String(stamp[1] ?? "")}`);
     }
-    await client.waitForRenderIdle();
     sendCommand(frame, cmdId(tool.cmd));
     if (USE_NG) {
       await runNgDialog(client, tool);

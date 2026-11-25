@@ -88,6 +88,10 @@ export const TESTS_TMP_DIR = join(ROOT, ".work", "tests-tmp");
 export const TMP_DIR = join(TESTS_TMP_DIR, "tmp");
 export let EXE = SOURCE_EXE;
 
+export function usePreparedTestExe(exe: string): void {
+  EXE = exe;
+}
+
 export function prepareTestEnvironment(): void {
   const sourceExe = resolve(SOURCE_EXE);
   const exeName = basename(sourceExe);
@@ -819,6 +823,31 @@ export function startSuiteProgress(total: number): void {
   progressDone = 0;
 }
 
+function nextTestProgress(name: string): string {
+  return progressTotal > 0 ? `${++progressDone}/${progressTotal} ${name}.ts` : "";
+}
+
+export function reportParallelTest(
+  name: string,
+  elapsed: number,
+  ok: boolean,
+  silent: boolean,
+  stdout: string,
+  stderr: string,
+): void {
+  recordTestTime(name, elapsed, ok);
+  const progress = nextTestProgress(name) || name;
+  const duration = formatDuration(elapsed);
+  if (silent && ok) {
+    console.log(`${progress} in ${duration}`);
+    return;
+  }
+  console.log(`\n========== ${name} ==========\n${progress}`);
+  if (stdout) process.stdout.write(stdout);
+  if (stderr) process.stderr.write(stderr);
+  if (ok) console.log(`✅ ${name} passed in ${duration}`);
+}
+
 // run one test and print pass/fail timing
 // win-automation registers this: it returns what the process a failed test
 // was driving wrote to stderr (an ASan report, a crash line), so "exited while
@@ -845,7 +874,7 @@ export async function runTest(name: string, fn: () => void | Promise<void>, opts
   // a Ctrl the machine thinks is held chords every posted key and click.
   // Before the progress line and the muting, so what it says stays visible
   await ensureModifierKeysUp();
-  const progress = progressTotal > 0 ? `${++progressDone}/${progressTotal} ${name}.ts` : "";
+  const progress = nextTestProgress(name);
   // A silent run prints nothing while a test runs, so the line stays open and
   // the timing completes it: "3/34 issue-5964.ts in 2.0s". A verbose run has
   // the test's own output coming next, so end the line right away.

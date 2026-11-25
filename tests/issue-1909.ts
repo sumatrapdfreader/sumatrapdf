@@ -5,7 +5,7 @@
 import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { deflateSync } from "node:zlib";
-import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { type ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { IS_WIN } from "./host.ts";
 import {
   assemblePdf,
@@ -91,7 +91,7 @@ function makeOfd(): Buffer {
   ]);
 }
 
-async function testBasic(): Promise<void> {
+async function testBasic(client: ControlClient): Promise<void> {
   const file = tmpPath("native-ofd.ofd");
   writeFileSync(file, makeOfd());
   for (const [page, label] of [
@@ -106,32 +106,26 @@ async function testBasic(): Promise<void> {
 
   const renamed = tmpPath("native-ofd.zip");
   copyFileSync(file, renamed);
-  await withControlledSumatra(
-    EXE,
-    async (client) => {
-      for (const [path, page] of [
-        [file, 1],
-        [file, 2],
-        [renamed, 1],
-      ] as const) {
-        const result = await client.request(ControlCommand.TestRenderPageColors, [path, page, 100]);
-        const raw = String(result[1] ?? "");
-        console.log(`OFD page ${page}: ${raw.trim()}`);
-        if (result[0] !== 0 || !raw.includes("pages=2")) {
-          throw new Error(`OFD render failed: ${raw}`);
-        }
-        const red = Number(/red=(\d+)/.exec(raw)?.[1]);
-        const blue = Number(/blue=(\d+)/.exec(raw)?.[1]);
-        if (!(red > 600 && red < 1000 && blue > 2000 && blue < 3600)) {
-          throw new Error(`OFD template order, inherited color or image failed: ${raw}`);
-        }
-        if (!raw.includes(page === 1 ? "size=284x227" : "size=341x256")) {
-          throw new Error(`OFD page dimensions failed: ${raw}`);
-        }
-      }
-    },
-    ["-log-to-file", tmpPath("ofd.log")],
-  );
+  for (const [path, page] of [
+    [file, 1],
+    [file, 2],
+    [renamed, 1],
+  ] as const) {
+    const result = await client.request(ControlCommand.TestRenderPageColors, [path, page, 100]);
+    const raw = String(result[1] ?? "");
+    console.log(`OFD page ${page}: ${raw.trim()}`);
+    if (result[0] !== 0 || !raw.includes("pages=2")) {
+      throw new Error(`OFD render failed: ${raw}`);
+    }
+    const red = Number(/red=(\d+)/.exec(raw)?.[1]);
+    const blue = Number(/blue=(\d+)/.exec(raw)?.[1]);
+    if (!(red > 600 && red < 1000 && blue > 2000 && blue < 3600)) {
+      throw new Error(`OFD template order, inherited color or image failed: ${raw}`);
+    }
+    if (!raw.includes(page === 1 ? "size=284x227" : "size=341x256")) {
+      throw new Error(`OFD page dimensions failed: ${raw}`);
+    }
+  }
 }
 
 // --- path fill defaults to transparent; text fill defaults to black
@@ -618,28 +612,26 @@ function featureFixture(c: Case): Buffer {
   return makeZip(files.map(([name, data]) => ({ name, data })));
 }
 
-async function testFeatures(): Promise<void> {
+async function testFeatures(client: ControlClient): Promise<void> {
   const failures: string[] = [];
   const files = cases.map((c) => {
     const file = tmpPath(`ofd-feature-${c.name}.ofd`);
     writeFileSync(file, featureFixture(c));
     return file;
   });
-  await withControlledSumatra(EXE, async (client) => {
-    for (const [i, c] of cases.entries()) {
-      const result = await client.request(ControlCommand.TestRenderPageColors, [files[i], 1, 100]);
-      const raw = String(result[1] ?? "");
-      const count = (name: string) => Number(new RegExp(`\\b${name}=(\\d+)`).exec(raw)?.[1] ?? 0);
-      const counts = {
-        red: count("red"),
-        blue: count("blue"),
-        nonwhite: count("nonwhite"),
-        right: Number(/box=\d+,\d+,(\d+),/.exec(raw)?.[1] ?? 0),
-      };
-      console.log(`${c.name}: ${raw.trim()}`);
-      if (result[0] !== 0 || !c.check(counts)) failures.push(`${c.name}: ${raw.trim()}`);
-    }
-  });
+  for (const [i, c] of cases.entries()) {
+    const result = await client.request(ControlCommand.TestRenderPageColors, [files[i], 1, 100]);
+    const raw = String(result[1] ?? "");
+    const count = (name: string) => Number(new RegExp(`\\b${name}=(\\d+)`).exec(raw)?.[1] ?? 0);
+    const counts = {
+      red: count("red"),
+      blue: count("blue"),
+      nonwhite: count("nonwhite"),
+      right: Number(/box=\d+,\d+,(\d+),/.exec(raw)?.[1] ?? 0),
+    };
+    console.log(`${c.name}: ${raw.trim()}`);
+    if (result[0] !== 0 || !c.check(counts)) failures.push(`${c.name}: ${raw.trim()}`);
+  }
   if (failures.length) throw new Error(failures.join("\n"));
   for (const [i, c] of cases.entries()) {
     if (c.text && !extractPageText(files[i]).replace(/\s/g, "").includes(c.text))
@@ -674,18 +666,16 @@ function packageFixture(): Buffer {
   return makeZip(files.map(([name, xml]) => ({ name, data: Buffer.from(xml) })));
 }
 
-async function testPackage(): Promise<void> {
+async function testPackage(client: ControlClient): Promise<void> {
   const file = tmpPath("ofd-package.ofd");
   writeFileSync(file, packageFixture());
-  await withControlledSumatra(EXE, async (client) => {
-    const render = await client.request(ControlCommand.TestRenderPageColors, [file, 3, 100]);
-    if (render[0] !== 0 || !String(render[1]).includes("pages=3")) {
-      throw new Error(`OFD package: expected 3 pages from 2 documents: ${render[1]}`);
-    }
-    const toc = String((await client.request(ControlCommand.TestGetToc, [file]))[1] ?? "").replace(/\r/g, "");
-    const want = "Invoice A|page=1\nInvoice B|page=2\n  Details|page=3\n";
-    if (toc !== want) throw new Error(`OFD package ToC: expected ${JSON.stringify(want)}, got ${JSON.stringify(toc)}`);
-  });
+  const render = await client.request(ControlCommand.TestRenderPageColors, [file, 3, 100]);
+  if (render[0] !== 0 || !String(render[1]).includes("pages=3")) {
+    throw new Error(`OFD package: expected 3 pages from 2 documents: ${render[1]}`);
+  }
+  const toc = String((await client.request(ControlCommand.TestGetToc, [file]))[1] ?? "").replace(/\r/g, "");
+  const want = "Invoice A|page=1\nInvoice B|page=2\n  Details|page=3\n";
+  if (toc !== want) throw new Error(`OFD package ToC: expected ${JSON.stringify(want)}, got ${JSON.stringify(toc)}`);
 }
 
 // --- an OFD attachment named .zip opens from memory as OFD, not as a comic book of its images
@@ -823,11 +813,6 @@ async function testSignatures(): Promise<void> {
 
 async function testEncrypted(): Promise<void> {
   const file = join(dataDir, "encrypted.ofd");
-  // without the password nothing opens
-  await withControlledSumatra(EXE, async (client) => {
-    const res = await client.request(ControlCommand.TestRenderPageColors, [file, 1, 100]);
-    if (res[0] === 0) throw new Error(`OFD encrypted: opened without a password: ${res[1]}`);
-  });
   const { proc, client } = await launchControlled(["-pwd", "sumatra", file]);
   try {
     const info = await pollUntil(
@@ -923,41 +908,48 @@ function linksFixture(): Buffer {
   return makeZip(files.map(([name, data]) => ({ name, data: Buffer.from(data) })));
 }
 
-async function testLinksAttachmentsConvert(): Promise<void> {
+async function testLinksAttachmentsConvert(client: ControlClient): Promise<void> {
   const file = tmpPath("ofd-links.ofd");
   writeFileSync(file, linksFixture());
   const pdf = tmpPath("ofd-converted.pdf");
-  await withControlledSumatra(EXE, async (client) => {
-    const links = String((await client.request(ControlCommand.TestPageLinks, [file, 1]))[1] ?? "");
-    if (!/page=2 /.test(links) || !links.includes("https://www.sumatrapdfreader.org/")) {
-      throw new Error(`OFD links: expected a link to page 2 and a URL:\n${links}`);
-    }
-    const toc = String((await client.request(ControlCommand.TestGetToc, [file]))[1] ?? "");
-    if (!toc.includes("invoice.xml")) throw new Error(`OFD attachments: expected invoice.xml in:\n${toc}`);
+  const links = String((await client.request(ControlCommand.TestPageLinks, [file, 1]))[1] ?? "");
+  if (!/page=2 /.test(links) || !links.includes("https://www.sumatrapdfreader.org/")) {
+    throw new Error(`OFD links: expected a link to page 2 and a URL:\n${links}`);
+  }
+  const toc = String((await client.request(ControlCommand.TestGetToc, [file]))[1] ?? "");
+  if (!toc.includes("invoice.xml")) throw new Error(`OFD attachments: expected invoice.xml in:\n${toc}`);
 
-    // Convert to PDF keeps OFD text as text
-    const res = await client.request(ControlCommand.TestConvertToPdf, [
-      join(dataDir, "../issue-1909-data/chain-signed.ofd"),
-      pdf,
-    ]);
-    if (res[0] !== 0) throw new Error(`OFD to PDF: ${res[1]}`);
-    const render = String((await client.request(ControlCommand.TestRenderPageColors, [pdf, 1, 100]))[1] ?? "");
-    if (!/blue=[1-9]\d{3,}/.test(render)) throw new Error(`OFD to PDF: page content missing: ${render}`);
-  });
+  // Convert to PDF keeps OFD text as text
+  const res = await client.request(ControlCommand.TestConvertToPdf, [
+    join(dataDir, "../issue-1909-data/chain-signed.ofd"),
+    pdf,
+  ]);
+  if (res[0] !== 0) throw new Error(`OFD to PDF: ${res[1]}`);
+  const render = String((await client.request(ControlCommand.TestRenderPageColors, [pdf, 1, 100]))[1] ?? "");
+  if (!/blue=[1-9]\d{3,}/.test(render)) throw new Error(`OFD to PDF: page content missing: ${render}`);
   console.log("OFD links, attachments and conversion: ok");
 }
 
 export async function testit(): Promise<void> {
-  await testBasic();
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await testBasic(client);
+      await testFeatures(client);
+      await testPackage(client);
+      const encrypted = join(dataDir, "encrypted.ofd");
+      const res = await client.request(ControlCommand.TestRenderPageColors, [encrypted, 1, 100]);
+      if (res[0] === 0) throw new Error(`OFD encrypted: opened without a password: ${res[1]}`);
+      await testLinksAttachmentsConvert(client);
+    },
+    ["-log-to-file", tmpPath("ofd.log")],
+  );
   await testPathFill();
   await testSeals();
-  await testFeatures();
-  await testPackage();
   await testMemory();
   await testSignatures();
   await testEncrypted();
   await testIntegrityAndTrust();
-  await testLinksAttachmentsConvert();
 }
 
 if (import.meta.main) {

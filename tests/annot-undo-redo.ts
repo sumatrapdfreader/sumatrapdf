@@ -96,12 +96,7 @@ async function runCmd(client: ControlClient, frame: number, name: string, x?: nu
 
 // The markup dump's screen rect is frame pixels. A command point is canvas
 // pixels; a TestInput point is frame dips.
-async function framePoint(
-  client: ControlClient,
-  x: number,
-  y: number,
-): Promise<{ x: number; y: number; dipX: number; dipY: number }> {
-  const layout = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+function framePoint(layout: string, x: number, y: number) {
   const scaleM = /scale=([0-9.]+)/.exec(layout);
   const canvasM = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(layout);
   const scale = scaleM ? Number(scaleM[1]) : 1;
@@ -115,12 +110,16 @@ async function framePoint(
   };
 }
 
+async function readLayout(client: ControlClient): Promise<string> {
+  return String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+}
+
 async function clickPoint(client: ControlClient, canvas: number, x: number, y: number): Promise<void> {
   if (!IS_MAC) {
     await clickAt(canvas, x, y, 0);
     return;
   }
-  const pt = await framePoint(client, x, y);
+  const pt = framePoint(await readLayout(client), x, y);
   const res = await client.request(ControlCommand.TestInput, ["click", pt.dipX, pt.dipY, 0, 0]);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || raw.startsWith("ERR")) {
@@ -142,16 +141,17 @@ async function dragResize(client: ControlClient, canvas: number, corner: { x: nu
     sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(corner.x + 36, corner.y + 36));
     return;
   }
-  const downPt = await framePoint(client, corner.x, corner.y);
+  const layout = await readLayout(client);
+  const downPt = framePoint(layout, corner.x, corner.y);
   const down = await client.request(ControlCommand.TestInput, ["down", downPt.dipX, downPt.dipY, 0, 0]);
   if (down[0] !== 0) {
     throw new Error(`annot-undo-redo: drag down failed: ${down[1]}`);
   }
   for (let i = 1; i <= 6; i++) {
-    const p = await framePoint(client, corner.x + i * 6, corner.y + i * 6);
+    const p = framePoint(layout, corner.x + i * 6, corner.y + i * 6);
     await client.request(ControlCommand.TestInput, ["move", p.dipX, p.dipY, 1, 0]);
   }
-  const up = await framePoint(client, corner.x + 36, corner.y + 36);
+  const up = framePoint(layout, corner.x + 36, corner.y + 36);
   await client.request(ControlCommand.TestInput, ["up", up.dipX, up.dipY, 0, 0]);
 }
 
@@ -273,7 +273,7 @@ export async function testit(): Promise<void> {
     }
     const original = s.squares[0]!;
     const mid = { x: original.x + Math.floor(original.dx / 2), y: original.y + Math.floor(original.dy / 2) };
-    const hit = IS_MAC ? await framePoint(client, mid.x, mid.y) : { x: mid.x, y: mid.y, dipX: mid.x, dipY: mid.y };
+    const hit = IS_MAC ? framePoint(await readLayout(client), mid.x, mid.y) : mid;
 
     // delete -> undo -> redo -> undo
     await runCmd(client, frame, "CmdDeleteAnnotation", hit.x, hit.y);
@@ -311,9 +311,11 @@ export async function testit(): Promise<void> {
 
     // a paste writes the annotation and its properties: one undo step
     await clickPoint(client, canvas, mid.x, mid.y);
-    const copyAt = IS_MAC ? await framePoint(client, mid.x, mid.y) : hit;
+    const layout = IS_MAC ? await readLayout(client) : "";
+    const copyAt = IS_MAC ? framePoint(layout, mid.x, mid.y) : hit;
     await runCmd(client, frame, "CmdCopyAnnotation", copyAt.x, copyAt.y);
-    const pasteAt = IS_MAC ? await framePoint(client, mid.x + 150, mid.y + 100) : { x: mid.x + 150, y: mid.y + 100 };
+    const paste = { x: mid.x + 150, y: mid.y + 100 };
+    const pasteAt = IS_MAC ? framePoint(layout, paste.x, paste.y) : paste;
     await runCmd(client, frame, "CmdPasteAnnotation", pasteAt.x, pasteAt.y);
     await client.waitForRenderIdle();
     s = await state(client);

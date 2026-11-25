@@ -23,8 +23,7 @@ import {
 } from "./winapi.ts";
 
 const kSettings = "SumatraPDF-settings.txt";
-// 6 seconds, so the timer runs out quickly
-const kMinutes = 0.1;
+const kTimerMinutes = 0.025;
 
 type BarState = { visible: boolean; paused: number; speed: number; scrollY: number; status: string };
 
@@ -73,10 +72,7 @@ export async function testit(): Promise<void> {
   const dir = tmpPath("auto-scroll-extras-appdata");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    join(dir, kSettings),
-    `ReadingAutoScrollSpeed = 40\nReadingAutoScrollMinutes = ${kMinutes}\nCheckForUpdates = false\nRestoreSession = false\n`,
-  );
+  writeFileSync(join(dir, kSettings), "ReadingAutoScrollSpeed = 40\nCheckForUpdates = false\nRestoreSession = false\n");
   const pdf = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
   let docSpeed = 0;
 
@@ -103,10 +99,19 @@ export async function testit(): Promise<void> {
     await waitBar(client, (s) => s.scrollY > st.scrollY, "did not scroll after restoring");
     console.log(`  minimize paused, restore resumed`);
 
+    const timer = await client.request(ControlCommand.TestSetSetting, [
+      "ReadingAutoScrollMinutes",
+      String(kTimerMinutes),
+    ]);
+    if (timer[0] !== 0) {
+      throw new Error(`auto-scroll-extras: could not set the timer: ${timer[1]}`);
+    }
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleAutomaticallyScroll"]);
+    await startScroll(client);
     st = await waitBar(client, (s) => s.paused === 1 && /Time is up/.test(s.status), "the timer did not pause", 12000);
     console.log(`  timer: ${st.status}`);
 
-    // an RDP client can leave Ctrl down during the 6 s wait, making this Ctrl+Down
+    // An RDP client can leave Ctrl down during the timer wait.
     await ensureModifierKeysUp();
     postMessage(frame, WM_KEYDOWN, VK_DOWN, 1);
     postMessage(frame, WM_KEYUP, VK_DOWN, 1);

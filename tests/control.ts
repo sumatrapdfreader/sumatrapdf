@@ -1,5 +1,5 @@
 import { Socket, createConnection } from "node:net";
-import { IS_MAC, IS_WIN } from "./host.ts";
+import { IS_WIN } from "./host.ts";
 import { macControlRequest, registerControlPath } from "./mac-control.ts";
 import { ensureModifierKeysUp, killAndWait, testWindowPos } from "./winapi.ts";
 import { processReuseWanted } from "./process-reuse.ts";
@@ -1085,7 +1085,7 @@ export async function withControlledSumatra<T>(
   // immediately so a verbose ASan dump cannot fill the pipe and stall exit.
   // tests post keys and clicks directly; a held modifier would chord them
   await ensureModifierKeysUp();
-  if (!IS_MAC && processReuseWanted()) {
+  if (processReuseWanted()) {
     const { canReuseLaunch, endSharedControlledSession, hasSharedSession } = await import("./win-automation.ts");
     const join =
       !options.cwd &&

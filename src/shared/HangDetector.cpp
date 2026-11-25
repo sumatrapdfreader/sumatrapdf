@@ -325,6 +325,8 @@ constexpr int kMaxHangReports = 10;
 
 static ThreadHandle gWatchdogThread = nullptr;
 static AtomicBool gShouldStop = 0;
+static Mutex gStopMutex;
+static ConditionVariable gStopCond;
 static AtomicBool gPingPending = 0;
 static AtomicInt gHeartbeat = 0;
 static int gHangReportsLeft = kMaxHangReports;
@@ -347,6 +349,25 @@ static void ReportHang() {
          kMaxHangReports - gHangReportsLeft, kMaxHangReports);
 }
 
+static bool WaitForWatchdogStop() {
+    timespec deadline;
+    clock_gettime(CLOCK_REALTIME, &deadline);
+    deadline.tv_sec += kPingIntervalMs / 1000;
+    deadline.tv_nsec += (kPingIntervalMs % 1000) * 1000000L;
+    if (deadline.tv_nsec >= 1000000000L) {
+        deadline.tv_sec++;
+        deadline.tv_nsec -= 1000000000L;
+    }
+    AutoUnlockMutex lock(&gStopMutex);
+    int err = 0;
+    while (!AtomicBoolGet(&gShouldStop) && err == 0) {
+        gStopMutex.NoteUnlocked();
+        err = pthread_cond_timedwait(&gStopCond.cond, &gStopMutex.lock, &deadline);
+        gStopMutex.NoteLocked();
+    }
+    return AtomicBoolGet(&gShouldStop);
+}
+
 static void HangDetectorThreadFunc() {
     int lastHeartbeat = AtomicIntGet(&gHeartbeat);
     int blockedMs = 0;
@@ -356,8 +377,7 @@ static void HangDetectorThreadFunc() {
             AtomicBoolSet(&gPingPending, true);
             uitask::Post(MkFunc0Void(HangDetectorPingUi), "HangDetectorPing");
         }
-        SleepInMs(kPingIntervalMs);
-        if (AtomicBoolGet(&gShouldStop)) {
+        if (WaitForWatchdogStop()) {
             return;
         }
         int heartbeat = AtomicIntGet(&gHeartbeat);
@@ -394,7 +414,11 @@ void StartUiHangDetector() {
 }
 
 void StopUiHangDetector() {
-    AtomicBoolSet(&gShouldStop, true);
+    {
+        AutoUnlockMutex lock(&gStopMutex);
+        AtomicBoolSet(&gShouldStop, true);
+    }
+    gStopCond.Wake();
     if (gWatchdogThread) {
         JoinThread(&gWatchdogThread, -1);
     }

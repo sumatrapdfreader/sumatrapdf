@@ -43,27 +43,28 @@ async function waitForTabs(client: ControlClient, ok: (tabs: Tab[]) => boolean, 
   );
 }
 
-async function run(equalWidth: boolean): Promise<void> {
+export async function testit(): Promise<void> {
   const files = [SHORT, MEDIUM, LONG].map((n) => {
     const p = tmpPath(`issue-6476-${n}.pdf`);
     writeFileSync(p, makeTextPdf("x"));
     return p;
   });
   const appdata = writeAppdata(
-    `issue-6476-appdata-${equalWidth}`,
-    `TabsEqualWidth = ${equalWidth}\nTabWidth = ${TAB_WIDTH}\nCheckForUpdates = false\n`,
+    "issue-6476-appdata",
+    `TabsEqualWidth = true\nTabWidth = ${TAB_WIDTH}\nCheckForUpdates = false\n`,
   );
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, ...files]);
   try {
     const rc = getWindowRect(frame);
     moveWindow(frame, rc.left, rc.top, WIDE_DX, rc.bottom - rc.top);
-    if (equalWidth) {
-      await waitForTabs(
-        client,
-        (t) => byName(t, SHORT) === byName(t, LONG) && byName(t, MEDIUM) === byName(t, LONG),
-        "equal-width tabs differ",
-      );
-      return;
+    await waitForTabs(
+      client,
+      (t) => byName(t, SHORT) === byName(t, LONG) && byName(t, MEDIUM) === byName(t, LONG),
+      "equal-width tabs differ",
+    );
+    const setting = await client.request(ControlCommand.TestSetSetting, ["TabsEqualWidth", "false"]);
+    if (setting[0] !== 0) {
+      throw new Error(`issue-6476: could not turn off equal-width tabs: ${setting[1]}`);
     }
 
     // room for all: each as wide as its name, the long one capped
@@ -73,7 +74,6 @@ async function run(equalWidth: boolean): Promise<void> {
       "tabs aren't sized to their names",
     );
     const shortDx = byName(wide, SHORT);
-    const capDx = byName(wide, LONG);
 
     // shrink until the medium tab has to give up width too: the short one keeps
     // its width, the other two share the rest equally
@@ -111,11 +111,6 @@ async function stableTabs(client: ControlClient): Promise<Tab[]> {
     }
     prev = cur;
   }
-}
-
-export async function testit(): Promise<void> {
-  await run(true);
-  await run(false);
 }
 
 if (import.meta.main) {

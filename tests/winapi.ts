@@ -1179,13 +1179,12 @@ export function setWindowPos(
 ): boolean {
   // macOS: a tool window is moved by name. A frame's "place" takes its index.
   if (IS_MAC) {
-    const listed = macWindow(hwnd);
+    const windows = macWindows();
+    const listed = windows.find((m) => m.hwnd === hwnd);
     if (listed?.toolName) {
       return macPlaceToolWindow(listed.toolName, x, y, w, h);
     }
-    const idx = macWindows()
-      .filter((m) => !m.toolName)
-      .findIndex((m) => m.hwnd === hwnd);
+    const idx = windows.filter((m) => !m.toolName).findIndex((m) => m.hwnd === hwnd);
     const above = insertAfter === HWND_TOPMOST ? 1 : 0;
     return macControlRequest(TestUiState, ["place", x, y, w, h, idx, above])[0] === 0;
   }
@@ -1339,6 +1338,11 @@ const MODIFIER_RELEASE_TRIES = 10;
 // the keys we last warned about as impossible to release, so a session that
 // stays disconnected doesn't repeat the warning before every test
 let unreleasedWarned = "";
+let manageModifiers = true;
+
+export function disableModifierRelease(): void {
+  manageModifiers = false;
+}
 
 function heldModifierKeys(): [string, number][] {
   return MODIFIER_KEYS.filter(([, vk]) => isKeyDownAsync(vk));
@@ -1349,7 +1353,7 @@ function modifierNames(keys: [string, number][]): string {
 }
 
 export async function ensureModifierKeysUp(): Promise<void> {
-  if (!IS_WIN) {
+  if (!IS_WIN || !manageModifiers) {
     return;
   }
   let held = heldModifierKeys();
@@ -1708,8 +1712,7 @@ export function getWindowRect(hwnd: number): Rect {
   if (IS_MAC) {
     // TestWindows already has every frame and tool window. Aiming TestLayout
     // at a tool window's id finds no frame and reports an empty rect.
-    const id = hwnd > 0 ? hwnd : (macWindows().find((m) => !m.toolName)?.hwnd ?? 0);
-    const listed = macWindow(id);
+    const listed = macWindows().find((m) => (hwnd > 0 ? m.hwnd === hwnd : !m.toolName));
     if (listed) {
       return listed.rect;
     }

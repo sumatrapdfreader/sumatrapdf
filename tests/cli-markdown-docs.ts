@@ -222,15 +222,7 @@ function testEpub(): void {
   expect("<sup>", r.out.includes("chapter 3<sup>3</sup>,"), r);
 }
 
-// password_and_other_formats
-function testPasswordAndFormats(pdf: string): void {
-  const locked = tmpPath("cli-markdown-docs-locked.pdf");
-  const p = Bun.spawnSync([EXE, "clean", "-E", "aes-256", "-U", "sumatra", "-O", "owner", pdf, locked]);
-  expect("encrypting", p.exitCode === 0, p.stderr.toString());
-  expect("no password is 4", cli(["text", locked]).code === 4, "");
-  expect("a wrong password is 4", cli(["text", locked, "--password", "wrong"]).code === 4, "");
-  expect("the password", cli(["text", locked, "--password", "sumatra"]).code === 0, "");
-
+function testOtherFormats(): void {
   // a page that is a drawing: no text and no error
   const xps = tmpPath("cli-markdown-docs.xps");
   writeFileSync(xps, makeVectorXps());
@@ -257,7 +249,7 @@ export async function testit(): Promise<void> {
   testPlainText(pdf);
   testPictures();
   testEpub();
-  testPasswordAndFormats(pdf);
+  testOtherFormats();
   console.log(`${name}: OK`);
 }
 
