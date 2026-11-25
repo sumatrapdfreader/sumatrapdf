@@ -549,14 +549,29 @@ static void SyncInitialSessionData() {
 
 static void RememberSessionState() {
     Vec<SessionData*>* sessionState = gSettings->sessionData;
-    FreeSessionDataVec(sessionState);
-
     if (!SettingsRememberOpenedFiles()) {
+        FreeSessionDataVec(sessionState);
         return;
     }
 
-    // which virtual desktop each window is on, so restoring puts it back (#6271)
+    // which virtual desktop each window is on, so restoring puts it back (#6271).
+    // Asked first: the shell's COM calls can pump messages, and a window closed
+    // (deleted) or a nested SaveSettings() in there must not happen while we
+    // walk gWindows and the session state below.
+    Vec<HWND> desktopHwnds;
+    for (auto* win : gWindows) {
+        VecAppend(desktopHwnds, win->hwndFrame);
+    }
+    StrVec desktopIds;
     ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+    for (HWND hwnd : desktopHwnds) {
+        desktopIds.Append(GetWindowDesktopIdTemp(vdm, hwnd));
+    }
+    if (vdm) {
+        vdm->Release();
+    }
+
+    FreeSessionDataVec(sessionState);
     for (auto* win : gWindows) {
         if (win->isQuickLook) {
             continue;
@@ -598,7 +613,10 @@ static void RememberSessionState() {
             FreeSessionData(windowState);
             continue;
         }
-        str::ReplaceWithCopy(&windowState->virtualDesktopId, GetWindowDesktopIdTemp(vdm, win->hwndFrame));
+        int desktopIdx = VecFind(desktopHwnds, win->hwndFrame);
+        if (desktopIdx >= 0) {
+            str::ReplaceWithCopy(&windowState->virtualDesktopId, desktopIds.At(desktopIdx));
+        }
         // 1-based index among document tabs only (home / about tab is omitted
         // from TabStates above). Using the UI tab index would mis-restore when
         // the home tab was closed at save time but recreated on the next start.
@@ -620,9 +638,6 @@ static void RememberSessionState() {
         windowState->windowPos = gSettings->windowPos;
         windowState->sidebarDx = gSettings->sidebarDx;
         VecAppend(*sessionState, windowState);
-    }
-    if (vdm) {
-        vdm->Release();
     }
 }
 #endif
