@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Archive.h"
+#include "base/Dict.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/HtmlTags.h"
@@ -348,7 +349,13 @@ bool EpubDoc::Load() {
 
     contentPath = Str(contentPath.s, str::LastIndexOfChar(contentPath, '/') + 1);
 
-    StrVec idList, pathList, navIds;
+    struct ManifestPage {
+        TempStr path;
+        int firstIdx;
+        bool inSpineOrNav;
+    };
+    Vec<ManifestPage> pages;
+    dict::StrToInt pageById;
 
     const GumboVector* manifestChildren = GumboChildrenOf(node);
     for (unsigned int i = 0; manifestChildren && i < manifestChildren->length; i++) {
@@ -381,18 +388,23 @@ bool EpubDoc::Load() {
         TempStr htmlId = GumboAttributeValueTemp(node, "id");
         // EPUB 3 ToC
         TempStr properties = GumboAttributeValueTemp(node, "properties");
-        if (properties && str::Contains(properties, StrL("nav")) && str::Eq(mediaType, StrL("application/xhtml+xml"))) {
+        bool isNav = str::Contains(properties, StrL("nav"));
+        if (isNav && str::Eq(mediaType, StrL("application/xhtml+xml"))) {
             str::ReplaceWithCopy(&tocPath, fullPath);
         }
         if (encList.Contains(fullPath)) {
             continue;
         }
         if (path && htmlId) {
-            idList.Append(htmlId);
-            pathList.Append(path);
-            if (properties && str::Contains(properties, StrL("nav"))) {
-                navIds.Append(htmlId);
+            // Keep the first path for duplicate IDs, as the linear lookup did.
+            int firstIdx = -1;
+            if (pageById.Insert(htmlId, len(pages), &firstIdx)) {
+                firstIdx = len(pages);
             }
+            if (firstIdx < 0 || !VecAppend(pages, {path, firstIdx, false})) {
+                return false;
+            }
+            pages[firstIdx].inSpineOrNav |= isNav;
         }
     }
 
@@ -403,11 +415,10 @@ bool EpubDoc::Load() {
 
     // EPUB 2 ToC
     TempStr tocId = GumboAttributeValueTemp(node, "toc");
-    int tocIdx = (tocId && len(tocPath) == 0) ? idList.Find(tocId) : -1;
-    if (tocIdx >= 0) {
-        Str s = pathList[tocIdx];
+    int tocIdx;
+    if (len(tocPath) == 0 && pageById.Get(tocId, &tocIdx)) {
         str::Free(tocPath);
-        tocPath = str::Join(contentPath, s);
+        tocPath = str::Join(contentPath, pages[tocIdx].path);
         isNcxToc = true;
     }
     EpubReadingDirection readingDir = EpubSpineDirection(node);
@@ -416,10 +427,27 @@ bool EpubDoc::Load() {
         isRtlDoc = readingDir.rtl;
     }
 
+    auto appendPage = [&](Str path) {
+        TempStr fullPath = str::JoinTemp(contentPath, path);
+        auto* htmlFi = archive->GetFileDataByName(fullPath);
+        if (!htmlFi || !htmlFi->data) {
+            return;
+        }
+        Str html(htmlFi->data, htmlFi->fileSizeUncompressed);
+        TempStr decoded = DecodeTextToUtf8Temp(html, true);
+        if (len(decoded) == 0) {
+            return;
+        }
+        // Keep a page break and file anchor for each section's internal links.
+        ReportIf(str::ContainsChar(fullPath, '"'));
+        str::TransCharsInPlace(fullPath, StrL("\""), StrL("'"));
+        htmlData.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", fullPath));
+        htmlData.Append(decoded);
+    };
+
     // page order: the linear spine items, then linear="no" ones (footnotes,
     // endnotes) where links still reach them, then XHTML only the manifest
     // names (an aside a link points at); the nav document is not a page (#5803)
-    StrVec spineIds, pageIds;
     const GumboVector* spineChildren = GumboChildrenOf(node);
     for (int pass = 0; pass < 2; pass++) {
         for (unsigned int i = 0; spineChildren && i < spineChildren->length; i++) {
@@ -436,38 +464,18 @@ bool EpubDoc::Load() {
             if (isLinear != (pass == 0)) {
                 continue;
             }
-            spineIds.Append(idref);
-            pageIds.Append(idref);
+            int idx;
+            if (pageById.Get(idref, &idx)) {
+                pages[idx].inSpineOrNav = true;
+                appendPage(pages[idx].path);
+            }
         }
     }
-    for (int i = 0; i < len(idList); i++) {
-        if (!spineIds.Contains(idList[i]) && !navIds.Contains(idList[i])) {
-            pageIds.Append(idList[i]);
+    for (const ManifestPage& page : pages) {
+        const ManifestPage& first = pages[page.firstIdx];
+        if (!first.inSpineOrNav) {
+            appendPage(first.path);
         }
-    }
-
-    for (Str id : pageIds) {
-        int idx = idList.Find(id);
-        if (idx < 0) {
-            continue;
-        }
-        Str fname = pathList[idx];
-        TempStr fullPath = str::JoinTemp(contentPath, fname);
-        auto* htmlFi = archive->GetFileDataByName(fullPath);
-        if (!htmlFi || !htmlFi->data) {
-            continue;
-        }
-        Str html(htmlFi->data, htmlFi->fileSizeUncompressed);
-        TempStr decoded = DecodeTextToUtf8Temp(html, true);
-        if (len(decoded) == 0) {
-            continue;
-        }
-        // insert explicit page-breaks between sections including
-        // an anchor with the file name at the top (for internal links)
-        ReportIf(str::ContainsChar(fullPath, '"'));
-        str::TransCharsInPlace(fullPath, StrL("\""), StrL("'"));
-        htmlData.Append(fmt("<pagebreak page_path=\"%s\" page_marker />", fullPath));
-        htmlData.Append(decoded);
     }
 
     return len(htmlData) > 0;
