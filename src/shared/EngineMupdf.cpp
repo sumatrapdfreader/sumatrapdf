@@ -7715,8 +7715,9 @@ void EngineMupdf::RunCadDetection() {
     cadHairlineVector = res.hairlineVector;
     cadDetectDone = true;
     if (cadDetectEnable) {
-        logf("CAD enhance detect: score=%d reason=%s raster=%d hairline=%d\n", cadDetectScore,
-             Str(CadEnhanceReasonName(res.reason)), (int)cadRasterDominant, (int)cadHairlineVector);
+        logf("CAD enhance detect: score=%d reason=%s raster=%d hairline=%d showLineWeights=%d\n", cadDetectScore,
+             Str(CadEnhanceReasonName(res.reason)), (int)cadRasterDominant, (int)cadHairlineVector,
+             (int)GetShowLineWeights());
     } else if (cadDetectScore >= 30) {
         logf("CAD enhance not enabled: score=%d hairline=%d (auto threshold 60, or metadata+45)\n", cadDetectScore,
              (int)cadHairlineVector);

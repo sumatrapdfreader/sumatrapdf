@@ -2855,6 +2855,14 @@ static void UpdateWindowFrameBorderColor(MainWindow* win) {
 
 static void OnDpiChanged(MainWindow* win, RECT* suggested, int explicitDpi = 0, bool force = false);
 
+// why a CreateWindowEx failed: handle exhaustion is the usual cause
+static void LogCreateWindowFailed(Str what) {
+    DWORD err = GetLastError();
+    HANDLE proc = GetCurrentProcess();
+    logf("%s: CreateWindowExW failed, lastError: %d, USER objects: %d, GDI objects: %d\n", what, (int)err,
+         (int)GetGuiResources(proc, GR_USEROBJECTS), (int)GetGuiResources(proc, GR_GDIOBJECTS));
+}
+
 static MainWindow* CreateMainWindow() {
     // -window-pos wins over both the remembered position and the default, and
     // skips the per-window shift below: a test asked for an exact rectangle
@@ -2890,6 +2898,7 @@ static MainWindow* CreateMainWindow() {
     HWND hwndFrame =
         CreateWindowExW(WS_EX_APPWINDOW, clsName.s, title.s, style, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     if (!hwndFrame) {
+        LogCreateWindowFailed(StrL("CreateMainWindow frame"));
         return nullptr;
     }
     // WM_NCCALCSIZE returning 0 disables DWM rounded corners; re-enable them.
@@ -2918,6 +2927,7 @@ static MainWindow* CreateMainWindow() {
     win->hwndCanvas =
         CreateWindowExW(0, clsName.s, nullptr, style, 0, 0, rcFrame.dx, rcFrame.dy, hwndFrame, nullptr, h, nullptr);
     if (!win->hwndCanvas) {
+        LogCreateWindowFailed(StrL("CreateMainWindow canvas"));
         delete win;
         return nullptr;
     }

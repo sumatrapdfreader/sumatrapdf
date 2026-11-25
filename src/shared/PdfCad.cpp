@@ -660,6 +660,9 @@ fz_device* PdfCadEnhanceWrapDevice(fz_context* ctx, fz_device* inner) {
 static bool gShowLineWeights = true;
 
 void SetShowLineWeights(bool show) {
+    if (show != gShowLineWeights) {
+        logf("SetShowLineWeights: %d\n", (int)show);
+    }
     gShowLineWeights = show;
 }
 
