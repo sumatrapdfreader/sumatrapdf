@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["text-snippets", textSnippets],
   ["close-tab-during-placement", closeTabDuringPlacement],
   ["app-unit-tests", appUnitTests],
   parallelTest("jbig2-resize-overflow"),
@@ -785,7 +786,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6248", issue6248],
   ["issue-6256", issue6256],
   ["annot-nudge", annotNudge],
-  ["text-snippets", textSnippets],
   ["sign-with-image", signWithImage],
   ["always-show-sidebar", alwaysShowSidebar],
   ["issue-6133", issue6133],

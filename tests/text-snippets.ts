@@ -8,16 +8,9 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { postMessage, sendText, sleep, WM_KEYDOWN } from "./winapi.ts";
-import {
-  killAndWait,
-  launchControlled,
-  paletteSetText,
-  sendCommand,
-  waitForPalette,
-  paletteState,
-} from "./win-automation.ts";
+import { killAndWait, launchControlled, paletteSetText, waitForPalette, paletteState } from "./win-automation.ts";
 
 const VK_RETURN = 0x0d;
 const VK_ESCAPE = 0x1b;
@@ -53,32 +46,29 @@ async function paletteItems(client: ControlClient, queryLen: number): Promise<nu
 
 // types query into a new palette; Enter runs the only match, else Esc closes it
 async function runFromPalette(client: ControlClient, frame: number, query: string): Promise<number> {
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  if (IS_MAC) {
-    const deadline = Date.now() + 5000;
-    for (;;) {
-      if ((await paletteState(client)).open) {
-        break;
-      }
-      if (Date.now() > deadline) {
-        throw new Error("text-snippets: palette did not open");
-      }
-      await sleep(50);
-    }
-    sendText(0, query);
-    const n = await paletteItems(client, query.length);
-    postMessage(frame, WM_KEYDOWN, n === 1 ? VK_RETURN : VK_ESCAPE, 0);
-    await sleep(300);
-    return n;
+  const [code, detail] = await client.request(ControlCommand.TestInvokeCommand, ["CmdCommandPalette"]);
+  if (code !== 0) {
+    throw new Error(`text-snippets: opening the palette for ${query} failed: ${detail}`);
   }
-  const handles = await waitForPalette(client, frame);
+  const handles = await waitForPalette(client, frame, 8000 * SLOW_BUILD_FACTOR);
   if (!handles.edit) {
-    throw new Error("text-snippets: palette did not open");
+    throw new Error(`text-snippets: palette did not open for ${query}`);
   }
-  await paletteSetText(client, handles, query);
+  if (IS_MAC) {
+    sendText(0, query);
+  } else {
+    await paletteSetText(client, handles, query);
+  }
   const n = await paletteItems(client, query.length);
-  postMessage(handles.edit, WM_KEYDOWN, n === 1 ? VK_RETURN : VK_ESCAPE, 0);
-  await sleep(300);
+  postMessage(IS_MAC ? frame : handles.edit, WM_KEYDOWN, n === 1 ? VK_RETURN : VK_ESCAPE, 0);
+  await pollUntil(
+    () => paletteState(client),
+    (state) => !state.open,
+    {
+      timeoutMs: 5000 * SLOW_BUILD_FACTOR,
+      error: (state) => `text-snippets: palette did not close after ${query}: ${state.raw}`,
+    },
+  );
   return n;
 }
 
