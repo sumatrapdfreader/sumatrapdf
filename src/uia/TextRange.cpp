@@ -491,18 +491,74 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(__unused T
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(__unused BSTR text, __unused BOOL backward,
-                                                                 __unused BOOL ignoreCase, ITextRangeProvider** found) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(BSTR text, BOOL backward, BOOL ignoreCase,
+                                                                 ITextRangeProvider** found) {
     if (found == nullptr) {
         return E_POINTER;
     }
+    *found = nullptr;
     HRESULT hrDoc = EnsureDocumentLoaded(document);
     if (FAILED(hrDoc)) {
         return hrDoc;
     }
+    if (!text || !*text || IsNullRange() || IsEmptyRange()) {
+        return S_OK;
+    }
 
-    // TODO: Support text searching
-    return E_NOTIMPL;
+    TempStr needle = ToUtf8Temp(WStr(text));
+    if (len(needle) == 0) {
+        return S_OK;
+    }
+
+    auto* engine = document->GetDM()->GetEngine();
+    int firstPage = backward ? endPage : startPage;
+    int lastPage = backward ? startPage : endPage;
+    int step = backward ? -1 : 1;
+
+    for (int pageNo = firstPage; backward ? (pageNo >= lastPage) : (pageNo <= lastPage); pageNo += step) {
+        int textLen = 0;
+        Str pageText = engine->GetTextForPage(pageNo, &textLen);
+        if (len(pageText) == 0 || textLen == 0) {
+            continue;
+        }
+        int fromGlyph = (pageNo == startPage) ? startGlyph : 0;
+        int toGlyph = (pageNo == endPage) ? endGlyph : textLen;
+        if (fromGlyph >= toGlyph) {
+            continue;
+        }
+        int fromByte = Utf8CodepointToByteIndex(pageText, fromGlyph);
+        int toByte = Utf8CodepointToByteIndex(pageText, toGlyph);
+        Str hay(pageText.s + fromByte, toByte - fromByte);
+
+        int matchOff = -1;
+        if (!backward) {
+            matchOff = ignoreCase ? str::IndexOfI(hay, needle) : str::IndexOf(hay, needle);
+        } else {
+            int pos = 0;
+            while (pos <= len(hay) - len(needle)) {
+                Str rest(hay.s + pos, len(hay) - pos);
+                int rel = ignoreCase ? str::IndexOfI(rest, needle) : str::IndexOf(rest, needle);
+                if (rel < 0) {
+                    break;
+                }
+                matchOff = pos + rel;
+                pos = matchOff + 1;
+            }
+        }
+        if (matchOff < 0) {
+            continue;
+        }
+        int matchStartGlyph = fromGlyph + Utf8CodepointCount(Str(hay.s, matchOff));
+        int matchEndGlyph = matchStartGlyph + Utf8CodepointCount(needle);
+        auto* res = new SumatraUIAutomationTextRange(document);
+        res->startPage = pageNo;
+        res->startGlyph = matchStartGlyph;
+        res->endPage = pageNo;
+        res->endGlyph = matchEndGlyph;
+        *found = res;
+        return S_OK;
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(__unused TEXTATTRIBUTEID attr,
@@ -985,15 +1041,30 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::RemoveFromSelection() {
     return E_FAIL;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL /*alignToTop*/) {
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL alignToTop) {
     HRESULT hrDoc = EnsureDocumentLoaded(document);
     if (FAILED(hrDoc)) {
         return hrDoc;
     }
+    if (IsNullRange()) {
+        return S_OK;
+    }
 
-    // TODO: scroll the range start (alignToTop) or end into view
-    // document->GetDM()->ScrollYTo()
-    return E_NOTIMPL;
+    DisplayModel* dm = document->GetDM();
+    if (!IsEmptyRange()) {
+        TextSelection selection(dm->GetEngine());
+        selection.StartAt(startPage, startGlyph);
+        selection.SelectUpTo(endPage, endGlyph);
+        if (len(selection.result) > 0) {
+            dm->ShowResultRectToScreen(&selection.result);
+            return S_OK;
+        }
+    }
+    int pageNo = alignToTop ? startPage : endPage;
+    if (dm->ValidPageNo(pageNo)) {
+        dm->GoToPage(pageNo, false);
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetChildren(SAFEARRAY** children) {
@@ -1016,29 +1087,24 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetChildren(SAFEARRAY** 
         return S_OK;
     }
 
-    SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)(endPage - startPage + 1));
+    int count = endPage - startPage + 1;
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)count);
     if (!psa) {
         return E_OUTOFMEMORY;
     }
 
-    SumatraUIAutomationPageProvider* it = document->GetFirstPage();
-    while (it) {
-        int pageNum = it->GetPageNum();
-        if (pageNum > endPage) {
-            break;
+    for (int i = 0; i < count; i++) {
+        SumatraUIAutomationPageProvider* page = document->GetPage(startPage + i);
+        if (!page) {
+            continue;
         }
-        if (pageNum >= startPage) {
-            LONG index = pageNum - startPage;
-
-            // SafeArrayPutElement() AddRefs a VT_UNKNOWN element itself
-            HRESULT hr = SafeArrayPutElement(psa, &index, it);
-            if (FAILED(hr)) {
-                SafeArrayDestroy(psa);
-                return hr;
-            }
+        LONG index = i;
+        // SafeArrayPutElement() AddRefs a VT_UNKNOWN element itself
+        HRESULT hr = SafeArrayPutElement(psa, &index, page);
+        if (FAILED(hr)) {
+            SafeArrayDestroy(psa);
+            return hr;
         }
-
-        it = it->GetNextPage();
     }
 
     *children = psa;

@@ -12,14 +12,11 @@ class SumatraUIAutomationPageProvider : public IRawElementProviderFragment,
     DisplayModel* dm;
     SumatraUIAutomationDocumentProvider* root;
 
-    SumatraUIAutomationPageProvider* sibling_prev;
-    SumatraUIAutomationPageProvider* sibling_next;
-
     // is dm released, and our root has released us.
     // Only UIA keeps us alive but we can't access anything
     bool released;
 
-    friend class SumatraUIAutomationDocumentProvider; // for setting up next/prev sibling
+    friend class SumatraUIAutomationDocumentProvider;
 
   public:
     SumatraUIAutomationPageProvider(int pageNum, HWND canvasHwnd, DisplayModel* dm,
@@ -29,29 +26,29 @@ class SumatraUIAutomationPageProvider : public IRawElementProviderFragment,
     ~SumatraUIAutomationPageProvider();
 
     int GetPageNum() const;
-    SumatraUIAutomationPageProvider* GetNextPage();
 
     // IUnknown
-    HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
-    ULONG STDMETHODCALLTYPE AddRef();
-    ULONG STDMETHODCALLTYPE Release();
+    HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**) override;
+    ULONG STDMETHODCALLTYPE AddRef() override;
+    ULONG STDMETHODCALLTYPE Release() override;
 
     // IRawElementProviderFragment
-    HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction, IRawElementProviderFragment** pRetVal);
-    HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY** pRetVal);
-    HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal);
-    HRESULT STDMETHODCALLTYPE SetFocus();
-    HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect* pRetVal);
-    HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal);
+    HRESULT STDMETHODCALLTYPE Navigate(enum NavigateDirection direction,
+                                       IRawElementProviderFragment** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE GetRuntimeId(SAFEARRAY** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE SetFocus() override;
+    HRESULT STDMETHODCALLTYPE get_BoundingRectangle(struct UiaRect* pRetVal) override;
+    HRESULT STDMETHODCALLTYPE get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal) override;
 
     // IRawElementProviderSimple
-    HRESULT STDMETHODCALLTYPE GetPatternProvider(PATTERNID patternId, IUnknown** pRetVal);
-    HRESULT STDMETHODCALLTYPE GetPropertyValue(PROPERTYID propertyId, VARIANT* pRetVal);
-    HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple** pRetVal);
-    HRESULT STDMETHODCALLTYPE get_ProviderOptions(ProviderOptions* pRetVal);
+    HRESULT STDMETHODCALLTYPE GetPatternProvider(PATTERNID patternId, IUnknown** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE GetPropertyValue(PROPERTYID propertyId, VARIANT* pRetVal) override;
+    HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple** pRetVal) override;
+    HRESULT STDMETHODCALLTYPE get_ProviderOptions(ProviderOptions* pRetVal) override;
 
     // IValueProvider
-    HRESULT STDMETHODCALLTYPE SetValue(LPCWSTR val);
-    HRESULT STDMETHODCALLTYPE get_Value(BSTR* pRetVal);
-    HRESULT STDMETHODCALLTYPE get_IsReadOnly(BOOL* pRetVal);
+    HRESULT STDMETHODCALLTYPE SetValue(LPCWSTR val) override;
+    HRESULT STDMETHODCALLTYPE get_Value(BSTR* pRetVal) override;
+    HRESULT STDMETHODCALLTYPE get_IsReadOnly(BOOL* pRetVal) override;
 };

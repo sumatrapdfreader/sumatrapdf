@@ -3,8 +3,6 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
-#include <uiautomationcore.h>
-#include <uiautomationcoreapi.h>
 
 #include "gui/UIModels.h"
 
@@ -14,7 +12,6 @@
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "base/File.h"
-#include "uia/Constants.h"
 #include "uia/Common.h"
 #include "uia/PageProvider.h"
 #include "uia/Provider.h"
@@ -23,13 +20,7 @@
 
 SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND canvasHwnd,
                                                                          SumatraUIAutomationProvider* root)
-    : refCount(1),
-      canvasHwnd(canvasHwnd),
-      root(root),
-      released(true),
-      child_first(nullptr),
-      child_last(nullptr),
-      dm(nullptr) {
+    : refCount(1), canvasHwnd(canvasHwnd), root(root), released(true), dm(nullptr) {
     // root->AddRef(); Don't add refs to our parent & owner.
 }
 
@@ -41,22 +32,11 @@ void SumatraUIAutomationDocumentProvider::LoadDocument(DisplayModel* newDm) {
     this->FreeDocument();
 
     // no mutexes needed, this function is called from thread that created dm
-
-    // create page element for each page
-    SumatraUIAutomationPageProvider* prevPage = nullptr;
-    for (int i = 1; i <= newDm->PageCount(); ++i) {
-        SumatraUIAutomationPageProvider* currentPage = new SumatraUIAutomationPageProvider(i, canvasHwnd, newDm, this);
-        currentPage->sibling_prev = prevPage;
-        if (prevPage) {
-            prevPage->sibling_next = currentPage;
-        }
-        prevPage = currentPage;
-
-        if (i == 1) {
-            child_first = currentPage;
-        }
+    int nPages = std::max(0, newDm->PageCount());
+    VecReserve(pages, nPages);
+    for (int i = 0; i < nPages; i++) {
+        VecAppend(pages, (SumatraUIAutomationPageProvider*)nullptr);
     }
-    child_last = prevPage;
 
     dm = newDm;
     released = false;
@@ -73,23 +53,16 @@ void SumatraUIAutomationDocumentProvider::FreeDocument() {
     // clients may keep this provider after the root (which doesn't ref-count us) is gone
     root = nullptr;
 
-    SumatraUIAutomationPageProvider* it = child_first;
-    while (it) {
-        SumatraUIAutomationPageProvider* current = it;
-        it = it->sibling_next;
-
-        current->released = true; // disallow DisplayModel access
-        current->dm = nullptr;
-        current->root = nullptr;
-        current->sibling_prev = nullptr;
-        current->sibling_next = nullptr;
-        current->Release();
+    for (SumatraUIAutomationPageProvider* page : pages) {
+        if (!page) {
+            continue;
+        }
+        page->released = true; // disallow DisplayModel access
+        page->dm = nullptr;
+        page->root = nullptr;
+        page->Release();
     }
-
-    // we have released our refs from these objects
-    // we are not allowed to access them anymore
-    child_first = nullptr;
-    child_last = nullptr;
+    VecReset(pages);
 }
 
 bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const {
@@ -107,16 +80,22 @@ HWND SumatraUIAutomationDocumentProvider::GetCanvasHwnd() const {
     return canvasHwnd;
 }
 
-SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage() {
-    ReportIf(!IsDocumentLoaded());
-    return child_first;
+SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetPage(int pageNum) {
+    if (released || pageNum < 1 || pageNum > len(pages)) {
+        return nullptr;
+    }
+    SumatraUIAutomationPageProvider* page = pages[pageNum - 1];
+    if (!page) {
+        page = new SumatraUIAutomationPageProvider(pageNum, canvasHwnd, dm, this);
+        pages[pageNum - 1] = page;
+    }
+    return page;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(REFIID riid, void** ppv) {
     static const QITAB qit[] = {QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderSimple),
                                 QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderFragment),
                                 QITABENT(SumatraUIAutomationDocumentProvider, ITextProvider),
-                                QITABENT(SumatraUIAutomationDocumentProvider, IAccIdentity),
                                 {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
@@ -140,24 +119,18 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum Nav
         return S_OK;
     } else if (direction == NavigateDirection_FirstChild || direction == NavigateDirection_LastChild) {
         // don't allow traversion to enter invalid nodes
-        if (released) {
-            *pRetVal = nullptr;
+        if (released || len(pages) == 0) {
             return S_OK;
         }
 
-        if (direction == NavigateDirection_FirstChild) {
-            *pRetVal = child_first;
-        } else {
-            *pRetVal = child_last;
-        }
-        // a document with no pages has no children
+        int pageNum = (direction == NavigateDirection_FirstChild) ? 1 : len(pages);
+        *pRetVal = GetPage(pageNum);
         if (*pRetVal) {
             (*pRetVal)->AddRef();
         }
         return S_OK;
     } else if (direction == NavigateDirection_Parent) {
         if (!root) {
-            *pRetVal = nullptr;
             return UIA_E_ELEMENTNOTAVAILABLE;
         }
         *pRetVal = root;
@@ -292,10 +265,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
 
     // return all pages' ranges that are even partially visible
     Vec<SumatraUIAutomationTextRange*> rangeArray;
-    for (SumatraUIAutomationPageProvider* it = child_first; it; it = it->sibling_next) {
-        PageInfo* pi = it->dm->GetPageInfo(it->pageNum);
+    int nPages = dm->PageCount();
+    for (int pageNo = 1; pageNo <= nPages; pageNo++) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
         if (pi && pi->isShown && pi->visibleRatio > 0.0f) {
-            VecAppend(rangeArray, new SumatraUIAutomationTextRange(this, it->pageNum));
+            VecAppend(rangeArray, new SumatraUIAutomationTextRange(this, pageNo));
         }
     }
 
@@ -334,11 +308,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
 
     // a client can pass any element (e.g. the Document itself), so only
     // accept one of our live pages
-    for (SumatraUIAutomationPageProvider* it = child_first; it; it = it->sibling_next) {
-        if (static_cast<IRawElementProviderSimple*>(it) != childElement) {
+    for (SumatraUIAutomationPageProvider* page : pages) {
+        if (!page || static_cast<IRawElementProviderSimple*>(page) != childElement) {
             continue;
         }
-        *pRetVal = new SumatraUIAutomationTextRange(this, it->pageNum);
+        *pRetVal = new SumatraUIAutomationTextRange(this, page->pageNum);
         return S_OK;
     }
     return E_INVALIDARG;
@@ -396,33 +370,4 @@ SumatraUIAutomationDocumentProvider::get_SupportedTextSelection(enum SupportedTe
     }
     *pRetVal = SupportedTextSelection_Single;
     return S_OK;
-}
-
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString(DWORD dwIDChild, BYTE** ppIDString,
-                                                                                 DWORD* pdwIDStringLen) {
-    if (ppIDString == nullptr || pdwIDStringLen == nullptr) {
-        return E_POINTER;
-    }
-    *ppIDString = nullptr;
-    *pdwIDStringLen = 0;
-    if (released) {
-        return UIA_E_ELEMENTNOTAVAILABLE;
-    }
-
-    for (SumatraUIAutomationPageProvider* it = child_first; it; it = it->sibling_next) {
-        if (it->pageNum == (int)dwIDChild + 1) {
-            // Use memory address as identification. Use 8 bytes just in case
-            *ppIDString = (BYTE*)CoTaskMemAlloc(8);
-            if (!(*ppIDString)) {
-                return E_OUTOFMEMORY;
-            }
-
-            memset(*ppIDString, 0, 8);
-            memcpy(*ppIDString, (const void*)&it, sizeof(void*)); // copy the pointer to the allocated array
-            *pdwIDStringLen = 8;
-            return S_OK;
-        }
-    }
-
-    return E_FAIL;
 }

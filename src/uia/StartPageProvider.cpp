@@ -3,9 +3,6 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
-#include <uiautomationcore.h>
-#include <uiautomationcoreapi.h>
-#include "uia/Constants.h"
 #include "uia/Common.h"
 #include "uia/Provider.h"
 #include "uia/StartPageProvider.h"

@@ -45,30 +45,30 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider {
     int FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial = false);
     int FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial = false);
 
-    HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);
-    ULONG STDMETHODCALLTYPE AddRef();
-    ULONG STDMETHODCALLTYPE Release();
+    HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**) override;
+    ULONG STDMETHODCALLTYPE AddRef() override;
+    ULONG STDMETHODCALLTYPE Release() override;
 
-    HRESULT STDMETHODCALLTYPE Clone(ITextRangeProvider** clonedRange);
-    HRESULT STDMETHODCALLTYPE Compare(ITextRangeProvider* range, BOOL* areSame);
+    HRESULT STDMETHODCALLTYPE Clone(ITextRangeProvider** clonedRange) override;
+    HRESULT STDMETHODCALLTYPE Compare(ITextRangeProvider* range, BOOL* areSame) override;
     HRESULT STDMETHODCALLTYPE CompareEndpoints(enum TextPatternRangeEndpoint srcEndPoint, ITextRangeProvider* range,
-                                               enum TextPatternRangeEndpoint targetEndPoint, int* compValue);
-    HRESULT STDMETHODCALLTYPE ExpandToEnclosingUnit(enum TextUnit textUnit);
+                                               enum TextPatternRangeEndpoint targetEndPoint, int* compValue) override;
+    HRESULT STDMETHODCALLTYPE ExpandToEnclosingUnit(enum TextUnit textUnit) override;
     HRESULT STDMETHODCALLTYPE FindAttribute(TEXTATTRIBUTEID attr, VARIANT val, BOOL backward,
-                                            ITextRangeProvider** found);
-    HRESULT STDMETHODCALLTYPE FindText(BSTR text, BOOL backward, BOOL ignoreCase, ITextRangeProvider** found);
-    HRESULT STDMETHODCALLTYPE GetAttributeValue(TEXTATTRIBUTEID attr, VARIANT* value);
-    HRESULT STDMETHODCALLTYPE GetBoundingRectangles(SAFEARRAY** boundingRects);
-    HRESULT STDMETHODCALLTYPE GetEnclosingElement(IRawElementProviderSimple** enclosingElement);
-    HRESULT STDMETHODCALLTYPE GetText(int maxLength, BSTR* text);
-    HRESULT STDMETHODCALLTYPE Move(enum TextUnit unit, int count, int* moved);
+                                            ITextRangeProvider** found) override;
+    HRESULT STDMETHODCALLTYPE FindText(BSTR text, BOOL backward, BOOL ignoreCase, ITextRangeProvider** found) override;
+    HRESULT STDMETHODCALLTYPE GetAttributeValue(TEXTATTRIBUTEID attr, VARIANT* value) override;
+    HRESULT STDMETHODCALLTYPE GetBoundingRectangles(SAFEARRAY** boundingRects) override;
+    HRESULT STDMETHODCALLTYPE GetEnclosingElement(IRawElementProviderSimple** enclosingElement) override;
+    HRESULT STDMETHODCALLTYPE GetText(int maxLength, BSTR* text) override;
+    HRESULT STDMETHODCALLTYPE Move(enum TextUnit unit, int count, int* moved) override;
     HRESULT STDMETHODCALLTYPE MoveEndpointByUnit(TextPatternRangeEndpoint endpoint, TextUnit unit, int count,
-                                                 int* moved);
+                                                 int* moved) override;
     HRESULT STDMETHODCALLTYPE MoveEndpointByRange(TextPatternRangeEndpoint srcEndPoint, ITextRangeProvider* range,
-                                                  TextPatternRangeEndpoint targetEndPoint);
-    HRESULT STDMETHODCALLTYPE Select();
-    HRESULT STDMETHODCALLTYPE AddToSelection();
-    HRESULT STDMETHODCALLTYPE RemoveFromSelection();
-    HRESULT STDMETHODCALLTYPE ScrollIntoView(BOOL alignToTop);
-    HRESULT STDMETHODCALLTYPE GetChildren(SAFEARRAY** children);
+                                                  TextPatternRangeEndpoint targetEndPoint) override;
+    HRESULT STDMETHODCALLTYPE Select() override;
+    HRESULT STDMETHODCALLTYPE AddToSelection() override;
+    HRESULT STDMETHODCALLTYPE RemoveFromSelection() override;
+    HRESULT STDMETHODCALLTYPE ScrollIntoView(BOOL alignToTop) override;
+    HRESULT STDMETHODCALLTYPE GetChildren(SAFEARRAY** children) override;
 };

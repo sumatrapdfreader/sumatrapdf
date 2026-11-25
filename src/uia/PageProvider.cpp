@@ -4,15 +4,12 @@
 #include "base/Base.h"
 #include "base/Win.h"
 
-#include <uiautomationcore.h>
-
 #include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
-#include "uia/Constants.h"
 #include "uia/Common.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Provider.h"
@@ -20,14 +17,7 @@
 
 SumatraUIAutomationPageProvider::SumatraUIAutomationPageProvider(int pageNum, HWND canvasHwnd, DisplayModel* dm,
                                                                  SumatraUIAutomationDocumentProvider* root)
-    : refCount(1),
-      pageNum(pageNum),
-      canvasHwnd(canvasHwnd),
-      dm(dm),
-      root(root),
-      sibling_prev(nullptr),
-      sibling_next(nullptr),
-      released(false) {
+    : refCount(1), pageNum(pageNum), canvasHwnd(canvasHwnd), dm(dm), root(root), released(false) {
     // root->AddRef(); Don't add refs to our parent & owner.
 }
 
@@ -35,10 +25,6 @@ SumatraUIAutomationPageProvider::~SumatraUIAutomationPageProvider() = default;
 
 int SumatraUIAutomationPageProvider::GetPageNum() const {
     return pageNum;
-}
-
-SumatraUIAutomationPageProvider* SumatraUIAutomationPageProvider::GetNextPage() {
-    return sibling_next;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(REFIID riid, void** ppv) {
@@ -70,9 +56,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Navigate(enum Navigat
 
     *pRetVal = nullptr;
     if (direction == NavigateDirection_PreviousSibling) {
-        *pRetVal = sibling_prev;
+        *pRetVal = root->GetPage(pageNum - 1);
     } else if (direction == NavigateDirection_NextSibling) {
-        *pRetVal = sibling_next;
+        *pRetVal = root->GetPage(pageNum + 1);
     } else if (direction == NavigateDirection_FirstChild || direction == NavigateDirection_LastChild) {
         // do nothing
     } else if (direction == NavigateDirection_Parent) {

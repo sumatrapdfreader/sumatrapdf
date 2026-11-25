@@ -4,7 +4,6 @@
 #include "base/Base.h"
 #include "base/WinDynCalls.h"
 #include "base/Win.h"
-#include "uia/Constants.h"
 #include "uia/Common.h"
 #include "uia/DocumentProvider.h"
 #include "uia/StartPageProvider.h"

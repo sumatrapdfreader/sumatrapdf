@@ -2,6 +2,7 @@
 
 #include <uiautomationcore.h>
 #include <uiautomationcoreapi.h>
+#include <uiautomationclient.h>
 
 // out-param for "nothing to return": GetRuntimeId of a top-level element,
 // GetEmbeddedFragmentRoots (no other roots), get_HostRawElementProvider
