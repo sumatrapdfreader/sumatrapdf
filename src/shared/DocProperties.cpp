@@ -140,3 +140,115 @@ TempStr PropNameTemp(DocProp prop) {
     }
     return SeqStrByIndex(gPropNames, idx);
 }
+
+// PDF date format (ISO 32000-1 7.9.4): "D:YYYYMMDDHHmmSSOHH'mm'",
+// where "D:" and fields after YYYY are optional.
+bool ParsePdfDate(Str date, PropDate* timeOut, int* timeZoneOut) {
+    if (len(date) == 0) {
+        return false;
+    }
+
+    *timeOut = PropDate();
+    if (timeZoneOut) {
+        *timeZoneOut = 0;
+    }
+
+    Str slice = date;
+    str::TrimPrefix(slice, StrL("D:"));
+    int year = 0;
+    Str end = str::Parse(slice, "%4d", &year);
+    if (!end.s) {
+        return false;
+    }
+    int month = 1, day = 1, hour = 0, minute = 0, second = 0;
+    bool hasSeconds = false;
+    if (Str next = str::Parse(end, "%2d", &month); next.s) {
+        end = next;
+        if (next = str::Parse(end, "%2d", &day); next.s) {
+            end = next;
+            if (next = str::Parse(end, "%2d", &hour); next.s) {
+                end = next;
+                if (next = str::Parse(end, "%2d", &minute); next.s) {
+                    end = next;
+                    if (next = str::Parse(end, "%2d", &second); next.s) {
+                        end = next;
+                        hasSeconds = true;
+                    }
+                }
+            }
+        }
+    }
+    if (!hasSeconds && len(end) > 0 && end.s[0] != 'Z' && end.s[0] != '+' && end.s[0] != '-') {
+        return false;
+    }
+    timeOut->year = year;
+    timeOut->month = month;
+    timeOut->day = day;
+    timeOut->hour = hour;
+    timeOut->minute = minute;
+    timeOut->second = second;
+
+    if (timeZoneOut && len(end) > 0) {
+        if (end.s[0] == 'Z') {
+            *timeZoneOut = 0;
+        } else if (end.s[0] == '+' || end.s[0] == '-') {
+            int sign = (end.s[0] == '+') ? 1 : -1;
+            int tzHour = 0;
+            int tzMin = 0;
+            Str tz = Str(end.s + 1, end.len - 1);
+            Str tzEnd = str::Parse(tz, "%2d'%2d", &tzHour, &tzMin);
+            if (!tzEnd.s) {
+                tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
+            }
+            if (!tzEnd.s) {
+                str::Parse(tz, "%2d", &tzHour);
+            }
+            *timeZoneOut = sign * ((tzHour * 100) + tzMin);
+        }
+    }
+    return true;
+}
+
+// ISO 8601 date format: "YYYY-MM-DD" with optional "THH:MM:SS" and timezone.
+bool ParseIsoDate(Str date, PropDate* timeOut, int* timeZoneOut) {
+    if (len(date) == 0) {
+        return false;
+    }
+
+    *timeOut = PropDate();
+    if (timeZoneOut) {
+        *timeZoneOut = 0;
+    }
+
+    int year = 0, month = 0, day = 0;
+    Str end = str::Parse(date, "%4d-%2d-%2d", &year, &month, &day);
+    if (!end.s) {
+        return false;
+    }
+    timeOut->year = year;
+    timeOut->month = month;
+    timeOut->day = day;
+    int hour = 0, minute = 0, second = 0;
+    Str timeEnd = str::Parse(end, "T%2d:%2d:%2d", &hour, &minute, &second);
+    if (timeEnd.s) {
+        timeOut->hour = hour;
+        timeOut->minute = minute;
+        timeOut->second = second;
+        if (timeZoneOut && len(timeEnd) > 0) {
+            if (timeEnd.s[0] == 'Z') {
+                *timeZoneOut = 0;
+            } else if (timeEnd.s[0] == '+' || timeEnd.s[0] == '-') {
+                int sign = (timeEnd.s[0] == '+') ? 1 : -1;
+                int tzHour = 0;
+                int tzMin = 0;
+                Str tz = Str(timeEnd.s + 1, timeEnd.len - 1);
+                Str tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
+                if (!tzEnd.s) {
+                    str::Parse(tz, "%2d%2d", &tzHour, &tzMin);
+                }
+                *timeZoneOut = sign * ((tzHour * 100) + tzMin);
+            }
+        }
+    }
+    return true;
+}

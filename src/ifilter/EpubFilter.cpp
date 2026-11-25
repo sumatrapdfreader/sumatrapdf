@@ -46,25 +46,15 @@ HRESULT EpubFilter::OnInit() {
     return S_OK;
 }
 
-// copied from DocumentProperties.cpp
-static bool IsoDateParse(Str isoDate, SYSTEMTIME* timeOut) {
-    ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    int year = 0, month = 0, day = 0;
-    Str end = str::Parse(isoDate, "%4d-%2d-%2d", &year, &month, &day);
-    if (end.s) {
-        timeOut->wYear = (WORD)year;
-        timeOut->wMonth = (WORD)month;
-        timeOut->wDay = (WORD)day;
-        // time is optional
-        int hour = 0, minute = 0, second = 0;
-        if (str::Parse(end, "T%2d:%2d:%2dZ", &hour, &minute, &second).s) {
-            timeOut->wHour = (WORD)hour;
-            timeOut->wMinute = (WORD)minute;
-            timeOut->wSecond = (WORD)second;
-        }
-    }
-    return end.s != nullptr;
-    // don't bother about the day of week, we won't display it anyway
+static bool PropDateToFileTime(const PropDate& d, FILETIME* ftOut) {
+    SYSTEMTIME st{};
+    st.wYear = (WORD)d.year;
+    st.wMonth = (WORD)d.month;
+    st.wDay = (WORD)d.day;
+    st.wHour = (WORD)d.hour;
+    st.wMinute = (WORD)d.minute;
+    st.wSecond = (WORD)d.second;
+    return SystemTimeToFileTime(&st, ftOut) != FALSE;
 }
 
 static WStr ExtractHtmlText(EpubDoc* doc) {
@@ -155,9 +145,9 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                 str = GetPropValueTemp(m_epubDoc->props, DocProp::CreationDate);
             }
             if (len(str) > 0) {
-                SYSTEMTIME systime;
+                PropDate date;
                 FILETIME filetime;
-                if (IsoDateParse(str, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
+                if (ParseIsoDate(str, &date) && PropDateToFileTime(date, &filetime)) {
                     return chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
                 }
             }

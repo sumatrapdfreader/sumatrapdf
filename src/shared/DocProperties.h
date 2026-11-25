@@ -81,3 +81,15 @@ void FreeProps(Props& props);
 
 TempStr PropNameTemp(DocProp prop);
 Str PdfInfoKeyFromProp(DocProp prop);
+
+struct PropDate {
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+};
+
+bool ParsePdfDate(Str date, PropDate* timeOut, int* timeZoneOut = nullptr);
+bool ParseIsoDate(Str date, PropDate* timeOut, int* timeZoneOut = nullptr);

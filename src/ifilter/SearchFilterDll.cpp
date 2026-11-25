@@ -9,12 +9,8 @@
 #include "FilterBase.h" // IWYU pragma: keep
 #include "RegistrySearchFilter.h"
 #include "PdfFilter.h"
-#ifdef BUILD_TEX_IFILTER
 #include "TeXFilter.h"
-#endif
-#ifdef BUILD_EPUB_IFILTER
 #include "EpubFilter.h"
-#endif
 #include "SumatraLog.h"
 
 static AtomicInt g_lRefCount = 0;
@@ -35,16 +31,12 @@ static FilterKind FilterKindFromClsid(REFCLSID clsid) {
     if (IsClsid(clsid, StrL(kPdfFilterClsid))) {
         return FilterKind::Pdf;
     }
-#ifdef BUILD_TEX_IFILTER
     if (IsClsid(clsid, StrL(kTexFilterClsid))) {
         return FilterKind::Tex;
     }
-#endif
-#ifdef BUILD_EPUB_IFILTER
     if (IsClsid(clsid, StrL(kEpubFilterClsid))) {
         return FilterKind::Epub;
     }
-#endif
     return FilterKind::None;
 }
 
@@ -88,16 +80,12 @@ class FilterClassFactory : public IClassFactory {
             case FilterKind::Pdf:
                 pFilter = new PdfFilter(&g_lRefCount);
                 break;
-#ifdef BUILD_TEX_IFILTER
             case FilterKind::Tex:
                 pFilter = new TeXFilter(&g_lRefCount);
                 break;
-#endif
-#ifdef BUILD_EPUB_IFILTER
             case FilterKind::Epub:
                 pFilter = new EpubFilter(&g_lRefCount);
                 break;
-#endif
             default:
                 return E_NOINTERFACE;
         }
@@ -127,7 +115,6 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
         ReportIf(hInstance != GetInstance());
         gLogAppName = StrL("PdfFilter");
         gLogToConsole = false;
-        log(StrL("DllMain\n"));
     } else if (dwReason == DLL_PROCESS_DETACH) {
         // lpReserved is non-null when the process is exiting; skip teardown
         // then so we don't take locks under the loader as other DLLs die.

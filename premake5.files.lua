@@ -1682,9 +1682,11 @@ end
 
 function search_filter_files()
   files_in_dir("src/ifilter", {
+    "EpubFilter.*",
     "FilterBase.h",
     "PdfFilter.*",
     "SearchFilterDll.cpp",
+    "TeXFilter.*",
   })
   files_in_dir("src/base", {
     "Archive.*",
@@ -1710,18 +1712,6 @@ function search_filter_files()
     "RegistrySearchFilter.*",
     "SumatraLog.*",
   })
-
-  filter { "configurations:Debug or DebugFull" }
-  files_in_dir("src/ifilter", {
-    "TeXFilter.*",
-    "EpubFilter.*",
-  })
-  files {
-    "src/shared/EbookDoc.*",
-    "src/shared/MobiDoc.*",
-    "src/PalmDbReader.*",
-  }
-  filter {}
 end
 
 function pdf_preview2_files()
@@ -1733,29 +1723,6 @@ function pdf_preview2_files()
   files_in_dir("src", {
     "CrashHandlerNoOp.cpp",
     "RegistryPreview.*",
-    "SumatraConfig.*",
-    "base/Base.*",
-    "gui/Dpi.h",
-    "gui/Dpi.cpp",
-    "base/File.h",
-    "base/File.cpp",
-    "base/LogNoOp.cpp",
-    "base/WinDynCalls.h",
-    "base/WinDynCalls.cpp",
-    "base/Win.*",
-  })
-end
-
-function search_filter2_files()
-  files_in_dir("src/ifilter2", {
-    "CPdfFilter.*",
-    "FilterBase.h",
-    "PdfFilter.*",
-    "SearchFilterDll.cpp",
-  })
-  files_in_dir("src", {
-    "CrashHandlerNoOp.cpp",
-    "RegistrySearchFilter.*",
     "SumatraConfig.*",
     "base/Base.*",
     "gui/Dpi.h",

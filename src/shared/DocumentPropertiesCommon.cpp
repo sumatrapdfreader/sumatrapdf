@@ -358,108 +358,6 @@ TempStr AddTimeZone(TempStr s, int timeZone) {
     return fmt("%s %s%02d:%02d", s, tzSign, hours, mins);
 }
 
-// a parsed document date: the SYSTEMTIME fields we show, on every platform
-struct PropDate {
-    int year = 0;
-    int month = 0;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
-    int second = 0;
-};
-
-// See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
-// Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
-// Example: "D:20091222171933-05'00'"
-static bool PdfDateParseA(Str date, PropDate* timeOut, int* timeZoneOut) {
-    if (len(date) == 0) {
-        return false;
-    }
-
-    *timeOut = PropDate();
-    *timeZoneOut = 0;
-
-    Str slice = date;
-    // "D:" at the beginning is optional
-    str::TrimPrefix(slice, StrL("D:"));
-    int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
-    Str end = str::Parse(slice,
-                         "%4d%2d%2d"
-                         "%2d%2d%2d",
-                         &year, &month, &day, &hour, &minute, &second);
-    if (!end.s) {
-        return false;
-    }
-    timeOut->year = year;
-    timeOut->month = month;
-    timeOut->day = day;
-    timeOut->hour = hour;
-    timeOut->minute = minute;
-    timeOut->second = second;
-    // parse optional timezone: Z, +HH'MM', -HH'MM' (or +HH'MM, +HHMM, +HH)
-    if (end.s[0] == 'Z') {
-        *timeZoneOut = 0;
-    } else if (end.s[0] == '+' || end.s[0] == '-') {
-        int sign = (end.s[0] == '+') ? 1 : -1;
-        int tzHour = 0;
-        int tzMin = 0;
-        Str tz = Str(end.s + 1, end.len - 1);
-        Str tzEnd = str::Parse(tz, "%2d'%2d", &tzHour, &tzMin);
-        if (!tzEnd.s) {
-            tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
-        }
-        if (!tzEnd.s) {
-            str::Parse(tz, "%2d", &tzHour);
-        }
-        *timeZoneOut = sign * ((tzHour * 100) + tzMin);
-    }
-    return true;
-    // don't bother about the day of week, we won't display it anyway
-}
-
-// See: ISO 8601 specification
-// Format:  "YYYY-MM-DDTHH:MM:SSZ"
-// Example: "2011-04-19T22:10:48Z"
-static bool IsoDateParse(Str date, PropDate* timeOut, int* timeZoneOut) {
-    if (len(date) == 0) {
-        return false;
-    }
-
-    *timeOut = PropDate();
-    *timeZoneOut = 0;
-
-    int year = 0, month = 0, day = 0;
-    Str end = str::Parse(date, "%4d-%2d-%2d", &year, &month, &day);
-    if (end.s) { // time is optional
-        timeOut->year = year;
-        timeOut->month = month;
-        timeOut->day = day;
-        int hour = 0, minute = 0, second = 0;
-        Str timeEnd = str::Parse(end, "T%2d:%2d:%2d", &hour, &minute, &second);
-        if (timeEnd.s) {
-            timeOut->hour = hour;
-            timeOut->minute = minute;
-            timeOut->second = second;
-            // parse optional timezone: Z, +HH:MM, -HH:MM
-            if (timeEnd.s[0] == 'Z') {
-                *timeZoneOut = 0;
-            } else if (timeEnd.s[0] == '+' || timeEnd.s[0] == '-') {
-                int sign = (timeEnd.s[0] == '+') ? 1 : -1;
-                int tzHour = 0;
-                int tzMin = 0;
-                Str tz = Str(timeEnd.s + 1, timeEnd.len - 1);
-                Str tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
-                if (!tzEnd.s) {
-                    str::Parse(tz, "%2d%2d", &tzHour, &tzMin);
-                }
-                *timeZoneOut = sign * ((tzHour * 100) + tzMin);
-            }
-        }
-    }
-    return end.s != nullptr;
-    // don't bother about the day of week, we won't display it anyway
-}
-
 static TempStr FormatDateTemp(const PropDate& date, int timeZone) {
 #if OS_WIN
     SYSTEMTIME st{};
@@ -521,9 +419,9 @@ void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
         return;
     }
     if (isPdfDate) {
-        ok = PdfDateParseA(val, &date, &timeZone);
+        ok = ParsePdfDate(val, &date, &timeZone);
     } else {
-        ok = IsoDateParse(val, &date, &timeZone);
+        ok = ParseIsoDate(val, &date, &timeZone);
     }
     if (!ok) {
         return;

@@ -270,15 +270,24 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
             CloseHandle(hFile);
             return HRESULT_FROM_WIN32(ERROR_FILE_TOO_LARGE);
         }
-        DWORD size = (DWORD)fileSize.QuadPart, read = 0;
+        DWORD size = (DWORD)fileSize.QuadPart;
         char* data = AllocArray<char>((int)size + 1);
         if (!data) {
             CloseHandle(hFile);
             return E_OUTOFMEMORY;
         }
-        BOOL ok = ReadFile(hFile, data, size, &read, nullptr);
+        DWORD totalRead = 0;
+        BOOL ok = TRUE;
+        while (totalRead < size) {
+            DWORD read = 0;
+            ok = ReadFile(hFile, data + totalRead, size - totalRead, &read, nullptr);
+            if (!ok || read == 0) {
+                break;
+            }
+            totalRead += read;
+        }
         CloseHandle(hFile);
-        if (!ok || read != size) {
+        if (!ok || totalRead != size) {
             free(data);
             return E_FAIL;
         }

@@ -53,31 +53,15 @@ HRESULT PdfFilter::OnInit() {
     return S_OK;
 }
 
-// copied from DocumentProperties.cpp
-static bool PdfDateParse(Str pdfDate, SYSTEMTIME* timeOut) {
-    if (len(pdfDate) == 0) {
-        return false;
-    }
-    ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    Str slice = pdfDate;
-    // "D:" at the beginning is optional
-    str::TrimPrefix(slice, StrL("D:"));
-    int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
-    Str end = str::Parse(slice,
-                         "%4d%2d%2d"
-                         "%2d%2d%2d",
-                         &year, &month, &day, &hour, &minute, &second);
-    if (str::IsNull(end)) {
-        return false;
-    }
-    timeOut->wYear = (WORD)year;
-    timeOut->wMonth = (WORD)month;
-    timeOut->wDay = (WORD)day;
-    timeOut->wHour = (WORD)hour;
-    timeOut->wMinute = (WORD)minute;
-    timeOut->wSecond = (WORD)second;
-    return true;
-    // don't bother about the day of week, we won't display it anyway
+static bool PropDateToFileTime(const PropDate& d, FILETIME* ftOut) {
+    SYSTEMTIME st{};
+    st.wYear = (WORD)d.year;
+    st.wMonth = (WORD)d.month;
+    st.wDay = (WORD)d.day;
+    st.wHour = (WORD)d.hour;
+    st.wMinute = (WORD)d.minute;
+    st.wSecond = (WORD)d.second;
+    return SystemTimeToFileTime(&st, ftOut) != FALSE;
 }
 
 // Start, Author, Title, Date, Content, End
@@ -127,9 +111,9 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                 prop = m_pdfEngine->GetPropertyTemp(DocProp::CreationDate);
             }
             if (len(prop) > 0) {
-                SYSTEMTIME systime;
+                PropDate date;
                 FILETIME filetime;
-                if (PdfDateParse(prop, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
+                if (ParsePdfDate(prop, &date) && PropDateToFileTime(date, &filetime)) {
                     return chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
                 }
             }

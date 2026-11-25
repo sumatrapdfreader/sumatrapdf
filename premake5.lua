@@ -1287,9 +1287,6 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4100", "4838" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
-    filter { "configurations:Debug" }
-    defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
-    filter {}
     includedirs { "src", "src/gui", "ext/mupdf/include", "ext/a-libarchive" }
     search_filter_files()
     -- libarchive + unrar live in libsumatrapdf.dll (re-exported); do not link second copies
@@ -1298,16 +1295,6 @@ workspace "SumatraPDF"
     links { "comctl32", "gdiplus", "shlwapi", "version", "wintrust", "crypt32", "delayimp" }
     -- base's Http.cpp comes along with the engines; a filter never fetches anything
     linkoptions { "/DELAYLOAD:winhttp.dll" }
-
-  -- project "PdfFilter2"
-  --   kind "SharedLib"
-  --   language "C++"
-  --   cppdialect "C++latest"
-  --   mixed_dbg_rel_conf()
-  --   disablewarnings { "4100", "4838" }
-  --   includedirs { "src", "src/gui" }
-  --   search_filter2_files()
-  --   links { "comctl32", "gdiplus", "shlwapi", "version", "wintrust", "crypt32" }
 
   -- project "PdfPreview2"
   --   kind "SharedLib"

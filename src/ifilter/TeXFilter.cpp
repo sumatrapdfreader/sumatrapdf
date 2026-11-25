@@ -15,7 +15,12 @@ HRESULT TeXFilter::OnInit() {
         return E_FAIL;
     }
 
-    WStr wdata = strconv::StrCPToWStr(m_data, CP_ACP);
+    Str raw = m_data;
+    bool hasUtf8Bom = str::TrimPrefix(raw, StrL("\xEF\xBB\xBF"));
+    const u8* s = (const u8*)raw.s;
+    const u8* end = s + len(raw);
+    bool isUtf8 = hasUtf8Bom || isLegalUTF8String(&s, end);
+    WStr wdata = isUtf8 ? ToWStr(raw) : strconv::StrCPToWStr(raw, CP_ACP);
     m_pData = wdata.s;
     m_pBuffer = AllocArray<WCHAR>(wdata.len + 1);
 
