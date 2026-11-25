@@ -39,8 +39,8 @@
 
 #include "SumatraLog.h"
 
-bool ReplaceImageWithData(MainWindow* win, int pageNo, int imageIdx, Str data) {
-    DisplayModel* dm = win->AsFixed();
+static bool ReplaceImageInTab(MainWindow* win, WindowTab* tab, int pageNo, int imageIdx, Str data) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
     if (!dm || len(data) == 0) {
         return false;
     }
@@ -48,13 +48,26 @@ bool ReplaceImageWithData(MainWindow* win, int pageNo, int imageIdx, Str data) {
         gRenderCache->AbortRendering(dm);
     }
     bool ok = EngineMupdfReplaceImage(dm->GetEngine(), pageNo, imageIdx, data);
-    ToolbarUpdateStateForWindow(win, true);
+    bool isCurrent = win->CurrentTab() == tab;
+    if (isCurrent) {
+        ToolbarUpdateStateForWindow(win, true);
+    }
     if (!ok) {
-        ShowWarningNotification(win, Tr("Couldn't replace the image"), kNotif5SecsTimeOut);
+        if (isCurrent) {
+            ShowWarningNotification(win, Tr("Couldn't replace the image"), kNotif5SecsTimeOut);
+        }
         return false;
     }
-    MainWindowRerender(win);
+    if (isCurrent) {
+        MainWindowRerender(win);
+    } else if (gRenderCache) {
+        gRenderCache->FreeForDisplayModel(dm);
+    }
     return true;
+}
+
+bool ReplaceImageWithData(MainWindow* win, int pageNo, int imageIdx, Str data) {
+    return ReplaceImageInTab(win, win ? win->CurrentTab() : nullptr, pageNo, imageIdx, data);
 }
 
 bool ImageElementPos(IPageElement* el, int* pageNo, int* imageIdx) {
@@ -122,14 +135,12 @@ static void ApplyImageEdit(ImageEditWatch* w) {
         w->wf = nullptr;
         return;
     }
-    // only the current tab is re-rendered; edits to a background tab's image wait
-    if (win->CurrentTab() != w->tab) {
-        return;
-    }
     Str data = file::ReadFile(w->path);
     // the editor can still be writing it; the next change notification comes
-    if (ImageDataIsValid(data) && ReplaceImageWithData(win, w->pageNo, w->imageIdx, data)) {
-        ShowTemporaryNotification(win, Tr("Image updated. Save the PDF to keep it."), kNotif5SecsTimeOut);
+    if (ImageDataIsValid(data) && ReplaceImageInTab(win, w->tab, w->pageNo, w->imageIdx, data)) {
+        if (win->CurrentTab() == w->tab) {
+            ShowTemporaryNotification(win, Tr("Image updated. Save the PDF to keep it."), kNotif5SecsTimeOut);
+        }
     }
     str::Free(data);
 }

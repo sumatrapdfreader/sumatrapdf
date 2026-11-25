@@ -89,37 +89,6 @@ bool IsAIChatSupportedForTab(WindowTab* tab) {
     return IsAIChatSupportedForFile(tab->filePath, tab->GetEngineType());
 }
 
-TempStr AIChatJsEscapeTemp(Str s) {
-    if (len(s) == 0) {
-        return str::DupTemp(StrL(""));
-    }
-    str::Builder buf;
-    for (int i = 0; i < s.len; i++) {
-        char c = s.s[i];
-        switch (c) {
-            case '\\':
-                buf.Append(StrL("\\\\"));
-                break;
-            case '\'':
-                buf.Append(StrL("\\'"));
-                break;
-            case '\n':
-                buf.Append(StrL("\\n"));
-                break;
-            case '\r':
-                buf.Append(StrL("\\r"));
-                break;
-            case '\t':
-                buf.Append(StrL("\\t"));
-                break;
-            default:
-                buf.AppendChar(c);
-                break;
-        }
-    }
-    return ToStrTemp(buf);
-}
-
 TempStr AIChatJsonStrTemp(Str json, Str key) {
     TempStr pattern = fmt("\"%s\":\"", key);
     Str rest;

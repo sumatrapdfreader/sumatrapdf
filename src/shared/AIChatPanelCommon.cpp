@@ -18,6 +18,7 @@
 #include "Translations.h"
 #include "Theme.h"
 #include "EmbeddedResources.h"
+#include "BrowserViewCommon.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
 #include "AIChatPanelCommon.h"
@@ -76,17 +77,17 @@ Str BgColorForProvider(AIChatProvider* p) {
 }
 
 void WebViewAppendText(MainWindow* win, Str text) {
-    TempStr js = fmt("appendText('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = fmt("appendText('%s')", JsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 void WebViewAddUser(MainWindow* win, Str text) {
-    TempStr js = fmt("addUser('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = fmt("addUser('%s')", JsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
 void WebViewAddTool(MainWindow* win, Str text) {
-    TempStr js = fmt("addTool('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = fmt("addTool('%s')", JsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
@@ -95,7 +96,7 @@ void WebViewAddError(MainWindow* win, Str text) {
     if (p) {
         AIChatLog(p->logger, StrL("error"), text);
     }
-    TempStr js = fmt("addError('%s')", AIChatJsEscapeTemp(text));
+    TempStr js = fmt("addError('%s')", JsEscapeTemp(text));
     WebViewEval(win, js);
 }
 
@@ -111,7 +112,7 @@ void WebViewShowUnsupportedFileType(MainWindow* win) {
     WebViewClearChat(win);
     AIChatProvider* p = CurrentProvider(win);
     TempStr msg = fmt("%s is only available for PDF files.", p ? p->name : StrL("AI chat"));
-    TempStr js = fmt("addError('%s')", AIChatJsEscapeTemp(msg));
+    TempStr js = fmt("addError('%s')", JsEscapeTemp(msg));
     WebViewEval(win, js, false);
 }
 
@@ -494,9 +495,9 @@ static void ApplyAIChatUpdate(MainWindow* win, AIChatProvider* p, AIChatUpdateDa
                               bool isActiveTab) {
     if (st && st->apiRequest && !isActiveTab) {
         if (data->updateType == AIChatUpdateType::Text)
-            st->chatLog.Append(fmt("appendText('%s')\n", AIChatJsEscapeTemp(data->text)));
+            st->chatLog.Append(fmt("appendText('%s')\n", JsEscapeTemp(data->text)));
         else if (data->updateType == AIChatUpdateType::Error)
-            st->chatLog.Append(fmt("addError('%s')\n", AIChatJsEscapeTemp(data->text)));
+            st->chatLog.Append(fmt("addError('%s')\n", JsEscapeTemp(data->text)));
         else if (data->updateType == AIChatUpdateType::Finished)
             st->chatLog.Append(StrL("flushBlock()\n"));
     }

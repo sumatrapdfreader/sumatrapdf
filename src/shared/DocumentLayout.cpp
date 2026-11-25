@@ -156,7 +156,7 @@ static void FinishRelayout(DocumentLayout& layout, int canvasDx, int canvasDy, b
     Rect& viewPort = layout.viewPort;
 
     if (canvasDy < viewPort.dy) {
-        int offY = params.windowMargin.top + ((viewPort.dy - canvasDy) / 2);
+        int offY = (viewPort.dy - canvasDy) / 2;
         for (DocumentLayoutPage& page : layout.pages) {
             if (page.isShown) {
                 page.pos.y += offY;

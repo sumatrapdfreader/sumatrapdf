@@ -142,7 +142,6 @@ bool IsBackendInstalled(AIChatBackend backend);
 bool IsAIChatSupportedForFile(Str filePath, Kind engineKind = nullptr);
 bool IsAIChatSupportedForTab(WindowTab* tab);
 
-TempStr AIChatJsEscapeTemp(Str s);
 TempStr AIChatJsonStrTemp(Str json, Str key);
 inline Str AIChatFindHistoryPrompt(Str data, Str sessionId, Str key) {
     Str line;
