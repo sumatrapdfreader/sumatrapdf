@@ -80,6 +80,9 @@ void SumatraUIAutomationDocumentProvider::FreeDocument() {
 
         current->released = true; // disallow DisplayModel access
         current->dm = nullptr;
+        current->root = nullptr;
+        current->sibling_prev = nullptr;
+        current->sibling_next = nullptr;
         current->Release();
     }
 
@@ -131,9 +134,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum Nav
     if (pRetVal == nullptr) {
         return E_POINTER;
     }
+    *pRetVal = nullptr;
 
     if (direction == NavigateDirection_NextSibling || direction == NavigateDirection_PreviousSibling) {
-        *pRetVal = nullptr;
         return S_OK;
     } else if (direction == NavigateDirection_FirstChild || direction == NavigateDirection_LastChild) {
         // don't allow traversion to enter invalid nodes
@@ -166,24 +169,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum Nav
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    SAFEARRAY* psa = SafeArrayCreateVector(VT_I4, 0, 2);
-    if (!psa) {
-        return E_OUTOFMEMORY;
-    }
-
-    // RuntimeID magic, use hwnd to differentiate providers of different windows
-    LONG rId[] = {HandleToLong(canvasHwnd), kSumatraUiaDocumentRuntimeId};
-    for (LONG i = 0; i < 2; i++) {
-        HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
-        ReportIf(FAILED(hr));
-    }
-
-    *pRetVal = psa;
-    return S_OK;
+    return UiaMakeRuntimeId(canvasHwnd, kSumatraUiaDocumentRuntimeId, pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
@@ -233,10 +219,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
                           propertyId == UIA_IsContentElementPropertyId || propertyId == UIA_IsControlElementPropertyId;
     if (propertyId == UIA_NamePropertyId) {
         // typically filename
-        pRetVal->vt = VT_BSTR;
         TempStr s = path::GetBaseNameTemp(dm->GetEngine()->FilePath());
-        pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
-        return S_OK;
+        return UiaSetBstr(pRetVal, CWStrTemp(s));
     } else if (isTrueBoolProp) {
         // must be VARIANT_TRUE (-1), not TRUE (1): UI Automation compares
         // against VARIANT_TRUE, so a 1 here reads as false and kept the
@@ -254,9 +238,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
         pRetVal->lVal = 0;
         return S_OK;
     } else if (propertyId == UIA_AutomationIdPropertyId) {
-        pRetVal->vt = VT_BSTR;
-        pRetVal->bstrVal = SysAllocString(L"Document");
-        return S_OK;
+        return UiaSetBstr(pRetVal, L"Document");
     }
 
     pRetVal->vt = VT_EMPTY;
@@ -289,9 +271,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
 
     LONG index = 0;
     HRESULT hr = SafeArrayPutElement(psa, &index, selection);
-    ReportIf(FAILED(hr));
-    // the array now owns the selection
+    // the array now owns the selection (or we drop it on failure)
     selection->Release();
+    if (FAILED(hr)) {
+        SafeArrayDestroy(psa);
+        return hr;
+    }
 
     *pRetVal = psa;
     return S_OK;
@@ -307,15 +292,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
 
     // return all pages' ranges that are even partially visible
     Vec<SumatraUIAutomationTextRange*> rangeArray;
-    SumatraUIAutomationPageProvider* it = child_first;
-    while (it && len(rangeArray) < (ULONG_MAX / 2)) {
+    for (SumatraUIAutomationPageProvider* it = child_first; it; it = it->sibling_next) {
         PageInfo* pi = it->dm->GetPageInfo(it->pageNum);
         if (pi && pi->isShown && pi->visibleRatio > 0.0f) {
             VecAppend(rangeArray, new SumatraUIAutomationTextRange(this, it->pageNum));
         }
-        it = it->sibling_next;
     }
-    ReportIf((ULONG_MAX / 2) == len(rangeArray));
 
     SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)len(rangeArray));
     if (!psa) {
@@ -327,8 +309,14 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
 
     for (LONG i = 0; i < (LONG)len(rangeArray); i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, rangeArray[i]);
-        ReportIf(FAILED(hr));
         rangeArray[i]->Release();
+        if (FAILED(hr)) {
+            for (LONG j = i + 1; j < (LONG)len(rangeArray); j++) {
+                rangeArray[j]->Release();
+            }
+            SafeArrayDestroy(psa);
+            return hr;
+        }
     }
 
     *pRetVal = psa;
@@ -415,6 +403,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString
     if (ppIDString == nullptr || pdwIDStringLen == nullptr) {
         return E_POINTER;
     }
+    *ppIDString = nullptr;
+    *pdwIDStringLen = 0;
     if (released) {
         return UIA_E_ELEMENTNOTAVAILABLE;
     }

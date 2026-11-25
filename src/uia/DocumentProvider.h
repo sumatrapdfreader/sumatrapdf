@@ -22,6 +22,8 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
 
   public:
     SumatraUIAutomationDocumentProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root);
+    SumatraUIAutomationDocumentProvider(const SumatraUIAutomationDocumentProvider&) = delete;
+    SumatraUIAutomationDocumentProvider& operator=(const SumatraUIAutomationDocumentProvider&) = delete;
     ~SumatraUIAutomationDocumentProvider();
 
     void LoadDocument(DisplayModel* dm);

@@ -88,24 +88,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Navigate(enum Navigat
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetRuntimeId(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    SAFEARRAY* psa = SafeArrayCreateVector(VT_I4, 0, 2);
-    if (!psa) {
-        return E_OUTOFMEMORY;
-    }
-
-    // RuntimeID magic, use hwnd to differentiate providers of different windows
-    int rId[] = {HandleToLong(canvasHwnd), kSumatraUiaPageRuntimeId(pageNum)};
-    for (LONG i = 0; i < 2; i++) {
-        HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
-        ReportIf(FAILED(hr));
-    }
-
-    *pRetVal = psa;
-    return S_OK;
+    return UiaMakeRuntimeId(canvasHwnd, kSumatraUiaPageRuntimeId(pageNum), pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
@@ -131,10 +114,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_BoundingRectangle
         return E_FAIL;
     }
 
-    Rect canvasRect = HwndWindowRect(canvasHwnd);
+    Point tl = HwndClientToScreen(canvasHwnd, page->pageOnScreen.TL());
 
-    pRetVal->left = canvasRect.x + page->pageOnScreen.x;
-    pRetVal->top = canvasRect.y + page->pageOnScreen.y;
+    pRetVal->left = tl.x;
+    pRetVal->top = tl.y;
     pRetVal->width = page->pageOnScreen.dx;
     pRetVal->height = page->pageOnScreen.dy;
 
@@ -171,10 +154,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetPropertyValue(PROP
     }
 
     if (propertyId == UIA_NamePropertyId) {
-        pRetVal->vt = VT_BSTR;
         TempStr s = fmt("Page %d", pageNum);
-        pRetVal->bstrVal = SysAllocString(CWStrTemp(s));
-        return S_OK;
+        return UiaSetBstr(pRetVal, CWStrTemp(s));
     } else if (propertyId == UIA_IsValuePatternAvailablePropertyId) {
         // VARIANT_TRUE (-1), not TRUE (1) - see DocumentProvider::GetPropertyValue
         pRetVal->vt = VT_BOOL;
@@ -215,7 +196,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_Value(BSTR* pRetV
 
     TempWStr pageContentW = ToWStrTemp(pageContent);
     *pRetVal = SysAllocString(pageContentW.s);
-    return S_OK;
+    return *pRetVal ? S_OK : E_OUTOFMEMORY;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_IsReadOnly(BOOL* pRetVal) {

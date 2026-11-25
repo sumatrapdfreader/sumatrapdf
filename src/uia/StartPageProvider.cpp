@@ -64,24 +64,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Navigate(enum Na
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetRuntimeId(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    SAFEARRAY* psa = SafeArrayCreateVector(VT_I4, 0, 2);
-    if (!psa) {
-        return E_OUTOFMEMORY;
-    }
-
-    // RuntimeID magic, use hwnd to differentiate providers of different windows
-    int rId[] = {HandleToLong(canvasHwnd), kSumatraUiaStartPageRuntimeId};
-    for (LONG i = 0; i < 2; i++) {
-        HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
-        ReportIf(FAILED(hr));
-    }
-
-    *pRetVal = psa;
-    return S_OK;
+    return UiaMakeRuntimeId(canvasHwnd, kSumatraUiaStartPageRuntimeId, pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
@@ -117,9 +100,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPropertyValue
         return E_POINTER;
     }
     if (propertyId == UIA_NamePropertyId) {
-        pRetVal->vt = VT_BSTR;
-        pRetVal->bstrVal = SysAllocString(L"Start Page");
-        return S_OK;
+        return UiaSetBstr(pRetVal, L"Start Page");
     }
 
     pRetVal->vt = VT_EMPTY;

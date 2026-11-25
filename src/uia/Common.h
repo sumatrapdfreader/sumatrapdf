@@ -47,3 +47,34 @@ inline HRESULT UiaRootFragmentRoot(T* root, IRawElementProviderFragmentRoot** pR
     root->AddRef();
     return S_OK;
 }
+
+inline HRESULT UiaMakeRuntimeId(HWND hwnd, int id, SAFEARRAY** pRetVal) {
+    if (pRetVal == nullptr) {
+        return E_POINTER;
+    }
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_I4, 0, 2);
+    if (!psa) {
+        return E_OUTOFMEMORY;
+    }
+    LONG rId[] = {HandleToLong(hwnd), (LONG)id};
+    for (LONG i = 0; i < 2; i++) {
+        HRESULT hr = SafeArrayPutElement(psa, &i, &rId[i]);
+        if (FAILED(hr)) {
+            SafeArrayDestroy(psa);
+            return hr;
+        }
+    }
+    *pRetVal = psa;
+    return S_OK;
+}
+
+inline HRESULT UiaSetBstr(VARIANT* pRetVal, const WCHAR* s) {
+    BSTR bstr = SysAllocString(s);
+    if (!bstr) {
+        pRetVal->vt = VT_EMPTY;
+        return E_OUTOFMEMORY;
+    }
+    pRetVal->vt = VT_BSTR;
+    pRetVal->bstrVal = bstr;
+    return S_OK;
+}

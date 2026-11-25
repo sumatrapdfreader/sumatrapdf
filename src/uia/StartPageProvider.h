@@ -9,6 +9,8 @@ class SumatraUIAutomationStartPageProvider : public IRawElementProviderFragment,
 
   public:
     SumatraUIAutomationStartPageProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root);
+    SumatraUIAutomationStartPageProvider(const SumatraUIAutomationStartPageProvider&) = delete;
+    SumatraUIAutomationStartPageProvider& operator=(const SumatraUIAutomationStartPageProvider&) = delete;
     void DetachRoot();
     ~SumatraUIAutomationStartPageProvider();
 

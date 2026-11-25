@@ -24,6 +24,8 @@ class SumatraUIAutomationPageProvider : public IRawElementProviderFragment,
   public:
     SumatraUIAutomationPageProvider(int pageNum, HWND canvasHwnd, DisplayModel* dm,
                                     SumatraUIAutomationDocumentProvider* root);
+    SumatraUIAutomationPageProvider(const SumatraUIAutomationPageProvider&) = delete;
+    SumatraUIAutomationPageProvider& operator=(const SumatraUIAutomationPageProvider&) = delete;
     ~SumatraUIAutomationPageProvider();
 
     int GetPageNum() const;

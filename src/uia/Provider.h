@@ -23,6 +23,8 @@ class SumatraUIAutomationProvider : public IRawElementProviderSimple,
 
   public:
     explicit SumatraUIAutomationProvider(HWND hwnd);
+    SumatraUIAutomationProvider(const SumatraUIAutomationProvider&) = delete;
+    SumatraUIAutomationProvider& operator=(const SumatraUIAutomationProvider&) = delete;
 
   private: // ensure no accidental destruction of this class and bypassing refcounting
     ~SumatraUIAutomationProvider();
