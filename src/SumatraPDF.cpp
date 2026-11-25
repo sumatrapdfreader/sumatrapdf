@@ -15630,7 +15630,20 @@ static bool LoadLibsumatrapdfFromFile(Str path, i64 expectedSize, bool useLoadLi
 // when the DLL is not next to the exe (issue #5849).
 static bool LoadLibsumatrapdfFromFileRobust(Str path, i64 expectedSize, bool justWritten = false) {
     i64 realSize = file::GetSize(path);
+    // a just-written file can read as size 0 for a moment (AV / a file system
+    // filter still has it): seen right after a successful write
+    static const int kSizeWaitMs[] = {500, 1000, 2000};
+    for (int i = 0; justWritten && realSize != expectedSize && i < dimofi(kSizeWaitMs); i++) {
+        logf("LoadLibsumatrapdfFromFileRobust: just written '%s' has size %lld, expected %lld, waiting %dms\n", path,
+             (long long)realSize, (long long)expectedSize, kSizeWaitMs[i]);
+        Sleep(kSizeWaitMs[i]);
+        realSize = file::GetSize(path);
+    }
     if (realSize != expectedSize) {
+        if (justWritten || realSize >= 0) {
+            logf("LoadLibsumatrapdfFromFileRobust: not loading '%s': size %lld, expected %lld (lastError=%u)\n", path,
+                 (long long)realSize, (long long)expectedSize, GetLastError());
+        }
         return false;
     }
 
