@@ -100,7 +100,6 @@ navigate-files-delete-selection
 issue-2199
 issue-6470
 issue-6472
-issue-6232
 issue-6232-filter
 issue-6232-refresh
 issue-6238

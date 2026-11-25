@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6232", issue6232],
   ["text-snippets", textSnippets],
   ["close-tab-during-placement", closeTabDuringPlacement],
   ["app-unit-tests", appUnitTests],
@@ -1032,7 +1033,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6469", issue6469],
   ["issue-6470", issue6470],
   parallelTest("issue-6472"),
-  ["issue-6232", issue6232],
   ["issue-6232-filter", issue6232Filter],
   ["issue-6232-refresh", issue6232Refresh],
   ["issue-6234", issue6234],
