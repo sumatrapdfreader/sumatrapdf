@@ -611,7 +611,6 @@ struct SvgPixmapCacheEntry {
     int dx = 0;
     int dy = 0;
     Color fg = 0;
-    Color bg = 0;
     Pixmap* pixmap = nullptr; // owned
 
     ~SvgPixmapCacheEntry() {
@@ -622,20 +621,18 @@ struct SvgPixmapCacheEntry {
 
 static SvgPixmapCacheEntry* gSvgPixmapCache = nullptr;
 
-// Render `svg` at dx×dy in fg/bg (theme text/control colors if unset).
+// Render `svg` at dx×dy in fg (theme text color if unset; bg is unused).
 // The Pixmap belongs to the cache and stays valid until the app exits.
 Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg, Color bg) {
+    (void)bg;
     if (str::IsEmptyOrWhiteSpace(svg) || dx <= 0 || dy <= 0) {
         return nullptr;
     }
     if (fg == kColorUnset) {
         fg = ThemeWindowTextColor();
     }
-    if (bg == kColorUnset) {
-        bg = ThemeControlBackgroundColor();
-    }
     for (SvgPixmapCacheEntry* e = gSvgPixmapCache; e; e = e->next) {
-        if (e->dx == dx && e->dy == dy && e->fg == fg && e->bg == bg && str::Eq(e->svg, svg)) {
+        if (e->dx == dx && e->dy == dy && e->fg == fg && str::Eq(e->svg, svg)) {
             return e->pixmap;
         }
     }
@@ -648,7 +645,6 @@ Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg, Color bg) {
     e->dx = dx;
     e->dy = dy;
     e->fg = fg;
-    e->bg = bg;
     e->pixmap = px;
     ListInsertFront(&gSvgPixmapCache, e);
     return px;

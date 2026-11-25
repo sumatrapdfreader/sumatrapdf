@@ -233,16 +233,15 @@ bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages) {
     }
 
     Vec<int> annotationPages;
+    VecReserve(annotationPages, len(annotations));
     for (Annotation* annotation : annotations) {
-        int pageNo = PageNo(annotation);
-        if (!VecContains(annotationPages, pageNo)) {
-            VecAppend(annotationPages, pageNo);
-        }
+        VecAppend(annotationPages, PageNo(annotation));
     }
+    std::sort(annotationPages.begin(), annotationPages.end());
 
     Vec<int> filteredPages;
     for (int pageNo : pages) {
-        if (VecContains(annotationPages, pageNo)) {
+        if (std::binary_search(annotationPages.begin(), annotationPages.end(), pageNo)) {
             VecAppend(filteredPages, pageNo);
         }
     }

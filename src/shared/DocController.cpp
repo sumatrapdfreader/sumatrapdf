@@ -62,7 +62,8 @@ TocTree* BuildBrowserTocTree(Arena* arena, Vec<BrowserTocTraceItem>& trace) {
         item->id = ++idCounter;
         if (ti.level <= len(levels)) {
             VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
-            VecLast(levels)->AddSiblingAtEnd(item);
+            VecLast(levels)->next = item;
+            VecLast(levels) = item;
         } else {
             *nextChild = item;
             VecAppend(levels, item);

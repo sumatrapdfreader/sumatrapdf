@@ -189,13 +189,30 @@ void CollectClosableTabs(MainWindow* win, Vec<WindowTab*>& out) {
 
 // what the close commands can act on, relative to ctx.tab
 void SetTabCloseFlags(AppCommandCtx& ctx) {
-    Vec<WindowTab*> other;
-    Vec<WindowTab*> right;
-    Vec<WindowTab*> left;
-    CollectTabsToClose(ctx.win, ctx.tab, other, right, left);
-    ctx.canCloseOtherTabs = len(other) > 0;
-    ctx.canCloseTabsToRight = len(right) > 0;
-    ctx.canCloseTabsToLeft = ctx.tab && len(left) > 0;
+    bool hasOther = false;
+    bool hasRight = false;
+    bool hasLeft = false;
+    bool seenCurrent = false;
+    int nTabs = ctx.win->TabCount();
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* tab = ctx.win->GetTab(i);
+        if (ctx.tab == tab) {
+            seenCurrent = true;
+            continue;
+        }
+        if (tab->IsPinnedHomeTab()) {
+            continue;
+        }
+        hasOther = true;
+        if (seenCurrent) {
+            hasRight = true;
+        } else {
+            hasLeft = true;
+        }
+    }
+    ctx.canCloseOtherTabs = hasOther;
+    ctx.canCloseTabsToRight = hasRight;
+    ctx.canCloseTabsToLeft = ctx.tab && hasLeft;
     ctx.hasDocTabs = HasOpenedDocuments(ctx.win);
     StripGroupSetFlags(ctx);
 }

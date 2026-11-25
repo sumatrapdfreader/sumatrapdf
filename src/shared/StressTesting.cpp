@@ -492,7 +492,8 @@ T RemoveRandomElementFromVec(Vec<T>& v) {
 
 static void LimitPagesToRender(Vec<int>& pages, int maxPages) {
     while (len(pages) > maxPages) {
-        RemoveRandomElementFromVec(pages);
+        int idx = rand() % len(pages);
+        VecRemoveAtFast(pages, idx);
     }
 }
 

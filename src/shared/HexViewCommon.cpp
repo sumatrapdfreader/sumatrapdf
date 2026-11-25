@@ -63,7 +63,9 @@ void HexViewFree(HexView* hex) {
 
 // bytes at `at`, from the piece of the file around it that is kept in memory
 int HexBytesAt(HexView* hex, u64 at, const u8** out, int want) {
-    bool inCache = at >= hex->cacheAt && at + (u64)want <= hex->cacheAt + (u64)hex->cacheLen;
+    u64 cacheEnd = hex->cacheAt + (u64)hex->cacheLen;
+    bool inCache = hex->cacheLen > 0 && at >= hex->cacheAt &&
+                   (at + (u64)want <= cacheEnd || (at < cacheEnd && cacheEnd >= hex->size));
     if (!inCache) {
         // the file can change under us: re-read its size when re-filling
         hex->size = HexFileSize(hex->f);

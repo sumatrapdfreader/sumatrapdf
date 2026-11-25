@@ -532,13 +532,14 @@ void CollectNonDefaultRegisteredExtensions(StrVec& out) {
     }
     for (const auto& type : gSupportedExts) {
         Str ext = type.ext;
+        // only list types with an explicit UserChoice that isn't us — otherwise
+        // every registered format (e.g. .tga) would show after a fresh install
+        TempStr userChoice = ReadUserChoiceProgIdTemp(ext);
+        if (len(userChoice) == 0 || IsOurProgId(userChoice, ext)) {
+            continue;
+        }
         if (HaveRegisteredOpenWithForExt(ext) && !IsSumatraDefaultForExt(ext)) {
-            // only list types with an explicit UserChoice that isn't us — otherwise
-            // every registered format (e.g. .tga) would show after a fresh install
-            TempStr userChoice = ReadUserChoiceProgIdTemp(ext);
-            if (len(userChoice) > 0 && !IsOurProgId(userChoice, ext)) {
-                out.Append(ext);
-            }
+            out.Append(ext);
         }
     }
 }
