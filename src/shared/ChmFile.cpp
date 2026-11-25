@@ -136,7 +136,7 @@ void ChmFile::ParseWindowsData() {
         return;
     }
 
-    for (int i = 0; i < entries && (i + 1) * entrySize <= windowsLen; i++) {
+    for (int i = 0; i < entries && (i64)8 + (i64)(i + 1) * entrySize <= windowsLen; i++) {
         int off = 8 + (i * entrySize);
         for (const auto& field : chmStrings) {
             Str& value = this->*field.field;

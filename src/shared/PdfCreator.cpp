@@ -48,6 +48,9 @@ static fz_image* FzImageFromRgbData(fz_context* ctx, u8* data, int width, int he
         fz_drop_pixmap(ctx, pixmap);
     }
     fz_catch(ctx) {
+        if (!pixmap) {
+            fz_free(ctx, data);
+        }
         fz_report_error(ctx);
         fz_rethrow(ctx);
     }
@@ -147,6 +150,9 @@ PdfCreator::PdfCreator() {
 }
 
 PdfCreator::~PdfCreator() {
+    if (!ctx) {
+        return;
+    }
     pdf_drop_document(ctx, doc);
     fz_flush_warnings(ctx);
     fz_drop_context_windows(ctx);
@@ -454,7 +460,9 @@ ImagesPdfResult PdfCreator::SaveImagesAsPdf(const StrVec& paths, Str dest, int* 
         }
         str::Free(data);
         if (!ok) {
-            *badIdxOut = i;
+            if (badIdxOut) {
+                *badIdxOut = i;
+            }
             return ImagesPdfResult::BadImage;
         }
     }

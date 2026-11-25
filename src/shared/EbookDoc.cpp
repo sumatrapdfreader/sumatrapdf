@@ -1220,7 +1220,7 @@ bool PalmDoc::Load() {
             htmlData.Append(StrL("&amp;"));
         } else if ('<' == c) {
             Str after = HandleTealDocTag(htmlData, tocEntries, Str(rest.s + i, rest.len - i));
-            if (after) {
+            if (after.s > rest.s + i) {
                 i += (int)(after.s - (rest.s + i)) - 1;
             }
         } else if ('\n' == c || ('\r' == c && i + 1 < rest.len && '\n' != rest.s[i + 1])) {

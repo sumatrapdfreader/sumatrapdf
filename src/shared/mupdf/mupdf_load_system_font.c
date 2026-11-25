@@ -720,35 +720,48 @@ static void create_system_font_list(fz_context* ctx) {
 static fz_buffer* load_and_cache_font(fz_context* ctx, win_font_info* fi, const char* font_name) {
     fz_buffer* buffer = NULL;
     font_file* ff = fi->file;
+    unsigned char* cached_data = NULL;
+    size_t cached_size = 0;
 
     EnterCriticalSection(&cs_fonts);
-    if (ff->data) {
-        buffer = fz_new_buffer_from_shared_data(ctx, ff->data, ff->size);
-        // fz_warn(ctx, "found cached font '%s' from '%s'", font_name, ff->file_path);
-    }
+    cached_data = (unsigned char*)ff->data;
+    cached_size = ff->size;
     LeaveCriticalSection(&cs_fonts);
-    if (buffer) {
-        return buffer;
+    if (cached_data) {
+        return fz_new_buffer_from_shared_data(ctx, cached_data, cached_size);
     }
 
-    // can fz_throw so load outside of cs
+    // can fz_throw so load and extract outside of cs
     buffer = fz_read_file(ctx, ff->file_path);
     if (!buffer) {
         return NULL;
     }
 
+    unsigned char* extracted = NULL;
+    size_t extracted_size = 0;
+    fz_try(ctx) {
+        extracted_size = fz_buffer_extract(ctx, buffer, &extracted);
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buffer);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+
     EnterCriticalSection(&cs_fonts);
     if (!ff->data) {
         // ff->data is freed in destroy_system_font_list()
-        ff->size = fz_buffer_extract(ctx, buffer, (unsigned char**)&ff->data);
+        ff->data = (char*)extracted;
+        ff->size = extracted_size;
+        extracted = NULL;
     }
-    // else: another thread cached the font while we were reading the file;
-    // use its data so we don't overwrite (and leak) an extracted block
-    fz_drop_buffer(ctx, buffer);
-    buffer = fz_new_buffer_from_shared_data(ctx, ff->data, ff->size);
+    cached_data = (unsigned char*)ff->data;
+    cached_size = ff->size;
     LeaveCriticalSection(&cs_fonts);
-    // fz_warn(ctx, "loaded font '%s' from '%s'", font_name, ff->file_path);
-    return buffer;
+
+    free(extracted);
+    return fz_new_buffer_from_shared_data(ctx, cached_data, cached_size);
 }
 
 static int str_ends_with(const char* str, const char* end) {

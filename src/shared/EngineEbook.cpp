@@ -1650,7 +1650,7 @@ class ChmDataCache {
     Vec<ImageData> images;
 
   public:
-    ChmDataCache(ChmFile* doc, Str html) : doc(doc), html(html.s) {}
+    ChmDataCache(ChmFile* doc, Str html) : doc(doc), html(html) {}
 
     ~ChmDataCache() {
         FreeImages(images);

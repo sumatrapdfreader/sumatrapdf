@@ -155,12 +155,29 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
             if (!ObjectCanFree(currTab, &o, skipId)) {
                 continue;
             }
-            u64 sz = o.size;
-            uintptr_t id = o.id;
-            if (!o.free(currTab, &o)) {
+            // Claim the entry under lock before calling o.free so a concurrent
+            // FreeCachedObjectsForEngine cannot double-free the same object.
+            bool claimed = false;
+            {
+                ScopedRecursiveMutex scope(&gCachedObjectsLock);
+                int idx = FindCachedObjectIdx(o.id);
+                if (idx >= 0) {
+                    VecRemoveAtFast(gCachedObjects, idx);
+                    claimed = true;
+                }
+            }
+            if (!claimed) {
                 continue;
             }
-            UnregisterCachedObject(id);
+            u64 sz = o.size;
+            if (!o.free(currTab, &o)) {
+                ScopedRecursiveMutex scope(&gCachedObjectsLock);
+                if (FindCachedObjectIdx(o.id) < 0) {
+                    VecAppend(gCachedObjects, o);
+                }
+                continue;
+            }
+            NotifyCachedObjectsChanged();
             freed += sz;
         }
     }
@@ -230,21 +247,26 @@ void FreeCachedObjectsForEngine(EngineBase* engine) {
         return;
     }
 
-    Vec<CachedObject> snap;
+    Vec<CachedObject> toFree;
     {
         ScopedRecursiveMutex scope(&gCachedObjectsLock);
-        snap = gCachedObjects;
-    }
-    WindowTab* currTab = CurrTab();
-    for (int i = 0; i < len(snap); i++) {
-        CachedObject o = snap[i];
-        if (o.engine != engine) {
-            continue;
+        for (int i = len(gCachedObjects) - 1; i >= 0; i--) {
+            if (gCachedObjects[i].engine == engine) {
+                VecAppend(toFree, gCachedObjects[i]);
+                VecRemoveAtFast(gCachedObjects, i);
+            }
         }
+    }
+    if (len(toFree) == 0) {
+        return;
+    }
+    NotifyCachedObjectsChanged();
+    WindowTab* currTab = CurrTab();
+    for (int i = 0; i < len(toFree); i++) {
+        CachedObject o = toFree[i];
         if (o.free) {
             o.free(currTab, &o);
         }
-        UnregisterCachedObject(o.id);
     }
 }
 

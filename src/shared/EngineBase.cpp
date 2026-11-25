@@ -148,6 +148,11 @@ static bool ParseJsQuotedString(const char*& p, const char* end, str::Builder& b
 // popUpMenu('A', ['Sub', 'B', 'C']) => A(0) Sub(0) B(1) C(1)
 static void ParseJsMenuEntries(const char*& p, const char* end, char close, int level, StrVec& items,
                                Vec<int>& levels) {
+    constexpr int kMaxJsMenuDepth = 32;
+    if (level > kMaxJsMenuDepth) {
+        p = end;
+        return;
+    }
     while (p < end) {
         SkipJsWs(p, end);
         if (p >= end) {
@@ -1387,7 +1392,7 @@ static Str ReturnPageText(const PageText& pt, int* lenOut, Rect** coordsOut, Qua
         *quadsOut = pt.quads;
     }
     // str::Builder-backed buffers reserve a NUL slot at .len
-    if (pt.text.s && len(pt.text) >= 0) {
+    if (pt.text.s && len(pt.text) >= 0 && pt.text.s[len(pt.text)] != 0) {
         pt.text.s[len(pt.text)] = 0;
     }
     return pt.text;

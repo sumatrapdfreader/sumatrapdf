@@ -638,6 +638,7 @@ static bool SetWidgetValue(Annotation* annot, Str value, Str operation, SetValue
     EngineMupdf* e = annot->engine;
     auto* a = annot->pdfannot;
     bool ok = false;
+    fz_var(ok);
     TempStr valueZ = str::DupTemp(value);
     {
         // BaseCtx(), not a Ctx() clone: regenerating the appearance runs the
@@ -651,6 +652,7 @@ static bool SetWidgetValue(Annotation* annot, Str value, Str operation, SetValue
             UpdateFormFieldPage(ctx, a); // refresh JS-calculated fields
         }
         fz_catch(ctx) {
+            ok = false;
             fz_report_error(ctx);
             logf("%s(): mupdf calls failed\n", operation);
         }
@@ -675,16 +677,20 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
         return;
     }
     AnnotAccess access(annot);
+    const char** opts = nullptr;
+    fz_var(opts);
     fz_try(access.ctx) {
         int n = pdf_choice_widget_options(access.ctx, access.annot, 0, nullptr);
         if (n > 0) {
-            const char** opts = (const char**)fz_malloc(access.ctx, n * sizeof(char*));
+            opts = (const char**)fz_malloc(access.ctx, n * sizeof(char*));
             pdf_choice_widget_options(access.ctx, access.annot, 0, opts);
             for (int i = 0; i < n; i++) {
                 out.Append(Str(opts[i] ? opts[i] : ""));
             }
-            fz_free(access.ctx, (void*)opts);
         }
+    }
+    fz_always(access.ctx) {
+        fz_free(access.ctx, (void*)opts);
     }
     fz_catch(access.ctx) {
         fz_report_error(access.ctx);
@@ -1808,6 +1814,9 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     static const float black[3] = {0, 0, 0};
 
     EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !args) {
+        return nullptr;
+    }
     fz_context* ctx = epdf->Ctx();
     // creating an annotation is a create plus a handful of property changes;
     // Undo should take all of it back in one go
@@ -1818,6 +1827,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
         return nullptr;
     }
     pdf_annot* annot = nullptr;
+    fz_var(annot);
     pdf_page* page = nullptr;
     auto typ = args->annotType;
     auto col = args->col;

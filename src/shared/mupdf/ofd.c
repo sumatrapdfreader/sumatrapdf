@@ -1132,19 +1132,26 @@ static void ofd_apply_clips(fz_context* ctx, ofd_document* doc, fz_xml* node, fz
         if (!ofd_is(clip, "Clip")) continue;
         // Areas within a Clip form a union; successive Clips intersect.
         fz_begin_mask(ctx, dev, bounds, 1, fz_device_gray(ctx), black, fz_default_color_params);
-        for (fz_xml* area = fz_xml_down(clip); area; area = fz_xml_next(area)) {
-            if (!ofd_is(area, "Area")) continue;
-            fz_try(ctx) {
-                ofd_clip_area(ctx, doc, area, dev, base, paint);
-            }
-            fz_catch(ctx) {
-                fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
-                fz_report_error(ctx);
-                fz_warn(ctx, "Skipping OFD clip area");
+        fz_try(ctx) {
+            for (fz_xml* area = fz_xml_down(clip); area; area = fz_xml_next(area)) {
+                if (!ofd_is(area, "Area")) continue;
+                fz_try(ctx) {
+                    ofd_clip_area(ctx, doc, area, dev, base, paint);
+                }
+                fz_catch(ctx) {
+                    fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+                    fz_report_error(ctx);
+                    fz_warn(ctx, "Skipping OFD clip area");
+                }
             }
         }
-        fz_end_mask(ctx, dev);
-        ++*count;
+        fz_always(ctx) {
+            fz_end_mask(ctx, dev);
+            ++*count;
+        }
+        fz_catch(ctx) {
+            fz_rethrow(ctx);
+        }
     }
 }
 

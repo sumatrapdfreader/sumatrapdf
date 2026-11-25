@@ -857,6 +857,7 @@ static fz_buffer* FzBufferFromData(fz_context* ctx, const u8* data, int size) {
         return nullptr;
     }
     fz_buffer* buf = nullptr;
+    fz_var(buf);
     fz_try(ctx) {
         buf = fz_new_buffer_from_data(ctx, (u8*)dataCopy, size);
     }
@@ -5384,6 +5385,7 @@ static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* fil
         return nullptr;
     }
     fz_buffer* buf = nullptr;
+    fz_var(buf);
     fz_try(ctx) {
         buf = fz_new_buffer_from_copied_data(ctx, (u8*)data.s, (size_t)data.len);
     }
@@ -9582,6 +9584,9 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     // the time this signature is checked as of: a trusted timestamp proves
     // when it was made, without one all we have is now
     i64 provenTime = 0;
+    fz_var(contents);
+    fz_var(contentsLen);
+    fz_var(provenTime);
     fz_try(ctx) {
         contentsLen = pdf_signature_contents(ctx, pdfdoc, sigObj, &contents);
         if (contentsLen > 0) {
@@ -12013,6 +12018,7 @@ Str EngineMupdfImageAsPng(EngineBase* engine, int pageNo, int imageIdx) {
         return {};
     }
     auto* ctx = e->Ctx();
+    ScopedMutex renderScope(&e->renderLock);
     ScopedRecursiveMutex scope(&e->docLock);
     fz_image* image = FzFindImageAtIdx(ctx, pi, imageIdx);
     if (!image) {
@@ -12698,12 +12704,14 @@ bool EngineMupdfSaveAsPdf(EngineBase* engine, Str destPath) {
         return false;
     }
     fz_context* ctx = e->Ctx();
+    ScopedMutex renderScope(&e->renderLock);
     ScopedRecursiveMutex scope(&e->docLock);
     fz_document_writer* writer = nullptr;
     fz_page* page = nullptr;
     bool ok = false;
     fz_var(writer);
     fz_var(page);
+    fz_var(ok);
     fz_try(ctx) {
         writer = fz_new_pdf_writer(ctx, CStrTemp(destPath), nullptr);
         int n = fz_count_pages(ctx, e->_doc);
@@ -13440,6 +13448,10 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
     fz_outline* outline = nullptr;
     fz_buffer* buf = nullptr;
     fz_output* out = nullptr;
+    fz_var(doc);
+    fz_var(outline);
+    fz_var(buf);
+    fz_var(out);
     fz_try(ctx) {
         doc = fz_open_document(ctx, CStrTemp(path));
         outline = fz_load_outline(ctx, doc);
@@ -13875,6 +13887,7 @@ TempStr EngineMupdfGetPdfInfo(Str path, Str password) {
     fz_register_document_handlers(ctx);
     TempStr res;
     fz_buffer* buf = nullptr;
+    fz_var(buf);
     fz_try(ctx) {
         buf = pdfinfo_to_buffer(ctx, CStrTemp(path), CStrTemp(password));
         unsigned char* data;

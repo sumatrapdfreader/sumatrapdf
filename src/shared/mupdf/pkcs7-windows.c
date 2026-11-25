@@ -876,7 +876,9 @@ static char* oid_to_dotted(fz_context* ctx, const unsigned char* p, size_t n) {
     if (n < 1) {
         return NULL;
     }
-    used = (size_t)snprintf(buf, sizeof(buf), "%u.%u", p[0] / 40, p[0] % 40);
+    unsigned int arc0 = p[0] >= 80 ? 2 : p[0] / 40;
+    unsigned int arc1 = p[0] >= 80 ? p[0] - 80 : p[0] % 40;
+    used = (size_t)snprintf(buf, sizeof(buf), "%u.%u", arc0, arc1);
     v = 0;
     for (i = 1; i < n && used + 12 < sizeof(buf); i++) {
         v = (v << 7) | (p[i] & 0x7F);
@@ -937,8 +939,16 @@ static void parse_tstinfo(fz_context* ctx, const unsigned char* p, size_t n, pkc
         memcpy(tmp, q + hdr, body);
         tmp[body] = 0;
         ZeroMemory(&st, sizeof(st));
-        if (sscanf(tmp, "%4hu%2hu%2hu%2hu%2hu%2hu", &st.wYear, &st.wMonth, &st.wDay, &st.wHour, &st.wMinute,
-                   &st.wSecond) >= 4) {
+        int parsed = 0;
+        if (q[0] == 0x17) {
+            parsed = sscanf(tmp, "%2hu%2hu%2hu%2hu%2hu%2hu", &st.wYear, &st.wMonth, &st.wDay, &st.wHour, &st.wMinute,
+                            &st.wSecond);
+            st.wYear = st.wYear < 50 ? (WORD)(2000 + st.wYear) : (WORD)(1900 + st.wYear);
+        } else {
+            parsed = sscanf(tmp, "%4hu%2hu%2hu%2hu%2hu%2hu", &st.wYear, &st.wMonth, &st.wDay, &st.wHour, &st.wMinute,
+                            &st.wSecond);
+        }
+        if (parsed >= 4) {
             if (SystemTimeToFileTime(&st, &ft)) {
                 ts->gen_time_unix = filetime_to_unix(&ft);
             }
