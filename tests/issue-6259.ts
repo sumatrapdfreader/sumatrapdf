@@ -15,8 +15,11 @@ import {
   getExtendedFrameBounds,
   getWindowRect,
   getWorkArea,
+  isZoomed as isWindowMaximized,
   postMessage,
+  showWindow,
   sleep,
+  SW_RESTORE,
   WM_SYSCOMMAND,
 } from "./winapi.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
@@ -70,6 +73,9 @@ export async function testit(): Promise<void> {
     }
     console.log("issue-6259: OK");
   } finally {
+    if (isWindowMaximized(frame)) {
+      showWindow(frame, SW_RESTORE);
+    }
     client.close();
     await killAndWait(proc);
   }

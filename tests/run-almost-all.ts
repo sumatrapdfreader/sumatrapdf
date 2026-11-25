@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6259", issue6259],
   ["issue-6261", issue6261],
   ["issue-3472", issue3472],
   ["read-aloud-lazy-voices", readAloudLazyVoices],
@@ -1070,7 +1071,6 @@ export const tests: NamedTest[] = orderForReuse([
   parallelTest("font-download"),
   parallelTest("font-system-substitutes"),
   ["print-dialog-multi-file", printDialogMultiFile],
-  ["issue-6259", issue6259],
   ["fullscreen-session-restore", fullscreenSessionRestore],
   ["stamp-edit-toolbar-name", stampEditToolbarName],
   ["home-tip-double-click", homeTipDoubleClick],
