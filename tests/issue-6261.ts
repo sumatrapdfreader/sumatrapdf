@@ -6,14 +6,14 @@
 
 import { writeFileSync } from "node:fs";
 import { IS_MAC } from "./host.ts";
-import { makeOnePagePdf, runStandalone, tmpPath } from "./util.ts";
+import { makeOnePagePdf, pollUntil, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
+  isWindowVisible,
   MK_LBUTTON,
   packCoords,
   postMessage,
   setCursorPos,
-  sleep,
   VK_ESCAPE,
   WM_KEYDOWN,
   WM_LBUTTONDOWN,
@@ -21,16 +21,6 @@ import {
   WM_MOUSEMOVE,
 } from "./winapi.ts";
 import { killAndWait, launchControlled, waitForContextMenu } from "./win-automation.ts";
-
-async function waitFor(what: string, f: () => boolean | Promise<boolean>, timeoutMs = 3000) {
-  const deadline = Date.now() + timeoutMs;
-  while (!(await f())) {
-    if (Date.now() > deadline) {
-      throw new Error(`issue-6261: ${what}`);
-    }
-    await sleep(30);
-  }
-}
 
 // posts a mouse message at client pt, with the real cursor there too: the
 // move loop and SetCapture look at it
@@ -61,12 +51,17 @@ export async function testit(): Promise<void> {
     // a click opens the system menu
     mouse(frame, WM_LBUTTONDOWN, MK_LBUTTON, at);
     mouse(frame, WM_LBUTTONUP, 0, at);
-    const menu = await waitForContextMenu(3000);
+    const menu = await waitForContextMenu(3000, proc.pid);
     if (!menu) {
       throw new Error("issue-6261: a click on the icon didn't open the system menu");
     }
     postMessage(menu, WM_KEYDOWN, VK_ESCAPE, 0);
-    await waitFor("the system menu didn't close", async () => (await waitForContextMenu(50)) === 0);
+    await pollUntil(
+      () => isWindowVisible(menu),
+      (visible) => !visible,
+      { timeoutMs: 3000, error: "issue-6261: the system menu didn't close" },
+    );
+    await client.waitForRenderIdle();
 
     // A drag moves the window instead: the release that follows is no click.
     // Windows ends the move loop at once without a real button down, so all
@@ -76,7 +71,7 @@ export async function testit(): Promise<void> {
     mouse(frame, WM_LBUTTONDOWN, MK_LBUTTON, at);
     mouse(frame, WM_MOUSEMOVE, MK_LBUTTON, to);
     mouse(frame, WM_LBUTTONUP, 0, to);
-    const menuAfterDrag = await waitForContextMenu(1000);
+    const menuAfterDrag = await waitForContextMenu(1000, proc.pid);
     if (menuAfterDrag) {
       postMessage(menuAfterDrag, WM_KEYDOWN, VK_ESCAPE, 0);
       throw new Error("issue-6261: dragging the icon opened the system menu instead of moving the window");

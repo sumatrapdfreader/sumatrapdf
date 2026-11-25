@@ -841,13 +841,13 @@ export function openContextMenu(hwnd: number, screenX: number, screenY: number):
   postMessage(hwnd, WM_CONTEXTMENU, hwnd, packCoords(screenX, screenY));
 }
 
-// Wait for a popup menu window (#32768) to appear; returns its hwnd or 0.
-export async function waitForContextMenu(timeoutMs = 1500): Promise<number> {
+// Wait for a popup menu window (#32768). With a PID, only match visible menus in that process.
+export async function waitForContextMenu(timeoutMs = 1500, pid?: number): Promise<number> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     let menu = 0;
     enumWindows((h) => {
-      if (getClassName(h) === "#32768") {
+      if (getClassName(h) === "#32768" && (pid === undefined || (getWindowPid(h) === pid && isWindowVisible(h)))) {
         menu = h;
         return false;
       }
