@@ -1460,6 +1460,7 @@ bool EngineImage::FinishLoading(Size fallbackSize) {
         fileDPI = p0->xres;
     }
 
+    VecReserve(pageInfos, std::max(1, len(frames)));
     auto* pi = new ImagePageInfo();
     int w = p0 ? p0->width : fallbackSize.dx;
     int h = p0 ? p0->height : fallbackSize.dy;
@@ -2045,6 +2046,7 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
 
     SortNatural(&e->pageFileNames);
 
+    VecReserve(e->pageInfos, nFiles);
     for (int i = 0; i < nFiles; i++) {
         ImagePageInfo* pi = new ImagePageInfo();
         VecAppend(e->pageInfos, pi);
@@ -2644,6 +2646,7 @@ bool EngineCbx::FinishLoading() {
 
     std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
 
+    VecReserve(pageInfos, nFiles);
     for (int i = 0; i < nFiles; i++) {
         auto* pi = new ImagePageInfo();
         VecAppend(pageInfos, pi);

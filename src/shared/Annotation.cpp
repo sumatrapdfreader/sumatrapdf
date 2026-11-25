@@ -467,6 +467,7 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     AnnotAccess access(annot);
     fz_try(access.ctx) {
         int n = pdf_annot_quad_point_count(access.ctx, access.annot);
+        VecReserve(res, n);
         for (int i = 0; i < n; i++) {
             fz_quad q = pdf_annot_quad_point(access.ctx, access.annot, i);
             VecAppend(res, ToRectF(fz_rect_from_quad(q)));
@@ -1510,6 +1511,7 @@ Vec<PointF> GetVertices(Annotation* annot) {
     AnnotAccess access(annot);
     fz_try(access.ctx) {
         int n = pdf_annot_vertex_count(access.ctx, access.annot);
+        VecReserve(res, n);
         for (int i = 0; i < n; i++) {
             fz_point p = pdf_annot_vertex(access.ctx, access.annot, i);
             VecAppend(res, {p.x, p.y});
