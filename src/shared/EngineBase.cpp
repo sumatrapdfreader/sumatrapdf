@@ -701,7 +701,7 @@ static TempStr CleanupTreeViewControlStringTemp(Str s) {
     TempWStr ws = ToWStrTemp(s);
     // soft hyphen (U+00AD): an invisible line-break hint, but rendered as a
     // visible hyphen by some fonts
-    wstr::RemoveCharsInPlace(ws, L"\x00ad");
+    ws.len -= wstr::RemoveCharsInPlace(ws, L"\x00ad");
     // control chars (incl. embedded newlines/tabs) and the Unicode line and
     // paragraph separators render as boxes in a single-line label
     for (int i = 0; i < ws.len; i++) {
@@ -711,7 +711,7 @@ static TempStr CleanupTreeViewControlStringTemp(Str s) {
         }
     }
     // collapse the runs of whitespace we just introduced (and trim)
-    wstr::NormalizeWSInPlace(ws);
+    ws.len -= wstr::NormalizeWSInPlace(ws);
     return ToUtf8Temp(ws);
 }
 
@@ -777,7 +777,7 @@ TocItem* TocItem::ChildAt(int n) {
         return currChild;
     }
     auto* node = child;
-    while (n > 0) {
+    while (n > 0 && node) {
         n--;
         node = node->next;
     }

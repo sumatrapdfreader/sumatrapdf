@@ -1164,6 +1164,9 @@ void init_system_font_list(void) {
 }
 
 void destroy_system_font_list(void) {
+    if (!did_init) {
+        return;
+    }
     // both names are part of the node's allocation, so the node is all there
     // is to free
     win_font_info* fi = g_win_fonts;
@@ -1185,6 +1188,7 @@ void destroy_system_font_list(void) {
     g_font_files = NULL;
     g_font_files_last = NULL;
     DeleteCriticalSection(&cs_fonts);
+    did_init = 0;
 }
 
 void install_load_windows_font_funcs(fz_context* ctx) {

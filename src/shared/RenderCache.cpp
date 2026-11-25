@@ -961,7 +961,7 @@ void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo,
     // carry the remaining pages forward so they're chained after this one
     PredictiveChain chain;
     chain.originPageNo = originPageNo;
-    for (int j = i + 1; j < nPages; j++) {
+    for (int j = i + 1; j < nPages && chain.nPages < kMaxPredictiveRequests; j++) {
         chain.pages[chain.nPages++] = pages[j];
     }
     TilePosition tile(GetTileRes(dm, pages[i]), 0, 0);
@@ -970,16 +970,8 @@ void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo,
 
 void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
                          const Func1<PageRenderRequest*>& callback) {
-    bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, callback);
-    if (!ok) {
-        // create a dummy request to notify callback of failure
-        PageRenderRequest req;
-        req.dm = dm;
-        req.pageNo = pageNo;
-        req.bmp = nullptr;
-        req.errorCode = 1;
-        callback.Call(&req);
-    }
+    // inner Render already invokes callback (as aborted) if the request is refused
+    Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, callback);
 }
 
 // a request that won't be rendered still gets its callback, as aborted: a
@@ -1041,6 +1033,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
         newRequest->tile = *tile;
     } else if (pageRect) {
         newRequest->pageRect = *pageRect;
+        newRequest->tile = TilePosition();
     } else {
         CrashMe();
     }
@@ -1346,7 +1339,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
     for (int i = 0; i < reqCount; i++) {
         PageRenderRequest* req = &(requests[i]);
         bool shouldRemove = req->dm == dm && (pageNo == kRenderCacheAllPages || req->pageNo == pageNo) &&
-                            (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, *tile, 0.5));
+                            (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, req->tile, 0.5));
         if (shouldRemove) {
             CallRenderAborted(req);
         }

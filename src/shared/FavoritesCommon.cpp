@@ -74,13 +74,13 @@ bool FavTreeModel::IsExpanded(TreeItem ti) {
 }
 
 void FavTreeModel::SetUserData(TreeItem ti, uintptr_t userData) {
-    ReportIf(ti < 0);
+    ReportIf(ti == TreeModel::kNullItem);
     FavTreeItem* treeItem = (FavTreeItem*)ti;
     treeItem->userData = userData;
 }
 
 uintptr_t FavTreeModel::GetUserData(TreeItem ti) {
-    ReportIf(ti < 0);
+    ReportIf(ti == TreeModel::kNullItem);
     FavTreeItem* treeItem = (FavTreeItem*)ti;
     return treeItem->userData;
 }

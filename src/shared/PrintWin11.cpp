@@ -993,14 +993,19 @@ class Win11PrintSession {
             return hr;
         }
 
-        PrintDocumentSource* src = source.Get();
-        auto handler = Callback<OptionChangedHandler>(
-            [src](OptDetails::IPrintTaskOptionDetails*, OptDetails::IPrintTaskOptionChangedEventArgs*) -> HRESULT {
-                src->InvalidatePreview();
+        ComPtr<PrintDocumentSource> retainedSource = source;
+        auto handler =
+            Callback<OptionChangedHandler>([retainedSource](OptDetails::IPrintTaskOptionDetails*,
+                                                            OptDetails::IPrintTaskOptionChangedEventArgs*) -> HRESULT {
+                retainedSource->InvalidatePreview();
                 return S_OK;
             });
         if (!handler) {
             return E_OUTOFMEMORY;
+        }
+        if (optionDetails && optionToken.value) {
+            optionDetails->remove_OptionChanged(optionToken);
+            optionToken.value = 0;
         }
         optionDetails = details;
         return details->add_OptionChanged(handler.Get(), &optionToken);

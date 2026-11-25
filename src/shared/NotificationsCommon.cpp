@@ -28,7 +28,7 @@ int CalcPerc(int current, int total) {
     if (total <= 0) {
         total = 1;
     }
-    int perc = limitValue(100 * current / total, 0, 100);
+    int perc = limitValue((int)((i64)100 * current / total), 0, 100);
     return perc;
 }
 
@@ -124,7 +124,12 @@ static void ShowFontDownloadNotif(const FontDownloadMsg& m, bool repaintNow) {
             args.timeoutMs = kNotifNoTimeout;
             wnd = ShowNotification(args);
         }
-        int perc = m.total > 0 ? CalcPerc((int)(std::min(m.nDownloaded, m.total) / 1024), (int)(m.total / 1024)) : 0;
+        int perc = 0;
+        if (m.total >= 1024) {
+            perc = CalcPerc((int)(std::min(m.nDownloaded, m.total) / 1024), (int)(m.total / 1024));
+        } else if (m.total > 0) {
+            perc = CalcPerc((int)std::min(m.nDownloaded, m.total), (int)m.total);
+        }
         if (wnd) {
             UpdateNotificationProgress(wnd, msg, perc);
         }

@@ -207,10 +207,11 @@ bool HandleExplorerQuickLookCopyData(COPYDATASTRUCT* cds) {
     if (!cds || cds->dwData != kCopyDataQuickLook || !cds->lpData || cds->cbData < 1) {
         return false;
     }
-    Str pathZ = Str((char*)cds->lpData, (int)cds->cbData);
-    if (strnlen_s(pathZ.s, (size_t)cds->cbData) >= cds->cbData) {
+    size_t n = strnlen_s((const char*)cds->lpData, (size_t)cds->cbData);
+    if (n >= cds->cbData) {
         return false;
     }
+    Str pathZ = Str((char*)cds->lpData, (int)n);
     auto* d = new QuickLookCopyDataAsync;
     d->path = str::Dup(pathZ);
     uitask::Post(MkFunc0<QuickLookCopyDataAsync>(QuickLookCopyDataAsyncRun, d), "QuickLookCopyData");

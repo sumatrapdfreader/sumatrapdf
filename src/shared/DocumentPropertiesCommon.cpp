@@ -407,7 +407,7 @@ static TempStr FormatDateTemp(const PropDate& date, int timeZone) {
     if (strftime(buf, dimof(buf), format, &tm) == 0) {
         return {};
     }
-    return AddTimeZone(Str(buf), timeZone);
+    return AddTimeZone(str::DupTemp(Str(buf)), timeZone);
 #endif
 }
 
@@ -686,12 +686,12 @@ static TempStr HexBytesTemp(const BYTE* p, int n, bool reverse) {
 }
 
 static TempStr CertNameTemp(PCCERT_CONTEXT cert, DWORD flags) {
-    char buf[512];
-    DWORD n = CertGetNameStringA(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, flags, nullptr, buf, dimof(buf));
+    WCHAR buf[512];
+    DWORD n = CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE, flags, nullptr, buf, dimof(buf));
     if (n <= 1) {
         return {};
     }
-    return str::DupTemp(Str(buf));
+    return ToUtf8Temp(WStr(buf, (int)n - 1));
 }
 
 static void AppendOneCert(str::Builder& out, PdfSigCert* c) {

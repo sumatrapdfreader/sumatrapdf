@@ -246,7 +246,7 @@ void SetCurrentLangByCode(Str langCode) {
         FallbackToEnglish();
         return;
     }
-    ParseTranslationsTxt(d, langCode);
+    ParseTranslationsTxt(d, gCurrLangCode);
     free(data);
 }
 

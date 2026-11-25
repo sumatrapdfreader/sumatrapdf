@@ -84,6 +84,7 @@ void FindFreeUi(Str& status, UI*& ui) {
         str::Free(ui->historyFirst);
     }
     delete ui;
+    ui = nullptr;
 }
 #endif
 

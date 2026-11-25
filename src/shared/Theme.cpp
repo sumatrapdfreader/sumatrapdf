@@ -546,6 +546,10 @@ void FreeThemes() {
     gThemes = nullptr;
     FreeParsedThemes(gParsedThemes);
     gParsedThemes = nullptr;
+    gCurrentTheme = nullptr;
+    gThemeLight = nullptr;
+    gThemeCount = 0;
+    gCurrThemeIndex = 0;
 }
 
 void CreateThemeCommands() {
@@ -625,8 +629,11 @@ int ThemeGetCurrentIndex() {
 
 void SetThemeByIndex(int themeIdx) {
     ReportIf((themeIdx < 0) || (themeIdx >= gThemeCount));
-    if (themeIdx >= gThemeCount) {
+    if (themeIdx < 0 || themeIdx >= gThemeCount) {
         themeIdx = 0;
+    }
+    if (gThemeCount == 0) {
+        return;
     }
     gThemeFollowsSystem = false;
     bool themeChanged = (gCurrThemeIndex != themeIdx);

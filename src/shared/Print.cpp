@@ -2054,11 +2054,11 @@ static short GetPaperByName(Printer* printer, Str wantedName) {
 
     // alternatively allow indicating the paper directly by number
     uint paperId = 0;
-    if (!str::IsNull(str::Parse(wantedName, "%u%$", &paperId))) {
+    if (!str::IsNull(str::Parse(wanted, "%u%$", &paperId))) {
         return (short)paperId;
     }
 
-    short standard = GetStandardPaperByName(wantedName);
+    short standard = GetStandardPaperByName(wanted);
     if (standard != 0) {
         return standard;
     }

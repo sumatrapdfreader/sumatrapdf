@@ -341,7 +341,13 @@ static void ParseTranslationOutput(AIChatBackend backend, Str output, str::Build
     {
         Str s = ToStr(translationOut);
         str::TrimWSInPlace(s, str::TrimOpt::Both);
+        if (s.s != translationOut.els && s.len > 0) {
+            memmove(translationOut.els, s.s, (size_t)s.len);
+        }
         translationOut.len = s.len;
+        if (translationOut.els) {
+            translationOut.els[s.len] = 0;
+        }
     }
     if (len(translationOut) == 0 && output && !str::Contains(output, StrL("{\"type\":")) &&
         !str::Contains(output, StrL("{\"event\":"))) {

@@ -129,6 +129,9 @@ void ResetQuickAccessCache() {
 
 // home entries show the full path: Quick access has many same-named folders
 static void AppendHomeDirEntry(Vec<NavFileEntry>& out, Str path) {
+    if (len(path) == 0) {
+        return;
+    }
     NavFileEntry e;
     e.isDir = true;
     e.path = str::Dup(path);

@@ -44,7 +44,7 @@ static int asn1_read_len(const unsigned char* p, size_t n, size_t max_bytes, siz
         }
         *hdr = 2 + ln;
     }
-    if (*hdr + *body > n) {
+    if (*body > n - *hdr) {
         return -1;
     }
     return 0;
@@ -1276,7 +1276,7 @@ static int ocsp_signature_ok(const unsigned char* basic, size_t basic_len, POCSP
     p = basic + hdr;
     left = body;
     for (i = 0; i < 3; i++) {
-        if (left < 2 || asn1_len(p + signed_len, left - signed_len, &h2, &b2) != 0) {
+        if (signed_len >= left || left - signed_len < 2 || asn1_len(p + signed_len, left - signed_len, &h2, &b2) != 0) {
             return 0;
         }
         signed_len += h2 + b2;
@@ -1330,6 +1330,9 @@ static int ocsp_signature_ok(const unsigned char* basic, size_t basic_len, POCSP
 static int ocsp_id_matches(const OCSP_CERT_ID* id, PCCERT_CONTEXT cert) {
     BYTE digest[64];
     DWORD cb = sizeof(digest);
+    if (!id->HashAlgorithm.pszObjId) {
+        return 0;
+    }
     LPCWSTR alg = cng_hash_name(id->HashAlgorithm.pszObjId);
     if (!alg || !CertCompareIntegerBlob((PCRYPT_INTEGER_BLOB)&id->SerialNumber, &cert->pCertInfo->SerialNumber)) {
         return 0;

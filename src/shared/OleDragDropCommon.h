@@ -167,7 +167,7 @@ class SimpleEnumFormatEtc : public IEnumFORMATETC {
         return fetched == celt ? S_OK : S_FALSE;
     }
     STDMETHODIMP Skip(ULONG celt) override {
-        if (index + celt < count) {
+        if (celt <= count - index) {
             index += celt;
             return S_OK;
         }

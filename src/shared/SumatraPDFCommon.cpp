@@ -191,6 +191,9 @@ void InitializePolicies(bool restrict) {
     }
 
     Str restrictData = file::ReadFile(restrictPath);
+    defer {
+        str::Free(restrictData);
+    };
     SquareTreeNode* root = ParseSquareTree(restrictData);
     AutoDelete delRoot(root);
     SquareTreeNode* polsec = root ? root->GetChild(StrL("Policies")) : nullptr;
@@ -1375,10 +1378,11 @@ void TogglePresentationMode(MainWindow* win) {
 // make sure that idx falls within <0, max-1> inclusive range
 // negative numbers wrap from the end
 int wrapIdx(int idx, int max) {
-    for (; idx < 0; idx += max) {
-        idx += max;
+    if (max <= 0) {
+        return 0;
     }
-    return idx % max;
+    int r = idx % max;
+    return r < 0 ? r + max : r;
 }
 
 // first entry is value in gLangCodes, second is ISO 639 lang code
@@ -2869,7 +2873,11 @@ static bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 ne
         return false;
     }
     payload->newWindow = newWindow;
-    memcpy(payload + 1, fullPath.s, pathLen + 1);
+    char* dst = (char*)(payload + 1);
+    if (pathLen > 0) {
+        memcpy(dst, fullPath.s, pathLen);
+    }
+    dst[pathLen] = 0;
     COPYDATASTRUCT cds = {kCopyDataOpen, (DWORD)cbData, payload};
     LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
     free(payload);

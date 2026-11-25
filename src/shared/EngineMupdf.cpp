@@ -833,8 +833,7 @@ static void PdfCleanStringInPlace(WStr& ws) {
             break;
         }
     }
-    wstr::NormalizeWSInPlace(ws);
-    ws.len = len(ws);
+    ws.len -= wstr::NormalizeWSInPlace(ws);
 }
 
 static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
@@ -4406,6 +4405,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
         fileBytes = nullptr;
         fz_drop_document(ctx, _doc);
         _doc = nullptr;
+        pdfdoc = nullptr;
         file = FzReadMaybeFixPDF(ctx, FilePath());
         if (!file) {
             return false;
@@ -4443,6 +4443,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
 
     fz_drop_document(ctx, _doc);
     _doc = nullptr;
+    pdfdoc = nullptr;
 
     if (!LoadFromStream(file, FilePath(), pwdUI)) {
         return false;
@@ -5730,6 +5731,7 @@ int EngineMupdf::LayOutChapter(int chapter) {
             // stale tail from before a re-pagination that shrank this chapter
             while (len(*v) > n) {
                 FzPageInfo* pi = (*v)[len(*v) - 1];
+                FreePageInfo(ctx, pi);
                 pi->~FzPageInfo();
                 VecRemoveLast(*v);
             }
@@ -7933,6 +7935,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
 
     page = pageInfo->page;
     if (!page) {
+        FreeRenderTarget(ctx, target);
         return nullptr;
     }
 
@@ -8001,16 +8004,20 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
             }
-            fz_run_page_contents(ctx, page, dev, fz_identity, nullptr);
-            fz_close_device(ctx, dev);
-            fz_drop_device(ctx, dev);
-            pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop, &palettized);
-            if (!args.transparentBackdrop) {
-                AtomicIntSet(&renderPalettized, palettized ? 1 : 0);
+            fz_run_page_contents(ctx, page, dev, fz_identity, fzcookie);
+            if (!RenderAborted(fzcookie)) {
+                fz_close_device(ctx, dev);
+                pixmap = FinishRenderTarget(ctx, target, args.transparentBackdrop, &palettized);
+                if (!args.transparentBackdrop) {
+                    AtomicIntSet(&renderPalettized, palettized ? 1 : 0);
+                }
+                MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
             }
-            MarkTransparentBackdropPixmap(pixmap, args.transparentBackdrop);
         }
         fz_always(ctx) {
+            if (dev) {
+                fz_drop_device(ctx, dev);
+            }
             FreeRenderTarget(ctx, target);
         }
         fz_catch(ctx) {

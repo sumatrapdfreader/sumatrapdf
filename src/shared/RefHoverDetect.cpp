@@ -1244,7 +1244,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
                     }
                     nextBottom = std::max(r.y + r.dy, nextBottom);
                 }
-                if (nextBottom < 0) {
+                if (nextBottom <= prevBottom) {
                     break;
                 }
                 blockBottom = nextBottom;

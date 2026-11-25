@@ -498,11 +498,7 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const KeyShortcut& sc) {
         // same bits as AltGr on Windows; keep the name the user would type
         str.Append(StrL("AltGr + "));
     } else if (sc.alt) {
-        Str s = StrL("Alt + ");
-        if (isGerman) {
-            s = StrL("Größe + ");
-        }
-        str.Append(s);
+        str.Append(StrL("Alt + "));
     } else if (sc.ctrl) {
         Str s = StrL("Ctrl + ");
         if (isGerman) {

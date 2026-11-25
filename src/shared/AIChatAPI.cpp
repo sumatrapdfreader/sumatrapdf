@@ -520,7 +520,7 @@ struct CustomAIProvider : AIChatProvider {
     CustomAIProvider() {
         backend = AIChatBackend::CustomAPI;
         name = StrL("Custom AI");
-        virtualHost = StrL("custom-ai.local");
+        virtualHost = StrL("https://sumatrapdf.custom-ai/");
         webViewDataDirPrefix = StrL("CustomAIWebView");
         docUri = StrL("AI-chat");
         optionItems = "Chat Completions\0";

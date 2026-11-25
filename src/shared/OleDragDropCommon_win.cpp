@@ -75,11 +75,12 @@ HGLOBAL EncodeBitmapToPngGlobal(HBITMAP hbmp) {
     }
     Gdiplus::Status status = gdipBmp.Save(stream, &pngClsid, nullptr);
     HGLOBAL hMem = nullptr;
-    if (status == Gdiplus::Ok) {
-        GetHGlobalFromStream(stream, &hMem);
-    }
+    GetHGlobalFromStream(stream, &hMem);
     stream->Release();
     if (status != Gdiplus::Ok) {
+        if (hMem) {
+            GlobalFree(hMem);
+        }
         return nullptr;
     }
     return hMem;

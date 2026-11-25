@@ -203,6 +203,7 @@ static void ofd_parse_cert(fz_context* ctx, ofd_der cert, ofd_sig_check* out) {
     ofd_der_take(ctx, &spki, OFD_DER_SEQUENCE);
     ofd_der key = ofd_der_take(ctx, &spki, OFD_DER_BIT_STRING);
     fz_drop_buffer(ctx, out->cert);
+    out->cert = NULL;
     out->cert = fz_new_buffer_from_copied_data(ctx, cert.data, cert.len);
     // unused-bits byte, then an uncompressed point 04 || x || y
     out->has_key = key.len == 66 && key.data[0] == 0 && key.data[1] == 4;

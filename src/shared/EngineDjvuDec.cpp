@@ -595,7 +595,7 @@ Pixmap* EngineDjvuDec::RenderPage(RenderPageArgs& args) {
     // The decoder applies intrinsic rotation; only user rotation remains.
     int rdx = sdx, rdy = sdy;
     if (userRotation != 0) {
-        if (isBitonal) {
+        if (comp == 1) {
             pixels.Set(RotatePixels<kGrayChannels>(pixels, sdx, sdy, userRotation, rdx, rdy));
         } else {
             pixels.Set(RotatePixels<kBgrChannels>(pixels, sdx, sdy, userRotation, rdx, rdy));

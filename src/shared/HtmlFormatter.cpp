@@ -674,7 +674,7 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
     if (currX > maxCurrX) {
         return false;
     }
-    DrawInstr& di = VecLast(currLineInstr);
+    DrawInstr di = VecLast(currLineInstr);
     // don't add a space if only an anchor would be in between them
     if (DrawInstrType::Anchor == di.type && len(currLineInstr) > 1) {
         di = currLineInstr[len(currLineInstr) - 2];

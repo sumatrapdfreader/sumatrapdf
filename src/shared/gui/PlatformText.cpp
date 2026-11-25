@@ -68,7 +68,7 @@ int PlatformTextRender::StringLenForWidth(Str s, float dx, float sWidth) {
         } else {
             // if decreasing length, we know that previous string didn't fit, so if
             // the one one fits, it's of the correct length
-            if (r.dx < dx) {
+            if (r.dx <= dx) {
                 return n;
             }
         }
@@ -312,7 +312,7 @@ struct GraphicsCacheEntry {
 
 // a single lock for everything here; contention is not a problem
 static Mutex gGraphicsCacheMutex;
-static Vec<GraphicsCacheEntry>* gGraphicsCache = nullptr;
+static Vec<GraphicsCacheEntry*>* gGraphicsCache = nullptr;
 
 bool GraphicsCacheEntry::Create() {
     memset(data, 0, sizeof(data));
@@ -326,6 +326,8 @@ bool GraphicsCacheEntry::Create() {
     }
     gfx = new Graphics((Image*)bmp);
     if (!gfx) {
+        delete bmp;
+        bmp = nullptr;
         return false;
     }
     InitGraphicsMode(gfx);
@@ -342,35 +344,39 @@ void GraphicsCacheEntry::Free() const {
 static Graphics* AllocGraphicsForMeasureTextNoLock() {
     ReportDebugIf(!gGraphicsCacheMutex.IsHeldByCurrentThread());
     if (!gGraphicsCache) {
-        gGraphicsCache = new Vec<GraphicsCacheEntry>();
+        gGraphicsCache = new Vec<GraphicsCacheEntry*>();
     }
     ThreadId threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry& e : *gGraphicsCache) {
-        if (e.threadId == threadId) {
-            e.refCount++;
-            return e.gfx;
+    for (GraphicsCacheEntry* e : *gGraphicsCache) {
+        if (e->threadId == threadId) {
+            e->refCount++;
+            return e->gfx;
         }
     }
-    GraphicsCacheEntry ce;
-    ce.Create();
+    auto* ce = new GraphicsCacheEntry();
+    if (!ce->Create()) {
+        delete ce;
+        return nullptr;
+    }
     VecAppend(*gGraphicsCache, ce);
     if (len(*gGraphicsCache) < 64) {
-        return ce.gfx;
+        return ce->gfx;
     }
 
     // try to limit the size of cache by evicting the oldest entries, but don't
     // remove the last (the one we just added) entry
     for (int i = 0; i < len(*gGraphicsCache) - 1; i++) {
-        GraphicsCacheEntry e = (*gGraphicsCache)[i];
-        if (0 == e.refCount) {
-            e.Free();
+        GraphicsCacheEntry* e = (*gGraphicsCache)[i];
+        if (0 == e->refCount) {
+            e->Free();
+            delete e;
             VecRemoveAt(*gGraphicsCache, i);
-            return ce.gfx;
+            return ce->gfx;
         }
     }
     // We shouldn't get here - indicates ref counting problem
     ReportIf(true);
-    return ce.gfx;
+    return ce->gfx;
 }
 
 static Graphics* AllocGraphicsForMeasureText() {
@@ -393,11 +399,11 @@ static void FreeGraphicsForMeasureText(Graphics* gfx) {
         return;
     }
     ThreadId threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry& e : *gGraphicsCache) {
-        if (e.gfx == gfx) {
-            ReportIf(e.threadId != threadId);
-            e.refCount--;
-            ReportIf(e.refCount < 0);
+    for (GraphicsCacheEntry* e : *gGraphicsCache) {
+        if (e->gfx == gfx) {
+            ReportIf(e->threadId != threadId);
+            e->refCount--;
+            ReportIf(e->refCount < 0);
             return;
         }
     }
@@ -412,10 +418,11 @@ void PlatformFontDestroy() {
     if (!gGraphicsCache) {
         return;
     }
-    for (GraphicsCacheEntry& e : *gGraphicsCache) {
+    for (GraphicsCacheEntry* e : *gGraphicsCache) {
         // whoever held this is gone by now
-        e.refCount = 0;
-        e.Free();
+        e->refCount = 0;
+        e->Free();
+        delete e;
     }
     delete gGraphicsCache;
     gGraphicsCache = nullptr;
@@ -441,7 +448,12 @@ struct WinTextRender : PlatformTextRender {
         }
     }
 
-    float GetCurrFontLineSpacing() override { return currFont->gdiFont->GetHeight(gfx); }
+    float GetCurrFontLineSpacing() override {
+        if (!currFont || !currFont->gdiFont) {
+            return 0.f;
+        }
+        return currFont->gdiFont->GetHeight(gfx);
+    }
 };
 
 // draws with gdi, into the hdc of the Graphics. Draw() must be bracketed by

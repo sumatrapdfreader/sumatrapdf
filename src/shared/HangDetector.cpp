@@ -247,6 +247,9 @@ static void HangDetectorThreadFunc() {
             }
             continue;
         }
+        if (WaitForSingleObject(gStopEvent, 0) != WAIT_TIMEOUT) {
+            return; // StopUiHangDetector signaled while SendMessageTimeoutW was blocked
+        }
         if (GetLastError() != ERROR_TIMEOUT) {
             continue; // window is gone, we're shutting down
         }

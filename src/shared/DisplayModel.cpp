@@ -3077,8 +3077,9 @@ static bool FullscreenDisplayModePref(DisplayMode* modeOut) {
 }
 
 void DisplayModel::SetInPresentation(bool enable) {
-    // entering twice would save the presentation layout as the one to restore
-    if (enable && inPresentation) {
+    // entering twice would save the presentation layout as the one to restore;
+    // exiting when not in presentation would restore uninitialized state
+    if (enable == inPresentation) {
         return;
     }
     inPresentation = enable;

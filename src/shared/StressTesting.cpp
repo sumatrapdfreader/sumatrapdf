@@ -666,15 +666,10 @@ static bool OpenFile(StressTest* st, Str fileName) {
                 VecAppend(st->pagesToRender, n);
             }
         }
-        for (auto&& range : st->pageRanges) {
-            for (int n = range.start; n <= range.end && n <= nPages; n++) {
-                VecAppend(st->pagesToRender, n);
-            }
-        }
-        if (len(st->pagesToRender) == 0) {
-            return false;
-        }
         LimitPagesToRender(st->pagesToRender, kStressTestMaxPagesPerFile);
+    }
+    if (len(st->pagesToRender) == 0) {
+        return false;
     }
 
     int randomPageIdx = rand() % len(st->pagesToRender);

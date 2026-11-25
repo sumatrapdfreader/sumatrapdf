@@ -917,8 +917,12 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
         return -1;
     }
 
+    DWORD currPid = GetCurrentProcessId();
     int killCount = 0;
     do {
+        if (pe32.th32ProcessID == currPid) {
+            continue;
+        }
         if (KillProcWithIdAndModule(pe32.th32ProcessID, modulePath, waitUntilTerminated)) {
             logf("  killed process with id %d\n", (int)pe32.th32ProcessID);
             killCount++;
@@ -926,7 +930,7 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
     } while (Process32NextW(hProcSnapshot, &pe32));
 
     if (killCount > 0) {
-        UpdateWindow(FindWindowW(nullptr, L"Shell_TrayWnd"));
+        UpdateWindow(FindWindowW(L"Shell_TrayWnd", nullptr));
         UpdateWindow(GetDesktopWindow());
     }
     return killCount;

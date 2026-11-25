@@ -79,20 +79,23 @@ int TextSearch::GetCurrentPageNo() const {
 void TextSearch::SetText(Str text) {
     // Single leading/trailing spaces request word boundaries; whole-word mode
     // requests both. Strip one space from each end for matching.
-    this->matchWordStart = matchWholeWord || (text && text.s[0] == ' ' && (text.len < 2 || text.s[1] != ' '));
-    this->matchWordEnd = matchWholeWord || (str::EndsWith(text, StrL(" ")) && !str::EndsWith(text, StrL("  ")));
+    bool newWordStart = matchWholeWord || (text && text.s[0] == ' ' && (text.len < 2 || text.s[1] != ' '));
+    bool newWordEnd = matchWholeWord || (str::EndsWith(text, StrL(" ")) && !str::EndsWith(text, StrL("  ")));
 
     Str searchText = text;
     if (searchText && searchText.s[0] == ' ') {
         searchText = Str(searchText.s + 1, searchText.len - 1);
     }
 
-    // don't reset anything if the search text hasn't changed at all
-    if (str::Eq(this->lastText, searchText)) {
+    // don't reset anything if the search text and boundary flags haven't changed
+    if (str::Eq(this->lastText, searchText) && this->matchWordStart == newWordStart &&
+        this->matchWordEnd == newWordEnd) {
         return;
     }
 
     this->Clear();
+    this->matchWordStart = newWordStart;
+    this->matchWordEnd = newWordEnd;
     // Matching text and anchor borrow the saved query.
     this->lastText = str::Dup(searchText);
     searchText = this->lastText;

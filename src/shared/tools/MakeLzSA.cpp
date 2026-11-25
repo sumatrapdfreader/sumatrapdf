@@ -146,7 +146,7 @@ bool CreateArchive(Str archivePath, StrVec& files, Packing packing, size_t skipF
         }
 
         str::TransCharsInPlace(utf8Name, StrL("/"), StrL("\\"));
-        if ('\\' == utf8Name.s[0] || str::Contains(utf8Name, StrL("..\\"))) {
+        if (len(utf8Name) == 0 || '\\' == utf8Name.s[0] || str::Contains(utf8Name, StrL("..\\"))) {
             fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name.s);
             return false;
         }
@@ -222,6 +222,9 @@ static void MyParseCmdLine(WStr cmdLine, StrVec& args) {
 int mainVerify(Str archivePath) {
     int errorStep = 1;
     Str fileData = file::ReadFile(archivePath);
+    defer {
+        str::Free(fileData);
+    };
     FailIf(!(u8*)fileData.s, "Failed to read \"%s\"", archivePath.s);
     errorStep++;
 

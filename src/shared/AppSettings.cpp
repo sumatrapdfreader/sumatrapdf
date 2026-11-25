@@ -719,7 +719,11 @@ bool LoadSettings() {
     if (weekDiff > 0) {
         // "age" openCount statistics (cut in in half after every week)
         for (FileState* fs : *gprefs->fileStates) {
-            fs->openCount >>= weekDiff;
+            if (weekDiff >= 31) {
+                fs->openCount = 0;
+            } else {
+                fs->openCount >>= weekDiff;
+            }
         }
     }
 

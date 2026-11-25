@@ -390,7 +390,10 @@ static void ReadAloudQueueNext(WindowTab* tab) {
 }
 
 static void ReadAloudOnQueuedStarted(WindowTab* tab) {
-    if (!tab || tab->readAloudQueuedEnd <= tab->readAloudChunkEnd) {
+    if (!tab) {
+        return;
+    }
+    if (tab->readAloudQueuedEnd <= tab->readAloudChunkEnd) {
         tab->readAloudQueuedEnd = 0;
         return;
     }

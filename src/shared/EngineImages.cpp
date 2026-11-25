@@ -883,8 +883,8 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
                 Pixmap* result = PixmapFromGdiplus(dstBmp);
                 delete dstBmp;
                 delete srcBmp;
-                DropPage(page, false);
                 if (result) {
+                    DropPage(page, false);
                     // PixmapFromGdiplus reads back as straight (not premultiplied) ARGB
                     result->premultiplied = false;
                     result->hasAlpha = srcHasAlpha;

@@ -164,12 +164,16 @@ struct ScreenTarget {
 static int CmpTargetsInReadingOrder(const ScreenTarget* a, const ScreenTarget* b) {
     const Rect& ta = a->screenRect;
     const Rect& tb = b->screenRect;
-    int rowTolerance = 8;
-    if (abs(ta.y - tb.y) > rowTolerance) {
-        return ta.y < tb.y ? -1 : 1;
+    int rowA = ta.y >> 3;
+    int rowB = tb.y >> 3;
+    if (rowA != rowB) {
+        return rowA < rowB ? -1 : 1;
     }
     if (ta.x != tb.x) {
         return ta.x < tb.x ? -1 : 1;
+    }
+    if (ta.y != tb.y) {
+        return ta.y < tb.y ? -1 : 1;
     }
     return 0;
 }

@@ -887,6 +887,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, Str lineSep, bool& isTextOnlySelecti
         Str text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (text) {
             selections.Append(text);
+            str::Free(text);
         }
     }
     if (len(selections) == 0) {
@@ -924,14 +925,16 @@ Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& s
             continue;
         }
         i64 pixels = (i64)pixmap->width * pixmap->height;
-        if (pixels <= 0 || pixels > kMaxPixels || totalHeight > kMaxPixels - pixels) {
+        int nextMaxW = std::max(maxWidth, pixmap->width);
+        i64 nextTotalH = totalHeight + pixmap->height;
+        if (pixels <= 0 || pixels > kMaxPixels || nextTotalH > INT_MAX || (i64)nextMaxW * nextTotalH > kMaxPixels) {
             FreePixmap(pixmap);
             tooBig = true;
             break;
         }
         VecAppend(pixmaps, pixmap);
-        totalHeight += pixmap->height;
-        maxWidth = std::max(maxWidth, pixmap->width);
+        totalHeight = nextTotalH;
+        maxWidth = nextMaxW;
     }
 
     if (tooBig || len(pixmaps) == 0 || totalHeight > INT_MAX) {
@@ -1027,11 +1030,10 @@ void CopySelectionAsImageToClipboard(MainWindow* win) {
 // first rectangle. Off Windows, gpui's clipboard is text only.
 void CopySelectionToClipboard(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
-#if defined(SUMATRA_NG)
     if (!tab || !tab->selectionOnPage) {
         return;
     }
-#else
+#if !defined(SUMATRA_NG)
     ReportIf(len(*tab->selectionOnPage) == 0 && win->mouseAction != MouseAction::SelectingText);
 #endif
 
@@ -1098,15 +1100,20 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
 
     DisplayModel* dm = win->AsFixed();
     if (textOnly) {
-        int pageNo;
-        for (pageNo = 1; !dm->PageShown(pageNo); pageNo++) {
-            ;
+        int pageCount = win->ctrl->PageCount();
+        int firstPage = 1;
+        while (firstPage <= pageCount && !dm->PageShown(firstPage)) {
+            firstPage++;
         }
-        dm->textSelection->StartAt(pageNo, 0);
-        for (pageNo = win->ctrl->PageCount(); !dm->PageShown(pageNo); pageNo--) {
-            ;
+        if (firstPage > pageCount) {
+            return;
         }
-        dm->textSelection->SelectUpTo(pageNo, -1);
+        int lastPage = pageCount;
+        while (lastPage >= firstPage && !dm->PageShown(lastPage)) {
+            lastPage--;
+        }
+        dm->textSelection->StartAt(firstPage, 0);
+        dm->textSelection->SelectUpTo(lastPage, -1);
         win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);
     } else {

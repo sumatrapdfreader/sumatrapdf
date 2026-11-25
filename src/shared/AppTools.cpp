@@ -442,7 +442,7 @@ Rect GetDefaultWindowPos() {
 
     Rect r = work;
     r.dx = std::min((int)((double)r.dy * kDefPageRatio), work.dx);
-    r.x = (work.dx - r.dx) / 2;
+    r.x = work.x + ((work.dx - r.dx) / 2);
 
     return r;
 }
@@ -481,6 +481,9 @@ static i64 FileTimeAgeSecs(FILETIME ft, const ULARGE_INTEGER& now) {
     ULARGE_INTEGER t;
     t.LowPart = ft.dwLowDateTime;
     t.HighPart = ft.dwHighDateTime;
+    if (t.QuadPart >= now.QuadPart) {
+        return 0;
+    }
     return (i64)((now.QuadPart - t.QuadPart) / 10000000ULL);
 }
 

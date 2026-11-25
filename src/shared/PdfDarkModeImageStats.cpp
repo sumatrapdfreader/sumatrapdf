@@ -32,14 +32,24 @@ static PixelColor SampleImageRgb(fz_context* ctx, fz_pixmap* pix, int x, int y) 
     if (!pix || !pix->samples || x < 0 || y < 0 || x >= pix->w || y >= pix->h) {
         return {};
     }
-    fz_colorspace* cs = pix->colorspace ? pix->colorspace : fz_device_rgb(ctx);
-    fz_colorspace* rgb = fz_device_rgb(ctx);
     int n = pix->n;
     int stride = (int)pix->stride;
     unsigned char* px = pix->samples + ((size_t)y * stride) + ((size_t)x * n);
+    fz_colorspace* cs = pix->colorspace;
+    if (!cs) {
+        if (n == 1) {
+            float v = (float)px[0] / 255.f;
+            return {v, v, v};
+        }
+        if (n >= 3) {
+            return {(float)px[0] / 255.f, (float)px[1] / 255.f, (float)px[2] / 255.f};
+        }
+        return {};
+    }
+    fz_colorspace* rgb = fz_device_rgb(ctx);
     float conv[FZ_MAX_COLORS] = {};
     float srcRgb[FZ_MAX_COLORS] = {};
-    int components = fz_colorspace_n(ctx, cs);
+    int components = std::min(fz_colorspace_n(ctx, cs), n);
     for (int c = 0; c < components && c < FZ_MAX_COLORS; c++) {
         conv[c] = (float)px[c] / 255.f;
     }
@@ -140,9 +150,9 @@ static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
         for (int y = 0; y < pix->h; y += stepY) {
             for (int x = 0; x < pix->w; x += stepX) {
                 PixelColor c = SampleImageRgb(ctx, pix, x, y);
-                int ri = (int)lroundf(c.r * 255.f);
-                int gi = (int)lroundf(c.g * 255.f);
-                int bi = (int)lroundf(c.b * 255.f);
+                int ri = ClampI((int)lroundf(limitValue(c.r, 0.f, 1.f) * 255.f), 0, 255);
+                int gi = ClampI((int)lroundf(limitValue(c.g, 0.f, 1.f) * 255.f), 0, 255);
+                int bi = ClampI((int)lroundf(limitValue(c.b, 0.f, 1.f) * 255.f), 0, 255);
                 int bucket = ((ri >> 4) << 8) | ((gi >> 4) << 4) | (bi >> 4);
                 buckets[bucket]++;
 

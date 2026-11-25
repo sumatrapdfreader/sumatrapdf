@@ -769,7 +769,7 @@ IPageDestination* EngineEbook::GetNamedDest(Str name) {
     DrawInstr* baseAnchor = nullptr;
     int basePageNo = 0;
     if (hash && hash.s > name.s) {
-        int base_len = (int)(hash.s - name.s - 1);
+        int base_len = (int)(hash.s - name.s);
         for (int i = 0; i < len(baseAnchors); i++) {
             DrawInstr* anchor = baseAnchors[i];
             if (anchor && base_len == anchor->str.len && str::EqNI(name, anchor->str, base_len)) {

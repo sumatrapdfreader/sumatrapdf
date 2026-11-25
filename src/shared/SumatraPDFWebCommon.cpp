@@ -328,6 +328,10 @@ static void VerifyThread(OnlineVerifyReq* req) {
     res->token = str::Dup(req->token);
     res->onDone = req->onDone;
     res->urlRejected = !UrlAllowed(req->url);
+    if (res->urlRejected) {
+        uitask::Post(MkFunc0(VerifyDone, res), "OnlineKeyVerified");
+        return;
+    }
     HttpRsp rsp;
     HttpGetWithHeaders(req->url, AuthHeaderTemp(req->token), &rsp);
     res->status = rsp.httpStatusCode;
@@ -461,7 +465,7 @@ static void JobThread(OnlineJobReq* req) {
         HttpDownloadWithHeaders(req->url, hdr, req->destPath, &rsp);
         NoteHttp(res, rsp);
         res->tooBig = rsp.error == kErrFileTooLarge;
-        if (rsp.httpStatusCode == kHttpStatusOk) {
+        if (rsp.httpStatusCode == kHttpStatusOk && rsp.error == 0) {
             HashDownload(req->destPath, res);
         }
     } else {

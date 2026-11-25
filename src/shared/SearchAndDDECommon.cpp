@@ -818,6 +818,12 @@ static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
         return {};
     }
 
+    // ReloadDocument can reset the temp arena; copy viewMode to stable storage
+    Str viewModeOwned = str::Dup(viewMode);
+    defer {
+        str::Free(viewModeOwned);
+    };
+
     MainWindow* win = FindDdeTargetWindow(hwnd, filePath, true);
     if (!win) {
         return next;
@@ -829,7 +835,7 @@ static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
         }
     }
 
-    DisplayMode mode = DisplayModeFromString(viewMode, DisplayMode::Automatic);
+    DisplayMode mode = DisplayModeFromString(viewModeOwned, DisplayMode::Automatic);
     if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
     }
@@ -2735,7 +2741,7 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wp, LPARAM lp) {
     ATOM aTopic = GlobalAddAtomW(kSumatraDdeTopic);
 
     if (LOWORD(lp) == aServer && HIWORD(lp) == aTopic) {
-        SendMessageW((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, 0));
+        SendMessageW((HWND)wp, WM_DDE_ACK, (WPARAM)hwnd, MAKELPARAM(aServer, aTopic));
     } else {
         GlobalDeleteAtom(aServer);
         GlobalDeleteAtom(aTopic);
