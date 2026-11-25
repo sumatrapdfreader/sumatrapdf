@@ -111,12 +111,8 @@ function vsInstallDirs(): string[] {
 
 const keptVars = ["PATH", "INCLUDE", "LIB", "LIBPATH", "VCToolsInstallDir", "WindowsSdkDir", "UCRTVersion"];
 
-// Runs vcvars64.bat through a shim batch file and reads back the variables
-// it exports. Starts from an environment without a previous vcvars in it:
-// vcvars refuses to run twice in one shell.
-function runVcvars(vsDir: string): Record<string, string> | null {
-  const bat = join(vsDir, "VC", "Auxiliary", "Build", "vcvars64.bat");
-  if (!isFile(bat)) return null;
+// Start vcvars without a previous developer environment.
+export function envBeforeVcvars(): Record<string, string> {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env)) {
     if (v === undefined) continue;
@@ -134,6 +130,14 @@ function runVcvars(vsDir: string): Record<string, string> | null {
     }
     env["PATH"] = preinit;
   }
+  return env;
+}
+
+// Runs vcvars64.bat through a shim and reads back the toolchain variables.
+function runVcvars(vsDir: string): Record<string, string> | null {
+  const bat = join(vsDir, "VC", "Auxiliary", "Build", "vcvars64.bat");
+  if (!isFile(bat)) return null;
+  const env = envBeforeVcvars();
   const shim = join(tmpdir(), `sumatra-vcvars-${process.pid}.bat`);
   writeFileSync(shim, ["@echo off", `call "${bat}" >nul 2>&1`, "set", ""].join("\r\n"));
   let r;

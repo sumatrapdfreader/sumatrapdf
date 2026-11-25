@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  parallelTest("jbig2-resize-overflow"),
   // Start the CLI tests with the most work before shorter worker jobs.
   parallelTest("cli-pdf-tools"),
   parallelTest("cli-markdown-cases"),
@@ -708,7 +709,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["annot-text-popup-reload", annotTextPopupReload],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["read-aloud-lazy-voices", readAloudLazyVoices],
-  parallelTest("jbig2-resize-overflow"),
   ["selection-toolbar-move", selectionToolbarMove],
   ["issue-6232-path-edit", issue6232PathEdit],
   ["issue-6070", issue6070],

@@ -4,6 +4,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { envBeforeVcvars } from "../cmd/helper/ng-toolchain.ts";
 import { ROOT, runStandalone, tmpPath } from "./util.ts";
 
 function vcvarsPath(): string {
@@ -51,7 +52,7 @@ function compileAndRun(vcvars: string, arch: "x64" | "x86"): void {
       ``,
     ].join("\r\n"),
   );
-  const built = spawnSync("cmd.exe", ["/d", "/c", bat], { cwd: ROOT, encoding: "utf8" });
+  const built = spawnSync("cmd.exe", ["/d", "/c", bat], { cwd: ROOT, encoding: "utf8", env: envBeforeVcvars() });
   if (built.status !== 0) {
     throw new Error(`cl ${arch} failed (${built.status})\n${built.stdout}\n${built.stderr}`);
   }
