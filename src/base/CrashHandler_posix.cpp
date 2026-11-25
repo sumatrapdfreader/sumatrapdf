@@ -17,6 +17,8 @@
 
 #include <csignal>
 #include <ctime>
+#include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
 #if OS_WASM
@@ -27,13 +29,15 @@
 #if OS_DARWIN
 #include <sys/sysctl.h>
 #include <sys/types.h>
-#elif OS_LINUX
-#include <fcntl.h>
 #endif
 
 static Arena* gCrashHandlerArena = nullptr;
 static CrashHandlerConfig gCfg{};
 static Str gSysInfo;
+// Pre-computed at InstallCrashHandler() time so SignalHandler never allocates
+// paths from the temp arena or calls dir::CreateForFile().
+static Str gReportBasePath;
+static Str gReportTxtPath;
 
 Arena* CrashHandlerArena() {
     return gCrashHandlerArena;
@@ -87,8 +91,9 @@ static void AppendBacktrace(str::Builder& b) {
     b.Append(StrL("\n"));
 }
 
-#else
-
+#elif !OS_DARWIN
+// Used only for non-crash debug reports; crashes use backtrace_symbols_fd()
+// to avoid malloc() inside a signal handler.
 static void AppendBacktrace(str::Builder& b) {
     void* frames[kMaxFrames];
     int n = backtrace(frames, kMaxFrames);
@@ -103,7 +108,6 @@ static void AppendBacktrace(str::Builder& b) {
     }
     free(syms);
 }
-
 #endif
 
 // the report path is the .dmp path with the extension swapped: a POSIX crash
@@ -165,24 +169,101 @@ static int NextLineStart(Str s, int i) {
 // log, and keep the head (build info) and the tail (end of
 // the log, settings, stacks, modules).
 #define kCutMarker "\n... (truncated) ...\n\n"
-static Str TruncateForUpload(Arena* a, Str report) {
-    if (len(report) <= kMaxUploadBytes) {
-        return report;
+// Async-signal-safe decimal formatter into a caller-supplied buffer.
+static int FormatDecBuf(char* dst, int cap, i64 v) {
+    char rev[24];
+    u64 u;
+    int pos = 0;
+    if (v < 0) {
+        if (pos < cap) {
+            dst[pos++] = '-';
+        }
+        u = (u64)(-(v + 1)) + 1;
+    } else {
+        u = (u64)v;
     }
-    int cutMarkerLen = (int)sizeof(kCutMarker) - 1;
-    int headEnd = NextLineStart(report, kUploadHeadBytes);
-    if (headEnd > kMaxUploadBytes - cutMarkerLen) {
-        headEnd = kMaxUploadBytes - cutMarkerLen;
+    int n = 0;
+    do {
+        rev[n++] = (char)('0' + (u % 10));
+        u /= 10;
+    } while (u != 0);
+    while (n > 0 && pos < cap) {
+        dst[pos++] = rev[--n];
     }
-    int tailLen = kMaxUploadBytes - headEnd - cutMarkerLen;
-    int tailStart = tailLen > 0 ? NextLineStart(report, len(report) - tailLen) : len(report);
-    str::Builder b(a);
-    b.Append(Str(report.s, headEnd));
-    b.Append(StrL(kCutMarker));
-    if (tailStart < len(report)) {
-        b.Append(Str(report.s + tailStart, len(report) - tailStart));
+    return pos;
+}
+
+static bool FormatPendingPath(char* dst, int cap, i64 unixTime) {
+    if (len(gReportBasePath) == 0 || cap <= 0) {
+        return false;
     }
-    return ToStr(b);
+    int pos = 0;
+    auto append = [&](Str s) -> bool {
+        if (len(s) > cap - 1 - pos) {
+            return false;
+        }
+        memcpy(dst + pos, s.s, (size_t)len(s));
+        pos += len(s);
+        return true;
+    };
+    char numBuf[24];
+    int numLen = FormatDecBuf(numBuf, sizeofi(numBuf), unixTime);
+    if (!append(gReportBasePath) || !append(StrL("-")) || !append(Str(numBuf, numLen)) ||
+        !append(StrL(kPendingSuffix))) {
+        return false;
+    }
+    dst[pos] = 0;
+    return true;
+}
+
+// Write all bytes to fd without stdio buffering or heap allocation.
+static void WriteAllFd(int fd, Str s) {
+    const char* p = s.s;
+    size_t left = (size_t)len(s);
+    while (left > 0) {
+        ssize_t n = write(fd, p, left);
+        if (n > 0) {
+            p += n;
+            left -= (size_t)n;
+        } else if (n < 0 && errno == EINTR) {
+            continue;
+        } else {
+            break;
+        }
+    }
+}
+
+static void WriteStderr(Str s) {
+    WriteAllFd(STDERR_FILENO, s);
+}
+
+// Write report (and optional raw backtrace frames) to an open fd, truncating
+// the middle when maxBytes > 0 and report exceeds it.
+static void WriteReportToFd(int fd, Str report, void* const* frames, int nFrames, int maxBytes) {
+    if (maxBytes <= 0 || len(report) <= maxBytes) {
+        WriteAllFd(fd, report);
+    } else {
+        int cutMarkerLen = (int)sizeof(kCutMarker) - 1;
+        int headEnd = NextLineStart(report, kUploadHeadBytes);
+        if (headEnd > maxBytes - cutMarkerLen) {
+            headEnd = maxBytes - cutMarkerLen;
+        }
+        int tailLen = maxBytes - headEnd - cutMarkerLen;
+        int tailStart = tailLen > 0 ? NextLineStart(report, len(report) - tailLen) : len(report);
+        WriteAllFd(fd, Str(report.s, headEnd));
+        WriteAllFd(fd, StrL(kCutMarker));
+        if (tailStart < len(report)) {
+            WriteAllFd(fd, Str(report.s + tailStart, len(report) - tailStart));
+        }
+    }
+#if !OS_WASM && !OS_DARWIN
+    if (frames && nFrames > 0) {
+        backtrace_symbols_fd((void* const*)frames, nFrames, fd);
+    }
+#else
+    (void)frames;
+    (void)nFrames;
+#endif
 }
 
 static bool ShouldUpload(bool isCrash) {
@@ -192,10 +273,13 @@ static bool ShouldUpload(bool isCrash) {
     return isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
 }
 
-// glibc marks write() warn_unused_result, which a (void) cast doesn't silence
-static void WriteStderr(Str s) {
-    ssize_t n = write(STDERR_FILENO, s.s, (size_t)len(s));
-    (void)n;
+static void WriteReportFileRaw(const char* path, Str report, void* const* frames, int nFrames, int maxBytes) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
+        return;
+    }
+    WriteReportToFd(fd, report, frames, nFrames, maxBytes);
+    close(fd);
 }
 
 // sig, sigInfo and uctx are the signal handler's arguments; 0 / null for a debug report
@@ -215,30 +299,43 @@ static void WriteCrashReport(Str condStr, Str fileLine, bool isCrash, int sig, v
     if (gCfg.getCrashComment) {
         b.Append(gCfg.getCrashComment(gCrashHandlerArena, condStr, fileLine, isCrash));
     }
+    void* crashFrames[kMaxFrames];
+    int nCrashFrames = 0;
 #if OS_DARWIN
     MacAppendStacks(b, uctx);
-#else
+#elif OS_WASM
     b.Append(StrL("\n--- backtrace ---\n"));
     AppendBacktrace(b);
+#else
+    b.Append(StrL("\n--- backtrace ---\n"));
+    if (isCrash) {
+        nCrashFrames = backtrace(crashFrames, kMaxFrames);
+        if (nCrashFrames <= 0) {
+            b.Append(StrL("(no backtrace)\n"));
+        }
+    } else {
+        AppendBacktrace(b);
+    }
 #endif
     Str report = ToStr(b);
-    TempStr path = ReportPathTemp(StrL(".txt"));
-    if (len(path) > 0) {
-        dir::CreateForFile(path);
-        file::WriteFile(path, report);
+    if (len(gReportTxtPath) > 0) {
+        WriteReportFileRaw(gReportTxtPath.s, report, crashFrames, nCrashFrames, 0);
         if (ShouldUpload(isCrash)) {
-            TempStr suffix = fmt("-%d%s", (i64)time(nullptr), StrL(kPendingSuffix));
-            file::WriteFile(ReportPathTemp(suffix), TruncateForUpload(gCrashHandlerArena, report));
+            char pendingPath[1024];
+            if (FormatPendingPath(pendingPath, sizeofi(pendingPath), (i64)time(nullptr))) {
+                WriteReportFileRaw(pendingPath, report, crashFrames, nCrashFrames, kMaxUploadBytes);
+            }
         }
     }
     if (!isCrash) {
-        logf("crash report written to '%s'\n%s\n", path, report);
+        logf("crash report written to '%s'\n%s\n", gReportTxtPath, report);
         return;
     }
     // log() takes a lock the faulting code may hold
-    TempStr msg = fmt("crash report written to '%s'\n", path);
-    WriteStderr(msg);
-    WriteStderr(report);
+    WriteStderr(StrL("crash report written to '"));
+    WriteStderr(gReportTxtPath);
+    WriteStderr(StrL("'\n"));
+    WriteReportToFd(STDERR_FILENO, report, crashFrames, nCrashFrames, 0);
 }
 
 static void RestoreDefaultSignals();
@@ -265,7 +362,11 @@ static void SignalHandler(int sig, siginfo_t* info, void* uctx) {
     if (gCfg.onCrashBegin) {
         gCfg.onCrashBegin();
     }
-    WriteCrashReport(fmt("signal %d", sig), {}, true, sig, info, uctx);
+    char condBuf[32];
+    memcpy(condBuf, "signal ", 7);
+    int n = 7 + FormatDecBuf(condBuf + 7, sizeofi(condBuf) - 8, sig);
+    condBuf[n] = 0;
+    WriteCrashReport(Str(condBuf, n), {}, true, sig, info, uctx);
     if (gCfg.showCrashMessage && !gCfg.localOnly) {
         alarm(kCrashMessageTimeoutSecs);
         gCfg.showCrashMessage();
@@ -440,6 +541,12 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     gCfg.crashDumpPath = str::Dup(gCrashHandlerArena, cfg.crashDumpPath);
     gCfg.submitUrl = str::Dup(gCrashHandlerArena, cfg.submitUrl);
     gCfg.fullDumpEnvVar = str::Dup(gCrashHandlerArena, cfg.fullDumpEnvVar);
+    TempStr basePath = ReportPathTemp({});
+    if (len(basePath) > 0) {
+        gReportBasePath = str::Dup(gCrashHandlerArena, basePath);
+        gReportTxtPath = str::Dup(gCrashHandlerArena, str::JoinTemp(basePath, StrL(".txt")));
+        dir::CreateForFile(gReportTxtPath);
+    }
 #if OS_DARWIN
     gSysInfo = str::Dup(gCrashHandlerArena, MacSysInfoTemp());
 #else
@@ -459,6 +566,8 @@ void UninstallCrashHandler() {
     RestoreDefaultSignals();
     gCfg = {};
     gSysInfo = {};
+    gReportBasePath = {};
+    gReportTxtPath = {};
     ArenaDelete(gCrashHandlerArena);
     gCrashHandlerArena = nullptr;
 }

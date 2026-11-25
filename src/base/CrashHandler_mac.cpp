@@ -106,6 +106,25 @@ static int WalkStack(const Regs& r, uintptr_t* frames, int maxFrames) {
     return n;
 }
 
+static void AppendDec(str::Builder& b, i64 v) {
+    char buf[24];
+    u64 u;
+    if (v < 0) {
+        b.AppendChar('-');
+        u = (u64)(-(v + 1)) + 1;
+    } else {
+        u = (u64)v;
+    }
+    int n = 0;
+    do {
+        buf[n++] = (char)('0' + (u % 10));
+        u /= 10;
+    } while (u != 0);
+    while (n > 0) {
+        b.AppendChar(buf[--n]);
+    }
+}
+
 static void AppendHex(str::Builder& b, u64 v, int minDigits = 1) {
     char buf[20];
     int n = 0;
@@ -141,7 +160,8 @@ static void RememberModule(const Dl_info& info) {
 
 // "3 0x0000000104a1b2c4 SumatraPDF + 0x1b2c4 (CrashMe() + 12)"
 static void AppendFrame(str::Builder& b, int idx, uintptr_t addr) {
-    b.Append(fmt("%d ", idx));
+    AppendDec(b, idx);
+    b.AppendChar(' ');
     AppendHex(b, addr, 16);
     Dl_info info{};
     if (addr == 0 || dladdr((void*)addr, &info) == 0 || !info.dli_fbase) {
@@ -156,7 +176,9 @@ static void AppendFrame(str::Builder& b, int idx, uintptr_t addr) {
     if (info.dli_sname) {
         b.Append(StrL(" ("));
         b.Append(Str(info.dli_sname));
-        b.Append(fmt(" + %d)", (int)(addr - (uintptr_t)info.dli_saddr)));
+        b.Append(StrL(" + "));
+        AppendDec(b, (i64)(addr - (uintptr_t)info.dli_saddr));
+        b.AppendChar(')');
     }
     b.AppendChar('\n');
 }
@@ -170,7 +192,8 @@ static void AppendStack(str::Builder& b, const Regs& r) {
 }
 
 static void AppendThreadHeader(str::Builder& b, thread_t thread, bool isCrashed) {
-    b.Append(fmt("\n--- thread %d", (int)thread));
+    b.Append(StrL("\n--- thread "));
+    AppendDec(b, (i64)thread);
     char name[kMaxThreadName] = {};
     pthread_t pt = pthread_from_mach_thread_np(thread);
     if (pt && pthread_getname_np(pt, name, sizeof(name)) == 0 && name[0]) {
@@ -273,9 +296,15 @@ static Str SignalName(int sig) {
 // "Signal: SIGSEGV (11) code 2 addr 0x0"
 void MacAppendSignalInfo(str::Builder& b, int sig, void* sigInfo) {
     auto si = (siginfo_t*)sigInfo;
-    b.Append(fmt("Signal: %s (%d)", SignalName(sig), sig));
+    b.Append(StrL("Signal: "));
+    b.Append(SignalName(sig));
+    b.Append(StrL(" ("));
+    AppendDec(b, sig);
+    b.AppendChar(')');
     if (si) {
-        b.Append(fmt(" code %d addr ", si->si_code));
+        b.Append(StrL(" code "));
+        AppendDec(b, si->si_code);
+        b.Append(StrL(" addr "));
         AppendHex(b, (uintptr_t)si->si_addr);
     }
     b.AppendChar('\n');

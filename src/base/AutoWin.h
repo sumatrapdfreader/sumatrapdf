@@ -12,6 +12,8 @@ class AutoCloseHandle {
     AutoCloseHandle() = default;
 
     AutoCloseHandle(HANDLE h) : handle(h) {}
+    AutoCloseHandle(const AutoCloseHandle&) = delete;
+    AutoCloseHandle& operator=(const AutoCloseHandle&) = delete;
 
     ~AutoCloseHandle() {
         if (IsValid()) {
@@ -46,6 +48,8 @@ class AutoReleaseComPtr {
     AutoReleaseComPtr() = default;
 
     explicit AutoReleaseComPtr(T* ptr) : ptr(ptr) {}
+    AutoReleaseComPtr(const AutoReleaseComPtr&) = delete;
+    AutoReleaseComPtr& operator=(const AutoReleaseComPtr&) = delete;
     ~AutoReleaseComPtr() {
         if (ptr) {
             ptr->Release();
@@ -84,6 +88,8 @@ class AutoReleaseComQIPtr {
 
   public:
     AutoReleaseComQIPtr() = default;
+    AutoReleaseComQIPtr(const AutoReleaseComQIPtr&) = delete;
+    AutoReleaseComQIPtr& operator=(const AutoReleaseComQIPtr&) = delete;
 
     explicit AutoReleaseComQIPtr(IUnknown* unk) {
         if (unk) {
@@ -137,6 +143,8 @@ struct AutoDeleteDC {
 
     explicit AutoDeleteDC(HDC hdc) { this->hdc = hdc; }
     AutoDeleteDC() = default;
+    AutoDeleteDC(const AutoDeleteDC&) = delete;
+    AutoDeleteDC& operator=(const AutoDeleteDC&) = delete;
 
     ~AutoDeleteDC() { DeleteDC(hdc); }
     operator HDC() const { // NOLINT
@@ -152,6 +160,8 @@ class AutoDeleteGdiObj {
     AutoDeleteGdiObj(T obj) { // NOLINT
         this->obj = obj;
     }
+    AutoDeleteGdiObj(const AutoDeleteGdiObj&) = delete;
+    AutoDeleteGdiObj& operator=(const AutoDeleteGdiObj&) = delete;
     ~AutoDeleteGdiObj() { DeleteObject(obj); }
     operator T() const { // NOLINT
         return obj;
@@ -169,6 +179,8 @@ class AutoReleaseDC {
         this->hwnd = hwnd;
         this->hdc = GetDC(hwnd);
     }
+    AutoReleaseDC(const AutoReleaseDC&) = delete;
+    AutoReleaseDC& operator=(const AutoReleaseDC&) = delete;
     ~AutoReleaseDC() { ReleaseDC(hwnd, hdc); }
     operator HDC() const { // NOLINT
         return hdc;
@@ -188,6 +200,8 @@ class AutoRestoreGdiObject {
             this->obj = obj;
         }
     }
+    AutoRestoreGdiObject(const AutoRestoreGdiObject&) = delete;
+    AutoRestoreGdiObject& operator=(const AutoRestoreGdiObject&) = delete;
 
     ~AutoRestoreGdiObject() {
         SelectObject(hdc, prev);
@@ -209,6 +223,8 @@ class AutoRestoreFont {
             prev = SelectObject(hdc, font);
         }
     }
+    AutoRestoreFont(const AutoRestoreFont&) = delete;
+    AutoRestoreFont& operator=(const AutoRestoreFont&) = delete;
 
     ~AutoRestoreFont() {
         if (prev) {
@@ -222,6 +238,8 @@ struct AutoRestorePen {
     HPEN prevPen = nullptr;
 
     explicit AutoRestorePen(HDC hdc, HPEN pen) : hdc(hdc) { this->prevPen = (HPEN)SelectObject(hdc, pen); }
+    AutoRestorePen(const AutoRestorePen&) = delete;
+    AutoRestorePen& operator=(const AutoRestorePen&) = delete;
 
     ~AutoRestorePen() { SelectObject(hdc, prevPen); }
 };
@@ -236,6 +254,8 @@ class AutoCoUninitialize {
   public:
     HRESULT hr;
     AutoCoUninitialize() { hr = CoInitialize(nullptr); }
+    AutoCoUninitialize(const AutoCoUninitialize&) = delete;
+    AutoCoUninitialize& operator=(const AutoCoUninitialize&) = delete;
     ~AutoCoUninitialize() {
         if (SUCCEEDED(hr)) {
             CoUninitialize();
@@ -247,6 +267,8 @@ class AutoOleUninitialize {
   public:
     HRESULT hr;
     AutoOleUninitialize() { hr = OleInitialize(nullptr); }
+    AutoOleUninitialize(const AutoOleUninitialize&) = delete;
+    AutoOleUninitialize& operator=(const AutoOleUninitialize&) = delete;
     ~AutoOleUninitialize() {
         if (SUCCEEDED(hr)) {
             OleUninitialize();
@@ -276,6 +298,8 @@ class AutoGdiPlusShutdown {
             }
         }
     }
+    AutoGdiPlusShutdown(const AutoGdiPlusShutdown&) = delete;
+    AutoGdiPlusShutdown& operator=(const AutoGdiPlusShutdown&) = delete;
     ~AutoGdiPlusShutdown() {
         if (!started) {
             return;

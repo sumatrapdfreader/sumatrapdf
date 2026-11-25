@@ -885,19 +885,16 @@ bool IsSame(Str path1, Str path2) {
         return true;
     }
 
-    TempStr base1 = path::GetBaseNameTemp(path1);
-    TempStr base2 = path::GetBaseNameTemp(path2);
-    if (!str::EqI(base1, base2)) {
-        return false;
-    }
-
     WCHAR* path1W = CWStrTemp(path1);
     WCHAR* path2W = CWStrTemp(path2);
     bool isSame = false;
     bool needFallback = true;
     DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
     HANDLE h1 = CreateFileW(path1W, 0, share, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-    HANDLE h2 = CreateFileW(path2W, 0, share, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    HANDLE h2 = INVALID_HANDLE_VALUE;
+    if (h1 != INVALID_HANDLE_VALUE) {
+        h2 = CreateFileW(path2W, 0, share, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    }
 
     if (h1 != INVALID_HANDLE_VALUE && h2 != INVALID_HANDLE_VALUE) {
         BY_HANDLE_FILE_INFORMATION fi1, fi2;

@@ -2291,6 +2291,8 @@ struct BuilderT : Vec<C> {
 
     BuilderT() = default;
     explicit BuilderT(Arena* arena) : a(arena) {}
+    BuilderT(const BuilderT&) = delete;
+    BuilderT& operator=(const BuilderT&) = delete;
 
     void Reset(S s = {});
     bool Reserve(int cap);

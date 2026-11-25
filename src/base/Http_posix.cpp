@@ -129,14 +129,15 @@ bool HttpGet(Str urlA, HttpRsp* rspOut) {
 
 bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbProgress, i64 maxSize) {
     logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
-    FILE* file = fopen(CStrTemp(destFilePath), "wb");
+    TempStr partPath = str::JoinTemp(destFilePath, StrL(".part"));
+    FILE* file = fopen(CStrTemp(partPath), "wb");
     if (!file) {
         return false;
     }
     CURL* curl = curl_easy_init();
     if (!curl) {
         fclose(file);
-        file::Delete(destFilePath);
+        file::Delete(partPath);
         return false;
     }
 
@@ -149,8 +150,11 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
     curl_easy_cleanup(curl);
     bool ok = fclose(file) == 0 && code == CURLE_OK && status == 200;
+    if (ok) {
+        ok = file::RenameReplace(destFilePath, partPath);
+    }
     if (!ok) {
-        file::Delete(destFilePath);
+        file::Delete(partPath);
     }
     return ok;
 }

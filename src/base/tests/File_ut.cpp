@@ -274,13 +274,23 @@ void FileUtilTest() {
 
 #if OS_WIN
     {
-        // the short path's length must not count the NUL terminator
+        // the short path's length must not count the NUL terminator, and
+        // path::IsSame must match long vs 8.3 short paths and hardlinks
+        // with different basenames
         TempStr path = path::JoinTemp(GetTempDirTemp(), StrL("short path test long name.txt"));
         utassert(file::WriteFile(path, StrL("x")));
         TempStr shortPath = path::ShortPathTemp(path);
         utassert(len(shortPath) > 0);
         utassert(len(shortPath) == (int)strlen(shortPath.s));
         utassert(file::Exists(shortPath));
+        utassert(path::IsSame(path, shortPath));
+
+        TempStr linkPath = path::JoinTemp(GetTempDirTemp(), StrL("different-hardlink-name.txt"));
+        file::Delete(linkPath);
+        if (CreateHardLinkW(CWStrTemp(linkPath), CWStrTemp(path), nullptr)) {
+            utassert(path::IsSame(path, linkPath));
+            file::Delete(linkPath);
+        }
         file::Delete(path);
     }
 
