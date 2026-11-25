@@ -198,7 +198,7 @@ class PdfPreview : public IThumbnailProvider,
     // the file's bytes, owned; freed once the engine has been built from them
     Str m_data;
     EngineBase* m_engine = nullptr;
-    AutoGdiPlusShutdown* m_gdiScope = nullptr;
+    bool m_usesGdiPlus = false;
     // state for IPreviewHandler
     AutoReleaseComPtr<IUnknown> m_site;
     HWND m_hwnd = nullptr;

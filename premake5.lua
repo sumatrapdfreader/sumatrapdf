@@ -1296,18 +1296,6 @@ workspace "SumatraPDF"
     -- base's Http.cpp comes along with the engines; a filter never fetches anything
     linkoptions { "/DELAYLOAD:winhttp.dll" }
 
-  -- project "PdfPreview2"
-  --   kind "SharedLib"
-  --   language "C++"
-  --   cppdialect "C++latest"
-  --   mixed_dbg_rel_conf()
-  --   disablewarnings { "4100", "4838" }
-  --   includedirs {
-  --     "src", "src/gui"
-  --   }
-  --   pdf_preview2_files()
-  --   links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wintrust", "crypt32" }
-
   project "PdfPreview"
     build_defines()
     dll_shared_lib_dirs()

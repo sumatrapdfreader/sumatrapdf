@@ -184,26 +184,14 @@ STDAPI DllUnregisterServer() {
     return S_OK;
 }
 
-// TODO: maybe remove, is anyone using this functionality?
-STDAPI DllInstall(BOOL bInstall, const WCHAR* pszCmdLine) {
-    TempStr s = ToUtf8Temp(pszCmdLine);
-    DisablePreviewInstallExts(s);
-    if (!bInstall) {
-        return DllUnregisterServer();
-    }
-    return DllRegisterServer();
-}
-
 #ifdef _WIN64
 #pragma comment(linker, "/EXPORT:DllCanUnloadNow=DllCanUnloadNow,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllGetClassObject=DllGetClassObject,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=DllRegisterServer,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=DllUnregisterServer,PRIVATE")
-#pragma comment(linker, "/EXPORT:DllInstall=DllInstall,PRIVATE")
 #else
 #pragma comment(linker, "/EXPORT:DllCanUnloadNow=_DllCanUnloadNow@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllGetClassObject=_DllGetClassObject@12,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=_DllRegisterServer@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
-#pragma comment(linker, "/EXPORT:DllInstall=_DllInstall@8,PRIVATE")
 #endif

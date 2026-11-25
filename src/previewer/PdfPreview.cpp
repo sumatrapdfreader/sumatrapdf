@@ -209,7 +209,7 @@ class PageRenderer {
     RectF reqPageRect;
     bool reqUseClip = false;
     bool reqAbort = false;
-    AbortCookie* volatile abortCookie = nullptr;
+    AtomicPtr abortCookie = nullptr;
 
     Mutex currAccess;
     ThreadHandle thread = nullptr;
@@ -232,8 +232,8 @@ class PageRenderer {
         ThreadHandle th = nullptr;
         {
             AutoUnlockMutex scope(&currAccess);
-            if (abortCookie) {
-                abortCookie->Abort();
+            if (auto* cookie = (AbortCookie*)AtomicPtrGet(&abortCookie)) {
+                cookie->Abort();
             }
             reqAbort = true;
             th = thread;
@@ -328,8 +328,8 @@ class PageRenderer {
             } else {
                 FreePixmap(bmp);
             }
-            toDelete = pr->abortCookie;
-            pr->abortCookie = nullptr;
+            toDelete = (AbortCookie*)AtomicPtrGet(&pr->abortCookie);
+            AtomicPtrSet(&pr->abortCookie, nullptr);
 
             // once thread is null ~PageRenderer won't wait for us, so don't touch pr after this
             th = pr->thread;
@@ -396,8 +396,8 @@ void PageRenderer::Render(HDC hdc, const PreviewLayout& lo, int pageNo) {
         reqAbort = false;
         thread = CreateThread(nullptr, 0, RenderThread, this, 0, nullptr);
     } else if (!ClipCovers(reqPage, reqZoom, reqClip, pageNo, lo.zoom, visInPage)) {
-        if (abortCookie) {
-            abortCookie->Abort();
+        if (auto* cookie = (AbortCookie*)AtomicPtrGet(&abortCookie)) {
+            cookie->Abort();
         }
         reqAbort = true;
     }
@@ -855,6 +855,28 @@ IFACEMETHODIMP PdfPreview::DoPreview() {
     return S_OK;
 }
 
+static Mutex gGdiPlusMutex;
+static int gGdiPlusRefCount = 0;
+static AutoGdiPlusShutdown* gGdiPlusScope = nullptr;
+
+static void AcquirePreviewGdiPlus() {
+    ScopedMutex scope(&gGdiPlusMutex);
+    if (gGdiPlusRefCount++ == 0) {
+        gGdiPlusScope = new AutoGdiPlusShutdown();
+    }
+}
+
+static void ReleasePreviewGdiPlus() {
+    ScopedMutex scope(&gGdiPlusMutex);
+    if (--gGdiPlusRefCount == 0) {
+        // the cached gdiplus objects text measuring keeps around must go before
+        // gdiplus itself does
+        PlatformFontDestroy();
+        delete gGdiPlusScope;
+        gGdiPlusScope = nullptr;
+    }
+}
+
 static bool NeedsGdiPlus(PreviewType type) {
     return type == PreviewType::DjVu || type == PreviewType::Epub || type == PreviewType::Fb2 ||
            type == PreviewType::Mobi || type == PreviewType::Cbx || type == PreviewType::Tga;
@@ -865,17 +887,15 @@ PdfPreview::PdfPreview(AtomicInt* plRefCount, PreviewType type) {
     m_plModuleRef = plRefCount;
     AtomicIntInc(m_plModuleRef);
     if (NeedsGdiPlus(type)) {
-        m_gdiScope = new AutoGdiPlusShutdown();
+        AcquirePreviewGdiPlus();
+        m_usesGdiPlus = true;
     }
 }
 
 PdfPreview::~PdfPreview() {
     Unload();
-    if (m_gdiScope) {
-        // the cached gdiplus objects text measuring keeps around must go before
-        // gdiplus itself does
-        PlatformFontDestroy();
-        delete m_gdiScope;
+    if (m_usesGdiPlus) {
+        ReleasePreviewGdiPlus();
     }
     AtomicIntDec(m_plModuleRef);
 }

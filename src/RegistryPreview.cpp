@@ -17,11 +17,10 @@
 #define kRegKeyPreviewHandlers "Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"
 
 // clang-format off
-static struct {
+static const struct {
     Str clsid;
     Str ext;
     Str ext2;
-    bool skip = false;
 } gPreviewers[] = {
     {StrL(kPdfPreviewClsid), StrL(".pdf")},
     {StrL(kCbxPreviewClsid), StrL(".cbz"), StrL(".cbr")},
@@ -110,7 +109,7 @@ bool InstallPreviewDll(Str dllPath, bool allUsers, PreviewHandlers which) {
         u32 bits = ExtBit(i, 0) | ExtBit(i, 1);
         bool withPreview = which.preview & bits;
         bool withThumbnails = which.thumbnails & bits;
-        if (prev.skip || (!withPreview && !withThumbnails)) {
+        if (!withPreview && !withThumbnails) {
             continue;
         }
         Str clsid = prev.clsid;
@@ -181,11 +180,7 @@ bool UninstallPreviewDll() {
     HRESULT hr = S_OK;
 
     TempStr key;
-    for (auto& prev : gPreviewers) {
-        if (prev.skip) {
-            logf("UninstallPreviewDll: skipping '%s'\n", prev.ext);
-            continue;
-        }
+    for (const auto& prev : gPreviewers) {
         Str clsid = prev.clsid;
         Str exts[2] = {prev.ext, prev.ext2};
 
@@ -210,22 +205,6 @@ bool UninstallPreviewDll() {
         logf("UninstallPreviewDll: removed '%s'\n", prev.ext);
     }
     return hr == S_OK ? true : false;
-}
-
-// TODO: is anyone using this functionality?
-void DisablePreviewInstallExts(Str cmdLine) {
-    // allows installing only a subset of available preview handlers
-    if (str::TrimPrefixI(cmdLine, StrL("exts:"))) {
-        TempStr extsList = str::DupTemp(cmdLine);
-        str::ToLowerInPlace(extsList);
-        str::TransCharsInPlace(extsList, StrL(";. :"), StrL(",,,\0"));
-        StrVec exts;
-        Split(&exts, extsList, StrL(","), true);
-        for (auto& p : gPreviewers) {
-            Str extNoDot = Str(p.ext.s + 1, p.ext.len - 1);
-            p.skip = !exts.Contains(extNoDot);
-        }
-    }
 }
 
 // any of our preview pane or thumbnail handlers is registered

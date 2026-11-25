@@ -21,7 +21,6 @@ constexpr u32 kAllPreviewExts = 0xffffffff;
 
 bool InstallPreviewDll(Str dllPath, bool allUsers, PreviewHandlers which);
 bool UninstallPreviewDll();
-void DisablePreviewInstallExts(Str cmdLine);
 PreviewHandlers GetOurPreviewHandlers();
 PreviewHandlers GetForeignPreviewHandlers();
 bool IsPreviewInstalled();

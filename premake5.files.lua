@@ -1714,28 +1714,6 @@ function search_filter_files()
   })
 end
 
-function pdf_preview2_files()
-  files_in_dir("src/previewer2", {
-    "PdfPreview.*",
-    "PdfPreviewDll.cpp",
-  })
-
-  files_in_dir("src", {
-    "CrashHandlerNoOp.cpp",
-    "RegistryPreview.*",
-    "SumatraConfig.*",
-    "base/Base.*",
-    "gui/Dpi.h",
-    "gui/Dpi.cpp",
-    "base/File.h",
-    "base/File.cpp",
-    "base/LogNoOp.cpp",
-    "base/WinDynCalls.h",
-    "base/WinDynCalls.cpp",
-    "base/Win.*",
-  })
-end
-
 function a_gumbo_files()
   files {
     "ext/a-gumbo/gumbo.c",
