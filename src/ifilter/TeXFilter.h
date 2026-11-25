@@ -25,13 +25,16 @@ class TeXFilter : public FilterBase {
     VOID CleanUp() {
         free(m_pData);
         m_pData = nullptr;
+        m_pPtr = nullptr;
         free(m_pBuffer);
         m_pBuffer = nullptr;
+        m_state = STATE_TEX_END;
+        m_iDepth = 0;
     }
     WStr ExtractBracedBlock();
 
     // IPersist
-    IFACEMETHODIMP GetClassID(CLSID* pClassID) { return CLSIDFromString(StrL(kTexFilterClsid), pClassID); }
+    IFACEMETHODIMP GetClassID(CLSID* pClassID) override { return CLSIDFromString(StrL(kTexFilterClsid), pClassID); }
 
   private:
     TEX_FILTER_STATE m_state;

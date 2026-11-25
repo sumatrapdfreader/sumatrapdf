@@ -125,18 +125,16 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     switch (m_state) {
         case STATE_EPUB_START:
             m_state = STATE_EPUB_AUTHOR;
-            chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
-            return S_OK;
+            return chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
 
         case STATE_EPUB_AUTHOR:
             m_state = STATE_EPUB_TITLE;
             str = GetPropValueTemp(m_epubDoc->props, DocProp::Author);
             if (len(str) > 0) {
                 ws = ToWStrTemp(str);
-                chunkValue.SetTextValue(PKEY_Author, ws.s);
-                return S_OK;
+                return chunkValue.SetTextValue(PKEY_Author, ws.s);
             }
-            // fall through
+            [[fallthrough]];
 
         case STATE_EPUB_TITLE:
             m_state = STATE_EPUB_DATE;
@@ -146,10 +144,9 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             if (len(str) > 0) {
                 ws = ToWStrTemp(str);
-                chunkValue.SetTextValue(PKEY_Title, ws.s);
-                return S_OK;
+                return chunkValue.SetTextValue(PKEY_Title, ws.s);
             }
-            // fall through
+            [[fallthrough]];
 
         case STATE_EPUB_DATE:
             m_state = STATE_EPUB_CONTENT;
@@ -159,24 +156,23 @@ HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             if (len(str) > 0) {
                 SYSTEMTIME systime;
-                if (IsoDateParse(str, &systime)) {
-                    FILETIME filetime;
-                    SystemTimeToFileTime(&systime, &filetime);
-                    chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
-                    return S_OK;
+                FILETIME filetime;
+                if (IsoDateParse(str, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
+                    return chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
                 }
             }
-            // fall through
+            [[fallthrough]];
 
         case STATE_EPUB_CONTENT:
             m_state = STATE_EPUB_END;
             ws = ExtractHtmlText(m_epubDoc);
             if (len(ws) > 0) {
-                chunkValue.SetTextValue(PKEY_Search_Contents, ws.s, CHUNK_TEXT);
+                HRESULT hr = chunkValue.SetTextValue(PKEY_Search_Contents, ws.s, CHUNK_TEXT);
                 wstr::Free(ws);
-                return S_OK;
+                return hr;
             }
-            // fall through
+            wstr::Free(ws);
+            [[fallthrough]];
 
         case STATE_EPUB_END:
         default:

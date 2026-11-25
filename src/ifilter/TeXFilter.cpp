@@ -15,8 +15,9 @@ HRESULT TeXFilter::OnInit() {
         return E_FAIL;
     }
 
-    m_pData = strconv::StrCPToWStr(Str((char*)(u8*)m_data.s, (int)(size_t)m_data.len), CP_ACP).s;
-    m_pBuffer = AllocArray<WCHAR>(m_data.len + 1);
+    WStr wdata = strconv::StrCPToWStr(m_data, CP_ACP);
+    m_pData = wdata.s;
+    m_pBuffer = AllocArray<WCHAR>(wdata.len + 1);
 
     if (!m_pData || !m_pBuffer) {
         CleanUp();
@@ -64,9 +65,22 @@ WStr TeXFilter::ExtractBracedBlock() {
                 // skip all LaTeX/TeX commands
                 if (iscmdchar(*m_pPtr)) {
                     // ignore the content of \begin{...} and \end{...}
-                    if (wstr::StartsWith(m_pPtr, WStrL(L"begin{")) || wstr::StartsWith(m_pPtr, WStrL(L"end{"))) {
-                        int braceIdx = wstr::IndexOfChar(WStr(m_pPtr), L'{');
-                        m_pPtr += braceIdx + 1;
+                    if (wstr::StartsWith(m_pPtr, WStrL(L"begin{"))) {
+                        m_pPtr += 6;
+                        int depth = 1;
+                        while (*m_pPtr && depth > 0) {
+                            if (*m_pPtr == '{') {
+                                depth++;
+                            } else if (*m_pPtr == '}') {
+                                depth--;
+                            }
+                            m_pPtr++;
+                        }
+                        addsingleNL(result, &rptr);
+                        break;
+                    }
+                    if (wstr::StartsWith(m_pPtr, WStrL(L"end{"))) {
+                        m_pPtr += 4;
                         int depth = 1;
                         while (*m_pPtr && depth > 0) {
                             if (*m_pPtr == '{') {
@@ -92,9 +106,9 @@ WStr TeXFilter::ExtractBracedBlock() {
                     skipspace(m_pPtr);
                     // ignore command parameters in brackets
                     if (*m_pPtr == '[') {
-                        int bracketIdx = wstr::IndexOfChar(WStr(m_pPtr), L']');
-                        if (bracketIdx >= 0) {
-                            m_pPtr += bracketIdx + 1;
+                        WCHAR* endBracket = wcschr(m_pPtr, L']');
+                        if (endBracket) {
+                            m_pPtr = endBracket + 1;
                         }
                     }
                     break;
@@ -185,12 +199,13 @@ WStr TeXFilter::ExtractBracedBlock() {
                 }
                 break;
             case '[': {
-                // ignore command parameters in brackets
-                WStr rest(m_pPtr);
-                int bracketIdx = wstr::IndexOfChar(rest, L']');
-                int newlineIdx = wstr::IndexOfChar(rest, L'\n');
-                if (bracketIdx >= 0 && newlineIdx >= 0 && bracketIdx < newlineIdx) {
-                    m_pPtr += bracketIdx + 1;
+                // ignore command parameters in brackets on the same line
+                WCHAR* p = m_pPtr;
+                while (*p && *p != L']' && *p != L'\n') {
+                    p++;
+                }
+                if (*p == L']') {
+                    m_pPtr = p + 1;
                 }
                 break;
             }
@@ -210,6 +225,7 @@ WStr TeXFilter::ExtractBracedBlock() {
                     m_pPtr++;
                     break;
                 }
+                [[fallthrough]];
             default:
                 m_pPtr--;
                 if (wstr::IsWs(*m_pPtr)) {
@@ -230,6 +246,9 @@ WStr TeXFilter::ExtractBracedBlock() {
 }
 
 HRESULT TeXFilter::GetNextChunkValue(ChunkValue& chunkValue) {
+    if (!m_pPtr) {
+        return FILTER_E_END_OF_CHUNKS;
+    }
     WCHAR *start, *end;
 
 ContinueParsing:
@@ -245,8 +264,7 @@ ContinueParsing:
     switch (m_state) {
         case STATE_TEX_START:
             m_state = STATE_TEX_PREAMBLE;
-            chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
-            return S_OK;
+            return chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
         case STATE_TEX_PREAMBLE:
             // the preamble (i.e. everything before \begin{document}) may contain
             // \author{...} and \title{...} commands
@@ -286,8 +304,7 @@ ContinueParsing:
                 int cmdLen = (int)(end - start);
                 WStr cmd(start, cmdLen);
                 if (wstr::Eq(cmd, WStrL(L"author")) || wstr::Eq(cmd, WStrL(L"title"))) {
-                    chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
-                    return S_OK;
+                    return chunkValue.SetTextValue(*start == 'a' ? PKEY_Author : PKEY_Title, ExtractBracedBlock().s);
                 }
 
                 if (wstr::Eq(cmd, WStrL(L"begin")) && wstr::Eq(ExtractBracedBlock(), WStrL(L"document"))) {
@@ -296,8 +313,7 @@ ContinueParsing:
             }
             goto ContinueParsing;
         case STATE_TEX_CONTENT:
-            chunkValue.SetTextValue(PKEY_Search_Contents, ExtractBracedBlock().s, CHUNK_TEXT);
-            return S_OK;
+            return chunkValue.SetTextValue(PKEY_Search_Contents, ExtractBracedBlock().s, CHUNK_TEXT);
         default:
             return FILTER_E_END_OF_CHUNKS;
     }

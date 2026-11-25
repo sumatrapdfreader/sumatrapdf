@@ -15,10 +15,12 @@
 
 class ChunkValue {
   public:
-    ChunkValue() : m_fIsValid(false), m_pszValue(nullptr) {
+    ChunkValue() : m_fIsValid(false), m_pszValue(nullptr), m_cchValue(0) {
         PropVariantInit(&m_propVariant);
         Clear();
     }
+    ChunkValue(const ChunkValue&) = delete;
+    ChunkValue& operator=(const ChunkValue&) = delete;
 
     ~ChunkValue() { Clear(); };
 
@@ -28,6 +30,7 @@ class ChunkValue {
         PropVariantClear(&m_propVariant);
         CoTaskMemFree(m_pszValue);
         m_pszValue = nullptr;
+        m_cchValue = 0;
     }
 
     BOOL IsValid() { return m_fIsValid; }
@@ -49,7 +52,8 @@ class ChunkValue {
         return hr;
     }
 
-    PWSTR GetString() { return m_pszValue; };
+    PWSTR GetString() { return m_pszValue; }
+    size_t GetStringLen() const { return m_cchValue; }
 
     HRESULT CopyChunk(STAT_CHUNK* pStatChunk) {
         if (!pStatChunk) return E_INVALIDARG;
@@ -68,17 +72,19 @@ class ChunkValue {
         HRESULT hr = SetChunk(pkey, chunkType, locale, cwcLenSource, cwcStartSource, chunkBreakType);
         if (FAILED(hr)) return hr;
 
-        size_t cch = wcslen(pszValue) + 1;
-        PWSTR pszCoTaskValue = static_cast<PWSTR>(CoTaskMemAlloc(cch * sizeof(WCHAR)));
+        size_t cch = wcslen(pszValue);
+        if (cch >= SIZE_MAX / sizeof(WCHAR)) return E_OUTOFMEMORY;
+        PWSTR pszCoTaskValue = static_cast<PWSTR>(CoTaskMemAlloc((cch + 1) * sizeof(WCHAR)));
         if (!pszCoTaskValue) return E_OUTOFMEMORY;
 
-        wstr::BufSet(WStr(pszCoTaskValue, (int)cch), WStr(pszValue));
+        memcpy(pszCoTaskValue, pszValue, (cch + 1) * sizeof(WCHAR));
         m_fIsValid = true;
         if (chunkType == CHUNK_VALUE) {
             m_propVariant.vt = VT_LPWSTR;
             m_propVariant.pwszVal = pszCoTaskValue;
         } else {
             m_pszValue = pszCoTaskValue;
+            m_cchValue = cch;
         }
 
         return hr;
@@ -106,6 +112,7 @@ class ChunkValue {
     STAT_CHUNK m_chunk;
     PROPVARIANT m_propVariant;
     PWSTR m_pszValue;
+    size_t m_cchValue;
 };
 
 inline HRESULT ChunkValue::SetChunk(REFPROPERTYKEY pkey, CHUNKSTATE chunkType /*=CHUNK_VALUE*/, LCID locale /*=0*/,
@@ -141,7 +148,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
 
     virtual ~FilterBase() {
         str::Free(m_data);
-        InterlockedDecrement(m_plModuleRef);
+        AtomicIntDec(m_plModuleRef);
     }
 
     // IUnknown
@@ -156,7 +163,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     }
     IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
     IFACEMETHODIMP_(ULONG) Release() {
-        long cRef = InterlockedDecrement(&m_lRef);
+        int cRef = AtomicIntDec(&m_lRef);
         if (cRef == 0) delete this;
         return cRef;
     }
@@ -191,18 +198,18 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
     }
 
     IFACEMETHODIMP GetText(ULONG* pcwcBuffer, WCHAR* awcBuffer) {
-        if (!pcwcBuffer || !*pcwcBuffer) return E_INVALIDARG;
+        if (!pcwcBuffer || !awcBuffer || *pcwcBuffer < 2) return E_INVALIDARG;
         if (!m_currentChunk.IsValid()) return FILTER_E_NO_MORE_TEXT;
         if (m_currentChunk.GetChunkType() != CHUNK_TEXT) return FILTER_E_NO_TEXT;
 
-        ULONG cchTotal = static_cast<ULONG>(wcslen(m_currentChunk.GetString()));
-        ULONG cchLeft = cchTotal - m_iText;
-        ULONG cchToCopy = std::min(*pcwcBuffer - 1, cchLeft);
-
-        if (!cchToCopy) return FILTER_E_NO_MORE_TEXT;
+        size_t cchTotal = m_currentChunk.GetStringLen();
+        if (m_iText >= cchTotal) return FILTER_E_NO_MORE_TEXT;
+        size_t cchLeft = cchTotal - m_iText;
+        ULONG cchToCopy = (ULONG)std::min<size_t>((size_t)(*pcwcBuffer - 1), cchLeft);
 
         PCWSTR psz = m_currentChunk.GetString() + m_iText;
-        wstr::BufSet(WStr(awcBuffer, (int)*pcwcBuffer), WStr(psz, (int)cchToCopy));
+        memcpy(awcBuffer, psz, (size_t)cchToCopy * sizeof(WCHAR));
+        awcBuffer[cchToCopy] = 0;
 
         *pcwcBuffer = cchToCopy;
         m_iText += cchToCopy;
@@ -245,6 +252,7 @@ class FilterBase : public IFilter, public IInitializeWithStream, public IPersist
 
     // IPersistFile (for compatibility with older Windows Desktop Search versions and ifilttst.exe)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, __unused DWORD dwMode) {
+        if (!pszFileName) return E_INVALIDARG;
         // share everything: we only read, and denying writers would lock the
         // file for the read the same way holding the shell's stream did
         DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;

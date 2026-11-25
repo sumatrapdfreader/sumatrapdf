@@ -52,7 +52,7 @@ class FilterClassFactory : public IClassFactory {
   public:
     explicit FilterClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { AtomicIntInc(&g_lRefCount); }
 
-    ~FilterClassFactory() { InterlockedDecrement(&g_lRefCount); }
+    ~FilterClassFactory() { AtomicIntDec(&g_lRefCount); }
 
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
@@ -63,7 +63,7 @@ class FilterClassFactory : public IClassFactory {
     IFACEMETHODIMP_(ULONG) AddRef() { return AtomicIntInc(&m_lRef); }
 
     IFACEMETHODIMP_(ULONG) Release() {
-        long cRef = InterlockedDecrement(&m_lRef);
+        int cRef = AtomicIntDec(&m_lRef);
         if (cRef == 0) {
             delete this;
         }
@@ -74,6 +74,9 @@ class FilterClassFactory : public IClassFactory {
     IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
         log(StrL("FilterClassFactory::CreateInstance()\n"));
 
+        if (!ppv) {
+            return E_POINTER;
+        }
         *ppv = nullptr;
         if (punkOuter) {
             return CLASS_E_NOAGGREGATION;
@@ -109,7 +112,7 @@ class FilterClassFactory : public IClassFactory {
         if (bLock) {
             AtomicIntInc(&g_lRefCount);
         } else {
-            InterlockedDecrement(&g_lRefCount);
+            AtomicIntDec(&g_lRefCount);
         }
         return S_OK;
     }
@@ -140,10 +143,13 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
 }
 
 STDAPI DllCanUnloadNow(VOID) {
-    return g_lRefCount == 0 ? S_OK : S_FALSE;
+    return AtomicIntGet(&g_lRefCount) == 0 ? S_OK : S_FALSE;
 }
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
+    if (!ppv) {
+        return E_POINTER;
+    }
     *ppv = nullptr;
     if (FilterKindFromClsid(rclsid) == FilterKind::None) {
         return CLASS_E_CLASSNOTAVAILABLE;

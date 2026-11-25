@@ -1682,7 +1682,6 @@ end
 
 function search_filter_files()
   files_in_dir("src/ifilter", {
-    "CPdfFilter.*",
     "FilterBase.h",
     "PdfFilter.*",
     "SearchFilterDll.cpp",

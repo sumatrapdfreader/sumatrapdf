@@ -95,16 +95,14 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
     switch (m_state) {
         case PdfFilterState::Start:
             m_state = PdfFilterState::Author;
-            chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
-            return S_OK;
+            return chunkValue.SetTextValue(PKEY_PerceivedType, L"document");
 
         case PdfFilterState::Author:
             m_state = PdfFilterState::Title;
             prop = m_pdfEngine->GetPropertyTemp(DocProp::Author);
             if (len(prop) > 0) {
                 ws = ToWStrTemp(prop);
-                chunkValue.SetTextValue(PKEY_Author, ws.s);
-                return S_OK;
+                return chunkValue.SetTextValue(PKEY_Author, ws.s);
             }
 
             [[fallthrough]];
@@ -117,8 +115,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             }
             if (len(prop) > 0) {
                 ws = ToWStrTemp(prop);
-                chunkValue.SetTextValue(PKEY_Title, ws.s);
-                return S_OK;
+                return chunkValue.SetTextValue(PKEY_Title, ws.s);
             }
 
             [[fallthrough]];
@@ -133,8 +130,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                 SYSTEMTIME systime;
                 FILETIME filetime;
                 if (PdfDateParse(prop, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
-                    chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
-                    return S_OK;
+                    return chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
                 }
             }
 
@@ -152,9 +148,9 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                 // together (#4859).
                 TempStr crlfText = str::LFToCRLFTemp(pageText.text);
                 TempWStr text = ToWStrTemp(crlfText);
-                chunkValue.SetTextValue(PKEY_Search_Contents, text.s, CHUNK_TEXT, 0, 0, 0, CHUNK_EOP);
+                HRESULT hr = chunkValue.SetTextValue(PKEY_Search_Contents, text.s, CHUNK_TEXT, 0, 0, 0, CHUNK_EOP);
                 FreePageText(&pageText);
-                return S_OK;
+                return hr;
             }
             m_state = PdfFilterState::End;
 
