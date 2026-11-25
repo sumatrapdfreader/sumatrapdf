@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6045", issue6045],
   ["installer-desktop-shortcut", installerDesktopShortcut],
   ["issue-6232", issue6232],
   ["text-snippets", textSnippets],
@@ -970,7 +971,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["toc-expand-chapter", tocExpandChapter],
   ["file-menu-send-by-email", fileMenuSendByEmail],
   ["favorites-tab-after-document-close", favoritesTabAfterDocumentClose],
-  ["issue-6045", issue6045],
   ["issue-3744", issue3744],
   ["issue-4986", issue4986],
   ["issue-5095", issue5095],

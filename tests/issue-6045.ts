@@ -155,16 +155,19 @@ async function waitForDarkTheme(help: number, webView: number, where: string): P
     const dx = r.right - r.left;
     const dy = r.bottom - r.top;
     const pixels = captureWebViewRegion(help, webView, Math.max(0, dx - 140), Math.max(0, dy - 100), 100, 60);
-    if (!pixels) {
-      throw new Error(`issue-6045: failed to read the ${where} Manual background`);
-    }
-    firstPixel = `${pixels[2]},${pixels[1]},${pixels[0]}`;
-    fraction = nearBlackFraction(pixels);
-    if (fraction >= 0.98) {
-      return;
+    // The window and WebView can report different sizes during a resize.
+    if (pixels) {
+      firstPixel = `${pixels[2]},${pixels[1]},${pixels[0]}`;
+      fraction = nearBlackFraction(pixels);
+      if (fraction >= 0.98) {
+        return;
+      }
     }
     await sleep(50);
   } while (Date.now() <= deadline);
+  if (!firstPixel) {
+    throw new Error(`issue-6045: failed to read the ${where} Manual background`);
+  }
   throw new Error(
     `issue-6045: ${where} Manual background was only ${(fraction * 100).toFixed(1)}% theme black (first RGB ${firstPixel})`,
   );
@@ -172,27 +175,29 @@ async function waitForDarkTheme(help: number, webView: number, where: string): P
 
 async function waitForLightThemeText(help: number, webView: number): Promise<void> {
   const deadline = Date.now() + 15000;
-  let lightPixels = 0;
+  let lightPixels: number | undefined;
   do {
     // Maximizing makes the left navigation visible. It contains many rows of
     // ordinary text; start below the white search input at its top.
     const r = getWindowRect(webView);
     const sampleDy = Math.min(500, r.bottom - r.top - 85);
     const pixels = captureWebViewRegion(help, webView, 15, 75, 190, sampleDy);
-    if (!pixels) {
-      throw new Error("issue-6045: failed to read the Manual text");
-    }
-    lightPixels = 0;
-    for (let i = 0; i < pixels.length; i += 4) {
-      if (pixels[i] >= 180 && pixels[i + 1] >= 180 && pixels[i + 2] >= 180) {
-        lightPixels++;
+    if (pixels) {
+      lightPixels = 0;
+      for (let i = 0; i < pixels.length; i += 4) {
+        if (pixels[i] >= 180 && pixels[i + 1] >= 180 && pixels[i + 2] >= 180) {
+          lightPixels++;
+        }
       }
-    }
-    if (lightPixels >= 100) {
-      return;
+      if (lightPixels >= 100) {
+        return;
+      }
     }
     await sleep(50);
   } while (Date.now() <= deadline);
+  if (lightPixels === undefined) {
+    throw new Error("issue-6045: failed to read the Manual text");
+  }
   throw new Error(`issue-6045: Manual text did not follow the light Dark-theme text color (${lightPixels} pixels)`);
 }
 
