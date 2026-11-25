@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["close-tab-during-placement", closeTabDuringPlacement],
   ["app-unit-tests", appUnitTests],
   parallelTest("jbig2-resize-overflow"),
   // Start the CLI tests with the most work before shorter worker jobs.
@@ -816,7 +817,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["lazy-tab-select-paint", lazyTabSelectPaint],
   ["pending-tab-freed-session-state", pendingTabFreedSessionState],
   ["form-js-throw", formJsThrow],
-  ["close-tab-during-placement", closeTabDuringPlacement],
   ["toggle-zoom-failed-tab", toggleZoomFailedTab],
   ["restore-chm-missing-tab", restoreChmMissingTab],
   ["restore-session-close-reentry", restoreSessionCloseReentry],

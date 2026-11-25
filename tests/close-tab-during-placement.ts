@@ -12,8 +12,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { killAndWait, killProcessesNamed, launchControlled, sendCommand, takeStderr } from "./win-automation.ts";
+import { pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { killAndWait, killProcessesNamed, launchControlled, takeStderr } from "./win-automation.ts";
 
 const FIRST_PDF = resolve("tests/issue-1189.pdf");
 const SECOND_PDF = resolve("tests/issue-3219.pdf");
@@ -74,17 +74,23 @@ async function placementActive(client: ControlClient): Promise<boolean> {
   return /Placement active=1/.test(raw);
 }
 
+async function invokeCommand(client: ControlClient, command: string): Promise<void> {
+  const [code, detail] = await client.request(ControlCommand.TestInvokeCommand, [command]);
+  if (code !== 0) {
+    throw new Error(`close-tab-during-placement: ${command} failed: ${detail}`);
+  }
+}
+
 export async function testit(): Promise<void> {
   await killProcessesNamed("SumatraPDF.exe");
   seedSettings();
-  const { proc, client, frame } = await launchControlled(["-appdata", APPDATA], { saveSettings: true });
+  const { proc, client } = await launchControlled(["-appdata", APPDATA], { saveSettings: true });
   try {
     await client.waitForSessionRestored(30000);
     await client.waitForRenderIdle(30000);
 
-    // load the lazy tab too, so the tab left after the close has a document
-    // posted: SendMessage would deadlock with the app writing a report to our stderr
-    sendCommand(frame, cmdId("CmdPrevTab"));
+    // Resolve the command target after session restore, when the document window is ready.
+    await invokeCommand(client, "CmdPrevTab");
     await pollUntil(
       () => currentPath(client),
       (path) => path === FIRST_PDF,
@@ -95,7 +101,7 @@ export async function testit(): Promise<void> {
     );
     await client.waitForRenderIdle(30000);
 
-    sendCommand(frame, cmdId("CmdCreateAnnotSquare"));
+    await invokeCommand(client, "CmdCreateAnnotSquare");
     await pollUntil(
       () => placementActive(client),
       (active) => active,
@@ -105,7 +111,7 @@ export async function testit(): Promise<void> {
       },
     );
 
-    sendCommand(frame, cmdId("CmdClose"));
+    await invokeCommand(client, "CmdClose");
     await pollUntil(
       () => currentPath(client),
       (path) => path === SECOND_PDF,
