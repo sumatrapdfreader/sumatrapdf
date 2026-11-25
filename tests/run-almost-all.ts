@@ -634,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["app-unit-tests", appUnitTests],
   parallelTest("jbig2-resize-overflow"),
   // Start the CLI tests with the most work before shorter worker jobs.
   parallelTest("cli-pdf-tools"),
@@ -851,7 +852,6 @@ export const tests: NamedTest[] = orderForReuse([
   parallelTest("lint-control-ids"),
   parallelTest("font-map-current"),
   parallelTest("build-cli"),
-  ["app-unit-tests", appUnitTests],
   parallelTest("combining-mark-first"),
   ["issue-5844", issue5844],
   parallelTest("issue-3434"),

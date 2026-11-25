@@ -13,6 +13,7 @@
 #include "EngineAll.h"
 
 #include "base/tests/UtAssert.h"
+#include "SumatraLog.h"
 
 #define OFD_NS "xmlns=\"http://www.ofdspec.org/2016\""
 
@@ -63,12 +64,21 @@ static void RenderOfdPages(Str ofd, int nPages) {
     }
     utassert(engine->PageCount() == nPages);
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
+        // The fixture emits expected limit warnings. Console writes can block on the test runner.
+        bool logToConsole = gLogToConsole;
+        gLogToConsole = false;
         auto start = TimeGet();
         RenderPageArgs args(pageNo, 1.f, 0);
         Pixmap* px = engine->RenderPage(args);
+        double elapsedMs = TimeSinceInMs(start);
+        gLogToConsole = logToConsole;
+
         utassert(px != nullptr);
         FreePixmap(px);
-        utassert(TimeSinceInMs(start) < kMaxPageMs);
+        if (elapsedMs >= kMaxPageMs) {
+            logf("OFD page %d rendered in %.1f ms\n", pageNo, elapsedMs);
+        }
+        utassert(elapsedMs < kMaxPageMs);
     }
     SafeEngineRelease(&engine);
 }
