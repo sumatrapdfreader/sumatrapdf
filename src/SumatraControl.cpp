@@ -186,7 +186,7 @@ void AddFavoriteSilent(MainWindow* win, int pageNo) {
             return;
         }
     }
-    TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
+    TempStr pageLabel = win->ctrl->GetPageLabelTemp(pageNo);
     TempStr plainLabel = fmt("%d", pageNo);
     bool needsLabel = pageLabel && !str::Eq(plainLabel, pageLabel) && !win->ctrl->HasChapters();
     Str pl = needsLabel ? pageLabel : Str{};

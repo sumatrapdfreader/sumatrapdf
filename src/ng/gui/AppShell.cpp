@@ -1451,7 +1451,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_fullscreen_left() {
 extern "C" EMSCRIPTEN_KEEPALIVE const char* sumatra_wasm_build_info() {
     static char* info = nullptr;
     if (!info) {
-        info = str::Dup(fmt("%s %s", currentVersion, gitCommidId)).s;
+        info = str::Dup(fmt("%s %s", currentVersion, gitCommitId)).s;
     }
     return info;
 }

@@ -454,7 +454,7 @@ void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo) {
         pageInfo = fmt("%s %d / %d, %s %d / %d", Tr("Chapter:"), loc.chapter, ctrl->ChapterCount(), Tr("Page:"),
                        loc.page, chapterPages);
     } else if (ctrl->HasPageLabels()) {
-        TempStr label = ctrl->GetPageLabeTemp(pageNo);
+        TempStr label = ctrl->GetPageLabelTemp(pageNo);
         pageInfo = fmt("%s %s (%d / %d)", Tr("Page:"), label, pageNo, nPages);
     } else {
         pageInfo = fmt("%s %d / %d", Tr("Page:"), pageNo, nPages);
@@ -720,7 +720,7 @@ static TempStr PageInfoBarRightTemp(MainWindow* win) {
         AppendBarPart(out, fmt(Tr("Page %d / %d").s, loc.page, ctrl->ChapterPageCount(loc.chapter)));
         AppendBarPart(out, fmt("%d%%", percentRead));
     } else {
-        TempStr label = ctrl->HasPageLabels() ? ctrl->GetPageLabeTemp(pageNo) : TempStr{};
+        TempStr label = ctrl->HasPageLabels() ? ctrl->GetPageLabelTemp(pageNo) : TempStr{};
         if (len(label) > 0 && !str::Eq(label, fmt("%d", pageNo))) {
             AppendBarPart(out, fmt(Tr("Page %s (%d / %d, %d%%)").s, label, pageNo, nPages, percentRead));
         } else {

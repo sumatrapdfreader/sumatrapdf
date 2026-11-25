@@ -108,9 +108,9 @@ void AboutSourceRow(Str* text, Str* url) {
     static Str gText;
     static Str gUrl;
     if (str::IsNull(gText)) {
-        if (len(gitCommidId) > 0) {
-            gText = str::Dup(Str(gitCommidId.s, std::min(len(gitCommidId), kAboutCommitDigits)));
-            gUrl = str::Dup(fmt("https://github.com/sumatrapdfreader/sumatrapdf/commit/%s", gitCommidId));
+        if (len(gitCommitId) > 0) {
+            gText = str::Dup(Str(gitCommitId.s, std::min(len(gitCommitId), kAboutCommitDigits)));
+            gUrl = str::Dup(fmt("https://github.com/sumatrapdfreader/sumatrapdf/commit/%s", gitCommitId));
         } else {
             gText = str::Dup(StrL("local build"));
             gUrl = str::Dup(StrL("https://github.com/sumatrapdfreader/sumatrapdf"));

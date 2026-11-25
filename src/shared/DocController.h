@@ -150,7 +150,7 @@ struct DocController {
 
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }
-    virtual TempStr GetPageLabeTemp(int pageNo) const { return fmt("%d", pageNo); }
+    virtual TempStr GetPageLabelTemp(int pageNo) const { return fmt("%d", pageNo); }
     virtual int GetPageByLabel(Str label) const { return ParseInt(label); }
 
     // common shortcuts

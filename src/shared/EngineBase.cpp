@@ -1541,7 +1541,7 @@ int EngineBase::LogicalPageCount() {
 
 // returns a label to be displayed instead of the page number
 // caller must free() the result
-TempStr EngineBase::GetPageLabeTemp(int pageNo) const {
+TempStr EngineBase::GetPageLabelTemp(int pageNo) const {
     return fmt("%d", pageNo);
 }
 
@@ -1721,8 +1721,8 @@ Location EnginePdfProxy::ResolveDest(IPageDestination* dest) {
     return pdfEngine->ResolveDest(dest);
 }
 
-TempStr EnginePdfProxy::GetPageLabeTemp(int pageNo) const {
-    return pdfEngine->GetPageLabeTemp(pageNo);
+TempStr EnginePdfProxy::GetPageLabelTemp(int pageNo) const {
+    return pdfEngine->GetPageLabelTemp(pageNo);
 }
 
 int EnginePdfProxy::GetPageByLabel(Str label) const {

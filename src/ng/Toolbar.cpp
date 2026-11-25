@@ -1334,7 +1334,7 @@ static void SyncLocationEdits(MainWindow* win) {
         return;
     }
     SetEditText(tb->chapterEdit, {});
-    SetEditText(tb->pageEdit, ctrl->GetPageLabeTemp(ctrl->CurrentPageNo()));
+    SetEditText(tb->pageEdit, ctrl->GetPageLabelTemp(ctrl->CurrentPageNo()));
 }
 
 gp::El* ToolbarBuild(MainWindow* win, gp::Ctx* cx) {

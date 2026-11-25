@@ -29,7 +29,7 @@ struct ClosedDocuments {
     bool isWindow = false;
 };
 
-int RecentlyCloseDocumentsCount();
+int RecentlyClosedDocumentsCount();
 void RememberRecentlyClosedDocument(Str path);
 void RememberRecentlyClosedWindow(const StrVec& paths, int activeIdx);
 ClosedDocuments* PopRecentlyClosed();

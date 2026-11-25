@@ -175,8 +175,6 @@ TempStr ChmModel::ScrollUrlForPageTemp(int pageNo) const {
 }
 
 struct ChmTocBuilder {
-    ChmFile* doc = nullptr;
-
     StrVec* pages = nullptr;
     Vec<BrowserTocTraceItem>* tocTrace = nullptr;
     Arena* a = nullptr;
@@ -203,8 +201,7 @@ struct ChmTocBuilder {
     }
 
   public:
-    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<BrowserTocTraceItem>* tocTrace, Arena* a) {
-        this->doc = doc;
+    ChmTocBuilder(StrVec* pages, Vec<BrowserTocTraceItem>* tocTrace, Arena* a) {
         this->pages = pages;
         this->tocTrace = tocTrace;
         this->a = a;
@@ -239,7 +236,7 @@ bool ChmModel::Load(Str fileName) {
 
     // parse the ToC here, since page numbering depends on it
     tocTrace = new Vec<BrowserTocTraceItem>();
-    ChmTocBuilder tmpTocBuilder(doc, &pages, tocTrace, poolAlloc);
+    ChmTocBuilder tmpTocBuilder(&pages, tocTrace, poolAlloc);
     EbookToc toc;
     doc->ParseToc(toc);
     for (EbookTocItem& it : toc.items) {

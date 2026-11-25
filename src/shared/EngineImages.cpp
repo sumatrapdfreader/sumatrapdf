@@ -2003,7 +2003,7 @@ class EngineImageDir : public EngineImages {
 
     TempStr GetPropertyTemp(DocProp /*prop*/) override { return {}; }
 
-    TempStr GetPageLabeTemp(int pageNo) const override;
+    TempStr GetPageLabelTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
 
     TocTree* GetToc() override;
@@ -2062,9 +2062,9 @@ static bool LoadImageDir(EngineImageDir* e, Str dir) {
     return true;
 }
 
-TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
+TempStr EngineImageDir::GetPageLabelTemp(int pageNo) const {
     if (pageNo < 1 || pageCount < pageNo) {
-        return EngineBase::GetPageLabeTemp(pageNo);
+        return EngineBase::GetPageLabelTemp(pageNo);
     }
 
     Str path = pageFileNames[pageNo - 1];
@@ -2107,11 +2107,11 @@ TocTree* EngineImageDir::GetToc() {
     if (tocTree) {
         return tocTree;
     }
-    TempStr label = GetPageLabeTemp(1);
+    TempStr label = GetPageLabelTemp(1);
     TocItem* root = newImageDirTocItem(arena, nullptr, label, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
-        label = GetPageLabeTemp(i);
+        label = GetPageLabelTemp(i);
         TocItem* item = newImageDirTocItem(arena, root, label, i);
         item->id = i;
         root->AddSiblingAtEnd(item);

@@ -526,7 +526,7 @@ void FindWindowWnd::DrawResultItem(VirtListBox::DrawItemEvent* ev) {
     // instead of fighting a per-row measured width (#5692 / #5796).
     const FindMatch& fm = win->findMatches[ev->itemIndex];
     // ctrl is null between closing a document and loading the next one in the tab
-    TempStr pageStr = win->ctrl ? fmt("%s", win->ctrl->GetPageLabeTemp(fm.startPage)) : TempStr{};
+    TempStr pageStr = win->ctrl ? fmt("%s", win->ctrl->GetPageLabelTemp(fm.startPage)) : TempStr{};
     int pageGap = DpiScale(10);
     int pageColDx = DpiScale(40);
     Size pageSize = gfx->MeasureText(pageStr, lb->font);

@@ -1106,7 +1106,6 @@ struct pkcs7_windows_rev_data {
     int n_ocsp;
     unsigned char* ocsp[PKCS7_MAX_OCSP];
     DWORD ocsp_len[PKCS7_MAX_OCSP];
-    fz_context* ctx;
 };
 
 pkcs7_windows_rev_data* pkcs7_windows_rev_new(void) {

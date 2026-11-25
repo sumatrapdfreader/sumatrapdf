@@ -13,7 +13,7 @@ struct FileHistoryEntry {
     int cmdId;
 };
 void SetFileHistoryCmdIds(Vec<FileHistoryEntry>& files);
-TempStr CleanupURLForClipbardCopyTemp(Str s);
+TempStr CleanupURLForClipboardCopyTemp(Str s);
 
 // the fixed entries of the zoom menu
 struct ZoomMenuId {

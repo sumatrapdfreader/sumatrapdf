@@ -122,8 +122,8 @@ constexpr Color kCol5 = MkRgb(112, 115, 207);
 static void AppendBugReportInfo(str::Builder& s) {
     s.Append(fmt("SumatraPDF %s\n", GetAppVersionTemp()));
     s.Append(fmt("Built on: %s %s\n", StrL(__DATE__), StrL(__TIME__)));
-    if (gitCommidId) {
-        s.Append(fmt("Git: %s\n", gitCommidId));
+    if (gitCommitId) {
+        s.Append(fmt("Git: %s\n", gitCommitId));
     }
     Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
     Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");

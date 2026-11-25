@@ -90,7 +90,7 @@ void GoToPageWnd::SetTarget(MainWindow* mainWin) {
         } else {
             pageCount = ctrl->PageCount();
             onlyNumeric = !ctrl->HasPageLabels();
-            pageLabel = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
+            pageLabel = ctrl->GetPageLabelTemp(ctrl->CurrentPageNo());
         }
     }
     if (labelOf) {

@@ -99,7 +99,7 @@ void SetFileHistoryCmdIds(Vec<FileHistoryEntry>& files) {
 
 // s could be in format "file:path.pdf" or "mailto:foo@bar.com"
 // We only want the "path.pdf" / "foo@bar.com"
-TempStr CleanupURLForClipbardCopyTemp(Str s) {
+TempStr CleanupURLForClipboardCopyTemp(Str s) {
     Str slice = s;
     str::TrimPrefix(slice, StrL("file:"));
     str::TrimPrefix(slice, StrL("mailto:"));

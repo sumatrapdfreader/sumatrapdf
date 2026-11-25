@@ -1565,7 +1565,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
                 win->pageEdit->SetText(fmt("%d", cur.page));
             }
         } else if (win->pageEdit) {
-            TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
+            TempStr label = win->ctrl->GetPageLabelTemp(pageNo);
             win->pageEdit->SetText(label);
         }
         ToolbarUpdateStateForWindow(win, false);
@@ -1868,7 +1868,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
         if (hasChapters) {
             win->pageEdit->SetText(fmt("%d", win->ctrl->CurrentLocation().page));
         } else if (hasDoc) {
-            win->pageEdit->SetText(win->ctrl->GetPageLabeTemp(win->ctrl->CurrentPageNo()));
+            win->pageEdit->SetText(win->ctrl->GetPageLabelTemp(win->ctrl->CurrentPageNo()));
         } else {
             win->pageEdit->SetText({});
         }
@@ -6404,7 +6404,7 @@ static void CreateLnkShortcut(MainWindow* win) {
 
     TempStr args = fmt("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode, zoomVirtual,
                        (int)ss.x, (int)ss.y);
-    TempStr label = ctrl->GetPageLabeTemp(ss.page);
+    TempStr label = ctrl->GetPageLabelTemp(ss.page);
     TempStr desc = fmt(Tr("Bookmark shortcut to page %s of %s").s, label, path);
     auto exePath = GetSelfExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
@@ -16569,8 +16569,8 @@ static void GetProgramInfo(str::Builder& b) {
     }
     b.Append(StrL("\n"));
 
-    if (gitCommidId) {
-        b.Append(fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\n", gitCommidId, gitCommidId));
+    if (gitCommitId) {
+        b.Append(fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\n", gitCommitId, gitCommitId));
     }
 }
 

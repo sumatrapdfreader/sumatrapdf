@@ -161,7 +161,7 @@ void ShowGoToPageDialog(MainWindow* win) {
     } else {
         gGoToPage.chapterCount = 0;
         gGoToPage.pageCount = ctrl->PageCount();
-        gGoToPage.editPage = NewNumberInput(app, ctrl->GetPageLabeTemp(ctrl->CurrentPageNo()));
+        gGoToPage.editPage = NewNumberInput(app, ctrl->GetPageLabelTemp(ctrl->CurrentPageNo()));
     }
     gGoToPage.visible = true;
     DialogsTrackFrameDialog(IsGoToPageDialogVisible, [] { return gGoToPage.win; }, CloseGoToPageDialog);

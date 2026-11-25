@@ -365,6 +365,8 @@ static void AppendSelectedLines(Str text, Rect* coords, int textLen, int glyph, 
     }
 
     const PageLine* prev = nullptr;
+    int cpCursor = 0;
+    int byteCursor = 0;
     for (const PageLine& l : lines) {
         if (!selected(l)) {
             continue;
@@ -391,7 +393,18 @@ static void AppendSelectedLines(Str text, Rect* coords, int textLen, int glyph, 
             }
         }
         if (to > from) {
-            b.Append(Utf8SliceByCodepoints(text, from, to - from));
+            // Advance running UTF-8 cursor instead of rescanning from byte 0 per line.
+            if (from < cpCursor) {
+                cpCursor = 0;
+                byteCursor = 0;
+            }
+            Str tail(text.s + byteCursor, text.len - byteCursor);
+            Str slice = Utf8SliceByCodepoints(tail, from - cpCursor, to - from);
+            b.Append(slice);
+            if (slice.s) {
+                byteCursor = (int)((slice.s - text.s) + slice.len);
+                cpCursor = to;
+            }
         }
         if (len(b) > 0) {
             out->Append(ToStr(b));

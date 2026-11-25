@@ -122,7 +122,7 @@ class EngineMupdf : public EngineBase {
 
     Func0 headingTocDoneCb;
 
-    TempStr GetPageLabeTemp(int pageNo) const override;
+    TempStr GetPageLabelTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
 
     fz_context* Ctx() const;

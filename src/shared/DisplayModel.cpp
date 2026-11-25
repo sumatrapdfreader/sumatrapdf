@@ -152,8 +152,8 @@ bool DisplayModel::HasPageLabels() const {
     return engine->hasPageLabels;
 }
 
-TempStr DisplayModel::GetPageLabeTemp(int pageNo) const {
-    return engine->GetPageLabeTemp(pageNo);
+TempStr DisplayModel::GetPageLabelTemp(int pageNo) const {
+    return engine->GetPageLabelTemp(pageNo);
 }
 
 int DisplayModel::GetPageByLabel(Str label) const {
@@ -2551,21 +2551,22 @@ void DisplayModel::RecalcVisibleParts() const {
         return;
     }
 
-    DocumentLayout layout;
-    layout.Reset(PageCount());
-    layout.viewPort = viewPort;
-    for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
-        DocumentLayoutPage* layoutPage = layout.GetPage(pageNo);
+    int count = PageCount();
+    for (int pageNo = 1; pageNo <= count; ++pageNo) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
-        if (!layoutPage || !pageInfo) {
+        if (!pageInfo) {
             continue;
         }
-        layoutPage->pos = pageInfo->pos;
-        layoutPage->isShown = pageInfo->isShown;
-        layoutPage->zoomReal = pageInfo->zoomReal;
+        Rect pageRect = pageInfo->pos;
+        Rect visiblePart = pageRect.Intersect(viewPort);
+        pageInfo->visibleRatio = 0;
+        if (!visiblePart.IsEmpty() && !pageRect.IsEmpty()) {
+            pageInfo->visibleRatio =
+                1.0f * (float)visiblePart.dx * (float)visiblePart.dy / ((float)pageRect.dx * (float)pageRect.dy);
+        }
+        pageInfo->pageOnScreen = pageRect;
+        pageInfo->pageOnScreen.Offset(-viewPort.x, -viewPort.y);
     }
-    layout.RecalcVisibleParts();
-    CopyDocumentLayoutToPageInfo(this, layout);
 }
 
 int DisplayModel::GetPageNoByPoint(Point pt) {

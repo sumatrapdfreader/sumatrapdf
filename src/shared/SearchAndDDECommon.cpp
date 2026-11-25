@@ -441,7 +441,7 @@ void SetFindCountProgressStatus(MainWindow* win, int nFound, int pageNo) {
     pageNo = gFindCountCurPage;
     TempStr pageStr = {};
     if (pageNo > 0 && win->ctrl) {
-        pageStr = win->ctrl->GetPageLabeTemp(pageNo);
+        pageStr = win->ctrl->GetPageLabelTemp(pageNo);
     }
     if (nFound > 0) {
         FindBarSetStatus(win, fmt("%d %s", nFound, pageStr));

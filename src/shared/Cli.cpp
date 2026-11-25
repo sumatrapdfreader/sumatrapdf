@@ -217,7 +217,7 @@ static bool PagesArg(CliCtx& cx, EngineBase* engine, Vec<int>& pages, int* code)
 
 // the page's own label (i, ii, A-1) when it has one other than its number
 static TempStr PageLabelTemp(EngineBase* engine, int pageNo) {
-    TempStr label = engine->GetPageLabeTemp(pageNo);
+    TempStr label = engine->GetPageLabelTemp(pageNo);
     if (len(label) == 0 || str::Eq(label, fmt("%d", pageNo))) {
         return {};
     }

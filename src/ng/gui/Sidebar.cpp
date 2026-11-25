@@ -1422,7 +1422,7 @@ constexpr float kTocPagePadDx = 8;
 static int TocRowLines(MainWindow* win, TocItem* item, int depth, float viewDx) {
     float pageDx = 0;
     if (gSettings->showTocPageNumbers && win->ctrl && item->pageNo > 0) {
-        TempStr label = win->ctrl->GetPageLabeTemp(item->pageNo);
+        TempStr label = win->ctrl->GetPageLabelTemp(item->pageNo);
         pageDx = kTocPagePadDx + (float)Utf8CodepointCount(label) * kCharDxEstimate;
     }
     float avail = viewDx - (kRowPadL + (float)depth * kIndentDx + kChevronDx) - kTocRowPadsDx - pageDx;
@@ -2502,7 +2502,7 @@ static gp::El* TocListRow(void* user, gp::Ctx* cx, int i) {
     }
     labelBox->Child(label);
     if (gSettings->showTocPageNumbers && win->ctrl && item->pageNo > 0) {
-        TempStr pageLabel = win->ctrl->GetPageLabeTemp(item->pageNo);
+        TempStr pageLabel = win->ctrl->GetPageLabelTemp(item->pageNo);
         if (len(pageLabel) > 0) {
             Color pageCol = txtCol;
             if (!(isSel && u->hasFocus)) {

@@ -16,7 +16,7 @@ extern bool gDisableDocumentRestrictions;
 extern bool gForTesting;
 TempStr BuiltOnDate();
 extern Str currentVersion; // e.g. "3.2.1138"
-extern Str gitCommidId;
+extern Str gitCommitId;
 
 constexpr const char* kExeName = "SumatraPDF.exe";
 

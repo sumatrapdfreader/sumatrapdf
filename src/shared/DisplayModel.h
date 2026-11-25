@@ -136,7 +136,7 @@ struct DisplayModel : DocController {
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
     bool HasPageLabels() const override;
-    TempStr GetPageLabeTemp(int pageNo) const override;
+    TempStr GetPageLabelTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
     int LogicalPageCount() const;
 

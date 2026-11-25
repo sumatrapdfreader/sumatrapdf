@@ -131,7 +131,7 @@
 // action: "add" | "goto" | "goto-fav" | "next" | "prev" | "page"
 // Adds a favorite without the name dialog.
 void AddFavoriteSilent(MainWindow* win, int pageNo) {
-    TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
+    TempStr label = win->ctrl->GetPageLabelTemp(pageNo);
     ApplyAddFavorite(win, win->ctrl->GetFilePath(), pageNo, label, {});
 }
 

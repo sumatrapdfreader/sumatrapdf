@@ -40,9 +40,9 @@ TempStr BuiltOnDate() {
 Str currentVersion = Str(CURR_VERSION_STRA);
 
 #ifdef GIT_COMMIT_ID
-Str gitCommidId = Str(QM(GIT_COMMIT_ID));
+Str gitCommitId = Str(QM(GIT_COMMIT_ID));
 #else
-Str gitCommidId;
+Str gitCommitId;
 #endif
 
 #ifdef DISABLE_DOCUMENT_RESTRICTIONS

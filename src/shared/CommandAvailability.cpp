@@ -619,7 +619,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return ctx.tabInGroup ? CommandVisibility::Show : CommandVisibility::Hide;
     }
     if (CmdReopenLastClosedFile == cmdId) {
-        return RecentlyCloseDocumentsCount() > 0 ? CommandVisibility::Show : CommandVisibility::Hide;
+        return RecentlyClosedDocumentsCount() > 0 ? CommandVisibility::Show : CommandVisibility::Hide;
     }
     if (cmdId == CmdTabGroupSave || origCmdId == CmdTabGroupSave) {
         if (surface == CommandSurface::Palette) {

@@ -209,7 +209,7 @@ void FileHistoryPurge(bool alwaysUseDefaultState) {
 // recently closed tabs and windows, most recent at the end
 static Vec<ClosedDocuments*> gClosedDocuments;
 
-int RecentlyCloseDocumentsCount() {
+int RecentlyClosedDocumentsCount() {
     return len(gClosedDocuments);
 }
 

@@ -615,7 +615,7 @@ class EngineBase {
 
     int LogicalPageCount();
 
-    virtual TempStr GetPageLabeTemp(int pageNo) const;
+    virtual TempStr GetPageLabelTemp(int pageNo) const;
 
     virtual int GetPageByLabel(Str label) const;
 
@@ -690,7 +690,7 @@ class EnginePdfProxy : public EngineBase {
     void GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) override;
     int GetOpenActionPageNo() override;
     Location ResolveDest(IPageDestination* dest) override;
-    TempStr GetPageLabeTemp(int pageNo) const override;
+    TempStr GetPageLabelTemp(int pageNo) const override;
     int GetPageByLabel(Str label) const override;
     void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
                                    Vec<Rect>& skipRects) override;

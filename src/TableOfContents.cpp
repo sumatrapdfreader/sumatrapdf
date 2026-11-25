@@ -556,7 +556,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             addText = fmt(Tr("Add Chapter %d Page %d to Favorites").s, loc.chapter, loc.page);
             delText = fmt(Tr("Remove Chapter %d Page %d from Favorites").s, loc.chapter, loc.page);
         } else {
-            TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
+            TempStr pageLabel = win->ctrl->GetPageLabelTemp(pageNo);
             addText = fmt(Tr("Add Page %s to Favorites").s, pageLabel);
             delText = fmt(Tr("Remove Page %s from Favorites").s, pageLabel);
         }
@@ -793,7 +793,7 @@ static int TocPageReserveDx(MainWindow* win, TocItem* tocItem, Gfx& gfx, Platfor
     if (!gSettings->showTocPageNumbers || !win || !win->ctrl || tocItem->pageNo <= 0) {
         return 0;
     }
-    TempStr label = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
+    TempStr label = win->ctrl->GetPageLabelTemp(tocItem->pageNo);
     if (len(label) == 0) {
         return 0;
     }
@@ -872,7 +872,7 @@ static void DrawTocItemPostPaint(TreeView::CustomDrawEvent* ev, MainWindow* win)
     bool showPage = gSettings->showTocPageNumbers && win && win->ctrl && tocItem->pageNo > 0;
     TempStr pageLabel{};
     if (showPage) {
-        pageLabel = win->ctrl->GetPageLabeTemp(tocItem->pageNo);
+        pageLabel = win->ctrl->GetPageLabelTemp(tocItem->pageNo);
         if (len(pageLabel) == 0) {
             showPage = false;
         }

@@ -324,13 +324,6 @@ static TextEditor editorRules[] = {
         // TODO: find a way to detect where emacs is installed
         // "emacsclientw.exe","+%l \"%f\"", BinaryPath, "???", "???",
     },
-    {
-        StrL("notepad.exe"),
-        StrL("\"%f\""),
-        RegType::BinaryDir,
-        StrL(R"(Software\Microsoft\Windows NT\CurrentVersion)"),
-        StrL("SystemRoot"),
-    }
 };
 
 // clang-format on
@@ -341,8 +334,7 @@ static void FindTextEditors() {
         return;
     }
     StrVec found;
-    // all but last entry, which is notepad.exe
-    int n = dimofi(editorRules) - 1;
+    int n = dimofi(editorRules);
     for (int i = 0; i < n; i++) {
         auto& rule = editorRules[i];
         Str regKey = rule.regKey;

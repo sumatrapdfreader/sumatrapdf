@@ -2805,7 +2805,7 @@ void CreateToolbar(MainWindow* win) {
                 win->chapterEdit->SetText(fmt("%d", cur.chapter));
             }
         } else {
-            TempStr label = ctrl->GetPageLabeTemp(ctrl->CurrentPageNo());
+            TempStr label = ctrl->GetPageLabelTemp(ctrl->CurrentPageNo());
             win->pageEdit->SetText(label);
         }
         EditSetNumbersOnly(win->pageEdit, !ctrl->HasPageLabels());

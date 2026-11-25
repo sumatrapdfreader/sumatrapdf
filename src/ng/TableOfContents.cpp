@@ -439,7 +439,7 @@ MenuModel* BuildTocContextMenu(MainWindow* win, TocItem* dti) {
             addText = fmt(Tr("Add Chapter %d Page %d to Favorites").s, loc.chapter, loc.page);
             delText = fmt(Tr("Remove Chapter %d Page %d from Favorites").s, loc.chapter, loc.page);
         } else {
-            TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
+            TempStr pageLabel = win->ctrl->GetPageLabelTemp(pageNo);
             addText = fmt(Tr("Add Page %s to Favorites").s, pageLabel);
             delText = fmt(Tr("Remove Page %s from Favorites").s, pageLabel);
         }

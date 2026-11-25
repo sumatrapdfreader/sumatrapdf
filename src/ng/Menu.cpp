@@ -1027,7 +1027,7 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
             Location loc = win->ctrl->LocationFromPageNo(pageNoUnderCursor);
             pageItem = fmt(Tr("Chapter %d Page %d").s, loc.chapter, loc.page);
         } else {
-            TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);
+            TempStr pageLabel = win->ctrl->GetPageLabelTemp(pageNoUnderCursor);
             pageItem = fmt(Tr("Page %s").s, pageLabel);
         }
         MenuSetText(popup, CmdSearchGoogleLensPage, pageItem);
@@ -1093,7 +1093,7 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
                 addText = fmt(Tr("Add Chapter %d Page %d to Favorites...").s, loc.chapter, loc.page);
                 delText = fmt(Tr("Remove Chapter %d Page %d from Favorites").s, loc.chapter, loc.page);
             } else {
-                TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);
+                TempStr pageLabel = win->ctrl->GetPageLabelTemp(pageNoUnderCursor);
                 addText = fmt(Tr("Add Page %s to Favorites...").s, pageLabel);
                 delText = fmt(Tr("Remove Page %s from Favorites").s, pageLabel);
             }
@@ -1262,7 +1262,7 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
 
         case CmdCopyLinkTarget: {
             if (len(value) > 0) {
-                TempStr tmp = CleanupURLForClipbardCopyTemp(value);
+                TempStr tmp = CleanupURLForClipboardCopyTemp(value);
                 CopyTextToClipboard(win, tmp);
             }
             return;

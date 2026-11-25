@@ -3960,7 +3960,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     } else if (kZoomFitContent == ctrl->GetZoomVirtual()) {
         zoomVirtual = StrL("fitcontent");
     }
-    TempStr label = ctrl->GetPageLabeTemp(ss.page);
+    TempStr label = ctrl->GetPageLabelTemp(ss.page);
 
     auto* c = new LnkShortcutCtx();
     c->args = str::Dup(fmt("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", path, ss.page, viewMode, zoomVirtual,

@@ -108,8 +108,8 @@ static void GetProgramInfo(str::Builder& b) {
     }
     b.Append(StrL("\n"));
 
-    if (gitCommidId) {
-        b.Append(fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\n", gitCommidId, gitCommidId));
+    if (gitCommitId) {
+        b.Append(fmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\n", gitCommitId, gitCommitId));
     }
 }
 

@@ -845,7 +845,7 @@ static gp::El* FindResultRow(void* user, gp::Ctx* cx, int i) {
     row->Child(FilterHighlightText(cx, fm.snippet, words, th.foreground, 13)->Flex1()->MinW(0)->ClipX());
     // the page label sits in a fixed-width right column so the right edge
     // stays stable as the rows change (orig's pageColDx)
-    TempStr pageStr = win->ctrl ? win->ctrl->GetPageLabeTemp(fm.startPage) : fmt("%d", fm.startPage);
+    TempStr pageStr = win->ctrl ? win->ctrl->GetPageLabelTemp(fm.startPage) : fmt("%d", fm.startPage);
     row->Child(gp::Div(cx->a)
                    ->FlexRow()
                    ->JustifyEnd()

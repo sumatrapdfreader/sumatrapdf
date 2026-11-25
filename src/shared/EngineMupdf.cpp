@@ -4779,11 +4779,11 @@ bool EngineMupdf_UnitTestPageLabels() {
         return false;
     }
     bool ok = engine->hasPageLabels && engine->PageCount() == 5 && engine->LogicalPageCount() == 2;
-    ok = ok && str::Eq(engine->GetPageLabeTemp(1), StrL("i"));
-    ok = ok && str::Eq(engine->GetPageLabeTemp(2), StrL("ii"));
-    ok = ok && str::Eq(engine->GetPageLabeTemp(3), StrL("iii"));
-    ok = ok && str::Eq(engine->GetPageLabeTemp(4), StrL("1"));
-    ok = ok && str::Eq(engine->GetPageLabeTemp(5), StrL("2"));
+    ok = ok && str::Eq(engine->GetPageLabelTemp(1), StrL("i"));
+    ok = ok && str::Eq(engine->GetPageLabelTemp(2), StrL("ii"));
+    ok = ok && str::Eq(engine->GetPageLabelTemp(3), StrL("iii"));
+    ok = ok && str::Eq(engine->GetPageLabelTemp(4), StrL("1"));
+    ok = ok && str::Eq(engine->GetPageLabelTemp(5), StrL("2"));
     ok = ok && engine->GetPageByLabel(StrL("i")) == 1;
     ok = ok && engine->GetPageByLabel(StrL("1")) == 4;
     ok = ok && engine->GetPageByLabel(StrL("2")) == 5;
@@ -11495,14 +11495,14 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
     return pageNo <= len(clipOptKnown) && clipOptKnown[pageNo - 1] == 2;
 }
 
-TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
+TempStr EngineMupdf::GetPageLabelTemp(int pageNo) const {
     if (!pageLabels || pageNo < 1 || pageCount < pageNo) {
-        return EngineBase::GetPageLabeTemp(pageNo);
+        return EngineBase::GetPageLabelTemp(pageNo);
     }
 
     TempStr res = (*pageLabels)[pageNo - 1];
     if (len(res) == 0 || str::ContainsI(res, StrL(".pdg"))) {
-        return EngineBase::GetPageLabeTemp(pageNo);
+        return EngineBase::GetPageLabelTemp(pageNo);
     }
     return res;
 }

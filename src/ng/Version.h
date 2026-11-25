@@ -5,7 +5,7 @@
 // The build passes it on the command line (cmd/helper/ng-version.ts), and
 // only to SumatraConfig.cpp, so that a new day recompiles one file:
 //   SUMATRA_VER=26.10.03.1 GIT_COMMIT_ID=<sha1>
-// Everything else reads currentVersion, BuiltOnDate() and gitCommidId
+// Everything else reads currentVersion, BuiltOnDate() and gitCommitId
 // (SumatraConfig.h). The Windows version resource gets VersionRc.h.
 
 #define _QUOTEME(x) #x
