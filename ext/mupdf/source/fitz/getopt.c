@@ -13,10 +13,13 @@
 
 char *fz_optarg; /* Global argument pointer. */
 int fz_optind = 0; /* Global argv index. */
+static char *scan = NULL; /* Private scan pointer. */
 
 void fz_set_optind(int val)
 {
 	fz_optind = val;
+	/* points into the previous call's argv, which may be gone */
+	scan = NULL;
 }
 const fz_getopt_long_options *fz_optlong = NULL;
 int fz_optitem = 0; /* Which item in a long opt list is selected? */
@@ -95,8 +98,6 @@ match_long_option(int argc, char * const *argv, const fz_getopt_long_options *lo
 	fprintf(stderr, "%s: unknown option --%s\n", argv[0], opt);
 	return '?';
 }
-
-static char *scan = NULL; /* Private scan pointer. */
 
 int
 fz_getopt_long(int argc, char * const *argv, const char *optstring, const fz_getopt_long_options *longopts)

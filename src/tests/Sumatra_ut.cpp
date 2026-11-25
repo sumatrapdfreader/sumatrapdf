@@ -49,6 +49,7 @@
 #include "HomePageCommon.h"
 #include "UpdateCheck.h"
 #include "UpdateCheckCommon.h"
+#include "shared/PdfToolsCommon.h"
 
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
@@ -770,6 +771,34 @@ static void CrashHandler_UnitTests() {
     SetUnhandledExceptionFilter(saved);
 }
 
+// a tool main run in-process must not read the previous run's argv: those
+// strings are gone (they were in the job thread's temp arena)
+static void PdfToolRerunTest() {
+    char arg0[] = "clean";
+    char argZ[] = {'-', 'Z', 0, 0};
+    char* argv1[] = {arg0, argZ};
+    // no input file: prints usage
+    utassert(RunPdfToolMain(pdfclean_main, dimofi(argv1), argv1) != 0);
+    // the first run's "-Z" string, freed and reused
+    argZ[2] = 'Q';
+
+    TempStr dir = GetTempDirTemp();
+    TempStr src = path::JoinTemp(dir, StrL("sumatra-ut-rerun.pdf"));
+    TempStr dst = path::JoinTemp(dir, StrL("sumatra-ut-rerun-out.pdf"));
+    Str pdf = StrL(
+        "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+        "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+        "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 10 10]>>endobj\n"
+        "trailer<</Root 1 0 R>>\n%%EOF\n");
+    utassert(file::WriteFile(src, pdf));
+    char argZ2[] = "-Z";
+    char* argv2[] = {arg0, argZ2, CStrTemp(src), CStrTemp(dst)};
+    utassert(RunPdfToolMain(pdfclean_main, dimofi(argv2), argv2) == 0);
+    utassert(file::Exists(dst));
+    file::Delete(src);
+    file::Delete(dst);
+}
+
 static LONG WINAPI ForAiCrashHandler(EXCEPTION_POINTERS* ei) {
     printf("unit tests crash\n");
     str::Builder s;
@@ -826,6 +855,7 @@ int RunAppUnitTests(bool forAi) {
     StrVecTest();
     VecTest();
     WinUtilTest();
+    PdfToolRerunTest();
 
     ChapterTable_UnitTests();
     LitDoc_UnitTests();

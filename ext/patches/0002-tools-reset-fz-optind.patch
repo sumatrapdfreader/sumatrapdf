@@ -7,6 +7,11 @@ place.
 
 Adds fz_set_optind() for callers outside source/tools, and resets fz_optind at
 the top of the two mains that had no reset of their own.
+
+fz_set_optind() also clears getopt's private scan pointer: after a single-letter
+option like -Z it is left pointing into that call's argv, and the next call
+read it before anything else. SumatraPDF builds each tool's argv on a job
+thread and frees it with the thread, so that read crashed.
 ---
 diff --git a/include/mupdf/fitz/getopt.h b/include/mupdf/fitz/getopt.h
 index 5357b6f..0e8d76e 100644
@@ -26,21 +31,33 @@ index 5357b6f..0e8d76e 100644
  	fz_optarg is a pointer to the argument data for the most recently
  	read option.
 diff --git a/source/fitz/getopt.c b/source/fitz/getopt.c
-index 9c5353d..157d7d0 100644
+index 9c5353d..4ce1415 100644
 --- a/source/fitz/getopt.c
 +++ b/source/fitz/getopt.c
-@@ -13,6 +13,11 @@
+@@ -13,6 +13,14 @@
  
  char *fz_optarg; /* Global argument pointer. */
  int fz_optind = 0; /* Global argv index. */
++static char *scan = NULL; /* Private scan pointer. */
 +
 +void fz_set_optind(int val)
 +{
 +	fz_optind = val;
++	/* points into the previous call's argv, which may be gone */
++	scan = NULL;
 +}
  const fz_getopt_long_options *fz_optlong = NULL;
  int fz_optitem = 0; /* Which item in a long opt list is selected? */
  
+@@ -91,8 +99,6 @@ match_long_option(int argc, char * const *argv, const fz_getopt_long_options *lo
+ 	return '?';
+ }
+ 
+-static char *scan = NULL; /* Private scan pointer. */
+-
+ int
+ fz_getopt_long(int argc, char * const *argv, const char *optstring, const fz_getopt_long_options *longopts)
+ {
 diff --git a/source/tools/muconvert.c b/source/tools/muconvert.c
 index cdc755f..faf1d64 100644
 --- a/source/tools/muconvert.c
