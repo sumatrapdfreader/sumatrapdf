@@ -1719,13 +1719,17 @@ int RenderCache::Paint(
     u16 maxRes = GetMaxTileRes(dm, pageNo, rotation);
     maxRes = std::max(maxRes, targetRes);
 
+    constexpr int kInlineTiles = 16;
+    TilePosition inlineTiles[kInlineTiles];
     Vec<TilePosition> queue;
+    VecUseExternalBuffer(queue, inlineTiles);
     VecAppend(queue, TilePosition(0, 0, 0));
     int renderDelayMin = kRenderDelayUndefined;
     bool neededScaling = false;
 
-    while (len(queue) > 0) {
-        TilePosition tile = VecPopAt(queue, 0);
+    int next = 0;
+    while (next < len(queue)) {
+        TilePosition tile = queue[next++];
         Rect tileOnScreen = GetTileOnScreen(dm, pageNo, rotation, zoom, tile, pi->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
             renderDelayMin = std::min(kRenderDelayFailed, renderDelayMin);
@@ -1759,7 +1763,9 @@ int RenderCache::Paint(
         } else {
             renderDelayMin = std::min(renderDelay, renderDelayMin);
         }
-        if (tile.res > 0 && len(queue) > 0 && tile.res < queue[0].res) {
+        if (tile.res > 0 && next < len(queue) && tile.res < queue[next].res) {
+            VecRemoveAtN(queue, 0, next);
+            next = 0;
             VecSort(queue, cmpTilePosition);
         }
     }
