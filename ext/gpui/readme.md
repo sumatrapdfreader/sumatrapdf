@@ -74,7 +74,7 @@ extras/              the ported library crates as standalone amalgams, one
                      Also inside gpui.cpp — this copy is standalone
   html5ever-mini/    a smaller parser implementing the same html5ever.h API;
                      selected with -html=mini
-  wry/               the webview, crate lb-wry 0.53.3 (WebView2 on
+  wry/               the webview, crate lb-wry 0.57.3 (WebView2 on
                      Windows, WKWebView on macOS, stubs elsewhere). Also
                      inside gpui.cpp
   unicode-linebreak/  Unicode 15.0 line breaks, crate unicode-linebreak
@@ -158,7 +158,7 @@ parsers need no libraries at all.
 
 No other dependencies, no nested build system, no STL containers.
 
-## Unicode grapheme data
+## Unicode data
 
 The grapheme property tables come from unicode-segmentation 1.13.3.
 
@@ -190,9 +190,53 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
+The browser's joining property table comes from the Unicode 17.0 Character Database.
+
+```text
+UNICODE LICENSE V3
+
+COPYRIGHT AND PERMISSION NOTICE
+
+Copyright © 1991-2026 Unicode, Inc.
+
+NOTICE TO USER: Carefully read the following legal agreement. BY
+DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING DATA FILES, AND/OR
+SOFTWARE, YOU UNEQUIVOCALLY ACCEPT, AND AGREE TO BE BOUND BY, ALL OF THE
+TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT
+DOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE THE DATA FILES OR SOFTWARE.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of data files and any associated documentation (the "Data Files") or
+software and any associated documentation (the "Software") to deal in the
+Data Files or Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, and/or sell
+copies of the Data Files or Software, and to permit persons to whom the
+Data Files or Software are furnished to do so, provided that either (a)
+this copyright and permission notice appear with all copies of the Data
+Files or Software, or (b) this copyright and permission notice appear in
+associated Documentation.
+
+THE DATA FILES AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
+THIRD PARTY RIGHTS.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE
+BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,
+OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE DATA
+FILES OR SOFTWARE.
+
+Except as contained in this notice, the name of a copyright holder shall
+not be used in advertising or otherwise to promote the sale, use or other
+dealings in these Data Files or Software without prior written
+authorization of the copyright holder.
+```
+
 ## This copy
 
-Amalgamated from gpui-kit-cpp [`87c5108f2a4ad0ee9e46756b2f2420a7c2a95b48`](https://github.com/kjk/gpui-kit-cpp/commit/87c5108f2a4ad0ee9e46756b2f2420a7c2a95b48).
+Amalgamated from gpui-kit-cpp [`c17370884548859a83b4568f61d25e7c15087ad6`](https://github.com/kjk/gpui-kit-cpp/commit/c17370884548859a83b4568f61d25e7c15087ad6).
 
-[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/87c5108f2a4ad0ee9e46756b2f2420a7c2a95b48...main)
+[What has changed in gpui-kit-cpp since](https://github.com/kjk/gpui-kit-cpp/compare/c17370884548859a83b4568f61d25e7c15087ad6...main)
 shows every commit this copy is behind by; if that page is empty, it is current.

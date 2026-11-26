@@ -154,7 +154,7 @@ zopfli         1.0.3+     2024-04-11
   https://github.com/google/zopfli/commit/ccf9f0588d4a4509cb1040310ec122243e670ee6
   amalgamated as ext/a-zopfli (zopfli.cpp + public headers + COPYING)
 
-gpui-kit-cpp-dist main    2026-10-05
+gpui-kit-cpp-dist main    2026-11-26
   https://github.com/kjk/gpui-kit-cpp-dist
-  commit 49d5540c4e439bc6d947676a06ff3e43e42cf56e
+  commit 6c1f537269ce569f27e1c40f490813b6329ff230
   vendored into ext/gpui for ng; update with bun cmd/ng-update-gpui.ts
