@@ -93,8 +93,12 @@ static void RunQueuedTasks() {
         if (!gQueue) {
             return;
         }
-        VecAppendVec(toRun, *gQueue);
-        VecClear(*gQueue);
+        toRun.len = gQueue->len;
+        toRun.cap = gQueue->cap;
+        toRun.els = gQueue->els;
+        gQueue->len = 0;
+        gQueue->cap = 0;
+        gQueue->els = nullptr;
     }
     for (TaskInfo* ti : toRun) {
         ExecuteTask(ti);
@@ -159,7 +163,9 @@ void Initialize(Dispatch dispatch) {
 }
 
 void DrainQueue() {
-    if (!AtomicBoolGet(&gInitialized)) return;
+    if (!AtomicBoolGet(&gInitialized) || ReportIf(!IsMainUIThread())) {
+        return;
+    }
 #if OS_WIN
     if (gDispatch == Dispatch::Native) {
         HWND hwnd = (HWND)AtomicPtrGet(&gTaskDispatchHwnd);
@@ -176,6 +182,9 @@ void DrainQueue() {
 }
 
 void Destroy() {
+    if (ReportIf(!IsMainUIThread())) {
+        return;
+    }
     DrainQueue();
     AtomicBoolSet(&gInitialized, false);
     AtomicBoolSet(&gWasDestroyed, true);
