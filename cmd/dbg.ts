@@ -238,8 +238,15 @@ async function main() {
   // bun kills its children when it exits, so this waits for the debugger
   // rather than launching it and returning
   const args = [...dbg.flags, join(process.cwd(), exePath), ...app];
+  const suppressions = join(import.meta.dir, "dbg-asan.supp");
+  const defaultAsanOptions = `suppressions="${suppressions}"`;
+  const userAsanOptions = process.env.ASAN_OPTIONS;
+  const env = {
+    ...process.env,
+    ASAN_OPTIONS: userAsanOptions ? `${defaultAsanOptions}:${userAsanOptions}` : defaultAsanOptions,
+  };
   console.log(`> ${dbg.exe} ${args.join(" ")}`);
-  const res = Bun.spawnSync([dbg.exe, ...args], { stdio: ["inherit", "inherit", "inherit"] });
+  const res = Bun.spawnSync([dbg.exe, ...args], { env, stdio: ["inherit", "inherit", "inherit"] });
   process.exit(res.exitCode ?? 0);
 }
 

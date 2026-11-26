@@ -1,0 +1,4 @@
+# Windows Shell file picker reports an intercepted memcmp in
+# ntshrui!CAceList::DoesAceListHasMoreThanOneSidForAllow via RtlEqualSid.
+# Match the module so this also works without Windows debug symbols.
+interceptor_via_lib:ntshrui.dll$
