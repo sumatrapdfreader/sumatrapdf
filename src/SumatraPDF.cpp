@@ -3272,13 +3272,7 @@ void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
     }
 }
 
-void ReloadTab(WindowTab* tab) {
-    // tab might have been closed, so first ensure it's still valid
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
-    MainWindow* win = FindMainWindowByTab(tab);
-    if (win == nullptr) {
-        return;
-    }
+void ReloadTab(MainWindow* win, WindowTab* tab) {
     tab->reloadOnFocus = true;
     if (IsCurrentTab(win, tab)) {
         // delay the reload slightly, in case we get another request immediately after this one
@@ -3671,13 +3665,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     // a lazy tab gets these when it's selected and loads
     if (gSettings->reloadModifiedDocuments && !transient && !lazyLoad) {
-        auto fn = MkFunc0(ScheduleReloadTab, currTab);
-        // was gSettings->enableTeXEnhancements because people complained
-        // about network traffic. but then people complained it stopped working
-        // we'll now recommend ReloadModifiedDocuments = false for those
-        // who complain
-        bool enableManualCheck = true;
-        currTab->watcher = FileWatcherSubscribe(path, fn, enableManualCheck);
+        currTab->watcher = WatchTabChanges(currTab, path);
     }
 
     if (SettingsRememberOpenedFiles() && !skipHistory) {

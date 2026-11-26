@@ -148,12 +148,13 @@ extern StrVec gNextPrevDirCache;
 void StealStrVec(StrVec& dst, StrVec& src);
 extern bool gNextPrevDirReady;
 extern bool gNextPrevDirScanning;
-void ScheduleReloadTab(WindowTab* tab);
+struct WatchedFile;
+WatchedFile* WatchTabChanges(WindowTab* tab, Str path);
 void EnsureNextPrevDirScan(Str filePath);
 StrVec* GetNextPrevFilesReady(Str path);
 
 // implemented by each app
-void ReloadTab(WindowTab* tab);
+void ReloadTab(MainWindow* win, WindowTab* tab);
 void StartNextPrevDirScan(Str dir);
 void RemoveFailedFiles(StrVec& files);
 

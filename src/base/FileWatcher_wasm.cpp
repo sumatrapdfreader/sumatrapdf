@@ -32,7 +32,7 @@ static bool StatFileMeta(Str path, FILETIME* modOut, i64* sizeOut) {
 struct WatchedFile {
     WatchedFile* next = nullptr;
     Str path;
-    Func0 onFileChanged;
+    FileWatchCallback onFileChanged;
     FILETIME modified{};
     i64 size = 0;
     bool exists = false;
@@ -49,7 +49,7 @@ static void FreeWatchedFile(WatchedFile* file) {
 }
 
 static void CheckWatchedFiles(void*) {
-    Vec<Func0> toNotify;
+    Vec<FileWatchCallback> toNotify;
     for (WatchedFile* file = gWatchedFiles; file; file = file->next) {
         FILETIME modified{};
         i64 size = 0;
@@ -62,7 +62,7 @@ static void CheckWatchedFiles(void*) {
             VecAppend(toNotify, file->onFileChanged);
         }
     }
-    for (const Func0& cb : toNotify) {
+    for (const auto& cb : toNotify) {
         cb.Call();
     }
     ResetTempArena();
@@ -85,7 +85,7 @@ void FileWatcherSetSkipPath(Str path) {
 
 void FileWatcherInit(void) {}
 
-WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) {
+WatchedFile* FileWatcherSubscribe(Str path, const FileWatchCallback& onFileChangedCb, bool) {
     FILETIME modified{};
     i64 size = 0;
     if (!StatFileMeta(path, &modified, &size) || path::IsSame(gSkipPath, path)) {

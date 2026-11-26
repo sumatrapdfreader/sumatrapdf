@@ -1227,11 +1227,7 @@ static void ApplyPageAspect(EngineBase* engine, DisplayMode* modeOut, float* zoo
 
 // orig's ReloadTab: runs on the UI thread, arms the delay, reloads when the
 // tab is the current one
-void ReloadTab(WindowTab* tab) {
-    MainWindow* win = FindMainWindowByTab(tab);
-    if (!win) {
-        return;
-    }
+void ReloadTab(MainWindow* win, WindowTab* tab) {
     logf("ReloadTab: '%s'\n", tab->filePath);
     tab->reloadOnFocus = true;
     if (IsCurrentTab(win, tab)) {
@@ -1249,8 +1245,7 @@ static void WatchTabFile(WindowTab* tab) {
     if (IsOpenCachePath(tab->filePath) || path::IsEphemeralHostFile(tab->filePath)) {
         return;
     }
-    auto fn = MkFunc0<WindowTab>(ScheduleReloadTab, tab);
-    tab->watcher = FileWatcherSubscribe(tab->filePath, fn, true);
+    tab->watcher = WatchTabChanges(tab, tab->filePath);
 }
 
 // ng: orig's kAutoReloadTimerID handler in Canvas.cpp. The shell's 16 ms tick

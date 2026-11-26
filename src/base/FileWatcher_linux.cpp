@@ -22,7 +22,7 @@ struct WatchedFile {
     WatchedFile* next = nullptr;
     WatchedDir* dir = nullptr;
     Str name;
-    Func0 onFileChanged;
+    FileWatchCallback onFileChanged;
     bool ignore = false;
 };
 
@@ -74,7 +74,7 @@ static bool IsWatchedDirReferenced(WatchedDir* dir) {
 }
 
 static void NotifyChangedFile(int descriptor, Str name) {
-    Vec<Func0> toNotify;
+    Vec<FileWatchCallback> toNotify;
     {
         ScopedMutex lock(&gWatcherMutex);
         WatchedDir* dir = FindWatchedDirByDescriptor(descriptor);
@@ -88,7 +88,7 @@ static void NotifyChangedFile(int descriptor, Str name) {
         }
     }
 
-    for (const Func0& cb : toNotify) {
+    for (const auto& cb : toNotify) {
         cb.Call();
     }
 }
@@ -184,7 +184,7 @@ void FileWatcherInit(void) {
     StartFileWatcher();
 }
 
-WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool) {
+WatchedFile* FileWatcherSubscribe(Str path, const FileWatchCallback& onFileChangedCb, bool) {
     if (!file::Exists(path)) {
         return nullptr;
     }

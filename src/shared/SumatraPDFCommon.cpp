@@ -2475,8 +2475,30 @@ bool gNextPrevDirReady = false;
 
 bool gNextPrevDirScanning = false;
 
-void ScheduleReloadTab(WindowTab* tab) {
-    PostForTab(tab, ReloadTab, "ReloadTab");
+static void RunReloadTab(u64* id) {
+    u64 lifetimeId = *id;
+    delete id;
+
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->lifetimeId == lifetimeId) {
+                ReloadTab(win, tab);
+                return;
+            }
+        }
+    }
+}
+
+static void ScheduleReloadTab(u64 lifetimeId) {
+    auto* id = new u64(lifetimeId);
+    if (!uitask::Post(MkFunc0(RunReloadTab, id), "ReloadTab")) {
+        delete id;
+    }
+}
+
+// Capture the tab's identity on the UI thread before the watcher can run.
+WatchedFile* WatchTabChanges(WindowTab* tab, Str path) {
+    return FileWatcherSubscribe(path, {ScheduleReloadTab, tab->lifetimeId}, true);
 }
 
 // Called from the AUTO_RELOAD_TIMER tick. Returns true if the file changed

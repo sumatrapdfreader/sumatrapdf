@@ -69,7 +69,7 @@ struct WatchedFile {
     WatchedFile* next = nullptr;
     WatchedDir* watchedDir = nullptr;
     Str filePath;
-    Func0 onFileChangedCb;
+    FileWatchCallback onFileChangedCb;
 
     // if true, the file is not on a fixed drive and we have
     // to check if it changed manually, by periodically checking
@@ -169,7 +169,7 @@ static bool FileStateChanged(Str filePath, FileWatcherState* fs) {
 // don't handle that. It is mostly reported for renames, which we do act on
 // (FILE_ACTION_RENAMED_NEW_NAME below), so the case is not ruled out.
 
-static void CollectNotificationsAboutFile(WatchedDir* d, Str fileName, Vec<Func0>& toNotify) {
+static void CollectNotificationsAboutFile(WatchedDir* d, Str fileName, Vec<FileWatchCallback>& toNotify) {
     int i = 0;
 
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
@@ -218,7 +218,7 @@ static void CollectChangedFiles(WatchedDir* wd, StrVec& changedFiles) {
     }
 }
 
-static void CollectNotificationsAboutDir(WatchedDir* d, Vec<Func0>& toNotify) {
+static void CollectNotificationsAboutDir(WatchedDir* d, Vec<FileWatchCallback>& toNotify) {
     for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->ignore || wf->watchedDir != d) {
             continue;
@@ -249,7 +249,7 @@ static void CompleteRemovalIfDone(WatchedDir* wd) {
 }
 
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {
-    Vec<Func0> toNotify;
+    Vec<FileWatchCallback> toNotify;
     {
         AutoUnlockMutex cs(&gFileWatcherMutex);
 
@@ -402,7 +402,7 @@ static void RunManualChecks() {
         it.path = {};
     }
 
-    Vec<Func0> toNotify;
+    Vec<FileWatchCallback> toNotify;
     {
         AutoUnlockMutex cs(&gFileWatcherMutex);
         for (ManualCheckItem& it : items) {
@@ -527,7 +527,8 @@ static WatchedDir* FindOrCreateWatchedDir(Str dirPath, bool* newDir) {
     return wd;
 }
 
-static WatchedFile* NewWatchedFile(Str filePath, const Func0& onFileChangedCb, bool enableManualCheckOnNetworkDrives) {
+static WatchedFile* NewWatchedFile(Str filePath, const FileWatchCallback& onFileChangedCb,
+                                   bool enableManualCheckOnNetworkDrives) {
     bool isManualCheck = !path::SupportsChangeNotifications(filePath);
     bool isNetworkDrive = path::IsOnNetworkDrive(filePath);
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5297#issuecomment-3810653582
@@ -570,15 +571,8 @@ static void DeleteWatchedFile(WatchedFile* wf) {
     free(wf);
 }
 
-/* Subscribe for notifications about file changes. When a file changes, we'll
-call observer->OnFileChanged().
-
-We take ownership of observer object.
-
-Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
-way we can support multiple callers subscribing to the same file.
-*/
-WatchedFile* FileWatcherSubscribe(Str path, const Func0& onFileChangedCb, bool enableManualCheck) {
+// Returns a token for FileWatcherUnsubscribe. Collected callbacks can still run after unsubscribe.
+WatchedFile* FileWatcherSubscribe(Str path, const FileWatchCallback& onFileChangedCb, bool enableManualCheck) {
     if (!file::Exists(path)) {
         logf("FileWatcherSubscribe: '%s' doesn't exist\n", path);
         return nullptr;

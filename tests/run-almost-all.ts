@@ -632,6 +632,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["background-tab-reload", backgroundTabReload],
   ["open-slow-drive", openSlowDrive],
   ["issue-6604", issue6604],
   ["free-text-in-place-edit", freeTextInPlaceEdit],
@@ -1235,7 +1236,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["scrollbar-capture-loss", scrollbarCaptureLoss],
   ["next-file-save-prompt", nextFileSavePrompt],
   ["save-prompt-fails", savePromptFails],
-  ["background-tab-reload", backgroundTabReload],
   ["session-restore-broken-file", sessionRestoreBrokenFile],
   ["tab-switch-presentation", tabSwitchPresentation],
   ["reload-keeps-fullscreen-layout", reloadKeepsFullscreenLayout],
