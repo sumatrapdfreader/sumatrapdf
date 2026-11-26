@@ -1,6 +1,12 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#define SUMATRA_MARKDOWN_HOST "https://sumatrapdf.markdown/"
+#define SUMATRA_MARKDOWN_PELE "pele.min.js"
+#define SUMATRA_MARKDOWN_MERMAID "mermaid-run.js"
+#define SUMATRA_MARKDOWN_HIGHLIGHT "microlighter.min.js"
+#define SUMATRA_MARKDOWN_CODE "code-run.js"
+
 struct MarkdownHeadingItem {
     Str title;
     Str anchor;

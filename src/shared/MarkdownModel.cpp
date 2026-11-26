@@ -23,8 +23,8 @@
 #include "PagePosition.h"
 #include "MarkdownModel.h"
 
-constexpr const char* kMdVirtualHost = "https://sumatrapdf.markdown/";
-constexpr int kMdVirtualHostLen = sizeof("https://sumatrapdf.markdown/") - 1;
+constexpr const char* kMdVirtualHost = SUMATRA_MARKDOWN_HOST;
+constexpr int kMdVirtualHostLen = LenL(SUMATRA_MARKDOWN_HOST);
 
 // The url without its ?query / #fragment. Unlike url::GetFullPathTemp() this
 // does not percent-decode: a virtual url stays encoded end to end, so a file
@@ -542,7 +542,7 @@ static bool IsPageScriptUrl(Str url, Str name) {
 // scripts the page MarkdownToHtmlPage makes loads: pele for ```mermaid
 // fences, microlighter and code-run.js for code blocks
 static Str PageScriptData(Str url) {
-    Str embedded[] = {StrL("pele.min.js"), StrL("microlighter.min.js")};
+    Str embedded[] = {StrL(SUMATRA_MARKDOWN_PELE), StrL(SUMATRA_MARKDOWN_HIGHLIGHT)};
     for (Str name : embedded) {
         if (!IsPageScriptUrl(url, name)) {
             continue;
@@ -553,10 +553,10 @@ static Str PageScriptData(Str url) {
         free(js);
         return res;
     }
-    if (IsPageScriptUrl(url, StrL("mermaid-run.js"))) {
+    if (IsPageScriptUrl(url, StrL(SUMATRA_MARKDOWN_MERMAID))) {
         return str::Dup(MermaidRunJs());
     }
-    if (IsPageScriptUrl(url, StrL("code-run.js"))) {
+    if (IsPageScriptUrl(url, StrL(SUMATRA_MARKDOWN_CODE))) {
         return str::Dup(CodeRunJs());
     }
     return {};

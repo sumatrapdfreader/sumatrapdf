@@ -403,11 +403,10 @@ static CodeBlockCounts RewriteCodeBlocks(str::Builder& out, Str body) {
 // pele.min.js (Pele 1.13.0, a Mermaid renderer) lives in IDR_EMBEDDED_PAK and
 // mermaid-run.js is kMermaidRunJs, both served from the markdown virtual host
 // (GetDataForUrl). Not inline, so kMarkdownCsp can allow just these two scripts.
-// Must match kMdVirtualHost in MarkdownModel.cpp.
-static const char kMermaidBootstrap[] = R"HTML(
-<script src="https://sumatrapdf.markdown/pele.min.js"></script>
-<script src="https://sumatrapdf.markdown/mermaid-run.js"></script>
-)HTML";
+static const char kMermaidBootstrap[] =
+    "\n<script src=\"" SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_PELE
+    "\"></script>\n"
+    "<script src=\"" SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_MERMAID "\"></script>\n";
 
 static const char kMermaidRunJs[] = R"JS(
 (function () {
@@ -423,8 +422,9 @@ static const char kMermaidRunJs[] = R"JS(
 static const char kMarkdownCsp[] =
     "<meta http-equiv=\"Content-Security-Policy\" content=\""
     "default-src 'self' data:; img-src * data:; media-src * data:; style-src 'self' 'unsafe-inline'; "
-    "script-src https://sumatrapdf.markdown/pele.min.js https://sumatrapdf.markdown/mermaid-run.js "
-    "https://sumatrapdf.markdown/microlighter.min.js https://sumatrapdf.markdown/code-run.js; "
+    "script-src " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_PELE " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_MERMAID
+    " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_HIGHLIGHT " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_CODE
+    "; "
     "object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'\">";
 
 Str MermaidRunJs() {
@@ -434,8 +434,8 @@ Str MermaidRunJs() {
 // microlighter.min.js (ext/, in IDR_EMBEDDED_PAK) colors code blocks that name a
 // language; code-run.js is kCodeRunJs. Both from the markdown virtual host.
 static const char kCodeHighlightScript[] =
-    "<script src=\"https://sumatrapdf.markdown/microlighter.min.js\"></script>\n";
-static const char kCodeRunScript[] = "<script src=\"https://sumatrapdf.markdown/code-run.js\"></script>\n";
+    "<script src=\"" SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_HIGHLIGHT "\"></script>\n";
+static const char kCodeRunScript[] = "<script src=\"" SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_CODE "\"></script>\n";
 
 // A copy button on every code block, then syntax coloring through the CSS Custom
 // Highlight API (where missing, code stays plain).
