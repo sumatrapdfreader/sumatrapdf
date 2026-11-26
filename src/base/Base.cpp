@@ -1355,7 +1355,9 @@ NO_INLINE void* VecTakeNT(VecNonTemplated* v, int elSize) {
 // Vec only holds POD, so copying is a reserve plus a memcpy. zeroTail is for
 // operator=, which zeroes the capacity past the new length.
 NO_INLINE void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail) {
-    VecReserveNT(nullptr, v, elSize, srcLen);
+    if (!VecReserveNT(nullptr, v, elSize, srcLen)) {
+        return;
+    }
     v->len = srcLen;
     if (srcLen > 0 && srcEls && v->els) {
         memcpy(v->els, srcEls, (size_t)srcLen * (size_t)elSize);

@@ -79,6 +79,13 @@ void VecTest() {
     }
 
     {
+        Vec<int> v;
+        VecAppend(v, 42);
+        VecCopyFromNT(VecNT(v), sizeof(int), INT_MAX, nullptr, false);
+        utassert(len(v) == 1 && v[0] == 42);
+    }
+
+    {
         int buf[4];
         Vec<int> v;
         VecUseExternalBuffer(v, buf);
