@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
+#include "base/UITask.h"
 #include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
@@ -179,8 +180,8 @@ bool GetPasswordWnd::Create() {
     return true;
 }
 
-// Modal: disable the parent and pump until OK / Cancel / close. Engine load
-// (often on a worker thread) calls this and cannot continue without a result.
+// Modal: disable the parent and pump until OK / Cancel / close. Ui thread only:
+// engine load on a worker thread goes through ShowGetPasswordDialog.
 bool ShowPasswordDialog(const PasswordDialogArgs& args, PasswordDialogResult* result) {
     if (!result) {
         return false;
@@ -243,6 +244,41 @@ bool ShowPasswordDialog(const PasswordDialogArgs& args, PasswordDialogResult* re
     return result->accepted;
 }
 
+struct PasswordDialogCall {
+    PasswordDialogArgs args;
+    PasswordDialogResult result;
+    HANDLE evtDone = nullptr;
+};
+
+static void ShowPasswordDialogOnUiThread(PasswordDialogCall* call) {
+    // the window can close between the post and now; its load is discarded
+    if (!call->args.parent || IsWindow(call->args.parent)) {
+        ShowPasswordDialog(call->args, &call->result);
+    }
+    SetEvent(call->evtDone);
+}
+
+// The dialog is a window: it must live on the ui thread, where its parent and
+// the D2D / D3D resources it paints with live. Engine load usually runs on a
+// worker thread, which waits here for the user's answer.
+static void ShowPasswordDialogFromAnyThread(const PasswordDialogArgs& args, PasswordDialogResult* result) {
+    if (uitask::IsMainUIThread()) {
+        ShowPasswordDialog(args, result);
+        return;
+    }
+    PasswordDialogCall call;
+    call.args = args;
+    call.evtDone = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    if (!call.evtDone) {
+        return;
+    }
+    if (uitask::Post(MkFunc0(ShowPasswordDialogOnUiThread, &call), "ShowPasswordDialog")) {
+        WaitForSingleObject(call.evtDone, INFINITE);
+        *result = call.result;
+    }
+    CloseHandle(call.evtDone);
+}
+
 Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword) {
     PasswordDialogArgs args;
     args.parent = hwndParent;
@@ -251,7 +287,7 @@ Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword,
     args.rememberPassword = rememberPassword && *rememberPassword;
     args.showPassword = showPassword && *showPassword;
     PasswordDialogResult result;
-    ShowPasswordDialog(args, &result);
+    ShowPasswordDialogFromAnyThread(args, &result);
     if (rememberPassword && result.accepted) {
         *rememberPassword = result.rememberPassword;
     }

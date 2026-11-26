@@ -1,6 +1,7 @@
 // The password dialog was created as a child window of the frame it disables, so
 // it never got a first paint: blank, with no label, field or buttons. Checks both
 // ways of opening a file from Explorer: with an instance running, and without.
+// Also checks the dialog belongs to the ui thread, not the document load thread.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,6 +17,7 @@ import {
   getWindowPid,
   getWindowRect,
   getWindowText,
+  getWindowThreadId,
   isWindowVisible,
   sendText,
 } from "./winapi.ts";
@@ -130,6 +132,15 @@ export async function testit(): Promise<void> {
     const second = Bun.spawn([EXE, "-appdata", appdata, encrypted], { stdout: "ignore", stderr: "ignore" });
     await second.exited;
     const dlg = await waitForPaintedDialog(app.proc.pid!, "running instance");
+    // the load runs on a worker thread; a dialog created there painted with D2D
+    // off the ui thread and crashed in d2d1 / d3d11
+    const dlgThread = getWindowThreadId(dlg);
+    const uiThread = getWindowThreadId(app.frame);
+    if (dlgThread !== uiThread) {
+      throw new Error(
+        `password-dialog-reuse-instance: the dialog is on thread ${dlgThread}, not the ui thread ${uiThread}`,
+      );
+    }
 
     const edit = findChildWindow(dlg, "Edit");
     sendText(edit, kPassword);

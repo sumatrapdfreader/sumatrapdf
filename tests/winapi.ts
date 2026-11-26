@@ -648,6 +648,13 @@ export function getWindowPid(hwnd: number): number {
   return out[0];
 }
 
+export function getWindowThreadId(hwnd: number): number {
+  if (IS_MAC) {
+    return 0;
+  }
+  return user32.symbols.GetWindowThreadProcessId(hwnd, null);
+}
+
 // Which window has keyboard focus in the thread that owns hwnd. GetFocus() only
 // answers for the calling thread, so a test in another process must go through
 // GUITHREADINFO { DWORD cbSize, flags; HWND active, focus, capture, menuOwner,
