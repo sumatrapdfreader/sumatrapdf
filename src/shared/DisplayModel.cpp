@@ -1485,10 +1485,9 @@ void DisplayModel::UpdateEstimatedMediaBox() {
 }
 
 PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
-    if (!ValidPageNo(pageNo)) {
+    if (!pagesInfo || !ValidPageNo(pageNo)) {
         return nullptr;
     }
-    ReportIf(!pagesInfo);
     return &pagesInfo[pageNo - 1];
 }
 
@@ -1519,7 +1518,11 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
         // would make dpiFactor and therefore zoomReal negative
         screenDPI = 96;
     }
-    dpiFactor = 1.0f * (float)screenDPI / engine->fileDPI;
+    float fileDPI = engine->fileDPI;
+    if (!(fileDPI > 0) || !isfinite(fileDPI)) {
+        fileDPI = 96.f;
+    }
+    dpiFactor = (float)screenDPI / fileDPI;
     // pagesInfo isn't built yet, so ValidPageNo() (which reads pageCount from
     // the snapshot) would always say no; ask the engine directly
     if (newStartPage >= 1 && newStartPage <= engine->PageCount()) {
