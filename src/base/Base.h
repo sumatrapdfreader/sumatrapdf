@@ -1575,7 +1575,7 @@ void VecRemoveAtFastNT(VecNonTemplated* v, int elSize, int idx);
 void VecFreeElementsNT(VecNonTemplated* v);
 void VecClearNT(VecNonTemplated* v, int elSize);
 void* VecTakeNT(VecNonTemplated* v, int elSize);
-void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail);
+void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool replace);
 
 // The type-erased view of a vec; a cast, not a copy (see the static_asserts
 // after the struct).
@@ -1734,7 +1734,6 @@ struct Vec {
             return *this;
         }
 
-        VecReset(*this);
         VecCopyFromNT(VecNT(*this), (int)sizeof(T), other.len, (const void*)other.els, true);
         return *this;
     }

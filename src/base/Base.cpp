@@ -1352,22 +1352,20 @@ NO_INLINE void* VecTakeNT(VecNonTemplated* v, int elSize) {
     return els;
 }
 
-// Vec only holds POD, so copying is a reserve plus a memcpy. zeroTail is for
-// operator=, which zeroes the capacity past the new length.
-NO_INLINE void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool zeroTail) {
-    if (!VecReserveNT(nullptr, v, elSize, srcLen)) {
+// Assignment builds the replacement before releasing the old storage.
+NO_INLINE void VecCopyFromNT(VecNonTemplated* v, int elSize, int srcLen, const void* srcEls, bool replace) {
+    VecNonTemplated replacement{};
+    VecNonTemplated* dst = replace ? &replacement : v;
+    if (!VecReserveNT(nullptr, dst, elSize, srcLen)) {
         return;
     }
-    v->len = srcLen;
-    if (srcLen > 0 && srcEls && v->els) {
-        memcpy(v->els, srcEls, (size_t)srcLen * (size_t)elSize);
+    dst->len = srcLen;
+    if (srcLen > 0 && srcEls) {
+        memcpy(dst->els, srcEls, (size_t)srcLen * (size_t)elSize);
     }
-    if (zeroTail && v->els) {
-        int curCap = v->cap < 0 ? -v->cap : v->cap;
-        if (curCap > srcLen) {
-            char* tail = (char*)v->els + ((size_t)srcLen * (size_t)elSize);
-            memset(tail, 0, (size_t)(curCap - srcLen) * (size_t)elSize);
-        }
+    if (replace) {
+        VecFreeElementsNT(v);
+        *v = replacement;
     }
 }
 

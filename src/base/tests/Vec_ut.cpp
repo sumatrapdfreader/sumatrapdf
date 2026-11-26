@@ -83,6 +83,10 @@ void VecTest() {
         VecAppend(v, 42);
         VecCopyFromNT(VecNT(v), sizeof(int), INT_MAX, nullptr, false);
         utassert(len(v) == 1 && v[0] == 42);
+        Vec<int> tooLarge;
+        tooLarge.len = INT_MAX;
+        v = tooLarge;
+        utassert(len(v) == 1 && v[0] == 42);
     }
 
     {
