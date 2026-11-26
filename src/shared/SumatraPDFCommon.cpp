@@ -2476,7 +2476,8 @@ bool gNextPrevDirReady = false;
 bool gNextPrevDirScanning = false;
 
 void ScheduleReloadTab(WindowTab* tab) {
-    PostForTab(tab, ReloadTab, "ReloadTab");
+    // called on the file-watcher thread: tab must not be dereferenced here
+    PostForTabFromThread(tab, ReloadTab, "ReloadTab");
 }
 
 // Called from the AUTO_RELOAD_TIMER tick. Returns true if the file changed

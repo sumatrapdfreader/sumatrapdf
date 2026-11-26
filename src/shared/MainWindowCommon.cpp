@@ -226,7 +226,9 @@ static void RunPostedForWindow(PostedForObject<MainWindow>* d) {
 }
 
 static void RunPostedForTab(PostedForObject<WindowTab>* d) {
-    if (IsWindowTabValid(d->ptr) && d->ptr->lifetimeId == d->lifetimeId) {
+    // lifetimeId 0 = posted from a non-ui thread (PostForTabFromThread), where
+    // the id couldn't be read: check only that the address names a live tab
+    if (IsWindowTabValid(d->ptr) && (d->lifetimeId == 0 || d->ptr->lifetimeId == d->lifetimeId)) {
         d->fn(d->ptr);
     }
     delete d;
@@ -250,6 +252,17 @@ void PostForTab(WindowTab* tab, void (*fn)(WindowTab*), Kind kind) {
         return;
     }
     auto* d = new PostedForObject<WindowTab>{tab, tab->lifetimeId, fn};
+    if (!uitask::Post(MkFunc0(RunPostedForTab, d), kind)) {
+        delete d;
+    }
+}
+
+// Post from a non-ui thread (e.g. the file watcher). The tab may already be
+// freed, so it is not dereferenced here; dispatch runs fn only if the address
+// still names a live tab (a new tab reusing the address is indistinguishable
+// without a lifetime id, as before the ids existed).
+void PostForTabFromThread(WindowTab* tab, void (*fn)(WindowTab*), Kind kind) {
+    auto* d = new PostedForObject<WindowTab>{tab, 0, fn};
     if (!uitask::Post(MkFunc0(RunPostedForTab, d), kind)) {
         delete d;
     }

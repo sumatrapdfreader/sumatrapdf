@@ -886,6 +886,7 @@ bool IsWindowTabValid(WindowTab*);
 void PostForWindow(MainWindow*, void (*fn)(MainWindow*), Kind kind);
 void PostForWindow(MainWindow*, u64 lifetimeId, void (*fn)(MainWindow*), Kind kind);
 void PostForTab(WindowTab*, void (*fn)(WindowTab*), Kind kind);
+void PostForTabFromThread(WindowTab*, void (*fn)(WindowTab*), Kind kind);
 extern Vec<MainWindow*> gWindows;
 extern bool gShowFrameRate;
 void HighlightTab(MainWindow*, WindowTab*);
