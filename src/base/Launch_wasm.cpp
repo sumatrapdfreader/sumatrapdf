@@ -86,3 +86,5 @@ bool LaunchBrowser(Str url) {
 void OpenPathInDefaultFileManager(Str) {
     // there is no file manager to show a path in
 }
+
+void OpenFilesInDefaultManager(Str, const StrVec&) {}

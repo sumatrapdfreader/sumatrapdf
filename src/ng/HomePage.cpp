@@ -266,6 +266,7 @@ struct HomePageUI {
     int searchReturnCol = 0;
     int gridCols = 1;
     int entryCount = 0;
+    HomeSelection selection;
     gpui::Bounds entriesView{};
     // the entries' height is only known once they were painted: the first
     // frame asks for a second one so the scrollbar can be there
@@ -278,7 +279,7 @@ struct HomePageUI {
     Vec<TipSpan> tipSpans;
     // orig's OnAboutContextMenu: the file the menu is for and the menu built
     // for it
-    Str menuPath;
+    StrVec menuPaths;
     MenuModel* menu = nullptr;
     gp::Entity<gp::PopupMenuState> menuPopup;
     // the entry the right button went down on (-1: none) and where, in the
@@ -335,7 +336,6 @@ void HomePageDelete(MainWindow* win) {
     }
     delete h->search;
     str::Free(h->searchQuery);
-    str::Free(h->menuPath);
     DeleteMenuModel(h->menu);
     VecReset(h->files);
     TipSpansFree(h->tipSpans);
@@ -452,6 +452,7 @@ struct HomeView {
     static void OnEntryDown(HomeView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev, int64_t idx);
     static void OnEntryHover(HomeView* self, gp::Ctx* cx, const gp::HoverEvent* ev, int64_t idx);
     static void OnPageDown(HomeView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
+    static void OnPageDrag(HomeView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev);
     static void OnPageUp(HomeView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev);
     static void OnMenuAction(HomeView* self, gp::Ctx* cx, const gp::ActionEvent* ev);
     static void OnEntryForget(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
@@ -502,7 +503,19 @@ static void OpenHomeEntry(MainWindow* win, int idx, bool ctrl) {
 }
 
 void HomeView::OnEntryClick(HomeView* self, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t idx) {
-    Ui(self->win)->selIdx = (int)idx;
+    HomePageUI* h = Ui(self->win);
+    if (idx < 0 || idx >= len(h->files)) {
+        return;
+    }
+    h->selIdx = (int)idx;
+    if (!ev->keyboard && ev->button == gp::MouseButton::Left &&
+        (ev->modifiers.control || (OS_DARWIN && ev->modifiers.platform))) {
+        h->selection.Toggle(h->files[h->selIdx]->filePath);
+        HoverTooltipHide(cx);
+        HomeNotify(self->win, cx);
+        return;
+    }
+    h->selection.Reset();
     OpenHomeEntry(self->win, (int)idx, ev->modifiers.control);
     HomeNotify(self->win, cx);
 }
@@ -518,7 +531,7 @@ void HomeView::OnEntryHover(HomeView* self, gp::Ctx* cx, const gp::HoverEvent* e
     MainWindow* win = self->win;
     HomePageUI* h = Ui(win);
     int i = (int)idx;
-    if (!ev->hovered || i < 0 || i >= len(h->files)) {
+    if (h->selection.dragging || !ev->hovered || i < 0 || i >= len(h->files)) {
         HoverTooltipHide(cx);
         return;
     }
@@ -547,7 +560,7 @@ void HomeView::OnEntryHover(HomeView* self, gp::Ctx* cx, const gp::HoverEvent* e
 // the entry the right button went down on; OnPageDown, which runs after it for
 // the same press, takes it from here
 void HomeView::OnEntryDown(HomeView* self, gp::Ctx*, const gp::MouseDownEvent* ev, int64_t idx) {
-    if (!IsContextClick(ev->button, ev->modifiers)) {
+    if (ev->button != gp::MouseButton::Right) {
         return;
     }
     HomePageUI* h = Ui(self->win);
@@ -555,16 +568,43 @@ void HomeView::OnEntryDown(HomeView* self, gp::Ctx*, const gp::MouseDownEvent* e
     h->rdownOnEntry = true;
 }
 
+static Rect BoundsRect(const gpui::Bounds& b);
+
+static bool HomeEntryAtPoint(HomePageUI* h, Point pt) {
+    for (int i = 0; i < h->entryCount; i++) {
+        if (BoundsRect(h->entryBounds[i]).Contains(pt)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void UpdateHomeMarquee(HomePageUI* h, Point pt) {
+    h->selection.UpdateDrag(pt, BoundsRect(h->entriesView));
+    for (int i = 0; i < h->entryCount; i++) {
+        h->selection.AddDragHit(h->files[i]->filePath, BoundsRect(h->entryBounds[i]));
+    }
+}
+
 // orig's OnMouseRightButtonDownAbout
 void HomeView::OnPageDown(HomeView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev) {
-    if (!IsContextClick(ev->button, ev->modifiers)) {
+    MainWindow* win = self->win;
+    HomePageUI* h = Ui(win);
+    Point pt{(int)ev->x, (int)ev->y};
+    if (ev->button != gp::MouseButton::Right) {
+        if (ev->button == gp::MouseButton::Left && BoundsRect(h->entriesView).Contains(pt) &&
+            !HomeEntryAtPoint(h, pt)) {
+            bool extend = ev->modifiers.control || (OS_DARWIN && ev->modifiers.platform);
+            h->selection.BeginDrag(pt, extend ? HomeDragMode::Add : HomeDragMode::Replace);
+            AppShellFocusFrame(win);
+            HoverTooltipHide(cx);
+            gp::WindowStopPropagation(cx);
+        }
         return;
     }
     // ng: gpui's ContextMenu would open from this press; orig's opens when
     // the button comes up
     gp::WindowStopPropagation(cx);
-    MainWindow* win = self->win;
-    HomePageUI* h = Ui(win);
     if (!h->rdownOnEntry) {
         h->rdownIdx = -1;
     }
@@ -573,23 +613,32 @@ void HomeView::OnPageDown(HomeView* self, gp::Ctx* cx, const gp::MouseDownEvent*
     h->rdown = Point{(int)ev->x, (int)ev->y};
 }
 
+void HomeView::OnPageDrag(HomeView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev) {
+    HomePageUI* h = Ui(self->win);
+    if (!h->selection.dragging) {
+        return;
+    }
+    if (ev->event.Dragging()) {
+        UpdateHomeMarquee(h, {(int)ev->event.x, (int)ev->event.y});
+    } else {
+        h->selection.EndDrag();
+    }
+    HomeNotify(self->win, cx);
+}
+
 // orig's OnAboutContextMenu: the menu of the file under the click; the
 // keyboard / context-menu key falls back to the keyboard-selected home entry
 static void OnAboutContextMenu(MainWindow* win, gp::Ctx* cx, int idx, float x, float y) {
     HomePageUI* h = Ui(win);
     Vec<FileState*>& files = h->files;
     bool fromClick = idx >= 0 && idx < len(files);
-    if (!fromClick) {
-        idx = h->selIdx;
+    if (fromClick) {
+        h->selIdx = idx;
     }
-    if (idx < 0 || idx >= len(files)) {
-        return;
-    }
-    // Keep keyboard selection in sync with the right-clicked thumbnail
-    h->selIdx = idx;
-    str::ReplaceWithCopy(&h->menuPath, files[idx]->filePath);
+    h->menuPaths.Reset();
+    HomePageMenuPaths(win, fromClick ? files[idx]->filePath : Str{}, h->menuPaths);
     DeleteMenuModel(h->menu);
-    h->menu = BuildHomeContextMenu(win, h->menuPath);
+    h->menu = BuildHomeContextMenu(win, h->menuPaths);
     HomeNotify(win, cx);
     if (!h->menu) {
         return;
@@ -599,11 +648,18 @@ static void OnAboutContextMenu(MainWindow* win, gp::Ctx* cx, int idx, float x, f
 
 // orig's OnMouseRightButtonUpAbout
 void HomeView::OnPageUp(HomeView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
-    if (!IsContextClick(ev->button, ev->modifiers)) {
-        return;
-    }
     MainWindow* win = self->win;
     HomePageUI* h = Ui(win);
+    if (ev->button == gp::MouseButton::Left && h->selection.dragging) {
+        UpdateHomeMarquee(h, {(int)ev->x, (int)ev->y});
+        h->selection.EndDrag();
+        gp::WindowStopPropagation(cx);
+        HomeNotify(win, cx);
+        return;
+    }
+    if (ev->button != gp::MouseButton::Right) {
+        return;
+    }
     if (IsDragDistance((int)ev->x, h->rdown.x, (int)ev->y, h->rdown.y)) {
         return;
     }
@@ -622,21 +678,20 @@ void HomePageContextMenuFromKey(MainWindow* win, gp::Ctx* cx) {
 // the keyboard, so it goes through the ui task queue
 struct HomeMenuCmd {
     MainWindow* win;
-    Str path; // owned
+    StrVec paths;
     int cmdId;
 };
 
 static void RunHomeMenuCmd(HomeMenuCmd* c) {
     if (IsMainWindowValidAndNotClosing(c->win)) {
-        HomeContextMenuCommand(c->win, c->path, c->cmdId);
+        HomeContextMenuCommand(c->win, c->paths, c->cmdId);
     }
-    str::Free(c->path);
     delete c;
 }
 
 void HomeView::OnMenuAction(HomeView* self, gp::Ctx* cx, const gp::ActionEvent* ev) {
     MainWindow* win = self->win;
-    auto* c = new HomeMenuCmd{win, str::Dup(Ui(win)->menuPath), (int)ev->arg};
+    auto* c = new HomeMenuCmd{win, Ui(win)->menuPaths, (int)ev->arg};
     uitask::Post(MkFunc0<HomeMenuCmd>(RunHomeMenuCmd, c), "HomeMenuCmd");
     HomeNotify(win, cx);
 }
@@ -1292,7 +1347,8 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
     // the selection ring, just outside the page; always laid out so its rect
     // is known, drawn for the selected entry
     int ringGap = kThumbsSelectionGap + kThumbsSelectionDx;
-    gp::Rgba ringCol = isSelected ? ToGpui(colText) : gp::Rgba8(0, 0, 0, 0);
+    Color outline = Ui(win)->selection.explicitSelection ? kHomeSelectionColor : colText;
+    gp::Rgba ringCol = isSelected ? ToGpui(outline) : gp::Rgba8(0, 0, 0, 0);
     page->Child(gp::Div(cx->a)
                     ->Absolute()
                     ->Left((float)-ringGap)
@@ -1767,7 +1823,9 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     if (listView) {
         content->Gap(0);
         for (int i = 0; i < nFiles; i++) {
-            content->Child(HomeListRowEl(win, cx, i, i == h->selIdx));
+            bool selected =
+                h->selection.explicitSelection ? h->selection.Contains(h->files[i]->filePath) : i == h->selIdx;
+            content->Child(HomeListRowEl(win, cx, i, selected));
         }
     } else {
         // the row pitch is the frame plus kThumbsSpaceBetweenY; the caption
@@ -1780,14 +1838,18 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                 if (idx >= nFiles) {
                     break;
                 }
-                rowEl->Child(HomeThumbnailEl(win, cx, idx, idx == h->selIdx));
+                bool selected =
+                    h->selection.explicitSelection ? h->selection.Contains(h->files[idx]->filePath) : idx == h->selIdx;
+                rowEl->Child(HomeThumbnailEl(win, cx, idx, selected));
             }
             content->Child(rowEl);
         }
     }
     h->scrollYLaidOut = h->scrollY;
+    // Pressing in a gap needs a click ID so drag moves still arrive over a thumbnail.
     root->Child(gp::Div(cx->a)
                     ->Id(GStrL("home-entries"))
+                    ->Click(gp::HashClickId(GStrL("home-entries")))
                     ->FlexCol()
                     ->Flex1()
                     ->W(gp::kFill)
@@ -1798,6 +1860,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                     ->HideScrollbar()
                     ->OnScroll(gp::ListenTo(Ui(win)->view, &HomeView::OnScroll))
                     ->OnScrollWheel(gp::ListenTo(Ui(win)->view, &HomeView::OnWheel))
+                    ->OnDragMove(gp::ListenTo(Ui(win)->view, &HomeView::OnPageDrag))
                     ->BoundsOut(&h->entriesView)
                     ->Child(content));
 
@@ -1818,7 +1881,18 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                        ->BoundsOut(&h->pageBounds)
                        ->OnMouseDown(gp::ListenTo(Ui(win)->view, &HomeView::OnPageDown))
                        ->OnMouseUp(gp::ListenTo(Ui(win)->view, &HomeView::OnPageUp))
+                       ->OnMouseUpOut(gp::ListenTo(Ui(win)->view, &HomeView::OnPageUp))
                        ->Child(root);
+    Rect marquee = h->selection.marquee;
+    if (!marquee.IsEmpty()) {
+        wrap->Child(gp::Div(cx->a)
+                        ->Absolute()
+                        ->Left((float)marquee.x - h->pageBounds.x)
+                        ->Top((float)marquee.y - h->pageBounds.y)
+                        ->W((float)marquee.dx)
+                        ->H((float)marquee.dy)
+                        ->Border(1, ToGpui(kHomeSelectionColor)));
+    }
     StartPageA11y(wrap);
     // orig's UpdateHomeOverlayScrollbar: the canvas' overlay bar, only in the
     // smart / overlay modes, along the whole right edge of the canvas
@@ -1901,6 +1975,7 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
     Rect outlineFull;
     Rect outline;
     bool showSel = !HomePageIsListView() && !searchFocus && sel >= 0 && sel < len(h->ringBounds);
+    showSel = showSel && (!h->selection.explicitSelection || h->selection.Contains(path));
     if (showSel) {
         outlineFull = BoundsRect(h->ringBounds[sel]);
         outline = outlineFull.Intersect(BoundsRect(h->entriesView));
@@ -1919,13 +1994,21 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
     TempStr header = fmt("vbar=%d logo=%s open=%s views=%s tipText=%s", h->vbarShown ? 1 : 0, RectCsvTemp(logo),
                          RectCsvTemp(BoundsRect(h->openGroupBounds)), RectCsvTemp(BoundsRect(h->viewBtnsBounds)),
                          RectCsvTemp(tipText));
-    return finish(
-        0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
-               "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s %s",
-               sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
-               RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(BoundsRect(h->listIconBounds)),
-               RectCsvTemp(BoundsRect(h->entriesView)), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
-               gSelectedTipIdx, RectCsvTemp(tipRect), header));
+    str::Builder out;
+    out.Append(
+        fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
+            "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s %s",
+            sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
+            RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(BoundsRect(h->listIconBounds)),
+            RectCsvTemp(BoundsRect(h->entriesView)), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
+            gSelectedTipIdx, RectCsvTemp(tipRect), header));
+    out.Append(fmt("\nmarquee=%s selected=", RectCsvTemp(h->selection.marquee)));
+    for (int i = 0; i < len(h->files); i++) {
+        if (h->selection.Contains(h->files[i]->filePath)) {
+            out.Append(fmt("%d,", i));
+        }
+    }
+    return finish(0, ToStrTemp(out));
 }
 
 TempStr HomeSelectionResultTemp(int* exitCodeOut) {
@@ -2004,6 +2087,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
 }
 
 void HomePageSelectFirst(MainWindow* win) {
+    Ui(win)->selection.Reset();
     HomePageUI* h = Ui(win);
     h->selIdx = 0;
     h->searchReturnCol = 0;
@@ -2016,6 +2100,33 @@ Str HomePageSelectedFilePathTemp(MainWindow* win) {
         return {};
     }
     return str::DupTemp(h->files[idx]->filePath);
+}
+
+bool HomePageClearSelection(MainWindow* win) {
+    if (!win->homePage) {
+        return false;
+    }
+    auto& selection = win->homePage->selection;
+    if (!selection.dragging && selection.paths.IsEmpty() && selection.explicitSelection) {
+        return false;
+    }
+    selection.Clear();
+    AppShellInvalidate(win);
+    return true;
+}
+
+void HomePageMenuPaths(MainWindow* win, Str target, StrVec& paths) {
+    HomePageUI* h = Ui(win);
+    auto& selection = h->selection;
+    if (len(target) > 0 && selection.explicitSelection && !selection.Contains(target)) {
+        HomePageClearSelection(win);
+        selection.Toggle(target);
+        AppShellInvalidate(win);
+    }
+    if (len(target) == 0 && !selection.explicitSelection) {
+        target = HomePageSelectedFilePathTemp(win);
+    }
+    selection.MenuPaths(target, h->files, paths);
 }
 
 void HomePageFocusSearch(MainWindow* win) {
@@ -2034,6 +2145,11 @@ void HomePageFocusSearch(MainWindow* win) {
 
 // dCol/dRow are in grid steps; in list view only dRow matters
 void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
+    auto& selection = Ui(win)->selection;
+    if (selection.explicitSelection) {
+        selection.Reset();
+        AppShellInvalidate(win);
+    }
     HomePageUI* h = Ui(win);
     int n = h->entryCount;
     if (n == 0) {
@@ -2098,9 +2214,9 @@ bool HomePageOnKeyDown(MainWindow* win, int vk, bool ctrl) {
         case VK_BACK:
 #endif
         case VK_DELETE: {
-            // remove the keyboard-selected entry from file history (not from disk)
-            Str path = HomePageSelectedFilePathTemp(win);
-            if (len(path) > 0) {
+            StrVec paths;
+            HomePageMenuPaths(win, {}, paths);
+            for (Str path : paths) {
                 ForgetFileFromFrequentlyRead(win, path);
             }
             return true;

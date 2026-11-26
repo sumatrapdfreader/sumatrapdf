@@ -37,7 +37,7 @@ MenuModel* BuildMenu(MainWindow* win);
 TempStr MainMenuResultTemp(MainWindow* win);
 TempStr FavoritesMenuIdsTemp(MainWindow* win);
 TempStr FileHistoryMenuIdsTemp(MainWindow* win);
-TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y);
+TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y, int invoke = 0);
 void RemoveBadMenuSeparators(MenuModel* menu);
 
 // orig edits an HMENU with these; here they edit the model
@@ -69,8 +69,8 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId);
 bool CommandUsesContextMenuPoint(int cmdId);
 
 // orig's OnAboutContextMenu: the home page's per-file menu
-MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath);
-void HomeContextMenuCommand(MainWindow* win, Str filePath, int cmdId);
+MenuModel* BuildHomeContextMenu(MainWindow* win, const StrVec& paths);
+void HomeContextMenuCommand(MainWindow* win, const StrVec& paths, int cmdId);
 
 int CmdIdFromVirtualZoom(float virtualZoom);
 float ZoomMenuItemToZoom(int menuItemId);

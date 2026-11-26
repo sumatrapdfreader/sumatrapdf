@@ -179,6 +179,7 @@ void CloseWindowIfCan(MainWindow* win, bool quitIfLast);
 void OnMenuExit();
 void CopyFilePath(WindowTab* tab);
 void ShowFileInFolder(MainWindow* win, Str path);
+void DeleteFilesFromHomePage(MainWindow* win, const StrVec& paths);
 enum class DisplayMode;
 void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepContinuous = false);
 

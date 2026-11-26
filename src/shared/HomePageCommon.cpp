@@ -5,12 +5,19 @@
 #include "base/Dict.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
+#include "base/Launch.h"
+#include "base/Pixmap.h"
 #include "base/UITask.h"
+#if OS_WIN
+#include "base/Win.h"
+#endif
 
 #include "gui/UIModels.h"
 
 #include "Settings.h"
+#include "Annotation.h"
 #include "AppSettings.h"
+#include "Commands.h"
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "PagePosition.h"
@@ -24,10 +31,165 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "Notifications.h"
+#include "ServerFiles.h"
+#include "TextSelection.h"
+#include "SumatraPDFCommon.h"
 #include "HomePage.h"
 #include "HomePageCommon.h"
 
 #include "SumatraLog.h"
+
+static int FindHomePath(const StrVec& paths, Str path) {
+#if OS_WIN
+    return paths.FindI(path);
+#else
+    return paths.Find(path);
+#endif
+}
+
+bool HomeSelection::Contains(Str path) const {
+    return FindHomePath(paths, path) >= 0;
+}
+
+void HomeSelection::Toggle(Str path) {
+    explicitSelection = true;
+    int idx = FindHomePath(paths, path);
+    if (idx >= 0) {
+        paths.RemoveAt(idx);
+    } else {
+        paths.AppendNonEmpty(path);
+    }
+}
+
+void HomeSelection::Clear() {
+    paths.Reset();
+    EndDrag();
+    explicitSelection = true;
+}
+
+void HomeSelection::Reset() {
+    Clear();
+    explicitSelection = false;
+}
+
+void HomeSelection::BeginDrag(Point pt, HomeDragMode mode) {
+    if (mode == HomeDragMode::Add) {
+        dragBase = paths;
+    }
+    dragging = true;
+    anchor = pt;
+}
+
+void HomeSelection::UpdateDrag(Point pt, Rect viewport) {
+    explicitSelection = true;
+    paths = dragBase;
+    marquee = Rect::FromXY(pt, anchor).Intersect(viewport);
+}
+
+void HomeSelection::AddDragHit(Str path, Rect bounds) {
+    if (!marquee.Intersect(bounds).IsEmpty() && !Contains(path)) {
+        paths.AppendNonEmpty(path);
+    }
+}
+
+void HomeSelection::EndDrag() {
+    dragging = false;
+    marquee = {};
+    dragBase.Reset();
+}
+
+void HomeSelection::MenuPaths(Str target, const Vec<FileState*>& visible, StrVec& out) const {
+    if (!paths.IsEmpty() && (len(target) == 0 || Contains(target))) {
+        for (FileState* fs : visible) {
+            if (Contains(fs->filePath)) {
+                out.Append(fs->filePath);
+            }
+        }
+        if (!out.IsEmpty()) {
+            return;
+        }
+    }
+    out.AppendNonEmpty(target);
+}
+
+bool HomeFilesAllPinned(const StrVec& paths) {
+    for (Str path : paths) {
+        FileState* fs = FileHistoryFindByPath(path);
+        if (!fs || !fs->isPinned) {
+            return false;
+        }
+    }
+    return !paths.IsEmpty();
+}
+
+static void ToggleHomeFilesPinned(MainWindow* win, const StrVec& paths) {
+    bool pin = !HomeFilesAllPinned(paths);
+    for (Str path : paths) {
+        FileState* fs = FileHistoryFindByPath(path);
+        if (fs) {
+            fs->isPinned = pin;
+        }
+    }
+    ScheduleSaveSettings();
+    win->RedrawAll(true);
+}
+
+static void ShowHomeFilesInFolder(MainWindow* win, const StrVec& paths) {
+    if (paths.IsEmpty() || !CanAccessDisk() || gPluginMode) {
+        return;
+    }
+    if (len(paths) == 1) {
+        ShowFileInFolder(win, paths[0]);
+        return;
+    }
+
+    StrVec dirs;
+    Vec<int> dirIndexes;
+    for (Str path : paths) {
+        TempStr dir = path::GetDirTemp(path::NormalizeTemp(path));
+        int idx = FindHomePath(dirs, dir);
+        if (idx < 0) {
+            idx = len(dirs);
+            dirs.Append(dir);
+        }
+        VecAppend(dirIndexes, idx);
+    }
+    for (int i = 0; i < len(dirs); i++) {
+        StrVec files;
+        for (int j = 0; j < len(paths); j++) {
+            if (dirIndexes[j] == i) {
+                files.Append(paths[j]);
+            }
+        }
+        if (FilePickerIsSumatraPDF() || OS_WASM || len(files) == 1) {
+            ShowFileInFolder(win, files[0]);
+            continue;
+        }
+        OpenFilesInDefaultManager(dirs[i], files);
+    }
+}
+
+bool RunHomeFilesCommand(MainWindow* win, const StrVec& paths, int cmd) {
+    if (len(paths) < 2) {
+        return false;
+    }
+    switch (cmd) {
+        case CmdShowInFolder:
+            ShowHomeFilesInFolder(win, paths);
+            return true;
+        case CmdPinSelectedDocument:
+            ToggleHomeFilesPinned(win, paths);
+            return true;
+        case CmdUploadToServer:
+            RunServerFilesBatch(win, paths, ServerFileAction::Upload);
+            return true;
+        case CmdDeleteFromServer:
+            RunServerFilesBatch(win, paths, ServerFileAction::Delete);
+            return true;
+    }
+    return false;
+}
 
 // Home page state that orig and ng keep the same way: the tip of the day and
 // promo lines, and how many files the page lists.

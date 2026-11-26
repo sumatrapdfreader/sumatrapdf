@@ -3051,7 +3051,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, y);
             // a frame point, as TestMarkupAnnots' screen= reports it
             Point pt = FramePointToCanvas(win, Point{x, y});
-            AppendTestResult(req, 0, ContextMenuAtPointResultTemp(win, pt.x, pt.y));
+            Str name = StringArg(req, 2);
+            int invoke = name ? GetCommandIdByName(name) : 0;
+            AppendTestResult(req, 0, ContextMenuAtPointResultTemp(win, pt.x, pt.y, invoke));
             break;
         }
 

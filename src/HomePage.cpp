@@ -1008,6 +1008,7 @@ struct HomeEntryCtrl : VirtCtrl {
 // keep keyboard selection in sync
 struct HomeEntriesCtrl : VirtCtrl {
     MainWindow* win = nullptr;
+    HomeSelection selection;
     // entry the mouse is on, -1 for none. Drives the ✕ button and the keyboard
     // selection, which follows the mouse
     int activeIdx = -1;
@@ -2138,7 +2139,8 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
         return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
     }
     auto& c = HomeLayout(win);
-    if (!c.valid) {
+    HomeEntriesCtrl* entriesCtrl = HomeEntries(win);
+    if (!c.valid || !entriesCtrl) {
         return finish(2, str::DupTemp(StrL("NOTREADY no-layout")));
     }
     int sel = win->homePageSelIdx;
@@ -2153,7 +2155,9 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
     Rect search = c.rcSearchBorder;
     Rect outlineFull;
     Rect outline;
+    const auto& selection = entriesCtrl->selection;
     bool showSel = !HomePageIsListView() && !searchFocus && sel >= 0 && sel < len(c.thumbs);
+    showSel = showSel && (!selection.explicitSelection || selection.Contains(path));
     if (showSel) {
         outlineFull = HomeSelectionOutlineRect(c.thumbs[sel]);
         outline = outlineFull.Intersect(HomeOutlinePaintClip(c.rcThumbsArea, c.rcSearchBorder, c.rcTip, c.hasTip));
@@ -2172,12 +2176,20 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
     Rect tipText = c.hasTip ? c.rcTipText : Rect{};
     TempStr header = fmt("vbar=%d logo=%s open=%s views=%s tipText=%s", HomeVScrollShown(win) ? 1 : 0,
                          RectCsvTemp(c.rcLogo), RectCsvTemp(open), RectCsvTemp(views), RectCsvTemp(tipText));
-    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
-                         "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s %s",
-                         sel, len(c.thumbs), searchFocus, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
-                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(c.rcIconListView),
-                         RectCsvTemp(c.rcThumbsArea), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
-                         gSelectedTipIdx, RectCsvTemp(tipRect), header));
+    str::Builder out;
+    out.Append(fmt(
+        "OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
+        "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s %s",
+        sel, len(c.thumbs), searchFocus, searchBox, RectCsvTemp(search), RectCsvTemp(outline), RectCsvTemp(outlineFull),
+        path, HomePageIsListView() ? 1 : 0, RectCsvTemp(c.rcIconListView), RectCsvTemp(c.rcThumbsArea),
+        RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0, gSelectedTipIdx, RectCsvTemp(tipRect), header));
+    out.Append(fmt("\nmarquee=%s selected=", RectCsvTemp(selection.marquee)));
+    for (int i = 0; i < len(c.thumbs); i++) {
+        if (selection.Contains(c.thumbs[i].fs->filePath)) {
+            out.Append(fmt("%d,", i));
+        }
+    }
+    return finish(0, ToStrTemp(out));
 }
 
 // What the home page list drew for each row: the path, the size text as drawn,
@@ -2384,6 +2396,14 @@ static void HomeEntryOpenClicked(MainWindow* win, VirtMouseEvent* ev) {
     if (len(entry->filePath) == 0) {
         return;
     }
+    auto* entries = (HomeEntriesCtrl*)entry->parent;
+    if (ev->isCtrl) {
+        entries->selection.Toggle(entry->filePath);
+        win->DeleteToolTip();
+        HwndInvalidate(win->hwndCanvas);
+        return;
+    }
+    entries->selection.Reset();
     HomePageOpenFile(win, entry->filePath);
 }
 
@@ -2452,7 +2472,9 @@ void HomeEntryCtrl::Paint(VirtPaintCtx& ctx) {
     PlatformFont* fontText = HomePageFont(13);
     Color backgroundColor = ThemeMainWindowBackgroundColor();
     // no selection chrome while typing in the search box
-    bool isSelected = (idx == win->homePageSelIdx) && !HomeSearchHasFocus(win);
+    auto& selection = entries->selection;
+    bool isSelected = !HomeSearchHasFocus(win) &&
+                      (selection.explicitSelection ? selection.Contains(filePath) : idx == win->homePageSelIdx);
     // ctx.clip is the entries band (vwfClipChildren on the parent): an entry
     // scrolled partially out must not paint over the header / tip band
     gfx->PushClip(ctx.clip);
@@ -2814,10 +2836,56 @@ void HomePageDestroyChrome(MainWindow* win) {
 
 // gives the home page's virtual controls first shot at the canvas messages.
 // Returns true when the event was consumed and the caller should stop
+static bool HomeMarqueeMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
+    HomeEntriesCtrl* entries = HomeEntries(win);
+    if (!entries) {
+        return false;
+    }
+    auto& selection = entries->selection;
+    auto& layout = HomeLayout(win);
+    Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+    if (!selection.dragging) {
+        if (msg != WM_LBUTTONDOWN || !layout.rcThumbsArea.Contains(pt)) {
+            return false;
+        }
+        ILayout* hit = ElementFromPoint(win->homeRoot, pt, nullptr);
+        if (entries->EntryForCtrl(hit ? hit->AsVirtCtrl() : nullptr)) {
+            return false;
+        }
+        selection.BeginDrag(pt, wp & MK_CONTROL ? HomeDragMode::Add : HomeDragMode::Replace);
+        HwndSetFocus(win->hwndFrame);
+        SetCapture(win->hwndCanvas);
+        win->DeleteToolTip();
+        return true;
+    }
+    if (msg == WM_CAPTURECHANGED || msg == WM_CANCELMODE) {
+        selection.EndDrag();
+        HwndInvalidate(win->hwndCanvas);
+        return false;
+    }
+    if (msg != WM_MOUSEMOVE && msg != WM_LBUTTONUP) {
+        return false;
+    }
+    selection.UpdateDrag(pt, layout.rcThumbsArea);
+    for (const auto& t : layout.thumbs) {
+        selection.AddDragHit(t.fs->filePath, HomeEntryRect(t));
+    }
+    if (msg == WM_LBUTTONUP) {
+        selection.EndDrag();
+        ReleaseCapture();
+    }
+    HwndInvalidate(win->hwndCanvas);
+    return true;
+}
+
 bool HomePageOnCanvasMessage(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp, LRESULT& res) {
     VirtRoot* root = win->homeRoot;
     if (!root || !root->owned) {
         return false;
+    }
+    if (HomeMarqueeMessage(win, msg, wp, lp)) {
+        res = 0;
+        return true;
     }
     // Hover feedback (highlight, ✕ button, tooltips) must stay quiet while
     // another window is in front. The mouse still moves over the home page when
@@ -2992,17 +3060,25 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     // thumbnail, clipped so it cannot paint over the search field or the tip
     // band (issue #5978). A little slack above/below the thumbs band keeps the
     // first row's top curve from being cut off.
-    int selIdx = win->homePageSelIdx;
-    bool showSel = !HomePageIsListView() && !HomeSearchHasFocus(win) && selIdx >= 0 && selIdx < nThumbs;
-    if (showSel) {
-        ThumbnailLayout& t = l.thumbnails[selIdx];
-        if (IsHomeThumbOnScreen(t.rcPage.Union(t.rcText), l.rcThumbsArea)) {
-            Rect clip = HomeOutlinePaintClip(l.rcThumbsArea, l.rcSearchBorder, l.rcTip, l.hasTip);
-            if (!clip.IsEmpty()) {
-                gfx->PushClip(clip);
-                DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(t), DpiScale(2));
-                gfx->PopClip();
+    const auto& selection = HomeEntries(win)->selection;
+    if (!HomePageIsListView() && !HomeSearchHasFocus(win)) {
+        Rect clip = HomeOutlinePaintClip(l.rcThumbsArea, l.rcSearchBorder, l.rcTip, l.hasTip);
+        if (!clip.IsEmpty()) {
+            gfx->PushClip(clip);
+            for (int i = 0; i < nThumbs; i++) {
+                const ThumbnailLayout& t = l.thumbnails[i];
+                if (!IsHomeThumbOnScreen(t.rcPage.Union(t.rcText), l.rcThumbsArea)) {
+                    continue;
+                }
+                bool selected =
+                    selection.explicitSelection ? selection.Contains(t.fs->filePath) : i == win->homePageSelIdx;
+                if (!selected) {
+                    continue;
+                }
+                Color color = selection.explicitSelection ? kHomeSelectionColor : ThemeWindowTextColor();
+                DrawHomeRoundedOutline(gfx, HomeSelectionOutlineRect(t), DpiScale(2), color, DpiScale(2));
             }
+            gfx->PopClip();
         }
         // the edit HWND is on top of the canvas; this is the canvas-drawn
         // border/fill around it. Repaint so a 1px antialiased leak cannot
@@ -3011,6 +3087,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
         if (chrome && chrome->searchBorder) {
             chrome->searchBorder->PaintStandalone(gfx);
         }
+    }
+    if (!selection.marquee.IsEmpty()) {
+        gfx->DrawRect(selection.marquee, kHomeSelectionColor);
     }
 }
 
@@ -3360,6 +3439,11 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
 
 // select the first entry, e.g. after the filter changed the list
 void HomePageSelectFirst(MainWindow* win) {
+    HomeEntriesCtrl* entries = HomeEntries(win);
+    if (entries) {
+        HomePageClearSelection(win);
+        entries->selection.Reset();
+    }
     win->homePageSelIdx = 0;
     win->homePageSearchReturnCol = 0;
 }
@@ -3396,6 +3480,46 @@ void HomePageOnWindowActivate(MainWindow* win, bool active) {
 static HomeEntriesCtrl* HomeEntries(MainWindow* win) {
     HomeChromeCtrl* chrome = HomeChrome(win);
     return chrome ? chrome->entries : nullptr;
+}
+
+bool HomePageClearSelection(MainWindow* win) {
+    HomeEntriesCtrl* entries = HomeEntries(win);
+    if (!entries) {
+        return false;
+    }
+    auto& selection = entries->selection;
+    if (!selection.dragging && selection.paths.IsEmpty() && selection.explicitSelection) {
+        return false;
+    }
+    bool wasDragging = selection.dragging;
+    selection.Clear();
+    if (wasDragging && GetCapture() == win->hwndCanvas) {
+        ReleaseCapture();
+    }
+    win->DeleteToolTip();
+    HwndInvalidate(win->hwndCanvas);
+    return true;
+}
+
+void HomePageMenuPaths(MainWindow* win, Str target, StrVec& paths) {
+    HomeEntriesCtrl* entries = HomeEntries(win);
+    if (!entries) {
+        return;
+    }
+    auto& selection = entries->selection;
+    if (len(target) > 0 && selection.explicitSelection && !selection.Contains(target)) {
+        HomePageClearSelection(win);
+        selection.Toggle(target);
+        HwndInvalidate(win->hwndCanvas);
+    }
+    if (len(target) == 0 && !selection.explicitSelection) {
+        target = HomePageSelectedFilePathTemp(win);
+    }
+    Vec<FileState*> visible;
+    for (const auto& t : HomeLayout(win).thumbs) {
+        VecAppend(visible, t.fs);
+    }
+    selection.MenuPaths(target, visible, paths);
 }
 
 // mouse left the canvas (or the page scrolled): drop the active entry so the
@@ -3464,6 +3588,12 @@ Str HomePageSelectedFilePathTemp(MainWindow* win) {
 // steps; in list view only dRow matters. Moving up past the first row puts
 // focus in the search box
 void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
+    HomeEntriesCtrl* entries = HomeEntries(win);
+    if (entries && entries->selection.explicitSelection) {
+        HomePageClearSelection(win);
+        entries->selection.Reset();
+        HwndInvalidate(win->hwndCanvas);
+    }
     int n = HomeSelectableCount(win);
     if (n == 0) {
         win->DeleteToolTip();

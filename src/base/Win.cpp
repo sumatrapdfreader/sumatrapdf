@@ -2263,17 +2263,20 @@ bool LaunchBrowser(Str url) {
     return LaunchFileShell(url, Str(), StrL("open"));
 }
 
+static Str FileManagerPathTemp(Str path) {
+    // strip \\?\ prefix — shell APIs (ILCreateFromPath, explorer.exe) don't understand it
+    if (str::TrimPrefix(path, StrL("\\\\?\\UNC\\"))) {
+        return str::JoinTemp(StrL("\\\\"), path);
+    }
+    str::TrimPrefix(path, StrL("\\\\?\\"));
+    return path;
+}
+
 void OpenPathInDefaultFileManager(Str path) {
     if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return;
     }
-
-    // strip \\?\ prefix — shell APIs (ILCreateFromPath, explorer.exe) don't understand it
-    if (str::TrimPrefix(path, StrL("\\\\?\\UNC\\"))) {
-        path = str::JoinTemp(StrL("\\\\"), path);
-    } else {
-        str::TrimPrefix(path, StrL("\\\\?\\"));
-    }
+    path = FileManagerPathTemp(path);
 
     // Use SHOpenFolderAndSelectItems which respects the default file manager
     // (e.g. Directory Opus) instead of hardcoding explorer.exe
@@ -2294,6 +2297,35 @@ void OpenPathInDefaultFileManager(Str path) {
     if (!file::Exists(explorer)) return;
     TempStr args = fmt("/select,\"%s\"", path);
     CreateProcessHelper(explorer, args);
+}
+
+void OpenFilesInDefaultManager(Str folder, const StrVec& files) {
+    if (len(folder) == 0 || files.IsEmpty() || ExternalLaunchBlocked(folder)) {
+        return;
+    }
+    folder = FileManagerPathTemp(folder);
+    PIDLIST_ABSOLUTE parent = ILCreateFromPathW(CWStrTemp(folder));
+    if (parent) {
+        Vec<PIDLIST_ABSOLUTE> items;
+        Vec<PCUITEMID_CHILD> children;
+        for (Str path : files) {
+            PIDLIST_ABSOLUTE item = ILCreateFromPathW(CWStrTemp(FileManagerPathTemp(path)));
+            if (item) {
+                VecAppend(items, item);
+                VecAppend(children, (PCUITEMID_CHILD)ILFindLastID(item));
+            }
+        }
+        HRESULT result =
+            len(children) > 0 ? SHOpenFolderAndSelectItems(parent, len(children), children.els, 0) : E_FAIL;
+        for (auto item : items) {
+            ILFree(item);
+        }
+        ILFree(parent);
+        if (SUCCEEDED(result)) {
+            return;
+        }
+    }
+    LaunchFileShell(folder, {}, StrL("open"));
 }
 
 HANDLE LaunchProcessWithCmdLine(Str exe, Str cmdLine) {

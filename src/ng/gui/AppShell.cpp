@@ -3161,6 +3161,8 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
             // the page box gave the focus back
         } else if (DialogsOnEscape(win)) {
             // the topmost dialog is gone now
+        } else if (win->IsCurrentTabAbout() && HomePageClearSelection(win)) {
+            // Home's selected file group is cleared
         } else if (ReadingAutoScrollIsOn(win)) {
             // orig's PreTranslate: these two take Esc before the frame does
             ReadingAutoScrollStop(win);

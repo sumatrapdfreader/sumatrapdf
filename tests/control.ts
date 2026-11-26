@@ -747,7 +747,7 @@ export class ControlClient {
     }
     const m =
       /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+) thumbsArea=(-?\d+),(-?\d+),(-?\d+),(-?\d+) lastCaption=(-?\d+),(-?\d+),(-?\d+),(-?\d+) tip=(\d,-?\d+) tipRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) vbar=(\d) logo=(-?\d+),(-?\d+),(-?\d+),(-?\d+) open=(-?\d+),(-?\d+),(-?\d+),(-?\d+) views=(-?\d+),(-?\d+),(-?\d+),(-?\d+) tipText=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(
-        raw,
+        raw.split("\n", 1)[0]!,
       );
     if (!m) {
       throw new Error(`homeSelection: could not parse '${raw}'`);

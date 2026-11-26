@@ -13,6 +13,7 @@ extern bool gBlockExternalLaunch;
 extern int gExternalLaunchesBlocked;
 bool ExternalLaunchBlocked(Str what);
 void SetExternalLaunchAllowDir(Str dir);
+void OpenFilesInDefaultManager(Str folder, const StrVec& files);
 
 #if !OS_WIN
 // hands `path` to the desktop (xdg-open on Linux, open on mac); params are ignored

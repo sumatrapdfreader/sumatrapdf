@@ -22,6 +22,33 @@ constexpr i64 kHomeFileSizePending = -2;
 i64 GetHomeFileSize(Str path);
 extern Str sumatraTips;
 
+enum class HomeDragMode {
+    Replace,
+    Add
+};
+
+struct HomeSelection {
+    StrVec paths;
+    StrVec dragBase;
+    Point anchor;
+    Rect marquee;
+    bool explicitSelection = false;
+    bool dragging = false;
+
+    bool Contains(Str path) const;
+    void Toggle(Str path);
+    void Clear();
+    void Reset();
+    void BeginDrag(Point pt, HomeDragMode mode);
+    void UpdateDrag(Point pt, Rect viewport);
+    void AddDragHit(Str path, Rect bounds);
+    void EndDrag();
+    void MenuPaths(Str target, const Vec<FileState*>& visible, StrVec& out) const;
+};
+
+bool HomeFilesAllPinned(const StrVec& paths);
+bool RunHomeFilesCommand(MainWindow* win, const StrVec& paths, int cmd);
+
 // the header row: [brand] [search] [Open icon "Open..."] [view icons]
 // x and widths in the caller's units (px or dips)
 struct HomeHeaderIn {

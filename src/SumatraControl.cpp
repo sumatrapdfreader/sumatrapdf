@@ -2091,7 +2091,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 2, StrL("NOTREADY no-window"));
                 break;
             }
-            AppendTestResult(req, 0, HomeContextMenuRowsTemp(win));
+            Str name = StringArg(req, 2);
+            int invoke = name ? GetCommandIdByName(name) : 0;
+            AppendTestResult(req, 0, HomeContextMenuRowsTemp(win, invoke));
             break;
         }
 

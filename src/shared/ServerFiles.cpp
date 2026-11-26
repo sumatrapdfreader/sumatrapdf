@@ -46,6 +46,7 @@ struct ServerFilesState {
     u64 listStartedMs = 0;
     // the disk cache was looked at for the current key
     bool cacheLoaded = false;
+    bool refreshAfterList = false;
     u32 listId = 0;
     u32 transferId = 0;
     Str transferName;
@@ -53,6 +54,19 @@ struct ServerFilesState {
 };
 
 static ServerFilesState gSrv;
+
+struct ServerBatch {
+    MainWindow* win;
+    StrVec paths;
+    Str account;
+    ServerFileAction action;
+    int next = 0;
+    bool refresh = false;
+
+    ~ServerBatch() { str::Free(account); }
+};
+
+static ServerBatch* gServerBatch;
 
 // a list older than this is fetched again (another device may have changed it)
 constexpr u64 kRelistMs = 5ULL * 60 * 1000;
@@ -85,6 +99,7 @@ static FileState* FindStandIn(Str name) {
 }
 
 static void ServerJobDone(OnlineJobResult* res);
+static void ContinueServerBatch();
 
 static Str ServerToken() {
     if (OS_WASM || !gSettings) {
@@ -223,6 +238,14 @@ static void StartList() {
     }
 }
 
+static void RefreshServerList() {
+    if (gSrv.listId != 0) {
+        gSrv.refreshAfterList = true;
+        return;
+    }
+    StartList();
+}
+
 static void FinishTransfer(OnlineJobResult* res) {
     gSrv.transferId = 0;
     TempStr name = str::DupTemp(gSrv.transferName);
@@ -250,16 +273,25 @@ static void FinishTransfer(OnlineJobResult* res) {
     } else {
         Notify(win, fmt(Tr("Deleted %s from the server.").s, name));
     }
-    StartList();
+    if (gServerBatch) {
+        gServerBatch->refresh = true;
+    } else {
+        RefreshServerList();
+    }
 }
 
 static void ServerJobDone(OnlineJobResult* res) {
     if (res->id != 0 && res->id == gSrv.listId) {
         FinishList(res);
+        if (gSrv.refreshAfterList) {
+            gSrv.refreshAfterList = false;
+            StartList();
+        }
         return;
     }
     if (res->id != 0 && res->id == gSrv.transferId) {
         FinishTransfer(res);
+        ContinueServerBatch();
     }
 }
 
@@ -297,6 +329,7 @@ void ServerFilesReset() {
     ClearServerList();
     gSrv.tried = false;
     gSrv.cacheLoaded = false;
+    gSrv.refreshAfterList = false;
     gSrv.listId = 0;
     ServerFilesChanged();
 }
@@ -579,4 +612,71 @@ void DeleteFileFromServer(MainWindow* win, Str path) {
     auto* ask = NewServerAsk(win, path);
     TempStr question = fmt(Tr("Delete %s from SumatraPDF Web?").s, name);
     AskServerYesNo(win, question, Tr("Delete from server"), MkFunc1(DeleteAnswered, ask));
+}
+
+static void ContinueServerBatch() {
+    while (gServerBatch && gSrv.transferId == 0) {
+        auto* b = gServerBatch;
+        bool sameAccount = str::Eq(b->account, OnlineAccountTemp());
+        if (b->next == len(b->paths) || !IsMainWindowValidAndNotClosing(b->win) || !ServerFilesListed() ||
+            !sameAccount) {
+            bool refresh = b->refresh && sameAccount;
+            gServerBatch = nullptr;
+            delete b;
+            if (refresh) {
+                RefreshServerList();
+            }
+            return;
+        }
+        Str path = b->paths[b->next++];
+        switch (b->action) {
+            case ServerFileAction::Open:
+                OpenServerFile(b->win, path);
+                break;
+            case ServerFileAction::Upload: {
+                TempStr why = CheckOnlineUploadTemp(path);
+                if (len(why) == 0) {
+                    StartUpload(b->win, path);
+                } else {
+                    Notify(b->win, why);
+                }
+                break;
+            }
+            case ServerFileAction::Delete:
+                StartDelete(b->win, path);
+                break;
+        }
+    }
+}
+
+static void StartServerBatch(ServerBatch* b, bool confirmed) {
+    if (!confirmed || !IsMainWindowValidAndNotClosing(b->win) || !str::Eq(b->account, OnlineAccountTemp()) ||
+        !CanStartTransfer(b->win) || gServerBatch) {
+        delete b;
+        return;
+    }
+    gServerBatch = b;
+    ContinueServerBatch();
+}
+
+void RunServerFilesBatch(MainWindow* win, const StrVec& paths, ServerFileAction action) {
+    if (!IsMainWindowValidAndNotClosing(win) || paths.IsEmpty() || !CanStartTransfer(win) || gServerBatch) {
+        return;
+    }
+    auto* b = new ServerBatch{win, paths, str::Dup(OnlineAccountTemp()), action};
+    if (action == ServerFileAction::Open) {
+        StartServerBatch(b, true);
+        return;
+    }
+    TempStr question;
+    Str title;
+    if (action == ServerFileAction::Upload) {
+        question = fmt(Tr("Upload %d files to SumatraPDF Web? Existing files with the same name will be replaced.").s,
+                       len(paths));
+        title = Tr("Upload to server");
+    } else {
+        question = fmt(Tr("Delete %d files from SumatraPDF Web?").s, len(paths));
+        title = Tr("Delete from server");
+    }
+    AskServerYesNo(win, question, title, MkFunc1(StartServerBatch, b));
 }

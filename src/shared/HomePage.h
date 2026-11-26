@@ -37,6 +37,8 @@ void HomePageFocusSearch(MainWindow* win);
 void HomePageOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos);
 void HomePageMoveSelection(MainWindow* win, int dCol, int dRow);
 Str HomePageSelectedFilePathTemp(MainWindow* win);
+void HomePageMenuPaths(MainWindow* win, Str target, StrVec& paths);
+bool HomePageClearSelection(MainWindow* win);
 void HomePageSelectFirst(MainWindow* win);
 void HomePageLocateFile(MainWindow* win, Str path);
 bool HomePageOnKeyDown(MainWindow* win, int vk, bool ctrl);

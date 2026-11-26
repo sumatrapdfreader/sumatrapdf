@@ -189,44 +189,64 @@ bool LaunchBrowser(Str url) {
     return SpawnDetached(args);
 }
 
-void OpenPathInDefaultFileManager(Str path) {
-    if (len(path) == 0 || ExternalLaunchBlocked(path)) {
-        return;
-    }
-    if (dir::Exists(path)) {
-        StrVec args;
-        args.Append(Str(OpenerProgram()));
-        args.Append(path);
-        SpawnDetached(args);
-        return;
-    }
+static void OpenFolder(Str folder) {
+    StrVec args;
+    args.Append(Str(OpenerProgram()));
+    args.Append(folder);
+    SpawnDetached(args);
+}
 
-    TempStr fullPath = path::NormalizeTemp(path);
+static void RevealFiles(Str folder, const StrVec& files) {
     StrVec args;
 #if OS_DARWIN
     args.Append(StrL("open"));
     args.Append(StrL("-R"));
-    args.Append(fullPath);
+    for (Str file : files) {
+        args.Append(path::NormalizeTemp(file));
+    }
 #else
-    TempStr uri = fmt("file://%s", url::EncodePathTemp(fullPath));
+    str::Builder uris;
+    uris.Append(StrL("array:string:"));
+    bool first = true;
+    for (Str file : files) {
+        if (!first) {
+            uris.AppendChar(',');
+        }
+        first = false;
+        uris.Append(StrL("file://"));
+        uris.Append(url::EncodePathTemp(path::NormalizeTemp(file)));
+    }
     args.Append(StrL("dbus-send"));
     args.Append(StrL("--session"));
     args.Append(StrL("--dest=org.freedesktop.FileManager1"));
     args.Append(StrL("--type=method_call"));
     args.Append(StrL("/org/freedesktop/FileManager1"));
     args.Append(StrL("org.freedesktop.FileManager1.ShowItems"));
-    args.Append(fmt("array:string:%s", uri));
+    args.Append(ToStr(uris));
     args.Append(StrL("string:"));
 #endif
-    if (SpawnDetached(args)) {
+    if (!SpawnDetached(args)) {
+        OpenFolder(folder);
+    }
+}
+
+void OpenPathInDefaultFileManager(Str path) {
+    if (len(path) == 0 || ExternalLaunchBlocked(path)) {
         return;
     }
+    if (dir::Exists(path)) {
+        OpenFolder(path);
+        return;
+    }
+    StrVec files;
+    files.Append(path);
+    RevealFiles(path::GetDirTemp(path), files);
+}
 
-    TempStr dir = path::GetDirTemp(path);
-    args.Reset();
-    args.Append(Str(OpenerProgram()));
-    args.Append(dir);
-    SpawnDetached(args);
+void OpenFilesInDefaultManager(Str folder, const StrVec& files) {
+    if (len(folder) > 0 && !files.IsEmpty() && !ExternalLaunchBlocked(folder)) {
+        RevealFiles(folder, files);
+    }
 }
 
 #if IS_DEBUG

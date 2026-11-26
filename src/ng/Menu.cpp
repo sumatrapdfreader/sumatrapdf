@@ -9,6 +9,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/Launch.h"
 #include "base/Pixmap.h"
 
 #include "gui/UIModels.h"
@@ -52,6 +53,7 @@
 #include "MenuCommon.h"
 #include "MenuDefs.h"
 #include "HomePage.h"
+#include "HomePageCommon.h"
 #include "ServerFiles.h"
 
 #include "SumatraLog.h"
@@ -912,19 +914,32 @@ TempStr MainMenuResultTemp(MainWindow* win) {
 }
 
 // The page context menu at a canvas point, in the same row format.
-TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y) {
+TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y, int invoke) {
     if (!win) {
         return StrL("NOTREADY no-window\n");
     }
     MenuModel* menu = nullptr;
     if (win->IsCurrentTabAbout()) {
         // the home page: the menu of the selected entry, else the first
-        Str path = HomePageSelectedFilePathTemp(win);
-        if (len(path) == 0) {
-            HomePageSelectFirst(win);
-            path = HomePageSelectedFilePathTemp(win);
+        StrVec paths;
+        HomePageMenuPaths(win, {}, paths);
+        menu = BuildHomeContextMenu(win, paths);
+        if (invoke != 0) {
+            const MenuItemModel* item = menu ? MenuFind(menu, invoke) : nullptr;
+            bool enabled = item && !item->disabled;
+            DeleteMenuModel(menu);
+            if (!enabled) {
+                return StrL("ERR command unavailable");
+            }
+            bool blocked = gBlockExternalLaunch;
+            if (invoke == CmdShowInFolder) {
+                gBlockExternalLaunch = true;
+            }
+            int before = gExternalLaunchesBlocked;
+            HomeContextMenuCommand(win, paths, invoke);
+            gBlockExternalLaunch = blocked;
+            return fmt("OK launchesBlocked=%d", gExternalLaunchesBlocked - before);
         }
-        menu = BuildHomeContextMenu(win, path);
     } else {
         menu = BuildWindowContextMenu(win, Point{x, y});
     }
@@ -1357,7 +1372,7 @@ static void AppendServerItems(MenuModel* popup, Str filePath) {
     }
 }
 
-MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
+static MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
     if (!HasPermission(Perm::SavePreferences | Perm::DiskAccess) || !SettingsRememberOpenedFiles() ||
         !gSettings->showStartPage) {
         return nullptr;
@@ -1399,7 +1414,34 @@ MenuModel* BuildHomeContextMenu(MainWindow* win, Str filePath) {
     return popup;
 }
 
-void HomeContextMenuCommand(MainWindow* win, Str filePathIn, int cmdId) {
+MenuModel* BuildHomeContextMenu(MainWindow* win, const StrVec& paths) {
+    if (paths.IsEmpty()) {
+        return nullptr;
+    }
+    MenuModel* menu = BuildHomeContextMenu(win, paths[0]);
+    if (!menu || len(paths) == 1) {
+        return menu;
+    }
+    for (int i = 1; i < len(paths); i++) {
+        MenuModel* other = BuildHomeContextMenu(win, paths[i]);
+        for (int j = len(menu->items) - 1; j >= 0; j--) {
+            const MenuItemModel& it = menu->items[j];
+            if (it.separator || it.submenu) {
+                continue;
+            }
+            const MenuItemModel* match = other ? MenuFind(other, it.cmdId) : nullptr;
+            if (!match || match->disabled) {
+                MenuRemove(menu, it.cmdId);
+            }
+        }
+        DeleteMenuModel(other);
+    }
+    MenuSetChecked(menu, CmdPinSelectedDocument, HomeFilesAllPinned(paths));
+    RemoveBadMenuSeparators(menu);
+    return menu;
+}
+
+static void HomeContextMenuCommand(MainWindow* win, Str filePathIn, int cmdId) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
@@ -1442,6 +1484,27 @@ void HomeContextMenuCommand(MainWindow* win, Str filePathIn, int cmdId) {
             return;
     }
     ExecuteCmd(win, cmdId);
+}
+
+void HomeContextMenuCommand(MainWindow* win, const StrVec& paths, int cmdId) {
+    if (!IsMainWindowValidAndNotClosing(win) || RunHomeFilesCommand(win, paths, cmdId)) {
+        return;
+    }
+    if (cmdId == CmdDeleteFile && len(paths) > 1) {
+        DeleteFilesFromHomePage(win, paths);
+        return;
+    }
+    StrVec serverPaths;
+    for (Str path : paths) {
+        if (len(paths) > 1 && cmdId == CmdOpenSelectedDocument && IsServerOnlyFile(path)) {
+            serverPaths.Append(path);
+        } else {
+            HomeContextMenuCommand(win, path, cmdId);
+        }
+    }
+    if (!serverPaths.IsEmpty()) {
+        RunServerFilesBatch(win, serverPaths, ServerFileAction::Open);
+    }
 }
 
 // orig's ToggleMenuBar, without the win32 menu / rebar handling: in fullscreen

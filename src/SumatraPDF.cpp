@@ -15189,6 +15189,13 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     // an edit control, so it keeps its own keys.
     if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
         WPARAM key = msg.wParam;
+        if (key == VK_ESCAPE) {
+            MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
+            if (win && (msg.hwnd == win->hwndFrame || msg.hwnd == win->hwndCanvas) && win->IsCurrentTabAbout() &&
+                HomePageClearSelection(win)) {
+                return true;
+            }
+        }
         bool isNavKey =
             key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_RETURN || key == VK_DELETE;
         if (isNavKey) {

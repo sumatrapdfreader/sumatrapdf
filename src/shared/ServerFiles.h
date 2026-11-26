@@ -25,6 +25,12 @@ i64 ServerFileSize(Str path);
 void OpenServerFile(MainWindow* win, Str path);
 void UploadFileToServer(MainWindow* win, Str path);
 void DeleteFileFromServer(MainWindow* win, Str path);
+enum class ServerFileAction {
+    Open,
+    Upload,
+    Delete
+};
+void RunServerFilesBatch(MainWindow* win, const StrVec& paths, ServerFileAction action);
 
 // implemented by each app
 void ServerFilesChanged();

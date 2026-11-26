@@ -5,6 +5,7 @@
 #include "base/AutoWin.h"
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
+#include "base/Launch.h"
 #include "gui/Dpi.h"
 #include "base/Win.h"
 #include "base/Pixmap.h"
@@ -40,6 +41,7 @@
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "HomePage.h"
+#include "HomePageCommon.h"
 #include "Translations.h"
 #include "Toolbar.h"
 #include "PagePosition.h"
@@ -926,6 +928,35 @@ HMENU BuildHomeContextMenu(MainWindow* win, Str path) {
     return popup;
 }
 
+static HMENU BuildHomeContextMenu(MainWindow* win, const StrVec& paths) {
+    if (paths.IsEmpty()) {
+        return nullptr;
+    }
+    HMENU menu = BuildHomeContextMenu(win, paths[0]);
+    if (!menu || len(paths) == 1) {
+        return menu;
+    }
+    for (int i = 1; i < len(paths); i++) {
+        HMENU other = BuildHomeContextMenu(win, paths[i]);
+        for (int j = GetMenuItemCount(menu) - 1; j >= 0; j--) {
+            UINT cmd = GetMenuItemID(menu, j);
+            if (cmd == (UINT)-1 || cmd == kMenuSeparatorID) {
+                continue;
+            }
+            UINT state = other ? GetMenuState(other, cmd, MF_BYCOMMAND) : (UINT)-1;
+            if (state == (UINT)-1 || state & (MF_DISABLED | MF_GRAYED)) {
+                DeleteMenu(menu, j, MF_BYPOSITION);
+            }
+        }
+        if (other) {
+            DestroyMenu(other);
+        }
+    }
+    MenuSetChecked(menu, CmdPinSelectedDocument, HomeFilesAllPinned(paths));
+    RemoveBadMenuSeparators(menu);
+    return menu;
+}
+
 static void HomeContextMenuCommand(MainWindow* win, Str path, int cmd) {
     if (CmdOpenSelectedDocument == cmd) {
         HomePageOpenFile(win, path);
@@ -997,21 +1028,53 @@ static void HomeContextMenuCommand(MainWindow* win, Str path, int cmd) {
     }
 }
 
+static void RunHomeContextCommand(MainWindow* win, const StrVec& paths, int cmd) {
+    if (cmd == 0 || RunHomeFilesCommand(win, paths, cmd)) {
+        return;
+    }
+    StrVec serverPaths;
+    for (Str path : paths) {
+        if (!IsMainWindowValidAndNotClosing(win)) {
+            return;
+        }
+        if (len(paths) > 1 && cmd == CmdOpenSelectedDocument && IsServerOnlyFile(path)) {
+            serverPaths.Append(path);
+        } else {
+            HomeContextMenuCommand(win, path, cmd);
+        }
+    }
+    if (!serverPaths.IsEmpty()) {
+        RunServerFilesBatch(win, serverPaths, ServerFileAction::Open);
+    }
+}
+
 // The home page menu of the selected entry (else the first), one
 // "idx\tkind\tcmd\tdisabled\tchecked\ttitle\taccel" row per item, as ng's
 // TestMainMenu.
-TempStr HomeContextMenuRowsTemp(MainWindow* win) {
+TempStr HomeContextMenuRowsTemp(MainWindow* win, int invoke) {
     if (!win->IsCurrentTabAbout()) {
         return {};
     }
-    Str path = HomePageSelectedFilePathTemp(win);
-    if (len(path) == 0) {
-        HomePageSelectFirst(win);
-        path = HomePageSelectedFilePathTemp(win);
-    }
-    HMENU popup = BuildHomeContextMenu(win, path);
+    StrVec paths;
+    HomePageMenuPaths(win, {}, paths);
+    HMENU popup = BuildHomeContextMenu(win, paths);
     if (!popup) {
         return {};
+    }
+    if (invoke != 0) {
+        UINT state = GetMenuState(popup, invoke, MF_BYCOMMAND);
+        DestroyMenu(popup);
+        if (state == (UINT)-1 || state & (MF_DISABLED | MF_GRAYED)) {
+            return StrL("ERR command unavailable");
+        }
+        bool blocked = gBlockExternalLaunch;
+        if (invoke == CmdShowInFolder) {
+            gBlockExternalLaunch = true;
+        }
+        int before = gExternalLaunchesBlocked;
+        RunHomeContextCommand(win, paths, invoke);
+        gBlockExternalLaunch = blocked;
+        return fmt("OK launchesBlocked=%d", gExternalLaunchesBlocked - before);
     }
     str::Builder out;
     int n = GetMenuItemCount(popup);
@@ -1057,19 +1120,14 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     // the keyboard-selected home entry.
     TempStr path = HomePageFilePathAtTemp(win, x, y);
     bool fromClick = path && path::IsAbsolute(path);
-    if (!fromClick) {
-        path = str::DupTemp(HomePageSelectedFilePathTemp(win));
-    }
-    if (len(path) == 0 || !path::IsAbsolute(path)) {
-        return;
-    }
-
     // Keep keyboard selection in sync with the right-clicked thumbnail
     if (fromClick) {
         HomePageOnHover(win, x, y);
     }
 
-    HMENU popup = BuildHomeContextMenu(win, path);
+    StrVec paths;
+    HomePageMenuPaths(win, fromClick ? path : Str{}, paths);
+    HMENU popup = BuildHomeContextMenu(win, paths);
     if (!popup) {
         return;
     }
@@ -1086,7 +1144,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     }
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     DestroyMenu(popup);
-    HomeContextMenuCommand(win, path, cmd);
+    RunHomeContextCommand(win, paths, cmd);
 }
 
 // removes a file from the Frequently Read list on the home page. Files with

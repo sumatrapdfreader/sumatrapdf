@@ -603,6 +603,7 @@ import { testit as issue6587 } from "./issue-6587.ts";
 import { testit as issue6588 } from "./issue-6588.ts";
 import { testit as issue6593 } from "./issue-6593.ts";
 import { testit as issue6596 } from "./issue-6596.ts";
+import { testit as issue6597 } from "./issue-6597.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -630,6 +631,7 @@ export const tests: NamedTest[] = orderForReuse([
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["issue-6596", issue6596],
+  ["issue-6597", issue6597],
   ["issue-6593", issue6593],
   ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6232-path-edit", issue6232PathEdit],

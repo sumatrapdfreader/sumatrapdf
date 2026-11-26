@@ -4356,38 +4356,74 @@ static void OnHomeDeleteTabClosed(MainWindow* win, Str path, bool ok) {
 struct HomeDeleteCtx {
     MainWindow* win;
     Str path; // owned
+    Func1<bool> onDone;
 };
 
 static void OnHomeDeleteDone(HomeDeleteCtx* c, bool ok) {
-    if (ok) {
+    bool deleteFile = ok && IsMainWindowValidAndNotClosing(c->win);
+    if (deleteFile) {
         WindowTab* tab = FindTabByFilePath(c->path);
         if (tab) {
             CloseTab(tab, false);
         }
         OnHomeDeleteTabClosed(c->win, c->path, true);
     }
+    c->onDone.Call(deleteFile);
     str::Free(c->path);
     delete c;
 }
 
 // orig's CmdDeleteFile in the home page's context menu: a file that is gone
 // only leaves the history, one that is there goes to the trash
-void DeleteFileFromHomePage(MainWindow* win, Str path) {
-    if (!CanAccessDisk() || gPluginMode) {
+static void DeleteHomeFile(MainWindow* win, Str path, Func1<bool> onDone) {
+    if (!CanAccessDisk() || gPluginMode || !IsMainWindowValidAndNotClosing(win)) {
+        onDone.Call(false);
         return;
     }
     TempStr owned = str::DupTemp(path);
     if (!file::Exists(owned)) {
         ForgetFileFromFrequentlyRead(win, owned);
+        onDone.Call(true);
         return;
     }
     WindowTab* tab = FindTabByFilePath(owned);
-    auto* c = new HomeDeleteCtx{win, str::Dup(owned)};
+    auto* c = new HomeDeleteCtx{win, str::Dup(owned), onDone};
     if (!tab) {
         OnHomeDeleteDone(c, true);
         return;
     }
     MaybeSaveAnnotations(tab, MkFunc1(OnHomeDeleteDone, c));
+}
+
+void DeleteFileFromHomePage(MainWindow* win, Str path) {
+    DeleteHomeFile(win, path, {});
+}
+
+struct HomeDeleteBatch {
+    MainWindow* win;
+    StrVec paths;
+    int next = 0;
+};
+
+static void DeleteNextHomeFile(HomeDeleteBatch* batch);
+
+static void HomeFileDeleted(HomeDeleteBatch* batch, bool ok) {
+    if (!ok || batch->next == len(batch->paths)) {
+        delete batch;
+        return;
+    }
+    uitask::Post(MkFunc0(DeleteNextHomeFile, batch), "DeleteNextHomeFile");
+}
+
+static void DeleteNextHomeFile(HomeDeleteBatch* batch) {
+    Str path = batch->paths[batch->next++];
+    DeleteHomeFile(batch->win, path, MkFunc1(HomeFileDeleted, batch));
+}
+
+void DeleteFilesFromHomePage(MainWindow* win, const StrVec& paths) {
+    if (!paths.IsEmpty()) {
+        DeleteNextHomeFile(new HomeDeleteBatch{win, paths});
+    }
 }
 
 // ng: orig opens an attachment straight out of memory (a tab with no file
