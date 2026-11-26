@@ -1196,7 +1196,7 @@ TempStr ZoomLevelStr(float zoom) {
     if (zoom == kZoomFitByOrientation) {
         return Tr("Fit by Orientation");
     }
-    if (zoom == 0) {
+    if (zoom == 0 || !isfinite(zoom)) {
         return StrL("-");
     }
     return fmt("%.f%%", zoom);
@@ -1214,7 +1214,7 @@ float ParseZoomText(Str text, const Vec<float>& levels, float fallback) {
         return fallback;
     }
     float zoom = (float)atof(CStrTemp(text));
-    if (zoom == 0) {
+    if (zoom == 0 || !isfinite(zoom)) {
         return fallback;
     }
     return limitValue(zoom, kZoomMin, kZoomMax);
