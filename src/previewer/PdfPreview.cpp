@@ -872,8 +872,6 @@ static void AcquirePreviewGdiPlus() {
 static void ReleasePreviewGdiPlus() {
     ScopedMutex scope(&gGdiPlusMutex);
     if (--gGdiPlusRefCount == 0) {
-        // the cached gdiplus objects text measuring keeps around must go before
-        // gdiplus itself does
         PlatformFontDestroy();
         delete gGdiPlusScope;
         gGdiPlusScope = nullptr;

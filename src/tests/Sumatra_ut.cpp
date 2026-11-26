@@ -130,6 +130,7 @@ void TextSelection_UnitTests();
 void EngineDjvuDec_UnitTests();
 void Layout_UnitTests();
 void VirtCtrl_UnitTests();
+bool PlatformTextCache_UnitTest();
 bool TableOfContents_UnitTestSnapshotNamedDest();
 bool Translations_UnitTestUnescape();
 bool Translations_UnitTestLocale();
@@ -586,6 +587,7 @@ static void SumatraPDF_UnitTests() {
     HttpTransferTest();
     OpenDdeCmdTest();
     InstallRegistryRollbackTest();
+    utassert(PlatformTextCache_UnitTest());
     UpdateCheckDecisionTest();
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();

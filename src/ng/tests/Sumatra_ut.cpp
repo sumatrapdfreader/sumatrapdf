@@ -58,6 +58,9 @@ void HttpTransferTest();
 void RestrictedUseConfigTest();
 void ControlFrameActionTest();
 void OpenDdeCmdTest();
+#if OS_WIN && IS_DEBUG
+bool PlatformTextCache_UnitTest();
+#endif
 void UpdateCheckDecisionTest();
 
 void CachedObjects_UnitTests();
@@ -270,6 +273,9 @@ void SumatraPDF_UnitTests() {
     RestrictedUseConfigTest();
     ControlFrameActionTest();
     OpenDdeCmdTest();
+#if OS_WIN && IS_DEBUG
+    utassert(PlatformTextCache_UnitTest());
+#endif
     UpdateCheckDecisionTest();
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();

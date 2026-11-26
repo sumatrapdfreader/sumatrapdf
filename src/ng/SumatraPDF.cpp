@@ -83,6 +83,8 @@
 #include "gui/AppShell.h"
 #include "gui/NativeFileDlg.h"
 #include "gui/NativeCursors.h"
+#include "gui/PlatformFont.h"
+#include "gui/PlatformText.h"
 #include "gui/Sidebar.h"
 #include "gui/WasmBridge.h"
 #include "gui/DocCanvas.h"
@@ -8213,6 +8215,9 @@ int GpuiMain(int argc, char** argv) {
     // e.g. reading a cached thumbnail back fails
     ScopedOle ole;
     ScopedGdiPlus gdiPlus(true);
+    defer {
+        PlatformFontDestroy();
+    };
     // the dynamically loaded win32 entry points (dbghelp for the crash handler
     // and the hang detector, the per-monitor DPI calls); orig's WinMain too
     InitDynCalls();

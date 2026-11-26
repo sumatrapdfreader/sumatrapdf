@@ -5,6 +5,7 @@
 
 #include "gui/PlatformFont.h"
 #if OS_WIN
+#include "base/AutoWin.h"
 #include "base/GdiPlusUtil.h"
 #include "base/Win.h"
 #elif OS_LINUX
@@ -299,125 +300,178 @@ struct GraphicsCacheEntry {
         stride = bmpDx * 4,
     };
 
-    ThreadId threadId;
-    int refCount;
+    ThreadId threadId = GetCurrentThreadId();
+    int refCount = 0;
+    bool retired = false;
 
-    Graphics* gfx;
-    Bitmap* bmp;
-    u8 data[bmpDx * bmpDy * 4];
+    Graphics* gfx = nullptr;
+    Bitmap* bmp = nullptr;
+    u8 data[bmpDx * bmpDy * 4]{};
 
     bool Create();
-    void Free() const;
+    ~GraphicsCacheEntry();
 };
 
-// a single lock for everything here; contention is not a problem
+struct GraphicsCache {
+    // Borrowers can outlive the application's GDI+ scope.
+    AutoGdiPlusShutdown gdiPlus;
+    Vec<GraphicsCacheEntry*> entries;
+};
+
 static Mutex gGraphicsCacheMutex;
-static Vec<GraphicsCacheEntry*>* gGraphicsCache = nullptr;
+static GraphicsCache* gGraphicsCache = nullptr;
 
 bool GraphicsCacheEntry::Create() {
-    memset(data, 0, sizeof(data));
-    refCount = 1;
-    threadId = GetCurrentThreadId();
-    // using a small bitmap under assumption that Graphics used only
-    // for measuring text doesn't need the actual bitmap
+    // Measuring only needs a small backing bitmap.
     bmp = new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
-    if (!bmp) {
+    if (!bmp || bmp->GetLastStatus() != Ok) {
         return false;
     }
     gfx = new Graphics((Image*)bmp);
-    if (!gfx) {
-        delete bmp;
-        bmp = nullptr;
+    if (!gfx || gfx->GetLastStatus() != Ok) {
         return false;
     }
     InitGraphicsMode(gfx);
     return true;
 }
 
-void GraphicsCacheEntry::Free() const {
-    ReportIf(0 != refCount);
+GraphicsCacheEntry::~GraphicsCacheEntry() {
+    ReportIf(refCount != 0);
     delete gfx;
     delete bmp;
+}
+
+static void RemoveGraphicsCacheEntry(int i) {
+    GraphicsCacheEntry* entry = gGraphicsCache->entries[i];
+    VecRemoveAt(gGraphicsCache->entries, i);
+    delete entry;
+}
+
+static void DeleteEmptyGraphicsCache() {
+    if (len(gGraphicsCache->entries) != 0) {
+        return;
+    }
+    delete gGraphicsCache;
+    gGraphicsCache = nullptr;
 }
 
 static Graphics* AllocGraphicsForMeasureText() {
     ScopedMutex lock(&gGraphicsCacheMutex);
     if (!gGraphicsCache) {
-        gGraphicsCache = new Vec<GraphicsCacheEntry*>();
+        gGraphicsCache = new GraphicsCache();
     }
+
     ThreadId threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry* e : *gGraphicsCache) {
-        if (e->threadId == threadId) {
+    for (GraphicsCacheEntry* e : gGraphicsCache->entries) {
+        if (!e->retired && e->threadId == threadId) {
             e->refCount++;
             return e->gfx;
         }
     }
+
     auto* ce = new GraphicsCacheEntry();
-    if (!ce->Create()) {
+    if (!ce->Create() || !VecAppend(gGraphicsCache->entries, ce)) {
         delete ce;
+        DeleteEmptyGraphicsCache();
         return nullptr;
     }
-    VecAppend(*gGraphicsCache, ce);
-    if (len(*gGraphicsCache) < 64) {
+    ce->refCount = 1;
+    constexpr int kMaxCacheEntries = 64;
+    if (len(gGraphicsCache->entries) <= kMaxCacheEntries) {
         return ce->gfx;
     }
 
-    // try to limit the size of cache by evicting the oldest entries, but don't
-    // remove the last (the one we just added) entry
-    for (int i = 0; i < len(*gGraphicsCache) - 1; i++) {
-        GraphicsCacheEntry* e = (*gGraphicsCache)[i];
-        if (0 == e->refCount) {
-            e->Free();
-            delete e;
-            VecRemoveAt(*gGraphicsCache, i);
-            return ce->gfx;
+    // Evict the oldest idle entry. Borrowed entries may exceed the limit.
+    for (int i = 0; i < len(gGraphicsCache->entries) - 1; i++) {
+        GraphicsCacheEntry* e = gGraphicsCache->entries[i];
+        if (e->refCount == 0) {
+            RemoveGraphicsCacheEntry(i);
+            break;
         }
     }
-    // We shouldn't get here - indicates ref counting problem
-    ReportIf(true);
     return ce->gfx;
 }
 
 static void FreeGraphicsForMeasureText(Graphics* gfx) {
-    gGraphicsCacheMutex.Lock();
-    defer {
-        gGraphicsCacheMutex.Unlock();
-    };
+    ScopedMutex lock(&gGraphicsCacheMutex);
     if (!gGraphicsCache) {
-        // PlatformFontDestroy() already ran on the main thread (shutdown) and
-        // freed every entry, including ours. Happens when a background thread
-        // (e.g. thumbnail creation laying out an ebook) outlives shutdown
+        ReportIf(true);
         return;
     }
-    ThreadId threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry* e : *gGraphicsCache) {
-        if (e->gfx == gfx) {
-            ReportIf(e->threadId != threadId);
-            e->refCount--;
-            ReportIf(e->refCount < 0);
+    for (int i = 0; i < len(gGraphicsCache->entries); i++) {
+        GraphicsCacheEntry* e = gGraphicsCache->entries[i];
+        if (e->gfx != gfx) {
+            continue;
+        }
+        ReportIf(e->threadId != GetCurrentThreadId());
+        if (e->refCount <= 0) {
+            ReportIf(true);
             return;
         }
+        if (--e->refCount == 0 && e->retired) {
+            RemoveGraphicsCacheEntry(i);
+            DeleteEmptyGraphicsCache();
+        }
+        return;
     }
     ReportIf(true);
 }
 
 void PlatformFontDestroy() {
-    gGraphicsCacheMutex.Lock();
-    defer {
-        gGraphicsCacheMutex.Unlock();
-    };
+    ScopedMutex lock(&gGraphicsCacheMutex);
     if (!gGraphicsCache) {
         return;
     }
-    for (GraphicsCacheEntry* e : *gGraphicsCache) {
-        // whoever held this is gone by now
-        e->refCount = 0;
-        e->Free();
-        delete e;
+    for (int i = len(gGraphicsCache->entries) - 1; i >= 0; i--) {
+        GraphicsCacheEntry* e = gGraphicsCache->entries[i];
+        if (e->refCount == 0) {
+            RemoveGraphicsCacheEntry(i);
+        } else {
+            e->retired = true;
+        }
     }
-    delete gGraphicsCache;
-    gGraphicsCache = nullptr;
+    DeleteEmptyGraphicsCache();
 }
+
+#if IS_DEBUG
+bool PlatformTextCache_UnitTest() {
+    auto isCached = [](Graphics* gfx) {
+        ScopedMutex lock(&gGraphicsCacheMutex);
+        if (!gGraphicsCache) {
+            return false;
+        }
+        for (GraphicsCacheEntry* entry : gGraphicsCache->entries) {
+            if (entry->gfx == gfx) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    Graphics* first = AllocGraphicsForMeasureText();
+    Graphics* shared = AllocGraphicsForMeasureText();
+    if (!first || first != shared) {
+        return false;
+    }
+
+    ThreadHandle thread = StartThread(MkFunc0Void(PlatformFontDestroy), StrL("TextCacheShutdownTest"));
+    if (!JoinThread(&thread, -1) || !isCached(first)) {
+        return false;
+    }
+
+    Graphics* next = AllocGraphicsForMeasureText();
+    bool ok = next && next != first && first->GetDpiX() > 0;
+    if (next) {
+        FreeGraphicsForMeasureText(next);
+    }
+    PlatformFontDestroy();
+    ok = ok && !isCached(next);
+    FreeGraphicsForMeasureText(first);
+    ok = ok && isCached(shared) && shared->GetDpiX() > 0;
+    FreeGraphicsForMeasureText(shared);
+    return ok && !gGraphicsCache;
+}
+#endif
 
 // --- the renderers
 
@@ -651,6 +705,9 @@ PlatformTextRender* CreateGdiplusTextRender(Graphics* gfx) {
 // measures, so the Graphics comes from the per-thread cache
 PlatformTextRender* CreateNativeTextRender() {
     Graphics* gfx = AllocGraphicsForMeasureText();
+    if (!gfx) {
+        return new StubTextRender();
+    }
     WinTextRender* res = NewTextRenderGdi(gfx);
     res->ownsGfx = true;
     return res;

@@ -54,6 +54,5 @@ struct CGContext;
 PlatformTextRender* CreateCoreTextRender(struct CGContext* context);
 #endif
 
-// frees what measuring text allocated along the way. Only worth calling at
-// shutdown; measuring after it just allocates again
+// Clears idle measurement graphics and frees borrowed ones on last release.
 void PlatformFontDestroy();
