@@ -587,7 +587,7 @@ static bool SaveSettings(bool force) {
     }
 
     WatchedFileSetIgnore(gWatchedSettingsFile, true);
-    bool ok = file::WriteFile(path, prefs);
+    bool ok = file::WriteFileAtomic(path, prefs);
     if (ok) {
         RememberLastSavedPrefs(prefs);
         gSettings->lastPrefUpdate = file::GetModificationTime(path);

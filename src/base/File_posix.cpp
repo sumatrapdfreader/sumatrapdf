@@ -578,6 +578,25 @@ bool RenameReplace(Str newPath, Str oldPath) {
     return Rename(newPath, oldPath);
 }
 
+bool WriteFileAtomic(Str path, Str data) {
+    if (len(path) == 0) {
+        return false;
+    }
+    TempStr dir = path::GetDirTemp(path);
+    char* tempPath = CStrTemp(path::JoinTemp(len(dir) ? dir : StrL("."), StrL(".tmp.XXXXXX")));
+    int fd = mkstemp(tempPath);
+    if (fd < 0) {
+        return false;
+    }
+    bool ok = WriteAll(fd, data) && fsync(fd) == 0;
+    ok = close(fd) == 0 && ok;
+    if (ok && RenameReplace(path, Str(tempPath))) {
+        return true;
+    }
+    unlink(tempPath);
+    return false;
+}
+
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs) {
     if (len(dst) == 0 || len(src) == 0) {
         return false;

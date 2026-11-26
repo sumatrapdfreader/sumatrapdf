@@ -162,7 +162,7 @@ static void SaveServerListCache(Str body) {
     if (len(account) == 0 || len(path) == 0) {
         return;
     }
-    file::WriteFile(path, str::JoinTemp(account, StrL("\n"), body));
+    file::WriteFileAtomic(path, str::JoinTemp(account, StrL("\n"), body));
 }
 
 // once per key: the cached list, if it is this account's

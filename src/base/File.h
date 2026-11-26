@@ -110,6 +110,7 @@ Str ReadFileWithArena(Str path, Arena*);
 Str ReadFile(Str path);
 int ReadN(Str path, u8* buf, size_t toRead);
 bool WriteFile(Str path, Str);
+bool WriteFileAtomic(Str path, Str data);
 
 i64 GetSize(Str path);
 
