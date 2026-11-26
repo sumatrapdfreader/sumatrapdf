@@ -1239,46 +1239,22 @@ FileType GuessFileTypeFromName(Str path, bool notDir) {
     return FileType::Unknown;
 }
 
-// clang-format off
-static const FileType gImageTypes[] = {
-    FileType::Png,
-    FileType::Jpeg,
-    FileType::Gif,
-    FileType::Bmp,
-    FileType::Tiff,
-    FileType::Tga,
-    FileType::Jxr,
-    FileType::Webp,
-    FileType::Jp2,
-    FileType::Heic,
-    FileType::Avif,
-    FileType::Jxl,
-    FileType::Ico
+static const struct {
+    FileType type;
+    Str ext;
+} gImageFormats[] = {
+    {FileType::Png, StrL(".png")},   {FileType::Jpeg, StrL(".jpg")},  {FileType::Gif, StrL(".gif")},
+    {FileType::Bmp, StrL(".bmp")},   {FileType::Tiff, StrL(".tif")},  {FileType::Tga, StrL(".tga")},
+    {FileType::Jxr, StrL(".jxr")},   {FileType::Webp, StrL(".webp")}, {FileType::Jp2, StrL(".jp2")},
+    {FileType::Heic, StrL(".heic")}, {FileType::Avif, StrL(".avif")}, {FileType::Jxl, StrL(".jxl")},
+    {FileType::Ico, StrL(".ico")},
 };
 
-static constexpr SeqStrings gImageFormatExts =
-    ".png\0"
-    ".jpg\0"
-    ".gif\0"
-    ".bmp\0"
-    ".tif\0"
-    ".tga\0"
-    ".jxr\0"
-    ".webp\0"
-    ".jp2\0"
-    ".heic\0"
-    ".avif\0"
-    ".jxl\0"
-    ".ico\0"
-    "\0";
-// clang-format on
-// GfxFileExtFromTypeTemp() maps an index in one to the same index in the other
-static_assert(SeqStrCount(gImageFormatExts) == dimof(gImageTypes));
-
 TempStr GfxFileExtFromTypeTemp(FileType ft) {
-    int idx = FileTypeIndexOf(gImageTypes, dimofi(gImageTypes), ft);
-    if (idx >= 0) {
-        return SeqStrByIndex(gImageFormatExts, idx);
+    for (const auto& format : gImageFormats) {
+        if (format.type == ft) {
+            return format.ext;
+        }
     }
     return {};
 }
