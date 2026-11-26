@@ -4,14 +4,23 @@
 #include "base/Base.h"
 #include "gui/Dpi.h"
 
-int gDpiOverride = 0;
+static AtomicInt gDpiOverride = 0;
 static thread_local int dpiX = 96;
 static thread_local int dpiY = 96;
 
+int GetDpiOverride() {
+    return AtomicIntGet(&gDpiOverride);
+}
+
+void SetDpiOverride(int pct) {
+    AtomicIntSet(&gDpiOverride, pct);
+}
+
 int DpiGetForHwnd(HWND hwnd) {
     // see the note in Dpi.h: the override doesn't apply to the desktop
-    if (gDpiOverride > 0 && hwnd) {
-        return (96 * gDpiOverride) / 100;
+    int pct = GetDpiOverride();
+    if (pct > 0 && hwnd) {
+        return (int)((96LL * pct) / 100);
     }
     return DpiGet();
 }

@@ -1342,7 +1342,7 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
     if (str::StartsWith(action, StrL("override "))) {
         int pct = 0;
         str::Parse(Str(action.s + 9, len(action) - 9), "%d", &pct);
-        gDpiOverride = pct;
+        SetDpiOverride(pct);
         out.Append(fmt("override=%d\n", pct));
         return finish(0);
     }

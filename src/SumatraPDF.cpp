@@ -7944,7 +7944,7 @@ static BOOL CALLBACK CollectTopWindowsProc(HWND hwnd, LPARAM lp) {
 }
 
 // Debug: pretend the app moved to a monitor with a different scaling. Cycles
-// gDpiOverride 0 (system) -> 125% -> 150% -> 75% and sends every top-level
+// DPI override 0 (system) -> 125% -> 150% -> 75% and sends every top-level
 // window a WM_DPICHANGED with a suggested rect scaled the way Windows would, so
 // DPI change handling can be exercised without a second monitor. 75% is there
 // because the interesting bugs are in the direction where the window's DPI is
@@ -7957,11 +7957,12 @@ static void ToggleDpiOverride() {
         return;
     }
     int next = 125;
-    if (gDpiOverride == 125) {
+    int current = GetDpiOverride();
+    if (current == 125) {
         next = 150;
-    } else if (gDpiOverride == 150) {
+    } else if (current == 150) {
         next = 75;
-    } else if (gDpiOverride == 75) {
+    } else if (current == 75) {
         next = 0;
     }
 
@@ -7979,12 +7980,11 @@ static void ToggleDpiOverride() {
         VecAppend(dpis, DpiGetForHwnd(hwnd));
     }
 
-    gDpiOverride = next;
+    SetDpiOverride(next);
     // not DpiGetForHwnd(HWND_DESKTOP): the override deliberately doesn't apply there,
     // so that still reports the (unchanged) system DPI
     int newDpi = n > 0 ? DpiGetForHwnd(hwnds[0]) : DpiGetForHwnd(HWND_DESKTOP);
-    logf("ToggleDpiOverride: gDpiOverride=%d, windowDpi=%d systemDpi=%d\n", gDpiOverride, newDpi,
-         DpiGetForHwnd(HWND_DESKTOP));
+    logf("ToggleDpiOverride: gDpiOverride=%d, windowDpi=%d systemDpi=%d\n", next, newDpi, DpiGetForHwnd(HWND_DESKTOP));
 
     for (int i = 0; i < n; i++) {
         int oldDpi = dpis[i] > 0 ? dpis[i] : 96;

@@ -10,36 +10,39 @@
 
 constexpr int kMdtEffectiveDpi = 0;
 
-int gDpiOverride = 0;
 static thread_local int dpiX = 96;
 static thread_local int dpiY = 96;
 
-static bool gDpiOverrideLegacy = false;
+struct DpiOverrideState {
+    AtomicInt percent = 0;
+    bool legacy = false;
+};
 
-static void DpiMaybeReadEnvOverride() {
-    static bool done = false;
-    if (done) {
-        return;
-    }
-    done = true;
-    if (gDpiOverride > 0) {
-        return;
-    }
+static DpiOverrideState ReadDpiOverride() {
     char buf[16]{};
     DWORD n = GetEnvironmentVariableA("SUMATRA_DPI_OVERRIDE", buf, (DWORD)sizeof(buf));
     if (n == 0 || n >= (DWORD)sizeof(buf)) {
-        return;
+        return {};
     }
-    char* pctText = buf;
     bool legacy = str::StartsWith(Str(buf, (int)n), StrL("legacy:"));
-    if (legacy) {
-        pctText += 7;
+    int pct = atoi(buf + (legacy ? LenL("legacy:") : 0));
+    if (pct < 50 || pct > 500) {
+        return {};
     }
-    int pct = atoi(pctText);
-    if (pct >= 50 && pct <= 500) {
-        gDpiOverride = pct;
-        gDpiOverrideLegacy = legacy;
-    }
+    return {pct, legacy};
+}
+
+static DpiOverrideState& DpiOverride() {
+    static DpiOverrideState state = ReadDpiOverride();
+    return state;
+}
+
+int GetDpiOverride() {
+    return AtomicIntGet(&DpiOverride().percent);
+}
+
+void SetDpiOverride(int pct) {
+    AtomicIntSet(&DpiOverride().percent, pct);
 }
 
 static bool DpiIsDesktopHwnd(HWND hwnd) {
@@ -47,7 +50,7 @@ static bool DpiIsDesktopHwnd(HWND hwnd) {
 }
 
 static bool DpiFromMonitor(HMONITOR h, int* outX, int* outY) {
-    if (!h || !DynGetDpiForMonitor || gDpiOverrideLegacy) {
+    if (!h || !DynGetDpiForMonitor || DpiOverride().legacy) {
         return false;
     }
     uint monX = 96, monY = 96;
@@ -62,10 +65,12 @@ static bool DpiFromMonitor(HMONITOR h, int* outX, int* outY) {
 
 // The monitor that contains (x,y), for seeding layout DPI before a window
 // exists. GetForegroundWindow / HWND_DESKTOP report the *primary* monitor.
+static void DpiQueryForHwnd(HWND hwnd, int pct, int& x, int& y);
+
 int DpiGetForPoint(int x, int y) {
-    DpiMaybeReadEnvOverride();
-    if (gDpiOverride > 0 && !gDpiOverrideLegacy) {
-        return MulDiv(96, gDpiOverride, 100);
+    int pct = GetDpiOverride();
+    if (pct > 0 && !DpiOverride().legacy) {
+        return MulDiv(96, pct, 100);
     }
     POINT pt{x, y};
     int dx, dy;
@@ -76,20 +81,20 @@ int DpiGetForPoint(int x, int y) {
     // system DPI, which the desktop DC reports even though GetDpiForWindow is
     // also unavailable. Returning 96 here left the installer and first app
     // window unscaled while their system fonts were scaled.
-    return DpiGetForHwnd(HWND_DESKTOP);
+    DpiQueryForHwnd(HWND_DESKTOP, pct, dx, dy);
+    return dx;
 }
 
 // Uncached per-window DPI. HWND_DESKTOP / null report the system (primary
-// monitor) DPI and ignore gDpiOverride, so a multi-monitor setup and the
+// monitor) DPI and ignore the override, so a multi-monitor setup and the
 // override test path both see per-window vs system DPI disagree.
 // Prefer the monitor the window sits on: GetDpiForWindow() on a newly created
 // (still hidden) hwnd returns the process / primary DPI, which made the
 // toolbar and tab bar 2.5× too big when launching on a 100% screen next to a
 // 250% primary (discussion #4831).
-static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
-    DpiMaybeReadEnvOverride();
-    if (gDpiOverride > 0 && !DpiIsDesktopHwnd(hwnd)) {
-        x = y = MulDiv(96, gDpiOverride, 100);
+static void DpiQueryForHwnd(HWND hwnd, int pct, int& x, int& y) {
+    if (pct > 0 && !DpiIsDesktopHwnd(hwnd)) {
+        x = y = MulDiv(96, pct, 100);
         return;
     }
     if (!DpiIsDesktopHwnd(hwnd)) {
@@ -118,8 +123,8 @@ static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
     ScopedGetDC dc(hwnd);
     x = GetDeviceCaps(dc, LOGPIXELSX);
     y = GetDeviceCaps(dc, LOGPIXELSY);
-    if (gDpiOverrideLegacy) {
-        x = y = MulDiv(96, gDpiOverride, 100);
+    if (DpiOverride().legacy) {
+        x = y = MulDiv(96, pct, 100);
     }
     if (x < 72) {
         HDC screenDC = GetDC(nullptr);
@@ -143,7 +148,7 @@ static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
 
 int DpiGetForHwnd(HWND hwnd) {
     int x, y;
-    DpiQueryForHwnd(hwnd, x, y);
+    DpiQueryForHwnd(hwnd, GetDpiOverride(), x, y);
     return x;
 }
 
@@ -173,7 +178,7 @@ void DpiSetFromHwnd(HWND hwnd) {
         }
     }
     int x, y;
-    DpiQueryForHwnd(hwnd, x, y);
+    DpiQueryForHwnd(hwnd, GetDpiOverride(), x, y);
     DpiSet(x, y);
 }
 

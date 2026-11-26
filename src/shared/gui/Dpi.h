@@ -10,7 +10,8 @@
 // at process start (the installer has no debug command to toggle it). The
 // legacy:<percent> form also disables the newer monitor DPI query to emulate
 // Windows 7's system-DPI-only path.
-extern int gDpiOverride;
+int GetDpiOverride();
+void SetDpiOverride(int pct);
 
 #if !OS_WIN
 // win32's MulDiv: a * b / c, rounded to nearest

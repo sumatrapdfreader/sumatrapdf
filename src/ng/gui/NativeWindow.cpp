@@ -859,11 +859,12 @@ void AppShellToggleDpiOverride() {
         return;
     }
     int next = 125;
-    if (gDpiOverride == 125) {
+    int current = GetDpiOverride();
+    if (current == 125) {
         next = 150;
-    } else if (gDpiOverride == 150) {
+    } else if (current == 150) {
         next = 75;
-    } else if (gDpiOverride == 75) {
+    } else if (current == 75) {
         next = 0;
     }
 
@@ -878,7 +879,7 @@ void AppShellToggleDpiOverride() {
         VecAppend(dpis, DpiGetForHwnd(hwnd));
     }
 
-    gDpiOverride = next;
+    SetDpiOverride(next);
     int newDpi = len(hwnds) > 0 ? DpiGetForHwnd(hwnds[0]) : DpiGet();
     for (int i = 0; i < len(hwnds); i++) {
         int oldDpi = dpis[i] > 0 ? dpis[i] : 96;
