@@ -6608,10 +6608,46 @@ static fz_stext_page* NewStextPage(fz_context* ctx, fz_page* page, const fz_stex
     return text;
 }
 
-// caller must hold pagesLock and renderLock
-static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQuick, fz_cookie* cookie) {
-    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
-    ReportDebugIf(!e->renderLock.IsHeldByCurrentThread());
+enum class PageLockMode {
+    Wait,
+    Try
+};
+
+class PageRenderScope : NonCopyable {
+    EngineMupdf* engine = nullptr;
+
+  public:
+    explicit PageRenderScope(EngineMupdf* e, PageLockMode mode = PageLockMode::Wait) {
+        if (mode == PageLockMode::Wait) {
+            e->pagesLock.Lock();
+            e->renderLock.Lock();
+        } else {
+            if (!e->pagesLock.TryLock()) {
+                return;
+            }
+            if (!e->renderLock.TryLock()) {
+                e->pagesLock.Unlock();
+                return;
+            }
+        }
+        engine = e;
+    }
+
+    ~PageRenderScope() {
+        if (engine) {
+            engine->renderLock.Unlock();
+            engine->pagesLock.Unlock();
+        }
+    }
+
+    EngineMupdf* GetEngine() const { return engine; }
+};
+
+static FzPageInfo* GetFzPageInfoLocked(const PageRenderScope& scope, Location loc, bool loadQuick, fz_cookie* cookie) {
+    EngineMupdf* e = scope.GetEngine();
+    if (!e) {
+        return nullptr;
+    }
     auto* ctx = e->Ctx();
     // docLock too: loading a page loads its annotations and has MuPDF generate
     // their appearance streams, reading the same pdf objects the UI thread
@@ -6791,25 +6827,16 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/4145
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/4187
 FzPageInfo* EngineMupdf::GetFzPageInfoCanFail(int pageNo) {
-    if (!pagesLock.TryLock()) {
-        return nullptr;
-    }
-    if (!renderLock.TryLock()) {
-        pagesLock.Unlock();
-        return nullptr;
-    }
+    PageRenderScope scope(this, PageLockMode::Try);
     // GetFzPageInfoLocked() needs docLock; take it here too so this stays the
     // "give up rather than block the UI thread" path it exists to be
-    if (!docLock.TryLock()) {
-        renderLock.Unlock();
-        pagesLock.Unlock();
+    if (!scope.GetEngine() || !docLock.TryLock()) {
         return nullptr;
     }
-    FzPageInfo* res = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), true, nullptr);
-    docLock.Unlock();
-    renderLock.Unlock();
-    pagesLock.Unlock();
-    return res;
+    defer {
+        docLock.Unlock();
+    };
+    return GetFzPageInfoLocked(scope, LocationFromPageNo(pageNo), true, nullptr);
 }
 
 // Maybe: handle FZ_ERROR_TRYLATER, which can happen when parsing from network.
@@ -6836,12 +6863,8 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
 }
 
 FzPageInfo* EngineMupdf::GetFzPageInfo(Location loc, bool loadQuick, fz_cookie* cookie) {
-    // TODO: minimize time spent under pagesLock when fully loading
-    ScopedRecursiveMutex scope(&pagesLock);
-    // page-running operations on this specific page run under per-page lock.
-    // pagesLock (held above) serializes concurrent fz_load_page on _doc.
-    ScopedMutex ctxScope(&renderLock);
-    return GetFzPageInfoLocked(this, loc, loadQuick, cookie);
+    PageRenderScope scope(this);
+    return GetFzPageInfoLocked(scope, loc, loadQuick, cookie);
 }
 
 // hot path (Transform/CvtToScreen/GetTileRes for every PDF page render), so
@@ -7653,13 +7676,12 @@ void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation
     // render threads render tiles of the same document at once; without this,
     // two of them ran fz_run_page on one fz_document concurrently and corrupted
     // the shared content-stream filter state (crash in next_endstream/memcpy).
-    ScopedRecursiveMutex pagesScope(&pagesLock);
-    ScopedMutex renderScope(&renderLock);
     // docLock as well: running a page reads its annotations, which a concurrent
     // annotation edit on the UI thread frees
+    PageRenderScope pageScope(this);
     ScopedRecursiveMutex docScope(&docLock);
 
-    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), false, nullptr);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(pageScope, LocationFromPageNo(pageNo), false, nullptr);
     if (!pageInfo || !pageInfo->page) {
         return;
     }
@@ -8598,7 +8620,11 @@ Str EngineMupdf::GetImagePngForPageElement(IPageElement* ipel) {
     return res;
 }
 
-static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
+static PageText ExtractPageTextLocked(const PageRenderScope& scope, FzPageInfo* pageInfo) {
+    EngineMupdf* e = scope.GetEngine();
+    if (!e) {
+        return {};
+    }
     auto* ctx = e->Ctx();
     // callers hold pagesLock + renderLock; docLock is needed too because this
     // runs the whole page, annotations included, and text extraction happens on
@@ -8624,33 +8650,24 @@ static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
 }
 
 PageText EngineMupdf::ExtractPageText(int pageNo) {
-    ScopedRecursiveMutex pagesScope(&pagesLock);
-    ScopedMutex renderScope(&renderLock);
-    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), true, nullptr);
+    PageRenderScope scope(this);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(scope, LocationFromPageNo(pageNo), true, nullptr);
     if (!pageInfo) {
         return {};
     }
-    return ExtractPageTextLocked(this, pageInfo);
+    return ExtractPageTextLocked(scope, pageInfo);
 }
 
 bool EngineMupdf::TryExtractPageText(int pageNo, PageText* out) {
-    if (!pagesLock.TryLock()) {
+    PageRenderScope scope(this, PageLockMode::Try);
+    if (!scope.GetEngine() || !docLock.TryLock()) {
         return false;
     }
-    if (!renderLock.TryLock()) {
-        pagesLock.Unlock();
-        return false;
-    }
-    FzPageInfo* pageInfo = GetFzPageInfoLocked(this, LocationFromPageNo(pageNo), true, nullptr);
-    if (!pageInfo) {
-        renderLock.Unlock();
-        pagesLock.Unlock();
-        *out = {};
-        return true;
-    }
-    *out = ExtractPageTextLocked(this, pageInfo);
-    renderLock.Unlock();
-    pagesLock.Unlock();
+    defer {
+        docLock.Unlock();
+    };
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(scope, LocationFromPageNo(pageNo), true, nullptr);
+    *out = pageInfo ? ExtractPageTextLocked(scope, pageInfo) : PageText{};
     return true;
 }
 
@@ -11890,9 +11907,11 @@ static void DropPageImages(fz_context* ctx, FzPageInfo* pi) {
 
 // Drop cached page bits that were built from the old content stream.
 // Caller holds pagesLock and renderLock. Leaves annotation wrappers in place.
-static void InvalidateFzPageAfterContentChange(EngineMupdf* e, FzPageInfo* pi) {
-    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
-    ReportDebugIf(!e->renderLock.IsHeldByCurrentThread());
+static void InvalidateFzPageAfterContentChange(const PageRenderScope& scope, FzPageInfo* pi) {
+    EngineMupdf* e = scope.GetEngine();
+    if (!e) {
+        return;
+    }
     auto* ctx = e->Ctx();
     if (pi->displayList) {
         fz_drop_display_list(ctx, pi->displayList);
@@ -11933,11 +11952,10 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
     bool any = false;
     // MuPDF journals each page separately; applying is one undo step.
     ScopedEngineOperation op(engine, "Apply redactions");
-    ScopedRecursiveMutex pagesScope(&e->pagesLock);
-    ScopedMutex renderScope(&e->renderLock);
+    PageRenderScope scope(e);
 
     for (int pageNo = 1; pageNo <= e->pageCount; pageNo++) {
-        FzPageInfo* pi = GetFzPageInfoLocked(e, e->LocationFromPageNo(pageNo), true, nullptr);
+        FzPageInfo* pi = GetFzPageInfoLocked(scope, e->LocationFromPageNo(pageNo), true, nullptr);
         if (!pi || !pi->page) {
             continue;
         }
@@ -12123,9 +12141,8 @@ bool EngineMupdfReplaceImage(EngineBase* engine, int pageNo, int imageIdx, Str i
     }
     auto* ctx = e->Ctx();
     ScopedEngineOperation op(engine, "Replace image");
-    ScopedRecursiveMutex pagesScope(&e->pagesLock);
-    ScopedMutex renderScope(&e->renderLock);
-    FzPageInfo* pi = GetFzPageInfoLocked(e, e->LocationFromPageNo(pageNo), true, nullptr);
+    PageRenderScope scope(e);
+    FzPageInfo* pi = GetFzPageInfoLocked(scope, e->LocationFromPageNo(pageNo), true, nullptr);
     if (!pi || !pi->page) {
         return false;
     }
@@ -12342,8 +12359,7 @@ static void ResyncWrapperList(EngineMupdf* e, int pageNo, Vec<Annotation*>& wrap
 // every cached rendering of the page.
 static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut) {
     auto* ctx = e->Ctx();
-    ScopedRecursiveMutex pagesScope(&e->pagesLock);
-    ScopedMutex renderScope(&e->renderLock);
+    PageRenderScope scope(e);
     ForEachPageInfo(e, [&](FzPageInfo* pi) {
         if (!pi || !pi->page) {
             return;
@@ -12577,9 +12593,8 @@ bool EngineMupdfGetStyledPage(EngineBase* engine, int pageNo, StyledPage& out) {
     if (!e) {
         return false;
     }
-    ScopedRecursiveMutex pagesScope(&e->pagesLock);
-    ScopedMutex renderScope(&e->renderLock);
-    FzPageInfo* pageInfo = GetFzPageInfoLocked(e, e->LocationFromPageNo(pageNo), true, nullptr);
+    PageRenderScope scope(e);
+    FzPageInfo* pageInfo = GetFzPageInfoLocked(scope, e->LocationFromPageNo(pageNo), true, nullptr);
     if (!pageInfo || !pageInfo->page) {
         return false;
     }
@@ -12781,8 +12796,7 @@ void EngineMupdf::ApplyReflowThemeCss() {
     }
     const char* cssZ = fullCss ? CStrTemp(fullCss) : "";
 
-    ScopedRecursiveMutex pagesScope(&pagesLock);
-    ScopedMutex renderScope(&renderLock);
+    PageRenderScope scope(this);
     ScopedRecursiveMutex docScope(&docLock);
 
     fz_context* ctx = Ctx();
