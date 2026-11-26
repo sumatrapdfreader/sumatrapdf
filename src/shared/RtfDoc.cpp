@@ -42,39 +42,185 @@ constexpr float kCssSingleLine = 1.2f; // MuPDF's line-height: normal
 constexpr int kMaxTiledDx = 32768;
 constexpr i64 kMaxTiledBytes = 1 << 28;
 
-// sorted: keywords are found with a binary search
+// Keywords are sorted for binary search.
+// clang-format off
+#define RTF_KEYWORDS(X) \
+    X(Ansi, "ansi") \
+    X(Ansicpg, "ansicpg") \
+    X(Author, "author") \
+    X(B, "b") \
+    X(Bin, "bin") \
+    X(Bkmkstart, "bkmkstart") \
+    X(Blue, "blue") \
+    X(Brdrdash, "brdrdash") \
+    X(Brdrdb, "brdrdb") \
+    X(Brdrdot, "brdrdot") \
+    X(Brdrnil, "brdrnil") \
+    X(Brdrnone, "brdrnone") \
+    X(Brdrs, "brdrs") \
+    X(Brdrsh, "brdrsh") \
+    X(Brdrth, "brdrth") \
+    X(Bullet, "bullet") \
+    X(Caps, "caps") \
+    X(Cb, "cb") \
+    X(Cell, "cell") \
+    X(Cellx, "cellx") \
+    X(Cf, "cf") \
+    X(Chftn, "chftn") \
+    X(Clbrdrb, "clbrdrb") \
+    X(Clbrdrl, "clbrdrl") \
+    X(Clbrdrr, "clbrdrr") \
+    X(Clbrdrt, "clbrdrt") \
+    X(Colortbl, "colortbl") \
+    X(Cpg, "cpg") \
+    X(Deff, "deff") \
+    X(Deleted, "deleted") \
+    X(Dibitmap, "dibitmap") \
+    X(Do, "do") \
+    X(Emdash, "emdash") \
+    X(Emfblip, "emfblip") \
+    X(Emspace, "emspace") \
+    X(Endash, "endash") \
+    X(Enspace, "enspace") \
+    X(F, "f") \
+    X(Fcharset, "fcharset") \
+    X(Fdecor, "fdecor") \
+    X(Fi, "fi") \
+    X(Field, "field") \
+    X(Fldinst, "fldinst") \
+    X(Fldrslt, "fldrslt") \
+    X(Fmodern, "fmodern") \
+    X(Fnil, "fnil") \
+    X(Fonttbl, "fonttbl") \
+    X(Footer, "footer") \
+    X(Footerf, "footerf") \
+    X(Footerl, "footerl") \
+    X(Footerr, "footerr") \
+    X(Footnote, "footnote") \
+    X(Froman, "froman") \
+    X(Fs, "fs") \
+    X(Fscript, "fscript") \
+    X(Fswiss, "fswiss") \
+    X(Ftech, "ftech") \
+    X(Green, "green") \
+    X(Header, "header") \
+    X(Headerf, "headerf") \
+    X(Headerl, "headerl") \
+    X(Headerr, "headerr") \
+    X(Highlight, "highlight") \
+    X(I, "i") \
+    X(Info, "info") \
+    X(Intbl, "intbl") \
+    X(Itap, "itap") \
+    X(Jpegblip, "jpegblip") \
+    X(Ldblquote, "ldblquote") \
+    X(Li, "li") \
+    X(Line, "line") \
+    X(Lquote, "lquote") \
+    X(Mac, "mac") \
+    X(Nestcell, "nestcell") \
+    X(Nestrow, "nestrow") \
+    X(Nesttableprops, "nesttableprops") \
+    X(Nonesttables, "nonesttables") \
+    X(Nonshppict, "nonshppict") \
+    X(Nosupersub, "nosupersub") \
+    X(Outlinelevel, "outlinelevel") \
+    X(Page, "page") \
+    X(Pagebb, "pagebb") \
+    X(Par, "par") \
+    X(Pard, "pard") \
+    X(Pc, "pc") \
+    X(Pca, "pca") \
+    X(Pich, "pich") \
+    X(Pichgoal, "pichgoal") \
+    X(Picscalex, "picscalex") \
+    X(Picscaley, "picscaley") \
+    X(Pict, "pict") \
+    X(Picw, "picw") \
+    X(Picwgoal, "picwgoal") \
+    X(Plain, "plain") \
+    X(Pngblip, "pngblip") \
+    X(Qc, "qc") \
+    X(Qj, "qj") \
+    X(Ql, "ql") \
+    X(Qr, "qr") \
+    X(Rdblquote, "rdblquote") \
+    X(Red, "red") \
+    X(Revtbl, "revtbl") \
+    X(Ri, "ri") \
+    X(Row, "row") \
+    X(Rquote, "rquote") \
+    X(Sa, "sa") \
+    X(Sb, "sb") \
+    X(Sbkcol, "sbkcol") \
+    X(Sbknone, "sbknone") \
+    X(Scaps, "scaps") \
+    X(Sect, "sect") \
+    X(Shppict, "shppict") \
+    X(Sl, "sl") \
+    X(Slmult, "slmult") \
+    X(Strike, "strike") \
+    X(Striked, "striked") \
+    X(Stylesheet, "stylesheet") \
+    X(Sub, "sub") \
+    X(Subject, "subject") \
+    X(Super, "super") \
+    X(Tab, "tab") \
+    X(Tc, "tc") \
+    X(Title, "title") \
+    X(Trowd, "trowd") \
+    X(Trqc, "trqc") \
+    X(U, "u") \
+    X(Uc, "uc") \
+    X(Ud, "ud") \
+    X(Ul, "ul") \
+    X(Uld, "uld") \
+    X(Uldash, "uldash") \
+    X(Uldashd, "uldashd") \
+    X(Uldb, "uldb") \
+    X(Ulhwave, "ulhwave") \
+    X(Ulnone, "ulnone") \
+    X(Ulth, "ulth") \
+    X(Ulw, "ulw") \
+    X(Ulwave, "ulwave") \
+    X(Upr, "upr") \
+    X(V, "v") \
+    X(Wbitmap, "wbitmap") \
+    X(Wmetafile, "wmetafile") \
+    X(Xe, "xe") \
+    X(Zwj, "zwj") \
+    X(Zwnj, "zwnj")
+
 enum class RtfKw : u8 {
-    // clang-format off
-    Ansi, Ansicpg, Author, B, Bin, Bkmkstart, Blue, Brdrdash, Brdrdb, Brdrdot, Brdrnil, Brdrnone, Brdrs, Brdrsh,
-    Brdrth, Bullet, Caps, Cb, Cell, Cellx, Cf, Chftn, Clbrdrb, Clbrdrl, Clbrdrr, Clbrdrt, Colortbl, Cpg, Deff,
-    Deleted, Dibitmap, Do, Emdash, Emfblip, Emspace, Endash, Enspace, F, Fcharset, Fdecor, Fi, Field, Fldinst,
-    Fldrslt, Fmodern, Fnil, Fonttbl, Footer, Footerf, Footerl, Footerr, Footnote, Froman, Fs, Fscript, Fswiss,
-    Ftech, Green, Header, Headerf, Headerl, Headerr, Highlight, I, Info, Intbl, Itap, Jpegblip, Ldblquote, Li, Line,
-    Lquote, Mac, Nestcell, Nestrow, Nesttableprops, Nonesttables, Nonshppict, Nosupersub, Outlinelevel, Page, Pagebb, Par, Pard, Pc, Pca, Pich, Pichgoal,
-    Picscalex, Picscaley, Pict, Picw, Picwgoal, Plain, Pngblip, Qc, Qj, Ql, Qr, Rdblquote, Red, Revtbl, Ri, Row,
-    Rquote, Sa, Sb, Sbkcol, Sbknone, Scaps, Sect, Shppict, Sl, Slmult, Strike, Striked, Stylesheet, Sub, Subject, Super, Tab, Tc, Title, Trowd, Trqc,
-    U, Uc, Ud, Ul, Uld, Uldash, Uldashd, Uldb, Ulhwave, Ulnone, Ulth, Ulw, Ulwave, Upr, V, Wbitmap, Wmetafile, Xe,
-    Zwj, Zwnj,
-    // clang-format on
+#define RTF_ENUM(name, text) name,
+    RTF_KEYWORDS(RTF_ENUM)
+#undef RTF_ENUM
 };
 
-// same order as RtfKw
-static const char* gRtfKeywords[] = {
-    // clang-format off
-    "ansi", "ansicpg", "author", "b", "bin", "bkmkstart", "blue", "brdrdash", "brdrdb", "brdrdot", "brdrnil",
-    "brdrnone", "brdrs", "brdrsh", "brdrth", "bullet", "caps", "cb", "cell", "cellx", "cf", "chftn", "clbrdrb",
-    "clbrdrl", "clbrdrr", "clbrdrt", "colortbl", "cpg", "deff", "deleted", "dibitmap", "do", "emdash", "emfblip",
-    "emspace", "endash", "enspace", "f", "fcharset", "fdecor", "fi", "field", "fldinst", "fldrslt", "fmodern",
-    "fnil", "fonttbl", "footer", "footerf", "footerl", "footerr", "footnote", "froman", "fs", "fscript", "fswiss",
-    "ftech", "green", "header", "headerf", "headerl", "headerr", "highlight", "i", "info", "intbl", "itap", "jpegblip",
-    "ldblquote", "li", "line", "lquote", "mac", "nestcell", "nestrow", "nesttableprops", "nonesttables", "nonshppict", "nosupersub", "outlinelevel",
-    "page", "pagebb", "par", "pard", "pc", "pca", "pich", "pichgoal", "picscalex", "picscaley", "pict", "picw", "picwgoal",
-    "plain", "pngblip", "qc", "qj", "ql", "qr", "rdblquote", "red", "revtbl", "ri", "row", "rquote", "sa", "sb",
-    "sbkcol", "sbknone", "scaps", "sect", "shppict", "sl", "slmult", "strike", "striked", "stylesheet", "sub", "subject", "super", "tab", "tc", "title",
-    "trowd", "trqc", "u", "uc", "ud", "ul", "uld", "uldash", "uldashd", "uldb", "ulhwave", "ulnone", "ulth", "ulw",
-    "ulwave", "upr", "v", "wbitmap", "wmetafile", "xe", "zwj", "zwnj",
-    // clang-format on
+static constexpr const char* gRtfKeywords[] = {
+#define RTF_TEXT(name, text) text,
+    RTF_KEYWORDS(RTF_TEXT)
+#undef RTF_TEXT
 };
+#undef RTF_KEYWORDS
+// clang-format on
+
+static constexpr bool RtfKeywordsSorted() {
+    for (int i = 1; i < dimofi(gRtfKeywords); i++) {
+        const char* a = gRtfKeywords[i - 1];
+        const char* b = gRtfKeywords[i];
+        while (*a && *a == *b) {
+            a++;
+            b++;
+        }
+        if (*a >= *b) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static_assert(RtfKeywordsSorted());
 
 static int FindRtfKeyword(Str name) {
     int lo = 0;
