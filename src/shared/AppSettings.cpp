@@ -1617,9 +1617,6 @@ static SeqStrings kFileStateKeepNoPerDoc =
 // prevData is used to preserve fields that exists in prevField but not in Settings
 // caller has to free()
 Str SerializeSettings(Settings* prefs, Str prevData, SerializeOpt opt) {
-    Vec<FileState*>* allFileStates = prefs->fileStates;
-    Vec<FileState*> withFavorites;
-
     // The two settings mean different things and must not be conflated (#5907):
     // RememberStatePerDocument = false only drops the per-document state (page,
     // zoom, scroll, window placement) - the list of files stays, because that is
@@ -1628,52 +1625,62 @@ Str SerializeSettings(Settings* prefs, Str prevData, SerializeOpt opt) {
     bool dropPerDocState = !prefs->rememberStatePerDocument || !prefs->rememberOpenedFiles;
     bool dropHistory = !prefs->rememberOpenedFiles;
 
-    if (dropPerDocState) {
-        for (FileState* fs : *prefs->fileStates) {
-            fs->useDefaultState = true;
-            if (FileStateWorthKeepingWithoutHistory(fs)) {
-                VecAppend(withFavorites, fs);
-            }
-        }
-        if (dropHistory) {
-            // serialize the filtered list, then put the real one back below -
-            // the in-memory history is still needed for this session
-            prefs->fileStates = &withFavorites;
-        }
-        FieldInfo keepFields[dimof(gFileStateFields)];
-        char keepNames[512];
-        int nKeep = 0;
-        int namesLen = 0;
-        const char* srcName = gFileStateInfo.fieldNames;
-        for (int i = 0; i < dimofi(gFileStateFields); i++) {
-            Str name = Str(srcName);
-            if (SeqStrIndex(kFileStateKeepNoPerDoc, name) >= 0) {
-                keepFields[nKeep] = gFileStateFields[i];
-                int n = len(name);
-                ReportIf(namesLen + n + 1 > (int)sizeof(keepNames));
-                memcpy(keepNames + namesLen, name.s, (size_t)n + 1);
-                namesLen += n + 1;
-                nKeep++;
-            }
-            srcName += len(name) + 1;
-        }
-        const FieldInfo* savedFields = gFileStateInfo.fields;
-        const char* savedNames = gFileStateInfo.fieldNames;
-        u16 savedCount = gFileStateInfo.fieldCount;
-        gFileStateInfo.fields = keepFields;
-        gFileStateInfo.fieldNames = keepNames;
-        gFileStateInfo.fieldCount = (u16)nKeep;
-
-        Str serialized = SerializeStruct(&gSettingsInfo, prefs, prevData, opt);
-
-        gFileStateInfo.fields = savedFields;
-        gFileStateInfo.fieldNames = savedNames;
-        gFileStateInfo.fieldCount = savedCount;
-        prefs->fileStates = allFileStates;
-        return serialized;
+    if (!dropPerDocState) {
+        return SerializeStruct(&gSettingsInfo, prefs, prevData, opt);
     }
 
-    return SerializeStruct(&gSettingsInfo, prefs, prevData, opt);
+    Vec<FileState> states;
+    for (FileState* fs : *prefs->fileStates) {
+        if (dropHistory && !FileStateWorthKeepingWithoutHistory(fs)) {
+            continue;
+        }
+        if (!VecAppend(states, *fs)) {
+            return {};
+        }
+        VecLast(states).useDefaultState = true;
+    }
+
+    Vec<FileState*> statePtrs;
+    if (len(states) > 0 && !VecReserve(statePtrs, len(states))) {
+        return {};
+    }
+    for (FileState& fs : states) {
+        VecAppend(statePtrs, &fs);
+    }
+    Settings snapshot = *prefs;
+    snapshot.fileStates = &statePtrs;
+
+    FieldInfo keepFields[dimof(gFileStateFields)];
+    str::Builder keepNames;
+    int nKeep = 0;
+    const char* srcName = gFileStateInfo.fieldNames;
+    for (int i = 0; i < dimofi(gFileStateFields); i++) {
+        Str name(srcName);
+        if (SeqStrIndex(kFileStateKeepNoPerDoc, name) >= 0) {
+            keepFields[nKeep++] = gFileStateFields[i];
+            keepNames.Append(Str(srcName, len(name) + 1));
+        }
+        srcName += len(name) + 1;
+    }
+    StructInfo fileInfo = gFileStateInfo;
+    fileInfo.fields = keepFields;
+    fileInfo.fieldNames = ToStr(keepNames).s;
+    fileInfo.fieldCount = (u16)nKeep;
+
+    Vec<FieldInfo> settingsFields;
+    if (!VecAppendN(settingsFields, gSettingsInfo.fields, gSettingsInfo.fieldCount)) {
+        return {};
+    }
+    for (FieldInfo& field : settingsFields) {
+        if (field.type == SettingType::Array && field.offset == offsetof(Settings, fileStates)) {
+            field.value = (intptr_t)&fileInfo;
+            StructInfo settingsInfo = gSettingsInfo;
+            settingsInfo.fields = VecData(settingsFields);
+            return SerializeStruct(&settingsInfo, &snapshot, prevData, opt);
+        }
+    }
+    ReportIf(true);
+    return {};
 }
 
 void DeleteSettings(Settings* gp) {
