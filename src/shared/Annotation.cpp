@@ -761,12 +761,12 @@ bool SetContents(Annotation* annot, Str sv) {
     });
 }
 
-void DeleteAnnotation(Annotation* annot) {
+void DeleteAnnotationWithoutUI(Annotation* annot) {
     ReportIf(!annot);
     if (!annot) {
         return;
     }
-    // Caller must have DetachAnnotationFromUI (or have no UI holders).
+    // The application uses DeleteAnnotationFromUI for displayed annotations.
     EngineMupdf* e = annot->engine;
     if (!e) {
         delete annot;

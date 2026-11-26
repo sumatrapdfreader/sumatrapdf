@@ -3120,8 +3120,7 @@ void UndoRedoInTab(WindowTab* tab, bool redo) {
     Vec<Annotation*> removed;
     bool ok = EngineUndoRedo(engine, dir, removed);
     for (Annotation* a : removed) {
-        DetachAnnotationFromUI(a);
-        DeleteAnnotation(a);
+        DeleteAnnotationFromUI(a);
     }
     // the wrapper deletes above mark the document modified; the journal knows better
     EngineMupdfRefreshModifiedState(engine);
@@ -3257,7 +3256,7 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args) 
             // Roll back annots created earlier in this call so we do not leave
             // partial multi-page selections as untracked annotations.
             for (Annotation* a : created) {
-                DeleteAnnotation(a);
+                DeleteAnnotationWithoutUI(a);
             }
             return nullptr;
         }
@@ -3349,8 +3348,7 @@ void ApplyRedactionsInTab(WindowTab* tab) {
     Vec<Annotation*> deleted;
     bool ok = EngineMupdfApplyRedactions(engine, deleted);
     for (Annotation* a : deleted) {
-        DetachAnnotationFromUI(a);
-        DeleteAnnotation(a);
+        DeleteAnnotationFromUI(a);
     }
     DeleteOldSelectionInfo(win, true);
     RefreshAnnotationLists(tab);

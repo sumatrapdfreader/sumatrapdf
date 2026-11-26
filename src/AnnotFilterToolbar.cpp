@@ -596,8 +596,7 @@ static void DeleteFloatSelected(AnnotFilterWindow* w) {
         keepSelected = nullptr;
     }
     for (Annotation* annot : toDelete) {
-        DetachAnnotationFromUI(annot);
-        DeleteAnnotation(annot);
+        DeleteAnnotationFromUI(annot);
     }
     RefreshAnnotationLists(tab);
     SetSelectedAnnotation(tab, keepSelected);

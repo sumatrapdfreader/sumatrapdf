@@ -216,7 +216,7 @@ bool ToggleFormButton(Annotation*);
 
 bool AnnotationIsLive(Annotation*);
 
-void DeleteAnnotation(Annotation*);
+void DeleteAnnotationWithoutUI(Annotation*);
 bool AnnotationCanBeMoved(AnnotationType);
 bool AnnotationIsTextMarkup(AnnotationType);
 bool AnnotationCanBeResized(AnnotationType);

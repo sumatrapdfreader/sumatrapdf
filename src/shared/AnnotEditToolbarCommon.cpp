@@ -1011,8 +1011,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
         CancelDrag(win);
     }
 
-    DetachAnnotationFromUI(annot);
-    DeleteAnnotation(annot);
+    DeleteAnnotationFromUI(annot);
     RefreshAnnotationLists(tab);
     SetSelectedAnnotation(tab, keepSelected);
     if (IsMainWindowValidAndNotClosing(tab->win)) {
@@ -1055,7 +1054,7 @@ void HideAnnotationTextPopupFor(MainWindow* win, Annotation* annot) {
     }
 }
 
-void DetachAnnotationFromUI(Annotation* annot) {
+void DeleteAnnotationFromUI(Annotation* annot) {
     if (!annot) {
         return;
     }
@@ -1081,6 +1080,7 @@ void DetachAnnotationFromUI(Annotation* annot) {
             }
         }
     }
+    DeleteAnnotationWithoutUI(annot);
 }
 
 void RefreshAnnotationLists(WindowTab* tab) {

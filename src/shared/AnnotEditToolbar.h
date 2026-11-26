@@ -50,7 +50,7 @@ void SetSelectedAnnotation(WindowTab*, Annotation*);
 void RefreshAnnotationLists(WindowTab*);
 void NotifyAnnotationsChanged(WindowTab*);
 void StartLoadingAnnotationsForUi(WindowTab*);
-void DetachAnnotationFromUI(Annotation*);
+void DeleteAnnotationFromUI(Annotation*);
 void RefreshEditAnnotationsAfterEngineChange(WindowTab*);
 void CloseAnnotationUiForTab(WindowTab*);
 

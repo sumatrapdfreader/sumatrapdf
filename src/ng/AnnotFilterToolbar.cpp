@@ -835,8 +835,7 @@ static void DeleteListSelection(AnnotFilterToolbar* f) {
     }
     MainWindow* win = f->win;
     for (Annotation* annot : toDelete) {
-        DetachAnnotationFromUI(annot);
-        DeleteAnnotation(annot);
+        DeleteAnnotationFromUI(annot);
     }
     RefreshAnnotationLists(tab);
     SetSelectedAnnotation(tab, keepSelected);
