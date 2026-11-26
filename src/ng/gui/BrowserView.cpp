@@ -136,6 +136,7 @@ struct BrowserView {
     gp::App* app = nullptr;
     gp::Entity<gp::WebView> view;
     bool created = false;
+    bool creating = false;
     // the element asked for a view; it is made from the shell's tick, not
     // during the frame (see BrowserViewCreatePending)
     bool wantCreate = false;
@@ -413,7 +414,7 @@ static void ForwardPageKey(BrowserView* bv, int vk, int mods) {
 
 static void OnIpcMessage(void* ctx, gp::Str, gp::Str body) {
     auto* bv = (BrowserView*)ctx;
-    if (!bv) {
+    if (!bv || !bv->cb) {
         return;
     }
     Str msg = FromGpui(body);
@@ -461,15 +462,15 @@ BrowserView* BrowserViewCreate(MainWindow* win, HWND, BrowserViewCallback* cb, S
     bv->win = win;
     bv->cb = cb;
     bv->virtualHost = str::Dup(len(virtualHost) > 0 ? virtualHost : Str(kDefaultVirtualHost));
-    VecAppend(gBrowserViews, bv);
+    if (!VecAppend(gBrowserViews, bv)) {
+        str::Free(bv->virtualHost);
+        delete bv;
+        return nullptr;
+    }
     return bv;
 }
 
-void BrowserViewDelete(BrowserView* bv) {
-    if (!bv) {
-        return;
-    }
-    VecRemove(gBrowserViews, bv);
+static void FreeBrowserView(BrowserView* bv) {
     if (bv->app && bv->view.IsValid()) {
         gp::EntityDrop(bv->app, bv->view.id);
     }
@@ -479,6 +480,16 @@ void BrowserViewDelete(BrowserView* bv) {
         str::Free(url);
     }
     delete bv;
+}
+
+void BrowserViewDelete(BrowserView* bv) {
+    if (!bv || VecRemove(gBrowserViews, bv) < 0) {
+        return;
+    }
+    bv->cb = nullptr;
+    if (!bv->creating) {
+        FreeBrowserView(bv);
+    }
 }
 
 MainWindow* BrowserViewWindow(BrowserView* bv) {
@@ -867,18 +878,18 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
 
     // creating runs a nested message loop, which can ask for another page
     Str startUrl = str::Dup(bv->pendingUrl);
+    bv->creating = true;
     gWebViewCreateDepth++;
     gp::Entity<gp::WebView> view = gp::WebViewNew(cx, &attrs);
     gWebViewCreateDepth--;
-    // the nested loop can close the panel or window that owned bv
-    if (!VecContains(gBrowserViews, bv)) {
-        if (view.IsValid()) {
-            gp::EntityDrop(cx->app, view.id);
-        }
+    bv->creating = false;
+    bv->view = view;
+    // Keep the callback context alive until native creation and disposal finish.
+    if (!bv->cb) {
+        FreeBrowserView(bv);
         str::Free(startUrl);
         return;
     }
-    bv->view = view;
     gp::WebView* wv = bv->view.Get(cx->app);
     if (!wv || !gp::WebViewRaw(wv)) {
         str::Free(startUrl);
