@@ -9,13 +9,11 @@
 // Bit reader is a streaming reader of bits from underlying memory data
 
 // data has to be valid for the lifetime of this class
-BitReader::BitReader(u8* data, int n) : data(data), dataLen(n) {
-    bitsCount = n * 8;
-}
+BitReader::BitReader(u8* data, int n) : data(data), dataLen(data && n > 0 ? n : 0), bitsCount((i64)dataLen * 8) {}
 
 BitReader::~BitReader() = default;
 
-u8 BitReader::GetByte(int pos) const {
+u8 BitReader::GetByte(i64 pos) const {
     if (pos >= dataLen) {
         return 0;
     }
@@ -25,22 +23,28 @@ u8 BitReader::GetByte(int pos) const {
 // advance position in the bit stream
 // returns false if we've eaten bits more than we have
 bool BitReader::Eat(int nBits) {
+    if (nBits < 0) {
+        return false;
+    }
+    if (nBits > BitsLeft()) {
+        currBitPos = bitsCount;
+        return false;
+    }
     currBitPos += nBits;
-    return currBitPos <= bitsCount;
+    return true;
 }
 
-int BitReader::BitsLeft() const {
-    if (currBitPos < bitsCount) {
-        return bitsCount - currBitPos;
-    }
-    return 0;
+i64 BitReader::BitsLeft() const {
+    return bitsCount - currBitPos;
 }
 
 // Read nBits (up to 32) bits, without advancing the position in the bit stream
 // If asked for more bits than we have left, the extra bits will be 0
 u32 BitReader::Peek(int nBits) {
-    ReportIf((nBits == 0) || (nBits > 32));
-    int currBytePos = currBitPos / 8;
+    if (ReportIf(nBits <= 0 || nBits > 32)) {
+        return 0;
+    }
+    i64 currBytePos = currBitPos / 8;
     u8 currByte = GetByte(currBytePos);
     u8 currBit = currBitPos % 8;
     currByte = currByte << currBit;

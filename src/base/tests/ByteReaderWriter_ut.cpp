@@ -100,6 +100,16 @@ void ByteOrderTests() {
         ByteReader r(d1, sizeof(d1));
         utassert(!r.CanRead(0, -1));
     }
+
+    {
+        u8 bytes[] = {0x80, 0xff};
+        BitReader bits(bytes, sizeof(bytes));
+        utassert(bits.Eat(1));
+        utassert(!bits.Eat(-1));
+        utassert(bits.BitsLeft() == 15 && bits.Peek(1) == 0);
+        utassert(!bits.Eat(INT_MAX));
+        utassert(bits.BitsLeft() == 0);
+    }
 }
 
 #undef kAbc
