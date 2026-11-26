@@ -184,6 +184,7 @@ void SwitchToDisplayMode(MainWindow* win, DisplayMode displayMode, bool keepCont
 
 // if pt is given (a point on the canvas) that point stays put across the zoom
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
+void RefreshEbookLayoutForDde(MainWindow* win, DisplayMode oldMode, float oldZoom);
 
 bool SettingsUseTabs();
 bool SettingsRememberOpenedFiles();

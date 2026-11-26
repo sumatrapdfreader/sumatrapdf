@@ -8,18 +8,28 @@
 // The startup view flags must be available when the ebook is paginated.
 // Use a fresh process with a real window so the layout sees those dimensions.
 
+import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
-import { IS_MAC } from "./host.ts";
+import { IS_MAC, IS_WIN } from "./host.ts";
 import { findCanvas, launchControlled, killAndWait } from "./win-automation.ts";
-import { getClientRect, getScrollInfo, setForegroundWindow, SB_VERT } from "./winapi.ts";
-import { runStandalone } from "./util.ts";
+import { getClientRect, getScrollInfo, sendCopyDataW, setForegroundWindow, SB_VERT } from "./winapi.ts";
+import { ROOT, runStandalone, USE_NG } from "./util.ts";
 
 const EPUB = "tests/issue-5846.epub";
+const kCopyDataDdeW = 0x44646557;
+const kFitWidthZoom = -2;
 
-export async function testit(): Promise<void> {
-  const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit width", EPUB]);
+async function testFitWidth(useDde: boolean): Promise<void> {
+  const view = useDde ? "continuous" : "single page";
+  const zoom = useDde ? "fit page" : "fit width";
+  const { proc, client, frame } = await launchControlled(["-view", view, "-zoom", zoom, EPUB]);
   try {
     await client.waitForRenderIdle();
+    if (useDde) {
+      const cmd = `[SetView("${join(ROOT, EPUB)}", "single page", ${kFitWidthZoom})]`;
+      if (!sendCopyDataW(frame, kCopyDataDdeW, cmd)) throw new Error("issue-3472: SetView failed");
+      await client.waitForRenderIdle();
+    }
     // macOS has no scrollbar HWND. TestLayout reports the same scroll range
     // the canvas computed from this window.
     if (IS_MAC) {
@@ -67,6 +77,11 @@ export async function testit(): Promise<void> {
     client.close();
     await killAndWait(proc);
   }
+}
+
+export async function testit(): Promise<void> {
+  await testFitWidth(false);
+  if (USE_NG && IS_WIN) await testFitWidth(true);
 }
 
 if (import.meta.main) {

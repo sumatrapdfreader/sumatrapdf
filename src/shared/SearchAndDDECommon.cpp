@@ -827,6 +827,12 @@ static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
         }
     }
 
+#if defined(SUMATRA_NG)
+    DisplayMode oldMode = win->ctrl->GetDisplayMode();
+    float oldZoom = win->ctrl->GetZoomVirtual();
+    u64 windowId = win->lifetimeId;
+    WindowTab* tab = win->CurrentTab();
+#endif
     DisplayMode mode = DisplayModeFromString(viewModeOwned, DisplayMode::Automatic);
     if (mode != DisplayMode::Automatic) {
         SwitchToDisplayMode(win, mode);
@@ -840,6 +846,12 @@ static Str HandleSetViewCmd(HWND hwnd, Str cmd, bool* ack) {
         SmartZoom(win, zoom, nullptr, false);
     }
 
+#if defined(SUMATRA_NG)
+    RefreshEbookLayoutForDde(win, oldMode, oldZoom);
+    if (!IsMainWindowValidAndNotClosing(win) || win->lifetimeId != windowId || win->CurrentTab() != tab) {
+        return next;
+    }
+#endif
     if ((scroll.x != -1 || scroll.y != -1) && win->AsFixed()) {
         DisplayModel* dm = win->AsFixed();
         ScrollState ss = dm->GetScrollState();

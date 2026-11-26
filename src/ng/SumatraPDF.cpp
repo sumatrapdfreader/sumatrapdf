@@ -1125,6 +1125,7 @@ Str SumatraPasswordUI::GetPassword(Str filePath, u8* fileDigest, u8 decryptionKe
 // Markdown / HTML fall back to their fixed-page engines the same way (orig's
 // CreateControllerForMarkdown, when SetParentWindow() fails).
 static float EbookLayoutAspectForLoad(MainWindow* win, Str path);
+static float EbookLayoutAspectForView(MainWindow* win, DisplayMode mode, float zoom);
 
 // True while the command-line file loop is loading, so -view / -zoom size
 // that ebook and not a session restored just before it.
@@ -1132,7 +1133,7 @@ static bool gApplyCliViewToEbookLayout = false;
 // another instance owns the saved session, so we don't restore it (#6350)
 static bool gOtherInstanceRunning = false;
 
-static DocController* CreateControllerForFile(MainWindow* win, Str path, PasswordUI* pwdUI) {
+static DocController* CreateControllerForFile(MainWindow* win, Str path, PasswordUI* pwdUI, float ebookAspect) {
     auto timeStart = TimeGet();
     FileType kind = GuessFileTypeFromName(path);
     bool chmInFixedUI = gSettings->chmUI.useFixedPageUI || !BrowserViewAvailable();
@@ -1150,7 +1151,7 @@ static DocController* CreateControllerForFile(MainWindow* win, Str path, Passwor
 
     // A reflow page cannot change size after this. Single Page + Fit Width
     // has to match the window or the fitted page is taller than it (#3472).
-    float prevAspect = EngineMupdfSetEbookLayoutAspect(EbookLayoutAspectForLoad(win, path));
+    float prevAspect = EngineMupdfSetEbookLayoutAspect(ebookAspect);
     EngineBase* engine = CreateEngineFromFile(path, pwdUI, chmInFixedUI);
     EngineMupdfSetEbookLayoutAspect(prevAspect);
     if (!engine) {
@@ -1168,6 +1169,14 @@ static DocController* CreateControllerForFile(MainWindow* win, Str path, Passwor
     auto dur = TimeSinceInMs(timeStart);
     logf("CreateControllerForEngineOrFile: '%s', %d pages, took %.2f ms\n", path, nPages, dur);
     return DisplayModel::Create(engine, win->cbHandler);
+}
+
+static DocController* CreateControllerForFile(MainWindow* win, Str path, PasswordUI* pwdUI) {
+    return CreateControllerForFile(win, path, pwdUI, EbookLayoutAspectForLoad(win, path));
+}
+
+static bool IsEbookFitWidth(DisplayMode mode, float zoom) {
+    return mode == DisplayMode::SinglePage && zoom == kZoomFitWidth;
 }
 
 // 0 keeps the fixed A5 page. Only Single Page + Fit Width wants one page
@@ -1198,7 +1207,11 @@ static float EbookLayoutAspectForLoad(MainWindow* win, Str path) {
             zoom = gFlags->startZoom;
         }
     }
-    if (displayMode != DisplayMode::SinglePage || zoom != kZoomFitWidth) {
+    return EbookLayoutAspectForView(win, displayMode, zoom);
+}
+
+static float EbookLayoutAspectForView(MainWindow* win, DisplayMode mode, float zoom) {
+    if (!IsEbookFitWidth(mode, zoom)) {
         return 0;
     }
     Rect rc = AppShellPredictCanvasRc(win, CanvasPredict::DocumentTab);
@@ -1296,7 +1309,11 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     DocController* ctrl = nullptr;
     if (autoRefresh) {
         SumatraPasswordUI pwdUI;
-        ctrl = CreateControllerForFile(win, fullPath, &pwdUI);
+        float aspect = EbookLayoutAspectForLoad(win, fullPath);
+        if (tab->ctrl && IsEbookFileType(GuessFileTypeFromName(fullPath, true))) {
+            aspect = EbookLayoutAspectForView(win, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
+        }
+        ctrl = CreateControllerForFile(win, fullPath, &pwdUI, aspect);
         if (!ctrl) {
             return;
         }
@@ -1351,6 +1368,18 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     }
     // reopening reads the file again: slow on a network / cloud drive
     logf("ReloadDocument: reloaded in %.1f ms\n", TimeSinceInMs(timeStart));
+}
+
+// SetView runs after loading, so crossing the Fit Width layout boundary needs
+// a new ebook pagination. Reuse the quiet reload path to preserve tab state.
+void RefreshEbookLayoutForDde(MainWindow* win, DisplayMode oldMode, float oldZoom) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !IsEbookFileType(GuessFileTypeFromName(dm->GetFilePath(), true))) {
+        return;
+    }
+    if (IsEbookFitWidth(oldMode, oldZoom) != IsEbookFitWidth(dm->GetDisplayMode(), dm->GetZoomVirtual())) {
+        ReloadDocument(win, true);
+    }
 }
 
 // ng: the other half of the asynchronous password prompt. The dialog's answer
