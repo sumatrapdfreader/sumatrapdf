@@ -567,6 +567,35 @@ static void IsAlNumWTest() {
 #endif
 }
 
+static void ArenaResetSavepointTest() {
+    Arena* arena = ArenaNew();
+    if (!arena) {
+        utassert(arena != nullptr);
+        return;
+    }
+    arena->Alloc(32);
+    ArenaSavepoint beforeReset = GetArenaSavepoint(arena);
+    arena->Reset();
+    arena->Alloc(64);
+    u64 afterReset = arena->Pos();
+    RestoreArenaSavepoint(beforeReset);
+    utassert(arena->Pos() == afterReset);
+    ArenaDelete(arena);
+}
+
+static void ProbeTempArenaScope(bool* preserved) {
+    {
+        AutoArenaSavepoint scope;
+        AllocStrTemp(32);
+        u64 pos = GetTempArena()->Pos();
+        ResetTempArena();
+        *preserved = GetTempArena()->Pos() == pos;
+        DestroyTempArena();
+        *preserved = *preserved && GetTempArena()->Pos() == pos;
+    }
+    DestroyTempArena();
+}
+
 void BaseUtilTest() {
     EnvVariableTest();
     LocalTimeTest();
@@ -593,6 +622,13 @@ void BaseUtilTest() {
     ArenaChainedBlockSizeTest();
     ArenaPushOverflowTest();
     ArenaChainTest();
+    ArenaResetSavepointTest();
+    if (kHasThreads) {
+        bool preserved = false;
+        ThreadHandle thread = StartThread(MkFunc0(ProbeTempArenaScope, &preserved), StrL("temp-arena-scope-test"));
+        utassert(JoinThread(&thread, 5000));
+        utassert(preserved);
+    }
 #if OS_POSIX && !OS_WASM
     TimedJoinTest();
 #endif

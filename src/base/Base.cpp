@@ -965,23 +965,23 @@ static void ArenaPopToLocked(Arena* arena, u64 pos) {
     current->pos = newPos;
 }
 
-void Arena::PopTo(u64 pos) {
-    if (!this) {
-        return;
-    }
-
-    ScopedMutex cs(&lock);
-    ArenaPopToLocked(this, pos);
-}
-
 ArenaSavepoint GetArenaSavepoint(Arena* arena) {
-    ArenaSavepoint temp = {arena, arena ? arena->Pos() : 0};
+    ArenaSavepoint temp;
+    if (arena) {
+        ScopedMutex lock(&arena->lock);
+        temp.arena = arena;
+        temp.pos = arena->current->basePos + arena->current->pos;
+        temp.resetCount = arena->resetCount;
+    }
     return temp;
 }
 
 void RestoreArenaSavepoint(ArenaSavepoint temp) {
     if (temp.arena) {
-        temp.arena->PopTo(temp.pos);
+        ScopedMutex lock(&temp.arena->lock);
+        if (temp.resetCount == temp.arena->resetCount) {
+            ArenaPopToLocked(temp.arena, temp.pos);
+        }
     }
 }
 
@@ -998,6 +998,7 @@ void Arena::Reset() {
     }
     ScopedMutex cs(&lock);
     ArenaPopToLocked(this, 0);
+    resetCount++;
     nAllocsSinceReset = 0;
     peakBytesSinceReset = 0;
 }
@@ -1090,7 +1091,22 @@ void* MemDup(Arena* arena, const void* mem, size_t size, size_t extraBytes) {
     return newMem;
 }
 
-thread_local Arena* gTempArena = nullptr;
+static thread_local Arena* gTempArena = nullptr;
+static thread_local int gTempArenaScopes = 0;
+
+AutoArenaSavepoint::AutoArenaSavepoint(Arena* arena)
+    : sp(GetArenaSavepoint(arena)), protectsTemp(arena && arena == gTempArena) {
+    if (protectsTemp) {
+        gTempArenaScopes++;
+    }
+}
+
+AutoArenaSavepoint::~AutoArenaSavepoint() {
+    RestoreArenaSavepoint(sp);
+    if (protectsTemp) {
+        gTempArenaScopes--;
+    }
+}
 
 Arena* GetTempArena() {
     if (!gTempArena) {
@@ -1100,12 +1116,15 @@ Arena* GetTempArena() {
 }
 
 void ResetTempArena() {
-    if (gTempArena) {
+    if (gTempArena && gTempArenaScopes == 0) {
         gTempArena->Reset();
     }
 }
 
 void DestroyTempArena() {
+    if (gTempArenaScopes != 0) {
+        return;
+    }
     ArenaDelete(gTempArena);
     gTempArena = nullptr;
 }

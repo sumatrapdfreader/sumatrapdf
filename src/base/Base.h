@@ -1425,9 +1425,13 @@ struct ArenaParams {
 
 struct Arena;
 
-struct ArenaSavepoint {
-    Arena* arena;
-    u64 pos;
+class ArenaSavepoint {
+    Arena* arena = nullptr;
+    u64 pos = 0;
+    u64 resetCount = 0;
+
+    friend ArenaSavepoint GetArenaSavepoint(Arena* arena);
+    friend void RestoreArenaSavepoint(ArenaSavepoint temp);
 };
 
 struct Arena {
@@ -1451,12 +1455,12 @@ struct Arena {
     u64 peakBytesLifetime;   // largest total size the arena ever reached
     u64 nAllocsSinceReset;   // allocations since the last Reset()
     u64 peakBytesSinceReset; // largest total size reached since the last Reset()
+    u64 resetCount;
 
     void* Alloc(int size);
     void Reset();
     void* Push(u64 size, u64 align = 8, bool zero = true);
     u64 Pos();
-    void PopTo(u64 pos);
 
     Arena() = delete;  // use ArenaNew()
     ~Arena() = delete; // use ArenaDelete()
@@ -1475,7 +1479,6 @@ ArenaSavepoint GetArenaSavepoint(Arena* arena);
 void RestoreArenaSavepoint(ArenaSavepoint temp);
 
 // Thread-local temporary arena, reset after each message loop iteration
-extern thread_local Arena* gTempArena;
 Arena* GetTempArena();
 void ResetTempArena();
 void DestroyTempArena();
@@ -1483,16 +1486,13 @@ void DestroyTempArena();
 // RAII scratch scope for an arena (the temp arena unless told otherwise):
 // rewinds it to the entry position on scope exit, so code that allocates
 // scratch in a loop or on a hot path doesn't grow the arena unbounded.
-struct AutoArenaSavepoint {
+class AutoArenaSavepoint : NonCopyable {
     ArenaSavepoint sp;
-    AutoArenaSavepoint(Arena* a = GetTempArena()) { // NOLINT
-        sp = GetArenaSavepoint(a);
-    }
-    AutoArenaSavepoint(AutoArenaSavepoint& other) = delete;
-    AutoArenaSavepoint(AutoArenaSavepoint&& other) = delete;
-    AutoArenaSavepoint(const AutoArenaSavepoint& other) = delete;
-    AutoArenaSavepoint(const AutoArenaSavepoint&& other) = delete;
-    ~AutoArenaSavepoint() { RestoreArenaSavepoint(sp); }
+    bool protectsTemp;
+
+  public:
+    explicit AutoArenaSavepoint(Arena* a = GetTempArena());
+    ~AutoArenaSavepoint();
 };
 
 // Arena for allocations that live for the whole lifetime of the program (i.e.
