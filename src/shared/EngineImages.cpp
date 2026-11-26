@@ -133,6 +133,7 @@ class EngineImages : public EngineBase {
     }
 
     RecursiveMutex cacheLock;
+    Mutex mediaboxLock;
     Vec<ImagePage*> pageCache;
     Vec<ImagePageInfo*> pageInfos;
     Str sourceData;
@@ -440,14 +441,21 @@ static Size ImageSizeFromDataPortable(Str data, bool partial = false) {
 }
 
 RectF EngineImages::PageMediabox(int pageNo) {
-    ReportIf((pageNo < 1) || (pageNo > pageCount));
-    int n = pageNo - 1;
-    ImagePageInfo* pi = pageInfos[n];
+    if (ReportIf(pageNo < 1 || pageNo > len(pageInfos))) {
+        return {};
+    }
+    ImagePageInfo* pi = pageInfos[pageNo - 1];
+    {
+        ScopedMutex scope(&mediaboxLock);
+        if (pi->state == PageInfoState::Known) {
+            return pi->mediabox;
+        }
+    }
+
+    // Loading can take the image cache lock. Keep that outside publication.
+    RectF mediabox = LoadMediabox(pageNo);
+    ScopedMutex scope(&mediaboxLock);
     if (pi->state == PageInfoState::Unknown) {
-        RectF mediabox = LoadMediabox(pageNo);
-        // store the box before flipping state: CopyMediaboxesFrom reads these
-        // from a clone being created on a render thread, and must never see
-        // Known paired with an unwritten mediabox
         pi->mediabox = mediabox;
         pi->state = PageInfoState::Known;
     }
@@ -459,6 +467,7 @@ void EngineImages::CopyMediaboxesFrom(EngineImages* src) {
         // different documents: the file changed on disk between the two opens
         return;
     }
+    ScopedMutex scope(&src->mediaboxLock);
     for (int i = 0; i < pageCount; i++) {
         ImagePageInfo* from = src->pageInfos[i];
         if (from->state != PageInfoState::Known) {
