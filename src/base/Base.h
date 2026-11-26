@@ -1746,8 +1746,9 @@ struct Vec {
     }
 
     T& operator[](int idx) const {
-        ReportIf(idx < 0);
-        ReportIf(idx >= len);
+        if (ReportIf(idx < 0 || idx >= len)) {
+            CrashMe();
+        }
         return els[idx];
     }
 
@@ -1984,8 +1985,7 @@ bool VecIsValidIndex(const Vec<T>& v, int idx) {
 
 template <typename T>
 T& VecLast(const Vec<T>& v) {
-    ReportIf(0 == v.len);
-    return v.els[v.len - 1];
+    return v[v.len - 1];
 }
 
 template <typename T>
