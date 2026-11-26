@@ -73,6 +73,10 @@ constexpr float kTtsSpeedMax = 3.0f;
 static SpdApi gSpd;
 static SpdConnection* gTtsConnection = nullptr;
 static Mutex gTtsMutex;
+class TtsStateScope {
+    ScopedMutex lock{&gTtsMutex};
+};
+
 static Str gTtsSpokenText;
 static Str gTtsQueuedText;
 static Str gTtsVoiceId;
@@ -97,9 +101,7 @@ static bool LoadSpdFn(T& fn, const char* name) {
     return fn != nullptr;
 }
 
-// caller holds gTtsMutex
-static void TtsBeganLocked(int messageId) {
-    ReportDebugIf(!gTtsMutex.IsHeldByCurrentThread());
+static void TtsBeganLocked(const TtsStateScope&, int messageId) {
     if (messageId != gTtsQueuedMessage) {
         return;
     }
@@ -112,9 +114,7 @@ static void TtsBeganLocked(int messageId) {
     gTtsQueuedStarted = true;
 }
 
-// caller holds gTtsMutex
-static void TtsEndedLocked(int messageId) {
-    ReportDebugIf(!gTtsMutex.IsHeldByCurrentThread());
+static void TtsEndedLocked(const TtsStateScope&, int messageId) {
     if (messageId == gTtsQueuedMessage) {
         str::FreePtr(&gTtsQueuedText);
         gTtsQueuedMessage = 0;
@@ -126,15 +126,15 @@ static void TtsEndedLocked(int messageId) {
 }
 
 static void TtsOnBegin(size_t messageId, size_t, SpdNotificationType) {
-    ScopedMutex lock(&gTtsMutex);
+    TtsStateScope scope;
     gTtsLastBegun = (int)messageId;
-    TtsBeganLocked((int)messageId);
+    TtsBeganLocked(scope, (int)messageId);
 }
 
 static void TtsOnEnd(size_t messageId, size_t, SpdNotificationType) {
-    ScopedMutex lock(&gTtsMutex);
+    TtsStateScope scope;
     gTtsLastEnded = (int)messageId;
-    TtsEndedLocked((int)messageId);
+    TtsEndedLocked(scope, (int)messageId);
 }
 
 static void TtsOnMark(size_t messageId, size_t, SpdNotificationType, char* mark) {
@@ -269,13 +269,13 @@ bool TtsSpeakUtf8(Str text) {
     if (message < 0) {
         return false;
     }
-    ScopedMutex lock(&gTtsMutex);
+    TtsStateScope scope;
     str::ReplacePtr(&gTtsSpokenText, str::Dup(text));
     gTtsSpokenPos = 0;
     gTtsActiveMessage = message;
     gTtsActive = true;
     if (gTtsLastEnded == message) {
-        TtsEndedLocked(message);
+        TtsEndedLocked(scope, message);
     }
     return true;
 }
@@ -295,14 +295,14 @@ bool TtsQueueUtf8(Str text) {
     if (message < 0) {
         return false;
     }
-    ScopedMutex lock(&gTtsMutex);
+    TtsStateScope scope;
     str::ReplacePtr(&gTtsQueuedText, str::Dup(text));
     gTtsQueuedMessage = message;
     if (gTtsLastBegun == message) {
-        TtsBeganLocked(message);
+        TtsBeganLocked(scope, message);
     }
     if (gTtsLastEnded == message) {
-        TtsEndedLocked(message);
+        TtsEndedLocked(scope, message);
     }
     return true;
 }
