@@ -3,6 +3,8 @@
 
 #include "base/Base.h"
 #if OS_WIN
+#include <ktmw32.h>
+
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/DirScan.h"
@@ -11,9 +13,81 @@
 #include "SumatraConfig.h"
 #include "Version.h"
 #include "AppTools.h"
+#include "Translations.h"
 #include "Installer.h"
 
+#pragma comment(lib, "KtmW32.lib")
+
 // All registry manipulation needed for installer / uninstaller
+
+struct InstallRegWriter {
+    HKEY root;
+    HANDLE transaction = nullptr;
+    bool ok = true;
+
+    void Set(Str key, Str name, DWORD type, const void* data, DWORD size);
+    void String(Str key, Str name, Str value);
+    void Dword(Str key, Str name, DWORD value);
+    void None(Str key, Str name);
+    void Delete(Str key, Str name);
+    void Record(Str key, Str name, LSTATUS status);
+};
+
+void InstallRegWriter::Record(Str key, Str name, LSTATUS status) {
+    if (status != ERROR_SUCCESS) {
+        ok = false;
+    }
+    if (gLogRegistryCalls || status != ERROR_SUCCESS) {
+        logf("Installer registry: %s, %s, %s => %d\n", RegKeyNameTemp(root), key, name, (int)status);
+    }
+}
+
+void InstallRegWriter::Set(Str key, Str name, DWORD type, const void* data, DWORD size) {
+    if (transaction && !ok) {
+        return;
+    }
+    HKEY hkey;
+    WCHAR* path = CWStrTemp(key);
+    LSTATUS status = transaction ? RegCreateKeyTransactedW(root, path, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hkey,
+                                                           nullptr, transaction, nullptr)
+                                 : RegCreateKeyExW(root, path, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hkey, nullptr);
+    if (status == ERROR_SUCCESS) {
+        status = RegSetValueExW(hkey, CWStrTemp(name), 0, type, (const BYTE*)data, size);
+        RegCloseKey(hkey);
+    }
+    Record(key, name, status);
+}
+
+void InstallRegWriter::String(Str key, Str name, Str value) {
+    int cch;
+    WCHAR* wide = CWStrTemp(value, cch);
+    Set(key, name, REG_SZ, wide, (DWORD)(cch + 1) * sizeof(WCHAR));
+}
+
+void InstallRegWriter::Dword(Str key, Str name, DWORD value) {
+    Set(key, name, REG_DWORD, &value, sizeof(value));
+}
+
+void InstallRegWriter::None(Str key, Str name) {
+    Set(key, name, REG_NONE, nullptr, 0);
+}
+
+void InstallRegWriter::Delete(Str key, Str name) {
+    if (transaction && !ok) {
+        return;
+    }
+    HKEY hkey;
+    WCHAR* path = CWStrTemp(key);
+    LSTATUS status = transaction ? RegOpenKeyTransactedW(root, path, 0, KEY_SET_VALUE, &hkey, transaction, nullptr)
+                                 : RegOpenKeyExW(root, path, 0, KEY_SET_VALUE, &hkey);
+    if (status == ERROR_SUCCESS) {
+        status = RegDeleteValueW(hkey, CWStrTemp(name));
+        RegCloseKey(hkey);
+    }
+    if (status != ERROR_FILE_NOT_FOUND && status != ERROR_PATH_NOT_FOUND) {
+        Record(key, name, status);
+    }
+}
 
 // Extensions registered for Open With and their icon resource IDs.
 // Negative icon indices select resources by ID in SumatraPDF.rc.
@@ -96,64 +170,55 @@ static i64 GetDirSize(Str dir) {
     return totalSize;
 }
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
-    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey),
-         (int)allUsers, installDir);
-    bool ok = true;
-
+static void WriteUninstallerInfo(InstallRegWriter& reg, Str installDir, DesktopShortcut shortcut) {
     TempStr installedExePath = path::JoinTemp(installDir, Str(kExeName));
     TempStr installDate = GetInstallDateTemp();
     // uninstaller is the same executable with a different flag
     TempStr uninstallCmdLine = fmt("\"%s\" -uninstall", installedExePath);
-    if (allUsers) {
+    if (reg.root == HKEY_LOCAL_MACHINE) {
         uninstallCmdLine = str::JoinTemp(uninstallCmdLine, StrL(" -all-users"));
     }
 
     TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
     // path to installed executable (or "$path,0" to force the first icon)
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayIcon"), installedExePath);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayName"), StrL(kAppName));
+    reg.String(regPathUninst, StrL("DisplayIcon"), installedExePath);
+    reg.String(regPathUninst, StrL("DisplayName"), StrL(kAppName));
     // version format: "1.2"
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayVersion"), currentVersion);
+    reg.String(regPathUninst, StrL("DisplayVersion"), currentVersion);
     // non-recursive because we don't want to count space used for thumbnails
     // which is in installDir for local install
     DWORD size = (DWORD)(GetDirSize(installDir) / 1024);
     // size of installed directory after copying files
-    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, StrL("EstimatedSize"), size);
+    reg.Dword(regPathUninst, StrL("EstimatedSize"), size);
     // current date as YYYYMMDD
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("InstallDate"), installDate);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("InstallLocation"), installDir);
-    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, StrL("NoModify"), 1);
-    ok &= LoggedWriteRegDWORD(hkey, regPathUninst, StrL("NoRepair"), 1);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("Publisher"), StrL(kPublisherStr));
+    reg.String(regPathUninst, StrL("InstallDate"), installDate);
+    reg.String(regPathUninst, StrL("InstallLocation"), installDir);
+    reg.Dword(regPathUninst, StrL("NoModify"), 1);
+    reg.Dword(regPathUninst, StrL("NoRepair"), 1);
+    reg.String(regPathUninst, StrL("Publisher"), StrL(kPublisherStr));
     // command line for uninstaller
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("UninstallString"), uninstallCmdLine);
+    reg.String(regPathUninst, StrL("UninstallString"), uninstallCmdLine);
     TempStr uninstallCmdLineSilent = str::JoinTemp(uninstallCmdLine, StrL(" -silent"));
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("QuietUninstallString"), uninstallCmdLineSilent);
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("URLInfoAbout"), StrL("https://www.sumatrapdfreader.org/"));
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("URLUpdateInfo"),
-                            StrL("https://www.sumatrapdfreader.org/docs/Version-history.html"));
-    if (!ok) {
-        log(StrL("WriteUninstallerRegistryInfo() failed\n"));
-    }
-    return ok;
+    reg.String(regPathUninst, StrL("QuietUninstallString"), uninstallCmdLineSilent);
+    reg.String(regPathUninst, StrL("URLInfoAbout"), StrL("https://www.sumatrapdfreader.org/"));
+    reg.String(regPathUninst, StrL("URLUpdateInfo"),
+               StrL("https://www.sumatrapdfreader.org/docs/Version-history.html"));
+    reg.Dword(regPathUninst, StrL(kRegDesktopShortcut), shortcut == DesktopShortcut::Create ? 1 : 0);
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
 // http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
-static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
-    bool ok = true;
-
+static void RegisterForDefaultPrograms(InstallRegWriter& reg, Str installedExePath) {
     // L"SOFTWARE\\SumatraPDF\\Capabilities"
     TempStr appCapabilityPath = str::JoinTemp(StrL("SOFTWARE\\"), StrL(kAppName), StrL("\\Capabilities"));
 
     Str desc = StrL("SumatraPDF is a PDF reader.");
-    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, StrL("ApplicationDescription"), desc);
+    reg.String(appCapabilityPath, StrL("ApplicationDescription"), desc);
     // ApplicationName must match the RegisteredApplications value name (kAppName).
-    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, StrL("ApplicationName"), StrL(kAppName));
+    reg.String(appCapabilityPath, StrL("ApplicationName"), StrL(kAppName));
     // icon shown next to the app in Settings > Default Apps
     TempStr appIcon = str::JoinTemp(StrL("\""), installedExePath, StrL("\",0"));
-    ok &= LoggedWriteRegStr(hkey, appCapabilityPath, StrL("ApplicationIcon"), appIcon);
+    reg.String(appCapabilityPath, StrL("ApplicationIcon"), appIcon);
 
     // L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations"
     TempStr keyAssoc = str::JoinTemp(appCapabilityPath, StrL("\\FileAssociations"));
@@ -167,22 +232,20 @@ static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
         // (e.g. "SumatraPDF.pdf"); Default Apps UI hides the app if the
         // FileAssociations ProgID can't be resolved under HKCR
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
-        ok &= LoggedWriteRegStr(hkey, keyAssoc, ext, progIDName);
+        reg.String(keyAssoc, ext, progIDName);
     }
 
-    ok &= LoggedWriteRegStr(hkey, StrL("SOFTWARE\\RegisteredApplications"), StrL(kAppName), appCapabilityPath);
-    return ok;
+    reg.String(StrL("SOFTWARE\\RegisteredApplications"), StrL(kAppName), appCapabilityPath);
 }
 
 // Register per-extension ProgIDs and their OpenWithProgids entries.
 // Use the same registry root for both so either per-user or all-users works.
-static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
+static void RegisterForOpenWith(InstallRegWriter& reg, Str installedExePath) {
     TempStr exePathQuoted = str::JoinTemp(StrL("\""), installedExePath, StrL("\""));
     TempStr cmdOpen = str::JoinTemp(exePathQuoted, StrL(" \"%1\""));
     TempStr cmdPrint = str::JoinTemp(exePathQuoted, StrL(" -print-to-default \"%1\""));
     TempStr cmdPrintTo = str::JoinTemp(exePathQuoted, StrL(" -print-to \"%2\" \"%1\""));
     TempStr key;
-    bool ok = true;
     for (const auto& type : gSupportedExts) {
         Str ext = type.ext;
         if (!IsExtUsable(ext)) {
@@ -196,37 +259,36 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
         // Windows generates for the file type, so non-English systems wrongly show
         // English names in Explorer's "Type" column (issue #3323). Delete any value
         // a previous version wrote so Windows falls back to the localized name.
-        ok &= LoggedDeleteRegValue(hkey, progIDKey, {});
+        reg.Delete(progIDKey, {});
 
         TempStr iconPath = fmt("%s,-%d", exePathQuoted, type.iconId);
 
         key = str::JoinTemp(progIDKey, StrL("\\Application"));
-        ok &= LoggedWriteRegStr(hkey, key, StrL("ApplicationCompany"), StrL("Krzysztof Kowalczyk"));
-        ok &= LoggedWriteRegStr(hkey, key, StrL("ApplicationName"), StrL(kAppName));
+        reg.String(key, StrL("ApplicationCompany"), StrL("Krzysztof Kowalczyk"));
+        reg.String(key, StrL("ApplicationName"), StrL(kAppName));
 
         key = str::JoinTemp(progIDKey, StrL("\\DefaultIcon"));
-        ok &= LoggedWriteRegStr(hkey, key, {}, iconPath);
+        reg.String(key, {}, iconPath);
 
         key = str::JoinTemp(progIDKey, StrL("\\shell\\open"));
-        ok &= LoggedWriteRegStr(hkey, key, StrL("Icon"), iconPath);
-        ok &= LoggedWriteRegStr(hkey, key, StrL("MultiSelectModel"), StrL("Player"));
+        reg.String(key, StrL("Icon"), iconPath);
+        reg.String(key, StrL("MultiSelectModel"), StrL("Player"));
 
         key = str::JoinTemp(progIDKey, StrL("\\shell\\open\\command"));
-        ok &= LoggedWriteRegStr(hkey, key, {}, cmdOpen);
+        reg.String(key, {}, cmdOpen);
 
         // for PDF also register for Print/PrintTo shell actions
         if (str::Eq(ext, StrL(".pdf"))) {
             key = str::JoinTemp(progIDKey, StrL("\\shell\\Print\\command"));
-            ok &= LoggedWriteRegStr(hkey, key, {}, cmdPrint);
+            reg.String(key, {}, cmdPrint);
 
             key = str::JoinTemp(progIDKey, StrL("\\shell\\PrintTo\\command"));
-            ok &= LoggedWriteRegStr(hkey, key, {}, cmdPrintTo);
+            reg.String(key, {}, cmdPrintTo);
         }
 
         key = str::JoinTemp(StrL("Software\\Classes\\"), ext, StrL("\\OpenWithProgids"));
-        ok &= LoggedWriteRegNone(hkey, key, progIDName);
+        reg.None(key, progIDName);
     }
-    return ok;
 }
 
 #define kRegExplorerPdfExt "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
@@ -236,28 +298,51 @@ static TempStr GetRegClassesAppsTemp(Str appName) {
     return str::JoinTemp(StrL("Software\\Classes\\Applications\\"), appName, StrL(".exe"));
 }
 
-// http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
-bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath) {
-    logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
-    bool ok = true;
-    TempStr key;
+InstallRegResult InstallRegistryInfo(HKEY root, Str installDir, DesktopShortcut shortcut) {
+    // Closing the transaction without a commit rolls back all of its changes.
+    AutoCloseHandle transaction(CreateTransaction(nullptr, nullptr, TRANSACTION_DO_NOT_PROMOTE, 0, 0, 0, nullptr));
+    if (!transaction.IsValid()) {
+        LogLastError();
+        return InstallRegResult::UninstallInfoFailed;
+    }
 
+    InstallRegWriter reg{root, transaction};
+    WriteUninstallerInfo(reg, installDir, shortcut);
+    if (!reg.ok) {
+        return InstallRegResult::UninstallInfoFailed;
+    }
+
+    TempStr exePath = path::JoinTemp(installDir, Str(kExeName));
     if (IsWindows10OrGreater()) {
-        ok &= RegisterForDefaultPrograms(hkey, installedExePath);
+        RegisterForDefaultPrograms(reg, exePath);
     }
-    ok &= RegisterForOpenWith(hkey, installedExePath);
+    RegisterForOpenWith(reg, exePath);
 
-    // in case these values don't exist yet (we won't delete these at uninstallation)
-    ok &= LoggedWriteRegStr(hkey, StrL(kRegClassesPdf), StrL("Content Type"), StrL("application/pdf"));
-    key = StrL(R"(Software\Classes\MIME\Database\Content Type\application/pdf)");
-    ok &= LoggedWriteRegStr(hkey, key, StrL("Extension"), StrL(".pdf"));
-
-    if (!ok) {
-        log(StrL("WriteExtendedFileExtensionInfo() failed\n"));
+    // These shared MIME values are retained by the uninstaller.
+    reg.String(StrL(kRegClassesPdf), StrL("Content Type"), StrL("application/pdf"));
+    reg.String(StrL(R"(Software\Classes\MIME\Database\Content Type\application/pdf)"), StrL("Extension"), StrL(".pdf"));
+    if (!reg.ok) {
+        return InstallRegResult::AssociationsFailed;
+    }
+    if (!CommitTransaction(transaction)) {
+        LogLastError();
+        return InstallRegResult::CommitFailed;
     }
 
-    ShellNotifyAssociationsChanged();
-    return ok;
+    return InstallRegResult::Complete;
+}
+
+Str InstallRegError(InstallRegResult result) {
+    switch (result) {
+        case InstallRegResult::UninstallInfoFailed:
+        case InstallRegResult::CommitFailed:
+            return Tr("Failed to write the uninstallation information to the registry");
+        case InstallRegResult::AssociationsFailed:
+            return Tr("Failed to write the extended file extension information to the registry");
+        case InstallRegResult::Complete:
+            return {};
+    }
+    return {};
 }
 
 bool RemoveUninstallerRegistryInfo(HKEY hkey) {
@@ -318,8 +403,7 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
     return isEmpty;
 }
 
-void RemoveInstallRegistryKeys(HKEY hkey) {
-    logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
+static void RemoveLegacyInstallKeys(HKEY hkey) {
     UnregisterFromBeingDefaultViewer(hkey);
 
     // those are registry keys written before 3.4
@@ -355,6 +439,11 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
             }
         }
     }
+}
+
+void RemoveInstallRegistryKeys(HKEY hkey) {
+    logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
+    RemoveLegacyInstallKeys(hkey);
 
     // those were introduced in 3.4
     for (const auto& type : gSupportedExts) {
@@ -373,6 +462,19 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     TempStr keyName = fmt("SOFTWARE\\%s\\Capabilities", StrL(kAppName));
     LoggedDeleteRegKey(hkey, keyName);
 
+    ShellNotifyAssociationsChanged();
+}
+
+void RemovePreviousInstallRegistry(HKEY installed, bool wasAllUsers) {
+    RemoveLegacyInstallKeys(installed);
+    if (installed != HKEY_LOCAL_MACHINE && wasAllUsers) {
+        RemoveInstallRegistryKeys(HKEY_LOCAL_MACHINE);
+        RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+    }
+    if (installed != HKEY_CURRENT_USER) {
+        RemoveInstallRegistryKeys(HKEY_CURRENT_USER);
+        RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER);
+    }
     ShellNotifyAssociationsChanged();
 }
 
@@ -397,9 +499,10 @@ void ReRegisterFileAssociations() {
         if (HasAllOurOpenWithEntries(hkey)) {
             continue;
         }
-        RegisterForOpenWith(hkey, exePath);
+        InstallRegWriter reg{hkey};
+        RegisterForOpenWith(reg, exePath);
         if (IsWindows10OrGreater()) {
-            RegisterForDefaultPrograms(hkey, exePath);
+            RegisterForDefaultPrograms(reg, exePath);
         }
         didRegister = true;
     }

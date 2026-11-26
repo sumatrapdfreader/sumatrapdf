@@ -117,8 +117,19 @@ TempStr GetRegPathUninstTemp(Str appName);
 
 void RemoveAppShortcuts();
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir);
-bool WriteExtendedFileExtensionInfo(HKEY hkey, Str installedExePath);
+enum class DesktopShortcut {
+    Omit,
+    Create
+};
+enum class InstallRegResult {
+    Complete,
+    UninstallInfoFailed,
+    AssociationsFailed,
+    CommitFailed
+};
+InstallRegResult InstallRegistryInfo(HKEY root, Str installDir, DesktopShortcut shortcut);
+Str InstallRegError(InstallRegResult result);
+void RemovePreviousInstallRegistry(HKEY installed, bool wasAllUsers);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();

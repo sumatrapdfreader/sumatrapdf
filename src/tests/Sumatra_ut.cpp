@@ -6,6 +6,10 @@
 
 #if IS_DEBUG
 
+#include <ktmw32.h>
+
+#include "base/AutoWin.h"
+
 #include "base/WinDynCalls.h"
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
@@ -24,6 +28,8 @@
 #include "gui/VirtCtrl.h"
 
 #include "AppTools.h"
+#include "Version.h"
+#include "Installer.h"
 #include "Settings.h"
 #include "DocController.h"
 #include "DocProperties.h"
@@ -506,6 +512,69 @@ static void AIChatReadUntilExitTest() {
     utassert(str::Contains(ToStr(out2), StrL("hi")));
 }
 
+static void InstallRegistryRollbackTest() {
+    TempStr testPath = fmt("Software\\SumatraPDF-unit-test-%u-%llu", (uint)GetCurrentProcessId(), GetTickCount64());
+    HKEY root;
+    DWORD disposition;
+    LSTATUS status = RegCreateKeyExW(HKEY_CURRENT_USER, CWStrTemp(testPath), 0, nullptr, 0, KEY_ALL_ACCESS, nullptr,
+                                     &root, &disposition);
+    utassert(status == ERROR_SUCCESS && disposition == REG_CREATED_NEW_KEY);
+    if (status != ERROR_SUCCESS) {
+        return;
+    }
+    defer {
+        RegCloseKey(root);
+    };
+    if (disposition != REG_CREATED_NEW_KEY) {
+        return;
+    }
+    defer {
+        RegDeleteTreeW(HKEY_CURRENT_USER, CWStrTemp(testPath));
+    };
+
+    TempStr uninstallKey = GetRegPathUninstTemp(StrL(kAppName));
+    TempStr pdfProgId = str::JoinTemp(StrL("Software\\Classes\\"), StrL(kAppName), StrL(".pdf"));
+    Str mimeKey = StrL(R"(Software\Classes\MIME\Database\Content Type\application/pdf)");
+    Str valueName = StrL("InstallLocation");
+    Str previousDir = StrL("C:\\previous");
+    Str friendlyName = StrL("Previous friendly name");
+    Str previousExt = StrL(".previous");
+    utassert(WriteRegStr(root, uninstallKey, valueName, previousDir));
+    utassert(WriteRegStr(root, pdfProgId, {}, friendlyName));
+    utassert(WriteRegStr(root, mimeKey, StrL("Extension"), previousExt));
+
+    TempStr installDir = GetTempDirTemp();
+    {
+        // Hold a write on the last association key so earlier writes must roll back.
+        AutoCloseHandle blocker(CreateTransaction(nullptr, nullptr, TRANSACTION_DO_NOT_PROMOTE, 0, 0, 0, nullptr));
+        utassert(blocker.IsValid());
+        HKEY held;
+        status = RegOpenKeyTransactedW(root, CWStrTemp(mimeKey), 0, KEY_SET_VALUE, &held, blocker, nullptr);
+        utassert(status == ERROR_SUCCESS);
+        if (status != ERROR_SUCCESS) {
+            return;
+        }
+        DWORD data = 1;
+        utassert(RegSetValueExW(held, L"Extension", 0, REG_DWORD, (BYTE*)&data, sizeof(data)) == ERROR_SUCCESS);
+        RegCloseKey(held);
+        auto result = InstallRegistryInfo(root, installDir, DesktopShortcut::Omit);
+        utassert(result == InstallRegResult::AssociationsFailed);
+    }
+
+    DWORD shortcut;
+    utassert(str::Eq(ReadRegStrTemp(root, uninstallKey, valueName), previousDir));
+    utassert(!ReadRegDWORD(root, uninstallKey, StrL(kRegDesktopShortcut), shortcut));
+    utassert(str::Eq(ReadRegStrTemp(root, pdfProgId, {}), friendlyName));
+    utassert(!RegKeyExists(root, str::JoinTemp(pdfProgId, StrL("\\shell"))));
+    utassert(str::Eq(ReadRegStrTemp(root, mimeKey, StrL("Extension")), previousExt));
+
+    utassert(InstallRegistryInfo(root, installDir, DesktopShortcut::Omit) == InstallRegResult::Complete);
+    utassert(str::Eq(ReadRegStrTemp(root, uninstallKey, valueName), installDir));
+    utassert(ReadRegDWORD(root, uninstallKey, StrL(kRegDesktopShortcut), shortcut) && shortcut == 0);
+    utassert(RegKeyExists(root, str::JoinTemp(pdfProgId, StrL("\\shell\\open\\command"))));
+    utassert(str::Eq(ReadRegStrTemp(root, mimeKey, StrL("Extension")), StrL(".pdf")));
+}
+
 static void SumatraPDF_UnitTests() {
     GuiFontLangTest();
     StripGroupOrderTest();
@@ -516,6 +585,7 @@ static void SumatraPDF_UnitTests() {
     SumatraPDFWebTest();
     HttpTransferTest();
     OpenDdeCmdTest();
+    InstallRegistryRollbackTest();
     UpdateCheckDecisionTest();
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();

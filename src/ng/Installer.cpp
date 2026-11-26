@@ -40,7 +40,6 @@ static InstallerWnd* gWnd = nullptr;
 static bool gInstallStarted = false; // a bit of a hack
 enum class InstallResult {
     Failed,
-    Partial,
     Complete
 };
 // Read after gInstallFinished is set, or immediately after a silent install.
@@ -116,37 +115,25 @@ static void InstallerThread(Flags* cli) {
         goto Exit;
     }
 
-    // for cleaner upgrades, remove registry entries and shortcuts from previous installations
-    // doing it unconditionally, because deleting non-existing things doesn't hurt
-    if (gPrevInstall.allUsers) {
-        RemoveInstallRegistryKeys(HKEY_LOCAL_MACHINE);
-        RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+    {
+        auto shortcut = cli->noDesktopShortcut ? DesktopShortcut::Omit : DesktopShortcut::Create;
+        InstallRegResult result = InstallRegistryInfo(key, cli->installDir, shortcut);
+        if (result != InstallRegResult::Complete) {
+            NotifyFailed(InstallRegError(result));
+            goto Exit;
+        }
     }
-    RemoveInstallRegistryKeys(HKEY_CURRENT_USER);
-    RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER);
+
+    RemovePreviousInstallRegistry(key, gPrevInstall.allUsers);
     RemoveAppShortcuts();
 
     CopySettingsFile();
 
     CreateAppShortcuts(allUsers, !cli->noDesktopShortcut, installedExePath);
 
-    {
-        bool uninstallInfo = WriteUninstallerRegistryInfo(key, allUsers, cli->installDir);
-        // Remember the desktop shortcut preference for the next upgrade.
-        uninstallInfo &= LoggedWriteRegDWORD(key, GetRegPathUninstTemp(StrL(kAppName)), StrL(kRegDesktopShortcut),
-                                             cli->noDesktopShortcut ? 0 : 1);
-        if (!uninstallInfo) {
-            NotifyFailed(Tr("Failed to write the uninstallation information to the registry"));
-        }
-        bool associations = WriteExtendedFileExtensionInfo(key, installedExePath);
-        if (!associations) {
-            NotifyFailed(Tr("Failed to write the extended file extension information to the registry"));
-        }
-        gInstallResult = uninstallInfo && associations ? InstallResult::Complete : InstallResult::Partial;
-    }
-
     AddInstallDirToPath(allUsers, cli->installDir);
 
+    gInstallResult = InstallResult::Complete;
     ProgressStep();
     log(StrL("Installer thread finished\n"));
 Exit:

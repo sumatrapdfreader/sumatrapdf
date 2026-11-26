@@ -977,8 +977,6 @@ static PreviewHandlers PreviewHandlersToInstall(Flags* cli) {
 }
 
 static void InstallerThread(Flags* cli) {
-    bool ok;
-
     gInstallFailed = true;
 
     TempStr installedExePath = path::JoinTemp(cli->installDir, Str(kExeName));
@@ -1008,17 +1006,19 @@ static void InstallerThread(Flags* cli) {
         goto Exit;
     }
 
-    // for cleaner upgrades, remove registry entries and shortcuts from previous installations
-    // doing it unconditionally, because deleting non-existing things doesn't hurt
-    // (filter/preview already unregistered in FreeInstallationFilesInUse)
+    {
+        auto shortcut = cli->noDesktopShortcut ? DesktopShortcut::Omit : DesktopShortcut::Create;
+        InstallRegResult result = InstallRegistryInfo(key, cli->installDir, shortcut);
+        if (result != InstallRegResult::Complete) {
+            NotifyFailed(InstallRegError(result));
+            RestoreShellExtensions(removedExts);
+            goto Exit;
+        }
+    }
+
     UninstallPreviewDll();
     UninstallSearchFilter();
-    if (gPrevInstall.allUsers) {
-        RemoveInstallRegistryKeys(HKEY_LOCAL_MACHINE);
-        RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
-    }
-    RemoveInstallRegistryKeys(HKEY_CURRENT_USER);
-    RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER);
+    RemovePreviousInstallRegistry(key, gPrevInstall.allUsers);
     RemoveAppShortcuts();
 
     CopySettingsFile();
@@ -1038,25 +1038,9 @@ static void InstallerThread(Flags* cli) {
 
     CreateAppShortcuts(allUsers, !cli->noDesktopShortcut, installedExePath);
 
-    // consider installation a success from here on
-    // (still warn, if we've failed to create the uninstaller, though)
-    gInstallFailed = false;
-
-    ok = WriteUninstallerRegistryInfo(key, allUsers, cli->installDir);
-    if (!ok) {
-        NotifyFailed(Tr("Failed to write the uninstallation information to the registry"));
-    }
-    // remembered for the next upgrade (GetPreviousInstallInfo)
-    LoggedWriteRegDWORD(key, GetRegPathUninstTemp(StrL(kAppName)), StrL(kRegDesktopShortcut),
-                        cli->noDesktopShortcut ? 0 : 1);
-
-    ok = WriteExtendedFileExtensionInfo(key, installedExePath);
-    if (!ok) {
-        NotifyFailed(Tr("Failed to write the extended file extension information to the registry"));
-    }
-
     AddInstallDirToPath(allUsers, cli->installDir);
 
+    gInstallFailed = false;
     ProgressStep();
     log(StrL("Installer thread finished\n"));
 Exit:
