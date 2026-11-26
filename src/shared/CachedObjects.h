@@ -24,7 +24,7 @@ extern Kind kindCachedImage;
 
 extern Vec<CachedObject> gCachedObjects;
 // 0: trim only after allocation failure. 100: free everything CanFree allows.
-extern int gSaveMemory;
+extern AtomicInt gSaveMemory;
 
 extern WindowTab* (*gFindTabByEngine)(EngineBase*);
 extern WindowTab* (*gCurrentTabForCache)();

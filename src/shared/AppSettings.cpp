@@ -421,7 +421,7 @@ static void CreateCustomShortcuts() {
 void ApplySettingsToOpenWindows() {
     if (gSettings) {
         setMinMax(gSettings->saveMemory, 0, 100);
-        gSaveMemory = gSettings->saveMemory;
+        AtomicIntSet(&gSaveMemory, gSettings->saveMemory);
     }
 #if !defined(SUMATRA_NG)
     for (MainWindow* win : gWindows) {
@@ -911,7 +911,7 @@ static void ReloadSettings(bool force = false) {
     FileHistorySetStates(nullptr);
     // no cache trim until LoadSettings() restores it: reading the file
     // allocates and the trim's canFree callbacks read gSettings
-    gSaveMemory = 0;
+    AtomicIntSet(&gSaveMemory, 0);
     CleanUpSettings();
 
     ok = LoadSettings();

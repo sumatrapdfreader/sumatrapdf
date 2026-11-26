@@ -13,7 +13,7 @@ Kind kindCachedRender = "render";
 Kind kindCachedImage = "image";
 
 Vec<CachedObject> gCachedObjects;
-int gSaveMemory = 50;
+AtomicInt gSaveMemory = 50;
 
 WindowTab* (*gFindTabByEngine)(EngineBase*) = nullptr;
 WindowTab* (*gCurrentTabForCache)() = nullptr;
@@ -191,7 +191,7 @@ static u64 BytesWeWantFreed(u64 newAllocationSize, bool aggressive) {
         return (u64)-1;
     }
 
-    int level = gSaveMemory;
+    int level = AtomicIntGet(&gSaveMemory);
     level = ClampI(level, 0, 100);
     if (level == 0) {
         return 0;
@@ -334,7 +334,8 @@ void SerializeCachedObjects(str::Builder& s) {
         total += snap[i].size;
     }
 
-    s.Append(fmt("Cached objects: %d  (%s)  SaveMemory %d", len(snap), FormatCachedSizeTemp(total), gSaveMemory));
+    s.Append(fmt("Cached objects: %d  (%s)  SaveMemory %d", len(snap), FormatCachedSizeTemp(total),
+                 AtomicIntGet(&gSaveMemory)));
     u64 availPhys = 0;
     u64 totalPhys = 0;
     int memLoad = 0;

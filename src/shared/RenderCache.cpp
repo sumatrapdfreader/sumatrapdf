@@ -1770,7 +1770,7 @@ int RenderCache::Paint(
         }
     }
 
-    if (gSaveMemory > 0 && !neededScaling) {
+    if (AtomicIntGet(&gSaveMemory) > 0 && !neededScaling) {
         if (renderOutOfDateCue) {
             *renderOutOfDateCue = false;
         }

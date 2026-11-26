@@ -138,13 +138,13 @@ static void ResetCacheTest() {
 }
 
 void CachedObjects_UnitTests() {
-    int saved = gSaveMemory;
+    int saved = AtomicIntGet(&gSaveMemory);
     ResetCacheTest();
 
     auto* e1 = (EngineBase*)(uintptr_t)0x100;
     auto* e2 = (EngineBase*)(uintptr_t)0x200;
 
-    gSaveMemory = 0;
+    AtomicIntSet(&gSaveMemory, 0);
     CachedObject a = MkObj(1, 1000, e1);
     CachedObject b = MkObj(2, 2000, e1);
     CachedObject c = MkObj(3, 3000, e2);
@@ -167,7 +167,7 @@ void CachedObjects_UnitTests() {
 
     ResetCacheTest();
 
-    gSaveMemory = 100;
+    AtomicIntSet(&gSaveMemory, 100);
     a = MkObj(1, 1000, e1);
     b = MkObj(2, 2000, e1);
     c = MkObj(3, 3000, e2);
@@ -187,7 +187,7 @@ void CachedObjects_UnitTests() {
 
     ResetCacheTest();
 
-    gSaveMemory = 0;
+    AtomicIntSet(&gSaveMemory, 0);
     a = MkObj(4, 100, e1);
     b = MkObj(5, 100, e2);
     DidAllocateCachedObject(&a);
@@ -199,7 +199,7 @@ void CachedObjects_UnitTests() {
     utassert(gCachedObjects[0].id == 5);
 
     ResetCacheTest();
-    gSaveMemory = 0;
+    AtomicIntSet(&gSaveMemory, 0);
     a = MkObj(6, 2048, nullptr);
     a.kind = kindCachedRender;
     a.pageNo = 4;
@@ -225,5 +225,5 @@ void CachedObjects_UnitTests() {
         TabLookupOffUIThreadTest();
         ResetCacheTest();
     }
-    gSaveMemory = saved;
+    AtomicIntSet(&gSaveMemory, saved);
 }
