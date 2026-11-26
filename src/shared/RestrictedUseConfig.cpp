@@ -4,26 +4,30 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/SquareTreeParser.h"
+#include "Permissions.h"
 #include "RestrictedUseConfig.h"
 
-static const char* kRestrictedUseNames[] = {
-    "InternetAccess", "DiskAccess",    "SavePreferences",  "RegistryAccess",
-    "PrinterAccess",  "CopySelection", "FullscreenAccess", "AIChat",
+static const struct {
+    Perm permission;
+    Str name;
+    Str description;
+} kRestrictedUseFeatures[] = {
+    {Perm::InternetAccess, StrL("InternetAccess"),
+     StrL("Allow update checks, crash reports, and other Internet access.")},
+    {Perm::DiskAccess, StrL("DiskAccess"),
+     StrL("Allow opening and saving files, recent files, and external applications.")},
+    {Perm::SavePreferences, StrL("SavePreferences"),
+     StrL("Allow preferences, favorites, and file history to be saved.")},
+    {Perm::RegistryAccess, StrL("RegistryAccess"),
+     StrL("Allow registry changes, including default PDF viewer registration.")},
+    {Perm::PrinterAccess, StrL("PrinterAccess"), StrL("Allow documents to be printed.")},
+    {Perm::CopySelection, StrL("CopySelection"), StrL("Allow document content to be selected and copied.")},
+    {Perm::FullscreenAccess, StrL("FullscreenAccess"), StrL("Allow fullscreen and presentation modes.")},
+    {Perm::AIChat, StrL("AIChat"),
+     StrL("Allow AI chat and AI translation features. Internet and disk access are also required.")},
 };
 
-static const char* kRestrictedUseDescriptions[] = {
-    "Allow update checks, crash reports, and other Internet access.",
-    "Allow opening and saving files, recent files, and external applications.",
-    "Allow preferences, favorites, and file history to be saved.",
-    "Allow registry changes, including default PDF viewer registration.",
-    "Allow documents to be printed.",
-    "Allow document content to be selected and copied.",
-    "Allow fullscreen and presentation modes.",
-    "Allow AI chat and AI translation features. Internet and disk access are also required.",
-};
-
-static_assert(dimof(kRestrictedUseNames) == kRestrictedUseFeatureCount);
-static_assert(dimof(kRestrictedUseDescriptions) == kRestrictedUseFeatureCount);
+static_assert(dimof(kRestrictedUseFeatures) == kRestrictedUseFeatureCount);
 
 RestrictedUseConfig::~RestrictedUseConfig() {
     str::Free(linkProtocols);
@@ -31,17 +35,28 @@ RestrictedUseConfig::~RestrictedUseConfig() {
 }
 
 int RestrictedUseFeatureCount() {
-    return dimofi(kRestrictedUseNames);
+    return dimofi(kRestrictedUseFeatures);
+}
+
+Perm RestrictedUseFeaturePerm(int idx) {
+    if (ReportIf(idx < 0 || idx >= RestrictedUseFeatureCount())) {
+        return (Perm)0;
+    }
+    return kRestrictedUseFeatures[idx].permission;
 }
 
 Str RestrictedUseFeatureName(int idx) {
-    ReportIf(idx < 0 || idx >= RestrictedUseFeatureCount());
-    return Str(kRestrictedUseNames[idx]);
+    if (ReportIf(idx < 0 || idx >= RestrictedUseFeatureCount())) {
+        return {};
+    }
+    return kRestrictedUseFeatures[idx].name;
 }
 
 Str RestrictedUseFeatureDescription(int idx) {
-    ReportIf(idx < 0 || idx >= RestrictedUseFeatureCount());
-    return Str(kRestrictedUseDescriptions[idx]);
+    if (ReportIf(idx < 0 || idx >= RestrictedUseFeatureCount())) {
+        return {};
+    }
+    return kRestrictedUseFeatures[idx].description;
 }
 
 void LoadRestrictedUseConfig(RestrictedUseConfig& cfg, Str data, RestrictedUseFile file) {

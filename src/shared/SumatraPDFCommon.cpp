@@ -206,17 +206,12 @@ void InitializePolicies(bool restrict) {
         return;
     }
 
-    static Perm perms[] = {Perm::InternetAccess, Perm::DiskAccess,    Perm::SavePreferences,  Perm::RegistryAccess,
-                           Perm::PrinterAccess,  Perm::CopySelection, Perm::FullscreenAccess, Perm::AIChat};
-    // names come from the editor's table, so both read and write the same keys
-    static_assert(dimof(perms) == kRestrictedUseFeatureCount);
-
     // enable policies as indicated in sumatrapdfrestrict.ini
-    for (int i = 0; i < dimofi(perms); i++) {
+    for (int i = 0; i < RestrictedUseFeatureCount(); i++) {
         Str name = RestrictedUseFeatureName(i);
         Str val = polsec->GetValue(name);
         if (val && ParseInt(val) != 0) {
-            gPolicyRestrictions = gPolicyRestrictions | perms[i];
+            gPolicyRestrictions = gPolicyRestrictions | RestrictedUseFeaturePerm(i);
         }
     }
 

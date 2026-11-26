@@ -4,8 +4,7 @@
 constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 constexpr const char* kRestrictedUseDocsUrl = "https://www.sumatrapdfreader.org/docs/Configure-for-restricted-use";
 
-// policies in sumatrapdfrestrict.ini; the editor's tables and the app's Perm
-// list (SumatraPDFCommon.cpp) must each have exactly this many, in this order
+// Number of named policies in sumatrapdfrestrict.ini.
 constexpr int kRestrictedUseFeatureCount = 8;
 
 struct RestrictedUseItem {
@@ -31,6 +30,8 @@ enum class RestrictedUseFile {
 };
 
 int RestrictedUseFeatureCount();
+enum class Perm : uint;
+Perm RestrictedUseFeaturePerm(int idx);
 Str RestrictedUseFeatureName(int idx);
 Str RestrictedUseFeatureDescription(int idx);
 void LoadRestrictedUseConfig(RestrictedUseConfig& cfg, Str data, RestrictedUseFile file);
