@@ -4042,9 +4042,15 @@ static void ForEachPageInfo(EngineMupdf* e, const Fn& fn) {
 
 //--- layers (optional content groups)
 
-// "1" / "0" per optional content group. Caller holds docLock
-static TempStr LayerStatesTemp(EngineMupdf* e) {
-    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
+static void RequireLock(const ScopedRecursiveMutex& scope, const RecursiveMutex* lock) {
+    if (ReportIf(!scope.Guards(lock))) {
+        CrashMe();
+    }
+}
+
+// "1" / "0" per optional content group.
+static TempStr LayerStatesTemp(EngineMupdf* e, const ScopedRecursiveMutex& scope) {
+    RequireLock(scope, &e->docLock);
     int n = e->layerCount;
     if (n <= 0) {
         return {};
@@ -4065,9 +4071,8 @@ static TempStr LayerStatesTemp(EngineMupdf* e) {
 }
 
 // remembers the document's own layer state, to save only what the user changed.
-// Caller holds docLock
-static void LoadLayerDefaults(EngineMupdf* e) {
-    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
+static void LoadLayerDefaults(EngineMupdf* e, const ScopedRecursiveMutex& scope) {
+    RequireLock(scope, &e->docLock);
     auto* ctx = e->Ctx();
     fz_try(ctx) {
         e->layerCount = pdf_count_layers(ctx, e->pdfdoc);
@@ -4076,7 +4081,7 @@ static void LoadLayerDefaults(EngineMupdf* e) {
         fz_report_error(ctx);
         e->layerCount = 0;
     }
-    str::ReplaceWithCopy(&e->layerStatesAtLoad, LayerStatesTemp(e));
+    str::ReplaceWithCopy(&e->layerStatesAtLoad, LayerStatesTemp(e, scope));
     str::ReplaceWithCopy(&e->layerStates, e->layerStatesAtLoad);
 }
 
@@ -5180,9 +5185,9 @@ static bool IsLinearizedFile(EngineMupdf* e) {
 }
 
 // one vector, pageCount full entries: PDF, XPS and single-chapter reflow docs
-// size of each page of a PDF, from its page object. Caller holds docLock
-static void LoadPdfPageMediaboxes(EngineMupdf* e) {
-    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
+// Size of each page of a PDF, from its page object.
+static void LoadPdfPageMediaboxes(EngineMupdf* e, const ScopedRecursiveMutex& scope) {
+    RequireLock(scope, &e->docLock);
     auto* ctx = e->Ctx();
     for (int pageNo = 0; pageNo < e->pageCount; pageNo++) {
         pdf_obj* pageref = nullptr;
@@ -5212,9 +5217,8 @@ static void LoadPdfPageMediaboxes(EngineMupdf* e) {
     }
 }
 
-// Caller holds docLock
-static void LoadPdfPageLabels(EngineMupdf* e) {
-    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
+static void LoadPdfPageLabels(EngineMupdf* e, const ScopedRecursiveMutex& scope) {
+    RequireLock(scope, &e->docLock);
     auto* ctx = e->Ctx();
     if (e->pageLabels) {
         e->pageLabels->~StrVec();
@@ -5493,7 +5497,7 @@ bool EngineMupdf::FinishLoading() {
 
     ScopedRecursiveMutex scope(&docLock);
 
-    LoadPdfPageMediaboxes(this);
+    LoadPdfPageMediaboxes(this, scope);
 
     fz_try(ctx) {
         outline = fz_load_outline(ctx, _doc);
@@ -5508,7 +5512,7 @@ bool EngineMupdf::FinishLoading() {
     }
 
     attachments = PdfLoadAttachments(ctx, pdfdoc, FilePath());
-    LoadLayerDefaults(this);
+    LoadLayerDefaults(this, scope);
 
     pdf_obj* origInfo = nullptr;
     fz_var(origInfo);
@@ -5562,7 +5566,7 @@ bool EngineMupdf::FinishLoading() {
         pdfInfo = nullptr;
     }
 
-    LoadPdfPageLabels(this);
+    LoadPdfPageLabels(this, scope);
 
     // enable mupdf's JavaScript engine so form-field calculate / validate /
     // format actions run (e.g. auto-summed totals on a fillable form). mujs is
@@ -5616,8 +5620,8 @@ static bool RectNear(RectF a, RectF b) {
 // Caller holds pagesLock. Fixed-layout viewports are larger than the A5
 // placeholder; matching chapters share one box, a different size is per page.
 // True when a display model that cached the old size must rebuild.
-static bool ApplyChapterMediabox(EngineMupdf* e, int chapter, RectF measured) {
-    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
+static bool ApplyChapterMediabox(EngineMupdf* e, const ScopedRecursiveMutex& scope, int chapter, RectF measured) {
+    RequireLock(scope, &e->pagesLock);
     if (measured.IsEmpty() || chapter < 1 || chapter > len(e->chapterPages)) {
         return false;
     }
@@ -5747,7 +5751,7 @@ int EngineMupdf::LayOutChapter(int chapter) {
                 pi->~FzPageInfo();
                 VecRemoveLast(*v);
             }
-            staleBox = ApplyChapterMediabox(this, chapter, measured);
+            staleBox = ApplyChapterMediabox(this, pagesScope, chapter, measured);
         }
     }
     if (staleBox) {
@@ -10819,9 +10823,9 @@ static void SaveIncrementalFromMemory(EngineMupdf* e, Str path, const pdf_write_
 }
 
 // why an incremental save of path can't compare against memory, {} if it can.
-// Caller holds docLock.
-static Str WhyNotSaveFromMemory(EngineMupdf* e, Str path, const pdf_write_options& opts) {
-    ReportDebugIf(!e->docLock.IsHeldByCurrentThread());
+static Str WhyNotSaveFromMemory(EngineMupdf* e, const ScopedRecursiveMutex& scope, Str path,
+                                const pdf_write_options& opts) {
+    RequireLock(scope, &e->docLock);
     pdf_document* doc = e->pdfdoc;
     if (!opts.do_incremental) {
         return StrL("not incremental");
@@ -10892,7 +10896,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
         save_opts.do_garbage = 1;
     }
 
-    Str whyNotFromMemory = WhyNotSaveFromMemory(epdf, path, save_opts);
+    Str whyNotFromMemory = WhyNotSaveFromMemory(epdf, scope, path, save_opts);
     bool fromMemory = len(whyNotFromMemory) == 0;
     bool ok = false;
     fz_var(ok);
@@ -13000,7 +13004,7 @@ bool EngineMupdfToggleLayerRow(EngineBase* engine, int row) {
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    TempStr states = LayerStatesTemp(epdf);
+    TempStr states = LayerStatesTemp(epdf, doc);
     if (str::Eq(states, epdf->layerStates)) {
         return false;
     }
@@ -13050,7 +13054,7 @@ void EngineMupdfSetLayerStates(EngineBase* engine, Str states) {
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    str::ReplaceWithCopy(&epdf->layerStates, LayerStatesTemp(epdf));
+    str::ReplaceWithCopy(&epdf->layerStates, LayerStatesTemp(epdf, doc));
     DropDisplayListsForLayers(epdf);
 }
 
