@@ -16,12 +16,7 @@ License: GPLv3 */
 
 #include "Theme.h"
 
-// The installer and uninstaller never load settings, so CreateThemeCommands()
-// doesn't run and there is no current theme - every Theme*Color() accessor
-// dereferences gCurrentTheme and would crash. They still create buttons and
-// edits; those paint in gui/'s own defaults, which start out as the system
-// colors, so nothing here has to answer without a theme. Defined next to
-// gCurrentTheme.
+// The installer and uninstaller do not load theme settings.
 static bool HasCurrentTheme();
 
 /*
@@ -490,12 +485,13 @@ int gCurrSetThemeCmdId;
 static Vec<Theme*>* gThemes = nullptr;
 static int gThemeCount;
 static int gCurrThemeIndex = 0;
-static Theme* gCurrentTheme = nullptr;
+static Theme gFallbackTheme{};
+static Theme* gCurrentTheme = &gFallbackTheme;
 static Theme* gThemeLight = nullptr;
 static Themes* gParsedThemes = nullptr;
 
 static bool HasCurrentTheme() {
-    return gCurrentTheme != nullptr;
+    return gCurrentTheme != &gFallbackTheme;
 }
 
 bool IsCurrentThemeDefault() {
@@ -542,14 +538,16 @@ bool ThemeUsesHighContrastColors() {
 }
 
 void FreeThemes() {
+    gCurrentTheme = &gFallbackTheme;
+    gThemeLight = nullptr;
+    gUseHighContrast = false;
     delete gThemes; // no need to free members, they are owned by gParsedThemes
     gThemes = nullptr;
     FreeParsedThemes(gParsedThemes);
     gParsedThemes = nullptr;
-    gCurrentTheme = nullptr;
-    gThemeLight = nullptr;
     gThemeCount = 0;
     gCurrThemeIndex = 0;
+    gFirstSetThemeCmdId = gLastSetThemeCmdId = gCurrSetThemeCmdId = 0;
 }
 
 void CreateThemeCommands() {
@@ -558,8 +556,23 @@ void CreateThemeCommands() {
 
     gThemes = new Vec<Theme*>();
     gParsedThemes = ParseThemes(themesTxt);
+    if (!gParsedThemes || !gParsedThemes->themes || !gSettings) {
+        return;
+    }
     for (Theme* theme : *gParsedThemes->themes) {
-        VecAppend(*gThemes, theme);
+        if (str::Eq(theme->name, StrL("Light"))) {
+            gThemeLight = theme;
+            break;
+        }
+    }
+    if (!gThemeLight || !VecAppend(*gThemes, gThemeLight)) {
+        gThemeLight = nullptr;
+        return;
+    }
+    for (Theme* theme : *gParsedThemes->themes) {
+        if (theme != gThemeLight) {
+            VecAppend(*gThemes, theme);
+        }
     }
 
     for (Theme* theme : *gSettings->themes) {
@@ -571,7 +584,6 @@ void CreateThemeCommands() {
         gCurrThemeIndex = 0;
     }
     gCurrentTheme = (*gThemes)[gCurrThemeIndex];
-    gThemeLight = (*gThemes)[0];
     RecalcUseHighContrast();
 
     CustomCommand* cmd;
@@ -582,7 +594,8 @@ void CreateThemeCommands() {
         cmd = CreateCustomCommand(themeName, CmdSetTheme, args, fmt(Tr("Set theme '%s'").s, themeName));
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;
-        } else if (i == gThemeCount - 1) {
+        }
+        if (i == gThemeCount - 1) {
             gLastSetThemeCmdId = cmd->id;
         }
     }
@@ -628,12 +641,12 @@ int ThemeGetCurrentIndex() {
 }
 
 void SetThemeByIndex(int themeIdx) {
+    if (!gSettings || gThemeCount == 0) {
+        return;
+    }
     ReportIf((themeIdx < 0) || (themeIdx >= gThemeCount));
     if (themeIdx < 0 || themeIdx >= gThemeCount) {
         themeIdx = 0;
-    }
-    if (gThemeCount == 0) {
-        return;
     }
     gThemeFollowsSystem = false;
     bool themeChanged = (gCurrThemeIndex != themeIdx);
@@ -760,6 +773,9 @@ static int GetPreferredDarkThemeIndex() {
 }
 
 void SetTheme(Str name) {
+    if (!gSettings || !gThemeLight) {
+        return;
+    }
     if (str::EqI(name, StrL("System"))) {
         // resolve to the preferred light/dark theme from the OS setting; keep
         // "System" in prefs so it persists and keeps following the OS
@@ -781,6 +797,9 @@ void SetTheme(Str name) {
 
 // switch between the last used light and dark theme (CmdToggleLightDarkTheme)
 void ToggleLightDarkTheme() {
+    if (!gSettings || !HasCurrentTheme()) {
+        return;
+    }
     bool isDark = !IsLightColor(ThemeWindowBackgroundColor());
     int idx = isDark ? GetPreferredLightThemeIndex() : GetPreferredDarkThemeIndex();
     SetThemeByIndex(idx);
@@ -789,6 +808,9 @@ void ToggleLightDarkTheme() {
 // name of the theme ToggleLightDarkTheme() would switch to, for the command
 // palette: ": set to true" says nothing useful when a toggle picks a theme
 Str ToggleLightDarkThemeTargetName() {
+    if (!gSettings || !HasCurrentTheme()) {
+        return {};
+    }
     bool isDark = !IsLightColor(ThemeWindowBackgroundColor());
     int idx = isDark ? GetPreferredLightThemeIndex() : GetPreferredDarkThemeIndex();
     return ThemeGetNameAt(idx);
@@ -841,6 +863,9 @@ void UpdateThemeAfterHighContrastChange() {
 
 // call after loading settings
 void SetCurrentThemeFromSettings() {
+    if (!gSettings || !gThemeLight) {
+        return;
+    }
     SetTheme(gSettings->theme);
     ParsedColor* bgParsed = GetPrefsColor(gSettings->mainWindowBackground);
     bool isDefault = IsDefaultMainWinColor(bgParsed);
@@ -866,7 +891,7 @@ void SetCurrentThemeFromSettings() {
 Color ThemeDocumentColors(Color& bg) {
     bg = ThemeMainWindowBackgroundColor();
 
-    if (!DocumentColorsFollowThemeEnabled()) {
+    if (!gSettings || !DocumentColorsFollowThemeEnabled()) {
         return ThemeWindowTextColor();
     }
 
@@ -960,15 +985,16 @@ Color ThemePageRenderColors(Color& bg) {
 }
 
 Color ThemeControlBackgroundColor() {
-    return gUseHighContrast ? SysWindowBgColor() : GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
+    return gUseHighContrast || !HasCurrentTheme() ? SysWindowBgColor()
+                                                  : GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
 }
 
 Color ThemeMainWindowBackgroundColor() {
-    if (gUseHighContrast) {
+    if (gUseHighContrast || !HasCurrentTheme()) {
         return SysWindowBgColor();
     }
     Color bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
-    if (gCurrThemeIndex == 0) {
+    if (gCurrThemeIndex == 0 && gSettings) {
         // Special behavior for light theme.
         ParsedColor* bgParsed = GetPrefsColor(gSettings->mainWindowBackground);
         if (bgParsed->parsedOk && !IsDefaultMainWinColor(bgParsed)) {
@@ -979,11 +1005,13 @@ Color ThemeMainWindowBackgroundColor() {
 }
 
 Color ThemeWindowBackgroundColor() {
-    return gUseHighContrast ? SysWindowBgColor() : GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
+    return gUseHighContrast || !HasCurrentTheme() ? SysWindowBgColor()
+                                                  : GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
 }
 
 Color ThemeWindowTextColor() {
-    return gUseHighContrast ? SysWindowTextColor() : GetThemeCol(gCurrentTheme->textColor, kColRed);
+    return gUseHighContrast || !HasCurrentTheme() ? SysWindowTextColor()
+                                                  : GetThemeCol(gCurrentTheme->textColor, kColRed);
 }
 
 static Color BlendTextAndBgHalfway() {
@@ -1045,7 +1073,7 @@ Color ThemeInactiveTabBackgroundColor() {
 }
 
 Color ThemeWindowLinkColor() {
-    return gUseHighContrast ? SysLinkColor() : GetThemeCol(gCurrentTheme->linkColor, kColRed);
+    return gUseHighContrast || !HasCurrentTheme() ? SysLinkColor() : GetThemeCol(gCurrentTheme->linkColor, kColRed);
 }
 
 Color ThemeHotBackgroundColor() {
@@ -1189,7 +1217,7 @@ bool ThemeColorizeControls() {
     if (gCurrentTheme->colorizeControls) {
         return true;
     }
-    return !IsMenuFontSizeDefault();
+    return gSettings && !IsMenuFontSizeDefault();
 }
 
 #if OS_WIN
