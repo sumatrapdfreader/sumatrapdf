@@ -81,8 +81,8 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase* engine, StrVec& names, Ve
     if (!epdf || !epdf->pdfdoc) {
         return;
     }
-    fz_context* ctx = epdf->BaseCtx();
     ScopedRecursiveMutex scope(&epdf->docLock);
+    fz_context* ctx = epdf->BaseCtx(scope);
 
     // finding the widgets means loading every page, which is O(pages). The
     // form's field tree says up front whether any signature field exists, so
@@ -135,8 +135,8 @@ int EngineMupdfCountSignedSignatures(EngineBase* engine) {
     if (!epdf || !epdf->pdfdoc) {
         return 0;
     }
-    fz_context* ctx = epdf->BaseCtx();
     ScopedRecursiveMutex scope(&epdf->docLock);
+    fz_context* ctx = epdf->BaseCtx(scope);
     int n = 0;
     pdf_page* page = nullptr;
     fz_var(page);
@@ -244,8 +244,8 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
     }
     // signing changes a form field value, which can regenerate appearances and
     // run form JavaScript, so it must happen on the base context (see BaseCtx)
-    fz_context* ctx = epdf->BaseCtx();
     ScopedRecursiveMutex scope(&epdf->docLock);
+    fz_context* ctx = epdf->BaseCtx(scope);
 
     pdf_pkcs7_signer* signer = nullptr;
     pdf_annot* widget = nullptr;

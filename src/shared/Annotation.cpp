@@ -534,8 +534,8 @@ bool ToggleFormButton(Annotation* annot) {
         // BaseCtx(), not a Ctx() clone: toggling regenerates the appearance,
         // which runs the button's format/calculate JS; mupdf executes (and
         // rethrows errors) on _ctx, so the fz_try must be on that context.
-        auto* ctx = e->BaseCtx();
         ScopedRecursiveMutex cs(&e->docLock);
+        auto* ctx = e->BaseCtx(cs);
         fz_try(ctx) {
             int wt = pdf_widget_type(ctx, a);
             int flags = pdf_annot_field_flags(ctx, a);
@@ -645,8 +645,8 @@ static bool SetWidgetValue(Annotation* annot, Str value, Str operation, SetValue
         // BaseCtx(), not a Ctx() clone: regenerating the appearance runs the
         // field's format/calculate JS, which mupdf executes (and rethrows
         // errors) on _ctx -- the fz_try must be on that same context.
-        auto* ctx = e->BaseCtx();
         ScopedRecursiveMutex cs(&e->docLock);
+        auto* ctx = e->BaseCtx(cs);
         fz_try(ctx) {
             ok = setValue(ctx, a, len(valueZ) == 0 ? "" : valueZ.s);
             pdf_update_annot(ctx, a);

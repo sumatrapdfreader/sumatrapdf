@@ -1338,11 +1338,13 @@ struct AutoUnlockMutex : NonCopyable {
     ~AutoUnlockMutex() { mutex->Unlock(); }
 };
 
-struct AutoUnlockRecursiveMutex : NonCopyable {
-    RecursiveMutex* mutex;
+class AutoUnlockRecursiveMutex : NonCopyable {
+    RecursiveMutex* const mutex;
 
+  public:
     explicit AutoUnlockRecursiveMutex(RecursiveMutex* mutex) : mutex(mutex) { mutex->Lock(); }
     ~AutoUnlockRecursiveMutex() { mutex->Unlock(); }
+    bool Guards(const RecursiveMutex* m) const { return mutex == m; }
 };
 
 // 0 = metric (A4), 1 = imperial (Letter). ng: orig declares it in Win.h
