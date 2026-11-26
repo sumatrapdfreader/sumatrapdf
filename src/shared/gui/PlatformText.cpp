@@ -340,9 +340,8 @@ void GraphicsCacheEntry::Free() const {
     delete bmp;
 }
 
-// caller must hold gGraphicsCacheMutex (it is not re-entrant)
-static Graphics* AllocGraphicsForMeasureTextNoLock() {
-    ReportDebugIf(!gGraphicsCacheMutex.IsHeldByCurrentThread());
+static Graphics* AllocGraphicsForMeasureText() {
+    ScopedMutex lock(&gGraphicsCacheMutex);
     if (!gGraphicsCache) {
         gGraphicsCache = new Vec<GraphicsCacheEntry*>();
     }
@@ -377,14 +376,6 @@ static Graphics* AllocGraphicsForMeasureTextNoLock() {
     // We shouldn't get here - indicates ref counting problem
     ReportIf(true);
     return ce->gfx;
-}
-
-static Graphics* AllocGraphicsForMeasureText() {
-    gGraphicsCacheMutex.Lock();
-    defer {
-        gGraphicsCacheMutex.Unlock();
-    };
-    return AllocGraphicsForMeasureTextNoLock();
 }
 
 static void FreeGraphicsForMeasureText(Graphics* gfx) {
