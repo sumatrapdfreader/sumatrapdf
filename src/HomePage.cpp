@@ -1352,8 +1352,10 @@ static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
         t.rcListFileName.y += dy;
         t.rcListPath.y += dy;
         t.rcListSize.y += dy;
+        t.rcListProgress.y += dy;
         t.rcListRemove.y += dy;
         t.rcListPin.y += dy;
+        t.rcListBadge.y += dy;
     }
 }
 
