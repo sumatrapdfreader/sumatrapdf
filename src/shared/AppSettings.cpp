@@ -712,16 +712,16 @@ bool LoadSettings() {
         gprefs->comicBookUI.defaultZoomFloat = ZoomFromString(gprefs->comicBookUI.defaultZoom, 0);
     }
 
-    int weekDiff = GetWeekCount() - gprefs->openCountWeek;
-    gprefs->openCountWeek = GetWeekCount();
-    if (weekDiff > 0) {
-        // "age" openCount statistics (cut in in half after every week)
-        for (FileState* fs : *gprefs->fileStates) {
-            if (weekDiff >= 31) {
-                fs->openCount = 0;
-            } else {
-                fs->openCount >>= weekDiff;
-            }
+    int week = GetWeekCount();
+    i64 weekDiff = (i64)week - gprefs->openCountWeek;
+    gprefs->openCountWeek = week;
+    // Age the count by cutting it in half for each elapsed week.
+    for (FileState* fs : *gprefs->fileStates) {
+        setMin(fs->openCount, 0);
+        if (weekDiff >= 31) {
+            fs->openCount = 0;
+        } else if (weekDiff > 0) {
+            fs->openCount >>= (int)weekDiff;
         }
     }
 

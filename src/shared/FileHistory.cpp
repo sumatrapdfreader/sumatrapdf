@@ -94,7 +94,9 @@ FileState* FileHistoryMarkFileLoaded(Str filePath) {
         fs->isMissing = false;
     }
     VecInsertAt(*gStates, 0, fs);
-    fs->openCount++;
+    if (fs->openCount < INT_MAX) {
+        fs->openCount++;
+    }
     return fs;
 }
 
@@ -135,14 +137,14 @@ static int cmpRecentlyOpened(FileState* const* a, FileState* const* b) {
     if (dsA->isPinned) {
         return str::CmpNatural(path::GetBaseNameTemp(dsA->filePath), path::GetBaseNameTemp(dsB->filePath));
     }
-    return dsA->index < dsB->index ? -1 : 1;
+    return (dsA->index > dsB->index) - (dsA->index < dsB->index);
 }
 
 static int cmpOpenCount(FileState* const* a, FileState* const* b) {
     FileState* dsA = *a;
     FileState* dsB = *b;
     if (!dsA->isPinned && !dsB->isPinned && dsA->openCount != dsB->openCount) {
-        return dsB->openCount - dsA->openCount;
+        return dsB->openCount < dsA->openCount ? -1 : 1;
     }
     return cmpRecentlyOpened(a, b);
 }
