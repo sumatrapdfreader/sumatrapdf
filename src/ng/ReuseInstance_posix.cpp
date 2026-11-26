@@ -18,7 +18,9 @@
 #include <atomic>
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
+#include <sys/file.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -330,12 +332,24 @@ static int TryListen(const sockaddr_un& addr, ino_t* ino) {
 // that one is gone, and one whose socket file another process removed or
 // replaced makes a new one: there's always someone to forward to.
 static void InstanceServerThread(sockaddr_un* addr) {
+    TempStr lockPath = str::JoinTemp(Str(addr->sun_path), StrL(".lock"));
+    int ownership = open(CStrTemp(lockPath), O_CREAT | O_CLOEXEC | O_NOFOLLOW | O_RDWR, 0600);
+    if (ownership < 0) {
+        delete addr;
+        gInstanceServerRunning = false;
+        return;
+    }
     int listener = -1;
     ino_t ino = 0;
     while (!gInstanceServerStop) {
         if (listener < 0) {
+            if (flock(ownership, LOCK_EX | LOCK_NB) != 0) {
+                SleepInMs(250);
+                continue;
+            }
             listener = TryListen(*addr, &ino);
             if (listener < 0) {
+                flock(ownership, LOCK_UN);
                 SleepInMs(250);
                 continue;
             }
@@ -346,6 +360,7 @@ static void InstanceServerThread(sockaddr_un* addr) {
             if (ino == 0 || SocketFileIno(addr->sun_path) != ino) {
                 close(listener);
                 listener = -1;
+                flock(ownership, LOCK_UN);
             }
             continue;
         }
@@ -366,6 +381,8 @@ static void InstanceServerThread(sockaddr_un* addr) {
             unlink(addr->sun_path);
         }
     }
+    // Keep the lock file so every process contends on the same inode.
+    close(ownership);
     delete addr;
     gInstanceServerRunning = false;
 }
