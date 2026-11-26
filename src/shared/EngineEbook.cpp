@@ -2037,7 +2037,9 @@ bool EngineHtml::Load(Str fileName) {
     }
 
     HtmlFormatterArgs args;
-    InitFormatterArgs(args, doc->htmlData, GetDefaultFontName());
+    Str fontName = GetDefaultWebFont(FileType::HTML);
+    InitFormatterArgs(args, doc->htmlData, fontName ? ToWStrTemp(fontName) : WStrL(L"Georgia"));
+    args.overrideFontName = len(fontName) > 0;
     if (!SetFormattedPages(HtmlFileFormatter(&args, doc).FormatAllPages(false))) {
         return false;
     }

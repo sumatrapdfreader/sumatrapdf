@@ -50,6 +50,25 @@ extern "C" {
 #include "Settings.h"
 #include "EngineMupdf.h"
 
+static Mutex gWebFontsMutex;
+static Str gDefaultMarkdownFont;
+static Str gDefaultHtmlFont;
+
+void SetDefaultWebFonts(Str markdown, Str html) {
+    ScopedMutex lock(&gWebFontsMutex);
+    if (!str::Eq(gDefaultMarkdownFont, markdown)) {
+        gDefaultMarkdownFont = str::Dup(GetPermArena(), markdown);
+    }
+    if (!str::Eq(gDefaultHtmlFont, html)) {
+        gDefaultHtmlFont = str::Dup(GetPermArena(), html);
+    }
+}
+
+Str GetDefaultWebFont(FileType kind) {
+    ScopedMutex lock(&gWebFontsMutex);
+    return kind == FileType::Markdown ? gDefaultMarkdownFont : gDefaultHtmlFont;
+}
+
 // A5
 static float layoutA5DxPt = 420.F;
 static float layoutA5DyPt = 595.F;
@@ -4488,7 +4507,7 @@ static TempStr EbookLineSpacingCssTemp(float lineSpacing) {
 // whose own element matches: publishers routinely put the font on a <span> or
 // another inline element. pre, code, kbd, samp and tt are left out on purpose,
 // so code stays monospace
-static TempStr EbookFontFamilyCssTemp(Str fontName) {
+static TempStr DocumentFontCssTemp(Str fontName) {
     if (len(fontName) == 0) {
         return {};
     }
@@ -4530,7 +4549,7 @@ static TempStr EbookMarginCssTemp(const Vec<float>* margin, int displayDPI) {
 // img { height: auto } fix (#5805) is not part of it -- that one is ours, not
 // something the user configured
 TempStr EbookGeneratedCssTemp(Str fontName, const Vec<float>* margin, float lineSpacing, int displayDPI) {
-    TempStr res = EbookFontFamilyCssTemp(EbookFontNameFromSetting(fontName));
+    TempStr res = DocumentFontCssTemp(EbookFontNameFromSetting(fontName));
     TempStr parts[] = {EbookMarginCssTemp(margin, displayDPI), EbookLineSpacingCssTemp(lineSpacing)};
     for (TempStr part : parts) {
         if (len(part) == 0) {
@@ -4549,10 +4568,10 @@ bool EngineMupdf_UnitTestEbookLineSpacingCss() {
 }
 
 bool EngineMupdf_UnitTestEbookFontFamilyCss() {
-    if (EbookFontFamilyCssTemp({})) {
+    if (DocumentFontCssTemp({})) {
         return false;
     }
-    TempStr css = EbookFontFamilyCssTemp(StrL("Segoe UI"));
+    TempStr css = DocumentFontCssTemp(StrL("Segoe UI"));
     if (!str::Contains(css, StrL("font-family: \"Segoe UI\" !important;"))) {
         return false;
     }
@@ -4866,7 +4885,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     // overrides with !important. User CustomCSS is appended after this.
     TempStr userCss = StrL("img { height: auto !important; max-width: 100% !important; }\n");
     int usePublisherCss = 1; // use the document's own (publisher) CSS by default
-    Str requestedFontName;   // the font name, checked for existence after layout
+    FileType kind = GuessFileTypeFromName(nameHint, true);
+    bool webDoc = kind == FileType::Markdown || kind == FileType::HTML;
+    Str requestedFontName; // the font name, checked for existence after layout
     auto* eBookUI = GetEBookUI();
     if (eBookUI) {
         // FileStates -> EBookUI overrides the global section for this document
@@ -4886,8 +4907,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             // after any LayoutDx override, so the user still sets line length
             ldy = limitValue(ldx * gEbookLayoutAspect, 150.f, 5000.f);
         }
-        requestedFontName = EbookFontNameFromSetting(s.fontName);
-        TempStr generated = EbookGeneratedCssTemp(s.fontName, s.margin, s.lineSpacing, displayDPI);
+        Str fontName = webDoc ? Str{} : s.fontName;
+        requestedFontName = EbookFontNameFromSetting(fontName);
+        TempStr generated = EbookGeneratedCssTemp(fontName, s.margin, s.lineSpacing, displayDPI);
         if (generated) {
             userCss = str::JoinTemp(generated, userCss);
         }
@@ -4895,6 +4917,12 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             userCss = str::JoinTemp(userCss, s.customCSS);
         }
         usePublisherCss = s.ignoreDocumentCSS ? 0 : 1;
+    }
+    if (webDoc) {
+        requestedFontName = GetDefaultWebFont(kind);
+        if (requestedFontName) {
+            userCss = str::JoinTemp(userCss, DocumentFontCssTemp(requestedFontName));
+        }
     }
     ebookUserCss = str::Dup(arena, userCss);
     ebookPublisherCss = usePublisherCss;
@@ -4912,7 +4940,6 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     fz_var(fontDy);
     fz_var(dir);
     // a synthesized name for the stream (e.g. "<path>.html"), never a directory
-    FileType kind = GuessFileTypeFromName(nameHint, true);
     const char* nameHintZ = CStrTemp(nameHint);
     if (kind == FileType::Markdown) {
         TempStr parentDir = path::GetDirTemp(nameHint);

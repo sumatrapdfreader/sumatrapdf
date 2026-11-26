@@ -905,6 +905,8 @@ struct ReadingBar {
 // customization options for Markdown UI. If UseFixedPageUI is true,
 // MuPDF is used; otherwise WebView2 browser view is used when available
 struct MarkdownUI {
+    // font family for Markdown prose
+    Str fontName;
     // if true, use MuPDF (cmark-gfm) to render markdown; if false, use
     // WebView2 browser view when available
     bool useFixedPageUI;
@@ -916,6 +918,8 @@ struct MarkdownUI {
 // customization options for HTML UI. If UseFixedPageUI is true, MuPDF
 // is used; otherwise WebView2 browser view is used when available
 struct HtmlUI {
+    // font family for HTML prose
+    Str fontName;
     // if true, use MuPDF to render HTML; if false, use WebView2 browser
     // view when available
     bool useFixedPageUI;

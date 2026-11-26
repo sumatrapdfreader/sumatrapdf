@@ -677,6 +677,7 @@ const chmUI: Field[] = [
 ];
 
 const markdownUI: Field[] = [
+  field("FontName", Str, "", "font family for Markdown prose").emptyMeans("the viewer default").ver("3.7"),
   field(
     "UseFixedPageUI",
     Bool,
@@ -692,6 +693,7 @@ const markdownUI: Field[] = [
 ];
 
 const htmlUI: Field[] = [
+  field("FontName", Str, "", "font family for HTML prose").emptyMeans("the viewer default").ver("3.7"),
   field(
     "UseFixedPageUI",
     Bool,

@@ -770,6 +770,24 @@ void RememberDefaultWindowPosition(MainWindow* win) {
     }
 }
 
+static void EnsureFrameVisibility(Rect& rect) {
+    Rect work = GetWorkAreaRect(rect, nullptr);
+    int dpi = DpiGetForPoint(rect.x + rect.dx / 2, rect.y + rect.dy / 2);
+    int resizeDy = DpiGetSystemMetrics(SM_CYFRAME, dpi) + DpiGetSystemMetrics(SM_CXPADDEDBORDER, dpi);
+    int beforeTop = work.y - rect.y;
+    int afterBottom = rect.y + rect.dy - work.y - work.dy;
+    bool spansWorkHeight = beforeTop >= 0 && beforeTop <= resizeDy && afterBottom >= 0 && afterBottom <= resizeDy;
+
+    // A vertically snapped frame can extend past the work area by its invisible resize margins.
+    int top = rect.y;
+    int height = rect.dy;
+    EnsureAreaVisibility(rect);
+    if (spansWorkHeight) {
+        rect.y = top;
+        rect.dy = height;
+    }
+}
+
 static void UpdateDisplayStateWindowRect(MainWindow* win, FileState* fs, bool updateGlobal = true) {
     if (updateGlobal) {
         RememberDefaultWindowPosition(win);
@@ -2009,7 +2027,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             if (fs->windowPos.IsEmpty()) {
                 fs->windowPos = gSettings->windowPos;
             }
-            EnsureAreaVisibility(fs->windowPos);
+            EnsureFrameVisibility(fs->windowPos);
         }
     }
     if (fs && fs->useDefaultState) {
@@ -2861,7 +2879,7 @@ static MainWindow* CreateMainWindow() {
     bool fixedPos = gCli && !gCli->windowPos.IsEmpty();
     Rect windowPos = fixedPos ? gCli->windowPos : gSettings->windowPos;
     if (!windowPos.IsEmpty()) {
-        EnsureAreaVisibility(windowPos);
+        EnsureFrameVisibility(windowPos);
     } else {
         windowPos = GetDefaultWindowPos();
     }
@@ -13150,15 +13168,28 @@ static void DrawCaptionSysButtonGlyph(HDC hdc, CaptionSysButtonKind kind, Rect r
     if (iconPx < 1) {
         return;
     }
+    int left = rc.x + (rc.dx - iconPx) / 2;
+    int top = rc.y + (rc.dy - iconPx) / 2;
+    if (iconPx % kCaptionGlyphDip == 0 &&
+        (kind == CaptionSysButtonKind::Minimize || kind == CaptionSysButtonKind::Maximize)) {
+        int stroke = iconPx / kCaptionGlyphDip;
+        if (kind == CaptionSysButtonKind::Minimize) {
+            HdcFillRect(hdc, {left, top + (iconPx - stroke) / 2, iconPx, stroke}, iconCol);
+        } else {
+            HdcFillRect(hdc, {left, top, iconPx, stroke}, iconCol);
+            HdcFillRect(hdc, {left, top + iconPx - stroke, iconPx, stroke}, iconCol);
+            HdcFillRect(hdc, {left, top + stroke, stroke, iconPx - 2 * stroke}, iconCol);
+            HdcFillRect(hdc, {left + iconPx - stroke, top + stroke, stroke, iconPx - 2 * stroke}, iconCol);
+        }
+        return;
+    }
+
     Gdiplus::GraphicsPath path(Gdiplus::FillModeAlternate);
     BuildCaptionSysButtonPath(kind, &path);
 
     float scale = (float)iconPx / kCaptionGlyphEm;
-    float ox = (float)rc.x + (((float)rc.dx - (float)iconPx) / 2.0f);
-    float oy = (float)rc.y + (((float)rc.dy + (float)iconPx) / 2.0f);
-
     Gdiplus::Matrix m;
-    m.Translate(ox, oy);
+    m.Translate((float)left, (float)(top + iconPx));
     m.Scale(scale, -scale);
     path.Transform(&m);
 
@@ -13367,21 +13398,27 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             return 0;
         }
 
-        case WM_NCACTIVATE:
+        case WM_NCACTIVATE: {
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
                 win->captionBtn[i].inactive = wp == FALSE;
             }
-            if (!IsIconic(hwnd)) {
-                RECT rc = ToRECT(win->captionRect);
-                if (IsCurrentThemeDefault()) {
-                    rc.bottom += kNonClientBand;
-                }
-                uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW;
-                RedrawWindow(hwnd, &rc, nullptr, flags);
-                *callDef = false;
-                return TRUE;
+            if (IsIconic(hwnd)) {
+                break;
             }
-            break;
+            LRESULT result = TRUE;
+            if (!IsZoomed(hwnd) && !win->IsFullScreenOrPresentation()) {
+                // Let Windows update the accent on the native frame before repainting our caption.
+                result = DefWindowProcW(hwnd, msg, wp, lp);
+            }
+            RECT rc = ToRECT(win->captionRect);
+            if (IsCurrentThemeDefault()) {
+                rc.bottom += kNonClientBand;
+            }
+            uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW;
+            RedrawWindow(hwnd, &rc, nullptr, flags);
+            *callDef = false;
+            return result;
+        }
 
         case WM_TIMER:
             if (wp == kDoNotReopenMenuTimerID) {
@@ -13424,11 +13461,10 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                     r->bottom -= frameY;
                 }
             } else if (!isFullScreen) {
-                // keep the standard side / bottom borders, DWM draws them as invisible
-                // resize borders; the caption is ours
+                // Keep the native resize borders and reserve one pixel for the top frame edge.
                 int top = r->top;
                 DefWindowProcW(hwnd, msg, wp, lp);
-                r->top = top;
+                r->top = top + kNonClientBand;
             }
             *callDef = false;
             return 0;

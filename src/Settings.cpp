@@ -263,6 +263,7 @@ static const StructInfo gChmUIInfo = {
 static_assert(dimof(gChmUIFields) == 2);
 
 static const FieldInfo gMarkdownUIFields[] = {
+    {offsetof(MarkdownUI, fontName), SettingType::String, (intptr_t)""},
     {offsetof(MarkdownUI, useFixedPageUI), SettingType::Bool, false},
     {offsetof(MarkdownUI, preserveLineBreaks), SettingType::Bool, false},
 };
@@ -270,23 +271,25 @@ static const StructInfo gMarkdownUIInfo = {
     sizeof(MarkdownUI),
     (u16)dimof(gMarkdownUIFields),
     gMarkdownUIFields,
-    "UseFixedPageUI\0PreserveLineBreaks",
-    "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available\0if true, "
-    "preserve source line breaks in the Markdown browser view; false uses standard Markdown paragraph wrapping",
+    "FontName\0UseFixedPageUI\0PreserveLineBreaks",
+    "font family for Markdown prose\0if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser "
+    "view when available\0if true, preserve source line breaks in the Markdown browser view; false uses standard "
+    "Markdown paragraph wrapping",
     false};
-static_assert(dimof(gMarkdownUIFields) == 2);
+static_assert(dimof(gMarkdownUIFields) == 3);
 
 static const FieldInfo gHtmlUIFields[] = {
+    {offsetof(HtmlUI, fontName), SettingType::String, (intptr_t)""},
     {offsetof(HtmlUI, useFixedPageUI), SettingType::Bool, false},
 };
 static const StructInfo gHtmlUIInfo = {
     sizeof(HtmlUI),
     (u16)dimof(gHtmlUIFields),
     gHtmlUIFields,
-    "UseFixedPageUI",
-    "if true, use MuPDF to render HTML; if false, use WebView2 browser view when available",
+    "FontName\0UseFixedPageUI",
+    "font family for HTML prose\0if true, use MuPDF to render HTML; if false, use WebView2 browser view when available",
     false};
-static_assert(dimof(gHtmlUIFields) == 1);
+static_assert(dimof(gHtmlUIFields) == 2);
 
 static const FieldInfo gClaudeCodeFields[] = {
     {offsetof(ClaudeCode, model), SettingType::String, (intptr_t)"sonnet"},

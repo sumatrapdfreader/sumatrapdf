@@ -5,6 +5,7 @@
 #include "base/Dict.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
+#include "base/JsonParser.h"
 #include "base/UITask.h"
 #include "gui/UIModels.h"
 #include "gui/BrowserView.h"
@@ -14,6 +15,7 @@
 #include "DocController.h"
 #include "DocProperties.h"
 #include "EngineBase.h"
+#include "EngineAll.h"
 #include "AppSettings.h"
 
 #include "SumatraPDF.h"
@@ -512,6 +514,21 @@ void MarkdownModel::OnDocumentComplete(Str url) {
         return;
     }
     TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
+    if (docView && IsMarkdownVirtualHostUrl(plainUrl)) {
+        Str font = GetDefaultWebFont(isHtml ? FileType::HTML : FileType::Markdown);
+        if (font) {
+            TempStr css =
+                fmt("body, body :where(:not(pre, code, kbd, samp, tt, svg,"
+                    "pre *, code *, kbd *, samp *, tt *, svg *))"
+                    " { font-family: \"%s\" !important; }",
+                    font);
+            BrowserViewEval(
+                docView, fmt("(() => { const style = document.querySelector('style[data-sumatra-font]')"
+                             " || document.createElement('style'); style.dataset.sumatraFont = '';"
+                             " style.textContent = \"%s\"; if (!style.isConnected) document.head.append(style); })()",
+                             json::EscapeStrTemp(css)));
+        }
+    }
     TempStr filePath = VirtualUrlToFileTemp(plainUrl);
     MaybeCaptureThumbnail(filePath);
     int pageNo = pages.Find(filePath) + 1;

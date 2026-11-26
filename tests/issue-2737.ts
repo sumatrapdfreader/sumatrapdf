@@ -30,6 +30,9 @@ export async function testit(): Promise<void> {
     `UiLanguage = en
 CheckForUpdates = false
 RestoreSession = false
+EBookUI [
+    FontName = Georgia
+]
 ChmUI [
     UseFixedPageUI = true
     FontName = Arial
@@ -46,6 +49,9 @@ ChmUI [
       }
       if (out.includes("Courier New")) {
         throw new Error(`issue-2737: document font was not overridden: ${out}`);
+      }
+      if (out.includes("Georgia")) {
+        throw new Error(`issue-2737: CHM inherited EBookUI.FontName: ${out}`);
       }
     },
     ["-appdata", appData, CHM],
