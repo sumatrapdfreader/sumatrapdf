@@ -3,7 +3,9 @@
 
 #include "base/Base.h"
 #include "base/AutoWin.h"
-#if !OS_WIN
+#if OS_WIN
+#include <io.h>
+#else
 #include <limits.h>
 #include <unistd.h>
 #endif
@@ -1347,6 +1349,19 @@ FILE* OpenFILE(Str path) {
     return _wfopen(CWStrTemp(path), L"rb");
 }
 
+bool GetReadStamp(FILE* f, ReadStamp& stamp) {
+    HANDLE h = (HANDLE)_get_osfhandle(_fileno(f));
+    BY_HANDLE_FILE_INFORMATION info{};
+    if (!GetFileInformationByHandle(h, &info) || (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        return false;
+    }
+    stamp.size = (i64)(((u64)info.nFileSizeHigh << 32) | info.nFileSizeLow);
+    stamp.mtime = FileTimeToU64(info.ftLastWriteTime);
+    stamp.device = info.dwVolumeSerialNumber;
+    stamp.id = ((u64)info.nFileIndexHigh << 32) | info.nFileIndexLow;
+    return stamp.size >= 0;
+}
+
 bool WriteFile(Str path, Str d) {
     const void* data = (const void*)d.s;
     size_t dataLen = (size_t)d.len;
@@ -1826,6 +1841,17 @@ bool WriteAll(FileHandle h, Str data) {
 }
 
 #endif
+
+bool ReadStampMatchesPath(Str path, const ReadStamp& stamp) {
+    FILE* f = OpenFILE(path);
+    if (!f) {
+        return false;
+    }
+    ReadStamp current;
+    bool matches = GetReadStamp(f, current) && current == stamp;
+    fclose(f);
+    return matches;
+}
 
 } // namespace file
 

@@ -325,6 +325,18 @@ FILE* OpenFILE(Str path) {
     return fopen(CStrTemp(path), "rb");
 }
 
+bool GetReadStamp(FILE* f, ReadStamp& stamp) {
+    struct stat st;
+    if (fstat(fileno(f), &st) != 0 || !S_ISREG(st.st_mode) || st.st_size < 0) {
+        return false;
+    }
+    stamp.size = st.st_size;
+    stamp.mtime = FileTimeToU64(FileTimeFromTimespec(StatModificationTime(st)));
+    stamp.device = (u64)st.st_dev;
+    stamp.id = (u64)st.st_ino;
+    return true;
+}
+
 // Opens path for reading and writing, creating it when createIfMissing.
 FileHandle OpenReadWrite(Str path, bool createIfMissing) {
     int flags = O_RDWR | (createIfMissing ? O_CREAT : 0);

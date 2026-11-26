@@ -100,6 +100,17 @@ bool Exists(Str path);
 
 FILE* OpenFILE(Str path);
 
+struct ReadStamp {
+    i64 size = 0;
+    u64 mtime = 0;
+    u64 device = 0;
+    u64 id = 0;
+    bool operator==(const ReadStamp&) const = default;
+};
+
+bool GetReadStamp(FILE*, ReadStamp&);
+bool ReadStampMatchesPath(Str path, const ReadStamp&);
+
 // handle-based i/o, for files kept open across many reads / appends
 FileHandle OpenReadWrite(Str path, bool createIfMissing);
 void Close(FileHandle);

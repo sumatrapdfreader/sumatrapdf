@@ -61,6 +61,7 @@ struct PathHash {
     Str path;
     HashState st = HashState::Pending;
     ContentHash h;
+    u64 revision = 0;
     // a job for it is in the queue
     bool queued = false;
 };
@@ -122,6 +123,7 @@ static PathHash* GetPathHash(Str path) {
 // Records h as path's current content, in memory and in its history entry.
 void RememberContentHash(Str path, const ContentHash& h) {
     PathHash* p = GetPathHash(path);
+    p->revision++;
     p->st = HashState::Hashed;
     p->h = h;
 
@@ -168,6 +170,7 @@ void SaveKnownContentHashes() {
 struct HashJob {
     Str path;
     Str shareKey;
+    u64 revision = 0;
     ContentHash stored;
     bool hasStored = false;
     Vec<i64> sizes;
@@ -191,6 +194,7 @@ struct HashJob {
 
 struct HashResult {
     Str path;
+    u64 revision = 0;
     HashState st = HashState::Failed;
     ContentHash h;
 };
@@ -279,11 +283,7 @@ static void BumpProgress(HashJob* job) {
 
 // Hashes the file in pieces; false if it can't be read in full or the job
 // was given up on.
-static bool HashFileContent(HashJob* job, i64 size, u8 digest[kSha1Len]) {
-    FILE* f = file::OpenFILE(job->path);
-    if (!f) {
-        return false;
-    }
+static bool HashFileContent(HashJob* job, FILE* f, i64 size, u8 digest[kSha1Len]) {
     char* buf = AllocArray<char>(kHashChunk);
     Sha1Hasher* hasher = NewSha1Hasher();
     i64 total = 0;
@@ -297,47 +297,55 @@ static bool HashFileContent(HashJob* job, i64 size, u8 digest[kSha1Len]) {
         total += (i64)n;
     }
     bool ok = !ferror(f) && total == size && !AtomicIntGet(&job->abandoned);
-    fclose(f);
     free(buf);
     Sha1Finish(hasher, digest);
     return ok;
 }
 
 static void HashIoThread(HashJob* job) {
+    defer {
+        ReleaseJob(job);
+    };
     if (job->testDelayMs > 0) {
         // stands in for a share that stopped answering
         SleepInMs(job->testDelayMs);
     }
     BumpProgress(job);
-    i64 size = file::GetSize(job->path);
+    FILE* f = file::OpenFILE(job->path);
     BumpProgress(job);
-    if (size < 0) {
+    if (!f) {
         job->st = HashState::Missing;
-        ReleaseJob(job);
         return;
     }
-    u64 mtime = FileTimeToU64(file::GetModificationTime(job->path));
+    AutoCall closeFile(fclose, f);
+    file::ReadStamp stamp;
+    if (!file::GetReadStamp(f, stamp)) {
+        return;
+    }
     BumpProgress(job);
-    job->h.size = size;
-    job->h.mtime = mtime;
+    job->h.size = stamp.size;
+    job->h.mtime = stamp.mtime;
 
-    if (job->hasStored && job->stored.size == size && job->stored.mtime == mtime) {
+    if (job->hasStored && job->stored.size == stamp.size && job->stored.mtime == stamp.mtime) {
         job->h = job->stored;
         job->st = HashState::Hashed;
-        ReleaseJob(job);
         return;
     }
     bool sizeOnServer = false;
     for (i64 sz : job->sizes) {
-        sizeOnServer |= sz == size;
+        sizeOnServer |= sz == stamp.size;
     }
     if (!sizeOnServer) {
         job->st = HashState::SizeNotOnServer;
-        ReleaseJob(job);
         return;
     }
-    job->st = HashFileContent(job, size, job->h.sha1) ? HashState::Hashed : HashState::Failed;
-    ReleaseJob(job);
+    if (!HashFileContent(job, f, stamp.size, job->h.sha1)) {
+        return;
+    }
+    file::ReadStamp after;
+    if (file::GetReadStamp(f, after) && stamp == after && file::ReadStampMatchesPath(job->path, stamp)) {
+        job->st = HashState::Hashed;
+    }
 }
 
 static void PostResult(HashJob* job, HashState st);
@@ -413,11 +421,14 @@ static void HashCoordinatorThread(void*) {
 
 // UI thread: a result is in
 static void HashResultDone(HashResult* res) {
-    GetPathHash(res->path)->queued = false;
-    if (res->st == HashState::Hashed) {
-        RememberContentHash(res->path, res->h);
-    } else {
-        GetPathHash(res->path)->st = res->st;
+    PathHash* path = GetPathHash(res->path);
+    path->queued = false;
+    if (path->revision == res->revision) {
+        if (res->st == HashState::Hashed) {
+            RememberContentHash(res->path, res->h);
+        } else {
+            path->st = res->st;
+        }
     }
     str::Free(res->path);
     delete res;
@@ -427,6 +438,7 @@ static void HashResultDone(HashResult* res) {
 static void PostResult(HashJob* job, HashState st) {
     auto* res = new HashResult();
     res->path = str::Dup(job->path);
+    res->revision = job->revision;
     res->st = st;
     // after a stall the I/O thread may still be writing job->h
     if (st == HashState::Hashed) {
@@ -467,6 +479,7 @@ void QueueContentHashes(const Vec<i64>& sizes, const Func0& onHashed) {
 
         auto* job = new HashJob();
         job->path = str::Dup(fs->filePath);
+        job->revision = p->revision;
         job->shareKey = str::Dup(ShareKeyTemp(fs->filePath));
         job->hasStored = len(fs->contentSha1) > 0 && ParseContentHash(fs->contentSha1, job->stored);
         for (i64 sz : sizes) {
