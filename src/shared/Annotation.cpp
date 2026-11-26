@@ -23,13 +23,7 @@ extern "C" {
 #include "Translations.h"
 #include "Annotation.h"
 
-// spot checks the definitions are the same
-static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
-static_assert((int)AnnotationType::ThreeD == (int)PDF_ANNOT_3D);
-static_assert((int)AnnotationType::Sound == (int)PDF_ANNOT_SOUND);
 static_assert((int)AnnotationType::Unknown == (int)PDF_ANNOT_UNKNOWN);
-static_assert((int)AnnotationType::Projection == (int)PDF_ANNOT_PROJECTION);
-static_assert(AnnotationType::Last == AnnotationType::Projection);
 
 // clang-format off
 static SeqStrings gAnnotationTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
@@ -39,15 +33,78 @@ SeqStrings AnnotationTextIcons() {
     return gAnnotationTextIcons;
 }
 
-// clang-format off
-// indexed by AnnotationType; unlike AnnotationReadableNameTemp() these are not
-// translated, so they can appear in the annotation filter's ":t=" syntax
-static constexpr SeqStrings gAnnotationTypeNames =
-    "Text\0Link\0FreeText\0Line\0Square\0Circle\0Polygon\0PolyLine\0Highlight\0Underline\0Squiggly\0"
-    "StrikeOut\0Redact\0Stamp\0Caret\0Ink\0Popup\0FileAttachment\0Sound\0Movie\0RichMedia\0Widget\0"
-    "Screen\0PrinterMark\0TrapNet\0Watermark\0ThreeD\0Projection\0";
-// clang-format on
-static_assert(SeqStrCount(gAnnotationTypeNames) == (int)AnnotationType::Last + 1);
+enum AnnotationCapability : u8 {
+    AnnotMove = 1 << 0,
+    AnnotCopy = 1 << 1,
+    AnnotResize = 1 << 2,
+    AnnotInteriorColor = 1 << 3,
+    AnnotBorder = 1 << 4,
+    AnnotColor = 1 << 5,
+    AnnotOpacity = 1 << 6,
+};
+
+struct AnnotationTypeInfo {
+    AnnotationType type;
+    enum pdf_annot_type nativeType;
+    Str name;
+    u8 capabilities;
+};
+
+static constexpr AnnotationTypeInfo kAnnotationTypes[] = {
+    {AnnotationType::Text, PDF_ANNOT_TEXT, StrL("Text"), AnnotMove | AnnotCopy | AnnotColor | AnnotOpacity},
+    {AnnotationType::Link, PDF_ANNOT_LINK, StrL("Link"), 0},
+    {AnnotationType::FreeText, PDF_ANNOT_FREE_TEXT, StrL("FreeText"),
+     AnnotMove | AnnotCopy | AnnotResize | AnnotBorder | AnnotColor | AnnotOpacity},
+    {AnnotationType::Line, PDF_ANNOT_LINE, StrL("Line"),
+     AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity},
+    {AnnotationType::Square, PDF_ANNOT_SQUARE, StrL("Square"),
+     AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity},
+    {AnnotationType::Circle, PDF_ANNOT_CIRCLE, StrL("Circle"),
+     AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity},
+    {AnnotationType::Polygon, PDF_ANNOT_POLYGON, StrL("Polygon"),
+     AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity},
+    {AnnotationType::PolyLine, PDF_ANNOT_POLY_LINE, StrL("PolyLine"),
+     AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity},
+    {AnnotationType::Highlight, PDF_ANNOT_HIGHLIGHT, StrL("Highlight"), AnnotColor | AnnotOpacity},
+    {AnnotationType::Underline, PDF_ANNOT_UNDERLINE, StrL("Underline"), AnnotColor | AnnotOpacity},
+    {AnnotationType::Squiggly, PDF_ANNOT_SQUIGGLY, StrL("Squiggly"), AnnotColor | AnnotOpacity},
+    {AnnotationType::StrikeOut, PDF_ANNOT_STRIKE_OUT, StrL("StrikeOut"), AnnotColor | AnnotOpacity},
+    {AnnotationType::Redact, PDF_ANNOT_REDACT, StrL("Redact"), AnnotMove | AnnotCopy | AnnotResize | AnnotOpacity},
+    {AnnotationType::Stamp, PDF_ANNOT_STAMP, StrL("Stamp"),
+     AnnotMove | AnnotCopy | AnnotResize | AnnotColor | AnnotOpacity},
+    {AnnotationType::Caret, PDF_ANNOT_CARET, StrL("Caret"), AnnotMove | AnnotCopy | AnnotColor | AnnotOpacity},
+    {AnnotationType::Ink, PDF_ANNOT_INK, StrL("Ink"), AnnotMove | AnnotCopy | AnnotBorder | AnnotColor | AnnotOpacity},
+    {AnnotationType::Popup, PDF_ANNOT_POPUP, StrL("Popup"), AnnotMove | AnnotResize},
+    {AnnotationType::FileAttachment, PDF_ANNOT_FILE_ATTACHMENT, StrL("FileAttachment"),
+     AnnotMove | AnnotColor | AnnotOpacity},
+    {AnnotationType::Sound, PDF_ANNOT_SOUND, StrL("Sound"), AnnotMove | AnnotColor},
+    {AnnotationType::Movie, PDF_ANNOT_MOVIE, StrL("Movie"), AnnotMove | AnnotResize},
+    {AnnotationType::RichMedia, PDF_ANNOT_RICH_MEDIA, StrL("RichMedia"), AnnotMove | AnnotResize},
+    {AnnotationType::Widget, PDF_ANNOT_WIDGET, StrL("Widget"), AnnotMove | AnnotResize},
+    {AnnotationType::Screen, PDF_ANNOT_SCREEN, StrL("Screen"), 0},
+    {AnnotationType::PrinterMark, PDF_ANNOT_PRINTER_MARK, StrL("PrinterMark"), 0},
+    {AnnotationType::TrapNet, PDF_ANNOT_TRAP_NET, StrL("TrapNet"), 0},
+    {AnnotationType::Watermark, PDF_ANNOT_WATERMARK, StrL("Watermark"), 0},
+    {AnnotationType::ThreeD, PDF_ANNOT_3D, StrL("ThreeD"), AnnotMove | AnnotResize},
+    {AnnotationType::Projection, PDF_ANNOT_PROJECTION, StrL("Projection"), 0},
+};
+
+static constexpr bool AnnotationTypesMatch() {
+    for (int i = 0; i < dimofi(kAnnotationTypes); i++) {
+        if ((int)kAnnotationTypes[i].type != i || (int)kAnnotationTypes[i].nativeType != i) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static_assert(dimofi(kAnnotationTypes) == (int)AnnotationType::Last + 1);
+static_assert(AnnotationTypesMatch());
+
+static const AnnotationTypeInfo* AnnotationInfo(AnnotationType type) {
+    int idx = (int)type;
+    return idx >= 0 && idx < dimofi(kAnnotationTypes) ? &kAnnotationTypes[idx] : nullptr;
+}
 
 // Matches case- and space-insensitively, so "free text" and "freetext" both
 // name AnnotationType::FreeText. Unknown if there is no such type.
@@ -57,11 +114,9 @@ AnnotationType AnnotationTypeFromName(Str name) {
     if (len(want) == 0) {
         return AnnotationType::Unknown;
     }
-    int idx = 0;
-    SeqStrings names = gAnnotationTypeNames;
-    for (Str item = SeqStrFirst(names); len(item) > 0; item = SeqStrNext(item), idx++) {
-        if (str::EqI(item, want)) {
-            return (AnnotationType)idx;
+    for (const auto& info : kAnnotationTypes) {
+        if (str::EqI(info.name, want)) {
+            return info.type;
         }
     }
     return AnnotationType::Unknown;
@@ -69,10 +124,8 @@ AnnotationType AnnotationTypeFromName(Str name) {
 
 // the untranslated name ("Highlight", "FreeText"), empty for Unknown
 Str AnnotationTypeName(AnnotationType tp) {
-    if ((int)tp < 0 || (int)tp > (int)AnnotationType::Last) {
-        return {};
-    }
-    return SeqStrByIndex(gAnnotationTypeNames, (int)tp);
+    const auto* info = AnnotationInfo(tp);
+    return info ? info->name : Str{};
 }
 
 // Translate an English annotation type label for the UI.
@@ -1730,51 +1783,9 @@ static TempStr GetAnnotationTextIconTemp() {
     return SeqStrByIndex(gAnnotationTextIcons, idx);
 }
 
-enum AnnotationCapability : u8 {
-    AnnotMove = 1 << 0,
-    AnnotCopy = 1 << 1,
-    AnnotResize = 1 << 2,
-    AnnotInteriorColor = 1 << 3,
-    AnnotBorder = 1 << 4,
-    AnnotColor = 1 << 5,
-    AnnotOpacity = 1 << 6,
-};
-
-static const u8 kAnnotationCapabilities[] = {
-    AnnotMove | AnnotCopy | AnnotColor | AnnotOpacity,                                                  // Text
-    0,                                                                                                  // Link
-    AnnotMove | AnnotCopy | AnnotResize | AnnotBorder | AnnotColor | AnnotOpacity,                      // FreeText
-    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Line
-    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Square
-    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Circle
-    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // Polygon
-    AnnotMove | AnnotCopy | AnnotResize | AnnotInteriorColor | AnnotBorder | AnnotColor | AnnotOpacity, // PolyLine
-    AnnotColor | AnnotOpacity,                                                                          // Highlight
-    AnnotColor | AnnotOpacity,                                                                          // Underline
-    AnnotColor | AnnotOpacity,                                                                          // Squiggly
-    AnnotColor | AnnotOpacity,                                                                          // StrikeOut
-    AnnotMove | AnnotCopy | AnnotResize | AnnotOpacity,                                                 // Redact
-    AnnotMove | AnnotCopy | AnnotResize | AnnotColor | AnnotOpacity,                                    // Stamp
-    AnnotMove | AnnotCopy | AnnotColor | AnnotOpacity,                                                  // Caret
-    AnnotMove | AnnotCopy | AnnotBorder | AnnotColor | AnnotOpacity,                                    // Ink
-    AnnotMove | AnnotResize,                                                                            // Popup
-    AnnotMove | AnnotColor | AnnotOpacity, // FileAttachment
-    AnnotMove | AnnotColor,                // Sound
-    AnnotMove | AnnotResize,               // Movie
-    AnnotMove | AnnotResize,               // RichMedia
-    AnnotMove | AnnotResize,               // Widget
-    0,                                     // Screen
-    0,                                     // PrinterMark
-    0,                                     // TrapNet
-    0,                                     // Watermark
-    AnnotMove | AnnotResize,               // ThreeD
-    0,                                     // Projection
-};
-static_assert(dimof(kAnnotationCapabilities) == (int)AnnotationType::Last + 1);
-
 static bool HasAnnotationCapability(AnnotationType tp, AnnotationCapability capability) {
-    int idx = (int)tp;
-    return idx >= 0 && idx < dimof(kAnnotationCapabilities) && (kAnnotationCapabilities[idx] & capability) != 0;
+    const auto* info = AnnotationInfo(tp);
+    return info && (info->capabilities & capability) != 0;
 }
 
 bool AnnotationCanBeMoved(AnnotationType tp) {
