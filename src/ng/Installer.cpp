@@ -38,7 +38,13 @@ struct InstallerWnd;
 
 static InstallerWnd* gWnd = nullptr;
 static bool gInstallStarted = false; // a bit of a hack
-static bool gInstallFailed = false;
+enum class InstallResult {
+    Failed,
+    Partial,
+    Complete
+};
+// Read after gInstallFinished is set, or immediately after a silent install.
+static InstallResult gInstallResult = InstallResult::Failed;
 static volatile LONG gInstallFinished = 0;
 
 // the three steps a static-exe install takes: copy the exe, write the registry
@@ -98,9 +104,7 @@ bool ExtractInstallerFiles(Str dir) {
 }
 
 static void InstallerThread(Flags* cli) {
-    bool ok;
-
-    gInstallFailed = true;
+    gInstallResult = InstallResult::Failed;
 
     TempStr installedExePath = path::JoinTemp(cli->installDir, Str(kExeName));
     auto allUsers = cli->allUsers;
@@ -126,22 +130,19 @@ static void InstallerThread(Flags* cli) {
 
     CreateAppShortcuts(allUsers, !cli->noDesktopShortcut, installedExePath);
 
-    // consider installation a success from here on
-    // (still warn, if we've failed to create the uninstaller, though)
-    gInstallFailed = false;
-
-    ok = WriteUninstallerRegistryInfo(key, allUsers, cli->installDir);
-    if (!ok) {
-        NotifyFailed(Tr("Failed to write the uninstallation information to the registry"));
-    }
-
-    // remembered for the next upgrade (GetPreviousInstallInfo)
-    LoggedWriteRegDWORD(key, GetRegPathUninstTemp(StrL(kAppName)), StrL(kRegDesktopShortcut),
-                        cli->noDesktopShortcut ? 0 : 1);
-
-    ok = WriteExtendedFileExtensionInfo(key, installedExePath);
-    if (!ok) {
-        NotifyFailed(Tr("Failed to write the extended file extension information to the registry"));
+    {
+        bool uninstallInfo = WriteUninstallerRegistryInfo(key, allUsers, cli->installDir);
+        // Remember the desktop shortcut preference for the next upgrade.
+        uninstallInfo &= LoggedWriteRegDWORD(key, GetRegPathUninstTemp(StrL(kAppName)), StrL(kRegDesktopShortcut),
+                                             cli->noDesktopShortcut ? 0 : 1);
+        if (!uninstallInfo) {
+            NotifyFailed(Tr("Failed to write the uninstallation information to the registry"));
+        }
+        bool associations = WriteExtendedFileExtensionInfo(key, installedExePath);
+        if (!associations) {
+            NotifyFailed(Tr("Failed to write the extended file extension information to the registry"));
+        }
+        gInstallResult = uninstallInfo && associations ? InstallResult::Complete : InstallResult::Partial;
     }
 
     AddInstallDirToPath(allUsers, cli->installDir);
@@ -281,14 +282,13 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
 }
 
 static void OnInstallationFinished(InstallerWnd* wnd, Flags* cli) {
-    logf("OnInstallationFinished: cli->fastInstall: %d gInstallFailed: %d\n", (int)cli->fastInstall,
-         (int)gInstallFailed);
+    logf("OnInstallationFinished: cli->fastInstall: %d result: %d\n", (int)cli->fastInstall, (int)gInstallResult);
 
     SafeCloseThreadHandle(&wnd->hThread);
     wnd->installing = false;
     wnd->finished = true;
 
-    if (gInstallFailed) {
+    if (gInstallResult != InstallResult::Complete) {
         gMsgError = gFirstError;
         SetMsg(Tr("Installation could not be completed."), kColorMsgFailed);
         return;
@@ -618,7 +618,7 @@ gp::El* InstallerView::Render(InstallerView*, gp::Ctx* cx) {
     }
     bottom->Child(gp::Div(cx->a)->Flex1());
     if (wnd->finished) {
-        if (!gInstallFailed && !gCliNew.fastInstall) {
+        if (gInstallResult != InstallResult::Failed && !gCliNew.fastInstall) {
             bottom->Child(gpc::Button::New(cx, GStrL("inst-start"))
                               ->Label(ToGpui(Tr("Start SumatraPDF")))
                               ->Primary()
@@ -765,7 +765,6 @@ int RunInstaller(Flags* cli) {
     if (gCli->silent) {
         gInstallStarted = true;
         InstallerThread(&gCliNew);
-        ret = gInstallFailed ? 1 : 0;
     } else {
         log(StrL("Before CreateInstallerWindow()\n"));
         if (!CreateInstallerWindow(&gCliNew)) {
@@ -776,10 +775,14 @@ int RunInstaller(Flags* cli) {
         logf("AppRun() returned %d\n", ret);
     }
 
+    if (ret == 0 && gInstallStarted &&
+        (InterlockedCompareExchange(&gInstallFinished, 0, 0) == 0 || gInstallResult != InstallResult::Complete)) {
+        ret = 1;
+    }
     log(StrL("Installer finished\n"));
     if (installerLogPath && gInstallStarted) {
         RunNonElevated(installerLogPath);
-    } else if (!gCli->silent && (ret != 0 || gInstallFailed)) {
+    } else if (!gCli->silent && ret != 0) {
         // if installation failed, save log to file and show it
         installerLogPath = GetInstallerLogPath();
         bool ok = WriteCurrentLogToFile(installerLogPath);
