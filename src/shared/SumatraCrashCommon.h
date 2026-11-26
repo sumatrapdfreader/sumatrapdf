@@ -6,6 +6,14 @@
 TempStr GetFileSizeAsStrTemp(Str path);
 void AppendLogAndSettings(str::Builder& b);
 void OnCrashBegin();
+bool CrashReportsDisabled();
+
+struct CrashHandlerConfig;
+enum class CrashSettingsSource {
+    File,
+    Defaults
+};
+void InstallConfiguredCrashHandler(CrashHandlerConfig cfg, CrashSettingsSource source);
 
 // --- shared by SumatraCrashCommon.cpp and each app's SumatraPDF.cpp ---
 

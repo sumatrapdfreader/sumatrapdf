@@ -177,7 +177,7 @@ static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* 
     TempWStr ws = ToWStrTemp(gDumpPath);
     dbghelp::WriteMiniDump(ws, mei, fullDump, logText);
 
-    if (!shouldUpload) {
+    if (!shouldUpload || gCfg.UploadsDisabled()) {
         log(StrL("WriteAndUploadMinidump: skipping upload, !shouldUpload\n"));
         return;
     }
@@ -332,7 +332,6 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     }
 
     bool shouldUpload = isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
-
     // a ReportIf in a hot path would walk the stack and copy log and settings
     // into the never-reset crash arena on every hit: build one per session
     static AtomicInt didBuildDebugReport = 0;

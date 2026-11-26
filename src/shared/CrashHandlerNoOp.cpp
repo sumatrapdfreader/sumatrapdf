@@ -4,7 +4,8 @@
 #include "base/Base.h"
 
 // stubs for what SumatraPDF.cpp provides, for the tools that don't link it
-void CrashHandlerSetSettings(Str) {}
+struct Settings;
+void CrashHandlerSetSettings(const Settings*) {}
 
 void _uploadDebugReport(Str /*condStr*/, Str /*fileLine*/, bool /*isCrash*/) {
 #if OS_WIN

@@ -5,6 +5,7 @@
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
 #include "base/Http.h"
+#include "base/SettingsUtil.h"
 #include "base/Timer.h"
 
 #include "gui/UIModels.h"
@@ -84,6 +85,33 @@ void RestrictedUseConfigTest() {
         utassert(roundTrip.items[i].enabled == cfg.items[i].enabled);
     }
     utassert(str::Eq(roundTrip.linkProtocols, StrL("https")));
+    int crashIdx = RestrictedUseFeatureCount() - 1;
+    utassert(str::Eq(RestrictedUseFeatureName(crashIdx), StrL("CrashReports")));
+    utassert(!roundTrip.items[crashIdx].enabled);
+    LoadRestrictedUseConfig(cfg, StrL("[Policies]\nInternetAccess = 1\nCrashReports = 1\n"), RestrictedUseFile::Exists);
+    utassert(cfg.items[0].enabled && cfg.items[crashIdx].enabled);
+}
+
+void CrashReportSettingsTest() {
+    Settings* settings =
+        NewSettings(StrL("OnlineApiKey = test-web-key\nDefaultPasswords = test-password\n"
+                         "SessionData [\n  [\n    TabStates [\n      [\n"
+                         "        FilePath = C:/test/session.pdf\n      ]\n    ]\n  ]\n]\n"));
+    Str all = SerializeSettings(settings, {}, SerializeOpt::All);
+    Str report = SerializeSettings(settings, {}, SerializeOpt::NoSecrets);
+    utassert(str::Contains(all, StrL("test-web-key")));
+    utassert(str::Contains(all, StrL("test-password")));
+    utassert(!str::Contains(report, StrL("test-web-key")));
+    utassert(!str::Contains(report, StrL("test-password")));
+    utassert(str::Contains(report, StrL("session.pdf")));
+    utassert(!settings->disableCrashReports);
+    utassert(settings->checkForUpdates);
+    auto* disabled = NewSettings(StrL("DisableCrashReports = true\nCheckForUpdates = true\n"));
+    utassert(disabled->disableCrashReports && disabled->checkForUpdates);
+    DeleteSettings(disabled);
+    str::Free(all);
+    str::Free(report);
+    DeleteSettings(settings);
 }
 
 void BenchRangeTest() {

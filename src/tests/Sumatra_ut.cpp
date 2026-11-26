@@ -76,6 +76,7 @@ void PrintAdvancedDefaultsTest();
 void ParseFileArgsTest();
 void ParseCommandLineTest();
 void RestrictedUseConfigTest();
+void CrashReportSettingsTest();
 void ControlFrameActionTest();
 void HexViewTest();
 void SumatraPDFWebTest();
@@ -581,6 +582,7 @@ static void SumatraPDF_UnitTests() {
     StripGroupOrderTest();
     OnlineURLAllowedTest();
     RestrictedUseConfigTest();
+    CrashReportSettingsTest();
     ControlFrameActionTest();
     HexViewTest();
     SumatraPDFWebTest();

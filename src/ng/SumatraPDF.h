@@ -190,7 +190,8 @@ void RefreshEbookLayoutForDde(MainWindow* win, DisplayMode oldMode, float oldZoo
 bool SettingsUseTabs();
 bool SettingsRememberOpenedFiles();
 
-void CrashHandlerSetSettings(Str settings);
+struct Settings;
+void CrashHandlerSetSettings(const Settings* settings);
 
 void InitializePolicies(bool restrict);
 bool HasPermission(Perm permission);

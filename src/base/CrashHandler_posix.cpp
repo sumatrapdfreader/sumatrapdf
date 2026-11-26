@@ -267,7 +267,7 @@ static void WriteReportToFd(int fd, Str report, void* const* frames, int nFrames
 }
 
 static bool ShouldUpload(bool isCrash) {
-    if (gCfg.localOnly || len(gCfg.submitUrl) == 0) {
+    if (gCfg.localOnly || len(gCfg.submitUrl) == 0 || gCfg.UploadsDisabled()) {
         return false;
     }
     return isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
@@ -493,6 +493,9 @@ static void UploadPending(Str path, Str url) {
 
 static void UploadPendingThread(PendingUpload* d) {
     for (Str path : d->paths) {
+        if (gCfg.UploadsDisabled()) {
+            break;
+        }
         UploadPending(path, d->url);
     }
     str::Free(d->url);
@@ -502,7 +505,8 @@ static void UploadPendingThread(PendingUpload* d) {
 // Sends the reports earlier runs left behind, newest kMaxPendingReports;
 // older ones are deleted.
 static void UploadPendingReports() {
-    if (gCfg.localOnly || len(gCfg.submitUrl) == 0) {
+    if (gCfg.localOnly || len(gCfg.submitUrl) == 0 || gCfg.UploadsDisabled() ||
+        (!gCfg.uploadCrashes && !gCfg.uploadDebugReports)) {
         return;
     }
     TempStr dir = path::GetDirTemp(gCfg.crashDumpPath);

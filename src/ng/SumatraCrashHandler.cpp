@@ -144,8 +144,9 @@ static void ShowCrashHandlerMessage() {
     }
     LaunchFileShell(StrL(kSubmitCrashReportUrl), {}, StrL("open"));
 #elif OS_DARWIN
-    Str msg = gWillUploadCrash ? StrL("A crash report will be sent the next time you start SumatraPDF.")
-                               : StrL("See how to report the crash.");
+    Str msg = gWillUploadCrash && !CrashReportsDisabled()
+                  ? StrL("A crash report will be sent the next time you start SumatraPDF.")
+                  : StrL("See how to report the crash.");
     if (MacCrashAlert(StrL("SumatraPDF crashed"), msg, StrL("How to Report"), kCrashAlertTimeoutSecs)) {
         LaunchFileShell(StrL(kSubmitCrashReportUrl), {}, StrL("open"));
     }
@@ -198,24 +199,6 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     return ToStr(b);
 }
 
-// FileStates are the largest part and we don't need them in a crash report
-static void CaptureSettings() {
-    TempStr path = GetSettingsPathTemp();
-    // can be empty on first run but that's fine because then we know it has default values
-    Str prefsData = file::ReadFile(path);
-    if (len(prefsData) == 0) {
-        return;
-    }
-    Settings* gp = NewSettings(prefsData);
-    DeleteFileStates(gp->fileStates);
-    gp->fileStates = new Vec<FileState*>();
-    Str d = SerializeSettings(gp, {}, SerializeOpt::NoSecrets);
-    CrashHandlerSetSettings(d);
-    str::Free(d);
-    DeleteSettings(gp);
-    str::Free(prefsData);
-}
-
 // the client info is the same as for the update check and doesn't change while
 // we run, so build the url now rather than at crash time
 static TempStr BuildSubmitUrlTemp() {
@@ -264,8 +247,8 @@ void InstallSumatraCrashHandler(bool localOnly) {
     }
     // a policy without internet access still gets a local .dmp to attach to
     // an issue; must run after InitializePolicies()
-    if (!HasPermission(Perm::InternetAccess)) {
-        log(StrL("InstallSumatraCrashHandler: no Perm::InternetAccess, not uploading\n"));
+    if (!HasPermission(Perm::InternetAccess | Perm::CrashReports)) {
+        log(StrL("InstallSumatraCrashHandler: upload disabled by policy\n"));
         cfg.submitUrl = {};
         cfg.uploadCrashes = false;
         cfg.uploadDebugReports = false;
@@ -276,7 +259,7 @@ void InstallSumatraCrashHandler(bool localOnly) {
     // a SAPI voice engine that faults on its own thread ends only that thread
     cfg.canEndCrashedThread = TtsOnEngineCrash;
 
-    InstallCrashHandler(cfg);
+    InstallConfiguredCrashHandler(cfg, CrashSettingsSource::File);
     gWillUploadCrash = !localOnly && cfg.uploadCrashes && len(cfg.submitUrl) > 0;
     Arena* a = CrashHandlerArena();
     if (a) {
@@ -285,5 +268,4 @@ void InstallSumatraCrashHandler(bool localOnly) {
         gProgramInfo = ToStr(info);
     }
     logf("InstallSumatraCrashHandler: dump '%s', localOnly=%d\n", cfg.crashDumpPath, (int)localOnly);
-    CaptureSettings();
 }

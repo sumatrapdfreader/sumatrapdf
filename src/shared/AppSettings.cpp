@@ -466,20 +466,6 @@ void ApplySettingsToOpenWindows() {
     ReRegisterGlobalHotkeys();
 }
 
-// FileStates are large; the minidump comment only needs the rest.
-static void UpdateCrashHandlerSettings() {
-    if (!gSettings) {
-        return;
-    }
-    Vec<FileState*> empty;
-    Vec<FileState*>* saved = gSettings->fileStates;
-    gSettings->fileStates = &empty;
-    Str d = SerializeSettings(gSettings, {}, SerializeOpt::NoSecrets);
-    gSettings->fileStates = saved;
-    CrashHandlerSetSettings(d);
-    str::Free(d);
-}
-
 TabState* CloneTabState(const TabState* src) {
     TabState* dst = (TabState*)AllocStruct<TabState>();
     str::ReplaceWithCopy(&dst->filePath, src->filePath);
@@ -579,7 +565,7 @@ static bool SaveSettings(bool force) {
     if (len(prefs) == 0) {
         return false;
     }
-    UpdateCrashHandlerSettings();
+    CrashHandlerSetSettings(gSettings);
 
     if (!missing && (IsLastSavedPrefs(prefs) || (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs)))) {
         RememberLastSavedPrefs(prefs);
@@ -830,7 +816,7 @@ bool LoadSettings() {
         SaveSettings();
     }
 
-    UpdateCrashHandlerSettings();
+    CrashHandlerSetSettings(gSettings);
 
     logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
     return true;

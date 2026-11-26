@@ -105,7 +105,8 @@ DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win);
 bool SettingsUseTabs();
 bool SettingsRememberOpenedFiles();
 
-void CrashHandlerSetSettings(Str settings);
+struct Settings;
+void CrashHandlerSetSettings(const Settings* settings);
 
 void InitializePolicies(bool restrict);
 bool HasPermission(Perm permission);

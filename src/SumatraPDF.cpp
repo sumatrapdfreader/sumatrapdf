@@ -16680,30 +16680,6 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     return ToStr(b);
 }
 
-// FileStates are the largest part and we don't need them in a crash report
-static void CaptureSettings() {
-    // installer/uninstaller don't use app settings; reading them here would
-    // trigger GetAppDataDirTemp() before installation is complete
-    if (IsInstallerOrUninstallerExe()) {
-        return;
-    }
-    TempStr path = GetSettingsPathTemp();
-    // can be empty on first run but that's fine because then we know it has default values
-    Str prefsData = file::ReadFile(path);
-    if (len(prefsData) == 0) {
-        return;
-    }
-    Settings* gp = NewSettings(prefsData);
-    DeleteFileStates(gp->fileStates);
-    gp->fileStates = new Vec<FileState*>();
-    // TODO: also sessionData?
-    Str d = SerializeSettings(gp, {}, SerializeOpt::NoSecrets);
-    CrashHandlerSetSettings(d);
-    str::Free(d);
-    DeleteSettings(gp);
-    str::Free(prefsData);
-}
-
 // the client info is the same as for the update check and doesn't change while
 // we run, so build the url now rather than at crash time
 static TempStr BuildSubmitUrlTemp() {
@@ -16746,8 +16722,8 @@ static void InstallSumatraCrashHandler(bool localOnly) {
     }
     // a policy without internet access still gets a local .dmp to attach to
     // an issue; must run after InitializePolicies()
-    if (!HasPermission(Perm::InternetAccess)) {
-        log(StrL("InstallSumatraCrashHandler: no Perm::InternetAccess, not uploading\n"));
+    if (!HasPermission(Perm::InternetAccess | Perm::CrashReports)) {
+        log(StrL("InstallSumatraCrashHandler: upload disabled by policy\n"));
         cfg.submitUrl = {};
         cfg.uploadCrashes = false;
         cfg.uploadDebugReports = false;
@@ -16757,8 +16733,8 @@ static void InstallSumatraCrashHandler(bool localOnly) {
     cfg.showCrashMessage = ShowCrashHandlerMessage;
     cfg.canEndCrashedThread = TtsOnEngineCrash;
 
-    InstallCrashHandler(cfg);
-    CaptureSettings();
+    auto source = IsInstallerOrUninstallerExe() ? CrashSettingsSource::Defaults : CrashSettingsSource::File;
+    InstallConfiguredCrashHandler(cfg, source);
 }
 
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ LPSTR /*lpCmdLine*/,
@@ -16816,6 +16792,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 
     Flags flags;
     if (ExeHasNameOfStoreInstaller()) {
+        InitializePolicies(false);
         InstallSumatraCrashHandler(false);
         logf("Running store installer\n");
         flags.install = true;
@@ -16840,6 +16817,16 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         StartPerfLog();
     }
     ApplyHtmlBackendFlag(flags.htmlBackend);
+    if (flags.appdataDir) {
+        // a path we can't create (e.g. pasted with a stray quote) falls back to the default
+        Str dir = path::NormalizeTemp(flags.appdataDir);
+        if (dir::Exists(dir) || dir::CreateAll(dir)) {
+            SetAppDataDir(dir);
+        } else {
+            logf("-appdata: can't create '%s', using the default\n", dir);
+            LogLastError();
+        }
+    }
     // must precede InstallSumatraCrashHandler(): it needs to know whether we're
     // allowed to send the report at all
     InitializePolicies(flags.restrictedUse);
@@ -17064,17 +17051,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         gLogToConsole = false;
         DumpExif(flags);
         return 0;
-    }
-
-    if (flags.appdataDir) {
-        // a path we can't create (e.g. pasted with a stray quote) falls back to the default
-        Str dir = path::NormalizeTemp(flags.appdataDir);
-        if (dir::Exists(dir) || dir::CreateAll(dir)) {
-            SetAppDataDir(dir);
-        } else {
-            logf("-appdata: can't create '%s', using the default\n", dir);
-            LogLastError();
-        }
     }
 
 #if IS_DEBUG

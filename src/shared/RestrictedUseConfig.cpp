@@ -25,6 +25,8 @@ static const struct {
     {Perm::FullscreenAccess, StrL("FullscreenAccess"), StrL("Allow fullscreen and presentation modes.")},
     {Perm::AIChat, StrL("AIChat"),
      StrL("Allow AI chat and AI translation features. Internet and disk access are also required.")},
+    {Perm::CrashReports, StrL("CrashReports"),
+     StrL("Allow automatic crash and diagnostic report uploads. Internet access is also required.")},
 };
 
 static_assert(dimof(kRestrictedUseFeatures) == kRestrictedUseFeatureCount);

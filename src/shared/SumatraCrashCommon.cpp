@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/Crypto.h"
+#include "base/SettingsUtil.h"
 #include "Settings.h"
 #include "UpdateCheck.h"
 #include "AppSettings.h"
@@ -27,20 +28,48 @@ TempStr GetFileSizeAsStrTemp(Str path) {
 // minidump comment can use it without allocating
 static Str gSettingsFile;
 
-void CrashHandlerSetSettings(Str settings) {
+static AtomicBool gCrashReportsDisabled = 0;
+
+bool CrashReportsDisabled() {
+    return AtomicBoolGet(&gCrashReportsDisabled);
+}
+
+void CrashHandlerSetSettings(const Settings* settings) {
+    AtomicBoolSet(&gCrashReportsDisabled, settings && settings->disableCrashReports);
     Arena* a = CrashHandlerArena();
-    if (!a) {
+    if (!a || !settings) {
         return;
     }
-    gSettingsFile = {};
-    if (len(settings) == 0) {
-        return;
-    }
-    gSettingsFile = str::Dup(a, settings);
-    // The file is UTF-8 BOM + CRLF. This comment is LF text; a BOM or CR
-    // here shows up as a blank line after every settings line.
+
+    Vec<FileState*> empty;
+    Settings captured = *settings;
+    captured.fileStates = &empty;
+    Str serialized = SerializeSettings(&captured, {}, SerializeOpt::NoSecrets);
+    gSettingsFile = str::Dup(a, serialized);
+    str::Free(serialized);
+    // Settings are UTF-8 BOM + CRLF. The report comment uses LF.
     str::TrimPrefix(gSettingsFile, StrL(kUtf8Bom));
     str::NormalizeNewlinesToLFInPlace(gSettingsFile);
+}
+
+void InstallConfiguredCrashHandler(CrashHandlerConfig cfg, CrashSettingsSource source) {
+    Settings* settings = nullptr;
+    if (source == CrashSettingsSource::File) {
+        Str prefs = file::ReadFile(GetSettingsPathTemp());
+        if (len(prefs) > 0) {
+            settings = NewSettings(prefs);
+        }
+        str::Free(prefs);
+    }
+
+    // The POSIX handler may start sending pending reports during installation.
+    AtomicBoolSet(&gCrashReportsDisabled, settings && settings->disableCrashReports);
+    cfg.uploadsDisabled = CrashReportsDisabled;
+    InstallCrashHandler(cfg);
+    if (settings) {
+        CrashHandlerSetSettings(settings);
+        DeleteSettings(settings);
+    }
 }
 
 void AppendLogAndSettings(str::Builder& b) {

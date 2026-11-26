@@ -18,11 +18,15 @@ struct CrashHandlerConfig {
     // describe the ReportIf() that fired and are empty for a crash. Everything
     // it returns must be allocated from a, which is the crash arena.
     Str (*getCrashComment)(Arena* a, Str condStr, Str fileLine, bool isCrash);
+    // Reads the current upload preference without allocating.
+    bool (*uploadsDisabled)();
     void (*onCrashBegin)();
     void (*showCrashMessage)();
     // for a crash on a thread not started by our exe (or the thread pool): true if
     // the code at faultAddr is such that ending only that thread is safe
     bool (*canEndCrashedThread)(void* faultAddr);
+
+    bool UploadsDisabled() const { return uploadsDisabled && uploadsDisabled(); }
 };
 
 void InstallCrashHandler(const CrashHandlerConfig& cfg);

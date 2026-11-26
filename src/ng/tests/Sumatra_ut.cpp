@@ -56,6 +56,7 @@ void HexViewTest();
 void SumatraPDFWebTest();
 void HttpTransferTest();
 void RestrictedUseConfigTest();
+void CrashReportSettingsTest();
 void ControlFrameActionTest();
 void OpenDdeCmdTest();
 #if OS_WIN && IS_DEBUG
@@ -271,6 +272,7 @@ static void PageAspectViewTest() {
 
 void SumatraPDF_UnitTests() {
     RestrictedUseConfigTest();
+    CrashReportSettingsTest();
     ControlFrameActionTest();
     OpenDdeCmdTest();
 #if OS_WIN && IS_DEBUG

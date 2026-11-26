@@ -1208,7 +1208,9 @@ const fileState: Field[] = [
     null,
     "hex encoded MD5 fingerprint of the file content (32 chars) followed by the " +
       "crypt key (64 chars); only applies to PDF documents",
-  ).doc("data required to open a password protected document without having to " + "ask for the password again"),
+  )
+    .secret()
+    .doc("data required to open a password protected document without having to " + "ask for the password again"),
   structPtr(
     "EBookUI",
     "FileEBookUI",
@@ -1930,6 +1932,9 @@ const globalPrefs: Field[] = [
     "if true, a PDF without an outline gets a table of contents built from numbered headings in its text (Generate Table Of Contents command does it on demand)",
   ).ver("3.7"),
   field("ShowStartPage", Bool, true, "if true, show a list of frequently read documents when no document is loaded"),
+  field("DisableCrashReports", Bool, false, "keep crash reports local and disable automatic diagnostic uploads").ver(
+    "3.7",
+  ),
   field(
     "SidebarDx",
     Int,
@@ -2397,6 +2402,7 @@ const globalPrefs: Field[] = [
 
   comment("You're not expected to change those manually"),
   compactArray("DefaultPasswords", Str, null, "passwords to try when opening a password protected document")
+    .secret()
     .ver("2.4")
     .doc(
       "a whitespace separated list of passwords to try when opening a password protected document " +
@@ -2468,6 +2474,7 @@ const globalPrefs: Field[] = [
     null,
     "API key for SumatraPDF Web. Set from File / Link SumatraPDF Web. Do not share the settings file.",
   )
+    .secret()
     .internal()
     .ver("3.7")
     .omitFromDocs(),
@@ -2620,6 +2627,7 @@ const globalPrefsLayout = [
   "ShowTocPageNumbers",
   "TocWrapText",
   "ShowStartPage",
+  "DisableCrashReports",
   "ScrollbarInSinglePage",
   "SmoothScroll",
   "PaddingAfterLastPage",

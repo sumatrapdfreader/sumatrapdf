@@ -64,6 +64,7 @@ ShowTocPageNumbers = true
 TocWrapText = false
 AutoGenerateTOC = false
 ShowStartPage = true
+DisableCrashReports = false
 SidebarDx = 0
 Scrollbars = windows
 ScrollbarInSinglePage = false

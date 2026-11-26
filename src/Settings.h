@@ -1423,6 +1423,8 @@ struct Settings {
     // if true, show a list of frequently read documents when no document
     // is loaded
     bool showStartPage;
+    // keep crash reports local and disable automatic diagnostic uploads
+    bool disableCrashReports;
     // if true, show a scrollbar in single page mode as well
     bool scrollbarInSinglePage;
     // if true, smooth mouse-wheel and arrow-key scrolling (exponential

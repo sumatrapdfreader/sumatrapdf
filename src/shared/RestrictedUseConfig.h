@@ -5,7 +5,7 @@ constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 constexpr const char* kRestrictedUseDocsUrl = "https://www.sumatrapdfreader.org/docs/Configure-for-restricted-use";
 
 // Number of named policies in sumatrapdfrestrict.ini.
-constexpr int kRestrictedUseFeatureCount = 8;
+constexpr int kRestrictedUseFeatureCount = 9;
 
 struct RestrictedUseItem {
     bool enabled = false;
