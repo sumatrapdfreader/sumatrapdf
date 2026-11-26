@@ -22,6 +22,9 @@
   var stamp = {};
   var saving = false;
   var queued = [];
+  var persistTimer = 0;
+  var changeVersion = 0;
+  var savedVersion = 0;
 
   function fs() {
     return Module.FS;
@@ -394,10 +397,12 @@
     var batch = queued;
     queued = [];
     saving = true;
+    var version = changeVersion;
     saveTreesLocked().then(
       function () {
         saving = false;
         reportedError = false;
+        savedVersion = version;
         for (var i = 0; i < batch.length; i++) batch[i](null);
         pump();
       },
@@ -412,6 +417,10 @@
   }
 
   Module.sumatraStorageSave = function (done) {
+    if (persistTimer) {
+      clearTimeout(persistTimer);
+      persistTimer = 0;
+    }
     done = done || function () {};
     if (loadError) {
       done("storage didn't load: " + loadError);
@@ -419,6 +428,16 @@
     }
     queued.push(done);
     pump();
+  };
+
+  Module.sumatraScheduleStorageSave = function (changed) {
+    if (Module.__exited || Module.__crashed || loadError) return;
+    if (changed) changeVersion++;
+    if (persistTimer || changeVersion === savedVersion) return;
+    persistTimer = setTimeout(function () {
+      persistTimer = 0;
+      if (!Module.__exited && !Module.__crashed) Module.sumatraStorageSave();
+    }, 500);
   };
 
   function saveAsync() {
@@ -674,10 +693,6 @@
     var flush = Module._sumatra_wasm_flush;
     if (!flush) return;
     flush();
-    if (Module.__persistTimer) {
-      clearTimeout(Module.__persistTimer);
-      Module.__persistTimer = 0;
-    }
     Module.sumatraStorageSave();
   }
   document.addEventListener("visibilitychange", function () {

@@ -39,7 +39,11 @@ bool WasmPrintPdf(Str path);
 
 // Schedules a write-back of /uploads, /settings and /fonts to OPFS. Coalesces:
 // many calls in a row cost one sync. Unchanged files are not rewritten.
-void WasmPersistSettings();
+enum class WasmSaveRequest {
+    Changed,
+    Retry
+};
+void WasmPersistSettings(WasmSaveRequest request = WasmSaveRequest::Changed);
 
 void WasmNotifyExit();
 

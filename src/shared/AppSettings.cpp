@@ -583,6 +583,9 @@ static bool SaveSettings(bool force) {
 
     if (!missing && (IsLastSavedPrefs(prefs) || (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs)))) {
         RememberLastSavedPrefs(prefs);
+#if defined(SUMATRA_NG) && OS_WASM
+        WasmPersistSettings(WasmSaveRequest::Retry);
+#endif
         return true;
     }
 

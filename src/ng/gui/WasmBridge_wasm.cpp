@@ -101,26 +101,10 @@ setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
 });
 
 // NOLINTNEXTLINE
-EM_JS(void, WasmJsPersist, (const char* dir, int dirLen), {
-    var dirPath = UTF8ToString(dir, dirLen);
-    if (Module.__persistTimer) {
-        return;
+EM_JS(void, WasmJsPersist, (int changed), {
+    if (Module.sumatraScheduleStorageSave) {
+        Module.sumatraScheduleStorageSave(!!changed);
     }
-    Module.__persistTimer = setTimeout(
-        function() {
-            Module.__persistTimer = 0;
-            var save = Module.sumatraStorageSave;
-            if (!save) {
-                console.error("saving " + dirPath + " to OPFS failed", "storage is not initialized");
-                return;
-            }
-            save(function(err) {
-                if (err) {
-                    console.error("saving " + dirPath + " to OPFS failed", err);
-                }
-            });
-        },
-        500);
 });
 
 extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_file_picked() {
@@ -395,9 +379,8 @@ bool WasmOpenHtmlFile(Str path) {
     return WasmJsOpenHtml(path.s, path.len) != 0;
 }
 
-void WasmPersistSettings() {
-    Str dir((char*)kWasmSettingsDir);
-    WasmJsPersist(dir.s, dir.len);
+void WasmPersistSettings(WasmSaveRequest request) {
+    WasmJsPersist(request == WasmSaveRequest::Changed ? 1 : 0);
 }
 
 // NOLINTNEXTLINE
