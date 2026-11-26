@@ -286,13 +286,17 @@ static void HandleInstanceConn(int fd) {
         free(buf);
         return;
     }
-    u8 ack = 1;
+    u8 ack = 0;
     if (!gInstanceServerStop) {
         auto* d = new InstanceCmd{Str(buf, (int)n)};
-        uitask::Post(MkFunc0<InstanceCmd>(ExecuteInstanceCmd, d), "InstanceCmd");
-    } else {
+        if (uitask::Post(MkFunc0<InstanceCmd>(ExecuteInstanceCmd, d), "InstanceCmd")) {
+            ack = 1;
+        } else {
+            delete d;
+        }
+    }
+    if (!ack) {
         free(buf);
-        ack = 0;
     }
     WriteAll(fd, &ack, 1);
 }
