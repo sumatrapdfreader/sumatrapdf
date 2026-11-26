@@ -947,8 +947,9 @@ void BrowserViewCreatePendingIn(BrowserView* bv, gp::Ctx* cx) {
     if (!bv || !bv->ownHost || !bv->wantCreate || bv->created) {
         return;
     }
+    MainWindow* win = bv->win;
     CreateWebView(bv, cx);
-    AppShellInvalidate(bv->win);
+    AppShellInvalidate(win);
 }
 
 // ng: gpui draws a popup menu in the frame, under the web view's native
