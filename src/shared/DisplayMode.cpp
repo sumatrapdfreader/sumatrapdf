@@ -59,25 +59,27 @@ bool IsValidZoom(float zoom) {
     return false;
 }
 
-// must match order of enum DisplayMode
-static constexpr SeqStrings displayModeNames =
-    "automatic\0"
-    "single page\0"
-    "facing\0"
-    "book view\0"
-    "continuous\0"
-    "continuous facing\0"
-    "continuous book view\0";
-static_assert(SeqStrCount(displayModeNames) == (int)DisplayMode::ContinuousBookView + 1);
+static const struct {
+    DisplayMode value;
+    Str name;
+} displayModes[] = {
+    {DisplayMode::Automatic, StrL("automatic")},
+    {DisplayMode::SinglePage, StrL("single page")},
+    {DisplayMode::Facing, StrL("facing")},
+    {DisplayMode::BookView, StrL("book view")},
+    {DisplayMode::Continuous, StrL("continuous")},
+    {DisplayMode::ContinuousFacing, StrL("continuous facing")},
+    {DisplayMode::ContinuousBookView, StrL("continuous book view")},
+};
 
 Str DisplayModeToString(DisplayMode mode) {
-    int idx = (int)mode;
-    Str s = SeqStrByIndex(displayModeNames, idx);
-    if (len(s) == 0) {
-        ReportIf(true);
-        return StrL("unknown display mode");
+    for (const auto& entry : displayModes) {
+        if (entry.value == mode) {
+            return entry.name;
+        }
     }
-    return s;
+    ReportIf(true);
+    return StrL("unknown display mode");
 }
 
 // Fills *modeOut and returns true when s is a recognized layout name.
@@ -87,21 +89,23 @@ bool TryParseDisplayMode(Str s, DisplayMode* modeOut) {
     if (len(s) == 0) {
         return false;
     }
-    // Accept the legacy long name for continuous mode.
-    int idx = str::EqIS(s, StrL("continuous single page")) ? (int)DisplayMode::Continuous
-                                                           : SeqStrIndexIS(displayModeNames, s);
-    if (idx < 0) {
-        return false;
+    if (str::EqIS(s, StrL("continuous single page"))) {
+        s = StrL("continuous");
     }
-    if (modeOut) {
-        *modeOut = (DisplayMode)idx;
+    for (const auto& entry : displayModes) {
+        if (str::EqIS(s, entry.name)) {
+            if (modeOut) {
+                *modeOut = entry.value;
+            }
+            return true;
+        }
     }
-    return true;
+    return false;
 }
 
 // DefaultDisplayMode = page aspect: not a live layout, only a first-open
 // picker (portrait -> continuous + fit width, landscape -> single page +
-// fit page). Must not be added to displayModeNames / the DisplayMode enum.
+// fit page). It is never a live layout.
 bool IsPageAspectDisplayMode(Str s) {
     return str::EqIS(s, StrL("page aspect"));
 }
