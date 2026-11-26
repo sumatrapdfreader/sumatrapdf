@@ -103,8 +103,17 @@ static void SyncInitialSessionData(const Vec<SavedLazyTab>& lazyTabs) {
         VecAppend(*gInitialSessionData, CloneSessionData(sd));
     }
     for (const SavedLazyTab& lazy : lazyTabs) {
+        if (!IsWindowTabValid(lazy.tab) || !VecIsValidIndex(*gInitialSessionData, lazy.windowIndex)) {
+            continue;
+        }
         SessionData* session = (*gInitialSessionData)[lazy.windowIndex];
-        lazy.tab->tabState = (*session->tabStates)[lazy.tabIndex];
+        if (!VecIsValidIndex(*session->tabStates, lazy.tabIndex)) {
+            continue;
+        }
+        TabState* state = (*session->tabStates)[lazy.tabIndex];
+        if (str::EqI(state->filePath, lazy.tab->filePath)) {
+            lazy.tab->tabState = state;
+        }
     }
 }
 
