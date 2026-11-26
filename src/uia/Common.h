@@ -2,7 +2,12 @@
 
 #include <uiautomationcore.h>
 #include <uiautomationcoreapi.h>
+
+// SDK 26100 omits two client enum definitions when targeting Windows 7.
+#pragma warning(push)
+#pragma warning(disable : 4471)
 #include <uiautomationclient.h>
+#pragma warning(pop)
 
 // out-param for "nothing to return": GetRuntimeId of a top-level element,
 // GetEmbeddedFragmentRoots (no other roots), get_HostRawElementProvider
