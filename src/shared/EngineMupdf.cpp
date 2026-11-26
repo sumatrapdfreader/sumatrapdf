@@ -96,31 +96,31 @@ Kind kindEngineMupdf = "enginePdf";
 // Whether to enable mupdf's JavaScript engine for newly loaded PDFs (form-field
 // calculate/validate/format). Set by the app from the DisableJavaScript pref;
 // PdfPreview/PdfFilter don't link Settings, so they keep the default.
-static bool gDisableFormJavaScript = false;
+static AtomicBool gDisableFormJavaScript = false;
 // disable mupdf's JavaScript engine for PDFs loaded after this call
 void EngineMupdfSetDisableJavaScript(bool disable) {
-    gDisableFormJavaScript = disable;
+    AtomicBoolSet(&gDisableFormJavaScript, disable);
 }
 
 // Whether a PDF may load an image from an external sibling file (issue #3731).
 // Set by the app from the AllowExternalImages pref; off by default (and in the
 // PdfPreview/PdfFilter DLLs, which don't link Settings).
-static bool gAllowExternalImages = false;
+static AtomicBool gAllowExternalImages = false;
 // allow PDFs to load images from an external sibling file (#3731), for PDFs
 // loaded after this call; set from gSettings->allowExternalImages
 void EngineMupdfSetAllowExternalImages(bool allow) {
-    gAllowExternalImages = allow;
+    AtomicBoolSet(&gAllowExternalImages, allow);
 }
 
 // Build a TOC from numbered headings when a document has no outline.
-static bool gAutoHeadingToc = false;
+static AtomicBool gAutoHeadingToc = false;
 void EngineMupdfSetAutoHeadingToc(bool enable) {
-    gAutoHeadingToc = enable;
+    AtomicBoolSet(&gAutoHeadingToc, enable);
 }
 
-static bool gShowAnnotAuthorInTooltip = false;
+static AtomicBool gShowAnnotAuthorInTooltip = false;
 void EngineMupdfSetAnnotAuthorInTooltip(AnnotAuthorVisibility visibility) {
-    gShowAnnotAuthorInTooltip = visibility == AnnotAuthorVisibility::Show;
+    AtomicBoolSet(&gShowAnnotAuthorInTooltip, visibility == AnnotAuthorVisibility::Show);
 }
 
 EngineMupdf* AsEngineMupdf(EngineBase* engine) {
@@ -140,7 +140,7 @@ void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone, Heading
     if (!e) {
         return;
     }
-    if (start == HeadingTocStart::IfEnabled && !gAutoHeadingToc) {
+    if (start == HeadingTocStart::IfEnabled && !AtomicBoolGet(&gAutoHeadingToc)) {
         return;
     }
     e->headingTocDoneCb = onDone;
@@ -5362,7 +5362,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
 // setting and restricted to sibling files (no path separators / drive specs)
 // for security -- Acrobat denies these by default too.
 static fz_buffer* EngineMupdfLoadExternalStream(fz_context* ctx, const char* filespec, void* opaque) {
-    if (!gAllowExternalImages) {
+    if (!AtomicBoolGet(&gAllowExternalImages)) {
         return nullptr;
     }
     EngineMupdf* e = (EngineMupdf*)opaque;
@@ -5561,7 +5561,7 @@ bool EngineMupdf::FinishLoading() {
     // Use the engine's main context (_ctx), not a per-thread clone: MuJS stores
     // the fz_context passed here as its allocator and fz_drop_document() must
     // tear it down with the same context (see ~EngineMupdf).
-    if (!gDisableFormJavaScript) {
+    if (!AtomicBoolGet(&gDisableFormJavaScript)) {
         fz_try(_ctx) {
             pdf_enable_js(_ctx, pdfdoc);
         }
@@ -6227,7 +6227,7 @@ TocTree* EngineMupdf::GetToc() {
     // No DisplayModel (tests, -dump): generate headings now. The UI path starts
     // StartHeadingTocIfNeeded() instead so opening a long document does not
     // freeze the message loop. Skipped for a chaptered doc (see StartHeadingTocIfNeeded).
-    if (gAutoHeadingToc && !outline && !headingTocStarted && !HasChapters()) {
+    if (AtomicBoolGet(&gAutoHeadingToc) && !outline && !headingTocStarted && !HasChapters()) {
         headingTocStarted = true;
         int idCounter = 0;
         TocItem* headings = GenerateTocFromHeadings(this, idCounter);
@@ -6430,7 +6430,7 @@ static Str WidgetTooltipTemp(fz_context* ctx, pdf_annot* annot) {
 
 // must be called inside fz_try
 static Str GetAnnotAuthor(fz_context* ctx, pdf_annot* annot) {
-    if (!gShowAnnotAuthorInTooltip || !pdf_annot_has_author(ctx, annot)) {
+    if (!AtomicBoolGet(&gShowAnnotAuthorInTooltip) || !pdf_annot_has_author(ctx, annot)) {
         return {};
     }
 
