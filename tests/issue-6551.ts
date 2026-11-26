@@ -135,8 +135,7 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6551: editing the free text resized it: ${before.rect} -> ${after.rect}`);
     }
 
-    // text past the right edge still widens the box, keeping its top-left
-    // corner and height
+    // Text that wraps grows the height while keeping the top-left corner and width.
     const sc2 = after.screen;
     await doubleClick(client, canvas, sc2.x + Math.floor(sc2.dx / 4), sc2.y + Math.floor(sc2.dy / 2));
     await waitForEdit(client, true, "the second double-click did not edit the free text");
@@ -149,16 +148,16 @@ export async function testit(): Promise<void> {
     sendMessage(box2, WM_CHAR, 0x0a, 0);
     await waitForEdit(client, false, "the second edit did not commit");
     await client.waitForRenderIdle();
-    const wide = await state(client);
+    const taller = await state(client);
     const [x0, y0, dx0, dy0] = after.rect.split(",").map(Number);
-    const [x1, y1, dx1, dy1] = wide.rect.split(",").map(Number);
+    const [x1, y1, dx1, dy1] = taller.rect.split(",").map(Number);
     if (
-      !(dx1! > dx0! + 20) ||
+      Math.abs(dx1! - dx0!) > 0.01 ||
       Math.abs(x1! - x0!) > 0.01 ||
       Math.abs(y1! - y0!) > 0.01 ||
-      Math.abs(dy1! - dy0!) > 0.01
+      !(dy1! > dy0! + 0.01)
     ) {
-      throw new Error(`issue-6551: a longer line must only widen the box: ${after.rect} -> ${wide.rect}`);
+      throw new Error(`issue-6551: wrapping must only increase the height: ${after.rect} -> ${taller.rect}`);
     }
   } finally {
     client.close();

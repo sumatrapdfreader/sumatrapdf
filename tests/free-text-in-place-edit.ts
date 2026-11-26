@@ -232,13 +232,13 @@ export async function testit(): Promise<void> {
     }
     const before = s.rect;
 
-    // longer text grows the box
-    const extra = " and a good deal more text than the box started with";
+    // A long paragraph increases the height and keeps the original width.
+    const extra = " and a good deal more text than the box started with".repeat(12);
     setBoxText(box, s.text + extra);
     await waitUntil(
       client,
-      (st) => st.text.includes("good deal") && st.rect.dx > before.dx,
-      `box did not grow with the text (${before.dx})`,
+      (st) => st.text.includes("good deal") && st.rect.dy > before.dy && Math.abs(st.rect.dx - before.dx) <= 1,
+      `box did not wrap at its original size (${before.dx}x${before.dy})`,
     );
 
     // a new line

@@ -1,8 +1,4 @@
-// What the in-place edit box shows has to be what MuPDF then renders. The box
-// is measured with GDI in screen pixels; MuPDF lays free text out in PDF
-// points, wrapping at the rect width less 2 * (2 * border width). Sizing the
-// box from the pixel measurement alone left the annotation a few points too
-// narrow, so a line the box showed whole came back wrapped.
+// Soft wrapping during in-place editing must match the committed annotation.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -26,14 +22,14 @@ import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommandSync
 
 type Rect = { x: number; y: number; dx: number; dy: number };
 
-const TEXT = "This is a text... and I'm here for it, with enough words to outgrow the box it started in";
+const TEXT = "A long sentence with enough words to wrap inside the annotation border. ".repeat(10).trim();
 
 async function selectedRect(client: ControlClient): Promise<Rect> {
   const res = await client.request(ControlCommand.TestAnnotEditorLayout, [0, 0]);
   const raw = String(res[1] ?? "").trim();
   const m = / annotRect=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(raw);
   if (res[0] !== 0 || !m) {
-    throw new Error(`free-text-edit-matches-render: no selected annotation: ${raw}`);
+    throw new Error(`issue-6604: no selected annotation: ${raw}`);
   }
   return { x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! };
 }
@@ -61,7 +57,7 @@ async function waitForEdit(client: ControlClient, active: boolean): Promise<void
   const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
   while ((await editActive(client)) !== active) {
     if (Date.now() > deadline) {
-      throw new Error(`free-text-edit-matches-render: in-place edit did not become ${active}`);
+      throw new Error(`issue-6604: in-place edit did not become ${active}`);
     }
     await sleep(40);
   }
@@ -87,7 +83,7 @@ function findBox(canvas: number, pred: (text: string) => boolean): number {
 function countTextLines(canvas: number, r: Rect): number {
   const shot = captureWindowPixels(canvas);
   if (!shot) {
-    throw new Error("free-text-edit-matches-render: could not read the canvas pixels");
+    throw new Error("issue-6604: could not read the canvas pixels");
   }
   const inset = 4;
   const x0 = Math.max(0, r.x + inset);
@@ -121,7 +117,7 @@ function countTextLines(canvas: number, r: Rect): number {
 }
 
 export async function testit(): Promise<void> {
-  const dir = tmpPath("free-text-edit-matches-render");
+  const dir = tmpPath("issue-6604");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   const pdf = join(dir, "blank.pdf");
@@ -158,19 +154,28 @@ export async function testit(): Promise<void> {
     // ng edits in a gpui text area on the frame. Orig's box is an Edit child.
     const box = USE_NG ? frame : findBox(canvas, (t) => t.startsWith("This is a text"));
     if (!box) {
-      throw new Error("free-text-edit-matches-render: placing a free text annotation did not open the editor");
+      throw new Error("issue-6604: placing a free text annotation did not open the editor");
     }
 
-    // replace the placeholder with one long line
+    const initial = await selectedRect(client);
+
+    // Replace the placeholder with one paragraph without explicit newlines.
     sendText(box, TEXT);
     const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
     let shown = await boxText(client, box);
     while (shown !== TEXT) {
       if (Date.now() > deadline) {
-        throw new Error(`free-text-edit-matches-render: box text is "${shown}"`);
+        throw new Error(`issue-6604: box text is "${shown}"`);
       }
       await sleep(40);
       shown = await boxText(client, box);
+    }
+
+    const live = /freeTextEdit active=1 rect=-?\d+,-?\d+,(\d+),(\d+)/.exec(await markupDump(client));
+    if (!live || Math.abs(Number(live[1]) - initial.dx) > 1 || Number(live[2]) <= initial.dy) {
+      throw new Error(
+        `issue-6604: editing should grow only in height, was ${initial.dx}x${initial.dy}, got ${live?.[0]}`,
+      );
     }
 
     sendMessage(box, WM_CHAR, 0x0a, 0); // Ctrl+Enter
@@ -178,28 +183,28 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
 
     const rendered = await selectedRect(client);
+    if (Math.abs(rendered.dx - initial.dx) > 1 || rendered.dy <= initial.dy) {
+      throw new Error(`issue-6604: committing should grow only in height, got ${rendered.dx}x${rendered.dy}`);
+    }
     // deselect, so the marker and its handles are not counted as text
     await pressEscape(frame);
     await client.waitForRenderIdle();
 
     if (IS_MAC) {
-      console.log("SKIP free-text-edit-matches-render: rendered line count needs a window DC capture");
+      console.log("SKIP issue-6604: rendered line count needs a window DC capture");
       return;
     }
 
     const lines = countTextLines(canvas, rendered);
-    if (lines !== 1) {
-      throw new Error(
-        `free-text-edit-matches-render: the box showed one line, MuPDF rendered ${lines} ` +
-          `in ${rendered.dx}x${rendered.dy}`,
-      );
+    if (lines < 2) {
+      throw new Error(`issue-6604: expected multiple rendered lines, got ${lines}`);
     }
   } finally {
     client.close();
     await killAndWait(proc);
   }
 
-  console.log("free-text-edit-matches-render: OK");
+  console.log("issue-6604: OK");
 }
 
 if (import.meta.main) {

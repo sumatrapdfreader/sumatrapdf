@@ -5,6 +5,7 @@
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "base/Win.h"
+#include "base/ScopedWin.h"
 #include "base/UITask.h"
 #include "gui/Dpi.h"
 #include <commdlg.h>
@@ -47,6 +48,8 @@ extern "C" {
 #include "FormFields.h"
 #include "FilterHighlightDraw.h"
 #include "AnnotFilterToolbar.h"
+#include "AnnotPlacement.h"
+#include "AnnotPlacementCommon.h"
 #include "SvgIcons.h"
 #include "ImageReader.h"
 #include "CommandPalette.h"
@@ -1668,7 +1671,8 @@ struct FreeTextInPlaceEdit {
     // what MuPDF will lay the text out with
     int textSize = 12;
     int borderWidth = 0;
-    int fontPx = 0;
+    int lineDy = 0;
+    int originalLines = 1;
     float scale = 1.f;
     // the annotation's text color, for the typed text and the box's border
     Color textCol = kColBlack;
@@ -1679,9 +1683,6 @@ struct FreeTextInPlaceEdit {
     HBITMAP bgBmp = nullptr;
 };
 
-// MuPDF stacks free text lines 1.2 * the font size apart and wraps at the
-// rect width less 2 * (2 * border width) (pdf_write_free_text_appearance).
-constexpr float kFreeTextLineHeight = 1.2f;
 static FreeTextInPlaceEdit gInPlace;
 static WNDPROC gInPlaceDefProc = nullptr;
 static bool gInPlaceEnding = false;
@@ -1706,15 +1707,23 @@ bool IsEditingFreeTextInPlace(MainWindow* win) {
     return !win || gInPlace.win == win;
 }
 
-static Size MeasureInPlaceText(Str text) {
-    if (!gInPlace.hwnd) {
-        return {};
-    }
-    HDC hdc = GetDC(gInPlace.hwnd);
-    uint format = DT_CALCRECT | DT_NOPREFIX | DT_EDITCONTROL | DT_NOCLIP;
-    Size s = HdcMeasureText(hdc, text, 0, format, gInPlace.font);
-    ReleaseDC(gInPlace.hwnd, hdc);
-    return s;
+static int InPlaceLineCount() {
+    return std::max(1, (int)SendMessageW(gInPlace.hwnd, EM_GETLINECOUNT, 0, 0));
+}
+
+static void UpdateInPlaceTextRect() {
+    RECT rect{};
+    GetClientRect(gInPlace.hwnd, &rect);
+    int pad = std::max(gInPlace.padding - 1, 0); // the frame already takes one pixel
+    int dx = std::max(0, std::min(pad, (int)(rect.right - 1) / 2));
+    int dy = std::max(0, std::min(pad, (int)(rect.bottom - 1) / 2));
+    InflateRect(&rect, -dx, -dy);
+    SendMessageW(gInPlace.hwnd, EM_SETRECTNP, 0, (LPARAM)&rect);
+}
+
+static int InPlaceMinHeight() {
+    int lineHeight = gInPlace.lineDy + 2 * std::max(gInPlace.padding, 1);
+    return std::max(gInPlace.minSize.dy, lineHeight);
 }
 
 // Font and box metrics for the annotation drawn `rc` big on screen. Called
@@ -1749,7 +1758,17 @@ static bool SetInPlaceEditScale(Annotation* annot, RectF pageRect, Rect rc) {
     gInPlace.minSize = rc.Size();
     gInPlace.textSize = textSize;
     gInPlace.borderWidth = std::max(BorderWidth(annot), 0);
-    gInPlace.fontPx = fontPx;
+    HDC hdc = GetDC(gInPlace.hwnd);
+    TEXTMETRICW metrics{};
+    if (hdc) {
+        {
+            ScopedSelectFont selected(hdc, font);
+            GetTextMetricsW(hdc, &metrics);
+        }
+        ReleaseDC(gInPlace.hwnd, hdc);
+    }
+    gInPlace.lineDy = std::max((int)metrics.tmHeight, fontPx);
+    gInPlace.padding = (int)ceilf(FreeTextPadding(gInPlace.borderWidth) * scale);
     gInPlace.scale = scale;
     return true;
 }
@@ -1790,54 +1809,24 @@ void FreeTextInPlaceEditCanvasPainted(MainWindow* win) {
     }
 }
 
-// The size `text` needs: room for the edit control to show it, and for MuPDF
-// to lay it out the same way once the box is gone. Lines don't wrap.
-static Size InPlaceTextFit(Str text) {
-    Size ts = MeasureInPlaceText(text);
-    int pad = gInPlace.padding;
-    // room for the caret past the last glyph
-    int caret = std::max(DpiScale(3), 2);
-    // big enough for the edit control to show the text...
-    Size want;
-    want.dx = ts.dx + (2 * pad) + caret;
-    want.dy = ts.dy + (2 * pad);
-
-    // ...and big enough for MuPDF to lay it out the same way once the box is
-    // gone. It measures in PDF points, so take the pixel measurement back to
-    // ems and re-apply the annotation's own font size: the pixel size is a
-    // rounded version of it, and that rounding alone was enough to make the
-    // annotation wrap a line the box had shown whole.
-    float emDx = gInPlace.fontPx > 0 ? ((float)ts.dx / (float)gInPlace.fontPx) : 0.f;
-    float padPts = 4.f * (float)gInPlace.borderWidth;
-    int nLines = 1;
-    for (int i = 0; i < len(text); i++) {
-        nLines += text.s[i] == '\n' ? 1 : 0;
-    }
-    float dxPts = (emDx * (float)gInPlace.textSize * kInPlaceWidthSlack) + padPts;
-    float dyPts = ((float)nLines * kFreeTextLineHeight * (float)gInPlace.textSize) + padPts;
-    want.dx = std::max(want.dx, (int)(dxPts * gInPlace.scale) + caret);
-    want.dy = std::max(want.dy, (int)(dyPts * gInPlace.scale));
-    return want;
-}
-
-// The box follows what has been typed. It never shrinks below the annotation's
-// own box.
 static void SizeInPlaceEditToText() {
     if (!gInPlace.hwnd || !gInPlace.win) {
         return;
     }
-    Size want = InPlaceTextFit(HwndGetTextTemp(gInPlace.hwnd));
-    want.dx = std::max(want.dx, gInPlace.minSize.dx);
-    want.dy = std::max(want.dy, gInPlace.minSize.dy);
+    int lines = InPlaceLineCount();
+    int liveHeight = lines * gInPlace.lineDy + 2 * std::max(gInPlace.padding, 1);
+    int pdfHeight = (int)ceilf(FreeTextWrappedHeight(lines, gInPlace.textSize, gInPlace.borderWidth) * gInPlace.scale);
+    int minHeight = InPlaceMinHeight();
+    int height = std::max(std::max(liveHeight, pdfHeight), minHeight);
     Rect canvas = HwndClientRect(gInPlace.win->hwndCanvas);
     Rect cur = ChildPosWithinParent(gInPlace.hwnd);
-    want.dx = std::min(want.dx, std::max(canvas.dx - cur.x, gInPlace.minSize.dx));
-    want.dy = std::min(want.dy, std::max(canvas.dy - cur.y, gInPlace.minSize.dy));
-    if (want == gInPlace.size) {
+    height = std::min(height, std::max(canvas.dy - cur.y, minHeight));
+    if (height == gInPlace.size.dy) {
         return;
     }
-    gInPlace.size = want;
-    SetWindowPos(gInPlace.hwnd, nullptr, 0, 0, want.dx, want.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    gInPlace.size.dy = height;
+    SetWindowPos(gInPlace.hwnd, nullptr, 0, 0, gInPlace.minSize.dx, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    UpdateInPlaceTextRect();
     CaptureInPlaceBackground();
 }
 
@@ -1857,8 +1846,12 @@ void RepositionFreeTextInPlaceEdit(MainWindow* win) {
     if (r.Size() != gInPlace.minSize && !r.IsEmpty()) {
         // a zoom changed the size: the box and its font follow, or accepting
         // the box would grow the annotation to its old pixel size
-        SetWindowPos(gInPlace.hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER | SWP_NOACTIVATE);
-        SetInPlaceEditScale(annot, pageRect, r);
+        if (!SetInPlaceEditScale(annot, pageRect, r)) {
+            return;
+        }
+        gInPlace.size.dy = InPlaceMinHeight();
+        SetWindowPos(gInPlace.hwnd, nullptr, r.x, r.y, r.dx, gInPlace.size.dy, SWP_NOZORDER | SWP_NOACTIVATE);
+        UpdateInPlaceTextRect();
         SizeInPlaceEditToText();
         return;
     }
@@ -1879,15 +1872,16 @@ void EndFreeTextInPlaceEdit(bool accept) {
     MainWindow* win = gInPlace.win;
     WindowTab* tab = gInPlace.tab;
     Annotation* annot = gInPlace.annot;
-    float scale = gInPlace.scale;
     TempStr text{};
-    Size grow{};
+    float height = 0;
     if (accept) {
         text = str::DupTemp(HwndGetTextTemp(hwnd));
         str::NormalizeNewlinesToLFInPlace(text);
         if (AnnotationIsLive(annot)) {
-            // the annotation still has the old text
-            grow = FreeTextGrowth(gInPlace.minSize, InPlaceTextFit(Contents(annot)), InPlaceTextFit(text));
+            int lines = InPlaceLineCount();
+            if (lines > gInPlace.originalLines && !str::Eq(Contents(annot), text)) {
+                height = FreeTextWrappedHeight(lines, gInPlace.textSize, gInPlace.borderWidth);
+            }
         }
     }
     bool seeThrough = gInPlace.seeThrough;
@@ -1917,12 +1911,10 @@ void EndFreeTextInPlaceEdit(bool accept) {
     if (accept && AnnotationIsLive(annot)) {
         // the box may be enlarged and the text set: one undo step
         ScopedEngineOperation op(annot->engine, "Edit text");
-        // make room so MuPDF doesn't clip what was just written: to the right
-        // and down, in page units, so the top-left corner stays put
-        if ((grow.dx > 0 || grow.dy > 0) && scale > 0) {
-            RectF r = GetRect(annot);
-            r.dx += (float)grow.dx / scale;
-            r.dy += (float)grow.dy / scale;
+        // Grow downward in page units to make room for the new lines.
+        RectF r = GetRect(annot);
+        if (height > r.dy) {
+            r.dy = height;
             SetRect(annot, r);
         }
         SetContents(annot, text);
@@ -2068,10 +2060,9 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
         return false;
     }
 
-    // lines don't wrap: the box grows to fit them instead
     // no WS_BORDER: the 1px frame comes from WM_NCCALCSIZE / WM_NCPAINT so it
     // can be drawn in the text color
-    DWORD style = WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL;
+    DWORD style = WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL;
     HMODULE hmod = GetModuleHandleW(nullptr);
     HWND hwnd =
         CreateWindowExW(0, WC_EDITW, L"", style, rc.x, rc.y, rc.dx, rc.dy, win->hwndCanvas, nullptr, hmod, nullptr);
@@ -2086,8 +2077,6 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     }
     // a themed edit paints its own border over the one we draw in WM_NCPAINT
     SetWindowTheme(hwnd, L"", L"");
-    int pad = std::max(DpiScale(2), 1);
-    SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(pad, pad));
     TempStr text = str::DupTemp(Contents(annot));
     str::NormalizeNewlinesToLFInPlace(text);
     text = str::LFToCRLFTemp(text);
@@ -2099,7 +2088,6 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     gInPlace.win = win;
     gInPlace.tab = win->CurrentTab();
     gInPlace.annot = annot;
-    gInPlace.padding = pad;
     PdfColor pdfTextCol = DefaultAppearanceTextColor(annot);
     if (pdfTextCol != kColorUnset) {
         u8 r, g, b, a;
@@ -2116,7 +2104,10 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
         gInPlace.bgCol = MkRgb(br, bg, bb);
     }
     // the border was painted before we knew the color
-    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    gInPlace.size.dy = InPlaceMinHeight();
+    SetWindowPos(hwnd, nullptr, 0, 0, rc.dx, gInPlace.size.dy,
+                 SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    UpdateInPlaceTextRect();
     if (gInPlace.seeThrough) {
         // the page shows through the box: render it without the annotation
         EngineMupdfSetEditedAnnot(gInPlace.tab ? gInPlace.tab->GetEngine() : nullptr, annot);
@@ -2130,6 +2121,7 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     int end = (int)SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
     EditSelectText(hwnd, end, end);
     SizeInPlaceEditToText();
+    gInPlace.originalLines = InPlaceLineCount();
     return true;
 }
 

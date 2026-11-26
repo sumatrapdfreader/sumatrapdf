@@ -391,7 +391,7 @@ import { testit as annotListPlacement } from "./annot-list-placement.ts";
 import { testit as exitEditPdfDeselects } from "./exit-edit-pdf-deselects.ts";
 import { testit as freeTextInPlaceEdit } from "./free-text-in-place-edit.ts";
 import { testit as issue6387 } from "./issue-6387.ts";
-import { testit as freeTextEditMatchesRender } from "./free-text-edit-matches-render.ts";
+import { testit as issue6604 } from "./issue-6604.ts";
 import { testit as annotMoveableTypes } from "./annot-moveable-types.ts";
 import { testit as stampCaretAnnotationPlacement } from "./stamp-caret-annotation-placement.ts";
 import { testit as issue6103 } from "./issue-6103.ts";
@@ -632,6 +632,9 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6604", issue6604],
+  ["free-text-in-place-edit", freeTextInPlaceEdit],
+  ["issue-6551", issue6551],
   ["issue-6603", issue6603],
   ["issue-6602", issue6602],
   ["issue-6596", issue6596],
@@ -829,8 +832,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],
   ["issue-6137", issue6137],
-  ["free-text-edit-matches-render", freeTextEditMatchesRender],
-  ["free-text-in-place-edit", freeTextInPlaceEdit],
   ["issue-6387", issue6387],
   ["issue-6103", issue6103],
   ["issue-6062", issue6062],
@@ -1261,7 +1262,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6544", issue6544],
   ["issue-6549", issue6549],
   ["issue-6550", issue6550],
-  ["issue-6551", issue6551],
   ["issue-6556", issue6556],
   ["issue-6534", issue6534],
   ["issue-6558", issue6558],

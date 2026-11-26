@@ -12,6 +12,8 @@ extern Kind kNotifHighlighterPlacement;
 void FreeTextPlacementArgs(int cmdId, AnnotCreateArgs& args);
 int FreeTextFontSize(const AnnotCreateArgs& args);
 float FreeTextPadding(const AnnotCreateArgs& args);
+float FreeTextPadding(int borderWidth);
+float FreeTextWrappedHeight(int lines, int fontSize, int borderWidth);
 Str FreeTextPlacementContent(const AnnotCreateArgs& args);
 AnnotPlacementKind KindOf(MainWindow* win);
 Kind NotifGroupForKind(AnnotPlacementKind kind);

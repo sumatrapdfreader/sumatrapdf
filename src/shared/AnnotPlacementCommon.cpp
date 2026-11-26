@@ -52,7 +52,15 @@ int FreeTextFontSize(const AnnotCreateArgs& args) {
 }
 
 float FreeTextPadding(const AnnotCreateArgs& args) {
-    return args.borderWidth > 0 ? (float)args.borderWidth * 2.f : 0.f;
+    return FreeTextPadding(args.borderWidth);
+}
+
+float FreeTextPadding(int borderWidth) {
+    return 2.f * (float)std::max(borderWidth, 0);
+}
+
+float FreeTextWrappedHeight(int lines, int fontSize, int borderWidth) {
+    return (float)lines * (float)fontSize * kFreeTextLineHeight + 2.f * FreeTextPadding(borderWidth);
 }
 
 Str FreeTextPlacementContent(const AnnotCreateArgs& args) {
