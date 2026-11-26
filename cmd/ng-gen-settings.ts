@@ -677,7 +677,15 @@ const chmUI: Field[] = [
 ];
 
 const markdownUI: Field[] = [
+  field("MaxContentWidth", Int, 0, "maximum browser reading width in CSS pixels; 0 uses the default (980)").ver("3.7"),
   field("FontName", Str, "", "font family for Markdown prose").emptyMeans("the viewer default").ver("3.7"),
+  field("FontSize", Float, 0, "base text size in points; 0 keeps the viewer or document default").ver("3.7"),
+  field(
+    "LineSpacing",
+    Float,
+    0,
+    "prose line-height multiplier from 0.5 to 5; 0 keeps the viewer or document default",
+  ).ver("3.7"),
   field(
     "UseFixedPageUI",
     Bool,
@@ -688,12 +696,19 @@ const markdownUI: Field[] = [
     "PreserveLineBreaks",
     Bool,
     false,
-    "if true, preserve source line breaks in the Markdown browser view; false uses standard Markdown paragraph wrapping",
+    "if true, preserve source line breaks in Markdown; false uses standard Markdown paragraph wrapping",
   ).ver("3.7"),
 ];
 
 const htmlUI: Field[] = [
   field("FontName", Str, "", "font family for HTML prose").emptyMeans("the viewer default").ver("3.7"),
+  field("FontSize", Float, 0, "base text size in points; 0 keeps the viewer or document default").ver("3.7"),
+  field(
+    "LineSpacing",
+    Float,
+    0,
+    "prose line-height multiplier from 0.5 to 5; 0 keeps the viewer or document default",
+  ).ver("3.7"),
   field(
     "UseFixedPageUI",
     Bool,

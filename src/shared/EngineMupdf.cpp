@@ -50,23 +50,40 @@ extern "C" {
 #include "Settings.h"
 #include "EngineMupdf.h"
 
-static Mutex gWebFontsMutex;
-static Str gDefaultMarkdownFont;
-static Str gDefaultHtmlFont;
+static Mutex gWebDocStyleMutex;
+static WebDocStyle gMarkdownStyle;
+static WebDocStyle gHtmlStyle;
 
-void SetDefaultWebFonts(Str markdown, Str html) {
-    ScopedMutex lock(&gWebFontsMutex);
-    if (!str::Eq(gDefaultMarkdownFont, markdown)) {
-        gDefaultMarkdownFont = str::Dup(GetPermArena(), markdown);
-    }
-    if (!str::Eq(gDefaultHtmlFont, html)) {
-        gDefaultHtmlFont = str::Dup(GetPermArena(), html);
-    }
+static void UpdateWebDocStyle(WebDocStyle& current, WebDocStyle style) {
+    Str name = EbookFontNameFromSetting(style.fontName);
+    style.fontName = str::Eq(name, current.fontName) ? current.fontName : str::Dup(GetPermArena(), name);
+    style.fontSize = style.fontSize > 0 && style.fontSize < 256 ? style.fontSize : 0;
+    style.lineSpacing = style.lineSpacing >= 0.5f && style.lineSpacing <= 5.f ? style.lineSpacing : 0;
+    current = style;
 }
 
-Str GetDefaultWebFont(FileType kind) {
-    ScopedMutex lock(&gWebFontsMutex);
-    return kind == FileType::Markdown ? gDefaultMarkdownFont : gDefaultHtmlFont;
+void SetWebDocStyles(WebDocStyle markdown, WebDocStyle html) {
+    ScopedMutex lock(&gWebDocStyleMutex);
+    UpdateWebDocStyle(gMarkdownStyle, markdown);
+    UpdateWebDocStyle(gHtmlStyle, html);
+}
+
+WebDocStyle GetWebDocStyle(FileType kind) {
+    ScopedMutex lock(&gWebDocStyleMutex);
+    return kind == FileType::Markdown ? gMarkdownStyle : gHtmlStyle;
+}
+
+TempStr WebDocMetricsCssTemp(const WebDocStyle& style, float fontSizePt) {
+    TempStr css;
+    if (fontSizePt > 0) {
+        css = fmt("html, body { font-size: %gpt !important; }\n", fontSizePt);
+    }
+    if (style.lineSpacing > 0) {
+        TempStr spacing =
+            fmt("body, p, li, dt, dd, td, th, blockquote { line-height: %g !important; }\n", style.lineSpacing);
+        css = css ? str::JoinTemp(css, spacing) : spacing;
+    }
+    return css;
 }
 
 // A5
@@ -4888,8 +4905,15 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     FileType kind = GuessFileTypeFromName(nameHint, true);
     bool webDoc = kind == FileType::Markdown || kind == FileType::HTML;
     Str requestedFontName; // the font name, checked for existence after layout
-    auto* eBookUI = GetEBookUI();
-    if (eBookUI) {
+    bool preserveMarkdownBreaks = false;
+    auto* eBookUI = webDoc ? nullptr : GetEBookUI();
+    if (webDoc) {
+        WebDocStyle style = GetWebDocStyle(kind);
+        preserveMarkdownBreaks = kind == FileType::Markdown && style.preserveLineBreaks;
+        requestedFontName = style.fontName;
+        userCss = str::JoinTemp(userCss, DocumentFontCssTemp(requestedFontName),
+                                WebDocMetricsCssTemp(style, DpiScale(style.fontSize, displayDPI)));
+    } else if (eBookUI) {
         // FileStates -> EBookUI overrides the global section for this document
         EBookUISettings s = MergeEBookUI(eBookUI, GetFileEBookUI(FilePath()));
         // accept any reasonable font size; the old upper bound of 30 made
@@ -4907,9 +4931,8 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             // after any LayoutDx override, so the user still sets line length
             ldy = limitValue(ldx * gEbookLayoutAspect, 150.f, 5000.f);
         }
-        Str fontName = webDoc ? Str{} : s.fontName;
-        requestedFontName = EbookFontNameFromSetting(fontName);
-        TempStr generated = EbookGeneratedCssTemp(fontName, s.margin, s.lineSpacing, displayDPI);
+        requestedFontName = EbookFontNameFromSetting(s.fontName);
+        TempStr generated = EbookGeneratedCssTemp(s.fontName, s.margin, s.lineSpacing, displayDPI);
         if (generated) {
             userCss = str::JoinTemp(generated, userCss);
         }
@@ -4917,12 +4940,6 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             userCss = str::JoinTemp(userCss, s.customCSS);
         }
         usePublisherCss = s.ignoreDocumentCSS ? 0 : 1;
-    }
-    if (webDoc) {
-        requestedFontName = GetDefaultWebFont(kind);
-        if (requestedFontName) {
-            userCss = str::JoinTemp(userCss, DocumentFontCssTemp(requestedFontName));
-        }
     }
     ebookUserCss = str::Dup(arena, userCss);
     ebookPublisherCss = usePublisherCss;
@@ -4954,7 +4971,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
         }
     }
     fz_try(ctx) {
-        if (dir) {
+        if (preserveMarkdownBreaks) {
+            _doc = fz_open_markdown_with_hardbreaks(ctx, stm, dir);
+        } else if (dir) {
             _doc = fz_open_document_with_stream_and_dir(ctx, nameHintZ, stm, dir);
         } else {
             _doc = fz_open_document_with_stream(ctx, nameHintZ, stm);

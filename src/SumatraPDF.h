@@ -320,11 +320,11 @@ struct SettingsApplyState {
     bool showMenubarWithTabs = false;
     bool disableAntiAlias = false;
     bool chmUseFixedPageUI = false;
-    bool markdownUseFixedPageUI = false;
-    bool markdownPreserveLineBreaks = false;
     bool explorerQuickLook = false;
     // owned copy of the ebook layout inputs; ApplyChangedSettingsAndRelayout frees it
     Str ebookLayout;
+    Str markdownLayout;
+    Str htmlLayout;
     // owned copy of the AI chat look (AIChat section, BgColor); freed the same way
     Str aiChatStyle;
     // owned copy of ThumbnailsType; freed the same way

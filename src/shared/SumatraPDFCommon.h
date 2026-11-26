@@ -106,6 +106,7 @@ int wrapIdx(int idx, int max);
 TempStr GetISO639LangCodeFromLangTemp(Str lang);
 Str EbookLayoutSnapshot();
 void ReloadEbookLayoutDocs();
+void ReloadWebDocLayouts(Str beforeMarkdown, Str beforeHtml);
 TempStr ZoomArgTemp(DocController* ctrl);
 void ManualOnJsNotify(void*, Str method, Str paramsJson);
 TempStr DocURIToLocalManualUrlTemp(Str docURI);

@@ -1439,12 +1439,15 @@ static bool LayoutFollowsEbookSettings(EngineBase* engine) {
     if (!engine) {
         return false;
     }
+    FileType kind = GuessFileTypeFromName(engine->FilePath(), true);
+    if (kind == FileType::Markdown || kind == FileType::HTML) {
+        return false;
+    }
     if (engine->isReflowable || engine->HasChapters()) {
         return true;
     }
     Kind k = engine->kind;
-    return k == kindEngineMobi || k == kindEngineFb2 || k == kindEnginePdb || k == kindEngineHtml ||
-           k == kindEngineEpub;
+    return k == kindEngineMobi || k == kindEngineFb2 || k == kindEnginePdb || k == kindEngineEpub;
 }
 
 void ReloadEbookLayoutDocs() {
@@ -1464,6 +1467,44 @@ void ReloadEbookLayoutDocs() {
             } else {
                 tab->reloadOnFocus = true;
             }
+        }
+    }
+}
+
+static Str WebDocLayoutSnapshot(FileType kind) {
+    WebDocStyle style = GetWebDocStyle(kind);
+    bool fixed = kind == FileType::Markdown ? gSettings->markdownUI.useFixedPageUI : gSettings->htmlUI.useFixedPageUI;
+    return str::Dup(fmt("%d|%d|%g|%g|%d|%d|%s", gSettings->customScreenDPI, (int)fixed, style.fontSize,
+                        style.lineSpacing, style.maxContentWidth, (int)style.preserveLineBreaks, style.fontName));
+}
+
+void ReloadWebDocLayouts(Str beforeMarkdown, Str beforeHtml) {
+    Str markdown = WebDocLayoutSnapshot(FileType::Markdown);
+    Str html = WebDocLayoutSnapshot(FileType::HTML);
+    bool changedMarkdown = !str::Eq(beforeMarkdown, markdown);
+    bool changedHtml = !str::Eq(beforeHtml, html);
+    str::Free(beforeMarkdown);
+    str::Free(beforeHtml);
+    str::Free(markdown);
+    str::Free(html);
+    if (!changedMarkdown && !changedHtml) {
+        return;
+    }
+
+    for (MainWindow* win : gWindows) {
+        bool reloadCurrent = false;
+        for (WindowTab* tab : win->Tabs()) {
+            FileType kind = GuessFileTypeFromName(tab->filePath, true);
+            if ((kind == FileType::Markdown && changedMarkdown) || (kind == FileType::HTML && changedHtml)) {
+                if (IsCurrentTab(win, tab)) {
+                    reloadCurrent = true;
+                } else {
+                    tab->reloadOnFocus = true;
+                }
+            }
+        }
+        if (reloadCurrent) {
+            ReloadDocument(win, false);
         }
     }
 }
@@ -3869,10 +3910,10 @@ SettingsApplyState GetSettingsApplyState() {
     s.showMenubarWithTabs = p->showMenubarWithTabs;
     s.disableAntiAlias = p->disableAntiAlias;
     s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
-    s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
-    s.markdownPreserveLineBreaks = p->markdownUI.preserveLineBreaks;
     s.explorerQuickLook = p->explorerQuickLook;
     s.ebookLayout = EbookLayoutSnapshot();
+    s.markdownLayout = WebDocLayoutSnapshot(FileType::Markdown);
+    s.htmlLayout = WebDocLayoutSnapshot(FileType::HTML);
     s.aiChatStyle = AIChatStyleSnapshot();
     s.thumbnailsType = str::Dup(p->thumbnailsType);
     return s;

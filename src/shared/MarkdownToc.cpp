@@ -4,11 +4,15 @@
 #include "base/Base.h"
 #include "base/DirScan.h"
 #include "base/File.h"
+#include "base/GuessFileType.h"
 
 #include "base/HtmlTags.h"
+#include "gui/UIModels.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
+#include "EngineBase.h"
+#include "EngineAll.h"
 #include "Theme.h"
 #include "GumboHtmlParser.h"
 
@@ -931,11 +935,30 @@ static char* MarkdownToHtmlBody(Str markdown, int options = CMARK_OPT_DEFAULT) {
     return body;
 }
 
-// Convert markdown source to a full HTML page (body only is rendered with cmark-gfm).
+TempStr BrowserTypographyCssTemp(const WebDocStyle& style) {
+    str::Builder css;
+    if (style.fontName) {
+        // A CSS escape also keeps '<' from ending the HTML style element.
+        TempStr font = str::ReplaceTemp(style.fontName, StrL("<"), StrL("\\3c "));
+        css.Append(
+            fmt("body, body :where(:not(pre, code, kbd, samp, tt, svg,"
+                "pre *, code *, kbd *, samp *, tt *, svg *))"
+                " { font-family: \"%s\" !important; }\n",
+                font));
+    }
+    css.Append(WebDocMetricsCssTemp(style, style.fontSize));
+    if (style.maxContentWidth > 0) {
+        css.Append(fmt("body { max-width: %dpx !important; }\n", style.maxContentWidth));
+    }
+    return str::DupTemp(ToStr(css));
+}
+
+// Convert Markdown to a full HTML page around the cmark-gfm-rendered body.
 Str MarkdownToHtmlPage(Str markdown) {
     // raw HTML is kept; tagfilter and kMarkdownCsp keep it from running script
     int options = CMARK_OPT_DEFAULT | CMARK_OPT_UNSAFE;
-    if (gSettings && gSettings->markdownUI.preserveLineBreaks) {
+    WebDocStyle style = GetWebDocStyle(FileType::Markdown);
+    if (style.preserveLineBreaks) {
         options |= CMARK_OPT_HARDBREAKS;
     }
     char* body = MarkdownToHtmlBody(markdown, options);
@@ -950,6 +973,7 @@ Str MarkdownToHtmlPage(Str markdown) {
     html.Append(Str(kMarkdownCsp, (int)(sizeof(kMarkdownCsp) - 1)));
     html.Append(StrL("<style>"));
     html.Append(Str(MarkdownPageCssTemp()));
+    html.Append(BrowserTypographyCssTemp(style));
     html.Append(StrL("</style></head><body>"));
     CodeBlockCounts counts = RewriteCodeBlocks(html, Str(body));
     cmark_mem* mem = cmark_get_default_mem_allocator();

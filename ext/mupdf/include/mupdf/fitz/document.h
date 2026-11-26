@@ -544,6 +544,12 @@ fz_document *fz_open_document_with_stream(fz_context *ctx, const char *magic, fz
 fz_document *fz_open_document_with_stream_and_dir(fz_context *ctx, const char *magic, fz_stream *stream, fz_archive *dir);
 
 /**
+	Open Markdown from a stream, preserving soft line breaks as hard breaks.
+	The caller retains ownership of the stream and optional directory archive.
+*/
+fz_document *fz_open_markdown_with_hardbreaks(fz_context *ctx, fz_stream *stream, fz_archive *dir);
+
+/**
 	Open a document using a buffer rather than opening a file on disk.
 */
 fz_document *fz_open_document_with_buffer(fz_context *ctx, const char *magic, fz_buffer *buffer);

@@ -514,14 +514,9 @@ void MarkdownModel::OnDocumentComplete(Str url) {
         return;
     }
     TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
-    if (docView && IsMarkdownVirtualHostUrl(plainUrl)) {
-        Str font = GetDefaultWebFont(isHtml ? FileType::HTML : FileType::Markdown);
-        if (font) {
-            TempStr css =
-                fmt("body, body :where(:not(pre, code, kbd, samp, tt, svg,"
-                    "pre *, code *, kbd *, samp *, tt *, svg *))"
-                    " { font-family: \"%s\" !important; }",
-                    font);
+    if (isHtml && docView && IsMarkdownVirtualHostUrl(plainUrl)) {
+        TempStr css = BrowserTypographyCssTemp(GetWebDocStyle(FileType::HTML));
+        if (css) {
             BrowserViewEval(
                 docView, fmt("(() => { const style = document.querySelector('style[data-sumatra-font]')"
                              " || document.createElement('style'); style.dataset.sumatraFont = '';"

@@ -263,7 +263,10 @@ static const StructInfo gChmUIInfo = {
 static_assert(dimof(gChmUIFields) == 2);
 
 static const FieldInfo gMarkdownUIFields[] = {
+    {offsetof(MarkdownUI, maxContentWidth), SettingType::Int, 0},
     {offsetof(MarkdownUI, fontName), SettingType::String, (intptr_t)""},
+    {offsetof(MarkdownUI, fontSize), SettingType::Float, (intptr_t)"0"},
+    {offsetof(MarkdownUI, lineSpacing), SettingType::Float, (intptr_t)"0"},
     {offsetof(MarkdownUI, useFixedPageUI), SettingType::Bool, false},
     {offsetof(MarkdownUI, preserveLineBreaks), SettingType::Bool, false},
 };
@@ -271,25 +274,31 @@ static const StructInfo gMarkdownUIInfo = {
     sizeof(MarkdownUI),
     (u16)dimof(gMarkdownUIFields),
     gMarkdownUIFields,
-    "FontName\0UseFixedPageUI\0PreserveLineBreaks",
-    "font family for Markdown prose\0if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser "
-    "view when available\0if true, preserve source line breaks in the Markdown browser view; false uses standard "
-    "Markdown paragraph wrapping",
+    "MaxContentWidth\0FontName\0FontSize\0LineSpacing\0UseFixedPageUI\0PreserveLineBreaks",
+    "maximum browser reading width in CSS pixels; 0 uses the default (980)\0font family for Markdown prose\0base text "
+    "size in points; 0 keeps the viewer or document default\0prose line-height multiplier from 0.5 to 5; 0 keeps the "
+    "viewer or document default\0if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser "
+    "view when available\0if true, preserve source line breaks in Markdown; false uses standard Markdown paragraph "
+    "wrapping",
     false};
-static_assert(dimof(gMarkdownUIFields) == 3);
+static_assert(dimof(gMarkdownUIFields) == 6);
 
 static const FieldInfo gHtmlUIFields[] = {
     {offsetof(HtmlUI, fontName), SettingType::String, (intptr_t)""},
+    {offsetof(HtmlUI, fontSize), SettingType::Float, (intptr_t)"0"},
+    {offsetof(HtmlUI, lineSpacing), SettingType::Float, (intptr_t)"0"},
     {offsetof(HtmlUI, useFixedPageUI), SettingType::Bool, false},
 };
 static const StructInfo gHtmlUIInfo = {
     sizeof(HtmlUI),
     (u16)dimof(gHtmlUIFields),
     gHtmlUIFields,
-    "FontName\0UseFixedPageUI",
-    "font family for HTML prose\0if true, use MuPDF to render HTML; if false, use WebView2 browser view when available",
+    "FontName\0FontSize\0LineSpacing\0UseFixedPageUI",
+    "font family for HTML prose\0base text size in points; 0 keeps the viewer or document default\0prose line-height "
+    "multiplier from 0.5 to 5; 0 keeps the viewer or document default\0if true, use MuPDF to render HTML; if false, "
+    "use WebView2 browser view when available",
     false};
-static_assert(dimof(gHtmlUIFields) == 2);
+static_assert(dimof(gHtmlUIFields) == 4);
 
 static const FieldInfo gClaudeCodeFields[] = {
     {offsetof(ClaudeCode, model), SettingType::String, (intptr_t)"sonnet"},

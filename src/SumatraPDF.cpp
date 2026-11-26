@@ -9511,13 +9511,6 @@ static bool IsChmTab(WindowTab* tab) {
     return dm && dm->GetEngineType() == kindEngineChm;
 }
 
-static bool IsMarkdownTab(WindowTab* tab) {
-    if (!tab || !tab->IsDocLoaded()) {
-        return false;
-    }
-    return tab->AsMarkdown() != nullptr;
-}
-
 // collect file paths from all windows, closing all but the last
 // returns the surviving window (with no documents)
 static MainWindow* CollectPathsAndCloseWindows(StrVec& paths) {
@@ -9712,14 +9705,7 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
             }
         }
     }
-    if (before.markdownUseFixedPageUI != p->markdownUI.useFixedPageUI ||
-        before.markdownPreserveLineBreaks != p->markdownUI.preserveLineBreaks) {
-        for (MainWindow* w : gWindows) {
-            if (IsMarkdownTab(w->CurrentTab())) {
-                ReloadDocument(w, false);
-            }
-        }
-    }
+    ReloadWebDocLayouts(before.markdownLayout, before.htmlLayout);
 
     bool menubarChanged =
         (before.showMenubar != p->showMenubar) || (before.showMenubarWithTabs != p->showMenubarWithTabs);

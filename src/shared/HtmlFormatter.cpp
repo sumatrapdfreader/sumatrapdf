@@ -133,6 +133,9 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     textMeasure->SetFont(CurrFont());
 
     lineSpacing = textMeasure->GetCurrFontLineSpacing();
+    if (args->lineHeight > 0) {
+        lineSpacing = args->lineHeight * defaultFontSize * (96.f / 72.f);
+    }
     spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
     float spaceDx2 = textMeasure->GetSpaceDx();
     if (spaceDx2 < spaceDx) {

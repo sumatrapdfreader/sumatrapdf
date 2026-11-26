@@ -787,8 +787,10 @@ bool LoadSettings() {
         }
         SetDefaultEbookFont(fontName, fontSize);
         SetDefaultChmFont(EbookFontNameFromSetting(gprefs->chmUI.fontName));
-        SetDefaultWebFonts(EbookFontNameFromSetting(gprefs->markdownUI.fontName),
-                           EbookFontNameFromSetting(gprefs->htmlUI.fontName));
+        auto& md = gprefs->markdownUI;
+        auto& html = gprefs->htmlUI;
+        SetWebDocStyles({md.fontName, md.fontSize, md.lineSpacing, md.maxContentWidth, md.preserveLineBreaks},
+                        {html.fontName, html.fontSize, html.lineSpacing});
     }
 
 #if !defined(SUMATRA_NG)

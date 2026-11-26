@@ -31,13 +31,6 @@
 
 #include <ctype.h>
 
-/* Defaults are all 0's. FIXME: Very subject to change. Possibly might be removed entirely. */
-typedef struct
-{
-	int dummy;
-}
-fz_md_to_html_opts;
-
 static void
 add_extension(fz_context *ctx, cmark_parser *parser, const char *ext)
 {
@@ -74,7 +67,7 @@ register_plugins(fz_context *ctx)
 }
 
 static fz_buffer *
-fz_md_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_archive *dir, fz_md_to_html_opts *opts)
+fz_md_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_archive *dir, int render_options)
 {
 	fz_buffer *buffer_out = NULL;
 	size_t i, len;
@@ -121,7 +114,7 @@ fz_md_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_a
 
 		document = cmark_parser_finish(parser);
 
-		out = cmark_render_html_with_mem(document, options, cmark_parser_get_syntax_extensions(parser), mem);
+		out = cmark_render_html_with_mem(document, options | render_options, cmark_parser_get_syntax_extensions(parser), mem);
 
 		buffer_out = fz_new_buffer_from_copied_data(ctx, (unsigned char *)out, strlen(out)+1);
 	}
@@ -151,9 +144,7 @@ fz_md_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, fz_a
 static fz_buffer *
 md_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *zip)
 {
-	fz_md_to_html_opts opts = { 0 };
-
-	return fz_md_to_html(ctx, set, buf, zip, &opts);
+	return fz_md_to_html(ctx, set, buf, zip, 0);
 }
 
 static const fz_htdoc_format_t fz_htdoc_md =
@@ -163,6 +154,25 @@ static const fz_htdoc_format_t fz_htdoc_md =
 	0, 1,
 	FZ_HTML_FLAVOR_MARKDOWN
 };
+
+static fz_buffer *
+md_hardbreaks_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buf, fz_archive *zip)
+{
+	return fz_md_to_html(ctx, set, buf, zip, CMARK_OPT_HARDBREAKS);
+}
+
+fz_document *
+fz_open_markdown_with_hardbreaks(fz_context *ctx, fz_stream *stream, fz_archive *dir)
+{
+	static const fz_htdoc_format_t format =
+	{
+		"Markdown document",
+		md_hardbreaks_to_html,
+		0, 1,
+		FZ_HTML_FLAVOR_MARKDOWN
+	};
+	return fz_htdoc_open_document_with_stream_and_dir(ctx, stream, dir, &format);
+}
 
 static fz_document *
 md_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *zip, void *state)

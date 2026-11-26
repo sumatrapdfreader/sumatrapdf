@@ -79,13 +79,17 @@ static WStr GetDefaultChmFontName() {
     return GetDefaultFontName();
 }
 
-static float GetDefaultFontSize() {
+static float DpiAdjustedFontSize(float size) {
     // fonts are scaled at higher DPI settings,
     // undo this here for (mostly) consistent results
+    return size * 96.0f / (float)DpiGetForHwnd(nullptr);
+}
+
+static float GetDefaultFontSize() {
     if (gDefaultFontSize == 0) {
         gDefaultFontSize = 10;
     }
-    return gDefaultFontSize * 96.0f / (float)DpiGetForHwnd(nullptr);
+    return DpiAdjustedFontSize(gDefaultFontSize);
 }
 
 void SetDefaultEbookFont(Str name, float size) {
@@ -2037,9 +2041,12 @@ bool EngineHtml::Load(Str fileName) {
     }
 
     HtmlFormatterArgs args;
-    Str fontName = GetDefaultWebFont(FileType::HTML);
+    WebDocStyle style = GetWebDocStyle(FileType::HTML);
+    Str fontName = style.fontName;
     InitFormatterArgs(args, doc->htmlData, fontName ? ToWStrTemp(fontName) : WStrL(L"Georgia"));
     args.overrideFontName = len(fontName) > 0;
+    args.fontSize = DpiAdjustedFontSize(style.fontSize > 0 ? style.fontSize : 8.f);
+    args.lineHeight = style.lineSpacing;
     if (!SetFormattedPages(HtmlFileFormatter(&args, doc).FormatAllPages(false))) {
         return false;
     }

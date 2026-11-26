@@ -80,6 +80,7 @@ EXPORTS
 	fz_open_document_with_stream
 
 	fz_open_document_with_stream_and_dir
+	fz_open_markdown_with_hardbreaks
 
 	fz_authenticate_password
 

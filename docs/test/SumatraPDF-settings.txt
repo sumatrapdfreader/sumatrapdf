@@ -165,11 +165,16 @@ ChmUI [
 ]
 
 MarkdownUI [
+	MaxContentWidth = 0
+	FontSize = 0
+	LineSpacing = 0
 	UseFixedPageUI = false
 	PreserveLineBreaks = false
 ]
 
 HtmlUI [
+	FontSize = 0
+	LineSpacing = 0
 	UseFixedPageUI = false
 ]
 

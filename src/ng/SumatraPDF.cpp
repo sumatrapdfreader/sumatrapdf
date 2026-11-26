@@ -442,14 +442,7 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
             }
         }
     }
-    if (before.markdownUseFixedPageUI != p->markdownUI.useFixedPageUI ||
-        before.markdownPreserveLineBreaks != p->markdownUI.preserveLineBreaks) {
-        for (MainWindow* w : gWindows) {
-            if (w->CurrentTab() && w->CurrentTab()->AsMarkdown()) {
-                ReloadDocument(w, false);
-            }
-        }
-    }
+    ReloadWebDocLayouts(before.markdownLayout, before.htmlLayout);
     bool menubarChanged =
         (before.showMenubar != p->showMenubar) || (before.showMenubarWithTabs != p->showMenubarWithTabs);
     if (menubarChanged) {

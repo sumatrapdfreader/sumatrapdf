@@ -113,6 +113,7 @@ struct HtmlFormatterArgs {
     WStr GetFontName() const { return fontName; }
 
     float fontSize = 0;
+    float lineHeight = 0;
     bool overrideFontName = false;
 
     // DrawInstr strings must outlive the formatter. Keep original HTML alive with

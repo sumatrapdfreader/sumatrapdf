@@ -34,8 +34,16 @@ EngineBase* CreateEngineHtmlFromFile(Str fileName);
 
 void SetDefaultEbookFont(Str name, float size);
 void SetDefaultChmFont(Str name);
-void SetDefaultWebFonts(Str markdown, Str html);
-Str GetDefaultWebFont(FileType kind);
+struct WebDocStyle {
+    Str fontName;
+    float fontSize = 0;
+    float lineSpacing = 0;
+    int maxContentWidth = 0;
+    bool preserveLineBreaks = false;
+};
+void SetWebDocStyles(WebDocStyle markdown, WebDocStyle html);
+WebDocStyle GetWebDocStyle(FileType kind);
+TempStr WebDocMetricsCssTemp(const WebDocStyle&, float fontSizePt);
 // Reject characters that would break out of a quoted CSS font-family value.
 inline bool IsSafeEbookFontName(Str name) {
     if (len(name) == 0) {

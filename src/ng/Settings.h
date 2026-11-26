@@ -905,13 +905,21 @@ struct ReadingBar {
 // customization options for Markdown UI. If UseFixedPageUI is true,
 // MuPDF is used; otherwise WebView2 browser view is used when available
 struct MarkdownUI {
+    // maximum browser reading width in CSS pixels; 0 uses the default
+    // (980)
+    int maxContentWidth;
     // font family for Markdown prose
     Str fontName;
+    // base text size in points; 0 keeps the viewer or document default
+    float fontSize;
+    // prose line-height multiplier from 0.5 to 5; 0 keeps the viewer or
+    // document default
+    float lineSpacing;
     // if true, use MuPDF (cmark-gfm) to render markdown; if false, use
     // WebView2 browser view when available
     bool useFixedPageUI;
-    // if true, preserve source line breaks in the Markdown browser view;
-    // false uses standard Markdown paragraph wrapping
+    // if true, preserve source line breaks in Markdown; false uses
+    // standard Markdown paragraph wrapping
     bool preserveLineBreaks;
 };
 
@@ -920,6 +928,11 @@ struct MarkdownUI {
 struct HtmlUI {
     // font family for HTML prose
     Str fontName;
+    // base text size in points; 0 keeps the viewer or document default
+    float fontSize;
+    // prose line-height multiplier from 0.5 to 5; 0 keeps the viewer or
+    // document default
+    float lineSpacing;
     // if true, use MuPDF to render HTML; if false, use WebView2 browser
     // view when available
     bool useFixedPageUI;
