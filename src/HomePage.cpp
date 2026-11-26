@@ -566,7 +566,7 @@ static void OnCopyProgramInfo(VirtMouseEvent*) {
 
 // prepares the About tree for hwnd and computes its geometry
 static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, Rect clientRc, bool hover = false) {
-    DpiSetFromHwnd(hwnd);
+    DpiScope dpiScope(hwnd);
     AboutCtrl* about = EnsureAboutCtrl(rootPtr, hwnd, clientRc);
     about->withBorder = hover;
     about->Sync();
@@ -2706,7 +2706,7 @@ static void ShowHomeAboutHover(MainWindow* win) {
 
     VirtHost* host = chrome->aboutHover;
     host->bgColor = ThemeMainWindowBackgroundColor();
-    DpiSetFromHwnd(host->native);
+    DpiScope dpiScope(host->native);
 
     Rect measureRc{0, 0, 2000, 2000};
     AboutCtrl* about = UpdateAboutLayout(&host->vroot, host->native, measureRc, true);

@@ -23,7 +23,7 @@
 //--- VirtCtrl
 
 VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool isDefault) {
-    DpiSetFromHwnd(hwndForDpi);
+    DpiScope dpiScope(hwndForDpi);
     auto* b = new VirtButton(text, font);
     b->SetIsDefault(isDefault);
     b->textPadding = DpiScaledInsets(5, 12);
@@ -3534,7 +3534,7 @@ void LayoutTreeToSize(HWND hwnd, ILayout* layout, Size size, VirtRoot** rootInOu
     if (!layout) {
         return;
     }
-    DpiSetFromHwnd(hwnd);
+    DpiScope dpiScope(hwnd);
     LayoutToSize(layout, size);
     RefreshVirtTops(hwnd, layout, Rect{0, 0, size.dx, size.dy}, rootInOut);
     // Virtual controls have no HWND. MoveWindow copies the host's bits, so a
