@@ -5,8 +5,8 @@
 #include "gui/Dpi.h"
 
 int gDpiOverride = 0;
-int dpiX = 96;
-int dpiY = 96;
+static thread_local int dpiX = 96;
+static thread_local int dpiY = 96;
 
 int DpiGetForHwnd(HWND hwnd) {
     // see the note in Dpi.h: the override doesn't apply to the desktop
@@ -38,6 +38,19 @@ void DpiSet(int x, int y) {
 void DpiSetFromHwnd(HWND hwnd) {
     int d = DpiGetForHwnd(hwnd);
     DpiSet(d, d);
+}
+
+DpiScope::DpiScope(HWND hwnd) : prevX(dpiX), prevY(dpiY) {
+    DpiSetFromHwnd(hwnd);
+}
+
+DpiScope::DpiScope(int x, int y) : prevX(dpiX), prevY(dpiY) {
+    DpiSet(x, y);
+}
+
+DpiScope::~DpiScope() {
+    dpiX = prevX;
+    dpiY = prevY;
 }
 
 int DpiScaleByDpi(int dpi, int n) {

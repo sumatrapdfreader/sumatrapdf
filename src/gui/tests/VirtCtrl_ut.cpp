@@ -5,6 +5,7 @@
 #include "base/Win.h"
 
 #include "gui/UIModels.h"
+#include "gui/Dpi.h"
 #include "gui/Layout.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
@@ -19,6 +20,25 @@
 
 static bool VirtCtrlRectEq(const Rect& r, int x, int y, int dx, int dy) {
     return r.x == x && r.y == y && r.dx == dx && r.dy == dy;
+}
+
+static void SetWorkerLayoutDpi() {
+    DpiSet(192, 192);
+}
+
+static void LayoutDpiThreadTest() {
+    DpiScope scope(144, 168);
+    {
+        DpiScope nested(120, 120);
+        utassert(DpiGet() == 120);
+    }
+    utassert(DpiGet() == 144);
+    ThreadHandle worker = StartThread(MkFunc0Void(SetWorkerLayoutDpi), StrL("layout-dpi-test"));
+    utassert(JoinThread(&worker, 5000));
+    utassert(DpiGet() == 144);
+    int x = 96, y = 96;
+    DpiScale(x, y);
+    utassert(x == 144 && y == 168);
 }
 
 static void Table_TestGrid() {
@@ -352,6 +372,7 @@ static void RtlScreenCoords_Test() {
 }
 
 void VirtCtrl_UnitTests() {
+    LayoutDpiThreadTest();
     RtlScreenCoords_Test();
     Slider_HaloFitsTest();
     TipLinkUnderlines_Test();

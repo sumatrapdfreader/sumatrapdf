@@ -11,8 +11,8 @@
 constexpr int kMdtEffectiveDpi = 0;
 
 int gDpiOverride = 0;
-int dpiX = 96;
-int dpiY = 96;
+static thread_local int dpiX = 96;
+static thread_local int dpiY = 96;
 
 static bool gDpiOverrideLegacy = false;
 
@@ -175,6 +175,19 @@ void DpiSetFromHwnd(HWND hwnd) {
     int x, y;
     DpiQueryForHwnd(hwnd, x, y);
     DpiSet(x, y);
+}
+
+DpiScope::DpiScope(HWND hwnd) : prevX(dpiX), prevY(dpiY) {
+    DpiSetFromHwnd(hwnd);
+}
+
+DpiScope::DpiScope(int x, int y) : prevX(dpiX), prevY(dpiY) {
+    DpiSet(x, y);
+}
+
+DpiScope::~DpiScope() {
+    dpiX = prevX;
+    dpiY = prevY;
 }
 
 int DpiScaleByDpi(int dpi, int n) {

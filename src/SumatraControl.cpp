@@ -105,9 +105,7 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
     };
 
     if (str::Eq(action, StrL("hidden"))) {
-        int prevX = dpiX;
-        int prevY = dpiY;
-        DpiSet(240, 240);
+        DpiScope dpiScope(240, 240);
         WindowBase w;
         CreateCustomArgs args;
         args.visible = false;
@@ -117,7 +115,6 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
         int windowDpi = w.GetDpi();
         int fontDy = FontHeight(GetDefaultGuiFont());
         w.Destroy();
-        DpiSet(prevX, prevY);
         out.Append(fmt("layout=%d window=%d font=%d\n", layoutDpi, windowDpi, fontDy));
         return finish(layoutDpi == 240 && windowDpi == 240 && fontDy >= 24 ? 0 : 1);
     }
