@@ -90,6 +90,16 @@ void VecTest() {
     }
 
     {
+        Vec<int> v;
+        VecAppend(v, 11);
+        VecAppend(v, 22);
+        VecInsertAt(v, 0, v[1]);
+        utassert(len(v) == 3 && v[0] == 22 && v[1] == 11 && v[2] == 22);
+        VecAppendVec(v, v);
+        utassert(len(v) == 6 && v[3] == 22 && v[4] == 11 && v[5] == 22);
+    }
+
+    {
         int buf[4];
         Vec<int> v;
         VecUseExternalBuffer(v, buf);

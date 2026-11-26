@@ -1890,9 +1890,18 @@ bool VecAppendN(Vec<T>& v, const T* src, int count) {
     if (0 == count) {
         return true;
     }
-    T* dst = VecInsertSpace(v, v.len, count);
+    int oldLen = v.len;
+    uintptr_t srcOffset = (uintptr_t)src - (uintptr_t)v.els;
+    bool aliases = v.els && srcOffset < (size_t)oldLen * sizeof(T);
+    if (ReportIf(count < 0 || !src || (aliases && count > oldLen - (int)(srcOffset / sizeof(T))))) {
+        return false;
+    }
+    T* dst = VecInsertSpace(v, oldLen, count);
     if (!dst) {
         return false;
+    }
+    if (aliases) {
+        src = (const T*)((const char*)v.els + srcOffset);
     }
     memcpy((void*)dst, (const void*)src, (size_t)count * sizeof(T));
     return true;
@@ -1905,11 +1914,12 @@ T* VecAppendBlanks(Vec<T>& v, int count) {
 
 template <typename T>
 bool VecInsertAt(Vec<T>& v, int idx, const VecIdentityT<T>& el) {
+    T copy = el;
     T* p = VecInsertSpace(v, idx, 1);
     if (!p) {
         return false;
     }
-    p[0] = el;
+    p[0] = copy;
     return true;
 }
 
