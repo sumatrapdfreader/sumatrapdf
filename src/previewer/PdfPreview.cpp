@@ -804,6 +804,9 @@ void UnregisterPreviewWndClass() {
 
 IFACEMETHODIMP PdfPreview::DoPreview() {
     log(StrL("PdfPreview::DoPreview()\n"));
+    if (!IsWindow(m_hwndParent)) {
+        return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
+    }
 
     WNDCLASSEX wcex{};
     wcex.cbSize = sizeof(wcex);

@@ -79,7 +79,10 @@ class PdfPreview : public IThumbnailProvider,
     // IPreviewHandler
     IFACEMETHODIMP SetWindow(HWND hwnd, const RECT* prc) {
         if (!hwnd || !prc) {
-            return S_OK;
+            return E_INVALIDARG;
+        }
+        if (!IsWindow(hwnd)) {
+            return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
         }
         m_hwndParent = hwnd;
         return SetRect(prc);
