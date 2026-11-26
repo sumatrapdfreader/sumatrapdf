@@ -697,6 +697,11 @@ void SumatraPDFWebTest() {
 
     utassert(!ParseOnlineFiles(StrL("{\"files\":[{\"name\":"), files));
     utassert(len(files) == 0);
+
+    utassert(!ParseOnlineFiles(StrL("{\"files\":[{\"name\":\"a.pdf\",\"size\":1.5}]}"), files));
+    utassert(!ParseOnlineFiles(StrL("{\"files\":[{\"name\":\"a.pdf\",\"size\":-1}]}"), files));
+    utassert(!ParseOnlineFiles(StrL("{\"files\":[{\"name\":\"a.pdf\",\"size\":9223372036854775808}]}"), files));
+    utassert(len(files) == 0);
 }
 
 struct TestStreamSink : HttpStreamSink {

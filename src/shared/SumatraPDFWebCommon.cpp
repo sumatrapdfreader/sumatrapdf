@@ -92,6 +92,22 @@ static void PushOnlineName(Vec<OnlineListedFile>& out, OnlineNameAcc& cur) {
     cur = {};
 }
 
+static bool ParseOnlineSize(Str s, i64& out) {
+    if (len(s) == 0) {
+        return false;
+    }
+    i64 n = 0;
+    for (int i = 0; i < len(s); i++) {
+        int digit = s.s[i] - '0';
+        if (digit < 0 || digit > 9 || n > (INT64_MAX - digit) / 10) {
+            return false;
+        }
+        n = n * 10 + digit;
+    }
+    out = n;
+    return true;
+}
+
 // {"files":[{"name":"...","size":N,"sha1":"<hex>","uploadedAt":ms}]} - name bytes
 // are copied; the parser reuses its buffer.
 bool ParseOnlineFiles(Str body, Vec<OnlineListedFile>& out) {
@@ -117,8 +133,12 @@ bool ParseOnlineFiles(Str body, Vec<OnlineListedFile>& out) {
             str::Free(cur.name);
             cur.name = str::Dup(v.value);
             cur.haveName = true;
-        } else if (isSize && v.type == json::Type::Number) {
-            cur.size = ParseInt64(v.value);
+        } else if (isSize) {
+            if (v.type != json::Type::Number || !ParseOnlineSize(v.value, cur.size)) {
+                str::Free(cur.name);
+                FreeOnlineFiles(out);
+                return false;
+            }
             cur.haveSize = true;
         } else if (isSha1 && v.type == json::Type::String) {
             cur.hasSha1 = len(v.value) == 40 && str::HexToMem(v.value, Str((char*)cur.sha1, sizeof(cur.sha1)));
