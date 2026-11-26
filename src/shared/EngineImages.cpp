@@ -2415,9 +2415,9 @@ EngineBase* EngineCbx::Clone() {
     } else {
         logf("EngineCbx::Clone() failed: no stream or file path\n");
     }
-    if (clone) {
-        // a mediabox costs an archive open + partial extract here, so hand the
-        // clone the ones we have instead of making it load them all again
+    if (clone && data) {
+        // A file reopened by path can contain different pages even when the
+        // page count matches. Only reuse boxes from the same in-memory data.
         ((EngineImages*)clone)->CopyMediaboxesFrom(this);
     }
     return clone;
