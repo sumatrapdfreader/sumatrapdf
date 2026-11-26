@@ -117,6 +117,8 @@ struct WindowTab {
     i64 loadCopyBytesTotal = 0;
 #if !defined(SUMATRA_NG)
     LoadArgs* pendingLoadArgs = nullptr;
+    LoadArgs* pendingFolderLoad = nullptr; // owned by the background load
+    void ClearPendingFolderLoad();
 #endif
     // FileWatcher token for unsubscribing
     WatchedFile* watcher = nullptr;
@@ -274,7 +276,7 @@ bool IsPdfDoc(WindowTab* tab);
 bool IsEpubDoc(WindowTab* tab);
 bool IsMupdfNonPdfDoc(WindowTab* tab);
 bool IsCajDoc(WindowTab* tab);
-TempStr LoadingMessageTemp(WindowTab* tab);
+TempStr LoadingMessageTemp(WindowTab* tab, Str path = {});
 
 enum class AutoReloadTrigger {
     TabFocus,

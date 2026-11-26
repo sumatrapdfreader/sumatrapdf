@@ -61,6 +61,9 @@ void WindowTab::SetFilePath(Str path) {
     isExtraHome = false;
     bool changed = filePath && !path::IsSame(filePath, path);
     if (changed) {
+#if !defined(SUMATRA_NG)
+        ClearPendingFolderLoad();
+#endif
         DeleteOpenCacheCopyOf(this, filePath);
         temporaryFileNotified = false;
         str::FreePtr(&pendingFindText);
@@ -122,10 +125,23 @@ bool WindowTab::IsNonDocumentTab() const {
 }
 
 #if !defined(SUMATRA_NG)
+void WindowTab::ClearPendingFolderLoad() {
+    if (!pendingFolderLoad) {
+        return;
+    }
+    pendingFolderLoad = nullptr;
+    loadStartedAt = 0;
+    loadCopyBytesCopied = -1;
+    loadCopyBytesTotal = 0;
+}
+
 // frees a finished background load that was never attached
 void WindowTab::DropPendingLoad() {
     if (!pendingLoadArgs) {
         return;
+    }
+    if (pendingFolderLoad == pendingLoadArgs) {
+        ClearPendingFolderLoad();
     }
     // LoadArgs dtor releases any leftover engine; drop ctrl first so we do
     // not double-delete through both paths if both were set
@@ -365,8 +381,8 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
 
 // the loading tab's message: "Loading foo.pdf ... 3s" or, while a network-drive
 // comic is copied to the local cache, "Copying foo.cbz: 1 MB / 40 MB 3s"
-TempStr LoadingMessageTemp(WindowTab* tab) {
-    TempStr basename = path::GetBaseNameTemp(tab->filePath);
+TempStr LoadingMessageTemp(WindowTab* tab, Str filePath) {
+    TempStr basename = path::GetBaseNameTemp(filePath ? filePath : tab->filePath);
     TempStr msg;
     if (tab->loadCopyBytesCopied >= 0) {
         TempStr copied = str::FormatSizeShortTemp(tab->loadCopyBytesCopied, nullptr);

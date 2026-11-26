@@ -1,6 +1,6 @@
 // Opening a document from a slow (sleeping) drive must not freeze the UI: the
-// engine is created on a thread while a "Loading" tab is shown, then the
-// document goes on screen. -dbg-control TestLoadDelay simulates the drive.
+// engine is created on a thread, then the document goes on screen.
+// -dbg-control TestLoadDelay simulates the drive.
 // Covered opens: the way a reuse-instance launch sends it (kCopyDataOpen) and
 // next file in folder, which also skips a file that fails to open, and the
 // copy of a network-drive comic, whose progress the loading tab shows.
@@ -12,7 +12,7 @@ import { copyFileSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } 
 import { extname, join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { ROOT, runStandalone, tmpPath, writeStoredZip } from "./util.ts";
+import { ROOT, runStandalone, tmpPath, USE_NG, writeStoredZip } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import { sendOpenCopyData, sleep } from "./winapi.ts";
 
@@ -38,19 +38,40 @@ async function pingMs(client: ControlClient): Promise<number> {
 
 // while the drive spins up the UI answers and shows the loading tab of name;
 // then the drive wakes up and the document with name wantName loads
-async function checkLoad(client: ControlClient, what: string, t0: number, name: string, wantName: string) {
+async function checkLoad(
+  client: ControlClient,
+  what: string,
+  t0: number,
+  name: string,
+  wantName: string,
+  previousName?: string,
+) {
   let sawLoading = false;
   // after a second the message says how long it has been loading: "... 1s"
   let sawElapsed = false;
   let worstPing = 0;
-  while (Date.now() - t0 < LOAD_DELAY_MS / 2) {
+  const feedbackWindow = previousName ? 3500 : LOAD_DELAY_MS / 2;
+  while (Date.now() - t0 < feedbackWindow) {
     worstPing = Math.max(worstPing, await pingMs(client));
     const tab = await currentTab(client);
-    if (tab.includes(name) && tab.includes("page=0")) {
+    if (previousName) {
+      if (!tab.includes(`\\${previousName} page=1`)) {
+        throw new Error(`open-slow-drive: ${what}: lost the previous page while loading (${tab})`);
+      }
+      if (tab.includes(" msg=") && Date.now() - t0 < 1900) {
+        throw new Error(`open-slow-drive: ${what}: showed the message too early (${tab})`);
+      }
+      if (tab.includes(" msg=") && tab.includes(name)) {
+        sawLoading = true;
+      }
+    } else if (tab.includes(name) && tab.includes("page=0")) {
       sawLoading = true;
     }
     if (/ msg=.* \d+s$/m.test(tab)) {
       sawElapsed = true;
+    }
+    if (sawElapsed && sawLoading) {
+      break;
     }
     await sleep(50);
   }
@@ -110,15 +131,63 @@ async function testNextFile() {
   const { proc, client } = await launchControlled([join(dir, "aaa.pdf")]);
   try {
     await client.waitForRenderIdle();
-    await client.request(ControlCommand.TestLoadDelay, [LOAD_DELAY_MS]);
+    await client.request(ControlCommand.TestLoadDelay, [USE_NG ? LOAD_DELAY_MS : 4500]);
     const t0 = Date.now();
     await client.request(ControlCommand.TestInvokeCommand, ["CmdOpenNextFileInFolder"]);
-    await checkLoad(client, "next file", t0, "bbb.pdf", "ccc.pdf");
+    await checkLoad(client, "next file", t0, "bbb.pdf", "ccc.pdf", USE_NG ? undefined : "aaa.pdf");
   } finally {
     client.close();
     await killAndWait(proc);
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+async function testQuickImageNavigation() {
+  const dir = tmpPath("next-file-images");
+  mkdirSync(dir, { recursive: true });
+  const first = join(dir, "001.png");
+  const second = join(dir, "002.png");
+  const third = join(dir, "003.png");
+  writeFileSync(first, PNG);
+  writeFileSync(second, PNG);
+  writeFileSync(third, PNG);
+
+  const { proc, client } = await launchControlled([first]);
+  try {
+    await client.waitForRenderIdle();
+    await client.request(ControlCommand.TestLoadDelay, [500]);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdOpenNextFileInFolder"]);
+    await expectImageTransition(client, first, second);
+
+    // Reverse an in-flight load, then keep going from the visible image.
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdOpenPrevFileInFolder"]);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdOpenNextFileInFolder"]);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdOpenNextFileInFolder"]);
+    await expectImageTransition(client, second, third);
+    await client.waitForRenderIdle();
+    if ((await currentTab(client)) !== `path=${third} page=1`) {
+      throw new Error("A canceled image load replaced the current image");
+    }
+  } finally {
+    client.close();
+    await killAndWait(proc);
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+async function expectImageTransition(client: ControlClient, from: string, to: string) {
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    const tab = await currentTab(client);
+    if (tab === `path=${to} page=1`) {
+      return;
+    }
+    if (tab !== `path=${from} page=1`) {
+      throw new Error(`image navigation showed an intermediate state: ${tab}`);
+    }
+    await sleep(30);
+  }
+  throw new Error(`image navigation didn't open ${to}: ${await currentTab(client)}`);
 }
 
 // a comic on a network drive is copied to the local cache first; the loading
@@ -208,6 +277,9 @@ function origCbxCachePath(path: string, size: number): string {
 }
 
 export async function testit(): Promise<void> {
+  if (!USE_NG) {
+    await testQuickImageNavigation();
+  }
   await testCopyDataOpen();
   await testNextFile();
   await testNetworkCopy();

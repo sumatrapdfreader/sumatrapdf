@@ -270,7 +270,12 @@ static void LogRedraw(Str what, HWND hwnd, const RECT* rc = nullptr) {
 
 static int gNextPrevDirScanGen = 0;
 
-static void CloseDocumentInCurrentTab(MainWindow* /*win*/, bool keepUIEnabled, bool deleteModel);
+enum class CanvasClear {
+    Yes,
+    No
+};
+static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool deleteModel,
+                                      CanvasClear clear = CanvasClear::Yes);
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh);
 static void OnSidebarSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
 static void OnPanelsSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
@@ -297,6 +302,16 @@ LoadArgs::LoadArgs(Str origPath, MainWindow* win) {
 }
 
 LoadArgs::~LoadArgs() {
+    if (deferLoadingUi) {
+        MainWindow* owner = FindMainWindowByTab(targetTab);
+        if (owner && targetTab->pendingFolderLoad == this) {
+            targetTab->ClearPendingFolderLoad();
+            if (IsCurrentTab(owner, targetTab)) {
+                HwndInvalidate(owner->hwndCanvas);
+            }
+        }
+    }
+    NotifyFinished(LoadResult::Canceled);
     if (ownsTabState) {
         DeleteTabState(tabState);
     }
@@ -306,6 +321,12 @@ LoadArgs::~LoadArgs() {
     delete fileArgs;
     str::Free(fileName);
     str::Free(displayName);
+}
+
+void LoadArgs::NotifyFinished(LoadResult result) {
+    auto fn = onFinished;
+    onFinished = {};
+    fn.Call(result);
 }
 
 Str LoadArgs::FilePath() const {
@@ -324,7 +345,8 @@ void LoadArgs::SetDisplayName(Str name) {
     str::ReplaceWithCopy(&displayName, name);
 }
 
-LoadArgs* LoadArgs::Clone() {
+// The async copy owns the completion callback from here on.
+LoadArgs* LoadArgs::CloneForAsync() {
     LoadArgs* res = new LoadArgs(fileName, win);
     res->SetDisplayName(displayName);
     if (tabState) {
@@ -341,7 +363,9 @@ LoadArgs* LoadArgs::Clone() {
     res->lazyLoad = this->lazyLoad;
     res->activateExistingInWindow = this->activateExistingInWindow;
     res->noSavePrefs = this->noSavePrefs;
-    res->onFinished = this->onFinished;
+    res->onFinished = onFinished;
+    onFinished = {};
+    res->deferLoadingUi = deferLoadingUi;
     res->hwndPwdParent = this->hwndPwdParent;
     res->engine = this->engine;
     res->initialDisplayMode = this->initialDisplayMode;
@@ -3487,10 +3511,40 @@ static void DeleteOrphanedController(MainWindow* win, DocController*& ctrl) {
     ctrl = nullptr;
 }
 
+static bool IsLoadTargetValid(LoadArgs* args);
+
+static bool PrepareFolderReplacement(LoadArgs* args) {
+    MainWindow* win = args->win;
+    WindowTab* tab = args->targetTab;
+    bool canReplace = tab->pendingFolderLoad == args && MaybeSaveAnnotations(tab);
+    if (!IsLoadTargetValid(args) || tab->pendingFolderLoad != args) {
+        return false;
+    }
+    tab->ClearPendingFolderLoad();
+    if (!canReplace || !IsCurrentTab(win, tab)) {
+        HwndInvalidate(win->hwndCanvas);
+        return false;
+    }
+    UpdateTabFileDisplayStateForTab(tab);
+    DeleteOldSelectionInfo(win, true);
+    // Keep the current pixels until the new page's render can replace them.
+    CloseDocumentInCurrentTab(win, true, true, CanvasClear::No);
+    if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab)) {
+        return false;
+    }
+    tab->skipHistory = args->skipHistory;
+    return true;
+}
+
 MainWindow* LoadDocumentFinish(LoadArgs* args) {
     MainWindow* win = args->win;
     Str fullPath = args->FilePath();
     WindowTab* targetTab = args->targetTab;
+
+    if (args->deferLoadingUi && !PrepareFolderReplacement(args)) {
+        DeleteOrphanedController(win, args->ctrl);
+        return nullptr;
+    }
 
     // it loaded, so it's no longer one of the files next/prev skips
     MarkFileOpenedOk(fullPath);
@@ -3512,6 +3566,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
             DeleteOrphanedController(win, args->ctrl);
             return nullptr;
         }
+        targetTab->ClearPendingFolderLoad();
         targetTab->loadState = WindowTab::LoadState::None;
         targetTab->loadCopyBytesCopied = -1;
         targetTab->loadCopyBytesTotal = 0;
@@ -3522,6 +3577,9 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         // there's no tab to reuse at this point
         args->forceReuse = false;
     } else {
+        if (args->forceReuse && win->CurrentTab()) {
+            win->CurrentTab()->ClearPendingFolderLoad();
+        }
         if (openNewTab) {
             SaveCurrentWindowTab(args->win);
         }
@@ -3718,6 +3776,18 @@ static int gMaxLoadThreads = 0;
 static Vec<LoadDocumentAsyncData*> gLoadQueue;
 static bool gLoadQueueDispatchPosted = false;
 static UINT_PTR gLoadingMessageTimer = 0;
+constexpr u64 kFolderLoadFeedbackMs = 2000;
+
+static bool ShowFolderLoadFeedback(WindowTab* tab, u64 now) {
+    return tab->pendingFolderLoad && tab->loadStartedAt && now - tab->loadStartedAt >= kFolderLoadFeedbackMs;
+}
+
+TempStr FolderLoadingMessageTemp(WindowTab* tab) {
+    if (!tab || !ShowFolderLoadFeedback(tab, GetTickCount64())) {
+        return {};
+    }
+    return LoadingMessageTemp(tab, tab->pendingFolderLoad->FilePath());
+}
 
 bool AreLoadThreadsActive() {
     return gLoadThreadsActive > 0 || AreThumbnailThreadsActive();
@@ -3744,11 +3814,13 @@ static void CALLBACK LoadingMessageTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_P
     u64 now = GetTickCount64();
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            if (tab->loadState != WindowTab::LoadState::Loading) {
+            bool loading = tab->loadState == WindowTab::LoadState::Loading;
+            if (!loading && !tab->pendingFolderLoad) {
                 continue;
             }
             hasLoadingTabs = true;
-            if (IsCurrentTab(win, tab) && tab->loadStartedAt != 0 && now - tab->loadStartedAt >= 1000) {
+            bool showElapsed = loading && tab->loadStartedAt && now - tab->loadStartedAt >= 1000;
+            if (IsCurrentTab(win, tab) && (showElapsed || ShowFolderLoadFeedback(tab, now))) {
                 HwndInvalidate(win->hwndCanvas);
             }
         }
@@ -3779,6 +3851,7 @@ static bool IsLoadTargetValid(LoadArgs* args) {
 }
 
 static void DispatchQueuedDocumentLoads();
+static bool IsLoadStillWanted(LoadArgs* args);
 
 static void StartLoadDocumentThread(LoadDocumentAsyncData* data) {
     // loading status is painted on the tab canvas (StartLoadingMessageTimer);
@@ -3829,9 +3902,8 @@ static void DispatchQueuedDocumentLoads() {
             }
         }
         LoadDocumentAsyncData* next = VecPopAt(gLoadQueue, idx);
-        if (!IsLoadTargetValid(next->args)) {
+        if (!IsLoadTargetValid(next->args) || (next->args->deferLoadingUi && !IsLoadStillWanted(next->args))) {
             EndDocumentLoad(next->args->FilePath());
-            next->args->onFinished.Call(false);
             delete next;
             continue;
         }
@@ -3855,6 +3927,9 @@ static void OnLoadDocumentThreadFinished() {
 static bool IsLoadStillWanted(LoadArgs* args) {
     if (!args || !args->targetTab) {
         return true;
+    }
+    if (args->deferLoadingUi) {
+        return args->targetTab->pendingFolderLoad == args;
     }
     Str want = args->targetTab->filePath;
     Str got = args->FilePath();
@@ -3886,14 +3961,12 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     MainWindow* win = args->win;
     if (!IsLoadTargetValid(args)) {
         DiscardFailedAsyncLoad(args);
-        args->onFinished.Call(false);
         return;
     }
     // forceReuse next/prev can start a newer load into the same tab while this
     // one is still finishing; drop the stale result instead of swapping docs
     if (!IsLoadStillWanted(args)) {
         DiscardFailedAsyncLoad(args);
-        args->onFinished.Call(false);
         return;
     }
 
@@ -3912,12 +3985,20 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
         args->targetTab->loadCopyBytesTotal = 0;
     }
     if (!args->ctrl) {
+        if (args->deferLoadingUi) {
+            args->targetTab->ClearPendingFolderLoad();
+            if (IsCurrentTab(win, args->targetTab)) {
+                HwndInvalidate(win->hwndCanvas);
+            }
+            args->NotifyFinished(LoadResult::Failed);
+            return;
+        }
         ShowLoadErrorInTab(win, args, path);
         // re-sync win->ctrl with current tab after ShowErrorLoadingNotification
         // which can pump messages and change tab selection
         WindowTab* currTab = win->CurrentTab();
         win->ctrl = currTab ? currTab->ctrl : nullptr;
-        args->onFinished.Call(false);
+        args->NotifyFinished(LoadResult::Failed);
         return;
     }
     if (args->targetTab && !IsCurrentTab(win, args->targetTab)) {
@@ -3929,12 +4010,15 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
         tab->DropPendingLoad();
         tab->pendingLoadArgs = args;
         d->args = nullptr;
-        args->onFinished.Call(true);
+        if (!args->deferLoadingUi) {
+            args->NotifyFinished(LoadResult::Loaded);
+        }
         return;
     }
     args->activateExisting = false;
-    LoadDocumentFinish(args);
-    args->onFinished.Call(true);
+    if (LoadDocumentFinish(args)) {
+        args->NotifyFinished(LoadResult::Loaded);
+    }
 }
 
 // Network-drive cbx cache copy progress. Stored on the loading tab and
@@ -3943,6 +4027,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
 // copy message.
 struct CopyProgressUITask {
     WindowTab* targetTab = nullptr;
+    LoadArgs* folderLoad = nullptr;
     i64 bytesCopied = 0;
     i64 bytesTotal = 0;
 };
@@ -3951,19 +4036,20 @@ static void UpdateCopyProgressUI(CopyProgressUITask* task) {
     AutoDelete delTask(task);
     WindowTab* tab = task->targetTab;
     MainWindow* win = FindMainWindowByTab(tab);
-    if (!win) {
+    if (!win || (task->folderLoad && tab->pendingFolderLoad != task->folderLoad)) {
         return;
     }
     ReportIf(tab->win != win);
     tab->loadCopyBytesCopied = task->bytesCopied;
     tab->loadCopyBytesTotal = task->bytesTotal;
-    if (IsCurrentTab(win, tab)) {
+    if (IsCurrentTab(win, tab) && (!task->folderLoad || ShowFolderLoadFeedback(tab, GetTickCount64()))) {
         HwndInvalidate(tab->win->hwndCanvas);
     }
 }
 
 struct CopyProgressState {
     WindowTab* targetTab = nullptr;
+    LoadArgs* folderLoad = nullptr;
 };
 
 static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
@@ -3972,6 +4058,7 @@ static void OnFileCopyProgress(CopyProgressState* s, file::CopyProgress* p) {
     }
     auto* task = new CopyProgressUITask;
     task->targetTab = s->targetTab;
+    task->folderLoad = s->folderLoad;
     task->bytesCopied = p->bytesCopied;
     task->bytesTotal = p->bytesTotal;
     auto fn = MkFunc0<CopyProgressUITask>(UpdateCopyProgressUI, task);
@@ -4002,6 +4089,7 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     // targetTab is only used to post UI tasks; FindMainWindowByTab rejects dead tabs.
     CopyProgressState copyState;
     copyState.targetTab = args->targetTab;
+    copyState.folderLoad = args->deferLoadingUi ? args : nullptr;
     file::CopyProgressCb copyProgress;
     if (args->targetTab) {
         copyProgress = MkFunc1<CopyProgressState, file::CopyProgress*>(OnFileCopyProgress, &copyState);
@@ -4115,6 +4203,11 @@ static float EbookLayoutAspectForLoad(LoadArgs* args, MainWindow* win) {
 
 static void MaybeDetachEphemeralHostFile(LoadArgs* args);
 
+static bool RequiresUiThreadForLoad(Str path) {
+    FileType kind = GuessFileTypeFromName(path);
+    return (!gSettings->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind)) || ShouldUseBrowserView(kind);
+}
+
 void StartLoadDocument(LoadArgs* argsIn) {
     if (gCrashOnOpen) {
         log(StrL("LoadDocumentAsync: about to call CrashMe()\n"));
@@ -4125,8 +4218,10 @@ void StartLoadDocument(LoadArgs* argsIn) {
     bool failEarly = AdjustPathForMaybeMovedFile(argsIn);
     Str path = argsIn->FilePath();
     if (failEarly) {
-        ShowFileNotFound(win, path, argsIn->noSavePrefs, argsIn->showWin);
-        argsIn->onFinished.Call(false);
+        if (!argsIn->deferLoadingUi) {
+            ShowFileNotFound(win, path, argsIn->noSavePrefs, argsIn->showWin);
+        }
+        argsIn->NotifyFinished(LoadResult::Failed);
         return;
     }
 
@@ -4135,31 +4230,38 @@ void StartLoadDocument(LoadArgs* argsIn) {
         MainWindow* existing = FindMainWindowToActivate(path, limitWin);
         if (existing) {
             existing->Focus();
-            argsIn->onFinished.Call(true);
+            argsIn->NotifyFinished(LoadResult::Loaded);
             return;
         }
         // Tab is created only after load finishes; without this, a second open of
         // the same path while a password dialog is up creates a duplicate tab.
         if (IndexOfLoadingFile(path) >= 0) {
             logf("StartLoadDocument: skipping in-flight load of '%s'\n", path);
-            argsIn->onFinished.Call(true);
+            argsIn->NotifyFinished(LoadResult::Loaded);
             return;
         }
     }
 
     win = MaybeCreateWindowForFileLoad(argsIn);
     if (!win) {
-        argsIn->onFinished.Call(false);
+        argsIn->NotifyFinished(LoadResult::Failed);
         return;
     }
 
     MaybeDetachEphemeralHostFile(argsIn);
     path = argsIn->FilePath();
+    bool loadOnUiThread = RequiresUiThreadForLoad(path);
+    if (loadOnUiThread) {
+        argsIn->deferLoadingUi = false;
+    }
     // overlap folder listing with the document load so next/prev and the
     // last-page hint are ready without a UI-thread scan
     EnsureNextPrevDirScan(path);
 
-    if (argsIn->targetTab) {
+    if (argsIn->deferLoadingUi) {
+        argsIn->targetTab = win->CurrentTab();
+    } else if (argsIn->targetTab) {
+        argsIn->targetTab->ClearPendingFolderLoad();
         argsIn->targetTab->skipHistory = argsIn->skipHistory;
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
         if (IsCurrentTab(win, argsIn->targetTab)) {
@@ -4183,10 +4285,9 @@ void StartLoadDocument(LoadArgs* argsIn) {
             TabsOnChangedDoc(win);
         }
     } else if (argsIn->forceReuse && win->CurrentTab() && !win->IsCurrentTabAbout()) {
-        // Reuse current tab (next/prev in folder, navigate dialog, etc.): drop the
-        // old document immediately so the canvas paints the standard "Loading ..."
-        // message while the engine loads on a background thread.
+        // This tab shows the standard loading screen while the engine loads.
         WindowTab* tab = win->CurrentTab();
+        tab->ClearPendingFolderLoad();
         DeleteOldSelectionInfo(win, true);
         if (tab->ctrl || win->ctrl) {
             CloseDocumentInCurrentTab(win, true, true);
@@ -4209,6 +4310,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
         UpdateWindow(win->hwndCanvas);
     } else if (SettingsUseTabs() && win->CurrentTab()) {
         argsIn->targetTab = win->CurrentTab();
+        argsIn->targetTab->ClearPendingFolderLoad();
         argsIn->targetTab->skipHistory = argsIn->skipHistory;
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
         HwndInvalidate(win->hwndCanvas);
@@ -4220,7 +4322,16 @@ void StartLoadDocument(LoadArgs* argsIn) {
     // Compute this here because the load thread must not touch MainWindow.
     argsIn->ebookLayoutAspect = EbookLayoutAspectForLoad(argsIn, win);
 
-    LoadArgs* args = argsIn->Clone();
+    LoadArgs* args = argsIn->CloneForAsync();
+    if (args->deferLoadingUi) {
+        WindowTab* tab = args->targetTab;
+        bool hadFeedback = ShowFolderLoadFeedback(tab, GetTickCount64());
+        tab->ClearPendingFolderLoad();
+        tab->pendingFolderLoad = args;
+        if (hadFeedback) {
+            HwndInvalidate(win->hwndCanvas);
+        }
+    }
     BeginDocumentLoad(path);
 
     // when using mshtml to display CHM files, we can't load in a thread
@@ -4228,10 +4339,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     // violates threading rules and that happens as part of CreateControllerForEngineOrFile()
     // we could probably delay creating web control but that's more complicated
     {
-        FileType kind = GuessFileTypeFromName(path);
-        bool isChm = !gSettings->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind);
-        bool isMd = ShouldUseBrowserView(kind);
-        if (isChm || isMd) {
+        if (loadOnUiThread) {
             // TODO: repeating the code below
             HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
             EngineBase* engine = args->engine;
@@ -4246,7 +4354,6 @@ void StartLoadDocument(LoadArgs* argsIn) {
             // CreateController can pump messages (WebView2 / COM / password UI)
             if (!IsLoadTargetValid(args)) {
                 DiscardFailedAsyncLoad(args);
-                args->onFinished.Call(false);
                 delete args;
                 return;
             }
@@ -4256,7 +4363,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
                 // which can pump messages and change tab selection
                 WindowTab* currTab = win->CurrentTab();
                 win->ctrl = currTab ? currTab->ctrl : nullptr;
-                args->onFinished.Call(false);
+                args->NotifyFinished(LoadResult::Failed);
                 delete args;
                 return;
             }
@@ -4270,12 +4377,13 @@ void StartLoadDocument(LoadArgs* argsIn) {
                 tab->loadState = WindowTab::LoadState::LoadedPending;
                 tab->DropPendingLoad();
                 tab->pendingLoadArgs = args;
-                args->onFinished.Call(true);
+                args->NotifyFinished(LoadResult::Loaded);
                 return;
             }
             args->activateExisting = false;
-            LoadDocumentFinish(args);
-            args->onFinished.Call(true);
+            if (LoadDocumentFinish(args)) {
+                args->NotifyFinished(LoadResult::Loaded);
+            }
             delete args;
             return;
         }
@@ -4537,10 +4645,18 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (tab->loadState == WindowTab::LoadState::LoadedPending) {
         LoadArgs* args = tab->pendingLoadArgs;
         tab->pendingLoadArgs = nullptr;
-        win->ctrl = nullptr;
-        LoadDocumentFinish(args);
+        tab->loadState = WindowTab::LoadState::None;
+        if (!args->deferLoadingUi) {
+            win->ctrl = nullptr;
+        }
+        bool attached = LoadDocumentFinish(args) != nullptr;
+        if (attached) {
+            args->NotifyFinished(LoadResult::Loaded);
+        }
         delete args;
-        return;
+        if (attached || !IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab)) {
+            return;
+        }
     }
 
     // Favorites tab: no document, no viewport — full-area tree via RelayoutFrame
@@ -4926,7 +5042,7 @@ void PostAppExit() {
 // about window (set keepUIEnabled if a new document will be loaded
 // into the tab right afterwards and ReplaceDocumentInCurrentTab would revert
 // the UI disabling afterwards anyway)
-static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool deleteModel) {
+static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool deleteModel, CanvasClear clear) {
     // tear down any in-place form-field edit before the model/engine goes away,
     // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
     // a document that's being closed or reloaded)
@@ -4943,7 +5059,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     bool wasntFixed = !win->AsFixed();
     // the canvas HWND is shared across tabs; wipe leftover page pixels so a
     // following markdown/CHM tab cannot flash this document on resize
-    if (!wasntFixed) {
+    if (!wasntFixed && clear == CanvasClear::Yes) {
         FillCanvasThemeBackground(win->hwndCanvas);
     }
     if (win->AsBrowser()) {
@@ -6774,6 +6890,8 @@ void OnDocumentVerticalScrollIntent(MainWindow* win, bool down) {
 
 struct NextPrevFileInFolderData {
     MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    u64 tabId = 0;
     bool forward = true;
     Str path;         // the file we tried to load; owned
     Str pathToDelete; // deleted only after another document loads; owned
@@ -6783,28 +6901,57 @@ struct NextPrevFileInFolderData {
     }
 };
 
-static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, bool ok) {
+static void OpenNextPrevFrom(MainWindow* win, bool forward, Str pathToDelete, Str fromPath);
+
+static void OnNextPrevFileInFolderLoaded(NextPrevFileInFolderData* d, LoadResult result) {
     AutoDelete delData(d);
+    if (result == LoadResult::Canceled) {
+        return;
+    }
+    if (result == LoadResult::Failed) {
+        MarkFileFailedToOpen(d->path);
+    }
     MainWindow* win = d->win;
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
-    // superseded: user advanced next/prev again (or navigated elsewhere) while loading
     WindowTab* tab = win->CurrentTab();
-    if (tab && tab->filePath && d->path && !str::EqI(tab->filePath, d->path) && !path::IsSame(tab->filePath, d->path)) {
+    if (!tab || tab != d->tab || tab->lifetimeId != d->tabId) {
         return;
     }
-    if (ok) {
+    if (result == LoadResult::Loaded) {
         if (d->pathToDelete) {
             DeleteFileFromDiskAndHistory(d->pathToDelete);
         }
         HwndRepaintNow(win->tabsCtrl->hwnd);
         return;
     }
-    // remember the failure so GetNextPrevFilesReady skips this file, then
-    // advance to the one after it in the same direction
-    MarkFileFailedToOpen(d->path);
-    OpenNextPrevFileInFolder(win, d->forward, d->pathToDelete);
+    OpenNextPrevFrom(win, d->forward, d->pathToDelete, d->path);
+}
+
+static void ShowFolderLoadError(WindowTab* tab, Str path) {
+    MainWindow* win = tab->win;
+    LoadArgs args(path, win);
+    u64 tabId = tab->lifetimeId;
+    if (!MaybeSaveAnnotations(tab) || !IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab) ||
+        tab->lifetimeId != tabId || tab->pendingFolderLoad) {
+        return;
+    }
+    UpdateTabFileDisplayStateForTab(tab);
+    DeleteOldSelectionInfo(win, true);
+    CloseDocumentInCurrentTab(win, true, true);
+    if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab) || tab->lifetimeId != tabId) {
+        return;
+    }
+    tab->skipHistory = false;
+    tab->SetFilePath(args.FilePath());
+    tab->SetDisplayName({});
+    args.targetTab = tab;
+    ShowLoadErrorInTab(win, &args, args.FilePath());
+    if (IsMainWindowValidAndNotClosing(win) && IsCurrentTab(win, tab)) {
+        UpdateUiForCurrentTab(win);
+        TabsOnChangedDoc(win);
+    }
 }
 
 // .md / .html open in a browser view whose "pages" are the sibling files in the
@@ -6828,6 +6975,10 @@ static bool GoToFileInBrowserView(MainWindow* win, Str path) {
 }
 
 void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
+    OpenNextPrevFrom(win, forward, pathToDelete, {});
+}
+
+static void OpenNextPrevFrom(MainWindow* win, bool forward, Str pathToDelete, Str fromPath) {
     ReportIf(win->IsCurrentTabAbout());
     if (win->IsCurrentTabAbout()) {
         return;
@@ -6841,7 +6992,10 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     DismissNextFileScrollHint(win);
 
     WindowTab* tab = win->CurrentTab();
-    Str path = tab->filePath;
+    Str path = fromPath;
+    if (len(path) == 0) {
+        path = tab->pendingFolderLoad ? tab->pendingFolderLoad->FilePath() : tab->filePath;
+    }
     StrVec* files = GetNextPrevFilesReady(path);
     if (!files) {
         DeferNextPrevNav(win, tab, forward, pathToDelete);
@@ -6849,22 +7003,13 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
              (int)uitask::IsMainUIThread());
         return;
     }
-    if (len(*files) < 2) {
-        ShowNoFileToOpenNotif(win, forward);
-        return;
-    }
-
     int nFiles = len(*files);
     int idx = files->Find(path);
-    if (idx < 0) {
-        ShowNoFileToOpenNotif(win, forward);
-        return;
-    }
     // do not wrap around at the ends of the folder; skip files that vanished
     int step = forward ? 1 : -1;
     int next = idx + step;
     Str chosen = {};
-    while (next >= 0 && next < nFiles) {
+    while (idx >= 0 && next >= 0 && next < nFiles) {
         Str cand = files->At(next);
         if (file::Exists(cand)) {
             chosen = cand;
@@ -6873,10 +7018,24 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
         next += step;
     }
     if (len(chosen) == 0) {
+        // Keep an error page for the last failed file so the user can act on it.
+        if (fromPath && tab->AsFixed() && !path::IsSame(tab->filePath, fromPath)) {
+            ShowFolderLoadError(tab, fromPath);
+        }
+        if (!IsMainWindowValidAndNotClosing(win)) {
+            return;
+        }
         ShowNoFileToOpenNotif(win, forward);
         return;
     }
     path = chosen;
+
+    if (tab->pendingFolderLoad && path::IsSame(path, tab->filePath)) {
+        tab->ClearPendingFolderLoad();
+        tab->askedToSaveAnnotations = false;
+        HwndInvalidate(win->hwndCanvas);
+        return;
+    }
 
     // with pathToDelete the caller wants the old file deleted once the new one
     // loaded, which only the load path does
@@ -6884,24 +7043,31 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
         return;
     }
 
+    LoadArgs args(path, win);
+    u64 tabId = tab->lifetimeId;
     if (!MaybeSaveAnnotations(tab)) {
         return;
     }
-    if (!IsMainWindowValidAndNotClosing(win)) {
+    if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab) || tab->lifetimeId != tabId) {
         return;
     }
-    tab->askedToSaveAnnotations = false;
-    UpdateTabFileDisplayStateForTab(tab);
+    args.forceReuse = true;
+    args.deferLoadingUi = len(pathToDelete) == 0 && !tab->askedToSaveAnnotations && tab->AsFixed() &&
+                          tab->loadState == WindowTab::LoadState::None && !RequiresUiThreadForLoad(args.FilePath());
+    if (!args.deferLoadingUi) {
+        tab->askedToSaveAnnotations = false;
+        UpdateTabFileDisplayStateForTab(tab);
+    }
     // load on a background thread; if the file fails to load, the
     // callback marks it as failed and advances to the next/prev file
     auto* d = new NextPrevFileInFolderData;
     d->win = win;
+    d->tab = tab;
+    d->tabId = tabId;
     d->forward = forward;
-    d->path = str::Dup(path);
+    d->path = str::Dup(args.FilePath());
     d->pathToDelete = str::Dup(pathToDelete);
-    LoadArgs args(path, win);
-    args.forceReuse = true;
-    args.onFinished = MkFunc1<NextPrevFileInFolderData, bool>(OnNextPrevFileInFolderLoaded, d);
+    args.onFinished = MkFunc1<NextPrevFileInFolderData, LoadResult>(OnNextPrevFileInFolderLoaded, d);
     StartLoadDocument(&args);
 }
 

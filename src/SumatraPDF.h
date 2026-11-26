@@ -223,6 +223,12 @@ struct DocController;
 struct FileArgs;
 enum class NotifCorner : int; // full definition in Notifications.h
 
+enum class LoadResult {
+    Loaded,
+    Failed,
+    Canceled
+};
+
 // LoadDocument carries a lot of state, this holds them in one place
 struct LoadArgs {
     explicit LoadArgs(Str origPath, MainWindow* win);
@@ -232,7 +238,8 @@ struct LoadArgs {
     void SetFilePath(Str path);
     Str DisplayName() const;
     void SetDisplayName(Str name);
-    LoadArgs* Clone();
+    LoadArgs* CloneForAsync();
+    void NotifyFinished(LoadResult);
 
     // we don't own those values
     EngineBase* engine = nullptr;
@@ -259,6 +266,7 @@ struct LoadArgs {
     bool lazyLoad = false;
     bool deferTabUpdate = false;
     bool async = false;
+    bool deferLoadingUi = false;
     bool activateExisting = false;
     // do not add to File History / Windows Recent (CmdOpenFileNoHistory)
     bool skipHistory = false;
@@ -280,14 +288,14 @@ struct LoadArgs {
     bool ownsTabState = false;
     WindowTab* targetTab = nullptr;
 
-    // if set, called on the UI thread when the load finishes,
-    // with true if the document was loaded successfully
-    Func1<bool> onFinished;
+    Func1<LoadResult> onFinished;
 
   private:
     Str fileName;
     Str displayName;
 };
+
+TempStr FolderLoadingMessageTemp(WindowTab* tab);
 
 struct PasswordUI;
 

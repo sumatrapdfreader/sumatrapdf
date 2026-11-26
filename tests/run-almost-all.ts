@@ -632,6 +632,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["open-slow-drive", openSlowDrive],
   ["issue-6604", issue6604],
   ["free-text-in-place-edit", freeTextInPlaceEdit],
   ["issue-6551", issue6551],
@@ -681,7 +682,6 @@ export const tests: NamedTest[] = orderForReuse([
   parallelTest("cli-images"),
   ["issue-1139", issue1139],
   ["issue-6113", issue6113],
-  ["open-slow-drive", openSlowDrive],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-6412", issue6412],
   ["issue-4788", issue4788],

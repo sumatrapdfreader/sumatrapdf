@@ -3164,6 +3164,20 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
             PaintPdfPageBoxes(dm, hdc);
         }
     }
+    if (TempStr msg = FolderLoadingMessageTemp(curTab)) {
+        PlatformFont* font = GetUserGuiFont(StrL("MS Shell Dlg"), DpiScale(14));
+        Size text = PlatformFontMeasureText(font, msg);
+        int pad = DpiScale(8);
+        int dx = std::min(screen.dx, text.dx + 2 * pad);
+        int dy = std::min(screen.dy, text.dy + 2 * pad);
+        Rect box((screen.dx - dx) / 2, (screen.dy - dy) / 2, dx, dy);
+        gfx.FillRect(box, ThemeMainWindowBackgroundColor());
+        Rect label = box;
+        label.Inflate(-std::min(pad, dx / 2), 0);
+        u32 flags = gfxTextCenter | gfxTextVCenter | gfxTextEllipsis | (isRtl ? gfxTextRtl : 0);
+        gfx.DrawText(msg, label, flags, font, ThemeWindowTextColor());
+        shouldPaint = true;
+    }
     // Empty viewport (narrow page on a canvas sized by a wider one): the last
     // frame is stale after a reload or jump. Flush the background. Issue #6136.
     if (!anyPageVisible) {
