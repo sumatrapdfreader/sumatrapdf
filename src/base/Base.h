@@ -1640,6 +1640,9 @@ bool VecAppend(Vec<T>& v, const VecIdentityT<T>& el);
 template <typename T>
 bool VecAppendVec(Vec<T>& v, const Vec<T>& other);
 
+template <typename T>
+bool VecTransferAppend(Vec<T>& dst, Vec<T>& src);
+
 // Append count elements from src.
 template <typename T>
 bool VecAppendN(Vec<T>& v, const T* src, int count);
@@ -1886,6 +1889,26 @@ bool VecAppend(Vec<T>& v, const VecIdentityT<T>& el) {
 template <typename T>
 bool VecAppendVec(Vec<T>& v, const Vec<T>& other) {
     return VecAppendN(v, other.els, other.len);
+}
+
+// Append src and clear it on success. An empty dst can take owned storage.
+template <typename T>
+bool VecTransferAppend(Vec<T>& dst, Vec<T>& src) {
+    if (&dst == &src || src.len == 0) {
+        return true;
+    }
+    if (dst.len == 0 && src.cap > 0) {
+        VecReset(dst);
+        dst.len = src.len;
+        dst.cap = src.cap;
+        dst.els = VecTake(src);
+        return true;
+    }
+    if (!VecAppendVec(dst, src)) {
+        return false;
+    }
+    VecClear(src);
+    return true;
 }
 
 template <typename T>

@@ -100,6 +100,31 @@ void VecTest() {
     }
 
     {
+        int borrowed[4]{};
+        Vec<int> src;
+        Vec<int> dst;
+        VecAppend(src, 1);
+        VecAppend(src, 2);
+        int* storage = VecData(src);
+        utassert(VecTransferAppend(dst, src));
+        utassert(len(src) == 0 && VecData(src) == nullptr);
+        utassert(len(dst) == 2 && VecData(dst) == storage);
+
+        VecAppend(src, 3);
+        utassert(VecTransferAppend(dst, src));
+        utassert(len(src) == 0);
+        utassert(len(dst) == 3 && dst[0] == 1 && dst[1] == 2 && dst[2] == 3);
+
+        VecReset(src);
+        VecUseExternalBuffer(src, borrowed);
+        VecAppend(src, 4);
+        VecClear(dst);
+        utassert(VecTransferAppend(dst, src));
+        utassert(len(src) == 0 && VecData(src) == borrowed);
+        utassert(len(dst) == 1 && dst[0] == 4 && VecData(dst) != borrowed);
+    }
+
+    {
         int buf[4];
         Vec<int> v;
         VecUseExternalBuffer(v, buf);

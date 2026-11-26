@@ -90,15 +90,9 @@ static void RunQueuedTasks() {
     Vec<TaskInfo*> toRun;
     {
         AutoUnlockMutex lock(&gQueueMutex);
-        if (!gQueue) {
+        if (!gQueue || !VecTransferAppend(toRun, *gQueue)) {
             return;
         }
-        toRun.len = gQueue->len;
-        toRun.cap = gQueue->cap;
-        toRun.els = gQueue->els;
-        gQueue->len = 0;
-        gQueue->cap = 0;
-        gQueue->els = nullptr;
     }
     for (TaskInfo* ti : toRun) {
         ExecuteTask(ti);
