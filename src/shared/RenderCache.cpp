@@ -322,23 +322,18 @@ bool RenderCache::Exists(DisplayModel* dm, int pageNo, int rotation, float zoom,
 
 bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     ScopedRecursiveMutex scope(&cacheAccess);
-    ReportIf(!entry);
-    if (!entry) {
+    if (ReportIf(!entry)) {
         return false;
     }
     int idx = entry->cacheIdx;
-    ReportIf(idx < 0);
-    ReportIf(idx >= cacheCount);
-    if ((idx < 0) || (idx >= cacheCount)) {
+    if (ReportIf(idx < 0 || idx >= cacheCount || cache[idx] != entry || entry->refs <= 0)) {
         return false;
     }
-    ReportIf(entry->refs <= 0);
     --entry->refs;
     if (entry->refs > 0) {
         return false;
     }
     ReportIf(entry->refs != 0);
-    ReportIf(cache[idx] != entry);
     rcLogf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo,
            entry->rotation, entry->zoom);
 
