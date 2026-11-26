@@ -35,6 +35,8 @@
 #include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {
+    static u64 nextLifetimeId = 0;
+    lifetimeId = ++nextLifetimeId;
     this->win = win;
 }
 

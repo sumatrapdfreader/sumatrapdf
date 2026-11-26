@@ -83,6 +83,8 @@ static void OverlayScrollbarsOnWindowMoved(MainWindow* win) {
 }
 
 MainWindow::MainWindow(HWND hwnd) {
+    static u64 nextLifetimeId = 0;
+    lifetimeId = ++nextLifetimeId;
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
     cbHandler = CreateControllerCallbackHandler(this);

@@ -137,6 +137,7 @@ struct PostRequest {
     Str contentType;
     Str headers;
     WindowTab* tab = nullptr;
+    u64 tabLifetimeId = 0;
 
     // filled in by the worker
     uint statusCode = 0;
@@ -156,7 +157,7 @@ static void FreePostRequest(PostRequest* req) {
 // Reports the result back on the ui thread. Deliberately terse: this is a
 // "did it work" channel, not a viewer.
 static void PostRequestFinished(PostRequest* req) {
-    if (!IsWindowTabValid(req->tab)) {
+    if (!IsWindowTabValid(req->tab) || req->tab->lifetimeId != req->tabLifetimeId) {
         FreePostRequest(req);
         return;
     }
@@ -193,7 +194,9 @@ static void PostRequestThread(PostRequest* req) {
     req->winErr = (uint)rsp.error;
     req->response = str::Dup(ToStr(rsp.data));
     auto fn = MkFunc0<PostRequest>(PostRequestFinished, req);
-    uitask::Post(fn, "SelectionHandlerPostFinished");
+    if (!uitask::Post(fn, "SelectionHandlerPostFinished")) {
+        FreePostRequest(req);
+    }
 }
 
 #if OS_WASM
@@ -250,6 +253,7 @@ static void PostRequestWasm(PostRequest* req) {
 void SelectionHandlerPost(WindowTab* tab, Str url, Str bodyPattern, Str contentType, Str headers, Str selection) {
     auto* req = new PostRequest();
     req->tab = tab;
+    req->tabLifetimeId = tab ? tab->lifetimeId : 0;
     req->url = str::Dup(url);
     // no Body given: send the selection as-is. That is the least surprising
     // thing for "just post my text somewhere", and pairs with the default

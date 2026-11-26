@@ -313,6 +313,8 @@ void SelectTocItemInTree(MainWindow* win, TocItem* tocItem) {
 }
 
 MainWindow::MainWindow(gpui::Window* w) {
+    static u64 nextLifetimeId = 0;
+    lifetimeId = ++nextLifetimeId;
     static int nextTestId = 1;
     testId = nextTestId++;
     gpuiWin = w;

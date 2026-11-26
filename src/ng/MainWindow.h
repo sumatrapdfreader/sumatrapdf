@@ -205,6 +205,7 @@ struct MainWindow {
     MainWindow(const MainWindow&) = delete;
     MainWindow& operator=(const MainWindow&) = delete;
     ~MainWindow();
+    u64 lifetimeId = 0;
 
     bool IsCurrentTabAbout() const;
     bool IsDocLoaded() const;
@@ -645,6 +646,7 @@ bool IsMainWindowValidAndNotClosing(MainWindow*);
 bool IsCurrentTab(MainWindow* win, WindowTab* tab);
 bool IsWindowTabValid(WindowTab*);
 void PostForWindow(MainWindow*, void (*fn)(MainWindow*), Kind kind);
+void PostForWindow(MainWindow*, u64 lifetimeId, void (*fn)(MainWindow*), Kind kind);
 void PostForTab(WindowTab*, void (*fn)(WindowTab*), Kind kind);
 extern Vec<MainWindow*> gWindows;
 void CleanRemoteDestNameInPlace(Str& destName);

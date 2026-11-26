@@ -108,6 +108,7 @@ struct WindowTab {
         HexView,   // filePath's bytes (CmdViewAsHex)
     };
     MainWindow* win = nullptr;
+    u64 lifetimeId = 0;
     DocController* ctrl = nullptr;
     HexView* hex = nullptr;
     u64 loadStartedAt = 0;
