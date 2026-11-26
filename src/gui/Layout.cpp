@@ -1058,14 +1058,21 @@ Table::~Table() {
 }
 
 int Table::CellIdx(int row, int col) const {
-    ReportIf(row < 0 || row >= rows);
-    ReportIf(col < 0 || col >= cols);
+    if (ReportIf(row < 0 || row >= rows || col < 0 || col >= cols)) {
+        CrashMe();
+    }
     return (row * cols) + col;
 }
 
 void Table::SetSize(int nRows, int nCols) {
-    ReportIf(nRows < 0 || nCols < 0);
+    if (ReportIf(nRows < 0 || nCols < 0 || (nCols > 0 && nRows > INT_MAX / nCols))) {
+        return;
+    }
     if (nRows == rows && nCols == cols) {
+        return;
+    }
+    int nCells = nRows * nCols;
+    if (nCells > 0 && !VecReserve(cells, nCells)) {
         return;
     }
     RemoveAllCells();
@@ -1073,7 +1080,7 @@ void Table::SetSize(int nRows, int nCols) {
     cols = nCols;
     VecClear(cells);
     TableCell empty;
-    for (int i = 0; i < rows * cols; i++) {
+    for (int i = 0; i < nCells; i++) {
         VecAppend(cells, empty);
     }
     VecClear(colWidths);
@@ -1087,8 +1094,6 @@ void Table::MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered
                 continue;
             }
             TableCell& cell = cells[CellIdx(r, c)];
-            // a spanned-over cell can't hold a child of its own
-            ReportIf(covered && cell.child);
             cell.covered = covered;
         }
     }
@@ -1097,10 +1102,22 @@ void Table::MarkCovered(int row, int col, int rowSpan, int colSpan, bool covered
 // (row, col) is the cell's top-left; a spanning cell covers the ones to its
 // right / below, which must stay empty
 TableCell& Table::SetCell(int row, int col, ILayout* child, int rowSpan, int colSpan) {
-    ReportIf(rowSpan < 1 || colSpan < 1);
-    ReportIf(row + rowSpan > rows || col + colSpan > cols);
     TableCell& cell = cells[CellIdx(row, col)];
-    ReportIf(cell.covered);
+    if (ReportIf(cell.covered || rowSpan < 1 || colSpan < 1 || rowSpan > rows - row || colSpan > cols - col)) {
+        CrashMe();
+    }
+    for (int r = row; r < row + rowSpan; r++) {
+        for (int c = col; c < col + colSpan; c++) {
+            if (r == row && c == col) {
+                continue;
+            }
+            const TableCell& target = cells[CellIdx(r, c)];
+            bool wasCovered = r < row + cell.rowSpan && c < col + cell.colSpan;
+            if (ReportIf(target.child || (target.covered && !wasCovered))) {
+                CrashMe();
+            }
+        }
+    }
     MarkCovered(row, col, cell.rowSpan, cell.colSpan, false);
     if (cell.child && cell.child != child) {
         delete cell.child;
