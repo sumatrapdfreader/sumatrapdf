@@ -269,7 +269,10 @@ static bool LayoutDocument(Str path, float zoom, DisplayMode mode) {
     }
 
     NoopDocControllerCallback cb;
-    auto* dm = new DisplayModel(engine, &cb);
+    auto* dm = DisplayModel::Create(engine, &cb);
+    if (!dm) {
+        return false;
+    }
     dm->SetInitialViewSettings(mode, 1, kLayoutViewPort, 96);
     dm->SetViewPortSize(kLayoutViewPort);
     dm->SetZoomVirtual(zoom, nullptr);

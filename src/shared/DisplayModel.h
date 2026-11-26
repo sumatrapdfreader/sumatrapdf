@@ -95,7 +95,11 @@ struct Synchronizer;
 enum class HeadingTocStart;
 
 struct DisplayModel : DocController {
+  private:
     DisplayModel(EngineBase* engine, DocControllerCallback* cb);
+
+  public:
+    static DisplayModel* Create(EngineBase* engine, DocControllerCallback* cb);
     DisplayModel(DisplayModel const&) = delete;
     DisplayModel& operator=(DisplayModel const&) = delete;
 

@@ -69,21 +69,24 @@ void RenderScale_UnitTests() {
     if (!gSettings) {
         gSettings = NewSettings({});
     }
-
-    TempStr path = TestDocPathTemp(StrL("docs/test/zlib.3.pdf"));
-    utassert(file::Exists(path));
-    EngineBase* engine = CreateEngineMupdfFromFile(path, FileType::PDF, 96);
-    utassert(engine != nullptr);
-    if (!engine) {
+    defer {
         if (!prevSettings) {
             DeleteSettings(gSettings);
             gSettings = nullptr;
         }
+    };
+
+    TempStr path = TestDocPathTemp(StrL("docs/test/zlib.3.pdf"));
+    utassert(file::Exists(path));
+    EngineBase* engine = CreateEngineMupdfFromFile(path, FileType::PDF, 96);
+    NoCb cb;
+    auto* model = DisplayModel::Create(engine, &cb);
+    utassert(model != nullptr);
+    if (!model) {
         return;
     }
-
-    NoCb cb;
-    DisplayModel dm(engine, &cb);
+    AutoDelete modelOwner(model);
+    DisplayModel& dm = *model;
     dm.SetInitialViewSettings(DisplayMode::Continuous, 1, {800, 600}, 96);
     dm.Relayout(100, 0);
 
@@ -174,8 +177,4 @@ void RenderScale_UnitTests() {
 
     cache.AbortRendering(&dm);
     cache.FreeForDisplayModel(&dm);
-    if (!prevSettings) {
-        DeleteSettings(gSettings);
-        gSettings = nullptr;
-    }
 }

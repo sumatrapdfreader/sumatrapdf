@@ -1167,11 +1167,7 @@ static DocController* CreateControllerForFile(MainWindow* win, Str path, Passwor
     int nPages = engine->pageCount;
     auto dur = TimeSinceInMs(timeStart);
     logf("CreateControllerForEngineOrFile: '%s', %d pages, took %.2f ms\n", path, nPages, dur);
-    if (nPages <= 0) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return new DisplayModel(engine, win->cbHandler);
+    return DisplayModel::Create(engine, win->cbHandler);
 }
 
 // 0 keeps the fixed A5 page. Only Single Page + Fit Width wants one page
@@ -1807,13 +1803,13 @@ static bool FinishOpenLoad(LazyTabLoad* d) {
     WindowTab* tab = d->tab;
     MainWindow* win = tab->win;
     TempStr path = str::DupTemp(tab->filePath);
-    if (!d->engine) {
+    DocController* ctrl = DisplayModel::Create(d->engine, win->cbHandler);
+    d->engine = nullptr;
+    if (!ctrl) {
         // a password dialog shows over the error, which stays if it's cancelled
         tab->loadState = WindowTab::LoadState::Error;
         return LoadDocumentNow(win, path, d->prefs, LoadReuse::CurrentTab) != nullptr;
     }
-    DocController* ctrl = new DisplayModel(d->engine, win->cbHandler);
-    d->engine = nullptr;
     return LoadDocumentFinish(win, path, ctrl, d->prefs, LoadReuse::CurrentTab, d->timeStart) != nullptr;
 }
 
@@ -1986,7 +1982,7 @@ void LoadPendingTab(WindowTab* tab) {
 // load created
 void LoadDocumentWithEngine(MainWindow* win, Str path, EngineBase* engine) {
     auto timeStart = TimeGet();
-    DocController* ctrl = new DisplayModel(engine, win->cbHandler);
+    DocController* ctrl = DisplayModel::Create(engine, win->cbHandler);
     LoadDocumentFinish(win, path, ctrl, LoadPrefs::DontSave, LoadReuse::CurrentTab, timeStart);
 }
 

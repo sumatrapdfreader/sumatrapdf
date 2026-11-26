@@ -1679,8 +1679,11 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
             return nullptr;
         }
         ReportIf(engine->kind != kindEngineChm);
-        ctrl = new DisplayModel(engine, win->cbHandler);
-        ReportIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
+        ctrl = DisplayModel::Create(engine, win->cbHandler);
+        if (!ctrl) {
+            return nullptr;
+        }
+        ReportIf(!ctrl->AsFixed() || ctrl->AsChm());
     } else {
         // another ChmModel might still be active
         chmModel->RemoveParentWindow();
@@ -1737,13 +1740,11 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     int nPages = engine ? engine->pageCount : 0;
     auto dur = TimeSinceInMs(timeStart);
     logf("CreateControllerForEngineOrFile: '%s', %d pages, took %2.f ms\n", path, nPages, dur);
-    if (nPages <= 0) {
-        // seen nPages < 0 in a crash in epub file
-        SafeEngineRelease(&engine);
+    DocController* ctrl = DisplayModel::Create(engine, win->cbHandler);
+    if (!ctrl) {
         return nullptr;
     }
-    DocController* ctrl = new DisplayModel(engine, win->cbHandler);
-    ReportIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
+    ReportIf(!ctrl->AsFixed() || ctrl->AsChm());
     VerifyController(ctrl, path);
     SetMostRecentlyOpenedDoc(ctrl);
     return ctrl;

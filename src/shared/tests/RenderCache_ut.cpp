@@ -108,7 +108,7 @@ bool RenderCache_UnitTestFullOfOneVisiblePage() {
     }
 
     NoopDocCb cb;
-    auto* dm = new DisplayModel(engine, &cb);
+    auto* dm = DisplayModel::Create(engine, &cb);
     dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
     dm->Relayout(1600, 0);
 
@@ -172,7 +172,7 @@ bool RenderCache_UnitTestFullOfOldZoom() {
     }
 
     NoopDocCb cb;
-    auto* dm = new DisplayModel(engine, &cb);
+    auto* dm = DisplayModel::Create(engine, &cb);
     dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
     // the whole page is visible, so every tile of the old zoom is on screen
     dm->Relayout(25, 0);
@@ -243,7 +243,7 @@ bool RenderCache_UnitTestReduceTileSize() {
     }
 
     NoopDocCb cb;
-    auto* dm = new DisplayModel(engine, &cb);
+    auto* dm = DisplayModel::Create(engine, &cb);
     dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
     dm->Relayout(25, 0);
 
@@ -298,7 +298,7 @@ bool DocController_UnitTestDestroyHook() {
         return false;
     }
     NoopDocCb cb;
-    DocController* ctrl = new DisplayModel(engine, &cb);
+    DocController* ctrl = DisplayModel::Create(engine, &cb);
     Func1<DocController*> prev = gOnDocControllerDestroyed;
     gOnDocControllerDestroyed = MkFunc1Void(NoteCtrlDestroyed);
     gDestroyedCtrl = nullptr;
@@ -324,7 +324,7 @@ bool DisplayModel_UnitTestZoomFallback() {
         return false;
     }
     NoopDocCb cb;
-    auto* dm = new DisplayModel(engine, &cb);
+    auto* dm = DisplayModel::Create(engine, &cb);
     dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
     dm->zoomVirtual = 100;
     dm->zoomReal = 0;
@@ -354,7 +354,7 @@ bool DisplayModel_UnitTestFreePanFirstPage() {
         return false;
     }
     NoopDocCb cb;
-    auto* dm = new DisplayModel(engine, &cb);
+    auto* dm = DisplayModel::Create(engine, &cb);
     dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
     dm->Relayout(200, 0);
     dm->SetFreePan(true);

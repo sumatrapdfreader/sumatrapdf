@@ -1281,10 +1281,18 @@ static void RememberStableNavPointCandidateAfterViewChange(DisplayModel* dm, con
     nav.hasPending = true;
 }
 
+// Takes ownership of engine, including when it cannot be displayed.
+DisplayModel* DisplayModel::Create(EngineBase* engine, DocControllerCallback* cb) {
+    if (!engine || engine->PageCount() <= 0 || !cb) {
+        SafeEngineRelease(&engine);
+        return nullptr;
+    }
+    return new DisplayModel(engine, cb);
+}
+
 // must call SetInitialViewSettings() after creation
 DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocController(cb) {
     this->engine = engine;
-    ReportIf(!engine || engine->PageCount() <= 0);
     engineType = engine->kind;
     VecAppend(gLiveDisplayModels, this);
 
