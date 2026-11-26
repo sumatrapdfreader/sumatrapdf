@@ -1470,7 +1470,15 @@ static Str FzTextPageToUtf8(fz_stext_page* text, Rect** coordsOut, QuadF** quads
 
     AppendStextBlocks(text->first_block, content, boxes, seen, hardLineSep, softLineSep);
 
-    ReportIf(Utf8CodepointCount(ToStr(content)) != len(boxes));
+    if (ReportIf(Utf8CodepointCount(ToStr(content)) != len(boxes))) {
+        if (coordsOut) {
+            *coordsOut = nullptr;
+        }
+        if (quadsOut) {
+            *quadsOut = nullptr;
+        }
+        return {};
+    }
 
     int n = len(boxes);
     if (coordsOut) {

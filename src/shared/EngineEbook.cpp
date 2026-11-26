@@ -621,7 +621,9 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         VecAppendBlanks(coords, len(lineSep));
     }
     int nCodepoints = Utf8CodepointCount(ToStr(content));
-    ReportIf(len(coords) != nCodepoints);
+    if (ReportIf(len(coords) != nCodepoints)) {
+        return {};
+    }
 
     PageText res;
     res.nCodepoints = nCodepoints;
