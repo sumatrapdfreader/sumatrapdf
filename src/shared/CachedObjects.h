@@ -9,6 +9,7 @@ using CachedObjectFn = bool (*)(WindowTab* currTab, CachedObject* o);
 
 struct CachedObject {
     uintptr_t id = 0;
+    u64 generation = 0;
     u64 size = 0;
     Kind kind = nullptr;
     int pageNo = 0;
@@ -17,6 +18,7 @@ struct CachedObject {
     WindowTab* tab = nullptr;
     CachedObjectFn canFree = nullptr;
     CachedObjectFn free = nullptr;
+    bool claimed = false;
 };
 
 extern Kind kindCachedRender;
@@ -31,6 +33,7 @@ extern WindowTab* (*gCurrentTabForCache)();
 extern void (*gOnCachedObjectsChanged)();
 
 void DidAllocateCachedObject(CachedObject* o);
+bool IsCurrentCachedObject(const CachedObject* o);
 void UnregisterCachedObject(uintptr_t id);
 u64 TryFreeCachedObjects(u64 newAllocationSize);
 u64 FreeCachedObjects();

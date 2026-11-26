@@ -20,6 +20,7 @@ WindowTab* (*gCurrentTabForCache)() = nullptr;
 void (*gOnCachedObjectsChanged)() = nullptr;
 
 static RecursiveMutex gCachedObjectsLock;
+static u64 gNextCacheGeneration = 0;
 static AtomicBool gFreeCachedObjectsReenter;
 static thread_local uintptr_t gSkipFreeId = 0;
 
@@ -48,6 +49,16 @@ static int FindCachedObjectIdx(uintptr_t id) {
         }
     }
     return -1;
+}
+
+static int FindCurrentCachedObject(const CachedObject* o) {
+    int idx = FindCachedObjectIdx(o->id);
+    return idx >= 0 && gCachedObjects[idx].generation == o->generation ? idx : -1;
+}
+
+bool IsCurrentCachedObject(const CachedObject* o) {
+    ScopedRecursiveMutex scope(&gCachedObjectsLock);
+    return FindCurrentCachedObject(o) >= 0;
 }
 
 static u64 CachedObjectsTotalSize() {
@@ -95,6 +106,8 @@ void DidAllocateCachedObject(CachedObject* o) {
 
     {
         ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        obj.generation = ++gNextCacheGeneration;
+        obj.claimed = false;
         int idx = FindCachedObjectIdx(obj.id);
         if (idx >= 0) {
             gCachedObjects[idx] = obj;
@@ -155,14 +168,14 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
             if (!ObjectCanFree(currTab, &o, skipId)) {
                 continue;
             }
-            // Claim the entry under lock before calling o.free so a concurrent
-            // FreeCachedObjectsForEngine cannot double-free the same object.
+            // Keep the claim registered until its callback completes. An
+            // eviction or replacement can invalidate it while we run unlocked.
             bool claimed = false;
             {
                 ScopedRecursiveMutex scope(&gCachedObjectsLock);
-                int idx = FindCachedObjectIdx(o.id);
-                if (idx >= 0) {
-                    VecRemoveAtFast(gCachedObjects, idx);
+                int idx = FindCurrentCachedObject(&o);
+                if (idx >= 0 && !gCachedObjects[idx].claimed) {
+                    gCachedObjects[idx].claimed = true;
                     claimed = true;
                 }
             }
@@ -170,15 +183,22 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
                 continue;
             }
             u64 sz = o.size;
-            if (!o.free(currTab, &o)) {
+            bool didFree = o.free(currTab, &o);
+            {
                 ScopedRecursiveMutex scope(&gCachedObjectsLock);
-                if (FindCachedObjectIdx(o.id) < 0) {
-                    VecAppend(gCachedObjects, o);
+                int idx = FindCurrentCachedObject(&o);
+                if (idx >= 0) {
+                    if (didFree) {
+                        VecRemoveAtFast(gCachedObjects, idx);
+                    } else {
+                        gCachedObjects[idx].claimed = false;
+                    }
                 }
-                continue;
             }
-            NotifyCachedObjectsChanged();
-            freed += sz;
+            if (didFree) {
+                NotifyCachedObjectsChanged();
+                freed += sz;
+            }
         }
     }
 
@@ -248,26 +268,38 @@ void FreeCachedObjectsForEngine(EngineBase* engine) {
     }
 
     Vec<CachedObject> toFree;
+    bool changed = false;
     {
         ScopedRecursiveMutex scope(&gCachedObjectsLock);
         for (int i = len(gCachedObjects) - 1; i >= 0; i--) {
-            if (gCachedObjects[i].engine == engine) {
-                VecAppend(toFree, gCachedObjects[i]);
+            CachedObject& o = gCachedObjects[i];
+            if (o.engine != engine) {
+                continue;
+            }
+            changed = true;
+            if (!o.claimed && VecAppend(toFree, o)) {
+                o.claimed = true;
+            } else {
                 VecRemoveAtFast(gCachedObjects, i);
             }
         }
     }
-    if (len(toFree) == 0) {
+    if (!changed) {
         return;
     }
-    NotifyCachedObjectsChanged();
     WindowTab* currTab = CurrTab();
     for (int i = 0; i < len(toFree); i++) {
         CachedObject o = toFree[i];
         if (o.free) {
             o.free(currTab, &o);
         }
+        ScopedRecursiveMutex scope(&gCachedObjectsLock);
+        int idx = FindCurrentCachedObject(&o);
+        if (idx >= 0) {
+            VecRemoveAtFast(gCachedObjects, idx);
+        }
     }
+    NotifyCachedObjectsChanged();
 }
 
 static void EnsureCachedObjectHooks() {

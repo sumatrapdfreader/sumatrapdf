@@ -39,6 +39,13 @@ static CachedObject MkObj(uintptr_t id, u64 size, EngineBase* engine) {
     return o;
 }
 
+static bool ReplaceBeforeFree(WindowTab*, CachedObject* o) {
+    UnregisterCachedObject(o->id);
+    CachedObject replacement = MkObj(o->id, o->size, o->engine);
+    DidAllocateCachedObject(&replacement);
+    return true;
+}
+
 static AtomicInt gFindTabCalls;
 
 static WindowTab* CountingFindTab(EngineBase*) {
@@ -112,10 +119,8 @@ static void StaleImagePageTest() {
     CachedObject ignore{};
     utassert(!FindPageObject(engine, 1, &ignore));
     // the allocator may reuse the evicted address for a new page, which is then live
-    if (!IsRegistered(evicted.id)) {
-        utassert(!evicted.canFree(nullptr, &evicted));
-        utassert(!evicted.free(nullptr, &evicted));
-    }
+    utassert(!evicted.canFree(nullptr, &evicted));
+    utassert(!evicted.free(nullptr, &evicted));
 
     CachedObject live{};
     utassert(FindPageObject(engine, 2, &live));
@@ -219,6 +224,13 @@ void CachedObjects_UnitTests() {
 
     ResetCacheTest();
     StaleImagePageTest();
+
+    ResetCacheTest();
+    CachedObject reused = MkObj(9, 1000, e1);
+    reused.canFree = ReplaceBeforeFree;
+    DidAllocateCachedObject(&reused);
+    utassert(FreeCachedObjects() == 0);
+    utassert(!gFreed[9] && IsRegistered(9));
 
     ResetCacheTest();
     if (kHasThreads) {

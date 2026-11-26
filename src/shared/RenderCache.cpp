@@ -451,7 +451,7 @@ static bool RenderCacheCanFree(WindowTab* currTab, CachedObject* o) {
     }
     auto* entry = (BitmapCacheEntry*)o->id;
     ScopedRecursiveMutex scope(&gRenderCache->cacheAccess);
-    if (!gRenderCache->IsCached(entry) || entry->refs > 1) {
+    if (!gRenderCache->IsCached(entry) || !IsCurrentCachedObject(o) || entry->refs > 1) {
         return false;
     }
     return !(entry->dm && entry->dm->PageVisibleNearbyLocked(entry->pageNo));
@@ -464,7 +464,7 @@ static bool RenderCacheFree(WindowTab* currTab, CachedObject* o) {
     }
     auto* entry = (BitmapCacheEntry*)o->id;
     ScopedRecursiveMutex scope(&gRenderCache->cacheAccess);
-    if (!gRenderCache->IsCached(entry)) {
+    if (!gRenderCache->IsCached(entry) || !IsCurrentCachedObject(o)) {
         return false;
     }
     return gRenderCache->DropCacheEntryIfNotUsed(entry);

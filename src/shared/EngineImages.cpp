@@ -1079,7 +1079,8 @@ static bool TrimImagePage(CachedObject* o, ImagePageTrim action) {
         eng->cacheLock.Unlock();
     };
 
-    if (!VecContains(eng->pageCache, page) || page->loading || AtomicIntGet(&page->refs) > 1) {
+    if (!VecContains(eng->pageCache, page) || !IsCurrentCachedObject(o) || page->loading ||
+        AtomicIntGet(&page->refs) > 1) {
         return false;
     }
     if (!page->ownPixmap || !page->pixmap) {
