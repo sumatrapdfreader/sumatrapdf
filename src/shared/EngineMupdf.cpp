@@ -11464,17 +11464,26 @@ bool EngineMupdfSaveCropped(EngineBase* engine, Str path, const Vec<RectF>& crop
     return ok;
 }
 
-// caller must hold pagesLock (protects pages[] and pageInfo->images)
-// returns 1 or 0, or -1 while the page isn't fully loaded
-static int HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
-    ReportDebugIf(!e->pagesLock.IsHeldByCurrentThread());
-    ReportIf(pageNo < 1 || pageNo > e->pageCount);
+enum class ClipOptimization : u8 {
+    Unknown,
+    Disabled,
+    Enabled,
+    InvalidPage
+};
+
+static ClipOptimization TryClipOptimization(EngineMupdf* e, int pageNo) {
+    if (!e->pagesLock.TryLock()) {
+        return ClipOptimization::Unknown;
+    }
+    defer {
+        e->pagesLock.Unlock();
+    };
     if (pageNo < 1 || pageNo > e->pageCount) {
-        return 0;
+        return ClipOptimization::InvalidPage;
     }
     FzPageInfo* pageInfo = e->PageInfoByPageNo(pageNo);
     if (!pageInfo || !pageInfo->page || !pageInfo->fullyLoaded) {
-        return -1;
+        return ClipOptimization::Unknown;
     }
 
     fz_rect mbox = ToFzRect(e->PageMediabox(pageNo));
@@ -11482,10 +11491,10 @@ static int HasClipOptimizationsLocked(EngineMupdf* e, int pageNo) {
     for (auto& img : pageInfo->images) {
         fz_rect ir = img->rect;
         if (FzRectOverlap(mbox, ir) >= 0.9f) {
-            return 0;
+            return ClipOptimization::Disabled;
         }
     }
-    return 1;
+    return ClipOptimization::Enabled;
 }
 
 bool EngineMupdf::HasClipOptimizations(int pageNo) {
@@ -11501,25 +11510,18 @@ bool EngineMupdf::HasClipOptimizations(int pageNo) {
     // resolution. Answering "no" only while pagesLock happens to be busy made
     // the visible tiles re-render in a loop at higher zoom (#6154), so fall
     // back to the last answer we got for the page.
-    if (pagesLock.TryLock()) {
-        int res = HasClipOptimizationsLocked(this, pageNo);
-        pagesLock.Unlock();
-        if (res >= 0) {
-            ScopedMutex scope(&clipOptLock);
-            if (len(clipOptKnown) < pageNo) {
-                int prevLen = len(clipOptKnown);
-                VecResize(clipOptKnown, pageNo);
-                for (int i = prevLen; i < pageNo; i++) {
-                    clipOptKnown[i] = 0;
-                }
-            }
-            clipOptKnown[pageNo - 1] = res ? 2 : 1;
-            return res != 0;
-        }
+    ClipOptimization res = TryClipOptimization(this, pageNo);
+    if (res == ClipOptimization::InvalidPage) {
+        return false;
     }
-    // a page never seen loaded answers "no", same as before it's loaded
     ScopedMutex scope(&clipOptLock);
-    return pageNo <= len(clipOptKnown) && clipOptKnown[pageNo - 1] == 2;
+    if (res != ClipOptimization::Unknown) {
+        if (pageNo <= len(clipOptKnown) || VecResize(clipOptKnown, pageNo)) {
+            clipOptKnown[pageNo - 1] = (u8)res;
+        }
+        return res == ClipOptimization::Enabled;
+    }
+    return pageNo <= len(clipOptKnown) && clipOptKnown[pageNo - 1] == (u8)ClipOptimization::Enabled;
 }
 
 TempStr EngineMupdf::GetPageLabelTemp(int pageNo) const {
@@ -12025,7 +12027,7 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
             ScopedRecursiveMutex docScope(&e->docLock);
             RebuildCommentsFromAnnotations(ctx, pi);
         }
-        InvalidateFzPageAfterContentChange(e, pi);
+        InvalidateFzPageAfterContentChange(scope, pi);
         e->InvalidateTextForPage(pageNo);
         any = true;
     }
@@ -12188,7 +12190,7 @@ bool EngineMupdfReplaceImage(EngineBase* engine, int pageNo, int imageIdx, Str i
         logf("EngineMupdfReplaceImage: image %d on page %d not replaced\n", imageIdx, pageNo);
         return false;
     }
-    InvalidateFzPageAfterContentChange(e, pi);
+    InvalidateFzPageAfterContentChange(scope, pi);
     e->InvalidateTextForPage(pageNo);
     e->modifiedAnnotations = true;
     StartLoadingFileBytes(e);
@@ -12395,7 +12397,7 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
                 RebuildCommentsFromAnnotations(ctx, pi);
             }
         }
-        InvalidateFzPageAfterContentChange(e, pi);
+        InvalidateFzPageAfterContentChange(scope, pi);
         e->InvalidateTextForPage(pi->pageNo);
     });
 }
@@ -12806,8 +12808,8 @@ void EngineMupdf::ApplyReflowThemeCss() {
 #endif
         return;
     }
-    ForEachPageInfo(this, [this, ctx](FzPageInfo* pi) {
-        InvalidateFzPageAfterContentChange(this, pi);
+    ForEachPageInfo(this, [&scope, ctx](FzPageInfo* pi) {
+        InvalidateFzPageAfterContentChange(scope, pi);
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
             pi->page = nullptr;
