@@ -417,14 +417,20 @@ void VirtCtrl::AddChild(VirtCtrl* c) {
 }
 
 void VirtCtrl::InsertChild(VirtCtrl* c, int idx) {
-    ReportIf(!c);
-    ReportIf(c->parent);
-    c->parent = this;
-    c->SetRoot(root);
+    if (ReportIf(!c || c->parent)) {
+        return;
+    }
+    for (VirtCtrl* node = this; node; node = node->parent) {
+        if (ReportIf(node == c)) {
+            return;
+        }
+    }
     if (idx < 0 || idx >= len(children)) {
-        VecAppend(children, c);
-    } else {
-        VecInsertAt(children, idx, c);
+        idx = len(children);
+    }
+    if (VecInsertAt(children, idx, c)) {
+        c->parent = this;
+        c->SetRoot(root);
     }
 }
 
