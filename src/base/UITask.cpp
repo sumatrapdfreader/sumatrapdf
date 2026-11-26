@@ -12,6 +12,7 @@ namespace uitask {
 static ThreadId gMainUIThreadId = 0;
 static AtomicBool gInitialized = 0;
 static AtomicBool gWasDestroyed = 0;
+static bool gDestroying = false;
 static Dispatch gDispatch = Dispatch::Queue;
 // protected by gQueueMutex
 static void (*gWakeupFn)() = nullptr;
@@ -176,12 +177,16 @@ void DrainQueue() {
 }
 
 void Destroy() {
-    if (ReportIf(!IsMainUIThread())) {
+    if (ReportIf(!IsMainUIThread()) || gDestroying) {
         return;
     }
+    gDestroying = true;
     DrainQueue();
-    AtomicBoolSet(&gInitialized, false);
-    AtomicBoolSet(&gWasDestroyed, true);
+    {
+        AutoUnlockMutex lock(&gQueueMutex);
+        AtomicBoolSet(&gWasDestroyed, true);
+        AtomicBoolSet(&gInitialized, false);
+    }
 #if OS_WIN
     if (gDispatch == Dispatch::Native) {
         HWND hwnd = (HWND)AtomicPtrExchange(&gTaskDispatchHwnd, nullptr);
@@ -196,6 +201,8 @@ void Destroy() {
         gExecuteTaskMessage = 0;
     }
 #endif
+    // A worker may have queued a task during the first drain.
+    RunQueuedTasks();
     Vec<TaskInfo*>* q;
     {
         AutoUnlockMutex lock(&gQueueMutex);
@@ -203,11 +210,9 @@ void Destroy() {
         gQueue = nullptr;
         gWakeupFn = nullptr;
     }
-    if (q) {
-        for (TaskInfo* ti : *q) FreeTaskInfo(ti);
-        delete q;
-    }
+    delete q;
     delete (TaskInfo*)AtomicPtrExchange(&gTaskInfoCache, nullptr);
+    gDestroying = false;
 }
 
 void SetWakeupFn(void (*fn)()) {
@@ -215,38 +220,39 @@ void SetWakeupFn(void (*fn)()) {
     gWakeupFn = fn;
 }
 
-void Post(const Func0& f, Kind kind) {
+bool Post(const Func0& f, Kind kind) {
     if (!AtomicBoolGet(&gInitialized)) {
         ReportIf(!AtomicBoolGet(&gWasDestroyed));
-        return;
+        return false;
     }
     TaskInfo* ti = AllocTaskInfo();
     ti->f = f;
     ti->kind = kind;
     ti->queueTime = TimeGet();
-#if OS_WIN
-    if (gDispatch == Dispatch::Native) {
-        HWND hwnd = (HWND)AtomicPtrGet(&gTaskDispatchHwnd);
-        if (hwnd && PostMessageW(hwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) {
-            return;
-        }
-        // a dropped task never calls back, and whatever it owns leaks: keep it
-        // for the next dispatch
-        logf("uitask::Post: PostMessage failed for '%s', queueing\n", kind ? Str(kind) : StrL("(no kind)"));
-    }
-#endif
     void (*wakeup)() = nullptr;
     {
         AutoUnlockMutex lock(&gQueueMutex);
-        // Destroy() ran since the gInitialized check above
-        if (!gQueue) {
-            FreeTaskInfo(ti);
-            return;
+        if (!AtomicBoolGet(&gInitialized) || !gQueue) {
+            delete ti;
+            return false;
         }
-        VecAppend(*gQueue, ti);
+#if OS_WIN
+        if (gDispatch == Dispatch::Native) {
+            HWND hwnd = (HWND)AtomicPtrGet(&gTaskDispatchHwnd);
+            if (hwnd && PostMessageW(hwnd, gExecuteTaskMessage, 0, (LPARAM)ti)) {
+                return true;
+            }
+            // Keep it for the next dispatch if the native queue is full.
+        }
+#endif
+        if (!VecAppend(*gQueue, ti)) {
+            delete ti;
+            return false;
+        }
         wakeup = gWakeupFn;
     }
     if (wakeup) wakeup();
+    return true;
 }
 
 bool IsMainUIThread() {

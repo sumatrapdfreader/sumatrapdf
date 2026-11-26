@@ -432,7 +432,10 @@ static void PostResult(HashJob* job, HashState st) {
     if (st == HashState::Hashed) {
         res->h = job->h;
     }
-    uitask::Post(MkFunc0(HashResultDone, res), "ContentHashDone");
+    if (!uitask::Post(MkFunc0(HashResultDone, res), "ContentHashDone")) {
+        str::Free(res->path);
+        delete res;
+    }
 }
 
 // UI thread. Queues the history files whose content isn't known yet, to be
