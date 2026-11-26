@@ -1868,6 +1868,9 @@ T* VecData(const Vec<T>& v) {
 // (other.els = v.els), since the sign is what says the block is not the heap's.
 template <typename T, int N>
 inline void VecUseExternalBuffer(Vec<T>& v, T (&buf)[N]) {
+    if (ReportIf(v.els || v.cap || v.len)) {
+        return;
+    }
     v.els = buf;
     v.cap = -N;
     v.len = 0;
