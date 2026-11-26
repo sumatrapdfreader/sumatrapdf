@@ -946,6 +946,9 @@ u64 Arena::Pos() {
 static void ArenaPopToLocked(Arena* arena, u64 pos) {
     u64 bigPos = ArenaClampBot(kArenaHeaderSize, pos);
     Arena* current = arena->current;
+    if (bigPos > current->basePos + current->pos) {
+        return;
+    }
     while (current && current->basePos >= bigPos) {
         Arena* prev = current->prev;
         ArenaRelease(current);
