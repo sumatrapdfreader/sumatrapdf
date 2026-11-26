@@ -5260,9 +5260,11 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return isWheel ? 0 : DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    // reveal/hide the floating overlay toolbar as the mouse approaches the top;
-    // don't consume the message, just observe it
-    if (msg == WM_MOUSEMOVE && win->isToolbarOverlay) {
+    // The caption can take over the pointer before the canvas gets another move.
+    if (win->isToolbarOverlay && (msg == WM_MOUSEMOVE || msg == WM_MOUSELEAVE)) {
+        if (msg == WM_MOUSEMOVE) {
+            TrackMouseLeave(hwnd);
+        }
         UpdateOverlayToolbarForMouse(win);
     }
     if (msg == WM_PAINT) {

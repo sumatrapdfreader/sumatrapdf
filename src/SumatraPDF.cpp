@@ -13784,6 +13784,10 @@ static void PlaceChromeForCaption(MainWindow* win, bool shown) {
         win->toolbarYBeforeCaption = -1;
     }
     PositionOverlayToolbar(win);
+    // The caption can appear over a stationary pointer in the reveal strip.
+    if (shown && win->toolbarOverlayShown) {
+        UpdateOverlayToolbarForMouse(win);
+    }
 
     int inset = 0;
     if (shown && win->hwndCanvas) {
