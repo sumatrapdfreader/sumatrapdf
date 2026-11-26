@@ -470,20 +470,9 @@ static LRESULT CALLBACK InstallerSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static BOOL CALLBACK FindInstallerHwnd(HWND hwnd, LPARAM lp) {
-    WCHAR cls[64]{};
-    GetClassNameW(hwnd, cls, dimof(cls));
-    if (!wstr::EqI(WStr(cls), WStrL(L"GpuiSystemMonitor"))) {
-        return TRUE;
-    }
-    *(HWND*)lp = hwnd;
-    return FALSE;
-}
-
-static void InstallerAttachProbe() {
-    HWND hwnd = nullptr;
-    EnumThreadWindows(GetCurrentThreadId(), FindInstallerHwnd, (LPARAM)&hwnd);
-    if (!hwnd) {
+static void InstallerAttachProbe(gp::Window* win) {
+    HWND hwnd = (HWND)gp::PlatWindowHandle(win);
+    if (!hwnd || !IsWindow(hwnd)) {
         return;
     }
     gInstallerHwnd = hwnd;
@@ -682,7 +671,7 @@ static bool CreateInstallerWindow(Flags* cli) {
         return false;
     }
     gp::WindowSetInterval(gWnd->win, 33, gp::ListenTo(gInstallerView, &InstallerView::OnTick));
-    InstallerAttachProbe();
+    InstallerAttachProbe(gWnd->win);
     if (gInstallerHwnd) {
         DpiSetFromHwnd(gInstallerHwnd);
         DpiScale(dx, dy);

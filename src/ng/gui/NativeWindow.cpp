@@ -1,14 +1,13 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: the one win32 message path of the shell. gpui does not expose the native
-// handle, and it has no hook for the messages a few services need
+// ng: the one win32 message path of the shell. gpui has no hook for the
+// messages a few services need
 // (WM_HOTKEY for GlobalHotkeys, WM_COPYDATA for Explorer QuickLook,
-// WM_ACTIVATE for the hotkey target window). We claim the gpui window of this
-// thread by its class name and subclass it. OS file drops arrive as gpui
-// ExternalPaths drops on the shell root.
+// WM_ACTIVATE for the hotkey target window), so subclass the native handle.
+// OS file drops arrive as gpui ExternalPaths drops on the shell root.
 
-#include "base/Base.h"
+#include "gui/GpuiBridge.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #include "base/Pixmap.h"
@@ -841,31 +840,6 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static bool HwndIsClaimed(HWND hwnd) {
-    if (ToolWindowOwnsHwnd(hwnd)) {
-        return true;
-    }
-    for (const NativeWin& nw : gNativeWins) {
-        if (nw.hwnd == hwnd) {
-            return true;
-        }
-    }
-    return false;
-}
-
-static BOOL CALLBACK FindGpuiWnd(HWND hwnd, LPARAM lp) {
-    WCHAR cls[64]{};
-    GetClassNameW(hwnd, cls, dimof(cls));
-    if (!wstr::EqI(WStr(cls), WStr((WCHAR*)kGpuiWndClass))) {
-        return TRUE;
-    }
-    if (HwndIsClaimed(hwnd)) {
-        return TRUE; // another MainWindow already took this one
-    }
-    *(HWND*)lp = hwnd;
-    return FALSE;
-}
-
 struct DpiToggleWindows {
     Vec<HWND>* hwnds;
 };
@@ -939,14 +913,15 @@ void AppShellClaimToolHwnd(HWND hwnd) {
 }
 
 void AppShellEnableFileDrop(MainWindow* win) {
-    HWND hwnd = nullptr;
-    EnumThreadWindows(GetCurrentThreadId(), FindGpuiWnd, (LPARAM)&hwnd);
-    if (!hwnd) {
+    HWND hwnd = win && win->gpuiWin ? (HWND)gp::PlatWindowHandle(win->gpuiWin) : nullptr;
+    if (!hwnd || !IsWindow(hwnd)) {
         log(StrL("AppShellEnableFileDrop: no gpui window found\n"));
         return;
     }
     NativeWin nw{hwnd, win};
-    VecAppend(gNativeWins, nw);
+    if (AppShellWindowFromHwnd(hwnd) || !VecAppend(gNativeWins, nw)) {
+        return;
+    }
     // WM_DROPFILES, for when gpui's OLE drop target could not be registered
     DragAcceptFiles(hwnd, TRUE);
     SetWindowSubclass(hwnd, ShellSubclass, 1, 0);
