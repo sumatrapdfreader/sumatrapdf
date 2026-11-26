@@ -196,6 +196,16 @@ Key = Value";
     }
     FreeStruct(&gSutStructInfo, data);
 
+    data = (SutStruct*)DeserializeStruct(
+        &gSutStructInfo,
+        StrL("FloatingPoint = NaN\r\nSutStructItems [\r\n\t[\r\n\t\tFloatArray = 1.5 nan 1e100 -2.5\r\n\t]\r\n]\r\n"));
+    utassert(data->floatingPoint == -3.14f);
+    {
+        Vec<float>& fa = *(*data->sutStructItems)[0]->floatArray;
+        utassert(len(fa) == 2 && fa[0] == 1.5f && fa[1] == -2.5f);
+    }
+    FreeStruct(&gSutStructInfo, data);
+
     data = (SutStruct*)DeserializeStruct(&gSutStructInfo, Str());
     utassert(data);
     if (!data) {
