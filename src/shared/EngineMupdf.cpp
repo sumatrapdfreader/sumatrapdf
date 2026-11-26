@@ -3455,7 +3455,9 @@ static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
             pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
             if (no == i + 1) {
                 fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
-                res = str::Dup(Str((char*)buf->data, (int)buf->len));
+                if (buf && buf->len <= INT_MAX) {
+                    res = str::Dup(Str((char*)buf->data, (int)buf->len));
+                }
                 fz_drop_buffer(ctx, buf);
                 break;
             }
@@ -3482,10 +3484,10 @@ static Str PdfLoadAnnotationAttachment(fz_context* ctx, pdf_document* doc, int o
             break;
         }
         fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
-        if (buf) {
+        if (buf && buf->len <= INT_MAX) {
             res = str::Dup(Str((char*)buf->data, (int)buf->len));
-            fz_drop_buffer(ctx, buf);
         }
+        fz_drop_buffer(ctx, buf);
         pdf_drop_obj(ctx, obj);
     }
     fz_catch(ctx) {
