@@ -405,6 +405,8 @@ uint GuessTextCodepage(Str data, uint defVal = CP_ACP);
 TempStr NormalizeString(Str str, int /* NORM_FORM */ form);
 void VariantInitBstr(VARIANT& urlVar, WStr s);
 bool DDEExecute(WStr server, WStr topic, WStr command);
+// makes creating clsid fail in this process, on every thread (Windows 8+)
+bool BlockComClass(const CLSID& clsid);
 
 //--- resources / instance / common controls
 

@@ -15777,6 +15777,44 @@ static void LogLibsumatrapdfFileStateAfterLoadFail(Str path, DWORD err) {
 // embedded/installer copy). Skips mismatched leftover DLLs from other builds.
 // useLoadLibraryEx: LoadLibraryExW with LOAD_WITH_ALTERED_SEARCH_PATH (helps
 // when AV hooks plain LoadLibrary, and for dependency search next to the DLL).
+// Third-party shell property handlers that crash inside our process. The file
+// dialogs load them on a shell thread for the files of the folder they show.
+static const struct {
+    const char* ext;
+    const char* dllName;
+} gCrashingPropertyHandlers[] = {
+    // Cuminas DjVu Shell Extension Pack (2017): heap corruption (crash 2026-11-26-19-15-b1fd)
+    {".djvu", "djvupropstr.dll"},
+    {".djv", "djvupropstr.dll"},
+};
+
+static void BlockCrashingShellExtensions() {
+    for (auto& h : gCrashingPropertyHandlers) {
+        TempStr key = str::JoinTemp(
+            StrL("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\PropertySystem\\PropertyHandlers\\"), Str(h.ext));
+        TempStr clsidStr = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, {});
+        if (len(clsidStr) == 0) {
+            continue;
+        }
+        key = str::JoinTemp(StrL("CLSID\\"), clsidStr, StrL("\\InprocServer32"));
+        TempStr dll = ReadRegStrTemp(HKEY_CLASSES_ROOT, key, {});
+        // the path can be quoted
+        if (str::EndsWith(dll, StrL("\""))) {
+            dll.len--;
+        }
+        TempStr suffix = str::JoinTemp(StrL("\\"), Str(h.dllName));
+        if (!str::EqI(dll, Str(h.dllName)) && !str::EndsWithI(dll, suffix)) {
+            continue;
+        }
+        CLSID clsid;
+        if (FAILED(CLSIDFromString(CWStrTemp(clsidStr), &clsid))) {
+            continue;
+        }
+        bool ok = BlockComClass(clsid);
+        logf("BlockCrashingShellExtensions: '%s' for %s, blocked: %d\n", dll, Str(h.ext), (int)ok);
+    }
+}
+
 static bool LoadLibsumatrapdfFromFile(Str path, i64 expectedSize, bool useLoadLibraryEx = false) {
     i64 realSize = file::GetSize(path);
     if (realSize != expectedSize) {
@@ -17123,6 +17161,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // dialog hangs inside PrintDlgExW instead of returning
         logf("WinMain: OleInitialize() failed with 0x%08x\n", (uint)ole.hr);
     }
+    BlockCrashingShellExtensions();
     InitAllCommonControls();
     AutoGdiPlusShutdown gdiPlus(true);
 

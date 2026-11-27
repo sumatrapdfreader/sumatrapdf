@@ -604,6 +604,72 @@ static void InstallRegistryRollbackTest() {
     utassert(RegKeyExists(root, str::JoinTemp(pdfProgId, StrL("\\shell\\open\\command"))));
 }
 
+struct ComCreateOnThread {
+    CLSID clsid;
+    DWORD coinit;
+    HRESULT hr = E_FAIL;
+};
+
+static DWORD WINAPI ComCreateThreadProc(void* arg) {
+    auto* d = (ComCreateOnThread*)arg;
+    HRESULT hrInit = CoInitializeEx(nullptr, d->coinit);
+    IUnknown* unk = nullptr;
+    d->hr = CoCreateInstance(d->clsid, nullptr, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&unk);
+    if (unk) {
+        unk->Release();
+    }
+    if (SUCCEEDED(hrInit)) {
+        CoUninitialize();
+    }
+    return 0;
+}
+
+static HRESULT ComCreateOnNewThread(const CLSID& clsid, DWORD coinit) {
+    ComCreateOnThread d{clsid, coinit};
+    HANDLE h = CreateThread(nullptr, 0, ComCreateThreadProc, &d, 0, nullptr);
+    utassert(h != nullptr);
+    if (!h) {
+        return E_FAIL;
+    }
+    WaitForSingleObject(h, INFINITE);
+    CloseHandle(h);
+    return d.hr;
+}
+
+// a crashing third-party shell extension (property handler loaded by the file
+// dialogs on a shell thread) must be blocked in every apartment
+static void BlockComClassTest() {
+    CLSID clsid;
+    utassert(SUCCEEDED(CoCreateGuid(&clsid)));
+    WCHAR clsidStr[64];
+    StringFromGUID2(clsid, clsidStr, dimof(clsidStr));
+    TempStr clsidKey = str::JoinTemp(StrL("Software\\Classes\\CLSID\\"), ToUtf8Temp(WStr(clsidStr)));
+    TempStr serverKey = str::JoinTemp(clsidKey, StrL("\\InprocServer32"));
+    utassert(WriteRegStr(HKEY_CURRENT_USER, serverKey, {}, StrL("C:\\sumatra-unit-test-missing\\blocked.dll")));
+    utassert(WriteRegStr(HKEY_CURRENT_USER, serverKey, StrL("ThreadingModel"), StrL("Both")));
+    defer {
+        RegDeleteTreeW(HKEY_CURRENT_USER, CWStrTemp(clsidKey));
+    };
+
+    IUnknown* unk = nullptr;
+    HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&unk);
+    // the dll doesn't exist: tried to load it
+    utassert(hr == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+    utassert(ComCreateOnNewThread(clsid, COINIT_APARTMENTTHREADED) == HRESULT_FROM_WIN32(ERROR_MOD_NOT_FOUND));
+
+    utassert(BlockComClass(clsid));
+    utassert(BlockComClass(clsid));
+    hr = CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&unk);
+    utassert(hr == E_ACCESSDENIED);
+    utassert(ComCreateOnNewThread(clsid, COINIT_APARTMENTTHREADED) == E_ACCESSDENIED);
+    utassert(ComCreateOnNewThread(clsid, COINIT_MULTITHREADED) == E_ACCESSDENIED);
+    // other classes still load
+    utassert(SUCCEEDED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&unk)));
+    if (unk) {
+        unk->Release();
+    }
+}
+
 static void SumatraPDF_UnitTests() {
     GuiFontLangTest();
     StripGroupOrderTest();
@@ -616,6 +682,7 @@ static void SumatraPDF_UnitTests() {
     HttpTransferTest();
     OpenDdeCmdTest();
     InstallRegistryRollbackTest();
+    BlockComClassTest();
     utassert(PlatformTextCache_UnitTest());
     UpdateCheckDecisionTest();
     CachedObjects_UnitTests();

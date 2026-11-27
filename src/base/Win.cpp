@@ -2910,6 +2910,79 @@ void VariantInitBstr(VARIANT& urlVar, WStr s) {
     urlVar.bstrVal = SysAllocStringLen(s.s, s.len);
 }
 
+// Process-wide COM activation filter (Windows 8+) that fails the creation of
+// blocked classes. Used to keep crashing third-party shell extensions, which
+// the file dialogs load into our process on threads of their own, out of it.
+// A class object registered with CoRegisterClassObject doesn't do it: that
+// only applies in the apartment that registered it.
+static CLSID gBlockedComClasses[16];
+static AtomicInt gBlockedComClassesCount = 0;
+
+class BlockingActivationFilter : public IActivationFilter {
+  public:
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        *ppv = nullptr;
+        if (riid == IID_IUnknown || riid == __uuidof(IActivationFilter)) {
+            *ppv = static_cast<IActivationFilter*>(this);
+            return S_OK;
+        }
+        return E_NOINTERFACE;
+    }
+    // lives until the process exits
+    ULONG STDMETHODCALLTYPE AddRef() override { return 2; }
+    ULONG STDMETHODCALLTYPE Release() override { return 1; }
+
+    STDMETHODIMP HandleActivation(DWORD, REFCLSID clsid, CLSID* replacementClsid) override {
+        *replacementClsid = clsid;
+        int n = AtomicIntGet(&gBlockedComClassesCount);
+        for (int i = 0; i < n; i++) {
+            if (IsEqualCLSID(clsid, gBlockedComClasses[i])) {
+                return E_ACCESSDENIED;
+            }
+        }
+        return S_OK;
+    }
+};
+
+typedef HRESULT(WINAPI* CoRegisterActivationFilterProc)(IActivationFilter*);
+
+// must be called on the ui thread
+bool BlockComClass(const CLSID& clsid) {
+    static BlockingActivationFilter gFilter;
+    static bool gFilterRegistered = false;
+    if (!gFilterRegistered) {
+        HMODULE dll = GetModuleHandleW(L"ole32.dll");
+        auto proc = dll ? (CoRegisterActivationFilterProc)GetProcAddress(dll, "CoRegisterActivationFilter") : nullptr;
+        if (!proc) {
+            // Windows 7
+            log(StrL("BlockComClass: no CoRegisterActivationFilter\n"));
+            return false;
+        }
+        HRESULT hr = proc(&gFilter);
+        if (FAILED(hr)) {
+            logf("BlockComClass: CoRegisterActivationFilter failed with 0x%08x\n", (uint)hr);
+            return false;
+        }
+        gFilterRegistered = true;
+    }
+    int n = AtomicIntGet(&gBlockedComClassesCount);
+    for (int i = 0; i < n; i++) {
+        if (IsEqualCLSID(clsid, gBlockedComClasses[i])) {
+            return true;
+        }
+    }
+    if (n >= dimofi(gBlockedComClasses)) {
+        return false;
+    }
+    // written before the count that makes it visible to the filter
+    gBlockedComClasses[n] = clsid;
+    AtomicIntSet(&gBlockedComClassesCount, n + 1);
+    return true;
+}
+
 static HDDEDATA CALLBACK DdeCallback(UINT /*type*/, UINT /*fmt*/, HCONV /*hconv*/, HSZ /*hsz1*/, HSZ /*hsz2*/,
                                      HDDEDATA /*hdata*/, ULONG_PTR /*data1*/, ULONG_PTR /*data2*/) {
     return nullptr;
