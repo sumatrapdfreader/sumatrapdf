@@ -262,32 +262,68 @@ static bool IsPSFileContent(Str d) {
     return isPJL;
 }
 
-// https://github.com/file/file/blob/7449263e1d6167233b3b6abfc3e4c13407d6432c/magic/Magdir/animation#L265
-// https://nokiatech.github.io/heif/technical.html
-// HEIF is the container, HEIC is its HEVC-coded flavour. We decode both
-// the same way, so .heif and .heic share one FileType.
-// ftyp brands per https://github.com/strukturag/libheif/issues/83
-static FileType DetectHicAndAvif(Str d) {
-    if (d.len < 0x18) {
-        return FileType::Unknown;
+// the FileType a HEIF/AVIF ftyp brand names, Unknown for other brands
+static FileType HeifBrandType(const u8* b) {
+    // AVIF: still image, image sequence (animated), intra-only sequence
+    static const char* kAvif[] = {"avif", "avis", "avio"};
+    // HEVC-coded images and image sequences
+    static const char* kHeic[] = {"heic", "heix", "heim", "heis", "hevc", "hevx", "hevm", "hevs"};
+    for (const char* s : kAvif) {
+        if (MemEq(b, s, 4)) {
+            return FileType::Avif;
+        }
     }
-    // clang-format off
-static const struct {
-    int off;
-    Str brand;
-    FileType type;
-} kBrands[] = {
-    {4, StrL("ftypheic"), FileType::Heic}, {4, StrL("ftypheix"), FileType::Heic},
-    {4, StrL("ftypmif1"), FileType::Heic}, {4, StrL("ftypavif"), FileType::Avif},
-    {16, StrL("mif1heic"), FileType::Heic},
-};
-    // clang-format on
-    for (auto& b : kBrands) {
-        if (str::StartsWith(Str(d.s + b.off, d.len - b.off), b.brand)) {
-            return b.type;
+    for (const char* s : kHeic) {
+        if (MemEq(b, s, 4)) {
+            return FileType::Heic;
         }
     }
     return FileType::Unknown;
+}
+
+// https://nokiatech.github.io/heif/technical.html
+// https://aomediacodec.github.io/av1-avif/
+// HEIF is the container, HEIC is its HEVC-coded flavour. We decode both
+// the same way, so .heif and .heic share one FileType.
+// The ftyp box has a major brand, a minor version and compatible brands. The
+// major brand can name the codec ("avif", "avis" for an animated AVIF,
+// "heic", "hevc" for a HEIC sequence) or only the HEIF structure ("mif1"
+// for an image, "msf1" for an image sequence, "miaf"), with the codec among
+// the compatible brands. ftyp brands per
+// https://github.com/strukturag/libheif/issues/83
+static FileType DetectHicAndAvif(Str d) {
+    ByteReader r(d);
+    if (r.len < 16 || !MemEq(r.d + 4, "ftyp", 4)) {
+        return FileType::Unknown;
+    }
+    // ftyp is never sized 0 (to the end) or 1 (64-bit size)
+    u32 boxSize = r.UInt32BE(0);
+    if (boxSize < 16) {
+        return FileType::Unknown;
+    }
+    int end = boxSize < (u32)r.len ? (int)boxSize : r.len;
+    FileType major = HeifBrandType(r.d + 8);
+    if (major != FileType::Unknown) {
+        return major;
+    }
+    bool isHeif = MemEq(r.d + 8, "mif1", 4) || MemEq(r.d + 8, "msf1", 4) || MemEq(r.d + 8, "miaf", 4);
+    FileType compat = FileType::Unknown;
+    // compatible brands follow the minor version at 12
+    for (int off = 16; off + 4 <= end; off += 4) {
+        const u8* b = r.d + off;
+        FileType ft = HeifBrandType(b);
+        if (ft == FileType::Avif || (ft == FileType::Heic && compat == FileType::Unknown)) {
+            compat = ft;
+        }
+        if (MemEq(b, "mif1", 4) || MemEq(b, "msf1", 4) || MemEq(b, "miaf", 4)) {
+            isHeif = true;
+        }
+    }
+    if (compat != FileType::Unknown) {
+        return compat;
+    }
+    // a HEIF without a codec brand
+    return isHeif ? FileType::Heic : FileType::Unknown;
 }
 
 static bool HasWebpSignature(Str d) {

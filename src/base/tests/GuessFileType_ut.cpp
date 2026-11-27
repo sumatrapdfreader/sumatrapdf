@@ -499,6 +499,63 @@ static void heifTest() {
     utassert(fti.imageDy == 5);
     utassert(fti.hasImageSize);
     utassert(fti.nImages == 1);
+
+    // the type from the ftyp brands: major brand, then the compatible ones
+    // (each ftyp is size, "ftyp", major brand, minor version, compatible brands)
+    struct {
+        Str ftyp;
+        FileType want;
+    } brands[] = {
+        // animated AVIF, as ffmpeg writes it
+        {StrL("\0\0\0\x2c"
+              "ftypavis\0\0\0\0avisavifmsf1iso8mif1miafMA1A"),
+         FileType::Avif},
+        {StrL("\0\0\0\x18"
+              "ftypavio\0\0\0\0avifmif1"),
+         FileType::Avif},
+        // HEIF structure brand first, the codec among the compatible brands
+        {StrL("\0\0\0\x18"
+              "ftypmif1\0\0\0\0mif1avif"),
+         FileType::Avif},
+        {StrL("\0\0\0\x18"
+              "ftypmif1\0\0\0\0mif1heic"),
+         FileType::Heic},
+        {StrL("\0\0\0\x18"
+              "ftypmsf1\0\0\0\0msf1hevc"),
+         FileType::Heic},
+        {StrL("\0\0\0\x1c"
+              "ftypmiaf\0\0\0\0mif1heicavif"),
+         FileType::Avif},
+        {StrL("\0\0\0\x14"
+              "ftypmif1\0\0\0\0mif1"),
+         FileType::Heic},
+        // HEIC image sequence
+        {StrL("\0\0\0\x18"
+              "ftyphevc\0\0\0\0msf1hevc"),
+         FileType::Heic},
+        // MP4 videos, including AV1 ("av01"), aren't images
+        {StrL("\0\0\0\x20"
+              "ftypisom\0\0\x02\0isomiso2avc1mp41"),
+         FileType::Unknown},
+        {StrL("\0\0\0\x1c"
+              "ftypiso6\0\0\0\0iso6av01mp41"),
+         FileType::Unknown},
+        // a brand past the box's end isn't one of its brands
+        {StrL("\0\0\0\x14"
+              "ftypiso6\0\0\0\0iso6"
+              "avif"),
+         FileType::Unknown},
+    };
+    for (auto& b : brands) {
+        // followed by a free box, as a box after the ftyp
+        char data[128]{};
+        memcpy(data, b.ftyp.s, (size_t)b.ftyp.len);
+        memcpy(data + b.ftyp.len,
+               "\0\0\0\x08"
+               "free",
+               8);
+        utassert(GuessFileTypeFromData(Str(data, b.ftyp.len + 8)) == b.want);
+    }
 }
 
 static void jxlTest() {
