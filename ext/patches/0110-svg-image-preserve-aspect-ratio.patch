@@ -1,0 +1,88 @@
+An SVG <image> honors preserveAspectRatio, default "xMidYMid meet".
+
+svg_run_image() scaled the image to its x/y/width/height box, stretching it.
+Now it fits inside the box keeping its aspect ratio (meet), aligned by
+xMin/xMid/xMax and YMin/YMid/YMax, or fills it and is clipped to it (slice);
+"none" stretches as before. An image turned 90 / 270 degrees by its
+orientation fits as h x w. Applies on top of 0044 / 0056 (unsized images).
+(Idea from Vira Reader's mupdf-svg-image-aspect.patch; SVG <image> only, not
+inline SVG in HTML.)
+
+diff --git a/source/svg/svg-run.c b/source/svg/svg-run.c
+index 0f1d09487..47322b295 100644
+--- a/source/svg/svg-run.c
++++ b/source/svg/svg-run.c
+@@ -1814,6 +1814,7 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+ 	svg_state local_state;
+ 	float x=0, y=0, w=0, h=0;
+ 	fz_image *img = NULL;
++	int clipped = 0;
+ 
+ 	char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
+ 	char *x_att = fz_xml_att(root, "x");
+@@ -1823,6 +1824,7 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+ 
+ 	svg_begin_state(ctx, &local_state, inherit_state);
+ 	fz_var(img);
++	fz_var(clipped);
+ 	fz_try(ctx)
+ 	{
+ 		svg_parse_common(ctx, doc, root, &local_state);
+@@ -1847,6 +1849,48 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+ 		if (w <= 0 || h <= 0)
+ 			break; // out of try-catch
+ 
++		/* SumatraPDF: preserveAspectRatio, by default "xMidYMid meet", fits
++		 * the image in its box keeping its aspect ratio, aligned; "slice"
++		 * fills the box and is clipped to it. The image was stretched to the
++		 * box. (Idea from Vira Reader.) */
++		{
++			char *par_att = fz_xml_att(root, "preserveAspectRatio");
++			int align_x = 1, align_y = 1;
++			int preserve = svg_parse_preserve_aspect_ratio(par_att ? par_att : "xMidYMid meet", &align_x, &align_y);
++			float iw = img->w, ih = img->h;
++			int orientation = fz_image_orientation(ctx, img);
++			/* turned by 90 or 270 degrees: the image shows h x w */
++			if (orientation == 2 || orientation == 4 || orientation == 6 || orientation == 8)
++			{
++				iw = img->h;
++				ih = img->w;
++			}
++			if (preserve && iw > 0 && ih > 0)
++			{
++				int slice = par_att && strstr(par_att, "slice") != NULL;
++				float s = slice ? fz_max(w / iw, h / ih) : fz_min(w / iw, h / ih);
++				float fit_w = iw * s, fit_h = ih * s;
++				if (slice)
++				{
++					fz_path *path = fz_new_path(ctx);
++					fz_try(ctx)
++					{
++						fz_rectto(ctx, path, x, y, x + w, y + h);
++						fz_clip_path(ctx, dev, path, 0, local_state.transform, fz_infinite_rect);
++						clipped = 1;
++					}
++					fz_always(ctx)
++						fz_drop_path(ctx, path);
++					fz_catch(ctx)
++						fz_rethrow(ctx);
++				}
++				x += (w - fit_w) * align_x / 2;
++				y += (h - fit_h) * align_y / 2;
++				w = fit_w;
++				h = fit_h;
++			}
++		}
++
+ 		local_state.transform = fz_concat(fz_translate(x, y), local_state.transform);
+ 		local_state.transform = fz_concat(fz_scale(w, h), local_state.transform);
+ 		local_state.transform = fz_concat(fz_image_orientation_matrix(ctx, img), local_state.transform);
+@@ -1854,6 +1898,8 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+ 	}
+ 	fz_always(ctx)
+ 	{
++		if (clipped)
++			fz_pop_clip(ctx, dev);
+ 		fz_drop_image(ctx, img);
+ 		svg_end_state(ctx, &local_state);
+ 	}

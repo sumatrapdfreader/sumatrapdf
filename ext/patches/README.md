@@ -110,6 +110,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0107-html-aat-deleted-glyph` | a glyph an Apple font's morx shaping deleted (0xFFFF) isn't drawn |
 | `0108-html-draw-abort-cookie` | drawing an HTML / EPUB page stops when the render is aborted |
 | `0109-pdf-appearance-encoding-check` | form text the simple writer can't encode in the encoding it picks ("x ≈ 5", "Привет ™") takes the rich layout instead of replacement characters; after `0009` |
+| `0110-svg-image-preserve-aspect-ratio` | an SVG `<image>` keeps its aspect ratio (`preserveAspectRatio`, default `xMidYMid meet`); it was stretched to its box; after `0044` / `0056` |
 | `backport-ab37474fc-redact-actualtext` | redaction rewrites a tagged element's `/ActualText`, not `/Alt`; the redacted words stayed in the file (mupdf bug 709973) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these
