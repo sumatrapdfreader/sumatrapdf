@@ -1281,6 +1281,48 @@ bool MarkdownToc_UnitTestMath() {
     return ok && headOk && str::Contains(MathRunJs(), StrL("temml.render"));
 }
 
+struct ConcurrentParseCtx {
+    int iterations = 0;
+    AtomicInt failures;
+};
+
+static const Str kConcurrentMd = StrL("~~gone~~ $x^2$ ==marked== *em*\n");
+static const Str kConcurrentHtml =
+    StrL("<p><del>gone</del> <span class=\"math math-inline\">x^2</span> <mark>marked</mark> <em>em</em></p>\n");
+
+static void ConcurrentParseWorker(ConcurrentParseCtx* ctx) {
+    for (int i = 0; i < ctx->iterations; i++) {
+        char* body = MarkdownToHtmlBody(kConcurrentMd);
+        if (!body || !str::Eq(Str(body), kConcurrentHtml)) {
+            AtomicIntInc(&ctx->failures);
+        }
+        cmark_get_default_mem_allocator()->free(body);
+    }
+}
+
+// Extensions' inline characters (~ $ =) were in process-wide tables that each
+// parse set and, when done, cleared, so a parse on another thread could lose
+// them mid-way and render ~~x~~ as text (ParseMarkdownTocsParallel parses
+// files on several threads).
+bool MarkdownToc_UnitTestConcurrentParse() {
+    EnsureCmarkPluginsRegistered();
+    ConcurrentParseCtx ctx;
+    ctx.iterations = 2000;
+    AtomicIntSet(&ctx.failures, 0);
+    Vec<ThreadHandle> threads;
+    for (int t = 0; t < 4; t++) {
+        VecAppend(threads, StartThread(MkFunc0(ConcurrentParseWorker, &ctx), StrL("MdParseTest")));
+    }
+    for (ThreadHandle& h : threads) {
+        JoinThread(&h, -1);
+    }
+    int failures = AtomicIntGet(&ctx.failures);
+    if (failures > 0) {
+        fprintf(stderr, "concurrent markdown parse: %d of %d wrong\n", failures, 4 * ctx.iterations);
+    }
+    return failures == 0;
+}
+
 bool MarkdownToc_UnitTestHighlightWikilinks() {
     struct {
         Str md;

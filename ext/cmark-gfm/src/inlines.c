@@ -63,10 +63,14 @@ typedef struct subject{
   bufsize_t backticks[MAXBACKTICKS + 1];
   bool scanned_for_backticks;
   bool no_link_openers;
+  // the parser's tables, with its extensions' characters; see
+  // cmark_manage_extensions_special_characters()
+  const int8_t *special_chars;
+  const int8_t *skip_chars;
 } subject;
 
-// Extensions may populate this.
-static int8_t SKIP_CHARS[256];
+static const int8_t NO_SKIP_CHARS[256];
+static const int8_t SPECIAL_CHARS[256];
 
 static CMARK_INLINE bool S_is_line_end_char(char c) {
   return (c == '\n' || c == '\r');
@@ -200,6 +204,8 @@ static void subject_from_buf(cmark_mem *mem, int line_number, int block_offset, 
   }
   e->scanned_for_backticks = false;
   e->no_link_openers = true;
+  e->special_chars = SPECIAL_CHARS;
+  e->skip_chars = NO_SKIP_CHARS;
 }
 
 static CMARK_INLINE int isbacktick(int c) { return (c == '`'); }
@@ -426,12 +432,12 @@ static int scan_delims(subject *subj, unsigned char c, bool *can_open,
   } else {
     before_char_pos = subj->pos - 1;
     // walk back to the beginning of the UTF_8 sequence:
-    while ((peek_at(subj, before_char_pos) >> 6 == 2 || SKIP_CHARS[peek_at(subj, before_char_pos)]) && before_char_pos > 0) {
+    while ((peek_at(subj, before_char_pos) >> 6 == 2 || subj->skip_chars[peek_at(subj, before_char_pos)]) && before_char_pos > 0) {
       before_char_pos -= 1;
     }
     len = cmark_utf8proc_iterate(subj->input.data + before_char_pos,
                                  subj->pos - before_char_pos, &before_char);
-    if (len == -1 || (before_char < 256 && SKIP_CHARS[(unsigned char) before_char])) {
+    if (len == -1 || (before_char < 256 && subj->skip_chars[(unsigned char) before_char])) {
       before_char = 10;
     }
   }
@@ -450,12 +456,12 @@ static int scan_delims(subject *subj, unsigned char c, bool *can_open,
     after_char = 10;
   } else {
     after_char_pos = subj->pos;
-    while (SKIP_CHARS[peek_at(subj, after_char_pos)] && after_char_pos < subj->input.len) {
+    while (subj->skip_chars[peek_at(subj, after_char_pos)] && after_char_pos < subj->input.len) {
       after_char_pos += 1;
     }
     len = cmark_utf8proc_iterate(subj->input.data + after_char_pos,
                                  subj->input.len - after_char_pos, &after_char);
-    if (len == -1 || (after_char < 256 && SKIP_CHARS[(unsigned char) after_char])) {
+    if (len == -1 || (after_char < 256 && subj->skip_chars[(unsigned char) after_char])) {
     after_char = 10;
   }
   }
@@ -1375,7 +1381,7 @@ static cmark_node *handle_newline(subject *subj) {
 }
 
 // "\r\n\\`&_*[]<!"
-static int8_t SPECIAL_CHARS[256] = {
+static const int8_t SPECIAL_CHARS[256] = {
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1407,7 +1413,7 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   bufsize_t n = subj->pos + 1;
 
   while (n < subj->input.len) {
-    if (SPECIAL_CHARS[subj->input.data[n]])
+    if (subj->special_chars[subj->input.data[n]])
       return n;
     if (options & CMARK_OPT_SMART && SMART_PUNCT_CHARS[subj->input.data[n]])
       return n;
@@ -1417,16 +1423,15 @@ static bufsize_t subject_find_special_char(subject *subj, int options) {
   return subj->input.len;
 }
 
-void cmark_inlines_add_special_character(unsigned char c, bool emphasis) {
-  SPECIAL_CHARS[c] = 1;
-  if (emphasis)
-    SKIP_CHARS[c] = 1;
+void cmark_inlines_reset_special_characters(cmark_parser *parser) {
+  memcpy(parser->special_chars, SPECIAL_CHARS, sizeof(parser->special_chars));
+  memset(parser->skip_chars, 0, sizeof(parser->skip_chars));
 }
 
-void cmark_inlines_remove_special_character(unsigned char c, bool emphasis) {
-  SPECIAL_CHARS[c] = 0;
+void cmark_inlines_add_special_character(cmark_parser *parser, unsigned char c, bool emphasis) {
+  parser->special_chars[c] = 1;
   if (emphasis)
-    SKIP_CHARS[c] = 0;
+    parser->skip_chars[c] = 1;
 }
 
 static cmark_node *try_extensions(cmark_parser *parser,
@@ -1537,6 +1542,8 @@ void cmark_parse_inlines(cmark_parser *parser,
   subject subj;
   cmark_chunk content = {parent->content.ptr, parent->content.size, 0};
   subject_from_buf(parser->mem, parent->start_line, parent->start_column - 1 + parent->internal_offset, &subj, &content, refmap);
+  subj.special_chars = parser->special_chars;
+  subj.skip_chars = parser->skip_chars;
   cmark_chunk_rtrim(&subj.input);
 
   while (!is_eof(&subj) && parse_inline(parser, &subj, parent, options))

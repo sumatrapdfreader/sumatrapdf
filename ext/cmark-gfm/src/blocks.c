@@ -148,6 +148,7 @@ cmark_parser *cmark_parser_new_with_mem(int options, cmark_mem *mem) {
   parser->mem = mem;
   parser->options = options;
   cmark_parser_reset(parser);
+  cmark_inlines_reset_special_characters(parser);
   return parser;
 }
 
@@ -416,18 +417,20 @@ static cmark_node *add_child(cmark_parser *parser, cmark_node *parent,
   return child;
 }
 
+// Sets the parser's own special-character tables (not process-wide ones)
+// to the defaults plus, when add is true, its inline extensions' characters.
 void cmark_manage_extensions_special_characters(cmark_parser *parser, int add) {
   cmark_llist *tmp_ext;
 
+  cmark_inlines_reset_special_characters(parser);
+  if (!add)
+    return;
   for (tmp_ext = parser->inline_syntax_extensions; tmp_ext; tmp_ext=tmp_ext->next) {
     cmark_syntax_extension *ext = (cmark_syntax_extension *) tmp_ext->data;
     cmark_llist *tmp_char;
     for (tmp_char = ext->special_inline_chars; tmp_char; tmp_char=tmp_char->next) {
       unsigned char c = (unsigned char)(size_t)tmp_char->data;
-      if (add)
-        cmark_inlines_add_special_character(c, ext->emphasis);
-      else
-        cmark_inlines_remove_special_character(c, ext->emphasis);
+      cmark_inlines_add_special_character(parser, c, ext->emphasis);
     }
   }
 }

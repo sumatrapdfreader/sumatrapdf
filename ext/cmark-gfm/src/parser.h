@@ -50,6 +50,11 @@ struct cmark_parser {
   cmark_llist *syntax_extensions;
   cmark_llist *inline_syntax_extensions;
   cmark_ispunct_func backslash_ispunct;
+  /* The inline parser's special characters, with those of the inline
+   * extensions. Per parser, not process-wide: a parse on another thread
+   * used to clear them mid-way. */
+  int8_t special_chars[256];
+  int8_t skip_chars[256];
 };
 
 #ifdef __cplusplus
