@@ -1,9 +1,7 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct BrowserView;
 enum class FileType : u8;
-struct BrowserViewCallback;
 struct MainWindow;
 struct MarkdownLaunchTask;
 struct MarkdownTocBuildTask;
@@ -32,9 +30,9 @@ struct MarkdownModel : BrowserDocController {
 
     void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) override;
 
-    bool OnBeforeNavigate(Str url, bool newWindow);
-    void OnDocumentComplete(Str url);
-    Str GetDataForUrl(Str url);
+    bool OnBeforeNavigate(Str url, bool newWindow) override;
+    void OnDocumentComplete(Str url) override;
+    Str GetDataForUrl(Str url) override;
 
     Str fileName;
     Str baseDir;
@@ -56,7 +54,6 @@ struct MarkdownModel : BrowserDocController {
 
     TempStr NormalizeScrollUrlTemp(Str url) const override;
     TempStr ScrollUrlForPageTemp(int pageNo) const override;
-    BrowserViewCallback* CreateBrowserCallback() override;
     Str BrowserVirtualHost() const override;
 
     TempStr FileToVirtualUrlTemp(Str filePath) const;

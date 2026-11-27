@@ -29,22 +29,6 @@ static IPageDestination* NewChmNamedDest(Arena* arena, Str url, int pageNo) {
     return NewBrowserDestination(arena, url, pageNo, type);
 }
 
-class BrowserViewHandler : public BrowserViewCallback {
-    ChmModel* cm;
-
-  public:
-    explicit BrowserViewHandler(ChmModel* cm) : cm(cm) {}
-    ~BrowserViewHandler() override = default;
-
-    bool OnBeforeNavigate(Str url, bool newWindow) override { return cm->OnBeforeNavigate(url, newWindow); }
-    void OnDocumentComplete(Str url) override { cm->OnDocumentComplete(url); }
-    void OnLButtonDown() override { cm->OnLButtonDown(); }
-    Str GetDataForUrl(Str url) override { return cm->GetDataForUrl(url); }
-    void DownloadData(Str url, Str data) override { cm->DownloadData(url, data); }
-    void OnFindResult(int gen, int current, int total) override { cm->OnFindResult(gen, current, total); }
-    void OnFindAllResult(Str payload) override { cm->OnFindAllResult(payload); }
-};
-
 ChmModel::ChmModel(DocControllerCallback* cb) : BrowserDocController(cb) {
     poolAlloc = ArenaNew();
 }
@@ -160,10 +144,6 @@ bool ChmModel::DisplayPage(Str pageUrl) {
 // for quick type determination and type-safe casting
 ChmModel* ChmModel::AsChm() {
     return this;
-}
-
-BrowserViewCallback* ChmModel::CreateBrowserCallback() {
-    return new BrowserViewHandler(this);
 }
 
 TempStr ChmModel::NormalizeScrollUrlTemp(Str url) const {
@@ -282,7 +262,6 @@ void ChmModel::OnDocumentComplete(Str url) {
 
 // Called before we start loading html for a given url. Will block
 // loading if returns false.
-// for BrowserViewCallback (called through browserCb)
 bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     // save scroll pos of the page we're leaving, unless DisplayPage() already
     // saved it before triggering this programmatic navigation

@@ -181,22 +181,6 @@ static void DestroyOwnedTocTree(TocTree* tree) {
     ArenaDelete(a);
 }
 
-class MarkdownHtmlWindowHandler : public BrowserViewCallback {
-    MarkdownModel* mm;
-
-  public:
-    explicit MarkdownHtmlWindowHandler(MarkdownModel* mm) : mm(mm) {}
-    ~MarkdownHtmlWindowHandler() override = default;
-
-    bool OnBeforeNavigate(Str url, bool newWindow) override { return mm->OnBeforeNavigate(url, newWindow); }
-    void OnDocumentComplete(Str url) override { mm->OnDocumentComplete(url); }
-    void OnLButtonDown() override { mm->OnLButtonDown(); }
-    Str GetDataForUrl(Str url) override { return mm->GetDataForUrl(url); }
-    void DownloadData(Str url, Str data) override { mm->DownloadData(url, data); }
-    void OnFindResult(int gen, int current, int total) override { mm->OnFindResult(gen, current, total); }
-    void OnFindAllResult(Str payload) override { mm->OnFindAllResult(payload); }
-};
-
 MarkdownModel::MarkdownModel(DocControllerCallback* cb) : BrowserDocController(cb) {
     poolAlloc = ArenaNew();
 }
@@ -433,10 +417,6 @@ void MarkdownModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
 
 MarkdownModel* MarkdownModel::AsMarkdown() {
     return this;
-}
-
-BrowserViewCallback* MarkdownModel::CreateBrowserCallback() {
-    return new MarkdownHtmlWindowHandler(this);
 }
 
 Str MarkdownModel::BrowserVirtualHost() const {

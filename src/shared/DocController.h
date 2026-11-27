@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "gui/BrowserView.h"
+
 struct DocController;
 struct ChmModel;
 struct MarkdownModel;
@@ -14,8 +16,6 @@ struct TocItem;
 struct MainWindow;
 struct FileState;
 struct RenderedBitmap;
-struct BrowserView;
-struct BrowserViewCallback;
 // chapter-aware page location; full definition in ChapterTable.h
 struct Location;
 enum class DisplayMode;
@@ -199,7 +199,7 @@ struct DocController {
     virtual BrowserDocController* AsBrowser() { return nullptr; }
 };
 
-struct BrowserDocController : DocController {
+struct BrowserDocController : DocController, BrowserViewCallback {
     explicit BrowserDocController(DocControllerCallback* cb);
     ~BrowserDocController() override;
 
@@ -234,10 +234,10 @@ struct BrowserDocController : DocController {
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
     void FinishDocumentLoad(int pageNo);
     void FinishPendingFind();
-    void OnFindResult(int gen, int current, int total);
-    void OnFindAllResult(Str payload);
-    void DownloadData(Str url, Str data);
-    void OnLButtonDown();
+    void OnFindResult(int gen, int current, int total) override;
+    void OnFindAllResult(Str payload) override;
+    void DownloadData(Str url, Str data) override;
+    void OnLButtonDown() override;
     bool SetParentWindow(MainWindow* win, HWND hwndParent);
     void RemoveParentWindow();
     void DestroyParentWindow();
@@ -257,7 +257,6 @@ struct BrowserDocController : DocController {
     int currentPageNo = 1;
     Str currentPageUrl;
     BrowserView* docView = nullptr;
-    BrowserViewCallback* browserCb = nullptr;
     float initZoom;
     float zoomVirtual = 100.0f;
     PointF htmlScrollPos = PointF(-1, -1);
@@ -278,7 +277,6 @@ struct BrowserDocController : DocController {
 
     void ClearDataCache();
 
-    virtual BrowserViewCallback* CreateBrowserCallback() = 0;
     virtual Str BrowserVirtualHost() const { return {}; }
     virtual bool OpenLinkedDocument(Str) { return false; }
     virtual bool DisplayPage(Str pageUrl) = 0;

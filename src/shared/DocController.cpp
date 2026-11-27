@@ -354,15 +354,10 @@ bool BrowserDocController::SetParentWindow(MainWindow* win, HWND hwndParent) {
         }
         BrowserViewDelete(docView);
         docView = nullptr;
-        delete browserCb;
-        browserCb = nullptr;
     }
 
-    browserCb = CreateBrowserCallback();
-    docView = BrowserViewCreate(win, hwndParent, browserCb, BrowserVirtualHost());
+    docView = BrowserViewCreate(win, hwndParent, this, BrowserVirtualHost());
     if (!docView) {
-        delete browserCb;
-        browserCb = nullptr;
         return false;
     }
     BrowserViewSetVisible(docView, true);
@@ -384,23 +379,20 @@ void BrowserDocController::RemoveParentWindow() {
 }
 
 void BrowserDocController::DestroyParentWindow() {
-    if (!docView && !browserCb) {
+    if (!docView) {
         return;
     }
     SaveHtmlScrollPos();
     restoreHtmlScrollPos = true;
     BrowserViewDelete(docView);
     docView = nullptr;
-    delete browserCb;
-    browserCb = nullptr;
 }
 
+// Called by the derived destructors while the browser can still use the model.
 void BrowserDocController::CloseBrowser() {
     docAccess.Lock();
     BrowserViewDelete(docView);
     docView = nullptr;
-    delete browserCb;
-    browserCb = nullptr;
     ClearDataCache();
     docAccess.Unlock();
 }

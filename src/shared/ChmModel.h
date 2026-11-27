@@ -3,8 +3,6 @@
 
 struct ChmFile;
 enum class FileType : u8;
-struct BrowserView;
-struct BrowserViewCallback;
 struct MainWindow;
 
 struct ChmModel : BrowserDocController {
@@ -29,9 +27,9 @@ struct ChmModel : BrowserDocController {
 
     void FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) override;
 
-    bool OnBeforeNavigate(Str url, bool newWindow);
-    void OnDocumentComplete(Str url);
-    Str GetDataForUrl(Str url);
+    bool OnBeforeNavigate(Str url, bool newWindow) override;
+    void OnDocumentComplete(Str url) override;
+    Str GetDataForUrl(Str url) override;
 
     static bool IsSupportedFileType(FileType);
 
@@ -48,5 +46,4 @@ struct ChmModel : BrowserDocController {
 
     TempStr NormalizeScrollUrlTemp(Str url) const override;
     TempStr ScrollUrlForPageTemp(int pageNo) const override;
-    BrowserViewCallback* CreateBrowserCallback() override;
 };

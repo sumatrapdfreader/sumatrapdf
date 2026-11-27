@@ -1,6 +1,9 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#ifndef SUMATRA_BROWSER_VIEW_H
+#define SUMATRA_BROWSER_VIEW_H
+
 // Browser host shared by the document models. The original uses WebView2/IE;
 // ng uses the GPUI WebView.
 
@@ -45,7 +48,7 @@ struct BrowserViewCallback {
     virtual ~BrowserViewCallback() = default;
 };
 
-// takes ownership of nothing; `cb` outlives the view (the model owns it)
+// The caller keeps cb alive until BrowserViewDelete() returns.
 BrowserView* BrowserViewCreate(MainWindow* win, HWND hwndParent, BrowserViewCallback* cb, Str virtualHost);
 void BrowserViewDelete(BrowserView*);
 MainWindow* BrowserViewWindow(BrowserView*);
@@ -103,3 +106,5 @@ void BrowserViewSetBackground(BrowserView*, Color);
 
 // is there an embedded browser at all (WebView2 runtime installed)
 bool BrowserViewAvailable();
+
+#endif
