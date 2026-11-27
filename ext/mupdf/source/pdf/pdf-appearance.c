@@ -3157,7 +3157,26 @@ pdf_write_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
 			text = pdf_field_value(ctx, annot->obj);
 		}
 		fz_try(ctx)
+		{
+			/* SumatraPDF: a password field's appearance stream is saved in
+			 * the file; write one '*' per character, never the text (idea
+			 * from Vira Reader). */
+			if ((ff & PDF_TX_FIELD_IS_PASSWORD) && text)
+			{
+				char *mask = fz_malloc(ctx, strlen(text) + 1);
+				const char *p = text;
+				int n = 0, c;
+				while (*p)
+				{
+					p += fz_chartorune(&c, p);
+					mask[n++] = '*';
+				}
+				mask[n] = 0;
+				fz_free(ctx, format);
+				text = format = mask;
+			}
 			pdf_write_tx_widget_appearance(ctx, annot, buf, rect, bbox, matrix, res, text, ff);
+		}
 		fz_always(ctx)
 			fz_free(ctx, format);
 		fz_catch(ctx)

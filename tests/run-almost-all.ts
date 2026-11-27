@@ -117,6 +117,7 @@ import { testit as htmlTocTargets } from "./html-toc-targets.ts";
 import { testit as pdfDestRotated } from "./pdf-dest-rotated.ts";
 import { testit as pdfSignWidgetError } from "./pdf-sign-widget-error.ts";
 import { testit as svgImageSubarea } from "./svg-image-subarea.ts";
+import { testit as pdfPasswordField } from "./pdf-password-field.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
@@ -754,6 +755,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["pdf-dest-rotated", pdfDestRotated],
   ["pdf-sign-widget-error", pdfSignWidgetError],
   ["svg-image-subarea", svgImageSubarea],
+  ["pdf-password-field", pdfPasswordField],
   parallelTest("issue-6434"),
   ["issue-6407", issue6407],
   ["issue-6435", issue6435],
