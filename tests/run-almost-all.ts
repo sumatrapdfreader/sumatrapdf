@@ -649,6 +649,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-4839", issue4839],
   ["issue-6610", issue6610],
   ["issue-6609", issue6609],
   ["issue-6608", issue6608],
@@ -1170,7 +1171,6 @@ export const tests: NamedTest[] = orderForReuse([
   ["selection-toolbar-stays", selectionToolbarStays],
   ["keyboard-select-yank-empty", keyboardSelectYankEmpty],
   ["selection-font-bbox", selectionFontBbox],
-  ["issue-4839", issue4839],
   ["issue-6023", issue6023],
   ["issue-6017", issue6017],
   ["issue-6025", issue6025],

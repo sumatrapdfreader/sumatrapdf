@@ -481,7 +481,12 @@ TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
     PointF p0{(float)(coords[first].x + (coords[first].dx / 2.0)), (float)(coords[first].y + (coords[first].dy / 2.0))};
     PointF p1{(float)(coords[last].x + coords[last].dx), (float)(coords[last].y + (coords[last].dy / 2.0))};
     if (quads) {
-        p0 = quads[first].Center();
+        // a quarter into the first glyph along its baseline: its center is the
+        // half-glyph split (FindClosestGlyphIn's t > 0.5), so a press there
+        // rounded to screen pixels could start the selection at the next glyph
+        PointF lead{(quads[first].ul.x + quads[first].ll.x) / 2.f, (quads[first].ul.y + quads[first].ll.y) / 2.f};
+        PointF center = quads[first].Center();
+        p0 = {(lead.x + center.x) / 2.f, (lead.y + center.y) / 2.f};
         // past the last glyph along its baseline so the final letter is included
         p1 = {(quads[last].ur.x + quads[last].lr.x) / 2.f, (quads[last].ur.y + quads[last].lr.y) / 2.f};
     }
