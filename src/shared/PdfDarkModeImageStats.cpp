@@ -114,6 +114,24 @@ static void SampleImageBorder(fz_context* ctx, fz_pixmap* pix, ImageStats* stats
     stats->borderUniformity = limitValue(1.f - (var / 0.12f), 0.f, 1.f);
 }
 
+// the size the image is sampled at, at most, on its longer side
+static constexpr int kSampleMaxDim = 64;
+
+// The image decoded at about kSampleMaxDim on its longer side (mupdf
+// subsamples while decoding, so it can be up to twice that). Throws.
+static fz_pixmap* GetImageSamplePixmap(fz_context* ctx, fz_image* image) {
+    int targetW = image->w > 0 ? image->w : 1;
+    int targetH = image->h > 0 ? image->h : 1;
+    if (targetW <= kSampleMaxDim && targetH <= kSampleMaxDim) {
+        return fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+    }
+    // the matrix maps the image's unit square to device pixels: its scale is
+    // the size in pixels, not a fraction of the image's size
+    float scale = (float)kSampleMaxDim / (float)std::max(targetW, targetH);
+    fz_matrix ctm = fz_scale((float)targetW * scale, (float)targetH * scale);
+    return fz_get_pixmap_from_image(ctx, image, nullptr, &ctm, nullptr, nullptr);
+}
+
 // Zeroed stats reject failed images in every classifier.
 static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
     ImageStats stats;
@@ -124,16 +142,7 @@ static ImageStats SampleImageStats(fz_context* ctx, fz_image* image) {
     fz_pixmap* pix = nullptr;
     fz_var(pix);
     fz_try(ctx) {
-        int targetW = image->w > 0 ? image->w : 1;
-        int targetH = image->h > 0 ? image->h : 1;
-        const int maxDim = 64;
-        if (targetW > maxDim || targetH > maxDim) {
-            float scale = (float)maxDim / (float)(targetW > targetH ? targetW : targetH);
-            fz_matrix ctm = fz_scale(scale, scale);
-            pix = fz_get_pixmap_from_image(ctx, image, nullptr, &ctm, nullptr, nullptr);
-        } else {
-            pix = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
-        }
+        pix = GetImageSamplePixmap(ctx, image);
         if (!pix || !pix->samples || pix->w <= 0 || pix->h <= 0) {
             fz_throw(ctx, FZ_ERROR_GENERIC, "empty image pixmap");
         }
@@ -325,8 +334,26 @@ bool PdfDarkModeImageStats_UnitTest() {
     fz_clear_pixmap(ctx, pix);
     SampleImageBorder(ctx, pix, &stats);
     ok = ok && stats.borderLightRatio == 0.f && stats.borderUniformity == 1.f;
-
     fz_drop_pixmap(ctx, pix);
+
+    // A big image is sampled at about kSampleMaxDim px. The matrix is the size
+    // in pixels: a bare scale asked for a 0 px image, which mupdf took as "no
+    // subsampling", and a 1024 px JPEG was decoded at full size.
+    fz_pixmap* big = fz_new_pixmap(ctx, fz_device_rgb(ctx), 1024, 1024, nullptr, 0);
+    fz_clear_pixmap_with_value(ctx, big, 200);
+    fz_buffer* jpeg = fz_new_buffer_from_pixmap_as_jpeg(ctx, big, fz_default_color_params, 90, 0);
+    fz_image* image = fz_new_image_from_buffer(ctx, jpeg);
+    fz_pixmap* sample = GetImageSamplePixmap(ctx, image);
+    int maxDim = std::max(sample->w, sample->h);
+    if (maxDim < kSampleMaxDim || maxDim > 2 * kSampleMaxDim) {
+        fprintf(stderr, "dark mode image sample of 1024x1024: %dx%d\n", sample->w, sample->h);
+        ok = false;
+    }
+    fz_drop_pixmap(ctx, sample);
+    fz_drop_image(ctx, image);
+    fz_drop_buffer(ctx, jpeg);
+    fz_drop_pixmap(ctx, big);
+
     fz_drop_context(ctx);
     return ok;
 }
