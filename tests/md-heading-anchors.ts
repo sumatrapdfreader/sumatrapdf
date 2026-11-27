@@ -1,5 +1,6 @@
 // In mupdf's Markdown rendering (the fixed-page view, cli render / text), a
-// link to a heading's GitHub-style anchor ("#café-au-lait", "#привет-мир")
+// link to a heading's GitHub-style anchor ("#café-au-lait", "#привет-мир" for
+// "Привет Мир")
 // goes to the page the heading is on. autoheaderid.c skipped a byte after
 // every 2-byte UTF-8 character and wrote non-ASCII ones as single bytes, so
 // such anchors never matched; and it wrapped the heading in <a id>, which
@@ -12,16 +13,15 @@
 import { writeFileSync } from "node:fs";
 import { EXE, runStandalone, tmpPath } from "./util";
 
-const TITLES = ["Section %d", "Café au lait %d", "Привет мир %d", "Ünïcödé Ärger %d"];
+const TITLES = ["Section %d", "Café au lait %d", "Привет Мир %d", "Ünïcödé Ärger — %d", "“Quoted” Title %d"];
 
-// GitHub's slug: lowercase ASCII, keep other letters, drop punctuation, a
-// space becomes '-'
+// GitHub's slug (github-slugger): lowercased, letters, marks, digits, '-'
+// and '_' kept, each space a '-', everything else dropped
 function slug(title: string): string {
   let out = "";
-  for (const ch of title) {
-    if (ch >= "A" && ch <= "Z") out += ch.toLowerCase();
-    else if (/[a-z0-9_-]/.test(ch) || ch.codePointAt(0)! >= 0x80) out += ch;
-    else if (ch === " ") out += "-";
+  for (const ch of title.toLowerCase()) {
+    if (ch === " ") out += "-";
+    else if (/[\p{L}\p{M}\p{N}_-]/u.test(ch)) out += ch;
   }
   return out;
 }

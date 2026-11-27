@@ -1619,6 +1619,7 @@ EXPORTS
 	cmark_get_default_mem_allocator
 	cmark_gfm_core_extensions_ensure_registered
 	cmark_gfm_extensions_is_math
+	cmark_gfm_heading_slug
 	cmark_iter_free
 	cmark_iter_get_node
 	cmark_iter_new

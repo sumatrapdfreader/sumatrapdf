@@ -21,6 +21,7 @@ extern "C" {
 #include "cmark-gfm-core-extensions.h"
 #include "node.h"
 #include "texmath.h"
+#include "autoheaderid.h"
 }
 #include "MarkdownToc.h"
 
@@ -106,27 +107,19 @@ static cmark_parser* CreateMarkdownParser(Str data) {
     return parser;
 }
 
-static const Str kSlugWhitespace = StrL(" \t\n\r");
 
 // Share GitHub-style slugs between TOC links and heading anchors.
+// The same function makes the ids of headings in mupdf's Markdown view
+// (autoheaderid.c), so a "#café" link works in both.
 static Str MarkdownHeadingSlug(Str title) {
-    str::Builder out;
-    str::TrimAny(title, kSlugWhitespace.s);
-    while (len(title) > 0 && str::ContainsChar(kSlugWhitespace, title.s[len(title) - 1])) {
-        title.len--;
+    size_t n = 0;
+    char* slug = cmark_gfm_heading_slug(title.s, (size_t)len(title), &n);
+    if (!slug) {
+        return {};
     }
-    for (int i = 0; i < len(title); i++) {
-        u8 c = (u8)title.s[i];
-        if (c >= 'A' && c <= 'Z') {
-            c += 'a' - 'A';
-        }
-        if (c >= 0x80 || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-') {
-            out.AppendChar((char)c);
-        } else if (str::ContainsChar(kSlugWhitespace, (char)c)) {
-            out.AppendChar('-');
-        }
-    }
-    return out.TakeStr();
+    Str res = str::Dup(Str(slug, (int)n));
+    cmark_get_default_mem_allocator()->free(slug);
+    return res;
 }
 
 // cmark literals are length-prefixed and need not be NUL-terminated.
@@ -1057,8 +1050,9 @@ Str MarkdownToHtmlPage(Str markdown) {
 }
 
 bool MarkdownToc_UnitTestHtmlLinks() {
-    // GitHub's slug rules: '_' survives, punctuation is dropped, each space
-    // becomes its own '-'. Generated register docs link to "#intr_state" and
+    // GitHub's slug rules: letters lowercased (not only ASCII), '_' survives,
+    // punctuation and symbols are dropped, each space becomes its own '-'.
+    // Generated register docs link to "#intr_state" and
     // "#adc_intr_ctl--trans_en" (#5883).
     struct {
         Str title;
@@ -1072,12 +1066,20 @@ bool MarkdownToc_UnitTestHtmlLinks() {
         {StrL("  padded  "), StrL("padded")},
         {StrL("\t\r\nPadded\t\r\n"), StrL("padded")},
         {StrL("\v hello \f"), StrL("-hello-")},
-        {StrL("ÄCAFÉ 😀"), StrL("ÄcafÉ-😀")},
+        {StrL("ÄCAFÉ 😀"), StrL("äcafé-")},
+        {StrL("Привет Мир"), StrL("привет-мир")},
+        {StrL("Ünïcödé Ärger"), StrL("ünïcödé-ärger")},
+        {StrL("STRAẞE Straße"), StrL("straße-straße")},
+        {StrL("\xe2\x80\x9cQuoted\xe2\x80\x9d \xe2\x80\x94 Title"), StrL("quoted--title")},
+        {StrL("Ω and ΣΟΦΙΑ"), StrL("ω-and-σοφια")},
         {StrL("\xc3X\xa9"), StrL("\xc3x\xa9")},
     };
     for (auto& t : slugs) {
         Str slug = MarkdownHeadingSlug(t.title);
         bool ok = str::Eq(slug, t.want);
+        if (!ok) {
+            fprintf(stderr, "slug of '%s': got '%s', want '%s'\n", CStrTemp(t.title), CStrTemp(slug), CStrTemp(t.want));
+        }
         str::Free(slug);
         if (!ok) {
             return false;
