@@ -123,6 +123,7 @@ import { testit as htmlRelativeImages } from "./html-relative-images.ts";
 import { testit as pdfTtcFontFaces } from "./pdf-ttc-font-faces.ts";
 import { testit as pdfTounicodeSurrogates } from "./pdf-tounicode-surrogates.ts";
 import { testit as txtChaptersToc } from "./txt-chapters-toc.ts";
+import { testit as pdfAbandonFontCache } from "./pdf-abandon-font-cache.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
@@ -769,6 +770,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["pdf-ttc-font-faces", pdfTtcFontFaces],
   ["pdf-tounicode-surrogates", pdfTounicodeSurrogates],
   ["txt-chapters-toc", txtChaptersToc],
+  ["pdf-abandon-font-cache", pdfAbandonFontCache],
   parallelTest("issue-6434"),
   ["issue-6407", issue6407],
   ["issue-6435", issue6435],

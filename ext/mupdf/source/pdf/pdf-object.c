@@ -1402,6 +1402,17 @@ void pdf_abandon_operation(fz_context *ctx, pdf_document *doc)
 
 	/* Undo the changes we are about the discard. */
 	swap_fragments(ctx, doc, entry);
+	/* SumatraPDF: like pdf_undo(), forget what was cached for the objects
+	 * swapped back, or the next edit reuses a font / image / colorspace
+	 * object the abandoned operation created and that is now gone (0089). */
+	{
+		pdf_journal_fragment *frag;
+		for (frag = entry->head; frag; frag = frag->next)
+		{
+			pdf_purge_object_from_store(ctx, doc, frag->obj_num);
+			pdf_purge_resources_for_object(ctx, doc, frag->obj_num);
+		}
+	}
 
 	/* And discard entry. */
 	if (entry->prev == NULL)

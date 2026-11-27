@@ -104,6 +104,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0101-pdf-font-resource-ttc-face` | two faces of a `.ttc` added to a PDF are two fonts; the second got the first one's glyphs |
 | `0102-pdf-tounicode-surrogates` | an embedded font's ToUnicode gives emoji / rare CJK as UTF-16 surrogate pairs, not `<1f600>` |
 | `0103-html-size-counts-images` | an HTML / EPUB chapter's size in the store counts its images (`<img>`, CSS backgrounds); image-heavy books were undercounted |
+| `0104-pdf-abandon-purge-resource-cache` | an abandoned edit forgets the cached fonts / images of the objects it rolls back, like undo (`0089`) |
 | `backport-ab37474fc-redact-actualtext` | redaction rewrites a tagged element's `/ActualText`, not `/Alt`; the redacted words stayed in the file (mupdf bug 709973) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these
