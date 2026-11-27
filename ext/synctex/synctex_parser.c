@@ -1132,7 +1132,10 @@ static _synctex_open_s __synctex_open_v2(const char * output, synctex_io_mode_t 
         }
     }
     /*	At this point, the file is properly open.
-     *  If we are in the add_quotes mode, we change the file name by removing the quotes. */
+     *  SumatraPDF: a viewer doesn't rename the user's files: the quoted name is
+     *  read as it is, not renamed to the quoteless one. */
+    free(quoteless_synctex_name);
+    quoteless_synctex_name = NULL;
     if (quoteless_synctex_name) {
         gzclose(open.file);
         if (rename(open.synctex,quoteless_synctex_name)) {
@@ -5046,14 +5049,60 @@ static synctex_status_t _synctex_scan_preamble(synctex_scanner_p scanner) {
     return SYNCTEX_STATUS_OK;
 }
 
+/*  SumatraPDF: parse SyncTeX's plain decimals ([+-]digits[.digits][e[+-]digits])
+ *  without the C locale. strtod() was wrapped in setlocale(LC_NUMERIC, "C") and
+ *  back, restored with the pointer setlocale() returned, which the switch had
+ *  overwritten: the app was left in "C", and meanwhile other threads parsed and
+ *  printed numbers in "C" (ng on Linux sets LC_ALL from the environment). */
+static double _synctex_strtod_c(const char * s, char ** endptr) {
+    const char * p = s;
+    double value = 0, scale = 1;
+    int negative = 0, digits = 0;
+    if (*p == '+' || *p == '-') {
+        negative = *p == '-';
+        ++p;
+    }
+    for (; *p >= '0' && *p <= '9'; ++p, ++digits) {
+        value = value * 10 + (*p - '0');
+    }
+    if (*p == '.') {
+        for (++p; *p >= '0' && *p <= '9'; ++p, ++digits) {
+            scale /= 10;
+            value += (*p - '0') * scale;
+        }
+    }
+    if (!digits) {
+        *endptr = (char *)s;
+        return 0;
+    }
+    if (*p == 'e' || *p == 'E') {
+        const char * q = p + 1;
+        int expNegative = 0, exp = 0, expDigits = 0;
+        if (*q == '+' || *q == '-') {
+            expNegative = *q == '-';
+            ++q;
+        }
+        for (; *q >= '0' && *q <= '9'; ++q, ++expDigits) {
+            if (exp < 400) {
+                exp = exp * 10 + (*q - '0');
+            }
+        }
+        if (expDigits) {
+            for (; exp > 0; --exp) {
+                value = expNegative ? value / 10 : value * 10;
+            }
+            p = q;
+        }
+    }
+    *endptr = (char *)p;
+    return negative ? -value : value;
+}
+
 /*  parse a float with a dimension */
 static _synctex_fs_s _synctex_scan_float_and_dimension(synctex_scanner_p scanner) {
     _synctex_fs_s fs = {0,0};
     _synctex_zs_s zs = {0,0};
     char * endptr = NULL;
-#ifdef HAVE_SETLOCALE
-    char * loc = setlocale(LC_NUMERIC, NULL);
-#endif
     if (NULL == scanner) {
         return (_synctex_fs_s){0,SYNCTEX_STATUS_BAD_ARGUMENT};
     }
@@ -5062,13 +5111,7 @@ static _synctex_fs_s _synctex_scan_float_and_dimension(synctex_scanner_p scanner
         _synctex_error("Problem with float.");
         return (_synctex_fs_s){0,zs.status};
     }
-#ifdef HAVE_SETLOCALE
-    setlocale(LC_NUMERIC, "C");
-#endif
-    fs.value = strtod(SYNCTEX_CUR,&endptr);
-#ifdef HAVE_SETLOCALE
-    setlocale(LC_NUMERIC, loc);
-#endif
+    fs.value = _synctex_strtod_c(SYNCTEX_CUR,&endptr);
     if (endptr == SYNCTEX_CUR) {
         _synctex_error("A float was expected.");
         return (_synctex_fs_s){0,SYNCTEX_STATUS_ERROR};
@@ -5131,9 +5174,6 @@ static synctex_status_t _synctex_scan_post_scriptum(synctex_scanner_p scanner) {
     synctex_status_t status = 0;
     _synctex_fs_s fs = {0,0};
     char * endptr = NULL;
-#ifdef HAVE_SETLOCALE
-    char * loc = setlocale(LC_NUMERIC, NULL);
-#endif
     if (NULL == scanner) {
         return SYNCTEX_STATUS_BAD_ARGUMENT;
     }
@@ -5163,13 +5203,7 @@ next_line:
     /*  Scanning the information */
     status = _synctex_match_string(scanner,"Magnification:");
     if (status == SYNCTEX_STATUS_OK ) {
-#ifdef HAVE_SETLOCALE
-        setlocale(LC_NUMERIC, "C");
-#endif
-        scanner->unit = strtod(SYNCTEX_CUR,&endptr);
-#ifdef HAVE_SETLOCALE
-        setlocale(LC_NUMERIC, loc);
-#endif
+        scanner->unit = _synctex_strtod_c(SYNCTEX_CUR,&endptr);
         if (endptr == SYNCTEX_CUR) {
             _synctex_error("bad magnification in the post scriptum, a float was expected.");
             return SYNCTEX_STATUS_ERROR;

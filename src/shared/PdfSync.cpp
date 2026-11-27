@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include <errno.h>
+#include <locale.h>
 #if !OS_WASM
 #include <synctex_parser.h>
 #endif
@@ -870,6 +871,62 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     }
     return PDFSYNCERR_SUCCESS;
 }
+
+#if IS_DEBUG
+// the magnification and X offset SyncTeX parses for pdfPath, with LC_NUMERIC
+// set to locale, and LC_NUMERIC after the parse (restored after that); false
+// if the locale or the parse fails
+static bool ParseSynctexInLocale(Str pdfPath, const char* locale, float* mag, int* xOffset, TempStr* localeAfter) {
+    TempStr saved = str::DupTemp(Str(setlocale(LC_NUMERIC, nullptr)));
+    if (!setlocale(LC_NUMERIC, locale)) {
+        return false;
+    }
+    synctex_scanner_p scanner = synctex_scanner_new_with_output_file(CStrTemp(pdfPath), nullptr, 1);
+    if (scanner) {
+        *mag = synctex_scanner_magnification(scanner);
+        *xOffset = synctex_scanner_x_offset(scanner);
+        synctex_scanner_free(scanner);
+    }
+    *localeAfter = str::DupTemp(Str(setlocale(LC_NUMERIC, nullptr)));
+    setlocale(LC_NUMERIC, CStrTemp(saved));
+    return scanner != nullptr;
+}
+
+// SyncTeX parses its decimals ("Magnification:1.5", "X Offset:1.5in") the
+// same in any locale and leaves the app's locale alone. It switched LC_NUMERIC
+// to "C" around strtod() and back with a pointer into setlocale()'s buffer,
+// which the switch had overwritten: the app was left in "C" (and, while
+// switched, other threads parsed numbers in "C").
+bool PdfSync_UnitTestNumberLocale() {
+    TempStr pdfPath = str::JoinTemp(GetTempFilePathTemp(StrL("syn")), StrL(".pdf"));
+    TempStr synctexPath = str::JoinTemp(path::GetPathNoExtTemp(pdfPath), StrL(".synctex"));
+    Str synctex = StrL(
+        "SyncTeX Version:1\nInput:1:test.tex\nOutput:pdf\nMagnification:1000\nUnit:1\nX Offset:0\nY Offset:0\n"
+        "Content:\n{1\n(1,5:13569629,10238041:9965148,465734,140115\nx1,2:13860384,10238041\n)\n}1\n"
+        "Postamble:\nCount:3\nPost scriptum:\nMagnification:1.5\nX Offset:1.5in\n");
+    if (!file::WriteFile(synctexPath, synctex)) {
+        return false;
+    }
+    float magC = 0, magDe = 0;
+    int xC = 0, xDe = 0;
+    TempStr after;
+    bool ok = ParseSynctexInLocale(pdfPath, "C", &magC, &xC, &after) && xC != 0;
+    // in a German locale too, where the system has one
+    TempStr saved = str::DupTemp(Str(setlocale(LC_NUMERIC, nullptr)));
+    bool hasDe = setlocale(LC_NUMERIC, "de-DE") != nullptr;
+    setlocale(LC_NUMERIC, CStrTemp(saved));
+    if (ok && hasDe) {
+        bool okDe = ParseSynctexInLocale(pdfPath, "de-DE", &magDe, &xDe, &after);
+        if (!okDe || magDe != magC || xDe != xC || !str::Eq(after, StrL("de-DE"))) {
+            fprintf(stderr, "synctex in de-DE: magnification %g x offset %d (in C: %g %d), locale after: %s\n", magDe,
+                    xDe, magC, xC, after.s ? after.s : "");
+            ok = false;
+        }
+    }
+    file::Delete(synctexPath);
+    return ok;
+}
+#endif
 #endif // !OS_WASM
 
 #endif // OS_WASM
