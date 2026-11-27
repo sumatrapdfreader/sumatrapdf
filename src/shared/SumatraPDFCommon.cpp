@@ -2526,6 +2526,11 @@ AutoReloadAction DecideAutoReload(WindowTab* tab, AutoReloadTrigger trigger) {
     if (!tab || !tab->reloadOnFocus) {
         return AutoReloadAction::Nothing;
     }
+    if (tab->autoReloadInFlight) {
+        // a background reload is already running; it swaps on finish (or sets
+        // reloadOnFocus again), so just check back later
+        return trigger == AutoReloadTrigger::TabFocus ? AutoReloadAction::Nothing : AutoReloadAction::Retry;
+    }
     if (tab->ignoreNextAutoReload) {
         tab->ignoreNextAutoReload = false;
         tab->reloadOnFocus = false;

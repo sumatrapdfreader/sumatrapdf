@@ -2493,70 +2493,21 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     StartPendingSearch(win);
 }
 
-void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
-    WindowTab* tab = win->CurrentTab();
+static void StartReloadDocumentAsync(MainWindow* win, WindowTab* tab, bool canAskForPassword);
 
-    if (!tab) {
-        return;
-    }
-    // TODO: maybe should ensure it never is called for IsAboutTab() ?
-    // This only happens if gLazyLoading is true
-    if (tab->IsNonDocumentTab()) {
-        return;
-    }
-
-    // tear down any in-place form-field edit before the engine is deleted below,
-    // so the overlay's widget pointer can't dangle into freed memory
-    CommitFormFieldEdit(false);
-
-    // Do not clear ignoreNextAutoReload here: SaveAnnotationsToExistingFile sets it
-    // so the file-watcher auto-reload from that write is skipped. Clearing it on every
-    // ReloadDocument caused a second full open right after the intentional post-save
-    // reload (race with render/RefHover on a just-rewritten PDF).
-
-    if (!tab->IsDocLoaded()) {
-        if (!autoRefresh) {
-            if (len(tab->filePath) == 0) {
-                logf("ReloadDocument: tab->filePath is empty, can't reload\n");
-                return;
-            }
-            LoadArgs args(tab->filePath, win);
-            args.forceReuse = true;
-            args.noSavePrefs = true;
-            args.tabState = tab->tabState;
-            LoadDocument(&args);
-        }
-        return;
-    }
-
-    // A reload nobody asked for must not pop a password dialog. If the file was
-    // replaced by a different, encrypted document - Outlook rewriting an
-    // attachment's temp path is the reported case - every window watching that
-    // path would put a modal dialog on screen out of nowhere (#3493). With a
-    // null hwnd, HwndPasswordUI still tries the remembered decryption key and
-    // DefaultPasswords, then gives up quietly: the tab keeps the document it
-    // has, and the user is asked if they reload it themselves.
-    HwndPasswordUI pwdUI(canAskForPassword ? win->hwndFrame : nullptr);
-    Str path = tab->filePath;
-    if (len(path) == 0) {
-        logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
-        return;
-    }
-    logf("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
+// Capture the current view state and swap in the freshly loaded controller
+// (null ctrl = load failed). Runs on the UI thread while the old document is
+// still in place, so nothing flickers and the view state is up to date.
+static void FinishReloadDocument(MainWindow* win, WindowTab* tab, DocController* ctrl, bool autoRefresh) {
     auto timeStart = TimeGet();
+    Str path = tab->filePath;
 
-    // Save display state before potentially destroying the old controller
+    // Save display state before destroying the old controller
     FileState* fs = NewFileState(path);
     tab->ctrl->GetDisplayState(fs);
     UpdateDisplayStateWindowRect(win, fs);
     UpdateSidebarDisplayState(tab, fs);
 
-    float aspect = EbookLayoutAspectForView(win, path, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
-    float previousAspect = EngineMupdfSetEbookLayoutAspect(aspect);
-    defer {
-        EngineMupdfSetEbookLayoutAspect(previousAspect);
-    };
-    DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
     // a refresh event can occur before the file is finished being written,
     // in which case the repair could fail. Instead, if the file is broken,
@@ -2625,9 +2576,85 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
         }
     }
 
-    // reopening reads the file again: slow on a network / cloud drive
-    logf("ReloadDocument: %s reloaded in %.1f ms\n", path, TimeSinceInMs(timeStart));
+    logf("FinishReloadDocument: %s swapped in %.1f ms\n", path, TimeSinceInMs(timeStart));
     DeleteFileState(fs);
+}
+
+void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
+    WindowTab* tab = win->CurrentTab();
+
+    if (!tab) {
+        return;
+    }
+    // TODO: maybe should ensure it never is called for IsAboutTab() ?
+    // This only happens if gLazyLoading is true
+    if (tab->IsNonDocumentTab()) {
+        return;
+    }
+
+    // tear down any in-place form-field edit before the engine is deleted below,
+    // so the overlay's widget pointer can't dangle into freed memory
+    CommitFormFieldEdit(false);
+
+    // Do not clear ignoreNextAutoReload here: SaveAnnotationsToExistingFile sets it
+    // so the file-watcher auto-reload from that write is skipped. Clearing it on every
+    // ReloadDocument caused a second full open right after the intentional post-save
+    // reload (race with render/RefHover on a just-rewritten PDF).
+
+    if (!tab->IsDocLoaded()) {
+        if (!autoRefresh) {
+            if (len(tab->filePath) == 0) {
+                logf("ReloadDocument: tab->filePath is empty, can't reload\n");
+                return;
+            }
+            LoadArgs args(tab->filePath, win);
+            args.forceReuse = true;
+            args.noSavePrefs = true;
+            args.tabState = tab->tabState;
+            LoadDocument(&args);
+        }
+        return;
+    }
+
+    // A reload nobody asked for must not pop a password dialog. If the file was
+    // replaced by a different, encrypted document - Outlook rewriting an
+    // attachment's temp path is the reported case - every window watching that
+    // path would put a modal dialog on screen out of nowhere (#3493). With a
+    // null hwnd, HwndPasswordUI still tries the remembered decryption key and
+    // DefaultPasswords, then gives up quietly: the tab keeps the document it
+    // has, and the user is asked if they reload it themselves.
+    HwndPasswordUI pwdUI(canAskForPassword ? win->hwndFrame : nullptr);
+    Str path = tab->filePath;
+    if (len(path) == 0) {
+        logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
+        return;
+    }
+    logf("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
+
+    // Reading the file can hang on a cloud placeholder being hydrated or a
+    // network drive; an auto-reload the user didn't ask for must not freeze
+    // the UI, so create the engine on a background thread and swap when done.
+    // CHM and browser-view documents can only load on the UI thread.
+    FileType kind = GuessFileTypeFromName(path);
+    bool uiThreadOnly =
+        ShouldUseBrowserView(kind) || (!gSettings->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind));
+    if (autoRefresh && !uiThreadOnly) {
+        if (!tab->autoReloadInFlight) {
+            StartReloadDocumentAsync(win, tab, canAskForPassword);
+        }
+        return;
+    }
+
+    auto timeStart = TimeGet();
+    float aspect = EbookLayoutAspectForView(win, path, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
+    float previousAspect = EngineMupdfSetEbookLayoutAspect(aspect);
+    defer {
+        EngineMupdfSetEbookLayoutAspect(previousAspect);
+    };
+    // reopening reads the file again: slow on a network / cloud drive
+    DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
+    logf("ReloadDocument: %s reloaded in %.1f ms\n", path, TimeSinceInMs(timeStart));
+    FinishReloadDocument(win, tab, ctrl, autoRefresh);
 }
 
 constexpr int kSplitterDy = 4;
@@ -4113,6 +4140,91 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsyncFinish, d);
     uitask::Post(fn, "TaskLoadDocumentAsyncFinish");
     AtomicIntDec(&gDangerousThreadCount);
+}
+
+// Async auto-reload: the engine loads on a background thread while the old
+// document stays visible and interactive, then FinishReloadDocument swaps it
+// in on the UI thread.
+struct ReloadAsyncData {
+    MainWindow* win = nullptr;
+    u64 winLifetimeId = 0;
+    WindowTab* tab = nullptr;
+    u64 tabLifetimeId = 0;
+    // the controller the tab had when the reload started: a different one at
+    // finish means the tab shows another document now, so the result is stale
+    DocController* oldCtrl = nullptr;
+    Str path;
+    float ebookAspect = 0.f;
+    HWND hwndPwdParent = nullptr;
+    EngineBase* engine = nullptr;
+    u64 startMs = 0;
+
+    ~ReloadAsyncData() { str::Free(path); }
+};
+
+static void ReloadDocumentAsyncFinish(ReloadAsyncData* d) {
+    MainWindow* win = d->win;
+    WindowTab* tab = d->tab;
+    bool tabAlive = IsMainWindowValid(win) && win->lifetimeId == d->winLifetimeId && IsWindowTabValid(tab) &&
+                    tab->lifetimeId == d->tabLifetimeId;
+    if (tabAlive) {
+        tab->autoReloadInFlight = false;
+    }
+    bool sameDoc = tabAlive && tab->ctrl == d->oldCtrl && tab->IsDocLoaded() && path::IsSame(tab->filePath, d->path);
+    if (!sameDoc) {
+        SafeEngineRelease(&d->engine);
+        delete d;
+        return;
+    }
+    if (!IsCurrentTab(win, tab)) {
+        // only the visible tab can swap documents; retry when it is selected
+        tab->reloadOnFocus = true;
+        SafeEngineRelease(&d->engine);
+        delete d;
+        return;
+    }
+
+    DocController* ctrl = nullptr;
+    if (d->engine) {
+        EngineBase* eng = d->engine;
+        d->engine = nullptr;
+        ctrl = CreateControllerForEngineOrFile(eng, d->path, nullptr, win);
+    }
+    FinishReloadDocument(win, tab, ctrl, true);
+    logf("ReloadDocumentAsyncFinish: %s reloaded in %d ms\n", d->path, (int)(GetTickCount64() - d->startMs));
+    delete d;
+}
+
+static void ReloadDocumentAsyncLoad(ReloadAsyncData* d) {
+    AtomicIntInc(&gDangerousThreadCount);
+    float previousAspect = EngineMupdfSetEbookLayoutAspect(d->ebookAspect);
+    HwndPasswordUI pwdUI(d->hwndPwdParent);
+    MaybeTestLoadDelay();
+    EngineBase* engine = CreateEngineFromFile(d->path, &pwdUI, gSettings->chmUI.useFixedPageUI, {});
+    if (engine && engine->pageCount <= 0) {
+        SafeEngineRelease(&engine);
+    }
+    d->engine = engine;
+    EngineMupdfSetEbookLayoutAspect(previousAspect);
+    auto fn = MkFunc0<ReloadAsyncData>(ReloadDocumentAsyncFinish, d);
+    uitask::Post(fn, "ReloadDocumentAsyncFinish");
+    AtomicIntDec(&gDangerousThreadCount);
+}
+
+static void StartReloadDocumentAsync(MainWindow* win, WindowTab* tab, bool canAskForPassword) {
+    auto* d = new ReloadAsyncData;
+    d->win = win;
+    d->winLifetimeId = win->lifetimeId;
+    d->tab = tab;
+    d->tabLifetimeId = tab->lifetimeId;
+    d->oldCtrl = tab->ctrl;
+    d->path = str::Dup(tab->filePath);
+    d->ebookAspect = EbookLayoutAspectForView(win, d->path, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
+    d->hwndPwdParent = canAskForPassword ? win->hwndFrame : nullptr;
+    d->startMs = GetTickCount64();
+    tab->autoReloadInFlight = true;
+    auto fn = MkFunc0<ReloadAsyncData>(ReloadDocumentAsyncLoad, d);
+    RunAsync(fn, StrL("ReloadDocumentAsync"));
 }
 
 // height / width of the area a document is displayed in, 0 if not known yet
