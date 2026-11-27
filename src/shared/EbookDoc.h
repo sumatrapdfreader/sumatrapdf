@@ -17,6 +17,7 @@ struct ImageData {
 void FreeImages(Vec<ImageData>& images);
 
 TempStr NormalizeURLTemp(Str url, Str base);
+TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false);
 #if IS_DEBUG
 bool EbookDoc_UnitTestNormalizeURL();
 bool EbookDoc_UnitTestLoading();

@@ -140,7 +140,9 @@ static bool IsValidUtf8(Str string) {
     return true;
 }
 
-static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
+// Text with a BOM, valid UTF-8 or (for XML) a declared encoding is taken as is;
+// otherwise the codepage is guessed (GBK, Big5, Shift-JIS, cp1251, ...).
+TempStr DecodeTextToUtf8Temp(Str s, bool isXML) {
     if (str::TrimPrefix(s, StrL(kUtf8Bom))) {
         return str::DupTemp(s);
     }

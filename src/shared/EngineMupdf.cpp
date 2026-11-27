@@ -4336,7 +4336,11 @@ static Str TxtFileToHTML(Str path) {
     AtomicIntInc(&gAllowAllocFailure);
     AutoCall decAllowAlloc(AtomicIntDec, &gAllowAllocFailure);
 
-    TempStr data = fd;
+    // the page is UTF-8 HTML; a UTF-16 BOM wouldn't be at the start for mupdf to see
+    TempStr data = DecodeTextToUtf8Temp(fd);
+    if (len(data) == 0) {
+        return {};
+    }
     data = str::ReplaceTemp(data, StrL("&"), StrL("&amp;"));
     if (len(data) == 0) {
         return {};
@@ -4353,10 +4357,8 @@ static Str TxtFileToHTML(Str path) {
     str::Builder d;
     d.Append(StrL(R"(<html>
     <head>
+<meta charset="utf-8">
 <style>
-    body {
-        color: 0xff0000;
-    }
     pre {
         white-space: pre-wrap;
     }
