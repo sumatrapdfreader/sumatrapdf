@@ -7,6 +7,7 @@
 #if IS_DEBUG
 
 #include <ktmw32.h>
+#include <sddl.h>
 
 #include "base/AutoWin.h"
 
@@ -575,6 +576,32 @@ static void InstallRegistryRollbackTest() {
     utassert(ReadRegDWORD(root, uninstallKey, StrL(kRegDesktopShortcut), shortcut) && shortcut == 0);
     utassert(RegKeyExists(root, str::JoinTemp(pdfProgId, StrL("\\shell\\open\\command"))));
     utassert(str::Eq(ReadRegStrTemp(root, mimeKey, StrL("Extension")), StrL(".pdf")));
+
+    // OpenWithProgids of an extension is shared with other apps and can be
+    // locked down: a failed write there must not fail the install
+    HKEY avif;
+    status = RegOpenKeyExW(root, L"Software\\Classes\\.avif\\OpenWithProgids", 0, WRITE_DAC, &avif);
+    utassert(status == ERROR_SUCCESS);
+    if (status != ERROR_SUCCESS) {
+        return;
+    }
+    auto setAvifDacl = [avif](const WCHAR* sddl) {
+        PSECURITY_DESCRIPTOR sd = nullptr;
+        BOOL ok = ConvertStringSecurityDescriptorToSecurityDescriptorW(sddl, SDDL_REVISION_1, &sd, nullptr);
+        utassert(ok);
+        if (ok) {
+            utassert(RegSetKeySecurity(avif, DACL_SECURITY_INFORMATION, sd) == ERROR_SUCCESS);
+            LocalFree(sd);
+        }
+    };
+    defer {
+        // the owner can always change the DACL back, so the tree can be deleted
+        setAvifDacl(L"D:(A;;KA;;;WD)");
+        RegCloseKey(avif);
+    };
+    setAvifDacl(L"D:P(A;;KR;;;WD)");
+    utassert(InstallRegistryInfo(root, installDir, DesktopShortcut::Omit) == InstallRegResult::Complete);
+    utassert(RegKeyExists(root, str::JoinTemp(pdfProgId, StrL("\\shell\\open\\command"))));
 }
 
 static void SumatraPDF_UnitTests() {

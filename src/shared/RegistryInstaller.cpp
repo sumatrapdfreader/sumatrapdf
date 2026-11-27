@@ -286,8 +286,16 @@ static void RegisterForOpenWith(InstallRegWriter& reg, Str installedExePath) {
             reg.String(key, {}, cmdPrintTo);
         }
 
+        // OpenWithProgids belongs to the extension and is shared with other apps.
+        // It can be locked down (access denied): only lose Open With for that
+        // extension instead of failing the install.
         key = str::JoinTemp(StrL("Software\\Classes\\"), ext, StrL("\\OpenWithProgids"));
+        bool wasOk = reg.ok;
         reg.None(key, progIDName);
+        if (wasOk && !reg.ok) {
+            logf("RegisterForOpenWith: ignoring failed write of '%s'\n", key);
+            reg.ok = true;
+        }
     }
 }
 
