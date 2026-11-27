@@ -1651,7 +1651,8 @@ const globalPrefs: Field[] = [
     Bool,
     true,
     "if true, a document of the restored session that no longer exists keeps its tab, which shows " +
-      "that the file is missing; if false, its tab is dropped at startup",
+      "that the file is missing; if false, its tab is dropped at startup. A file in a temporary folder " +
+      "(e.g. an Outlook attachment, deleted when Outlook closes) loses its tab either way",
   ).ver("3.7"),
   field(
     "ReuseInstance",

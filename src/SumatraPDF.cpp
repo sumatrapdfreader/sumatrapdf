@@ -15313,7 +15313,9 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad,
     // a lazy tab touches its file only when selected: checking every file here
     // woke each sleeping drive of the session
     bool lazyTab = lazyLoad && SettingsUseTabs();
-    if (!lazyTab && !DocumentPathExists(state->filePath)) {
+    // except for a temporary file: one that's gone loses its tab (#6618)
+    bool missing = lazyTab ? IsMissingTemporaryFile(state->filePath) : !DocumentPathExists(state->filePath);
+    if (missing) {
         RestoreMissingTabOnStartup(win, state, deferTabUpdate);
         return;
     }

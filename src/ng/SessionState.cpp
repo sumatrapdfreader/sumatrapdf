@@ -113,8 +113,9 @@ void FinishLazyTabLoad(WindowTab* tab, EngineBase* engine) {
 static void RestoreTabOnStartup(MainWindow* win, TabState* state) {
     logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
     // a lazy tab touches its file only when selected: checking every file here
-    // woke each sleeping drive of the session
-    if (gSettings->lazyLoading && SettingsUseTabs()) {
+    // woke each sleeping drive of the session. A temporary file is checked:
+    // one that's gone loses its tab (#6618)
+    if (gSettings->lazyLoading && SettingsUseTabs() && !IsMissingTemporaryFile(state->filePath)) {
         RestoreLazyTabOnStartup(win, state);
         return;
     }

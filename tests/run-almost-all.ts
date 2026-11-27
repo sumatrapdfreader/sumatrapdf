@@ -236,6 +236,7 @@ import { testit as issue6497 } from "./issue-6497.ts";
 import { testit as issue6221 } from "./issue-6221.ts";
 import { testit as issue6505 } from "./issue-6505.ts";
 import { testit as issue6506 } from "./issue-6506.ts";
+import { testit as issue6618 } from "./issue-6618.ts";
 import { testit as startupPageAfterSession } from "./startup-page-after-session.ts";
 import { testit as copyJoinLines } from "./copy-join-lines.ts";
 import { testit as tabSwitchEndsModes } from "./tab-switch-ends-modes.ts";
@@ -1280,6 +1281,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6221", issue6221],
   ["issue-6505", issue6505],
   ["issue-6506", issue6506],
+  ["issue-6618", issue6618],
   ["startup-page-after-session", startupPageAfterSession],
   ["copy-join-lines", copyJoinLines],
   ["tab-switch-ends-modes", tabSwitchEndsModes],

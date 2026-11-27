@@ -27,6 +27,7 @@
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "FileHistory.h"
+#include "FileThumbnails.h"
 #include "Notifications.h"
 #include "Translations.h"
 #include "AppTools.h"
@@ -99,14 +100,73 @@ WindowTab* NewSessionTab(MainWindow* win, TabState* state) {
     return tab;
 }
 
+// A file in a temporary folder that is gone: an attachment Outlook extracted
+// and deleted when it closed, a download in %TEMP%. It won't come back, unlike
+// a file in a renamed folder or on an unplugged drive (#6618). Checking it
+// costs little: temporary folders are local.
+bool IsMissingTemporaryFile(Str path) {
+    return IsTemporaryFile(path) && !DocumentPathExists(path);
+}
+
+// the warning about a restored session's missing files: one per window, which
+// counts them, not one per file
+static Kind kNotifMissingSessionFiles = "notifMissingSessionFiles";
+static MainWindow* gMissingFilesWin = nullptr;
+static int gMissingFilesCount = 0;
+
+static void NotifyMissingSessionFile(MainWindow* win, Str path) {
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifMissingSessionFiles);
+    if (!wnd || win != gMissingFilesWin) {
+        gMissingFilesCount = 0;
+    }
+    gMissingFilesWin = win;
+    gMissingFilesCount++;
+    TempStr msg = gMissingFilesCount == 1 ? fmt(Tr("File %s not found").s, path)
+                                          : fmt(Tr("%d files of the session were not found").s, gMissingFilesCount);
+    if (wnd) {
+        NotificationUpdateMessage(wnd, msg, kNotifDefaultTimeOut);
+        return;
+    }
+    NotificationCreateArgs args;
+    SetNotifWindow(args, win);
+    args.msg = msg;
+    args.timeoutMs = kNotifDefaultTimeOut;
+    args.warning = true;
+    args.plainText = true;
+    args.groupId = kNotifMissingSessionFiles;
+    ShowNotification(args);
+}
+
+// a missing temporary file has nothing worth keeping in the file history: its
+// entry and thumbnail go, unless it has favorites
+static void ForgetMissingTemporaryFile(Str path) {
+    FileState* fs = FileHistoryFindByPath(path);
+    if (fs && len(*fs->favorites) == 0) {
+        FileHistoryRemove(fs);
+        DeleteFileState(fs);
+    } else if (fs) {
+        FileHistoryDemote(path, true);
+    }
+    DeleteThumbnailForFile(path);
+}
+
 // A restored session's document that no longer exists keeps a tab that says so
-// (#5585), unless KeepMissingSessionTabs = false (#6506). nullptr: no tab.
+// (#5585), unless KeepMissingSessionTabs = false (#6506): then a warning says
+// it's gone. A temporary file's tab goes silently, whatever the setting
+// (#6618). nullptr: no tab.
 WindowTab* NewMissingSessionTab(MainWindow* win, TabState* state) {
-    logf("NewMissingSessionTab: file not found '%s', keep tab: %d\n", state->filePath,
-         (int)gSettings->keepMissingSessionTabs);
-    FileHistoryDemote(state->filePath, true);
+    // a copy: forgetting the file can free the history entry state points into
+    TempStr path = str::DupTemp(state->filePath);
+    bool isTemp = IsTemporaryFile(path);
+    logf("NewMissingSessionTab: file not found '%s', keep tab: %d, temporary: %d\n", path,
+         (int)gSettings->keepMissingSessionTabs, (int)isTemp);
+    if (isTemp) {
+        ForgetMissingTemporaryFile(path);
+        return nullptr;
+    }
+    FileHistoryDemote(path, true);
     if (!gSettings->keepMissingSessionTabs) {
-        ShowPlainWarningNotification(win, fmt(Tr("File %s not found").s, state->filePath), kNotifDefaultTimeOut);
+        NotifyMissingSessionFile(win, path);
         return nullptr;
     }
     return NewSessionTab(win, state);

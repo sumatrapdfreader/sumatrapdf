@@ -57,6 +57,7 @@ void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& to
 void CloseCollectedTabs(MainWindow* win, const Vec<WindowTab*>& toClose);
 WindowTab* NewSessionTab(MainWindow* win, TabState* state);
 WindowTab* NewMissingSessionTab(MainWindow* win, TabState* state);
+bool IsMissingTemporaryFile(Str path);
 void CloseMissingFileTabs(MainWindow* win);
 // the tab's right-click menu; the caller owns the model
 MenuModel* BuildTabContextMenu(MainWindow* win, WindowTab* tabUnderMouse);
