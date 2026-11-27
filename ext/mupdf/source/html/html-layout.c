@@ -3753,10 +3753,16 @@ static int draw_flow_box(fz_context *ctx, fz_html_box *box, float page_top, floa
 						{
 							if (walker.glyph_info[i].cluster == k)
 							{
+								/* SumatraPDF: AAT (morx) shaping marks a glyph it
+								 * deleted as 0xFFFF; keep its text, draw no glyph
+								 * (FreeType warned or drew junk; idea from Vira Reader) */
+								int gid = (int)walker.glyph_info[i].codepoint;
+								if (gid == 0xFFFF)
+									gid = -1;
 								trm.e = x + walker.glyph_pos[i].x_offset * node_scale;
 								trm.f = y - walker.glyph_pos[i].y_offset * node_scale - page_top;
 								fz_show_glyph(ctx, text, walker.font, trm,
-										walker.glyph_info[i].codepoint, c,
+										gid, c,
 										0, node->bidi_level, box->markup_dir, node->markup_lang);
 								c = -1; /* for subsequent glyphs in x-to-many mappings */
 							}
