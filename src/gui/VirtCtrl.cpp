@@ -3667,12 +3667,9 @@ bool VirtTreeOnMessage(HWND hwnd, VirtRoot* root, UINT msg, WPARAM wp, LPARAM lp
 
 // A small markup with links, keyboard shortcuts and bold runs, parsed into a
 // VirtRichText: a virtual control that wraps, paints and hit-tests itself.
-// Shared by SumatraPDF's home page and notifications, and by other apps in the
-// family. What it needs from the app is a CommandsContext (see VirtCtrl.h) and a
-// way to open a url.
-
 void (*gTipOpenUrl)(Str url) = nullptr;
-CommandsContext* gCommandsContext = nullptr;
+TempStr (*gTipCommandShortcutTemp)(Str cmdName) = nullptr;
+void (*gTipRunCommand)(HWND hwnd, Str cmd) = nullptr;
 
 static Kind kindVirtRichText = "virtRichText";
 
@@ -3959,13 +3956,12 @@ void VirtRichText::AddPlainText(Str text) {
     layoutDx = -1;
 }
 
-// The app decides what a command name means; without a context (Key/...) is
-// left as literal text and command links do nothing.
+// With no shortcut callback, (Key/...) stays literal.
 static TempStr CommandShortcutTemp(Str cmdName) {
-    if (!gCommandsContext) {
+    if (!gTipCommandShortcutTemp) {
         return {};
     }
-    return gCommandsContext->GetCommandShortcutTemp(cmdName);
+    return gTipCommandShortcutTemp(cmdName);
 }
 
 void InitKeyHint(VirtRichText* t, PlatformFont* font, Str key, Str desc, Color colTxt, Color colBg) {
@@ -4453,8 +4449,8 @@ void ExecuteTipLink(HWND hwnd, Str cmd) {
         return;
     }
     if (str::StartsWith(cmd, StrL("Cmd"))) {
-        if (gCommandsContext) {
-            gCommandsContext->ExecuteCommand(hwnd, cmd);
+        if (gTipRunCommand) {
+            gTipRunCommand(hwnd, cmd);
         }
         return;
     }

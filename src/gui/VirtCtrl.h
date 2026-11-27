@@ -799,30 +799,16 @@ struct VirtSpacer : VirtCtrl {
 Rect FitSizeInRect(Size src, Rect dst);
 
 //--- VirtRichText: a small markup with links, keyboard shortcuts and bold runs.
-// Shared by SumatraPDF's home page and notifications, and by other apps in the
-// family. What it needs from the app is a CommandsContext and a way to open a
-// url
+// Shared by SumatraPDF's home page and notifications and by other apps.
 
 struct TipLink;
 
-// What the markup needs to know about the app's commands. The app implements it
-// and installs it as gCommandsContext, which is what keeps this code free of
-// SumatraPDF's command table.
-struct CommandsContext {
-    virtual ~CommandsContext() = default;
+// Resolves (Key/CmdOpenFile). Returns {} to keep unknown markup literal, or the
+// command name if the command exists without a shortcut.
+extern TempStr (*gTipCommandShortcutTemp)(Str cmdName);
 
-    // Keyboard shortcut for a command name like "CmdOpenFile", used by
-    // (Key/CmdOpenFile). Returns {} when there is no such command (the markup is
-    // then left as literal text), and the command name itself when the command
-    // exists but has no binding.
-    virtual TempStr GetCommandShortcutTemp(Str cmdName) = 0;
-
-    // Runs a link target that names a command. `cmd` may carry arguments, e.g.
-    // "CmdFixDefaultApp .pdf".
-    virtual void ExecuteCommand(HWND hwnd, Str cmd) = 0;
-};
-
-extern CommandsContext* gCommandsContext;
+// Runs a command link, which can include arguments such as "CmdFixDefaultApp .pdf".
+extern void (*gTipRunCommand)(HWND hwnd, Str cmd);
 
 // how the app opens a url link; without it, url links do nothing
 extern void (*gTipOpenUrl)(Str url);

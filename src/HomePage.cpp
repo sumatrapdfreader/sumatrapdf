@@ -42,7 +42,7 @@
 #include "HomePage.h"
 #include "HomePageCommon.h"
 
-// how the shared tip code (TipText.cpp) opens a url link
+// Opens a URL from tip markup.
 static void OpenTipUrl(Str url) {
     // documentation links open in the embedded manual browser
     if (!MaybeLaunchDocumentation(url)) {
@@ -50,47 +50,40 @@ static void OpenTipUrl(Str url) {
     }
 }
 
-// what the shared tip code (TipText.cpp) knows about our commands: it names
-// them in (Key/Cmd...) and in link targets, but knows nothing about the command
-// table itself
-struct SumatraCommandsContext : CommandsContext {
-    TempStr GetCommandShortcutTemp(Str cmdName) override {
-        int cmdId = GetCommandIdByName(cmdName);
-        if (cmdId <= 0) {
-            return {}; // not a command: the markup stays literal text
-        }
-        TempStr accel = AppendAccelKeyToMenuStringTemp(StrL(""), cmdId);
-        if (len(accel) == 0 || !*accel.s) {
-            return str::DupTemp(cmdName); // a command, but unbound
-        }
-        // AppendAccelKeyToMenuStringTemp prepends 	, skip it
-        if (accel.s[0] == '	') {
-            return Str(accel.s + 1);
-        }
-        return accel;
+static TempStr TipCommandShortcutTemp(Str cmdName) {
+    int cmdId = GetCommandIdByName(cmdName);
+    if (cmdId <= 0) {
+        return {}; // not a command: the markup stays literal text
     }
-
-    // `cmd` can carry arguments (e.g. "CmdFixDefaultApp .pdf"); those go through
-    // CreateCommandFromDefinition so FrameOnCommand sees a CustomCommand with args
-    void ExecuteCommand(HWND hwnd, Str cmd) override {
-        CustomCommand* custom = CreateCommandFromDefinition(cmd);
-        if (custom) {
-            HwndSendCommand(hwnd, custom->id);
-            return;
-        }
-        int cmdId = GetCommandIdByName(cmd);
-        if (cmdId > 0) {
-            HwndSendCommand(hwnd, cmdId);
-        }
+    TempStr accel = AppendAccelKeyToMenuStringTemp(StrL(""), cmdId);
+    if (len(accel) == 0 || !*accel.s) {
+        return str::DupTemp(cmdName); // a command, but unbound
     }
-};
+    // AppendAccelKeyToMenuStringTemp prepends a tab.
+    if (accel.s[0] == '\t') {
+        return Str(accel.s + 1);
+    }
+    return accel;
+}
 
-static SumatraCommandsContext gSumatraCommandsContext;
+// Parse command links with arguments so FrameOnCommand receives a CustomCommand.
+static void RunTipCommand(HWND hwnd, Str cmd) {
+    CustomCommand* custom = CreateCommandFromDefinition(cmd);
+    if (custom) {
+        HwndSendCommand(hwnd, custom->id);
+        return;
+    }
+    int cmdId = GetCommandIdByName(cmd);
+    if (cmdId > 0) {
+        HwndSendCommand(hwnd, cmdId);
+    }
+}
 
 struct TipHookInstaller {
     TipHookInstaller() {
         gTipOpenUrl = OpenTipUrl;
-        gCommandsContext = &gSumatraCommandsContext;
+        gTipCommandShortcutTemp = TipCommandShortcutTemp;
+        gTipRunCommand = RunTipCommand;
     }
 };
 static TipHookInstaller gTipHookInstaller;

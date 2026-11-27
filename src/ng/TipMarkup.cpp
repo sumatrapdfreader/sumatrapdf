@@ -9,8 +9,7 @@
 #include "TipLink.h"
 #include "TipMarkup.h"
 
-// the shortcut a (Key/CmdXxx) fragment stands for, orig's
-// SumatraCommandsContext::GetCommandShortcutTemp
+// Resolves the shortcut a (Key/CmdXxx) fragment stands for.
 static TempStr CommandShortcutTemp(Str cmdName) {
     int cmdId = GetCommandIdByName(cmdName);
     if (cmdId <= 0) {
