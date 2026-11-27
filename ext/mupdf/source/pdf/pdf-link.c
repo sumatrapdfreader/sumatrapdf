@@ -124,20 +124,33 @@ populate_destination(fz_context *ctx, pdf_document *doc, pdf_obj *dest, int is_r
 	case FZ_LINK_DEST_FIT:
 	case FZ_LINK_DEST_FIT_B:
 		break;
+	/* SumatraPDF: on a page rotated by 90 or 270 degrees (ctm.a == ctm.d == 0)
+	 * the page's x is the device's y and its y the device's x. A coordinate
+	 * the destination leaves out (null) must drop the device coordinate it
+	 * maps to, not the one on the same-named axis. FitH's top is then a device
+	 * x, where a FitH has no use for one, so it is dropped (the page top). */
 	case FZ_LINK_DEST_FIT_H:
 	case FZ_LINK_DEST_FIT_BH:
 		p = fz_transform_point_xy(0, arg1v, ctm);
-		destination->y = arg1 ? p.y : NAN;
+		destination->y = arg1 && !(ctm.a == 0 && ctm.d == 0) ? p.y : NAN;
 		break;
 	case FZ_LINK_DEST_FIT_V:
 	case FZ_LINK_DEST_FIT_BV:
 		p = fz_transform_point_xy(arg1v, 0, ctm);
-		destination->x = arg1 ? p.x : NAN;
+		destination->x = arg1 && !(ctm.a == 0 && ctm.d == 0) ? p.x : NAN;
 		break;
 	case FZ_LINK_DEST_XYZ:
 		p = fz_transform_point_xy(arg1v, arg2v, ctm);
-		destination->x = arg1 ? p.x : NAN;
-		destination->y = arg2 ? p.y : NAN;
+		if (ctm.a == 0 && ctm.d == 0)
+		{
+			destination->x = arg2 ? p.x : NAN;
+			destination->y = arg1 ? p.y : NAN;
+		}
+		else
+		{
+			destination->x = arg1 ? p.x : NAN;
+			destination->y = arg2 ? p.y : NAN;
+		}
 		destination->zoom = arg3 ? (arg3v > 0 ? (arg3v * 100) : NAN) : NAN;
 		break;
 	case FZ_LINK_DEST_FIT_R:
@@ -1344,7 +1357,8 @@ pdf_new_dest_from_link(fz_context *ctx, pdf_document *doc, const char *uri, int 
 			case FZ_LINK_DEST_FIT_H:
 				p = fz_transform_point_xy(0, val.y, invctm);
 				pdf_array_push(ctx, dest, PDF_NAME(FitH));
-				if (isnan(p.y))
+				/* SumatraPDF: rotated by 90 or 270 degrees, the top is a device x */
+				if (isnan(p.y) || (invctm.a == 0 && invctm.d == 0))
 					pdf_array_push(ctx, dest, PDF_NULL);
 				else
 					pdf_array_push_real(ctx, dest, p.y);
@@ -1352,7 +1366,8 @@ pdf_new_dest_from_link(fz_context *ctx, pdf_document *doc, const char *uri, int 
 			case FZ_LINK_DEST_FIT_BH:
 				p = fz_transform_point_xy(0, val.y, invctm);
 				pdf_array_push(ctx, dest, PDF_NAME(FitBH));
-				if (isnan(p.y))
+				/* SumatraPDF: rotated by 90 or 270 degrees, the top is a device x */
+				if (isnan(p.y) || (invctm.a == 0 && invctm.d == 0))
 					pdf_array_push(ctx, dest, PDF_NULL);
 				else
 					pdf_array_push_real(ctx, dest, p.y);
@@ -1360,7 +1375,8 @@ pdf_new_dest_from_link(fz_context *ctx, pdf_document *doc, const char *uri, int 
 			case FZ_LINK_DEST_FIT_V:
 				p = fz_transform_point_xy(val.x, 0, invctm);
 				pdf_array_push(ctx, dest, PDF_NAME(FitV));
-				if (isnan(p.x))
+				/* SumatraPDF: rotated by 90 or 270 degrees, the left is a device y */
+				if (isnan(p.x) || (invctm.a == 0 && invctm.d == 0))
 					pdf_array_push(ctx, dest, PDF_NULL);
 				else
 					pdf_array_push_real(ctx, dest, p.x);
@@ -1368,7 +1384,8 @@ pdf_new_dest_from_link(fz_context *ctx, pdf_document *doc, const char *uri, int 
 			case FZ_LINK_DEST_FIT_BV:
 				p = fz_transform_point_xy(val.x, 0, invctm);
 				pdf_array_push(ctx, dest, PDF_NAME(FitBV));
-				if (isnan(p.x))
+				/* SumatraPDF: rotated by 90 or 270 degrees, the left is a device y */
+				if (isnan(p.x) || (invctm.a == 0 && invctm.d == 0))
 					pdf_array_push(ctx, dest, PDF_NULL);
 				else
 					pdf_array_push_real(ctx, dest, p.x);
@@ -1443,6 +1460,12 @@ pdf_resolve_link_dest(fz_context *ctx, pdf_document *doc, const char *uri)
 	char *name = NULL;
 	char *desturi = NULL;
 	pdf_obj *destobj = NULL;
+
+	/* SumatraPDF: the outline loader also resolves external URIs. Their page
+	 * numbers and coordinates are another document's, not this page tree's
+	 * (idea from Vira Reader). */
+	if (fz_is_external_link(ctx, uri))
+		return dest;
 
 	fz_var(needle);
 	fz_var(name);
