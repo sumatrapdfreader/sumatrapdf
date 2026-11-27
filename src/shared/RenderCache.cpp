@@ -291,25 +291,88 @@ BitmapCacheEntry::~BitmapCacheEntry() {
     FreePixmap(bitmap);
 }
 
+// a stale entry keyed by the old pageNo must not match after a chapter
+// shift; loc identifies the page across the shift, pageNo alone doesn't
+static Location PageLocation(DisplayModel* dm, int pageNo) {
+    PageInfo* pi = dm ? dm->GetPageInfo(pageNo) : nullptr;
+    return pi ? pi->loc : kInvalidLocation;
+}
+
+static bool IsSamePageTile(BitmapCacheEntry* e, DisplayModel* dm, int pageNo, int rotation, Location loc,
+                           TilePosition* tile, u32 darkModeEpoch) {
+    bool locOk = !loc.IsValid() || !e->loc.IsValid() || loc == e->loc;
+    return (dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) && (!tile || e->tile == *tile) &&
+           (e->darkModeEpoch == darkModeEpoch) && locOk;
+}
+
 BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile) {
     ScopedRecursiveMutex scope(&cacheAccess);
     rotation = NormalizeRotation(rotation);
-    // a stale entry keyed by the old pageNo must not match after a chapter
-    // shift; loc identifies the page across the shift, pageNo alone doesn't
-    PageInfo* pi = dm ? dm->GetPageInfo(pageNo) : nullptr;
-    Location loc = pi ? pi->loc : kInvalidLocation;
+    Location loc = PageLocation(dm, pageNo);
     for (int i = 0; i < cacheCount; i++) {
         BitmapCacheEntry* e = cache[i];
-        bool locOk = !loc.IsValid() || !e->loc.IsValid() || loc == e->loc;
-        if ((dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) &&
-            (kInvalidZoom == zoom || zoom == e->zoom) && (!tile || e->tile == *tile) &&
-            (e->darkModeEpoch == darkModeEpoch) && locOk) {
+        if (IsSamePageTile(e, dm, pageNo, rotation, loc, tile, darkModeEpoch) &&
+            (kInvalidZoom == zoom || zoom == e->zoom)) {
             e->refs++;
             ReportIf(i != e->cacheIdx);
             return e;
         }
     }
     return nullptr;
+}
+
+// How far a cached bitmap is from the size it's drawn at (log of the scale), as a
+// stand-in while the tile renders at the current zoom. Stretching up blurs, so it
+// costs double shrinking.
+static float StandInCost(Size bmp, Size target) {
+    if (bmp.IsEmpty() || target.IsEmpty()) {
+        return FLT_MAX;
+    }
+    float scale = std::min((float)bmp.dx / (float)target.dx, (float)bmp.dy / (float)target.dy);
+    float cost = logf(scale);
+    return cost >= 0 ? cost : -2.0f * cost;
+}
+
+// The cached bitmap of the tile, at any zoom, that looks best drawn at <target>
+// size. The cache's order is arbitrary, so the first match (what Find() returns)
+// can be any earlier zoom, not the one just left.
+BitmapCacheEntry* RenderCache::FindStandIn(DisplayModel* dm, int pageNo, int rotation, TilePosition* tile,
+                                           Size target) {
+    ScopedRecursiveMutex scope(&cacheAccess);
+    rotation = NormalizeRotation(rotation);
+    Location loc = PageLocation(dm, pageNo);
+    BitmapCacheEntry* best = nullptr;
+    float bestCost = FLT_MAX;
+    for (int i = 0; i < cacheCount; i++) {
+        BitmapCacheEntry* e = cache[i];
+        if (!IsSamePageTile(e, dm, pageNo, rotation, loc, tile, darkModeEpoch)) {
+            continue;
+        }
+        Pixmap* bmp = e->bitmap;
+        float cost = bmp && bmp->data ? StandInCost(Size(bmp->width, bmp->height), target) : FLT_MAX;
+        if (!best || cost < bestCost) {
+            best = e;
+            bestCost = cost;
+        }
+    }
+    if (best) {
+        best->refs++;
+    }
+    return best;
+}
+
+// Of bitmaps rendered at several zooms, the closest to the drawn size is the
+// stand-in; a bigger one beats an equally far smaller one, which would blur.
+bool RenderCache_UnitTestStandIn() {
+    Size target(400, 500);
+    Size bigger(440, 550), smaller(360, 450), half(200, 250), quarter(100, 125), twice(800, 1000);
+    bool ok = StandInCost(bigger, target) < StandInCost(smaller, target);
+    ok = ok && StandInCost(smaller, target) < StandInCost(half, target);
+    ok = ok && StandInCost(twice, target) < StandInCost(half, target);
+    ok = ok && StandInCost(half, target) < StandInCost(quarter, target);
+    ok = ok && StandInCost(target, target) == 0.0f;
+    ok = ok && StandInCost(Size(), target) == FLT_MAX && StandInCost(bigger, Size()) == FLT_MAX;
+    return ok;
 }
 
 bool RenderCache::Exists(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile) {
@@ -1574,7 +1637,7 @@ int RenderCache::PaintTile(
             if (renderedReplacement) {
                 *renderedReplacement = true;
             }
-            entry = Find(dm, pageNo, dm->PageRotation(pageNo), kInvalidZoom, &tile);
+            entry = FindStandIn(dm, pageNo, dm->PageRotation(pageNo), &tile, tileOnScreen.Size());
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && kRenderDelayUndefined == renderDelay && !IsRenderQueueFull()) {

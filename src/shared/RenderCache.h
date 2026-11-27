@@ -261,6 +261,7 @@ struct RenderCache {
 
     BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,
                            TilePosition* tile = nullptr);
+    BitmapCacheEntry* FindStandIn(DisplayModel* dm, int pageNo, int rotation, TilePosition* tile, Size target);
     bool DropCacheEntry(BitmapCacheEntry* entry);
     bool DropCacheEntryIfNotUsed(BitmapCacheEntry* entry);
     bool IsCached(BitmapCacheEntry* entry);
