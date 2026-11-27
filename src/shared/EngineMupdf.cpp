@@ -4911,6 +4911,86 @@ bool EngineMupdf_UnitTestEbookMarginCss() {
     return len(EbookMarginCssTemp(&m, 96)) == 0;
 }
 
+// characters of HTML page 0 drawn into a text device, with the cookie's abort set or not
+static int HtmlPageCharsDrawn(fz_context* ctx, fz_document* doc, bool abort) {
+    fz_page* page = nullptr;
+    fz_stext_page* text = nullptr;
+    fz_device* dev = nullptr;
+    int n = -1;
+    fz_var(page);
+    fz_var(text);
+    fz_var(dev);
+    fz_try(ctx) {
+        page = fz_load_page(ctx, doc, 0);
+        text = fz_new_stext_page(ctx, fz_bound_page(ctx, page));
+        dev = fz_new_stext_device(ctx, text, nullptr);
+        fz_cookie cookie{};
+        cookie.abort = abort ? 1 : 0;
+        fz_run_page(ctx, page, dev, fz_identity, &cookie);
+        fz_close_device(ctx, dev);
+        n = 0;
+        for (fz_stext_block* b = text->first_block; b; b = b->next) {
+            if (b->type != FZ_STEXT_BLOCK_TEXT) {
+                continue;
+            }
+            for (fz_stext_line* l = b->u.t.first_line; l; l = l->next) {
+                for (fz_stext_char* c = l->first_char; c; c = c->next) {
+                    n++;
+                }
+            }
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+        fz_drop_stext_page(ctx, text);
+        fz_drop_page(ctx, page);
+    }
+    fz_catch(ctx) {
+        n = -1;
+    }
+    return n;
+}
+
+// An HTML / EPUB page render that is aborted (the page scrolled away) stops
+// drawing: mupdf's html drawing ignored the cookie (ext/patches/0108).
+bool EngineMupdf_UnitTestHtmlDrawAbort() {
+    fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
+    if (!ctx) {
+        return false;
+    }
+    fz_register_document_handlers(ctx);
+    static const char kHtml[] = "<html><body><p>Some text that is drawn on the page.</p></body></html>";
+    fz_buffer* buf = nullptr;
+    fz_stream* stm = nullptr;
+    fz_document* doc = nullptr;
+    int drawn = -1;
+    int aborted = -1;
+    fz_var(buf);
+    fz_var(stm);
+    fz_var(doc);
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_copied_data(ctx, (const u8*)kHtml, sizeof(kHtml) - 1);
+        stm = fz_open_buffer(ctx, buf);
+        doc = fz_open_document_with_stream(ctx, "page.html", stm);
+        drawn = HtmlPageCharsDrawn(ctx, doc, false);
+        aborted = HtmlPageCharsDrawn(ctx, doc, true);
+    }
+    fz_always(ctx) {
+        fz_drop_document(ctx, doc);
+        fz_drop_stream(ctx, stm);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    fz_drop_context(ctx);
+    if (drawn <= 0 || aborted != 0) {
+        fprintf(stderr, "html draw abort: drawn=%d aborted=%d\n", drawn, aborted);
+        return false;
+    }
+    return true;
+}
+
 bool EngineMupdf_UnitTestMergeEBookUI() {
     EBookUI g{};
     g.fontName = StrL("Georgia");

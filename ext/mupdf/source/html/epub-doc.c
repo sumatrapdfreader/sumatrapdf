@@ -527,7 +527,7 @@ epub_run_page(fz_context *ctx, fz_page *page_, fz_device *dev, fz_matrix ctm, fz
 {
 	epub_page *page = (epub_page*)page_;
 
-	fz_draw_html(ctx, dev, ctm, page->html, page->number);
+	fz_draw_html(ctx, dev, ctm, page->html, page->number, cookie);
 }
 
 static fz_link *

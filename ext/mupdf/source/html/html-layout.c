@@ -4254,11 +4254,15 @@ static void draw_list_mark(fz_context *ctx, fz_html_box *box, float page_top, fl
 		fz_rethrow(ctx);
 }
 
-static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart);
-static int draw_table_row(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart);
+static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart, fz_cookie *cookie);
+static int draw_table_row(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart, fz_cookie *cookie);
 
-static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart)
+static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart, fz_cookie *cookie)
 {
+	/* SumatraPDF: an aborted render (e.g. the page scrolled away) stops here,
+	 * like reaching the restart place (idea from Vira Reader) */
+	if (cookie && cookie->abort)
+		return 1;
 	int ret = 0;
 	int str = fz_html_tag_to_structure(box->tag);
 
@@ -4270,7 +4274,7 @@ static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float pag
 	case BOX_TABLE_ROW:
 		if (restart && restart->end == box)
 			ret = 1;
-		else if (draw_table_row(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart))
+		else if (draw_table_row(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart, cookie))
 			ret = 1;
 		break;
 	case BOX_TABLE:
@@ -4278,7 +4282,7 @@ static int draw_box(fz_context *ctx, fz_html_box *box, float page_top, float pag
 	case BOX_BLOCK:
 		if (restart && restart->end == box)
 			ret = 1;
-		else if (draw_block_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart))
+		else if (draw_block_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart, cookie))
 			ret = 1;
 		break;
 	case BOX_FLOW:
@@ -4752,7 +4756,7 @@ static void transform_page_window(fz_html_box *box, float x0, float y0, float x1
 	*page_bot = bot;
 }
 
-static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart)
+static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart, fz_cookie *cookie)
 {
 	fz_html_box *child;
 	float x0, y0, x1, y1;
@@ -4819,7 +4823,7 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
 
 	for (child = box->down; child; child = child->next)
 	{
-		if (draw_box(ctx, child, page_top, page_bot, dev, ctm, hb_buf, restart))
+		if (draw_box(ctx, child, page_top, page_bot, dev, ctm, hb_buf, restart, cookie))
 		{
 			stopped = 1;
 			break;
@@ -4851,7 +4855,7 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
 	return stopped;
 }
 
-static int draw_table_row(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart)
+static int draw_table_row(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart, fz_cookie *cookie)
 {
 	/* Table rows don't draw background colors or borders */
 
@@ -4875,14 +4879,14 @@ static int draw_table_row(fz_context *ctx, fz_html_box *box, float page_top, flo
 		return 1;
 
 	for (child = box->down; child; child = child->next)
-		if (draw_box(ctx, child, page_top, page_bot, dev, ctm, hb_buf, restart))
+		if (draw_box(ctx, child, page_top, page_bot, dev, ctm, hb_buf, restart, cookie))
 			return 1;
 
 	return 0;
 }
 
-void
-fz_draw_restarted_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html_box *top, float page_top, float page_bot, fz_html_restarter *restart)
+static void
+draw_restarted_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html_box *top, float page_top, float page_bot, fz_html_restarter *restart, fz_cookie *cookie)
 {
 	fz_html_box *box;
 	hb_buffer_t *hb_buf = NULL;
@@ -4899,7 +4903,7 @@ fz_draw_restarted_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html_b
 		unlocked = 1;
 
 		for (box = top->down; box; box = box->next)
-			if (draw_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart))
+			if (draw_box(ctx, box, page_top, page_bot, dev, ctm, hb_buf, restart, cookie))
 				break;
 	}
 	fz_always(ctx)
@@ -4916,7 +4920,13 @@ fz_draw_restarted_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html_b
 }
 
 void
-fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html, int page)
+fz_draw_restarted_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html_box *top, float page_top, float page_bot, fz_html_restarter *restart)
+{
+	draw_restarted_html(ctx, dev, ctm, top, page_top, page_bot, restart, NULL);
+}
+
+void
+fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html, int page, fz_cookie *cookie)
 {
 	float page_top = page * html->page_h;
 	float page_bot = (page + 1) * html->page_h;
@@ -4928,7 +4938,7 @@ fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html, int 
 
 	ctm = fz_pre_translate(ctm, html->page_margin[L], html->page_margin[T]);
 
-	fz_draw_restarted_html(ctx, dev, ctm, html->tree.root, page_top, page_bot, NULL);
+	draw_restarted_html(ctx, dev, ctm, html->tree.root, page_top, page_bot, NULL, cookie);
 }
 
 void fz_draw_story(fz_context *ctx, fz_story *story, fz_device *dev, fz_matrix ctm)
