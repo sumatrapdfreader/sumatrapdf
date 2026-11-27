@@ -1346,6 +1346,28 @@ TempStr FrameNcStripsResultTemp(int* exitCodeOut) {
     return ToStrTemp(sb);
 }
 
+// The top edge the first window's frame paints in its client area, as on
+// Windows 10; "force" paints it on any Windows. Used by tests/issue-6608.ts.
+TempStr FrameTopEdgeResultTemp(Str action, int* exitCodeOut) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-window"));
+    }
+    if (str::Eq(action, StrL("force"))) {
+        ForceFrameTopEdge(win);
+    }
+    Rect edge;
+    Color col = 0;
+    GetFrameTopEdge(win, edge, col);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return fmt("edge=%d color=%02x%02x%02x", edge.dy, (int)GetRed(col), (int)GetGreen(col), (int)GetBlue(col));
+}
+
 // Sends the frame a mouse wheel while the window is marked as being closed, as
 // when a wheel arrives during CloseWindow(). Used by tests/wheel-while-closing.ts.
 TempStr WheelWhileClosingResultTemp(int* exitCodeOut) {

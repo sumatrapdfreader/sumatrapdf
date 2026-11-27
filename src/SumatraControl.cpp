@@ -667,6 +667,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestFrameTopEdge: {
+            Str action = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = FrameTopEdgeResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
         case ControlCmd::TestSidebarThumbnails: {
             int exitCode = 0;
             Str res = SidebarThumbnailsResultTemp(&exitCode);

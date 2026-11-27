@@ -61,6 +61,7 @@ TempStr TemporaryFileResultTemp(Str action, int* exitCodeOut = nullptr);
 TempStr PageInfoResultTemp(int* exitCodeOut = nullptr);
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut = nullptr);
 TempStr FrameNcStripsResultTemp(int* exitCodeOut = nullptr);
+TempStr FrameTopEdgeResultTemp(Str action, int* exitCodeOut = nullptr);
 TempStr WheelWhileClosingResultTemp(int* exitCodeOut = nullptr);
 TempStr TouchSelResultTemp(Str action, Str word, int* exitCodeOut = nullptr);
 

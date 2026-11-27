@@ -59,8 +59,9 @@ WindowPos = ${x} ${work.top} 600 ${dy}
           `Vertically snapped frame restored to ${rect.top}..${rect.bottom}, expected ${work.top}..${work.top + dy}`,
         );
       }
-      if (clientToScreen(frame, 0, 0).y <= rect.top) {
-        throw new Error("Restored caption did not leave a native top frame edge");
+      // any non-client area at the top makes Windows 10 draw its own title bar (#6608)
+      if (clientToScreen(frame, 0, 0).y !== rect.top) {
+        throw new Error("Restored caption left non-client area above it");
       }
     },
     ["-appdata", dir],

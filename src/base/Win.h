@@ -303,6 +303,8 @@ bool IsProcess32();
 bool IsArmBuild();
 bool IsRunningInWow64();
 bool IsProcessAndOsArchSame();
+// Windows 11 is 10.0.22000 and up
+constexpr DWORD kWin11Build = 22000;
 bool GetOsVersion(OSVERSIONINFOEX& ver);
 TempStr OsNameFromVerTemp(const OSVERSIONINFOEX& ver);
 TempStr GetWindowsVerTemp();

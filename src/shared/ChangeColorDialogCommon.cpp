@@ -91,14 +91,3 @@ void ShowSetTabColorDialog(MainWindow* win, WindowTab* tab) {
     args->onClose = MkFunc1(TabColorPicked, target);
     ShowChangeColorsDialog(args);
 }
-
-static u8 BlendChannel(u8 fg, u8 bg, u8 a) {
-    return (u8)((((int)fg * (int)a) + ((int)bg * (255 - (int)a))) / 255);
-}
-
-Color BlendOver(Color col, Color bg, u8 a) {
-    u8 r, g, b, br, bg2, bb;
-    UnpackColor(col, r, g, b);
-    UnpackColor(bg, br, bg2, bb);
-    return MkRgb(BlendChannel(r, br, a), BlendChannel(g, bg2, a), BlendChannel(b, bb, a));
-}

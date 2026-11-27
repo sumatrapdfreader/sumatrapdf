@@ -6832,6 +6832,18 @@ Color AccentColor(Color col, int light, int dark) {
     return AdjustLightness2(col, (float)dark);
 }
 
+static u8 BlendChannel(u8 fg, u8 bg, u8 a) {
+    return (u8)((((int)fg * (int)a) + ((int)bg * (255 - (int)a))) / 255);
+}
+
+// `col` at opacity `a` painted over an opaque `bg`
+Color BlendOver(Color col, Color bg, u8 a) {
+    u8 r, g, b, br, bg2, bb;
+    UnpackColor(col, r, g, b);
+    UnpackColor(bg, br, bg2, bb);
+    return MkRgb(BlendChannel(r, br, a), BlendChannel(g, bg2, a), BlendChannel(b, bb, a));
+}
+
 // If `fg` is too close to `bg` in lightness, shift it away so muted labels
 // (disabled buttons, secondary list text) stay readable. `minDelta` is in
 // GetLightness units (0-255).

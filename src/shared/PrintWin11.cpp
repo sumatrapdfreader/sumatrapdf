@@ -63,9 +63,6 @@ using Microsoft::WRL::RuntimeClass;
 using Microsoft::WRL::RuntimeClassFlags;
 using Microsoft::WRL::WinRtClassicComMix;
 
-// Windows 11 is 10.0.22000 and up
-constexpr DWORD kWin11Build = 22000;
-
 // the cap keeps the bitmap of a large page within reason
 constexpr float kMaxRasterDpi = 300.f;
 

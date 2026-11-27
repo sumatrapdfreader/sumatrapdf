@@ -350,6 +350,8 @@ enum class ControlCmd : u16 {
     TestTabGroups = 178,
     // the AI chat session combo of the first window (AIChatSessionsTestTemp)
     TestAIChatSessions = 179,
+    // [action]: "force" paints Windows 10's top frame edge on any Windows; its rows and color
+    TestFrameTopEdge = 180,
 };
 
 enum class ControlFrameAction : u8 {

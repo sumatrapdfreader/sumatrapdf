@@ -347,6 +347,8 @@ void DismissNextFileScrollHint(MainWindow* win);
 void MainWindowRerender(MainWindow* win, bool includeNonClientArea = false);
 void RerenderTabPage(WindowTab*, int pageNo);
 void GetFrameNcStrips(MainWindow*, Vec<Rect>& out);
+bool GetFrameTopEdge(MainWindow*, Rect& rc, Color& col);
+void ForceFrameTopEdge(MainWindow*);
 EngineBase* CreatePdfEngineForDialog(Str path, HWND hwnd);
 
 TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut = nullptr);

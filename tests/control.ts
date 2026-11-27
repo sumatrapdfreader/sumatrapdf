@@ -210,6 +210,8 @@ export enum ControlCommand {
   TestTabGroups = 178,
   // "pending=<0|1> sel=<n>", then the AI chat session combo's items, a line each
   TestAIChatSessions = 179,
+  // orig: ["force"] paints Windows 10's top frame edge on any Windows; "edge=<rows> color=<rrggbb>"
+  TestFrameTopEdge = 180,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

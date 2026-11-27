@@ -13466,6 +13466,93 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
     }
 }
 
+// DWM draws the frame border in the non-client area we keep on the sides and
+// at the bottom. Windows 10 has none along the top, where any non-client area
+// makes it draw a whole native caption (#6608), so we paint that edge in the
+// client row RelayoutFrame leaves free. Windows 11 draws its border by itself.
+// The colors are those of Windows 10's DWM, as worked out by Chromium.
+constexpr Color kDwmBorderNeutral = MkGray(0xd9);
+constexpr Color kDwmBorderActive = MkGray(0x26);
+constexpr u8 kDwmBorderActiveAlpha = 0xa8;
+constexpr Color kDwmBorderInactive = MkGray(0x55);
+constexpr u8 kDwmBorderInactiveAlpha = 0x80;
+constexpr DWORD kDwmColorBalanceMax = 100;
+constexpr DWORD kDwmColorBalanceDefault = 80;
+
+// tests paint the edge on any Windows
+static bool gForceFrameTopEdge = false;
+
+static bool FrameDrawsTopEdge(MainWindow* win) {
+    if (!win->tabsInTitlebar || IsZoomed(win->hwndFrame) || win->IsFullScreenOrPresentation()) {
+        return false;
+    }
+    if (gForceFrameTopEdge) {
+        return true;
+    }
+    OSVERSIONINFOEX ver{};
+    return GetOsVersion(ver) && ver.dwMajorVersion == 10 && ver.dwBuildNumber < kWin11Build;
+}
+
+static Color FrameTopEdgeColor(MainWindow* win) {
+    Color bg = ThemeControlBackgroundColor();
+    if (win->captionBtn[CB_CLOSE].inactive) {
+        return BlendOver(kDwmBorderInactive, bg, kDwmBorderInactiveAlpha);
+    }
+
+    // "Show accent color on title bars and window borders"
+    HKEY root = HKEY_CURRENT_USER;
+    Str key = StrL("SOFTWARE\\Microsoft\\Windows\\DWM");
+    DWORD prevalence = 0;
+    DWORD accent = 0;
+    DWORD balance = 0;
+    bool useAccent = ReadRegDWORD(root, key, StrL("ColorPrevalence"), prevalence) && prevalence == 1;
+    useAccent = useAccent && ReadRegDWORD(root, key, StrL("ColorizationColor"), accent);
+    useAccent = useAccent && ReadRegDWORD(root, key, StrL("ColorizationColorBalance"), balance);
+    if (!useAccent) {
+        return BlendOver(kDwmBorderActive, bg, kDwmBorderActiveAlpha);
+    }
+
+    // some builds store a balance that is not a percentage
+    if (balance > kDwmColorBalanceMax) {
+        balance = kDwmColorBalanceDefault;
+    }
+    // ColorizationColor is 0xXXRRGGBB and its high byte is not an alpha
+    Color col = MkRgb((u8)(accent >> 16), (u8)(accent >> 8), (u8)accent);
+    return BlendOver(col, kDwmBorderNeutral, (u8)(balance * 255 / kDwmColorBalanceMax));
+}
+
+// The top frame edge we paint, in client coordinates. False if DWM draws it or there is none.
+bool GetFrameTopEdge(MainWindow* win, Rect& rc, Color& col) {
+    if (!FrameDrawsTopEdge(win)) {
+        return false;
+    }
+    rc = {0, 0, HwndClientRect(win->hwndFrame).dx, kFrameBorderSize};
+    col = FrameTopEdgeColor(win);
+    return true;
+}
+
+static void PaintFrameTopEdge(MainWindow* win, HDC hdc) {
+    Rect rc;
+    Color col = 0;
+    if (GetFrameTopEdge(win, rc, col)) {
+        HdcFillRect(hdc, rc, col);
+    }
+}
+
+static void InvalidateFrameTopEdge(MainWindow* win) {
+    Rect rc;
+    Color col = 0;
+    if (GetFrameTopEdge(win, rc, col)) {
+        HwndInvalidateRect(win->hwndFrame, rc, false);
+    }
+}
+
+void ForceFrameTopEdge(MainWindow* win) {
+    gForceFrameTopEdge = true;
+    InvalidateFrameTopEdge(win);
+    UpdateWindow(win->hwndFrame);
+}
+
 static WCHAR gMenuAccelPressed = 0;
 
 static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool* callDef, MainWindow* win) {
@@ -13474,6 +13561,8 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             if (wp == SPI_SETNONCLIENTMETRICS) {
                 RelayoutCaption(win);
             }
+            // turning the accent color of window borders on or off arrives here
+            InvalidateFrameTopEdge(win);
             break;
 
         case WM_NCPAINT: {
@@ -13513,6 +13602,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
                 DrawCaptionButton(win, memDC, &win->captionBtn[i]);
             }
+            PaintFrameTopEdge(win, memDC);
             if (isRtl) {
                 SetLayout(hdc, 0);
             }
@@ -13526,6 +13616,8 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 HBRUSH brBorder = CreateSolidBrush(ThemeControlBackgroundColor());
                 HdcFillRect(hdc, ToRect(ps.rcPaint), brBorder);
                 DeleteObject(brBorder);
+                // a hidden caption leaves the edge's row out of the buffer above
+                PaintFrameTopEdge(win, hdc);
             }
             // the splitters are virtual controls of this window
             if (win->frameRoot) {
@@ -13554,11 +13646,17 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             if (IsCurrentThemeDefault()) {
                 rc.bottom += kNonClientBand;
             }
+            // the edge above the caption changes color with the activation
+            InvalidateFrameTopEdge(win);
             uint flags = RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW;
             RedrawWindow(hwnd, &rc, nullptr, flags);
             *callDef = false;
             return result;
         }
+
+        case WM_DWMCOLORIZATIONCOLORCHANGED:
+            InvalidateFrameTopEdge(win);
+            break;
 
         case WM_TIMER:
             if (wp == kDoNotReopenMenuTimerID) {
@@ -13601,10 +13699,11 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                     r->bottom -= frameY;
                 }
             } else if (!isFullScreen) {
-                // Keep the native resize borders and reserve one pixel for the top frame edge.
+                // Keep the native resize borders. The top stays free of non-client area,
+                // for which Windows 10 draws a whole native caption above ours (#6608).
                 int top = r->top;
                 DefWindowProcW(hwnd, msg, wp, lp);
-                r->top = top + kNonClientBand;
+                r->top = top;
             }
             *callDef = false;
             return 0;
@@ -13910,6 +14009,8 @@ static LRESULT CALLBACK CaptionOverlayProc(HWND hwnd, UINT msg, WPARAM wp, LPARA
         for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
             DrawCaptionButton(win, memDC, &win->captionBtn[i]);
         }
+        // the overlay covers the frame's top row
+        PaintFrameTopEdge(win, memDC);
         buffer.Flush(hdc);
         EndPaint(hwnd, &ps);
         return 0;
