@@ -552,9 +552,11 @@ static bool IsPageScriptUrl(Str url, Str name) {
 }
 
 // scripts the page MarkdownToHtmlPage makes loads: pele for ```mermaid
-// fences, microlighter and code-run.js for code blocks
+// fences, microlighter and code-run.js for code blocks, temml and math-run.js
+// for math
 static Str PageScriptData(Str url) {
-    Str embedded[] = {StrL(SUMATRA_MARKDOWN_PELE), StrL(SUMATRA_MARKDOWN_HIGHLIGHT)};
+    Str embedded[] = {StrL(SUMATRA_MARKDOWN_PELE), StrL(SUMATRA_MARKDOWN_HIGHLIGHT), StrL(SUMATRA_MARKDOWN_TEMML),
+                      StrL(SUMATRA_MARKDOWN_TEMML_CSS)};
     for (Str name : embedded) {
         if (!IsPageScriptUrl(url, name)) {
             continue;
@@ -570,6 +572,9 @@ static Str PageScriptData(Str url) {
     }
     if (IsPageScriptUrl(url, StrL(SUMATRA_MARKDOWN_CODE))) {
         return str::Dup(CodeRunJs());
+    }
+    if (IsPageScriptUrl(url, StrL(SUMATRA_MARKDOWN_MATH))) {
+        return str::Dup(MathRunJs());
     }
     return {};
 }

@@ -63,6 +63,7 @@ extern bool MarkdownModel_UnitTestBrowserNavigationUrl();
 extern bool MarkdownToc_UnitTestHtmlLinks();
 extern bool MarkdownToc_UnitTestHtmlHeadings();
 extern bool MarkdownToc_UnitTestMermaid();
+extern bool MarkdownToc_UnitTestMath();
 extern bool MarkdownToc_UnitTestHighlightWikilinks();
 #if IS_DEBUG
 extern bool PdfDarkModeImageStats_UnitTest();
@@ -215,6 +216,7 @@ int main(int argc, char** argv) {
     utassert(MarkdownToc_UnitTestHtmlLinks());
     utassert(MarkdownToc_UnitTestHtmlHeadings());
     utassert(MarkdownToc_UnitTestMermaid());
+    utassert(MarkdownToc_UnitTestMath());
     utassert(MarkdownToc_UnitTestHighlightWikilinks());
 #if IS_DEBUG
     utassert(PdfDarkModeImageStats_UnitTest());

@@ -6,6 +6,9 @@
 #define SUMATRA_MARKDOWN_MERMAID "mermaid-run.js"
 #define SUMATRA_MARKDOWN_HIGHLIGHT "microlighter.min.js"
 #define SUMATRA_MARKDOWN_CODE "code-run.js"
+#define SUMATRA_MARKDOWN_TEMML "temml.min.js"
+#define SUMATRA_MARKDOWN_TEMML_CSS "temml.css"
+#define SUMATRA_MARKDOWN_MATH "math-run.js"
 
 struct MarkdownHeadingItem {
     Str title;
@@ -28,3 +31,4 @@ struct WebDocStyle;
 TempStr BrowserTypographyCssTemp(const WebDocStyle&);
 Str MermaidRunJs();
 Str CodeRunJs();
+Str MathRunJs();

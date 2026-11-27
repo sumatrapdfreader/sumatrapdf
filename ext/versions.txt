@@ -149,6 +149,11 @@ microlighter    2.2.0      2026-09-11
   syntax highlighting of markdown code blocks (CSS Custom Highlight API)
   ext/microlighter.min.js: core + all grammars bundled by cmd/update-microlighter.ts
 
+temml           0.14.0     2026-10-08
+  https://temml.org, https://github.com/ronkok/Temml
+  TeX math in markdown ($...$, $...$, ```math) to MathML
+  ext/temml.min.js, ext/temml.css (Temml-Local.css, font inlined) by cmd/update-temml.ts
+
 zopfli         1.0.3+     2024-04-11
   https://github.com/google/zopfli
   https://github.com/google/zopfli/commit/ccf9f0588d4a4509cb1040310ec122243e670ee6

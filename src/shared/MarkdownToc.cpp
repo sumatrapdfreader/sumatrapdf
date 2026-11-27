@@ -20,6 +20,7 @@ extern "C" {
 #include "cmark-gfm.h"
 #include "cmark-gfm-core-extensions.h"
 #include "node.h"
+#include "texmath.h"
 }
 #include "MarkdownToc.h"
 
@@ -92,7 +93,8 @@ static cmark_parser* CreateMarkdownParser(Str data) {
     // makes don't match the "#anchor" links such documents carry.
     // AddHeadingAnchors() emits them instead (#5883).
     // "highlight" is ==marked== (Obsidian), not a GFM extension.
-    const char* exts[] = {"table", "strikethrough", "autolink", "tagfilter", "tasklist", "highlight"};
+    // "math" is $TeX$ and $$TeX$$, as GitHub writes it (#6614).
+    const char* exts[] = {"table", "strikethrough", "autolink", "tagfilter", "tasklist", "highlight", "math"};
     for (const char* ext : exts) {
         cmark_syntax_extension* syntax = cmark_find_syntax_extension(ext);
         if (syntax) {
@@ -137,6 +139,11 @@ static void AppendHeadingText(cmark_node* node, str::Builder* out) {
     cmark_node_type type = cmark_node_get_type(node);
     if (type == CMARK_NODE_TEXT || type == CMARK_NODE_CODE) {
         out->Append(CmarkLiteral(node));
+        return;
+    }
+    if (cmark_gfm_extensions_is_math(node)) {
+        // the TeX source: the TOC is plain text
+        out->Append(Str((char*)node->content.ptr, (int)node->content.size));
         return;
     }
     for (cmark_node* child = cmark_node_first_child(node); child; child = cmark_node_next(child)) {
@@ -306,6 +313,7 @@ pre.mermaid { background: transparent; text-align: center; overflow: visible;
   --pele-surface: var(--code-bg); --pele-surface-alt: var(--border); --pele-border: var(--border);
   --pele-accent: var(--link); }
 pre.mermaid svg { max-width: 100%%; height: auto; }
+.math-display { display: block; overflow-x: auto; margin: 1em 0; }
 pre[data-lang]::before { content: attr(data-lang); display: block; margin-bottom: 8px; color: var(--muted);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
 .code-block { position: relative; }
@@ -334,6 +342,8 @@ img { max-width: 100%%; }
 
 struct CodeBlockCounts {
     int mermaid = 0;
+    // ```math fences
+    int math = 0;
     // fences that name a language other than mermaid: highlighted
     int withLang = 0;
     // fences without a language
@@ -379,7 +389,8 @@ static CodeBlockCounts RewriteCodeBlocks(str::Builder& out, Str body) {
             langLen++;
         }
         Str lang(attrs.s, langLen);
-        if (!str::EqI(lang, StrL("mermaid"))) {
+        bool isMath = str::EqI(lang, StrL("math"));
+        if (!isMath && !str::EqI(lang, StrL("mermaid"))) {
             // cmark has already HTML-escaped the language name
             out.Append(StrL("<pre data-lang=\""));
             out.Append(lang);
@@ -395,13 +406,27 @@ static CodeBlockCounts RewriteCodeBlocks(str::Builder& out, Str body) {
             out.Append(fromOpen);
             break;
         }
-        // cmark has already HTML-escaped the diagram text.
+        // cmark has already HTML-escaped the diagram or TeX text.
+        if (isMath) {
+            // ```math is display math, like $$...$$ (#6614)
+            out.Append(StrL("<div class=\"math math-display\">"));
+            out.Append(block);
+            out.Append(StrL("</div>"));
+            counts.math++;
+            continue;
+        }
         out.Append(StrL("<pre class=\"mermaid\">"));
         out.Append(block);
         out.Append(StrL("</pre>"));
         counts.mermaid++;
     }
     return counts;
+}
+
+// the math extension's spans (texmath.c) or a ```math fence
+static bool BodyHasMath(Str body) {
+    return str::Contains(body, StrL("<span class=\"math math-")) ||
+           str::Contains(body, StrL("<pre><code class=\"language-math\">"));
 }
 
 // pele.min.js (Pele 1.13.0, a Mermaid renderer) lives in IDR_EMBEDDED_PAK and
@@ -428,11 +453,40 @@ static const char kMarkdownCsp[] =
     "default-src 'self' data:; img-src * data:; media-src * data:; style-src 'self' 'unsafe-inline'; "
     "script-src " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_PELE " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_MERMAID
     " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_HIGHLIGHT " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_CODE
+    " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_TEMML " " SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_MATH
     "; "
     "object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'\">";
 
 Str MermaidRunJs() {
     return Str(kMermaidRunJs, (int)(sizeof(kMermaidRunJs) - 1));
+}
+
+// temml.min.js and temml.css (Temml 0.14.0, TeX to MathML; ext/, in
+// IDR_EMBEDDED_PAK) and math-run.js (kMathRunJs), from the markdown virtual
+// host. The browser view draws the MathML with the system math font (#6614).
+static const char kMathStylesheet[] =
+    "<link rel=\"stylesheet\" href=\"" SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_TEMML_CSS "\">";
+static const char kMathScripts[] = "<script src=\"" SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_TEMML
+                                   "\"></script>\n"
+                                   "<script src=\"" SUMATRA_MARKDOWN_HOST SUMATRA_MARKDOWN_MATH "\"></script>\n";
+
+// Bad TeX shows as Temml's error message in place of the formula.
+static const char kMathRunJs[] = R"JS(
+(function () {
+  if (typeof temml === "undefined" || !temml.render) return;
+  document.querySelectorAll(".math-inline, .math-display").forEach(function (el) {
+    var tex = el.textContent;
+    try {
+      temml.render(tex, el, { displayMode: el.classList.contains("math-display"), throwOnError: false });
+    } catch (e) {
+      el.textContent = tex;
+    }
+  });
+})();
+)JS";
+
+Str MathRunJs() {
+    return Str(kMathRunJs, (int)(sizeof(kMathRunJs) - 1));
 }
 
 // microlighter.min.js (ext/, in IDR_EMBEDDED_PAK) colors code blocks that name a
@@ -941,8 +995,8 @@ TempStr BrowserTypographyCssTemp(const WebDocStyle& style) {
         // A CSS escape also keeps '<' from ending the HTML style element.
         TempStr font = str::ReplaceTemp(style.fontName, StrL("<"), StrL("\\3c "));
         css.Append(
-            fmt("body, body :where(:not(pre, code, kbd, samp, tt, svg,"
-                "pre *, code *, kbd *, samp *, tt *, svg *))"
+            fmt("body, body :where(:not(pre, code, kbd, samp, tt, svg, math,"
+                "pre *, code *, kbd *, samp *, tt *, svg *, math *))"
                 " { font-family: \"%s\" !important; }\n",
                 font));
     }
@@ -974,7 +1028,12 @@ Str MarkdownToHtmlPage(Str markdown) {
     html.Append(StrL("<style>"));
     html.Append(Str(MarkdownPageCssTemp()));
     html.Append(BrowserTypographyCssTemp(style));
-    html.Append(StrL("</style></head><body>"));
+    html.Append(StrL("</style>"));
+    bool hasMath = BodyHasMath(Str(body));
+    if (hasMath) {
+        html.Append(Str(kMathStylesheet, (int)(sizeof(kMathStylesheet) - 1)));
+    }
+    html.Append(StrL("</head><body>"));
     CodeBlockCounts counts = RewriteCodeBlocks(html, Str(body));
     cmark_mem* mem = cmark_get_default_mem_allocator();
     mem->free(body);
@@ -988,6 +1047,9 @@ Str MarkdownToHtmlPage(Str markdown) {
     }
     if (counts.withLang + counts.plain > 0) {
         html.Append(Str(kCodeRunScript, (int)(sizeof(kCodeRunScript) - 1)));
+    }
+    if (hasMath) {
+        html.Append(Str(kMathScripts, (int)(sizeof(kMathScripts) - 1)));
     }
     html.Append(StrL("</body></html>"));
 
@@ -1137,6 +1199,86 @@ bool MarkdownToc_UnitTestMermaid() {
     Str run = MermaidRunJs();
     ok = ok && str::Contains(run, StrL("pele.mount"));
     return ok;
+}
+
+// $TeX$, $$TeX$$ and $`TeX`$ reach the page verbatim, for temml to typeset
+// (#6614): markdown escapes and emphasis don't apply inside, prices stay text.
+bool MarkdownToc_UnitTestMath() {
+    struct {
+        Str md;
+        Str want;
+    } cases[] = {
+        {StrL("Inline $\\int_0^\\infty x \\, dx$ here.\n"),
+         StrL("<p>Inline <span class=\"math math-inline\">\\int_0^\\infty x \\, dx</span> here.</p>\n")},
+        {StrL("$$\\left( \\sum_{k=1}^n a_k b_k \\right)^2 \\leq \\sum_{k=1}^n a_k^2$$\n"),
+         StrL("<p><span class=\"math math-display\">\\left( \\sum_{k=1}^n a_k b_k \\right)^2 \\leq \\sum_{k=1}^n "
+              "a_k^2</span></p>\n")},
+        {StrL("$$\n\\begin{aligned}\na &= b \\\\\nc &< d\n\\end{aligned}\n$$\n"),
+         StrL("<p><span class=\"math math-display\">\n\\begin{aligned}\na &amp;= b \\\\\nc &amp;&lt; "
+              "d\n\\end{aligned}\n</span></p>\n")},
+        {StrL("GitHub $`\\sqrt{2}`$ form\n"),
+         StrL("<p>GitHub <span class=\"math math-inline\">\\sqrt{2}</span> form</p>\n")},
+        {StrL("*a $x*y$ b*\n"), StrL("<p><em>a <span class=\"math math-inline\">x*y</span> b</em></p>\n")},
+        {StrL("$a \\$ b$\n"), StrL("<p><span class=\"math math-inline\">a \\$ b</span></p>\n")},
+        {StrL("Prices $5 and $10.\n"), StrL("<p>Prices $5 and $10.</p>\n")},
+        {StrL("From $20 to $30 each\n"), StrL("<p>From $20 to $30 each</p>\n")},
+        {StrL("$ x$ and $x $\n"), StrL("<p>$ x$ and $x $</p>\n")},
+        {StrL("Escaped \\$x\\$\n"), StrL("<p>Escaped $x$</p>\n")},
+        {StrL("Empty $$ $$ and $``$\n"), StrL("<p>Empty $$ $$ and $``$</p>\n")},
+        {StrL("`$x$` code\n"), StrL("<p><code>$x$</code> code</p>\n")},
+        {StrL("Unclosed $x\n"), StrL("<p>Unclosed $x</p>\n")},
+    };
+    for (auto& c : cases) {
+        char* body = MarkdownToHtmlBody(c.md, CMARK_OPT_UNSAFE);
+        if (!body) {
+            return false;
+        }
+        bool ok = str::Eq(Str(body), c.want);
+        if (!ok) {
+            fprintf(stderr, "math\n md: %s got: %s want: %s\n", c.md.s, body, c.want.s);
+        }
+        cmark_get_default_mem_allocator()->free(body);
+        if (!ok) {
+            return false;
+        }
+    }
+
+    // ```math is display math; the page loads temml only when there is math
+    char* body = MarkdownToHtmlBody(StrL("```math\nx < \\frac{1}{2}\n```\n"));
+    if (!body) {
+        return false;
+    }
+    bool fenceHasMath = BodyHasMath(Str(body));
+    str::Builder rewritten;
+    CodeBlockCounts n = RewriteCodeBlocks(rewritten, Str(body));
+    cmark_get_default_mem_allocator()->free(body);
+    Str html = ToStr(rewritten);
+    bool ok = fenceHasMath && n.math == 1 && n.withLang == 0 &&
+              str::Contains(html, StrL("<div class=\"math math-display\">x &lt; \\frac{1}{2}\n</div>")) &&
+              !str::Contains(html, StrL("language-math"));
+    if (!ok) {
+        fprintf(stderr, "math fence: %s\n", html.s);
+        return false;
+    }
+
+    body = MarkdownToHtmlBody(StrL("No math, $5 only.\n"));
+    if (!body) {
+        return false;
+    }
+    ok = !BodyHasMath(Str(body));
+    cmark_get_default_mem_allocator()->free(body);
+
+    // a heading's TeX is part of its anchor, as text
+    body = MarkdownToHtmlBody(StrL("## Area $\\pi r^2$\n"), CMARK_OPT_UNSAFE);
+    if (!body) {
+        return false;
+    }
+    bool headOk = str::Contains(Str(body), StrL("id=\"area-pi-r2\""));
+    if (!headOk) {
+        fprintf(stderr, "math heading: %s\n", body);
+    }
+    cmark_get_default_mem_allocator()->free(body);
+    return ok && headOk && str::Contains(MathRunJs(), StrL("temml.render"));
 }
 
 bool MarkdownToc_UnitTestHighlightWikilinks() {

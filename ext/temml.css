@@ -1,0 +1,373 @@
+/*! Temml v0.14.0 | MIT License | Copyright (c) 2020 Ron Kok | https://temml.org */
+/*
+Temml.woff2 is a clone of KaTeX_Script-Regular, except that the code points
+have been changed from ASCII to Unicode Mathematical Alphanumeric Symbols Script capitals,
+Unicode range 1D49C to 1D4B5.
+*/
+
+@font-face {
+  font-family: 'Temml';
+  src: url(data:font/woff2;base64,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) format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+math {
+  font-family: "Cambria Math", 'STIXTwoMath-Regular', 'NotoSansMath-Regular', math;
+  font-style: normal;
+  font-weight: normal;
+  line-height: normal;
+  font-size-adjust: none;
+  text-indent: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  direction: ltr;
+  /* Prevent Firefox from omitting the dot on i or j. */
+  font-feature-settings: "dtls" off;
+}
+
+math * {
+  border-color: currentColor;
+}
+
+/* display: block is necessary in Firefox and Safari.
+ * Not in Chromium, which recognizes display: "block math" written inline. */
+ math.tml-display {
+  display: block;
+  width: 100%;
+}
+
+*.mathcal {
+  /* NotoSans */
+  font-feature-settings: 'ss01';
+}
+
+math .mathscr {
+  font-family: "Temml";
+}
+
+mo.tml-prime {
+  font-family: Temml;
+}
+
+/* Cramped superscripts in WebKit */
+mfrac > :nth-child(2),
+msqrt,
+mover > :first-child {
+  math-shift: compact
+}
+
+.menclose {
+  display: inline-block;
+  position: relative;
+  padding: 0.5ex 0ex;
+}
+.tml-cancelto {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.5ex 0ex;
+  background-color: currentColor;
+  /* Use the SVG as an alpha mask (painted by background-color) */
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><defs><marker id='a' markerHeight='5' markerUnits='strokeWidth' markerWidth='7' orient='auto' refX='7' refY='2.5'><path fill='black' d='m0 0 7 2.5L0 5z'/></marker></defs><line x2='100%25' y1='100%25' stroke='black' stroke-width='.06em' marker-end='url(%23a)' vector-effect='non-scaling-stroke'/></svg>");
+          mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><defs><marker id='a' markerHeight='5' markerUnits='strokeWidth' markerWidth='7' orient='auto' refX='7' refY='2.5'><path fill='black' d='m0 0 7 2.5L0 5z'/></marker></defs><line x2='100%25' y1='100%25' stroke='black' stroke-width='.06em' marker-end='url(%23a)' vector-effect='non-scaling-stroke'/></svg>");
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+          mask-size: 100% 100%;
+  -webkit-mask-position: 0 0;
+          mask-position: 0 0;
+}
+
+@supports (-moz-appearance: none) {
+  /* \vec w/o italic correction for Firefox */
+  .tml-vec {
+    transform: scale(0.75)
+  }
+  /* Fix \cancelto in Firefox */
+  .ff-narrow {
+    width: 0em;
+  }
+  .ff-nudge-left {
+    margin-left: -0.2em;
+  }
+  /* Squash hidden mrows in \bordermatrix. Messes with centering, but necessary to squash. */
+  .ff-squash mtd {
+    display: block;
+    height: 0;
+  }
+}
+
+@supports (not (-moz-appearance: none)) {
+  /* Chromium and WebKit */
+  /* prime vertical alignment */
+  mo.tml-prime {
+    font-family: Temml;
+  }
+  /* Italic correction on superscripts */
+  .tml-sml-pad {
+    padding-left: 0.05em;
+  }
+  .tml-med-pad {
+    padding-left: 0.10em;
+  }
+  .tml-lrg-pad {
+    padding-left: 0.15em;
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(1px)) {
+  /* WebKit vertical & italic correction on accents */
+  .wbk-acc {
+    /* lower by x-height distance */
+    transform: translate(0em, 0.431em);
+  }
+  .wbk-sml {
+    transform: translate(0.07em, 0);
+  }
+  .wbk-sml-acc {
+    transform: translate(0.07em, 0.431em);
+  }
+  .wbk-sml-vec {
+    transform: scale(0.75) translate(0.07em, 0);
+  }
+  .wbk-med {
+    transform: translate(0.14em, 0);
+  }
+  .wbk-med-acc {
+    transform: translate(0.14em, 0.431em);
+  }
+  .wbk-med-vec {
+    transform: scale(0.75) translate(0.14em, 0);
+  }
+  .wbk-lrg {
+    transform: translate(0.21em, 0);
+  }
+  .wbk-lrg-acc {
+    transform: translate(0.21em, 0.431em);
+  }
+  .wbk-lrg-vec {
+    transform: scale(0.75) translate(0.21em, 0);
+  }
+}
+
+/* \cancel & \phase use background images. Get them to print. */
+menclose {
+  -webkit-print-color-adjust: exact;  /* Chrome & Edge */
+          print-color-adjust: exact;
+}
+
+/* Array cell justification in Firefox & WebKit */
+.tml-right {
+  text-align: right;
+}
+.tml-left {
+  text-align: left;
+}
+
+/* For CD labels that grow to the left in Firefox and WebKit */
+.tml-shift-left { margin-left:-200% }
+
+/* Styles for Chromium only */
+@supports (not (-webkit-backdrop-filter: blur(1px))) and (not (-moz-appearance: none)) {
+  /* Italic correction on accents */
+  .chr-sml {
+    transform: translate(0.07em, 0)
+  }
+  .chr-sml-vec {
+    transform: scale(0.75) translate(0.07em, 0)
+  }
+  .chr-med {
+    transform: translate(0.14em, 0)
+  }
+  .chr-med-vec {
+    transform: scale(0.75) translate(0.14em, 0)
+  }
+  .chr-lrg {
+    transform: translate(0.21em, 0)
+  }
+  .chr-lrg-vec {
+    transform: scale(0.75) translate(0.21em, 0)
+  }
+
+  /* For CD labels that grow to the left */
+  .tml-shift-left { margin-left:-100% }
+
+  /* MathML Core & Chromium do not support the MathML 3.0 element <menclose> attributes. */
+  /* So use styles. */
+  menclose {
+    position: relative;
+    padding: 0.5ex 0ex;
+  }
+  
+    .tml-overline {
+    padding: 0.1em 0 0 0;
+    border-top: 0.065em solid;
+  }
+
+  .tml-underline {
+    padding: 0 0 0.1em 0;
+    border-bottom: 0.065em solid;
+  }
+
+  .tml-cancel {
+    display: inline-block;
+    position: absolute;
+    left: 0.5px;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: currentColor;
+  }
+  .upstrike {
+    clip-path: polygon(0.05em 100%, 0em calc(100% - 0.05em), calc(100% - 0.05em) 0em, 100% 0.05em);
+  }
+  .downstrike {
+    clip-path: polygon(0em 0.05em, 0.05em 0em, 100% calc(100% - 0.05em), calc(100% - 0.05em) 100%);
+  }
+  .sout {
+    clip-path: polygon(0em calc(55% + 0.0333em), 0em calc(55% - 0.0333em), 100% calc(55% - 0.0333em), 100% calc(55% + 0.0333em));
+  }
+  .tml-xcancel {
+    clip-path: polygon(0.05em 0em, 0em 0.05em, calc(50% - 0.05em) 50%, 0em calc(100% - 0.05em), 0.05em 100%, 50% calc(50% + 0.05em), calc(100% - 0.05em) 100%, 100% calc(100% - 0.05em), calc(50% + 0.05em) 50%, 100% 0.05em, calc(100% - 0.05em) 0%, 50% calc(50% - 0.05em));
+  }
+
+  .longdiv-top {
+    border-top: 0.067em solid;
+    padding: 0.1em 0.2em 0.2em 0.433em;
+  }
+  .longdiv-arc {
+    position: absolute;
+    top: 0;
+    bottom: 0.1em;
+    left: -0.4em;
+    width: 0.7em;
+    border: 0.067em solid;
+    transform: translateY(-0.067em);
+    border-radius: 70%;
+    clip-path: inset(0 0 0 0.4em);
+    box-sizing: border-box;}
+    .menclose {display: inline-block;
+    text-align: left;
+    position: relative;
+  }
+  
+  .phasor-bottom {
+    border-bottom: 0.067em solid;
+    padding: 0.2em 0.2em 0.1em 0.6em;
+  }
+  .phasor-angle {
+    display: inline-block;
+    position: absolute;
+    left: 0.5px;
+    bottom: -0.04em;
+    height: 100%;
+    aspect-ratio: 0.5;
+    background-color: currentColor;
+    clip-path: polygon(0.05em 100%, 0em calc(100% - 0.05em), calc(100% - 0.05em) 0em, 100% 0.05em);
+  }
+
+  .tml-fbox {
+    padding: 3pt;
+    border: 1px solid;
+  }
+
+  .circle-pad {
+    padding: 0.267em;
+  }
+  .textcircle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    border: 0.067em solid;
+    border-radius: 50%;
+   }
+
+   .actuarial {
+    padding: 0.03889em 0.03889em 0 0.03889em;
+    border-width: 0.08em 0.08em 0em 0em;
+    border-style: solid;
+    margin-right: 0.03889em;
+   }
+
+   /* Stretch \widetilde */
+  .tml-tilde-2 {
+    transform: scale(2.0, 1.1)
+  }
+  .tml-tilde-3 {
+    transform: scale(3.0, 1.1)
+  }
+  .tml-tilde-4 {
+    transform: scale(4.0, 1.1)
+  }
+  /* Stretch \widehat */
+  .tml-hat-1 {
+    transform: scale(1.9, 1.0)
+  }
+  .tml-hat-2 {
+    transform: scale(3.9, 1.0)
+  }
+  .tml-hat-3 {
+    transform: scale(5.8, 1.0)
+  }
+  .tml-hat-4 {
+    transform: scale(7.8, 1.0)
+  }
+  
+  /* set array cell justification */
+  .tml-right {
+    text-align: -webkit-right;
+  }
+  .tml-left {
+    text-align: -webkit-left;
+  }
+}
+
+.special-fraction {
+  font-family: 'STIX TWO', 'Times New Roman', Times, Tinos, serif;
+}
+
+/* flex-wrap for line-breaking in Chromium */
+math {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+math > mrow {
+  padding: 0.5ex 0ex;
+}
+
+/* Default mtd top padding is 0.5ex per MathML-Core and user-agent CSS */
+/* We adjust for jot and small */
+mtable.tml-jot > mtr > mtd {
+  padding-top: 0.7ex;
+  padding-bottom: 0.7ex;
+}
+mtable.tml-small mtd {
+  padding-top: 0.35ex;
+  padding-bottom: 0.35ex;
+}
+
+/* Firefox */
+@-moz-document url-prefix() {
+  /* Avoid flex-wrap */
+  math { display: inline; }
+  math > mrow { padding: 0 }
+  /* Adjust Firefox spacing between array rows */
+  mtd, mtable.tml-small mtd { padding-top: 0; padding-bottom: 0; }
+  mtable.tml-jot > mtr > mtd { padding-top: 0.2ex; padding-bottom: 0.2ex; }
+}
+
+/* AMS environment auto-numbering via CSS counter. */
+.tml-eqn::before {
+  counter-increment: tmlEqnNo;
+  content: "(" counter(tmlEqnNo) ")";
+}
+
+body {
+  counter-reset: tmlEqnNo;
+}

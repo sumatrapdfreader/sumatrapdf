@@ -15,8 +15,8 @@ import type { Toolchain } from "./ng-toolchain";
 import { genPDFScripts } from "../gen-pdf-scripts";
 
 const root = resolve(import.meta.dir, "../..");
-// scripts from ext/ the app embeds as is (markdown rendering, pele, code highlighting)
-export const extScripts = ["markdown-it.min.js", "pele.min.js", "microlighter.min.js"];
+// scripts from ext/ the app embeds as is (markdown rendering, pele, code highlighting, math)
+export const extScripts = ["markdown-it.min.js", "pele.min.js", "microlighter.min.js", "temml.min.js", "temml.css"];
 
 // base 14 and Charis SIL (EPUB); the CJK and Noto fallbacks download on first use,
 // as in orig (cmd/pack-embedded-prebuild.cmd)

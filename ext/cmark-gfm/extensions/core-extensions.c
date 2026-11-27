@@ -7,6 +7,7 @@
 #include "registry.h"
 #include "autoheaderid.h"
 #include "highlight.h"
+#include "texmath.h"
 #include "plugin.h"
 
 static int core_extensions_registration(cmark_plugin *plugin) {
@@ -18,6 +19,7 @@ static int core_extensions_registration(cmark_plugin *plugin) {
   cmark_plugin_register_syntax_extension(plugin, create_tasklist_extension());
   cmark_plugin_register_syntax_extension(plugin, create_autoheaderid_extension());
   cmark_plugin_register_syntax_extension(plugin, create_highlight_extension());
+  cmark_plugin_register_syntax_extension(plugin, create_math_extension());
   return 1;
 }
 

@@ -12,7 +12,8 @@ REM                       passed as extra files
 REM
 REM Staged (in-archive names are relative to the staging dir):
 REM   .work\translations.txt  (created empty when trans-dl.ts never ran)
-REM   ext\markdown-it.min.js, ext\pele.min.js, ext\microlighter.min.js
+REM   ext\markdown-it.min.js, ext\pele.min.js, ext\microlighter.min.js,
+REM   ext\temml.min.js, ext\temml.css
 REM   fonts\*                 mupdf's built-in fonts, picked from
 REM                           ext\mupdf\resources\fonts (see :fonts below).
 REM                           Skipped when SUMATRA_NO_EMBED_FONTS=1; the app
@@ -81,6 +82,8 @@ if exist "%WORK%\scripts.js" (
 copy /y "%ROOT%\ext\markdown-it.min.js" "%STAGING%\markdown-it.min.js" >nul || exit /b 1
 copy /y "%ROOT%\ext\pele.min.js" "%STAGING%\pele.min.js" >nul || exit /b 1
 copy /y "%ROOT%\ext\microlighter.min.js" "%STAGING%\microlighter.min.js" >nul || exit /b 1
+copy /y "%ROOT%\ext\temml.min.js" "%STAGING%\temml.min.js" >nul || exit /b 1
+copy /y "%ROOT%\ext\temml.css" "%STAGING%\temml.css" >nul || exit /b 1
 
 REM base 14 (URW), needed by most PDFs, and Charis SIL, every EPUB's font.
 REM Not packed, downloaded on first use: the CJK fallback (Droid), the Noto

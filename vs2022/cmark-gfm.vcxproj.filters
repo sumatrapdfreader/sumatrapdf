@@ -36,6 +36,9 @@
     <ClCompile Include="..\ext\cmark-gfm\extensions\tasklist.c">
       <Filter>extensions</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\texmath.c">
+      <Filter>extensions</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\cmark-gfm\src\arena.c">
       <Filter>src</Filter>
     </ClCompile>

@@ -1133,6 +1133,7 @@
     <ClCompile Include="..\ext\cmark-gfm\extensions\table.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\tagfilter.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\tasklist.c" />
+    <ClCompile Include="..\ext\cmark-gfm\extensions\texmath.c" />
     <ClCompile Include="..\ext\cmark-gfm\src\arena.c" />
     <ClCompile Include="..\ext\cmark-gfm\src\blocks.c" />
     <ClCompile Include="..\ext\cmark-gfm\src\buffer.c" />
