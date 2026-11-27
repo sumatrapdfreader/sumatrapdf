@@ -198,6 +198,9 @@ class EngineMupdf : public EngineBase {
     // reflowPagesVary: laid-out chapters measured to different sizes.
     RectF reflowMediabox;
     bool reflowPagesVary = false;
+    // HTML, FB2, MOBI, Markdown, text: mupdf's html-doc, which resolves its
+    // outline at layout (not EPUB, which resolves an entry when asked)
+    bool isHtmlDoc = false;
     Vec<u8> chapterBoxMeasured; // 1 once that chapter's box came from fz_bound_page
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;

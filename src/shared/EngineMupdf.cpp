@@ -444,7 +444,7 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
     return LinkDestPageNo(ldest, pageNo, xp, yp, zoomp, rectp);
 }
 
-// For a reflowable document without chapters (HTML, FB2, MOBI, Markdown, text),
+// For mupdf's html-doc (HTML, FB2, MOBI, Markdown, text; e->isHtmlDoc),
 // fz_load_outline() resolved the entries at layout, all in one walk
 // (ext/patches/0094). ResolveLink() gets the same destination, but walks the
 // whole document for each entry.
@@ -630,7 +630,7 @@ static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, 
             loc = {chapter, 0};
         }
     } else {
-        if (outline && e->isReflowable) {
+        if (outline && e->isHtmlDoc) {
             pageNo = ResolveHtmlOutlineEntry(ctx, doc, outline, &x, &y, &z, &destRect);
         } else {
             pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z, &destRect);
@@ -5040,6 +5040,16 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     }
 
     isReflowable = fz_is_document_reflowable(ctx, _doc) != 0;
+    if (isReflowable) {
+        char format[32] = {};
+        fz_try(ctx) {
+            fz_lookup_metadata(ctx, _doc, FZ_META_FORMAT, format, sizeof(format));
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+        isHtmlDoc = !str::StartsWith(Str(format), StrL("EPUB"));
+    }
     // the CSS styles nothing else: a PDF page is recolored as a bitmap, from white
     ebookPageBg = isReflowable ? themePageBg : kColWhite;
 
