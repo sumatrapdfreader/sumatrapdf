@@ -237,6 +237,8 @@ pdf_lookup_field(fz_context *ctx, pdf_obj *arr, const char *str)
 	return pdf_lookup_field_imp(ctx, arr, str, NULL);
 }
 
+static pdf_annot *find_widget(fz_context *ctx, pdf_document *doc, pdf_obj *chk);
+
 static void reset_form_field(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 {
 	/* Set V to DV wherever DV is present, and delete V where DV is not.
@@ -276,9 +278,15 @@ static void reset_form_field(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 
 				if (!pdf_is_name(ctx, leafv))
 					leafv = PDF_NAME(Off);
-				pdf_dict_put(ctx, field, PDF_NAME(AS), leafv);
+				/* SumatraPDF: switch to the state's own appearance; marking
+				 * the field dirty replaced the document's checkbox drawing
+				 * with a generic one (idea from Vira Reader) */
+				if (!pdf_name_eq(ctx, pdf_dict_get(ctx, field, PDF_NAME(AS)), leafv))
+				{
+					pdf_dict_put(ctx, field, PDF_NAME(AS), leafv);
+					pdf_set_annot_has_changed(ctx, find_widget(ctx, doc, field));
+				}
 			}
-			pdf_field_mark_dirty(ctx, field);
 			break;
 
 		case PDF_WIDGET_TYPE_BUTTON:
