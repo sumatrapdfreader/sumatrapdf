@@ -109,6 +109,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0106-pdf-script-button-value` | a checkbox / radio value set by a script (or our radio toggle) is a name in `/V`, and buttons keep their own appearances |
 | `0107-html-aat-deleted-glyph` | a glyph an Apple font's morx shaping deleted (0xFFFF) isn't drawn |
 | `0108-html-draw-abort-cookie` | drawing an HTML / EPUB page stops when the render is aborted |
+| `0109-pdf-appearance-encoding-check` | form text the simple writer can't encode in the encoding it picks ("x ≈ 5", "Привет ™") takes the rich layout instead of replacement characters; after `0009` |
 | `backport-ab37474fc-redact-actualtext` | redaction rewrites a tagged element's `/ActualText`, not `/Alt`; the redacted words stayed in the file (mupdf bug 709973) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these

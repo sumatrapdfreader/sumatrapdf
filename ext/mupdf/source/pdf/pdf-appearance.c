@@ -2548,46 +2548,64 @@ measure_rich_line(fz_context *ctx, const char *rc, const char *ds, float size)
 	return x1 > x0 ? x1 - x0 : 0;
 }
 
-static int text_needs_rich_layout(fz_context *ctx, const char *s)
+/* SumatraPDF: whether the simple writer can't draw text, so it needs the rich
+ * (HTML) layout. It accepted a character any 8-bit encoding had, but the
+ * writer picks the encoding by script, and a neutral character takes the
+ * script before it: "x ≈ 5" ('≈' only in KOI8) and "Привет ™" ('™' only in
+ * cp1252) came out with replacement characters. Now each character is checked
+ * against the encoding next_text_walk() picks for it. (Idea from Vira
+ * Reader's mupdf-appearance-cjk.patch.) */
+static int text_needs_rich_layout(fz_context *ctx, const char *s, fz_text_language lang)
 {
-	int c, script;
-	while (*s)
+	struct text_walk_state state;
+	init_text_walk(ctx, &state, lang, NULL, s, NULL);
+	while (next_text_walk(ctx, &state))
 	{
-		s += fz_chartorune(&c, s);
+		int c = state.u, encoded;
+		const char *cmap_name;
 
-		// base 14 fonts
-		if (fz_windows_1252_from_unicode(c) > 0)
-			continue;
-		/* SumatraPDF: Central European Latin (Č, Ň, ...) is handled by the
-		 * base appearance path via ENC_LATIN2, so it does not need (and must
-		 * not take) the rich/HTML layout path which renders it blank (#5404) */
-		if (fz_windows_1250_from_unicode(c) > 0)
-			continue;
-		if (fz_iso8859_7_from_unicode(c) > 0)
-			continue;
-		if (fz_koi8u_from_unicode(c) > 0)
-			continue;
+		/* the simple writer writes BMP code points, not surrogate pairs */
+		if (c > 0xffff)
+			return 1;
 
-		// cjk fonts
-		script = ucdn_get_script(c);
-		if (
-			script == UCDN_SCRIPT_HANGUL ||
-			script == UCDN_SCRIPT_HIRAGANA ||
-			script == UCDN_SCRIPT_KATAKANA ||
-			script == UCDN_SCRIPT_BOPOMOFO ||
-			script == UCDN_SCRIPT_HAN
-		)
+		if (state.enc < ENC_KOREAN)
+		{
+			switch (state.enc)
+			{
+			case ENC_LATIN: encoded = fz_windows_1252_from_unicode(c); break;
+			/* Central European Latin (Č, Ň, ...) (#5404) */
+			case ENC_LATIN2: encoded = fz_windows_1250_from_unicode(c); break;
+			case ENC_GREEK: encoded = fz_iso8859_7_from_unicode(c); break;
+			case ENC_CYRILLIC: encoded = fz_koi8u_from_unicode(c); break;
+			default: return 1;
+			}
+			/* next_text_walk() swaps an unencodable character for REPLACEMENT */
+			if (encoded < 0 || state.c != encoded)
+				return 1;
 			continue;
+		}
 
-		// halfwidth and fullwidth forms
-		if (c >= 0xff01 && c <= 0xffee)
-			continue;
+		/* a neutral character after CJK text takes the CJK font: one that
+		 * isn't CJK punctuation or in any 8-bit encoding needs the rich path */
+		if (ucdn_get_script(c) == UCDN_SCRIPT_COMMON || ucdn_get_script(c) == UCDN_SCRIPT_INHERITED)
+		{
+			if (!(c >= 0xff01 && c <= 0xffee) && !(c >= 0x3000 && c <= 0x303f) &&
+				fz_windows_1252_from_unicode(c) < 0 && fz_iso8859_7_from_unicode(c) < 0 &&
+				fz_koi8u_from_unicode(c) < 0)
+				return 1;
+		}
 
-		// cjk symbols and punctuation
-		if (c >= 0x3000 && c <= 0x303f)
-			continue;
-
-		return 1;
+		/* the CJK font of the writer's encoding must have the character */
+		switch (state.enc)
+		{
+		case ENC_KOREAN: cmap_name = "UniKS-UTF16-H"; break;
+		case ENC_JAPANESE: cmap_name = "UniJIS-UTF16-H"; break;
+		case ENC_HANT: cmap_name = "UniCNS-UTF16-H"; break;
+		case ENC_HANS: cmap_name = "UniGB-UTF16-H"; break;
+		default: return 1;
+		}
+		if (pdf_lookup_cmap(pdf_load_system_cmap(ctx, cmap_name), c) < 0)
+			return 1;
 	}
 	return 0;
 }
@@ -2844,7 +2862,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 #if FZ_ENABLE_HTML_ENGINE
 	ds = pdf_dict_get_text_string_opt(ctx, annot->obj, PDF_NAME(DS));
 	rc = pdf_dict_get_text_string_opt(ctx, annot->obj, PDF_NAME(RC));
-	if (!rc && (ds || text_needs_rich_layout(ctx, text)))
+	if (!rc && (ds || text_needs_rich_layout(ctx, text, lang)))
 	{
 		rc = free_rc = escape_text(ctx, text);
 		if (!ds)
@@ -2931,7 +2949,7 @@ pdf_write_tx_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 #if FZ_ENABLE_HTML_ENGINE
 	ds = pdf_dict_get_text_string_opt(ctx, annot->obj, PDF_NAME(DS));
 	rc = pdf_dict_get_text_string_opt(ctx, annot->obj, PDF_NAME(RV));
-	if (!rc && (ds || text_needs_rich_layout(ctx, text)))
+	if (!rc && (ds || text_needs_rich_layout(ctx, text, lang)))
 	{
 		rc = free_rc = escape_text(ctx, text);
 		if (!ds)
