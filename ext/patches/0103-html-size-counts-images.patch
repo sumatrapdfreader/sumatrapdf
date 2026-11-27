@@ -1,0 +1,52 @@
+An HTML / EPUB chapter's size in the store counts its images.
+
+fz_html_size() counted only the box pool. The images the flows (<img>) and
+boxes (CSS background images, 0038) hold are outside it, so an image-heavy
+chapter (a comic, an illustrated book) was undercounted and the store kept
+too many. (Idea from Vira Reader's mupdf-html-image-size.patch; this one also
+counts background images and those of inline boxes.)
+
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index 2c3958f15..af91e9306 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -3025,10 +3025,38 @@ fz_debug_html(fz_context *ctx, fz_html_box *box)
+ 	fz_debug_html_box(ctx, box, 0);
+ }
+ 
++/* SumatraPDF: the images the boxes and flows hold (<img>, CSS background
++ * images) are outside the pool. */
++static size_t
++html_box_image_size(fz_context *ctx, fz_html_box *box)
++{
++	size_t size = 0;
++	for (; box; box = box->next)
++	{
++		if (box->background_image)
++			size += fz_image_size(ctx, box->background_image);
++		if (box->type == BOX_FLOW)
++		{
++			fz_html_flow *flow;
++			for (flow = box->u.flow.head; flow; flow = flow->next)
++				if (flow->type == FLOW_IMAGE)
++					size += fz_image_size(ctx, flow->content.image);
++		}
++		/* a flow box's children are its inline boxes */
++		size += html_box_image_size(ctx, box->down);
++	}
++	return size;
++}
++
++/* SumatraPDF: count the images too, or the store undercounts an
++ * image-heavy chapter (a comic, an illustrated book) and keeps too many
++ * (idea from Vira Reader). */
+ static size_t
+ fz_html_size(fz_context *ctx, fz_html *html)
+ {
+-	return html ? fz_pool_size(ctx, html->tree.pool) : 0;
++	if (!html)
++		return 0;
++	return fz_pool_size(ctx, html->tree.pool) + html_box_image_size(ctx, html->tree.root);
+ }
+ 
+ /* Magic to make html storable. */
