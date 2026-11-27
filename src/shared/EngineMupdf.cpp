@@ -4359,6 +4359,142 @@ Str LoadEmbeddedPDFFile(Str filePath) {
     return res;
 }
 
+// a text file's chapter headings: at least this many make it a book with a TOC
+constexpr int kMinTxtChapters = 2;
+constexpr int kMaxTxtHeadingCodepoints = 80;
+
+// Splits off the first word: letters, digits and '-' (twenty-one).
+static Str TxtFirstWord(Str s, Str* rest) {
+    int i = 0;
+    while (i < s.len && (str::IsAlNum(s.s[i]) || s.s[i] == '-' || (u8)s.s[i] >= 0x80)) {
+        i++;
+    }
+    *rest = Str(s.s + i, s.len - i);
+    return Str(s.s, i);
+}
+
+static bool IsTxtNumberWord(Str w) {
+    static const SeqStrings kWords =
+        "one\0two\0three\0four\0five\0six\0seven\0eight\0nine\0ten\0eleven\0twelve\0thirteen\0fourteen\0"
+        "fifteen\0sixteen\0seventeen\0eighteen\0nineteen\0twenty\0thirty\0forty\0fifty\0sixty\0seventy\0"
+        "eighty\0ninety\0hundred\0";
+    // twenty-one
+    for (Str rest = w; rest;) {
+        Str part;
+        str::CutChar(rest, '-', &part, &rest);
+        if (SeqStrIndexI(kWords, part) < 0) {
+            return false;
+        }
+    }
+    return len(w) > 0;
+}
+
+// 12, IV, Three, twenty-one
+static bool IsTxtChapterNumber(Str w) {
+    if (len(w) == 0) {
+        return false;
+    }
+    bool digits = true;
+    bool roman = true;
+    for (int i = 0; i < w.len; i++) {
+        digits = digits && str::IsDigit(w.s[i]);
+        roman = roman && str::ContainsChar(StrL("IVXLCDMivxlcdm"), w.s[i]);
+    }
+    return digits || roman || IsTxtNumberWord(w);
+}
+
+// "Chapter 12", "CHAPTER IV. Title", "Part Two", "Prologue", "Глава 3"
+static bool IsTxtLatinHeading(Str line) {
+    static const SeqStrings kNumbered = "chapter\0part\0book\0";
+    static const SeqStrings kNamed = "prologue\0epilogue\0preface\0foreword\0introduction\0afterword\0";
+    Str rest;
+    Str word = TxtFirstWord(line, &rest);
+    if (SeqStrIndexI(kNamed, word) >= 0) {
+        // alone, or followed by punctuation and a title ("Prologue: The Fall")
+        return len(rest) == 0 || !str::IsAlNum(rest.s[0]);
+    }
+    if (str::Eq(word, StrL("Глава")) || str::Eq(word, StrL("ГЛАВА"))) {
+        return len(rest) > 1 && rest.s[0] == ' ';
+    }
+    if (SeqStrIndexI(kNumbered, word) < 0 || len(rest) < 2 || rest.s[0] != ' ') {
+        return false;
+    }
+    Str num = TxtFirstWord(Str(rest.s + 1, rest.len - 1), &rest);
+    return IsTxtChapterNumber(num) && (len(rest) == 0 || !str::IsAlNum(rest.s[0]));
+}
+
+// is code point c one of the characters of UTF-8 string chars
+static bool Utf8HasCodepoint(Str chars, int c) {
+    for (int i = 0; i < chars.len;) {
+        if (Utf8CodepointNext(chars, i) == c) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// "第十二章 标题", "第3回", "楔子"
+static bool IsTxtCjkHeading(Str line) {
+    static const SeqStrings kNamed = "序章\0楔子\0尾声\0番外\0后记\0序言\0前言\0引子\0";
+    for (Str name = SeqStrFirst(kNamed); name; name = SeqStrNext(name)) {
+        if (str::StartsWith(line, name)) {
+            return true;
+        }
+    }
+    Str rest = line;
+    if (!str::TrimPrefix(rest, StrL("第"))) {
+        return false;
+    }
+    int nDigits = 0;
+    int i = 0;
+    while (i < rest.len) {
+        int next = i;
+        int c = Utf8CodepointNext(rest, next);
+        bool isNumeral = (c >= '0' && c <= '9') || (c >= 0xFF10 && c <= 0xFF19) ||
+                         Utf8HasCodepoint(StrL("〇零一二三四五六七八九十百千万两"), c);
+        if (!isNumeral) {
+            break;
+        }
+        nDigits++;
+        i = next;
+    }
+    if (nDigits == 0) {
+        return false;
+    }
+    int c = Utf8CodepointAtByte(rest, i);
+    return c != 0 && Utf8HasCodepoint(StrL("章回卷节集部篇"), c);
+}
+
+static bool IsBlankTxtLine(Str line) {
+    str::TrimWsBoth(line);
+    return len(line) == 0;
+}
+
+// Indexes of the lines that are chapter headings. A CJK heading is distinctive
+// enough on its own; a Latin one must stand alone between blank lines.
+static void FindTxtChapterLines(const StrVec& lines, Vec<int>& out) {
+    int n = len(lines);
+    for (int i = 0; i < n; i++) {
+        Str line = lines.At(i);
+        str::TrimWsBoth(line);
+        // full-width spaces indent Chinese text
+        while (str::TrimPrefix(line, StrL("\xE3\x80\x80"))) {
+        }
+        if (len(line) == 0 || Utf8CodepointCount(line) > kMaxTxtHeadingCodepoints) {
+            continue;
+        }
+        if (IsTxtCjkHeading(line)) {
+            VecAppend(out, i);
+            continue;
+        }
+        bool blankBefore = i == 0 || IsBlankTxtLine(lines.At(i - 1));
+        bool blankAfter = i == n - 1 || IsBlankTxtLine(lines.At(i + 1));
+        if (blankBefore && blankAfter && IsTxtLatinHeading(line)) {
+            VecAppend(out, i);
+        }
+    }
+}
+
 static Str TxtFileToHTML(Str path) {
     Str fd = file::ReadFileWithArena(path, GetTempArena());
     if (len(fd) == 0) {
@@ -4394,11 +4530,40 @@ static Str TxtFileToHTML(Str path) {
     pre {
         white-space: pre-wrap;
     }
+    h2 {
+        font-size: 1.2em;
+    }
 </style>
     </head>
 <body>
     <pre>)"));
-    bool ok = d.Append(data);
+
+    // chapter headings become <h2>, which mupdf makes the table of contents
+    StrVec lines;
+    Split(&lines, data, StrL("\n"));
+    Vec<int> chapters;
+    FindTxtChapterLines(lines, chapters);
+    bool ok = true;
+    if (len(chapters) < kMinTxtChapters) {
+        ok = d.Append(data);
+    } else {
+        int next = 0;
+        for (int i = 0; i < len(lines); i++) {
+            Str line = lines.At(i);
+            if (next < len(chapters) && chapters[next] == i) {
+                next++;
+                str::TrimWsBoth(line);
+                d.Append(StrL("</pre><h2>"));
+                d.Append(line);
+                d.Append(StrL("</h2><pre>"));
+                continue;
+            }
+            ok = ok && d.Append(line);
+            if (i < len(lines) - 1) {
+                d.AppendChar('\n');
+            }
+        }
+    }
     if (!ok) {
         return {};
     }
