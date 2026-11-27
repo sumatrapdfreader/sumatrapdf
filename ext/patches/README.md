@@ -96,6 +96,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0093-redact-actualtext-despite-alt` | redaction keeps editing a tagged element's `/ActualText` when its `/Alt` (a description) doesn't match the text; `/ActualText` kept the redacted words |
 | `0094-html-outline-targets-one-walk` | an HTML / FB2 / MOBI outline is resolved in one walk of the tree (`fz_find_html_targets`), not one per entry; long books took seconds to open |
 | `0095-pdf-dest-rotated-page-axes` | a link / bookmark destination on a page rotated 90 or 270 degrees keeps the right coordinate; `/XYZ null 500` went to a made-up height |
+| `0096-pdf-signature-widget-error` | creating a signature field that fails reports the error instead of returning the deleted widget, which Sign PDF went on to sign |
 | `backport-ab37474fc-redact-actualtext` | redaction rewrites a tagged element's `/ActualText`, not `/Alt`; the redacted words stayed in the file (mupdf bug 709973) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these

@@ -1,0 +1,31 @@
+pdf_create_signature_widget() reports a failure instead of returning a
+deleted widget.
+
+When filling in the new widget threw (e.g. the form's /Fields isn't an array),
+the catch deleted the widget from the page and then returned it as if it had
+worked, keeping the caller's reference: our Sign PDF went on to sign a widget
+no longer on the page. Now it drops the reference and rethrows.
+(Idea from Vira Reader's mupdf-signature-errors.patch.)
+
+diff --git a/source/pdf/pdf-form.c b/source/pdf/pdf-form.c
+index 4f0a2fd18..acae86e91 100644
+--- a/source/pdf/pdf-form.c
++++ b/source/pdf/pdf-form.c
+@@ -1087,8 +1087,16 @@ pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name)
+ 	}
+ 	fz_catch(ctx)
+ 	{
++		/* SumatraPDF: report the error; the widget is deleted, so it mustn't
++		 * be returned (the caller would sign a widget no longer on the page) */
+ 		pdf_abandon_operation(ctx, page->doc);
+-		pdf_delete_annot(ctx, page, annot);
++		fz_try(ctx)
++			pdf_delete_annot(ctx, page, annot);
++		fz_always(ctx)
++			pdf_drop_annot(ctx, annot);
++		fz_catch(ctx)
++			fz_rethrow(ctx);
++		fz_rethrow(ctx);
+ 	}
+ 	return (pdf_annot *)annot;
+ }

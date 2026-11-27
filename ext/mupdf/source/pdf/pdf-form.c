@@ -1087,8 +1087,16 @@ pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name)
 	}
 	fz_catch(ctx)
 	{
+		/* SumatraPDF: report the error; the widget is deleted, so it mustn't
+		 * be returned (the caller would sign a widget no longer on the page) */
 		pdf_abandon_operation(ctx, page->doc);
-		pdf_delete_annot(ctx, page, annot);
+		fz_try(ctx)
+			pdf_delete_annot(ctx, page, annot);
+		fz_always(ctx)
+			pdf_drop_annot(ctx, annot);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+		fz_rethrow(ctx);
 	}
 	return (pdf_annot *)annot;
 }

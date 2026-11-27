@@ -115,6 +115,7 @@ import { testit as redactActualText } from "./redact-actualtext.ts";
 import { testit as txtEncoding } from "./txt-encoding.ts";
 import { testit as htmlTocTargets } from "./html-toc-targets.ts";
 import { testit as pdfDestRotated } from "./pdf-dest-rotated.ts";
+import { testit as pdfSignWidgetError } from "./pdf-sign-widget-error.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
@@ -750,6 +751,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["txt-encoding", txtEncoding],
   ["html-toc-targets", htmlTocTargets],
   ["pdf-dest-rotated", pdfDestRotated],
+  ["pdf-sign-widget-error", pdfSignWidgetError],
   parallelTest("issue-6434"),
   ["issue-6407", issue6407],
   ["issue-6435", issue6435],
