@@ -4156,9 +4156,10 @@ struct ReloadAsyncData {
     u64 winLifetimeId = 0;
     WindowTab* tab = nullptr;
     u64 tabLifetimeId = 0;
-    // the controller the tab had when the reload started: a different one at
-    // finish means the tab shows another document now, so the result is stale
-    DocController* oldCtrl = nullptr;
+    // lifetimeId of the controller the tab had when the reload started: a
+    // different one at finish means the tab shows another document now (or the
+    // same file loaded again), so the result is stale
+    int oldCtrlLifetimeId = 0;
     Str path;
     float ebookAspect = 0.f;
     // read on the UI thread: the load thread can't walk the file history (#4600)
@@ -4183,7 +4184,8 @@ static void ReloadDocumentAsyncFinish(ReloadAsyncData* d) {
     if (tabAlive) {
         tab->autoReloadInFlight = false;
     }
-    bool sameDoc = tabAlive && tab->ctrl == d->oldCtrl && tab->IsDocLoaded() && path::IsSame(tab->filePath, d->path);
+    bool sameDoc = tabAlive && tab->ctrl && tab->ctrl->lifetimeId == d->oldCtrlLifetimeId && tab->IsDocLoaded() &&
+                   path::IsSame(tab->filePath, d->path);
     if (!sameDoc) {
         SafeEngineRelease(&d->engine);
         delete d;
@@ -4245,7 +4247,7 @@ static void StartReloadDocumentAsync(MainWindow* win, WindowTab* tab, bool canAs
     d->winLifetimeId = win->lifetimeId;
     d->tab = tab;
     d->tabLifetimeId = tab->lifetimeId;
-    d->oldCtrl = tab->ctrl;
+    d->oldCtrlLifetimeId = tab->ctrl->lifetimeId;
     d->path = str::Dup(tab->filePath);
     d->ebookAspect = EbookLayoutAspectForView(win, d->path, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
     d->fileEBookUI = CopyFileEBookUIForPath(d->path);

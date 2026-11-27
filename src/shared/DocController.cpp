@@ -14,6 +14,13 @@
 // lets the app drop raw pointers it keeps to a controller (e.g. for DDE)
 Func1<DocController*> gOnDocControllerDestroyed;
 
+static AtomicInt gNextDocControllerLifetimeId = 0;
+
+DocController::DocController(DocControllerCallback* cb) : cb(cb) {
+    ReportIf(!cb);
+    lifetimeId = AtomicIntInc(&gNextDocControllerLifetimeId);
+}
+
 DocController::~DocController() {
     gOnDocControllerDestroyed.Call(this);
 }

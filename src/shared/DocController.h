@@ -84,8 +84,11 @@ extern Func1<DocController*> gOnDocControllerDestroyed;
 
 struct DocController {
     DocControllerCallback* cb;
+    // unique for the life of the process: unlike the address, it tells apart
+    // a controller from a later one allocated at the same place
+    int lifetimeId = 0;
 
-    explicit DocController(DocControllerCallback* cb) : cb(cb) { ReportIf(!cb); }
+    explicit DocController(DocControllerCallback* cb);
     virtual ~DocController();
 
     // meta data
