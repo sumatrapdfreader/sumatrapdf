@@ -268,6 +268,9 @@ class EngineMupdf : public EngineBase {
     // change can restyle without reopening the file
     Str ebookUserCss;
     int ebookPublisherCss = 1;
+    // the page background of the theme overlay a reflowable document is styled
+    // with, white for other documents; written and read under renderLock
+    Color ebookPageBg = kColWhite;
     float ebookLayoutW = 0;
     float ebookLayoutH = 0;
     float ebookLayoutEm = 0;

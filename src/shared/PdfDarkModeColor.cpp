@@ -43,12 +43,15 @@ bool DocumentColorsFollowThemeEnabled() {
 
 // User CSS overlay for MuPDF reflowable documents (EPUB, HTML, FB2, MOBI, TXT).
 // Empty when the effective page colors are black-on-white (nothing to override).
-TempStr ReflowDocumentThemeCssTemp() {
+// pageBg is the background the CSS gives the pages, white without one.
+TempStr ReflowDocumentThemeCssTemp(Color& pageBg) {
+    pageBg = kColWhite;
     Color bgCol;
     Color txtCol = ThemePageRenderColors(bgCol);
     if (bgCol == kColWhite && txtCol == kColBlack) {
         return {};
     }
+    pageBg = bgCol;
     TempStr bg = ColorToCssTemp(bgCol);
     TempStr fg = ColorToCssTemp(txtCol);
     TempStr link = ColorToCssTemp(ThemeWindowLinkColor());

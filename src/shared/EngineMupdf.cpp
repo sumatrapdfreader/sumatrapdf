@@ -4943,7 +4943,8 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     }
     ebookUserCss = str::Dup(arena, userCss);
     ebookPublisherCss = usePublisherCss;
-    TempStr themeCss = ReflowDocumentThemeCssTemp();
+    Color themePageBg;
+    TempStr themeCss = ReflowDocumentThemeCssTemp(themePageBg);
     if (themeCss) {
         userCss = str::JoinTemp(userCss, themeCss);
     }
@@ -5003,6 +5004,8 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     }
 
     isReflowable = fz_is_document_reflowable(ctx, _doc) != 0;
+    // the CSS styles nothing else: a PDF page is recolored as a bitmap, from white
+    ebookPageBg = isReflowable ? themePageBg : kColWhite;
 
     // EBookUI.FontName only affects reflowable documents, and a name we can't
     // resolve silently renders in the default font. Note it for the UI (#4600).
@@ -7824,12 +7827,29 @@ void EngineMupdf::ToggleCadEnhanceOverride() {
 
 // Transparent backdrop: leave unpainted samples at alpha 0 so the canvas
 // checkerboard (CmdToggleTransparencyGrid) shows through (issue #1809).
-static void ClearRenderedPagePixmap(fz_context* ctx, fz_pixmap* pix, const RenderPageArgs& args) {
+// A reflowable page gets its background from CSS, as a rectangle that can end
+// inside the bitmap's last pixel column or row. Starting from that color keeps
+// a white line from showing along the page's edge (#6610).
+static void ClearRenderedPagePixmap(fz_context* ctx, fz_pixmap* pix, const RenderPageArgs& args, Color pageBg) {
     if (args.transparentBackdrop) {
         fz_clear_pixmap(ctx, pix);
         return;
     }
     fz_clear_pixmap_with_value(ctx, pix, 0xff);
+    if (pageBg == kColWhite) {
+        return;
+    }
+
+    u8 r, g, b;
+    UnpackColor(pageBg, r, g, b);
+    // BGRA without row padding, see NewRenderTarget()
+    u8* px = pix->samples;
+    u8* end = px + (size_t)pix->w * (size_t)pix->h * 4;
+    for (; px < end; px += 4) {
+        px[0] = b;
+        px[1] = g;
+        px[2] = r;
+    }
 }
 
 static void MarkTransparentBackdropPixmap(Pixmap* pixmap, bool transparentBackdrop) {
@@ -7969,7 +7989,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         // after-free. Hold renderLock to serialize.
         ScopedMutex rls(&renderLock);
         fz_try(ctx) {
-            ClearRenderedPagePixmap(ctx, target.fz, args);
+            ClearRenderedPagePixmap(ctx, target.fz, args, ebookPageBg);
             dev = fz_new_draw_device(ctx, ctm, target.fz);
             fz_device* drawDev = dev;
             if (disableAntiAlias) {
@@ -8033,7 +8053,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     if (pdfdoc) {
         fz_try(ctx) {
             pdfpage = pdf_page_from_fz_page(ctx, page);
-            ClearRenderedPagePixmap(ctx, target.fz, args);
+            ClearRenderedPagePixmap(ctx, target.fz, args, ebookPageBg);
             dev = fz_new_draw_device(ctx, ctm, target.fz);
             drawDev = dev;
             if (disableAntiAlias) {
@@ -8083,7 +8103,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         }
     } else {
         fz_try(ctx) {
-            ClearRenderedPagePixmap(ctx, target.fz, args);
+            ClearRenderedPagePixmap(ctx, target.fz, args, ebookPageBg);
             dev = fz_new_draw_device(ctx, ctm, target.fz);
             if (disableAntiAlias) {
                 fz_enable_device_hints(ctx, dev, FZ_DONT_INTERPOLATE_IMAGES);
@@ -12841,7 +12861,8 @@ void EngineMupdf::ApplyReflowThemeCss() {
     // drop a count started against the layout we're about to throw away
 #endif
     CancelBackgroundChapterLayout();
-    TempStr themeCss = ReflowDocumentThemeCssTemp();
+    Color pageBg;
+    TempStr themeCss = ReflowDocumentThemeCssTemp(pageBg);
     TempStr fullCss = ebookUserCss;
     if (themeCss) {
         fullCss = fullCss ? str::JoinTemp(fullCss, themeCss) : themeCss;
@@ -12870,6 +12891,7 @@ void EngineMupdf::ApplyReflowThemeCss() {
     fz_var(ok);
     fz_try(ctx) {
         fz_style_document(ctx, _doc, ebookPublisherCss, cssZ);
+        ebookPageBg = pageBg;
         fz_layout_document(ctx, _doc, ebookLayoutW, ebookLayoutH, ebookLayoutEm);
         ok = true;
     }

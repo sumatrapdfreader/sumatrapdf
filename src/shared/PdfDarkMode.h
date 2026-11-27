@@ -38,7 +38,7 @@ bool DarkModeProfileUsesLegacyPostProcess(const DarkModeProfile* profile);
 void BuildViewDarkModeProfile(EngineBase* engine, DarkModeProfile* profile);
 bool EngineUsesDocumentColorsFollowTheme(EngineBase* engine);
 bool EngineUsesReflowThemeCss(EngineBase* engine);
-TempStr ReflowDocumentThemeCssTemp();
+TempStr ReflowDocumentThemeCssTemp(Color& pageBg);
 bool DocumentColorsFollowThemeEnabled();
 DocumentColorsFollowTheme GetDocumentColorsFollowTheme();
 DocumentColorsFollowTheme DocumentColorsFollowThemeFromString(Str v);

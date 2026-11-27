@@ -47,7 +47,8 @@ bool EngineUsesReflowThemeCss(EngineBase* engine) {
     return false;
 }
 
-TempStr ReflowDocumentThemeCssTemp() {
+TempStr ReflowDocumentThemeCssTemp(Color& pageBg) {
+    pageBg = kColWhite;
     return {};
 }
 
