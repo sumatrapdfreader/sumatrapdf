@@ -40,11 +40,10 @@ constexpr int kMaxUrlEncodedLen = 8192;
 
 TempStr URLEncodeMayTruncateTemp(Str s, int maxEncodedLen = 0, bool* didTruncateOut = nullptr);
 
-struct HttpStreamSink {
-    virtual ~HttpStreamSink() = default;
-    virtual void OnStatus(int status) = 0;
-    virtual bool OnData(Str bytes) = 0;
-    virtual bool IsCanceled() = 0;
+struct HttpStreamCallbacks {
+    void* ctx;
+    void (*onStatus)(void* ctx, int status);
+    bool (*onData)(void* ctx, Str bytes);
 };
 
 struct HttpStreamCancel {
@@ -60,8 +59,10 @@ struct HttpStreamCancel {
 #if OS_WIN
     // signaled by Cancel(); HttpPostStream waits on it next to its request
     void* event = nullptr;
-    friend bool HttpPostStream(Str, Str, Str, HttpStreamSink*, HttpStreamCancel*);
+    friend bool HttpPostStream(Str, Str, Str, const HttpStreamCallbacks&, HttpStreamCancel&);
 #endif
 };
 
-bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpStreamCancel* cancel);
+// Both callbacks run on the calling thread. Status precedes data, and returning
+// false from onData stops the stream. The bytes are valid until onData returns.
+bool HttpPostStream(Str url, Str headers, Str body, const HttpStreamCallbacks&, HttpStreamCancel&);

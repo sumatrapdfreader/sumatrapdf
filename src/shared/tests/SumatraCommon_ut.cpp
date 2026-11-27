@@ -732,27 +732,46 @@ void SumatraPDFWebTest() {
     utassert(len(files) == 0);
 }
 
-struct TestStreamSink : HttpStreamSink {
-    HttpStreamCancel* cancel = nullptr;
+struct TestStreamReply {
     str::Builder data;
     int status = 0;
-    void OnStatus(int s) override { status = s; }
-    bool OnData(Str bytes) override {
-        data.Append(bytes);
-        return true;
+    int statusCalls = 0;
+    int dataCalls = 0;
+    AtomicBool gotData = false;
+    bool statusBeforeData = true;
+    bool stopAfterFirstChunk = false;
+
+    HttpStreamCallbacks Callbacks() {
+        return {
+            this,
+            [](void* ctx, int status) {
+                auto* reply = (TestStreamReply*)ctx;
+                reply->status = status;
+                reply->statusCalls++;
+            },
+            [](void* ctx, Str bytes) {
+                auto* reply = (TestStreamReply*)ctx;
+                reply->statusBeforeData &= reply->statusCalls == 1;
+                reply->data.Append(bytes);
+                reply->dataCalls++;
+                AtomicBoolSet(&reply->gotData, true);
+                return !reply->stopAfterFirstChunk;
+            },
+        };
     }
-    bool IsCanceled() override { return cancel->IsCanceled(); }
 };
 
 struct SlowStreamRun {
     HttpStreamCancel cancel;
-    TestStreamSink sink;
+    TestStreamReply reply;
     Str url;
     bool ok = true;
+
+    ~SlowStreamRun() { str::Free(url); }
 };
 
 static void RunSlowStream(SlowStreamRun* run) {
-    run->ok = HttpPostStream(run->url, Str(), StrL("{}"), &run->sink, &run->cancel);
+    run->ok = HttpPostStream(run->url, Str(), StrL("{}"), run->reply.Callbacks(), run->cancel);
 }
 
 static void CountProgress(int* calls, HttpProgress* p) {
@@ -787,33 +806,40 @@ static void HttpGetTest(Str base) {
 #endif
 }
 
-// HttpPostStream: a whole streamed reply, and a cancel that ends a stalled one
+// HttpPostStream: ordered callbacks, early stop, and canceling a stalled reply.
 static void HttpStreamTest(Str base) {
+    Str url = fmt("%s/stream", base);
     {
         HttpStreamCancel cancel;
-        TestStreamSink sink;
-        sink.cancel = &cancel;
-        utassert(HttpPostStream(fmt("%s/stream", base), Str(), StrL("{}"), &sink, &cancel));
-        utassert(sink.status == 200);
-        utassert(str::Eq(ToStr(sink.data), StrL("abc")));
+        TestStreamReply reply;
+        utassert(HttpPostStream(url, Str(), StrL("{}"), reply.Callbacks(), cancel));
+        utassert(reply.status == 200 && reply.statusCalls == 1 && reply.statusBeforeData);
+        utassert(str::Eq(ToStr(reply.data), StrL("abc")));
+    }
+    {
+        HttpStreamCancel cancel;
+        TestStreamReply reply;
+        reply.stopAfterFirstChunk = true;
+        utassert(!HttpPostStream(url, Str(), StrL("{}"), reply.Callbacks(), cancel));
+        utassert(reply.statusCalls == 1 && reply.statusBeforeData && reply.dataCalls == 1);
     }
 
     auto* run = new SlowStreamRun();
-    run->sink.cancel = &run->cancel;
-    run->url = fmt("%s/slowstream", base);
+    run->url = str::Dup(fmt("%s/slowstream", base));
     ThreadHandle th = StartThread(MkFunc0(RunSlowStream, run), StrL("SlowStreamTest"));
     // let the first piece arrive, then cancel the read that waits for more
-    for (int i = 0; i < 100 && len(run->sink.data) == 0; i++) {
+    for (int i = 0; i < 100 && !AtomicBoolGet(&run->reply.gotData); i++) {
         SleepInMs(20);
     }
-    utassert(len(run->sink.data) == 1);
+    utassert(AtomicBoolGet(&run->reply.gotData));
     TimeStamp start = TimeGet();
     run->cancel.Cancel();
     bool joined = JoinThread(&th, 5000);
     utassert(joined);
     utassert(TimeSinceInMs(start) < 3000);
-    utassert(!run->ok);
     if (joined) {
+        utassert(!run->ok);
+        utassert(str::Eq(ToStr(run->reply.data), StrL("x")));
         delete run;
     }
 }

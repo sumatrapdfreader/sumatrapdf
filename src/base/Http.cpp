@@ -822,27 +822,20 @@ static void CALLBACK StreamCallback(HINTERNET, DWORD_PTR ctx, DWORD status, void
 }
 
 // waits for the pending call to complete with `want`; false on an error or a cancel
-static bool WaitStream(AsyncStreamReq* r, HttpStreamSink* sink, HANDLE cancelEvent, DWORD want) {
-    // the sink can be canceled without Cancel(): look at it now and then
-    constexpr DWORD kPollMs = 200;
-    HANDLE events[2] = {r->done, cancelEvent};
-    for (;;) {
-        DWORD res = WaitForMultipleObjects(2, events, FALSE, kPollMs);
-        if (res == WAIT_OBJECT_0) {
-            return r->status == want;
-        }
-        if (res != WAIT_TIMEOUT || sink->IsCanceled()) {
-            return false;
-        }
-    }
+static bool WaitStream(AsyncStreamReq* r, HANDLE cancelEvent, DWORD want) {
+    HANDLE events[] = {cancelEvent, r->done};
+    DWORD res = WaitForMultipleObjects(dimofi(events), events, FALSE, INFINITE);
+    return res == WAIT_OBJECT_0 + 1 && r->status == want;
 }
 
-bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpStreamCancel* cancel) {
+bool HttpPostStream(Str url, Str headers, Str body, const HttpStreamCallbacks& callbacks, HttpStreamCancel& cancel) {
+    HANDLE cancelEvent = (HANDLE)cancel.event;
+    if (!cancelEvent || cancel.IsCanceled()) return false;
     URL_COMPONENTS parts{};
     parts.dwStructSize = sizeof(parts);
     parts.dwSchemeLength = parts.dwHostNameLength = parts.dwUrlPathLength = parts.dwExtraInfoLength = (DWORD)-1;
     TempWStr wide = ToWStrTemp(url);
-    if (!WinHttpCrackUrl(wide.s, 0, 0, &parts) || sink->IsCanceled()) return false;
+    if (!WinHttpCrackUrl(wide.s, 0, 0, &parts)) return false;
     TempWStr host = str::DupTemp(WStr(parts.lpszHostName, (int)parts.dwHostNameLength));
     DWORD pathLen = parts.dwUrlPathLength == (DWORD)-1 ? 0 : parts.dwUrlPathLength;
     DWORD extraLen = parts.dwExtraInfoLength == (DWORD)-1 ? 0 : parts.dwExtraInfoLength;
@@ -856,7 +849,6 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
     HINTERNET request = connect ? WinHttpOpenRequest(connect, L"POST", path.s, nullptr, WINHTTP_NO_REFERER,
                                                      WINHTTP_DEFAULT_ACCEPT_TYPES, flags)
                                 : nullptr;
-    HANDLE cancelEvent = (HANDLE)cancel->event;
     // heap: a WinHTTP thread can still call back after a wait gives up
     auto* r = new AsyncStreamReq();
     r->done = CreateEventW(nullptr, FALSE, FALSE, nullptr);
@@ -874,22 +866,22 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
         bool setOk = callbackSet && WinHttpSetOption(request, WINHTTP_OPTION_CONTEXT_VALUE, &ctx, sizeof(ctx)) &&
                      WinHttpSetOption(request, WINHTTP_OPTION_REDIRECT_POLICY, &policy, sizeof(policy));
         TempWStr wideHeaders = ToWStrTemp(headers);
-        if (setOk && !cancel->IsCanceled() &&
+        if (setOk && !cancel.IsCanceled() &&
             WinHttpSendRequest(request, wideHeaders.s, (DWORD)len(wideHeaders), (void*)body.s, (DWORD)len(body),
                                (DWORD)len(body), ctx) &&
-            WaitStream(r, sink, cancelEvent, WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE) &&
+            WaitStream(r, cancelEvent, WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE) &&
             WinHttpReceiveResponse(request, nullptr) &&
-            WaitStream(r, sink, cancelEvent, WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE)) {
+            WaitStream(r, cancelEvent, WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE)) {
             DWORD status = 0, size = sizeof(status);
             if (WinHttpQueryHeaders(request, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
                                     WINHTTP_HEADER_NAME_BY_INDEX, &status, &size, WINHTTP_NO_HEADER_INDEX)) {
-                sink->OnStatus((int)status);
+                callbacks.onStatus(callbacks.ctx, (int)status);
                 // ask what has arrived, then read that: a read for a full buffer
                 // would hold back a streamed reply until the buffer fills
                 char bytes[4096];
-                while (!sink->IsCanceled()) {
+                while (!cancel.IsCanceled()) {
                     if (!WinHttpQueryDataAvailable(request, nullptr) ||
-                        !WaitStream(r, sink, cancelEvent, WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE)) {
+                        !WaitStream(r, cancelEvent, WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE)) {
                         break;
                     }
                     if (r->bytes == 0) {
@@ -898,14 +890,14 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
                     }
                     DWORD toRead = std::min(r->bytes, (DWORD)sizeof(bytes));
                     if (!WinHttpReadData(request, bytes, toRead, nullptr) ||
-                        !WaitStream(r, sink, cancelEvent, WINHTTP_CALLBACK_STATUS_READ_COMPLETE)) {
+                        !WaitStream(r, cancelEvent, WINHTTP_CALLBACK_STATUS_READ_COMPLETE)) {
                         break;
                     }
                     if (r->bytes == 0) {
                         ok = true;
                         break;
                     }
-                    if (!sink->OnData(Str(bytes, (int)r->bytes))) break;
+                    if (!callbacks.onData(callbacks.ctx, Str(bytes, (int)r->bytes))) break;
                 }
             }
         }
@@ -926,7 +918,7 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
         if (r->closed) CloseHandle(r->closed);
         delete r;
     }
-    return ok && !sink->IsCanceled();
+    return ok && !cancel.IsCanceled();
 }
 
 HttpStreamCancel::HttpStreamCancel() {

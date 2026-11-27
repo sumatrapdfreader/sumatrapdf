@@ -44,7 +44,7 @@ static void AppendAPIMessage(str::Builder& messages, Str role, Str text) {
 }
 
 // one Chat Completions call; runs on a worker thread, the tab state keeps a ref
-struct AIChatAPIRequest : HttpStreamSink {
+struct AIChatAPIRequest {
     AtomicRefCount refs = 1;
     HttpStreamCancel cancel;
     APIRequestMode mode = APIRequestMode::Sync;
@@ -90,9 +90,7 @@ struct AIChatAPIRequest : HttpStreamSink {
         error = str::Dup(safe);
     }
 
-    bool IsCanceled() override { return cancel.IsCanceled(); }
-
-    void OnStatus(int code) override { status = code; }
+    bool IsCanceled() { return cancel.IsCanceled(); }
 
     void ParseEvent() {
         Str data = ToStr(event);
@@ -168,7 +166,7 @@ struct AIChatAPIRequest : HttpStreamSink {
         }
     }
 
-    bool OnData(Str bytes) override {
+    bool OnData(Str bytes) {
         if (IsCanceled()) {
             return false;
         }
@@ -240,7 +238,12 @@ struct AIChatAPIRequest : HttpStreamSink {
         if (len(key) > 0) {
             headers.Append(fmt("\r\nAuthorization: Bearer %s", key));
         }
-        bool ok = HttpPostStream(url, ToStr(headers), body, this, &cancel);
+        HttpStreamCallbacks callbacks{
+            this,
+            [](void* ctx, int code) { ((AIChatAPIRequest*)ctx)->status = code; },
+            [](void* ctx, Str bytes) { return ((AIChatAPIRequest*)ctx)->OnData(bytes); },
+        };
+        bool ok = HttpPostStream(url, ToStr(headers), body, callbacks, cancel);
         if (IsCanceled()) {
             return;
         }

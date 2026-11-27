@@ -597,29 +597,31 @@ bool OnlineURLAllowed(Str url) {
 #if defined(GPUI_HAVE_CURL) && GPUI_HAVE_CURL
 struct HttpStreamState {
     CURL* curl;
-    HttpStreamSink* sink;
+    const HttpStreamCallbacks& callbacks;
+    HttpStreamCancel& cancel;
     bool gotStatus = false;
 };
 
 static size_t WriteStream(char* bytes, size_t size, size_t count, void* context) {
     auto* state = (HttpStreamState*)context;
     size_t n = size * count;
-    if (n > INT_MAX || state->sink->IsCanceled()) return 0;
+    if (n > INT_MAX || state->cancel.IsCanceled()) return 0;
     if (!state->gotStatus) {
         long status = 0;
         curl_easy_getinfo(state->curl, CURLINFO_RESPONSE_CODE, &status);
-        state->sink->OnStatus((int)status);
+        state->callbacks.onStatus(state->callbacks.ctx, (int)status);
         state->gotStatus = true;
     }
-    return state->sink->OnData(Str(bytes, (int)n)) ? n : 0;
+    const auto& callbacks = state->callbacks;
+    return !state->cancel.IsCanceled() && callbacks.onData(callbacks.ctx, Str(bytes, (int)n)) ? n : 0;
 }
 
 static int CancelStream(void* context, curl_off_t, curl_off_t, curl_off_t, curl_off_t) {
-    return ((HttpStreamSink*)context)->IsCanceled() ? 1 : 0;
+    return ((HttpStreamCancel*)context)->IsCanceled() ? 1 : 0;
 }
 
-bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpStreamCancel*) {
-    if (sink->IsCanceled()) return false;
+bool HttpPostStream(Str url, Str headers, Str body, const HttpStreamCallbacks& callbacks, HttpStreamCancel& cancel) {
+    if (cancel.IsCanceled()) return false;
     CURL* curl = curl_easy_init();
     if (!curl) return false;
     SetCurlDefaults(curl, url);
@@ -633,24 +635,24 @@ bool HttpPostStream(Str url, Str headers, Str body, HttpStreamSink* sink, HttpSt
     // a null POSTFIELDS makes curl read the body from stdin
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.s ? body.s : "");
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE, (curl_off_t)len(body));
-    HttpStreamState state{curl, sink};
+    HttpStreamState state{curl, callbacks, cancel};
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteStream);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &state);
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, CancelStream);
-    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, sink);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &cancel);
     CURLcode code = curl_easy_perform(curl);
     if (!state.gotStatus) {
         long status = 0;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-        sink->OnStatus((int)status);
+        callbacks.onStatus(callbacks.ctx, (int)status);
     }
     curl_slist_free_all(list);
     curl_easy_cleanup(curl);
-    return code == CURLE_OK && !sink->IsCanceled();
+    return code == CURLE_OK && !cancel.IsCanceled();
 }
 #else
-bool HttpPostStream(Str, Str, Str, HttpStreamSink*, HttpStreamCancel*) {
+bool HttpPostStream(Str, Str, Str, const HttpStreamCallbacks&, HttpStreamCancel&) {
     return false;
 }
 #endif
