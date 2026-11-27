@@ -99,6 +99,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0096-pdf-signature-widget-error` | creating a signature field that fails reports the error instead of returning the deleted widget, which Sign PDF went on to sign |
 | `0097-scalable-image-subarea-ctm` | a partly visible SVG / display-list image (a tile of a zoomed page) was stretched over the whole image; after `0057` |
 | `0098-pdf-password-field-appearance` | a password field's appearance stream has one `*` per character; the typed password was saved in the clear |
+| `0099-pdf-combo-display-text` | a combo box with [export, display] options shows the display text; it showed the export value ("2") |
 | `backport-ab37474fc-redact-actualtext` | redaction rewrites a tagged element's `/ActualText`, not `/Alt`; the redacted words stayed in the file (mupdf bug 709973) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these

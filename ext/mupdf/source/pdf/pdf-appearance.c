@@ -3080,9 +3080,23 @@ pdf_write_ch_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	int ff = pdf_field_flags(ctx, annot->obj);
 	if (ff & PDF_CH_FIELD_IS_COMBO)
 	{
+		/* SumatraPDF: /V is the export value; show its option's display text
+		 * (an [export, display] pair), or /V itself for a typed-in value
+		 * (idea from Vira Reader). */
+		const char *value = pdf_field_value(ctx, annot->obj);
+		const char *display = value;
+		int i, n = pdf_choice_field_option_count(ctx, annot->obj);
+		for (i = 0; value && i < n; ++i)
+		{
+			const char *exportval = pdf_choice_field_option(ctx, annot->obj, 1, i);
+			if (exportval && !strcmp(value, exportval))
+			{
+				display = pdf_choice_field_option(ctx, annot->obj, 0, i);
+				break;
+			}
+		}
 		/* TODO: Pop-down arrow */
-		pdf_write_tx_widget_appearance(ctx, annot, buf, rect, bbox, matrix, res,
-			pdf_field_value(ctx, annot->obj), 0);
+		pdf_write_tx_widget_appearance(ctx, annot, buf, rect, bbox, matrix, res, display, 0);
 	}
 	else
 	{
