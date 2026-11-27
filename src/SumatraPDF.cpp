@@ -2335,8 +2335,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (shouldPlace) {
         bool fixedWindowPos = gCli && !gCli->windowPos.IsEmpty();
         if (!fixedWindowPos && args->isNewWindow && fs && !fs->windowPos.IsEmpty() && showType == SW_NORMAL) {
-            // Make sure it doesn't have a position like outside of the screen etc.
-            Rect rect = ShiftRectToWorkArea(fs->windowPos);
+            // Make sure it fits the monitor and its title bar is on screen
+            Rect rect = fs->windowPos;
+            EnsureFrameVisibility(rect);
             // This shouldn't happen until !win.IsAboutWindow(), so that we don't
             // accidentally update gGlobalState with this window's dimensions
             HwndMoveWindow(win->hwndFrame, &rect);
@@ -3228,8 +3229,12 @@ MainWindow* CreateAndShowMainWindow(SessionData* data, bool showWin) {
 
     if (data) {
         windowState = data->windowState;
-        Rect rect = ShiftRectToWorkArea(data->windowPos);
-        HwndMoveWindow(win->hwndFrame, &rect);
+        // the saved monitor may be gone or smaller; an empty position keeps the default
+        if (!data->windowPos.IsEmpty()) {
+            Rect rect = data->windowPos;
+            EnsureFrameVisibility(rect);
+            HwndMoveWindow(win->hwndFrame, &rect);
+        }
         // TODO: also restore data->sidebarDx
     }
 

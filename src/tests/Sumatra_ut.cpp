@@ -143,6 +143,7 @@ bool MarkdownToc_UnitTestHtmlLinks();
 bool MarkdownToc_UnitTestHtmlHeadings();
 bool MarkdownToc_UnitTestMermaid();
 bool MarkdownToc_UnitTestMath();
+bool AppTools_UnitTestCaptionVisible();
 bool MarkdownToc_UnitTestHighlightWikilinks();
 bool MarkdownToc_TestLineBreaks();
 bool EbookDoc_UnitTestNormalizeURL();
@@ -1090,6 +1091,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(MarkdownToc_UnitTestHtmlHeadings());
     utassert(MarkdownToc_UnitTestMermaid());
     utassert(MarkdownToc_UnitTestMath());
+    utassert(AppTools_UnitTestCaptionVisible());
     utassert(MarkdownToc_UnitTestHighlightWikilinks());
     utassert(MarkdownToc_TestLineBreaks());
     utassert(EbookDoc_UnitTestNormalizeURL());

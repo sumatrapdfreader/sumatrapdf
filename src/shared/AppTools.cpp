@@ -405,6 +405,21 @@ constexpr double kDefPageRatio = 612.0 / 792.0;
 
 constexpr int kMinWinDx = 50;
 constexpr int kMinWinDy = 50;
+// how much of the title bar's width must be on screen to grab it
+constexpr int kMinVisibleCaptionDx = 120;
+
+// The lower half of the title bar must be in the work area across
+// kMinVisibleCaptionDx (or the whole width of a narrower window), so the window
+// can be dragged back. The upper half may be outside: a snapped frame's
+// invisible resize border is.
+static bool IsCaptionVisible(Rect r, Rect work, int captionDy) {
+    Rect halfCaption(r.x, r.y + (captionDy / 2), r.dx, captionDy / 2);
+    Rect visible = halfCaption.Intersect(work);
+    if (visible.IsEmpty()) {
+        return false;
+    }
+    return visible.dx >= std::min(r.dx, kMinVisibleCaptionDx);
+}
 
 void EnsureAreaVisibility(Rect& r) {
     // adjust to the work-area of the current monitor (not necessarily the primary one)
@@ -418,13 +433,38 @@ void EnsureAreaVisibility(Rect& r) {
         r.dy = work.dy;
     }
 
-    // check whether the lower half of the window's title bar is
-    // inside a visible working area
     int captionDy = GetSystemMetrics(SM_CYCAPTION);
-    Rect halfCaption(r.x, r.y + (captionDy / 2), r.dx, captionDy / 2);
-    if (halfCaption.Intersect(work).IsEmpty()) {
+    if (!IsCaptionVisible(r, work, captionDy)) {
         r = Rect(work.TL(), r.Size());
     }
+}
+
+// A window with only a sliver of its title bar on screen is moved back.
+bool AppTools_UnitTestCaptionVisible() {
+    Rect work(0, 0, 1920, 1040);
+    constexpr int captionDy = 24;
+    struct {
+        Rect r;
+        bool want;
+    } cases[] = {
+        {Rect(100, 100, 800, 600), true},   // all on screen
+        {Rect(1800, 100, 800, 600), true},  // 120 px of the title bar
+        {Rect(1900, 100, 800, 600), false}, // 20 px
+        {Rect(-780, 100, 800, 600), false}, // 20 px on the left
+        {Rect(100, -7, 800, 1054), true},   // snapped: top resize border above the work area
+        {Rect(100, -20, 800, 600), true},   // lower half of the title bar partly inside
+        {Rect(100, 1030, 800, 600), false}, // title bar below the work area
+        {Rect(100, -40, 800, 600), false},  // title bar above the work area
+        {Rect(1840, 100, 80, 600), true},   // narrow window, all of it on screen
+        {Rect(1870, 100, 80, 600), false},  // narrow window, 50 of 80 px on screen
+    };
+    for (auto& c : cases) {
+        if (IsCaptionVisible(c.r, work, captionDy) != c.want) {
+            fprintf(stderr, "IsCaptionVisible(%d, %d, %d, %d): want %d\n", c.r.x, c.r.y, c.r.dx, c.r.dy, (int)c.want);
+            return false;
+        }
+    }
+    return true;
 }
 
 Rect GetDefaultWindowPos() {
