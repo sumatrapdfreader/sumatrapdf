@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include <float.h>
 #include "base/Pixmap.h"
 #include "base/ScopedWin.h"
 #include "gui/Dpi.h"
