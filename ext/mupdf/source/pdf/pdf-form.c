@@ -731,34 +731,28 @@ static int set_validated_field_value(fz_context *ctx, pdf_document *doc, pdf_obj
 	return 1;
 }
 
-static void update_checkbox_selector(fz_context *ctx, pdf_document *doc, pdf_obj *field, const char *val)
-{
-	pdf_obj *kids = pdf_dict_get(ctx, field, PDF_NAME(Kids));
-
-	if (kids)
-	{
-		int i, n = pdf_array_len(ctx, kids);
-
-		for (i = 0; i < n; i++)
-			update_checkbox_selector(ctx, doc, pdf_array_get(ctx, kids, i), val);
-	}
-	else
-	{
-		pdf_obj *n = pdf_dict_getp(ctx, field, "AP/N");
-		pdf_obj *oval;
-
-		if (pdf_dict_gets(ctx, n, val))
-			oval = pdf_new_name(ctx, val);
-		else
-			oval = PDF_NAME(Off);
-		pdf_dict_put_drop(ctx, field, PDF_NAME(AS), oval);
-	}
-}
-
+/* SumatraPDF: a checkbox / radio group's value is a name in /V of the group's
+ * head, as a click (pdf_toggle_widget) sets it, and each button switches to
+ * its own on state or Off with its own appearance (set_check_grp). It wrote a
+ * text string into /V and marked the field dirty, which replaced the
+ * document's button drawing with a generic one. (Idea from Vira Reader.) */
 static int set_checkbox_value(fz_context *ctx, pdf_document *doc, pdf_obj *field, const char *val)
 {
-	update_checkbox_selector(ctx, doc, field, val);
-	update_field_value(ctx, doc, field, val);
+	pdf_obj *grp = find_head_of_field_group(ctx, field);
+	pdf_obj *name = pdf_new_name(ctx, val ? val : "Off");
+	if (!grp)
+		grp = field;
+
+	fz_try(ctx)
+	{
+		if (!pdf_name_eq(ctx, pdf_dict_get(ctx, grp, PDF_NAME(V)), name))
+			pdf_dict_put(ctx, grp, PDF_NAME(V), name);
+		set_check_grp(ctx, doc, grp, name);
+	}
+	fz_always(ctx)
+		pdf_drop_obj(ctx, name);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 	return 1;
 }
 
