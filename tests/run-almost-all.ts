@@ -129,6 +129,7 @@ import { testit as pdfScriptRadioValue } from "./pdf-script-radio-value.ts";
 import { testit as mdHeadingAnchors } from "./md-heading-anchors.ts";
 import { testit as pdfFieldMixedScripts } from "./pdf-field-mixed-scripts.ts";
 import { testit as svgImageAspect } from "./svg-image-aspect.ts";
+import { testit as svgContentSniff } from "./svg-content-sniff.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
@@ -781,6 +782,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["md-heading-anchors", mdHeadingAnchors],
   ["pdf-field-mixed-scripts", pdfFieldMixedScripts],
   ["svg-image-aspect", svgImageAspect],
+  ["svg-content-sniff", svgContentSniff],
   parallelTest("issue-6434"),
   ["issue-6407", issue6407],
   ["issue-6435", issue6435],

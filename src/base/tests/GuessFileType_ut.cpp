@@ -633,6 +633,39 @@ static void tgaTest() {
 }
 
 // issue 6159 / crash 2026-09-09-19-32-4dfd: a Windows EPS header whose 32-bit
+static void svgTest() {
+    Str svgs[] = {
+        StrL("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"10\"/>"),
+        StrL("\xEF\xBB\xBF<?xml version=\"1.0\"?>\n<svg>\n</svg>"),
+        // Inkscape
+        StrL("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<!-- Created with Inkscape "
+             "(http://www.inkscape.org/) -->\n\n<svg\n   width=\"210mm\"></svg>"),
+        // a comment with '>' in it
+        StrL("<!-- a > b -->\r\n<svg viewBox=\"0 0 1 1\"></svg>"),
+        // Adobe Illustrator: a DOCTYPE declaring entities
+        StrL("<?xml version=\"1.0\"?>\n<!-- Generator: Adobe Illustrator 10.0 -->\n<!DOCTYPE svg PUBLIC "
+             "\"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\" [\n"
+             "\t<!ENTITY ns_svg \"http://www.w3.org/2000/svg\">\n]>\n<svg xmlns=\"&ns_svg;\"></svg>"),
+        // a DOCTYPE with an internal subset, not naming svg
+        StrL("<!DOCTYPE x [ <!ENTITY a \"b>\"> ]>\n<svg>"),
+    };
+    for (Str s : svgs) {
+        utassert(GuessFileTypeFromData(s) == FileType::Svg);
+    }
+    Str notSvgs[] = {
+        StrL("<html><body><svg></svg></body></html>"),
+        StrL("<!DOCTYPE html>\n<svg></svg>"),
+        StrL("<svgfoo></svgfoo>"),
+        StrL("<?xml version=\"1.0\"?><root/>"),
+        StrL("<!-- never closed <svg>"),
+        StrL("<?xml version=\"1.0\"?>"),
+        StrL("text <svg>"),
+    };
+    for (Str s : notSvgs) {
+        utassert(GuessFileTypeFromData(s) != FileType::Svg);
+    }
+}
+
 // psStart offset has the high bit set passed the "past the end" check as a
 // negative int, then was indexed with as unsigned -> wild pointer read
 static void epsTest() {
@@ -775,6 +808,7 @@ void GuessFileTypeTest() {
     jp2Test();
     heifTest();
     jxlTest();
+    svgTest();
     nonImageTest();
     tgaTest();
     epsTest();

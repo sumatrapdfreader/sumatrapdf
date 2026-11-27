@@ -369,6 +369,58 @@ static bool HasJxlSignature(Str d) {
            (d.len >= sizeofi(jxlContainer) && MemEq(data, jxlContainer, sizeofi(jxlContainer)));
 }
 
+// A standalone SVG: an XML document whose root element is <svg>. Skips a
+// UTF-8 BOM, the XML declaration and other processing instructions, comments
+// and a DOCTYPE (whose internal subset can declare entities, as Adobe
+// Illustrator's does); "<!DOCTYPE svg" is enough by itself. An SVG inside
+// HTML isn't one. Like probe-image-size's SVG check, but only what fits in d.
+static bool IsSvgFileContent(Str d) {
+    const char* s = d.s;
+    const char* end = d.s + d.len;
+    if (end - s >= 3 && MemEq(s, "\xEF\xBB\xBF", 3)) {
+        s += 3;
+    }
+    // the part of [s, end) after the first `what`, or nullptr
+    auto after = [&](const char* from, Str what) -> const char* {
+        int i = str::IndexOf(Str(from, (int)(end - from)), what);
+        return i < 0 ? nullptr : from + i + what.len;
+    };
+    for (;;) {
+        while (s < end && (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n')) {
+            s++;
+        }
+        Str rest(s, (int)(end - s));
+        if (str::StartsWith(rest, StrL("<?"))) {
+            s = after(s + 2, StrL("?>"));
+        } else if (str::StartsWith(rest, StrL("<!--"))) {
+            s = after(s + 4, StrL("-->"));
+        } else if (str::StartsWithI(rest, StrL("<!DOCTYPE"))) {
+            s += 9;
+            while (s < end && (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n')) {
+                s++;
+            }
+            if (end - s >= 4 && MemEq(s, "svg", 3) && (s[3] == ' ' || s[3] == '>' || s[3] == '\r' || s[3] == '\n')) {
+                return true;
+            }
+            if (str::StartsWithI(Str(s, (int)(end - s)), StrL("html"))) {
+                // HTML that starts with an <svg> element
+                return false;
+            }
+            // skip to the '>' that ends it, past an internal subset in [ ]
+            while (s && s < end && *s != '>') {
+                s = *s == '[' ? after(s, StrL("]")) : s + 1;
+            }
+            s = s && s < end ? s + 1 : nullptr;
+        } else {
+            return end - s >= 5 && MemEq(s, "<svg", 4) &&
+                   (s[4] == ' ' || s[4] == '>' || s[4] == '/' || s[4] == '\t' || s[4] == '\r' || s[4] == '\n');
+        }
+        if (!s) {
+            return false;
+        }
+    }
+}
+
 // detect file type based on file content
 static FileType DetectFileTypeFromData(Str d) {
     // TODO: sniff .fb2 content
@@ -412,6 +464,9 @@ static FileType DetectFileTypeFromData(Str d) {
     }
     if (HasJxlSignature(d)) {
         return FileType::Jxl;
+    }
+    if (IsSvgFileContent(d)) {
+        return FileType::Svg;
     }
     return FileType::Unknown;
 }
@@ -1431,5 +1486,11 @@ static FileType GuessArchiveType(Archive* archive) {
 
 FileType GuessFileType(Str path, bool sniff) {
     FileType ft = sniff ? GuessFileTypeFromFile(path) : FileType::Unknown;
+    if (ft == FileType::Svg) {
+        // SVG is text: a .txt, .html or .md file that starts with <svg> stays
+        // what its name says; the content decides for an unknown extension
+        FileType byName = GuessFileTypeFromName(path);
+        return byName != FileType::Unknown ? byName : ft;
+    }
     return ft != FileType::Unknown ? ft : GuessFileTypeFromName(path);
 }

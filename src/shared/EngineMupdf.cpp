@@ -4588,7 +4588,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     return Load(path, pwdUI, FileType::Unknown);
 }
 
-// kindHint only overrides the name for OFD, which is detected by content (e.g. a renamed .zip)
+// kindHint only overrides the name for OFD and SVG, which are detected by content (e.g. a renamed .zip)
 bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
     bool ok;
     auto* ctx = Ctx();
@@ -4633,6 +4633,11 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
     fz_stream* file = FzOpenOrReadFile(ctx, fnCopy, &fileBytes);
     // A .zip suffix would give MuPDF's comic handler priority over OFD.
     Str streamName = kind == FileType::Ofd ? StrL("file.ofd") : FilePath();
+    if (kindHint == FileType::Svg && kind != FileType::Svg) {
+        // an SVG found by its content, under another extension: MuPDF's own
+        // content check misses some (a BOM, an Illustrator DOCTYPE)
+        streamName = str::JoinTemp(path, StrL(".svg"));
+    }
     ok = LoadFromStream(file, streamName, pwdUI);
     if (!ok) {
         return false;
