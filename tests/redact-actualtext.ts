@@ -1,7 +1,11 @@
-// Applying a redaction rewrites the /ActualText of the tagged structure element
-// whose text it removes. mupdf wrote the redacted string to /Alt instead, so the
-// original /ActualText, with the redacted words, stayed in the saved file
-// (mupdf bug 709973, ext/patches/backport-redact-actualtext).
+// Applying a redaction must remove the redacted words from the /ActualText of
+// the tagged structure element whose text it removes.
+// - mupdf wrote the edited string to /Alt instead, so the original /ActualText
+//   stayed in the saved file (mupdf bug 709973,
+//   ext/patches/backport-ab37474fc-redact-actualtext).
+// - An /Alt that doesn't spell out the text (a description, as /Alt usually is)
+//   made mupdf stop editing the element, leaving /ActualText as it was
+//   (ext/patches/0093-redact-actualtext-despite-alt).
 //
 // Run:  bun tests/redact-actualtext.ts [--no-build]   (or via tests/run-almost-all.ts)
 
@@ -31,9 +35,10 @@ print("ActualText=" + (actual.isNull() ? "<none>" : actual.asString()));
 `;
 
 // One page with "SECRETWORD KEEPWORD" in a marked-content span whose
-// structure element carries the same /ActualText.
-function makeTaggedPdf(): string {
+// structure element carries the same /ActualText, and optionally an /Alt.
+function makeTaggedPdf(alt: string): string {
   const content = `/Span << /MCID 0 >> BDC BT /F1 24 Tf 72 700 Td (${TEXT}) Tj ET EMC`;
+  const altEntry = alt ? ` /Alt (${alt})` : "";
   return assemblePdf([
     "<< /Type /Catalog /Pages 2 0 R /MarkInfo << /Marked true >> /StructTreeRoot 6 0 R >>",
     "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
@@ -42,26 +47,31 @@ function makeTaggedPdf(): string {
     `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     "<< /Type /StructTreeRoot /K [7 0 R] /ParentTree << /Nums [0 [7 0 R]] >> >>",
-    `<< /Type /StructElem /S /Span /P 6 0 R /Pg 3 0 R /K 0 /ActualText (${TEXT}) >>`,
+    `<< /Type /StructElem /S /Span /P 6 0 R /Pg 3 0 R /K 0 /ActualText (${TEXT})${altEntry} >>`,
   ]);
 }
 
-export async function testit(): Promise<void> {
+function checkRedacted(name: string, alt: string): void {
   const script = tmpPath("redact-actualtext.js");
-  const pdf = tmpPath("redact-actualtext.pdf");
-  const out = tmpPath("redact-actualtext-out.pdf");
+  const pdf = tmpPath(`redact-actualtext-${name}.pdf`);
+  const out = tmpPath(`redact-actualtext-${name}-out.pdf`);
   writeFileSync(script, SCRIPT);
-  writeFileSync(pdf, makeTaggedPdf(), "latin1");
+  writeFileSync(pdf, makeTaggedPdf(alt), "latin1");
 
   const r = Bun.spawnSync([EXE, "run", script, pdf, out]);
   const res = r.stdout.toString() + r.stderr.toString();
   const actual = /^ActualText=(.*)$/m.exec(res)?.[1];
   if (r.exitCode !== 0 || actual === undefined) {
-    throw new Error(`redact-actualtext: exit ${r.exitCode}\n${res}`);
+    throw new Error(`redact-actualtext ${name}: exit ${r.exitCode}\n${res}`);
   }
   if (actual.includes(SECRET) || !actual.includes("KEEPWORD")) {
-    throw new Error(`redact-actualtext: /ActualText after redaction is "${actual}"\n${res}`);
+    throw new Error(`redact-actualtext ${name}: /ActualText after redaction is "${actual}"\n${res}`);
   }
+}
+
+export async function testit(): Promise<void> {
+  checkRedacted("no-alt", "");
+  checkRedacted("alt", "a span");
   console.log("redact-actualtext: OK");
 }
 
