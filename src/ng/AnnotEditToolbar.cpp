@@ -124,7 +124,7 @@ struct AnnotEditToolbar : AnnotEditToolbarBase {
     gp::SliderState popupSlider{};
     bool popupSliderLive = false;
     // the thickness slider, in window dips; 0 until it has been laid out
-    gp::Bounds thicknessBounds{};
+    gp::Bounds sliderBounds{};
     int sliderMin = 0;
     int sliderMax = 100;
     int sliderValue = 0;
@@ -221,7 +221,7 @@ static void ClosePopup(AnnotEditToolbar* tb) {
     tb->popupOtherFontIdx = -1;
     VecReset(tb->popupColors);
     tb->editBounds = {};
-    tb->thicknessBounds = {};
+    tb->sliderBounds = {};
     tb->popupSliderLive = false;
     tb->popupThickness = -1;
 }
@@ -471,63 +471,8 @@ bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch) {
     return true;
 }
 
-static Str InPlaceMeasureFamily(Str family) {
-#if OS_WIN
-    if (str::EqI(family, StrL("Courier"))) {
-        return StrL("Courier New");
-    }
-    if (str::EqI(family, StrL("Times")) || str::EqI(family, StrL("TimesRoman"))) {
-        return StrL("Times New Roman");
-    }
-    if (len(family) == 0 || str::EqI(family, StrL("Helvetica"))) {
-        return StrL("Arial");
-    }
-#else
-    if (len(family) == 0) {
-        return StrL("Helvetica");
-    }
-#endif
-    return family;
-}
-
 static float MeasureInPlaceHeight(Annotation* annot, Str text, float scale, int width) {
-    int textSize = DefaultAppearanceTextSize(annot);
-    if (textSize <= 0) {
-        textSize = 12;
-    }
-    int fontPx = std::max(6, (int)lroundf((float)textSize * scale));
-    int styleBits = FreeTextFontStyle(annot);
-    PlatformFontStyle style = PlatformFontStyle::Regular;
-    if (styleBits & kFreeTextBold) {
-        style = style | PlatformFontStyle::Bold;
-    }
-    if (styleBits & kFreeTextItalic) {
-        style = style | PlatformFontStyle::Italic;
-    }
-    float sizePt = (float)fontPx * 72.f / 96.f;
-    PlatformFont* font = GetPlatformFont(InPlaceMeasureFamily(FreeTextFontFamily(annot)), sizePt, style);
-
-    int border = BorderWidth(annot);
-    int textWidth = std::max(1, width - (int)ceilf(2.f * FreeTextPadding(border) * scale) - 2);
-    int lineDy = std::max(1, PlatformFontMeasureText(font, StrL("Ag")).dy);
-    int lines = 0;
-    int start = 0;
-    for (int i = 0; i <= len(text); i++) {
-        if (i < len(text) && text.s[i] != '\n') {
-            continue;
-        }
-        int n = i - start;
-        if (n > 0 && text.s[i - 1] == '\r') {
-            n--;
-        }
-        Size size = PlatformFontMeasureText(font, Str(text.s ? text.s + start : nullptr, n), textWidth);
-        int wrapped = (int)lroundf((float)size.dy / (float)lineDy);
-        // GDI may return an over-wide word even when measuring with wrapping.
-        int extra = size.dx > textWidth ? (size.dx - 1) / textWidth : 0;
-        lines += std::max(wrapped, 1) + extra;
-        start = i + 1;
-    }
-    return FreeTextWrappedHeight(lines, textSize, border);
+    return MeasureFreeTextHeight(annot, text, DefaultAppearanceTextSize(annot), scale, width);
 }
 
 static int InPlaceEditorHeight(MainWindow* win, Annotation* annot, RectF pageRect, Rect rc) {
@@ -1711,9 +1656,7 @@ static gp::El* BuildPopup(AnnotEditToolbar* tb, gp::Ctx* cx) {
                              ->OnChange(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnPopupSlider))
                              ->W(160)
                              ->IntoEl();
-        if (thickness) {
-            slider->BoundsOut(&tb->thicknessBounds);
-        }
+        slider->BoundsOut(&tb->sliderBounds);
         row->Child(slider);
         row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", shown)))->Font(13)->Fg(ToGpui(fg))->MinW(16));
         card->Child(row);
@@ -1989,7 +1932,7 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
 
 TempStr AnnotColorPopupStateTemp(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
-    if (!tb || tb->popupKind != AnnotPopupKind::Colors) {
+    if (!tb || (tb->popupKind != AnnotPopupKind::Colors && tb->popupKind != AnnotPopupKind::Slider)) {
         return StrL("annotColorPopup visible=0 n=0 thickness= swatches=\n");
     }
     str::Builder swatches;
@@ -2010,9 +1953,10 @@ TempStr AnnotColorPopupStateTemp(MainWindow* win) {
     }
     gp::Bounds e = tb->editBounds;
     Str thickness = StrL("");
-    gp::Bounds th = tb->thicknessBounds;
-    if (tb->popupThickness >= 0 && th.w >= 1.f && th.h >= 1.f) {
-        thickness = fmt("%d:%d,%d,%d,%d", tb->popupThickness, (int)th.x, (int)th.y, (int)th.w, (int)th.h);
+    gp::Bounds th = tb->sliderBounds;
+    int value = tb->popupKind == AnnotPopupKind::Slider ? tb->sliderValue : tb->popupThickness;
+    if (value >= 0 && th.w >= 1.f && th.h >= 1.f) {
+        thickness = fmt("%d:%d,%d,%d,%d", value, (int)th.x, (int)th.y, (int)th.w, (int)th.h);
     }
     return fmt("annotColorPopup visible=1 n=%d placed=0,0,0,0 thickness=%s edit=%d,%d,%d,%d swatches=%s\n", n,
                thickness, (int)e.x, (int)e.y, (int)e.w, (int)e.h, ToStrTemp(swatches));

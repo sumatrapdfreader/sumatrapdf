@@ -30,6 +30,8 @@
 #include "SvgIcons.h"
 #include "CommandPalette.h"
 #include "AnnotTextPopup.h"
+#include "AnnotPlacement.h"
+#include "AnnotPlacementCommon.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotEditToolbarCommon.h"
 
@@ -966,16 +968,92 @@ void ChipOpacityPicked(AnnotEditToolbarBase* tb, int percent) {
     AnnotChanged(tab);
 }
 
+static Str FreeTextMeasureFamily(Str family) {
+#if OS_WIN
+    if (str::EqI(family, StrL("Courier"))) {
+        return StrL("Courier New");
+    }
+    if (str::EqI(family, StrL("Times")) || str::EqI(family, StrL("TimesRoman"))) {
+        return StrL("Times New Roman");
+    }
+    if (len(family) == 0 || str::EqI(family, StrL("Helvetica"))) {
+        return StrL("Arial");
+    }
+#else
+    if (len(family) == 0) {
+        return StrL("Helvetica");
+    }
+#endif
+    return family;
+}
+
+float MeasureFreeTextHeight(Annotation* annot, Str text, int textSize, float scale, int width) {
+    textSize = textSize > 0 ? textSize : 12;
+    int fontPx = std::max(6, (int)lroundf((float)textSize * scale));
+    int styleBits = FreeTextFontStyle(annot);
+    PlatformFontStyle style = PlatformFontStyle::Regular;
+    if (styleBits & kFreeTextBold) {
+        style = style | PlatformFontStyle::Bold;
+    }
+    if (styleBits & kFreeTextItalic) {
+        style = style | PlatformFontStyle::Italic;
+    }
+    float sizePt = (float)fontPx * 72.f / 96.f;
+    PlatformFont* font = GetPlatformFont(FreeTextMeasureFamily(FreeTextFontFamily(annot)), sizePt, style);
+
+    int border = BorderWidth(annot);
+    int textWidth = std::max(1, width - (int)ceilf(2.f * FreeTextPadding(border) * scale) - 2);
+    int lineDy = std::max(1, PlatformFontMeasureText(font, StrL("Ag")).dy);
+    int lines = 0;
+    int start = 0;
+    for (int i = 0; i <= len(text); i++) {
+        if (i < len(text) && text.s[i] != '\n') {
+            continue;
+        }
+        int n = i - start;
+        if (n > 0 && text.s[i - 1] == '\r') {
+            n--;
+        }
+        Size size = PlatformFontMeasureText(font, Str(text.s ? text.s + start : nullptr, n), textWidth);
+        int wrapped = (int)lroundf((float)size.dy / (float)lineDy);
+        // GDI may return an over-wide word even when measuring with wrapping.
+        int extra = size.dx > textWidth ? (size.dx - 1) / textWidth : 0;
+        lines += std::max(wrapped, 1) + extra;
+        start = i + 1;
+    }
+    return FreeTextWrappedHeight(lines, textSize, border);
+}
+
 void ChipTextSizePicked(AnnotEditToolbarBase* tb, int size) {
     WindowTab* tab = tb->tab;
     Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
     if (!AnnotationIsLive(annot) || annot != tb->annot) {
         return;
     }
-    if (DefaultAppearanceTextSize(annot) == size) {
+    int oldSize = DefaultAppearanceTextSize(annot);
+    if (oldSize == size) {
         return;
     }
-    SetDefaultAppearanceTextSize(annot, size);
+    {
+        EngineBase* engine = tab->GetEngine();
+        EngineMupdfBeginOperation(engine, "Change text size");
+        defer {
+            EngineMupdfEndOperation(engine);
+        };
+        SetDefaultAppearanceTextSize(annot, size);
+        Str text = Contents(annot);
+        if (Type(annot) == AnnotationType::FreeText && text && size > (oldSize > 0 ? oldSize : 12)) {
+            RectF box = GetRect(annot);
+            // Measure at a fixed scale so the page height does not depend on zoom.
+            constexpr float pixelsPerPoint = 4.f;
+            int width = (int)ceilf(box.dx * pixelsPerPoint);
+            float height = MeasureFreeTextHeight(annot, text, size, pixelsPerPoint, width);
+            if (height > box.dy) {
+                box.dy = height;
+                SetRect(annot, box);
+            }
+        }
+    }
     AnnotChanged(tab);
 }
 

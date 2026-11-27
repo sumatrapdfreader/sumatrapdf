@@ -397,6 +397,7 @@ import { testit as annotUndoOneStep } from "./annot-undo-one-step.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-placement.ts";
 import { testit as freeTextEditToolbar } from "./free-text-edit-toolbar.ts";
+import { testit as issue3489 } from "./issue-3489.ts";
 import { testit as freeTextEditZoom } from "./free-text-edit-zoom.ts";
 import { testit as issue6198 } from "./issue-6198.ts";
 import { testit as createAnnotEntersEditMode } from "./create-annot-enters-edit-mode.ts";
@@ -649,6 +650,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-3489", issue3489],
   ["issue-4839", issue4839],
   ["issue-6610", issue6610],
   ["issue-6609", issue6609],

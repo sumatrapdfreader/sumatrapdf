@@ -110,6 +110,7 @@ void DetachAnnotationFromEditors(Annotation* annot);
 void ChipThicknessPicked(AnnotEditToolbarBase* tb, int width);
 void ChipOpacityPicked(AnnotEditToolbarBase* tb, int percent);
 void ChipTextSizePicked(AnnotEditToolbarBase* tb, int size);
+float MeasureFreeTextHeight(Annotation* annot, Str text, int textSize, float scale, int width);
 Annotation* LiveToolbarAnnot(AnnotEditToolbarBase* tb);
 AnnotEditKind ChipColorKind(AnnotEditToolbarBase* tb);
 void ChipColorPicked(AnnotEditToolbarBase* tb, Color col);
