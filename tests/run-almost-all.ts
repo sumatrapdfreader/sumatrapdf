@@ -223,6 +223,7 @@ import { testit as scrollbarCaptureLoss } from "./scrollbar-capture-loss.ts";
 import { testit as nextFileSavePrompt } from "./next-file-save-prompt.ts";
 import { testit as savePromptFails } from "./save-prompt-fails.ts";
 import { testit as backgroundTabReload } from "./background-tab-reload.ts";
+import { testit as autoReloadBackground } from "./auto-reload-background.ts";
 import { testit as sessionRestoreBrokenFile } from "./session-restore-broken-file.ts";
 import { testit as tabSwitchPresentation } from "./tab-switch-presentation.ts";
 import { testit as reloadKeepsFullscreenLayout } from "./reload-keeps-fullscreen-layout.ts";
@@ -640,6 +641,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6608", issue6608],
   ["issue-6259", issue6259],
   ["background-tab-reload", backgroundTabReload],
+  ["auto-reload-background", autoReloadBackground],
   ["open-slow-drive", openSlowDrive],
   ["issue-6604", issue6604],
   ["free-text-in-place-edit", freeTextInPlaceEdit],

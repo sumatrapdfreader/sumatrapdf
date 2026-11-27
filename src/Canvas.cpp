@@ -4972,7 +4972,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                 SetTimer(hwnd, kAutoReloadTimerID, kAutoReloadDelayInMs, nullptr);
             } else if (action == AutoReloadAction::Reload) {
                 // A timer must never ask for a password (#3493).
-                ReloadDocument(win, true, false);
+                AutoReloadDocument(win, false);
             }
             break;
         }

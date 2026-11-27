@@ -138,6 +138,8 @@ struct WindowTab {
     i64 autoReloadSize = -1;
     u64 autoReloadStartMs = 0;
     FILETIME autoReloadModTime{};
+    // an async auto-reload's engine load is running on a background thread
+    bool autoReloadInFlight = false;
 #if defined(SUMATRA_NG)
     Countdown autoReload;
 #endif

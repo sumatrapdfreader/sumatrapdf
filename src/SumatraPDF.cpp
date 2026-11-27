@@ -2493,7 +2493,99 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     StartPendingSearch(win);
 }
 
-void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
+static void StartReloadDocumentAsync(MainWindow* win, WindowTab* tab, bool canAskForPassword);
+
+// Capture the current view state and swap in the freshly loaded controller
+// (null ctrl = load failed). Runs on the UI thread while the old document is
+// still in place, so nothing flickers and the view state is up to date.
+static void FinishReloadDocument(MainWindow* win, WindowTab* tab, DocController* ctrl, bool autoRefresh) {
+    auto timeStart = TimeGet();
+    Str path = tab->filePath;
+
+    // Save display state before destroying the old controller
+    FileState* fs = NewFileState(path);
+    tab->ctrl->GetDisplayState(fs);
+    UpdateDisplayStateWindowRect(win, fs);
+    UpdateSidebarDisplayState(tab, fs);
+
+    // We don't allow PDF-repair if it is an autorefresh because
+    // a refresh event can occur before the file is finished being written,
+    // in which case the repair could fail. Instead, if the file is broken,
+    // we postpone the reload until the next autorefresh event
+    if (!ctrl && autoRefresh) {
+        SetFrameTitleForTab(tab, true);
+        HwndSetText(win->hwndFrame, tab->frameTitle);
+        DeleteFileState(fs);
+        return;
+    }
+    // Set the windows state based on the actual window's placement
+    int wstate = WIN_STATE_NORMAL;
+    if (win->IsFullScreen()) {
+        wstate = WIN_STATE_FULLSCREEN;
+    } else {
+        if (IsZoomed(win->hwndFrame)) {
+            wstate = WIN_STATE_MAXIMIZED;
+        } else if (IsIconic(win->hwndFrame)) {
+            wstate = WIN_STATE_MINIMIZED;
+        }
+    }
+    fs->windowState = wstate;
+    fs->useDefaultState = false;
+
+    LoadArgs args(tab->filePath, win);
+    args.showWin = true;
+    args.placeWindow = false;
+    // the old engine is deleted below. A background reload leaves the document
+    // usable while it loads, so a form-field edit can have started since
+    // ReloadDocumentImpl committed the previous one
+    CommitFormFieldEdit(false);
+    // Canvas and compact toolbar keep non-owning Annotation* from the engine.
+    // Clear those pointers before a replacement controller is opened (or a
+    // manual reload is about to replace the document with an error page).
+    CloseAnnotationUiForTab(tab);
+    tab->selectedAnnotation = nullptr;
+    EndPdfEditOperation(win);
+    win->annotationBeingDragged = nullptr;
+    win->annotationBeingResized = false;
+    win->annotationUnderCursor = nullptr;
+    ReplaceDocumentInCurrentTab(&args, ctrl, fs);
+
+    RefreshEditAnnotationsAfterEngineChange(tab);
+    CommandPaletteOnDocumentReloaded(win);
+
+    if (!ctrl) {
+        DeleteFileState(fs);
+        return;
+    }
+
+    tab->reloadOnFocus = false;
+
+    if (gSettings->showStartPage) {
+        // refresh the thumbnail for this file
+        FileState* state = FileHistoryFindByPath(fs->filePath);
+        if (state) {
+            CreateThumbnailForFile(win, state);
+        }
+    }
+
+    if (tab->AsFixed()) {
+        // save a newly remembered password into file history so that
+        // we don't ask again at the next refresh
+        Str decryptionKey = tab->AsFixed()->GetEngine()->decryptionKey;
+        if (decryptionKey) {
+            FileState* fs2 = FileHistoryFindByPath(fs->filePath);
+            if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
+                str::ReplaceWithCopy(&fs2->decryptionKey, decryptionKey);
+            }
+        }
+    }
+
+    logf("FinishReloadDocument: %s swapped in %.1f ms\n", path, TimeSinceInMs(timeStart));
+    DeleteFileState(fs);
+}
+
+// inBackground: create the engine on a background thread (see AutoReloadDocument)
+static void ReloadDocumentImpl(MainWindow* win, bool autoRefresh, bool canAskForPassword, bool inBackground) {
     WindowTab* tab = win->CurrentTab();
 
     if (!tab) {
@@ -2543,91 +2635,44 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
         return;
     }
     logf("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
+
+    // Reading the file can hang on a cloud placeholder being hydrated or a
+    // network drive; an auto-reload the user didn't ask for must not freeze
+    // the UI, so create the engine on a background thread and swap when done.
+    // CHM and browser-view documents can only load on the UI thread.
+    FileType kind = GuessFileTypeFromName(path);
+    bool uiThreadOnly =
+        ShouldUseBrowserView(kind) || (!gSettings->chmUI.useFixedPageUI && ChmModel::IsSupportedFileType(kind));
+    if (inBackground && !uiThreadOnly) {
+        if (!tab->autoReloadInFlight) {
+            StartReloadDocumentAsync(win, tab, canAskForPassword);
+        }
+        return;
+    }
+
     auto timeStart = TimeGet();
-
-    // Save display state before potentially destroying the old controller
-    FileState* fs = NewFileState(path);
-    tab->ctrl->GetDisplayState(fs);
-    UpdateDisplayStateWindowRect(win, fs);
-    UpdateSidebarDisplayState(tab, fs);
-
     float aspect = EbookLayoutAspectForView(win, path, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
     float previousAspect = EngineMupdfSetEbookLayoutAspect(aspect);
     defer {
         EngineMupdfSetEbookLayoutAspect(previousAspect);
     };
-    DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
-    // We don't allow PDF-repair if it is an autorefresh because
-    // a refresh event can occur before the file is finished being written,
-    // in which case the repair could fail. Instead, if the file is broken,
-    // we postpone the reload until the next autorefresh event
-    if (!ctrl && autoRefresh) {
-        SetFrameTitleForTab(tab, true);
-        HwndSetText(win->hwndFrame, tab->frameTitle);
-        DeleteFileState(fs);
-        return;
-    }
-    // Set the windows state based on the actual window's placement
-    int wstate = WIN_STATE_NORMAL;
-    if (win->IsFullScreen()) {
-        wstate = WIN_STATE_FULLSCREEN;
-    } else {
-        if (IsZoomed(win->hwndFrame)) {
-            wstate = WIN_STATE_MAXIMIZED;
-        } else if (IsIconic(win->hwndFrame)) {
-            wstate = WIN_STATE_MINIMIZED;
-        }
-    }
-    fs->windowState = wstate;
-    fs->useDefaultState = false;
-
-    LoadArgs args(tab->filePath, win);
-    args.showWin = true;
-    args.placeWindow = false;
-    // Canvas and compact toolbar keep non-owning Annotation* from the engine.
-    // Clear those pointers before a replacement controller is opened (or a
-    // manual reload is about to replace the document with an error page).
-    CloseAnnotationUiForTab(tab);
-    tab->selectedAnnotation = nullptr;
-    EndPdfEditOperation(win);
-    win->annotationBeingDragged = nullptr;
-    win->annotationBeingResized = false;
-    win->annotationUnderCursor = nullptr;
-    ReplaceDocumentInCurrentTab(&args, ctrl, fs);
-
-    RefreshEditAnnotationsAfterEngineChange(tab);
-    CommandPaletteOnDocumentReloaded(win);
-
-    if (!ctrl) {
-        DeleteFileState(fs);
-        return;
-    }
-
-    tab->reloadOnFocus = false;
-
-    if (gSettings->showStartPage) {
-        // refresh the thumbnail for this file
-        FileState* state = FileHistoryFindByPath(fs->filePath);
-        if (state) {
-            CreateThumbnailForFile(win, state);
-        }
-    }
-
-    if (tab->AsFixed()) {
-        // save a newly remembered password into file history so that
-        // we don't ask again at the next refresh
-        Str decryptionKey = tab->AsFixed()->GetEngine()->decryptionKey;
-        if (decryptionKey) {
-            FileState* fs2 = FileHistoryFindByPath(fs->filePath);
-            if (fs2 && !str::Eq(fs2->decryptionKey, decryptionKey)) {
-                str::ReplaceWithCopy(&fs2->decryptionKey, decryptionKey);
-            }
-        }
-    }
-
     // reopening reads the file again: slow on a network / cloud drive
+    DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     logf("ReloadDocument: %s reloaded in %.1f ms\n", path, TimeSinceInMs(timeStart));
-    DeleteFileState(fs);
+    FinishReloadDocument(win, tab, ctrl, autoRefresh);
+}
+
+// Synchronous: callers like DDE [Open(..., forceRefresh)] followed by
+// [ForwardSearch] or the post-save reload act on the new document right after.
+void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
+    ReloadDocumentImpl(win, autoRefresh, canAskForPassword, false);
+}
+
+// A reload of a file that changed on disk (file watcher timer, tab focus):
+// nothing acts on the document right after, so the old one stays visible and
+// usable while the new one loads in the background.
+void AutoReloadDocument(MainWindow* win, bool canAskForPassword) {
+    ReloadDocumentImpl(win, true, canAskForPassword, true);
 }
 
 constexpr int kSplitterDy = 4;
@@ -4103,6 +4148,117 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     AtomicIntDec(&gDangerousThreadCount);
 }
 
+// Async auto-reload: the engine loads on a background thread while the old
+// document stays visible and interactive, then FinishReloadDocument swaps it
+// in on the UI thread.
+struct ReloadAsyncData {
+    MainWindow* win = nullptr;
+    u64 winLifetimeId = 0;
+    WindowTab* tab = nullptr;
+    u64 tabLifetimeId = 0;
+    // the controller the tab had when the reload started: a different one at
+    // finish means the tab shows another document now, so the result is stale
+    DocController* oldCtrl = nullptr;
+    Str path;
+    float ebookAspect = 0.f;
+    // read on the UI thread: the load thread can't walk the file history (#4600)
+    // or read gSettings, which a settings reload can free
+    FileEBookUI* fileEBookUI = nullptr;
+    bool chmInFixedUI = false;
+    HWND hwndPwdParent = nullptr;
+    EngineBase* engine = nullptr;
+    u64 startMs = 0;
+
+    ~ReloadAsyncData() {
+        str::Free(path);
+        DeleteFileEBookUI(fileEBookUI);
+    }
+};
+
+static void ReloadDocumentAsyncFinish(ReloadAsyncData* d) {
+    MainWindow* win = d->win;
+    WindowTab* tab = d->tab;
+    bool tabAlive = IsMainWindowValid(win) && win->lifetimeId == d->winLifetimeId && IsWindowTabValid(tab) &&
+                    tab->lifetimeId == d->tabLifetimeId;
+    if (tabAlive) {
+        tab->autoReloadInFlight = false;
+    }
+    bool sameDoc = tabAlive && tab->ctrl == d->oldCtrl && tab->IsDocLoaded() && path::IsSame(tab->filePath, d->path);
+    if (!sameDoc) {
+        SafeEngineRelease(&d->engine);
+        delete d;
+        return;
+    }
+    if (!IsCurrentTab(win, tab)) {
+        // only the visible tab can swap documents; retry when it is selected
+        tab->reloadOnFocus = true;
+        SafeEngineRelease(&d->engine);
+        delete d;
+        return;
+    }
+
+    DocController* ctrl = nullptr;
+    if (d->engine) {
+        EngineBase* eng = d->engine;
+        d->engine = nullptr;
+        ctrl = CreateControllerForEngineOrFile(eng, d->path, nullptr, win);
+    }
+    // StartReloadDocumentAsync cleared reloadOnFocus: set again, the file
+    // changed while it was loading and what we loaded can be out of date
+    bool changedWhileLoading = tab->reloadOnFocus;
+    FinishReloadDocument(win, tab, ctrl, true);
+    if (changedWhileLoading || !ctrl) {
+        // a failed load (e.g. file still being written) is retried on the
+        // next change or focus, like the synchronous reload
+        tab->reloadOnFocus = true;
+    }
+    if (changedWhileLoading) {
+        SetTimer(win->hwndCanvas, kAutoReloadTimerID, kAutoReloadDelayInMs, nullptr);
+    }
+    logf("ReloadDocumentAsyncFinish: %s reloaded in %d ms, changed while loading: %d\n", d->path,
+         (int)(GetTickCount64() - d->startMs), (int)changedWhileLoading);
+    delete d;
+}
+
+static void ReloadDocumentAsyncLoad(ReloadAsyncData* d) {
+    AtomicIntInc(&gDangerousThreadCount);
+    // load threads are reused, so this has to be cleared before we return
+    SetLoadThreadFileEBookUI(d->fileEBookUI);
+    float previousAspect = EngineMupdfSetEbookLayoutAspect(d->ebookAspect);
+    HwndPasswordUI pwdUI(d->hwndPwdParent);
+    MaybeTestLoadDelay();
+    EngineBase* engine = CreateEngineFromFile(d->path, &pwdUI, d->chmInFixedUI, {});
+    if (engine && engine->pageCount <= 0) {
+        SafeEngineRelease(&engine);
+    }
+    d->engine = engine;
+    EngineMupdfSetEbookLayoutAspect(previousAspect);
+    SetLoadThreadFileEBookUI(nullptr);
+    auto fn = MkFunc0<ReloadAsyncData>(ReloadDocumentAsyncFinish, d);
+    uitask::Post(fn, "ReloadDocumentAsyncFinish");
+    AtomicIntDec(&gDangerousThreadCount);
+}
+
+static void StartReloadDocumentAsync(MainWindow* win, WindowTab* tab, bool canAskForPassword) {
+    auto* d = new ReloadAsyncData;
+    d->win = win;
+    d->winLifetimeId = win->lifetimeId;
+    d->tab = tab;
+    d->tabLifetimeId = tab->lifetimeId;
+    d->oldCtrl = tab->ctrl;
+    d->path = str::Dup(tab->filePath);
+    d->ebookAspect = EbookLayoutAspectForView(win, d->path, tab->ctrl->GetDisplayMode(), tab->ctrl->GetZoomVirtual());
+    d->fileEBookUI = CopyFileEBookUIForPath(d->path);
+    d->chmInFixedUI = gSettings->chmUI.useFixedPageUI;
+    d->hwndPwdParent = canAskForPassword ? win->hwndFrame : nullptr;
+    d->startMs = GetTickCount64();
+    tab->autoReloadInFlight = true;
+    // set again by a change while loading (ReloadTab); see ReloadDocumentAsyncFinish
+    tab->reloadOnFocus = false;
+    auto fn = MkFunc0<ReloadAsyncData>(ReloadDocumentAsyncLoad, d);
+    RunAsync(fn, StrL("ReloadDocumentAsync"));
+}
+
 // height / width of the area a document is displayed in, 0 if not known yet
 static float EbookLayoutAspectForWindow(MainWindow* win) {
     if (!win) {
@@ -4759,7 +4915,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         if (gSettings->lazyLoading && !tab->ctrl && tab->loadState == WindowTab::LoadState::None) {
             StartLazyTabLoad(win);
         } else if (DecideAutoReload(tab, AutoReloadTrigger::TabFocus) == AutoReloadAction::Reload) {
-            ReloadDocument(win, true);
+            AutoReloadDocument(win, true);
         }
     }
     HwndInvalidate(win->hwndCanvas);
