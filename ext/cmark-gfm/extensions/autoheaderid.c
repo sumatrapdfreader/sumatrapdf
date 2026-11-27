@@ -31,6 +31,15 @@ static cmark_node *postprocess(cmark_syntax_extension *ext, cmark_parser *parser
   return root;
 }
 
+/* SumatraPDF: the heading's id is GitHub's anchor for it, as
+ * MarkdownHeadingSlug() (src/shared/MarkdownToc.cpp) makes for the WebView2
+ * view, so "#café-au-lait" links work in both: ASCII letters lowercased,
+ * other characters (UTF-8 bytes >= 0x80) kept, digits, '_' and '-' kept, each
+ * whitespace a '-', other punctuation dropped. The id is on the heading,
+ * not on an <a> around it, so a link lands on the heading's page when
+ * pagination moves the heading to the next one. (It decoded UTF-8 itself,
+ * skipping a byte after every 2-byte character, and wrote non-ASCII
+ * characters as single bytes, so such anchors never matched.) */
 static void html_render(cmark_syntax_extension *extension,
                         cmark_html_renderer *renderer, cmark_node *node,
                         cmark_event_type ev_type, int options) {
@@ -38,131 +47,35 @@ static void html_render(cmark_syntax_extension *extension,
   cmark_strbuf *html = renderer->html;
   char start_heading[] = "<h0";
   char end_heading[] = "</h0";
-    if (entering) {
-      unsigned char *p = node->content.ptr;
-      unsigned char *e = p + node->content.size;
-      int minus_pending = 0;
-      cmark_html_render_cr(html);
-      cmark_strbuf_puts(html, "<a id=\"");
-      for (; p < e; p++)
-      {
-        unsigned int c = *p;
-
-        /* UTF 8 reading. */
-        if (c >= 0x80)
-        {
-          if (c >= 0xF8)
-            goto bad;/* Not a valid UTF-8 codepoint */
-          if (c >= 0xF0)
-          {
-            if (p+3 >= e)
-              goto bad;
-            c = ((p[0] & 0x07)<<18) + ((p[1] & 0x3f)<<12) + ((p[2] & 0x3f)<<6) + (p[3] & 0x3f);
-            p += 3;
-          }
-          else if (c >= 0xE0)
-          {
-            if (p+2 >= e)
-              goto bad;
-            c = ((p[0] & 0x0F)<<12) + ((p[1] & 0x3f)<<6) + (p[2] & 0x3f);
-            p += 2;
-          }
-          else if (c >= 0xC0)
-          {
-            if (p+1 >= e)
-              goto bad;
-            c = ((p[0] & 0x1F)<<6) + (p[1] & 0x3f);
-            p += 2;
-          }
-          else
-            goto bad;
-        }
-
-        /* C is unicode. */
-        if (c >= 'A' && c <= 'Z')
-        {
-          c += 'a' - 'A';
-        }
-        else if (c >= 'a' && c <= 'z')
-        {
-        }
-        else if (c >= '0' && c <= '9')
-        {
-        }
-        else if (c >= 0xa0 && c <= 0xbf)
-        {
-          /* Ascii punctuation in unicode */
-          goto bad;
-        }
-        else if ((c >= 0xc0 && c <= 0xc5) || (c >= 0xE0 && c <= 0xeb) || (c >= 0x100 && c <= 0x105))
-        {
-          /* A or a with accents */
-          c = 'a';
-        }
-        else if (c == 0xC7 || c == 0xE7)
-        {
-          /* C cedilla */
-          c = 'c';
-        }
-        else if ((c >= 0xc8 && c <= 0xcb) || (c >= 0xE8 && c <= 0xeb))
-        {
-          /* E or e with accents */
-          c = 'e';
-        }
-        else if ((c >= 0xcc && c <= 0xcf) || (c >= 0xEC && c <= 0xef))
-        {
-          /* I or i with accents */
-          c = 'i';
-        }
-        else if (c == 0xD1 || c == 0xF1)
-        {
-          /* N or n with tilde */
-          c = 'n';
-        }
-        else if ((c >= 0xd2 && c <= 0xd8) || (c >= 0xEC && c <= 0xef))
-        {
-          /* O or o with accents */
-          c = 'o';
-        }
-        else if ((c >= 0xd9 && c <= 0xdc) || (c >= 0xF9 && c <= 0xfc))
-        {
-          /* U or u with accents */
-          c = 'u';
-        }
-        else if (c >= 0x80)
-        {
-          /* Assuming we're using valid UTF8 here, this means we've got
-           * a unicode char. We don't have the tables to do fiddling, so
-           * just send this through as is. */
-        }
-        else
-        {
-bad:
-          c = '-';
-        }
-
-        /* C is now 0 or a 7 bit value. */
-        if (c == '-')
-          minus_pending = 1;
-        else if (c)
-        {
-          if (minus_pending)
-            cmark_strbuf_putc(html, '-');
-          cmark_strbuf_putc(html, c);
-          minus_pending = 0;
-        }
-      }
-      cmark_strbuf_puts(html, "\">");
-      start_heading[2] = (char)('0' + node->as.heading.level);
-      cmark_strbuf_puts(html, start_heading);
-      cmark_html_render_sourcepos(node, html, options);
-      cmark_strbuf_putc(html, '>');
-    } else {
-      end_heading[3] = (char)('0' + node->as.heading.level);
-      cmark_strbuf_puts(html, end_heading);
-      cmark_strbuf_puts(html, ">\n");
-      cmark_strbuf_puts(html, "</a>");
+  (void)extension;
+  if (entering) {
+    unsigned char *p = node->content.ptr;
+    unsigned char *e = p + node->content.size;
+    while (p < e && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r'))
+      p++;
+    while (e > p && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\n' || e[-1] == '\r'))
+      e--;
+    cmark_html_render_cr(html);
+    start_heading[2] = (char)('0' + node->as.heading.level);
+    cmark_strbuf_puts(html, start_heading);
+    cmark_strbuf_puts(html, " id=\"");
+    for (; p < e; p++) {
+      unsigned int c = *p;
+      if (c >= 'A' && c <= 'Z')
+        c += 'a' - 'A';
+      if (c >= 0x80 || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-')
+        cmark_strbuf_putc(html, (int)c);
+      else if (c == ' ' || c == '\t' || c == '\n' || c == '\r')
+        cmark_strbuf_putc(html, '-');
     }
+    cmark_strbuf_putc(html, '"');
+    cmark_html_render_sourcepos(node, html, options);
+    cmark_strbuf_putc(html, '>');
+  } else {
+    end_heading[3] = (char)('0' + node->as.heading.level);
+    cmark_strbuf_puts(html, end_heading);
+    cmark_strbuf_puts(html, ">\n");
+  }
 }
 
 cmark_syntax_extension *create_autoheaderid_extension(void) {

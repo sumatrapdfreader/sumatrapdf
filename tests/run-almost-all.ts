@@ -126,6 +126,7 @@ import { testit as txtChaptersToc } from "./txt-chapters-toc.ts";
 import { testit as pdfAbandonFontCache } from "./pdf-abandon-font-cache.ts";
 import { testit as pdfFormResetAppearance } from "./pdf-form-reset-appearance.ts";
 import { testit as pdfScriptRadioValue } from "./pdf-script-radio-value.ts";
+import { testit as mdHeadingAnchors } from "./md-heading-anchors.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
@@ -775,6 +776,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["pdf-abandon-font-cache", pdfAbandonFontCache],
   ["pdf-form-reset-appearance", pdfFormResetAppearance],
   ["pdf-script-radio-value", pdfScriptRadioValue],
+  ["md-heading-anchors", mdHeadingAnchors],
   parallelTest("issue-6434"),
   ["issue-6407", issue6407],
   ["issue-6435", issue6435],
