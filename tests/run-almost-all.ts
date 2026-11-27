@@ -111,6 +111,7 @@ import { testit as issue6429 } from "./issue-6429.ts";
 import { testit as issue6431 } from "./issue-6431.ts";
 import { testit as issue6433 } from "./issue-6433.ts";
 import { testit as issue6614 } from "./issue-6614.ts";
+import { testit as redactActualText } from "./redact-actualtext.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
@@ -742,6 +743,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["issue-6429", issue6429],
   ["issue-6433", issue6433],
   ["issue-6614", issue6614],
+  ["redact-actualtext", redactActualText],
   parallelTest("issue-6434"),
   ["issue-6407", issue6407],
   ["issue-6435", issue6435],
