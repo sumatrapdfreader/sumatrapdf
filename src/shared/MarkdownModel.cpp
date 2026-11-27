@@ -610,8 +610,6 @@ TocTree* MarkdownModel::GetToc() {
     return tocTree;
 }
 
-void MarkdownModel::CreateThumbnail(Size /*size*/, const OnBitmapRendered* /*saveThumbnail*/) {}
-
 bool MarkdownModel::IsSupportedFileType(FileType kind) {
     return kind == FileType::Markdown || kind == FileType::HTML;
 }

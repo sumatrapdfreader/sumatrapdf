@@ -1534,49 +1534,6 @@ void HtmlWindow::SetScrollPos(Point pos) {
     }
 }
 
-// Take a screenshot of a given <area> inside an html window and resize
-// it to <finalSize>. It's up to the caller to make sure <area> fits
-// within window (we don't check that's the case)
-HBITMAP HtmlWindow::TakeScreenshot(Rect area, Size finalSize) {
-    AutoReleaseComPtr<IDispatch> docDispatch;
-    HRESULT hr = webBrowser->get_Document(&docDispatch);
-    if (FAILED(hr) || !docDispatch) {
-        return nullptr;
-    }
-    AutoReleaseComQIPtr<IViewObject2> view(docDispatch);
-    if (!view) {
-        return nullptr;
-    }
-
-    // capture the whole window (including scrollbars)
-    // to image and create imageRes containing the area
-    // user asked for
-    Rect winRc = HwndWindowRect(hwndParent);
-    Gdiplus::Bitmap image(winRc.dx, winRc.dy, PixelFormat24bppRGB);
-    Gdiplus::Graphics g(&image);
-
-    HDC dc = g.GetHDC();
-    RECTL rc = {0, 0, winRc.dx, winRc.dy};
-    hr = view->Draw(DVASPECT_CONTENT, -1, nullptr, nullptr, dc, dc, &rc, nullptr, nullptr, 0);
-    g.ReleaseHDC(dc);
-    if (FAILED(hr)) {
-        return nullptr;
-    }
-
-    Gdiplus::Bitmap imageRes(finalSize.dx, finalSize.dy, PixelFormat24bppRGB);
-    Gdiplus::Graphics g2(&imageRes);
-    g2.SetInterpolationMode(Gdiplus::InterpolationModeHighQualityBicubic);
-    g2.DrawImage(&image, Gdiplus::Rect(0, 0, finalSize.dx, finalSize.dy), area.x, area.y, area.dx, area.dy,
-                 Gdiplus::UnitPixel);
-
-    HBITMAP hbmp;
-    Gdiplus::Status ok = imageRes.GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp);
-    if (ok != Gdiplus::Ok) {
-        return nullptr;
-    }
-    return hbmp;
-}
-
 // called before an url is shown. If returns false, will cancel
 // the navigation.
 bool HtmlWindow::OnBeforeNavigate(Str url, bool newWindow) {

@@ -69,7 +69,6 @@ struct NoopDocCb : DocControllerCallback {
     void RequestRendering(DisplayModel*, int) override {}
     void RequestPredictiveRendering(DisplayModel*, int, const int*, int) override {}
     void CleanUp(DisplayModel*) override {}
-    void RenderThumbnail(DisplayModel*, Size, const OnBitmapRendered*) override {}
     void FocusFrame(bool) override {}
     void SaveDownload(Str, Str) override {}
     void FindResultReceived(int, int, int) override {}

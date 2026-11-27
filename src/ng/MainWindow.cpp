@@ -126,7 +126,6 @@ struct ControllerCallbackHandler : DocControllerCallback {
             gRenderCache->FreeForDisplayModel(dm);
         }
     }
-    void RenderThumbnail(DisplayModel*, Size, const OnBitmapRendered*) override {}
     void GotoLink(IPageDestination* dest) override {
         if (win->linkHandler) {
             win->linkHandler->GotoLink(dest);

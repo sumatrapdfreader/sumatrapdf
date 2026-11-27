@@ -214,8 +214,6 @@ struct RenderCache {
     ~RenderCache();
 
     void RequestRendering(DisplayModel* dm, int pageNo);
-    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
-                const Func1<PageRenderRequest*>& callback);
     void CancelRenderingBlocking(DisplayModel* dm);
     void AbortRendering(DisplayModel* dm);
     bool IsRenderingFor(DisplayModel* dm);
@@ -254,7 +252,7 @@ struct RenderCache {
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true,
                           const PredictiveChain* chain = nullptr);
     void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages);
-    bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
+    bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, const TilePosition& tile,
                 const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain = nullptr);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kRenderCacheAllPages, TilePosition* tile = nullptr);
     void AbortCurrentRequest(int threadIdx);

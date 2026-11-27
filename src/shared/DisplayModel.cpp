@@ -143,10 +143,6 @@ IPageDestination* DisplayModel::GetNamedDest(Str name) {
     return engine->GetNamedDest(name);
 }
 
-void DisplayModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) {
-    cb->RenderThumbnail(this, size, saveThumbnail);
-}
-
 // page labels (optional)
 bool DisplayModel::HasPageLabels() const {
     return engine->hasPageLabels;

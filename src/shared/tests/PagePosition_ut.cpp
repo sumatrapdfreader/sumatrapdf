@@ -18,7 +18,6 @@ struct MockDocControllerCallback : DocControllerCallback {
     void RequestRendering(DisplayModel*, int) override {}
     void RequestPredictiveRendering(DisplayModel*, int, const int*, int) override {}
     void CleanUp(DisplayModel*) override {}
-    void RenderThumbnail(DisplayModel*, Size, const OnBitmapRendered*) override {}
     void FocusFrame(bool) override {}
     void SaveDownload(Str, Str) override {}
     void FindResultReceived(int, int, int) override {}
@@ -52,7 +51,6 @@ struct MockChapterDocCtrl : DocController {
     void ScrollTo(int, RectF, float) override {}
     IPageDestination* GetNamedDest(Str) override { return nullptr; }
     void GetDisplayState(FileState*) override {}
-    void CreateThumbnail(Size, const OnBitmapRendered*) override {}
 
     int ChapterCount() override { return 3; }
     int ChapterPageCount(int chapter) override {

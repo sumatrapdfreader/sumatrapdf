@@ -15,7 +15,6 @@ struct TocTree;
 struct TocItem;
 struct MainWindow;
 struct FileState;
-struct RenderedBitmap;
 // chapter-aware page location; full definition in ChapterTable.h
 struct Location;
 enum class DisplayMode;
@@ -38,8 +37,6 @@ IPageDestination* NewBrowserDestination(Arena* arena, Str url, int pageNo, Brows
 TocItem* NewBrowserTocItem(Arena* arena, Str title, int pageNo, Str url, BrowserUrlType type);
 TocTree* BuildBrowserTocTree(Arena* arena, Vec<BrowserTocTraceItem>& trace);
 
-using OnBitmapRendered = Func1<RenderedBitmap*>;
-
 struct DocControllerCallback {
     virtual ~DocControllerCallback() = default;
     // tell the UI to show the pageNo as current page (which also syncs
@@ -56,7 +53,6 @@ struct DocControllerCallback {
     // start (or continue) chained predictive rendering anchored to originPageNo
     virtual void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages) = 0;
     virtual void CleanUp(DisplayModel* dm) = 0;
-    virtual void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) = 0;
     // ChmModel //
     // tell the UI to move focus back to the main window
     // (if always == false, then focus is only moved if it's inside
@@ -149,8 +145,6 @@ struct DocController {
     // get display state (pageNo, zoom, scroll etc. of the document)
     virtual void GetDisplayState(FileState* fs) = 0;
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) = 0;
-
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }
     virtual TempStr GetPageLabelTemp(int pageNo) const { return fmt("%d", pageNo); }

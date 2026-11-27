@@ -114,7 +114,3 @@ void SaveThumbnail(FileState* fs) {
     WasmPersistSettings();
 #endif
 }
-
-void CreateChmThumbnail(Str, const Size&, const OnBitmapRendered* saveThumbnail) {
-    delete saveThumbnail;
-}

@@ -19,8 +19,6 @@ struct ChmModel : BrowserDocController {
 
     IPageDestination* GetNamedDest(Str name) override;
 
-    void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
-
     ChmModel* AsChm() override;
 
     static ChmModel* Create(Str fileName, DocControllerCallback* cb = nullptr);

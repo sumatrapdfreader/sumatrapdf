@@ -1051,7 +1051,6 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void RequestRendering(DisplayModel* dm, int pageNo) override;
     void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages) override;
     void CleanUp(DisplayModel* dm) override;
-    void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered* /*saveThumbnail*/) override;
     void GotoLink(IPageDestination* dest) override { win->linkHandler->GotoLink(dest); }
     void FocusFrame(bool always) override;
     void SaveDownload(Str url, Str /*data*/) override;
@@ -1102,45 +1101,6 @@ void ControllerCallbackHandler::PagesRenumbered(DisplayModel* dm) {
 
 DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
     return new ControllerCallbackHandler(win);
-}
-
-struct ThumbnailRenderData {
-    const OnBitmapRendered* saveThumbnail = nullptr;
-};
-
-static void ThumbnailRenderFinished(ThumbnailRenderData* d, PageRenderRequest* req) {
-    // extract bitmap from request and pass to original callback
-    // the callback takes ownership of the bitmap (the present-layer handle)
-    RenderedBitmap* bmp = RenderedBitmapFromPixmap(req->bmp);
-    req->bmp = nullptr; // prevent double-free
-    d->saveThumbnail->Call(bmp);
-    delete d->saveThumbnail;
-    delete d;
-}
-
-void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered* saveThumbnail) {
-    auto* engine = dm->GetEngine();
-    RectF pageRect = engine->PageMediabox(1);
-    if (pageRect.IsEmpty()) {
-        // saveThumbnail must always be called for clean-up code
-        saveThumbnail->Call(nullptr);
-        return;
-    }
-
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = (float)size.dx / pageRect.dx;
-    pageRect.dy = std::min(pageRect.dy, (float)size.dy / zoom);
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
-
-    // always render thumbnails with anti-aliasing for quality
-    bool savedAntiAlias = engine->disableAntiAlias;
-    engine->disableAntiAlias = false;
-
-    auto* td = new ThumbnailRenderData();
-    td->saveThumbnail = saveThumbnail;
-    auto cb = MkFunc1(ThumbnailRenderFinished, td);
-    gRenderCache->Render(dm, 1, 0, zoom, pageRect, cb);
-    engine->disableAntiAlias = savedAntiAlias;
 }
 
 EngineBase* CreateEngineForThumbnail(Str path) {

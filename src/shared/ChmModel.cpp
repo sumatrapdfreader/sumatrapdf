@@ -14,7 +14,6 @@
 #include "EngineBase.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
-#include "FileThumbnails.h"
 #include "AppSettings.h"
 #include "Theme.h"
 #include "PagePosition.h"
@@ -427,10 +426,6 @@ TocTree* ChmModel::GetToc() {
 
 // adapted from DisplayModel::NextZoomStep
 // Platform thumbnail service renders the CHM home page when supported.
-void ChmModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) {
-    CreateChmThumbnail(fileName, size, saveThumbnail);
-}
-
 bool ChmModel::IsSupportedFileType(FileType kind) {
     return kind == FileType::Chm;
 }

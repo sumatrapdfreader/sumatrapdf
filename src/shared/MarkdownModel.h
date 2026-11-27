@@ -19,8 +19,6 @@ struct MarkdownModel : BrowserDocController {
     TocTree* GetToc() override;
     IPageDestination* GetNamedDest(Str name) override;
 
-    void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
-
     MarkdownModel* AsMarkdown() override;
 
     static MarkdownModel* Create(Str fileName, DocControllerCallback* cb = nullptr);

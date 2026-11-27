@@ -11,8 +11,6 @@ constexpr int kThumbnailFullDy = 212;
 
 struct Pixmap;
 struct FileState;
-struct RenderedBitmap;
-using OnBitmapRendered = Func1<RenderedBitmap*>;
 
 bool ThumbnailsAreFullPage();
 Size ThumbnailFrameSize();
@@ -34,4 +32,3 @@ TempStr GetThumbnailPathTemp(Str filePath);
 void DeleteThumbnailForFile(Str path);
 void EmptyThumbnailCacheDirectory();
 void HomePageThumbnailChanged(FileState* fs);
-void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendered* saveThumbnail);

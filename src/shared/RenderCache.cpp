@@ -973,7 +973,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
     }
 
     auto cb = MkMethod1<DisplayModel, PageRenderRequest*, &DisplayModel::RenderFinishedAsync>(dm);
-    Render(dm, pageNo, rotation, zoom, &tile, nullptr, cb, chain);
+    Render(dm, pageNo, rotation, zoom, tile, cb, chain);
 }
 
 // Start (or continue) a chain of predictive renders. Renders the first page in
@@ -1027,14 +1027,7 @@ void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo,
     RequestRendering(dm, pages[i], tile, true, &chain);
 }
 
-void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
-                         const Func1<PageRenderRequest*>& callback) {
-    // inner Render already invokes callback (as aborted) if the request is refused
-    Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, callback);
-}
-
-// a request that won't be rendered still gets its callback, as aborted: a
-// caller can own data that only the callback frees (RenderThumbnail)
+// Notify the caller when a request is dropped or refused.
 static void CallRenderAborted(PageRenderRequest* req) {
     req->abort = true;
     req->bmp = nullptr;
@@ -1044,13 +1037,12 @@ static void CallRenderAborted(PageRenderRequest* req) {
     }
 }
 
-bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
+bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, const TilePosition& tile,
                          const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain) {
     rcLogf("RenderCache::Render: pageNo %d\n", pageNo);
     ReportIf(!dm);
     ReportIf(!renderFinishedCb.IsValid());
-    ReportIf(!(tile || pageRect));
-    if (!dm || dm->pauseRendering || (!tile && !pageRect)) {
+    if (!dm || dm->pauseRendering) {
         PageRenderRequest refused;
         refused.dm = dm;
         refused.pageNo = pageNo;
@@ -1087,15 +1079,8 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     newRequest->zoom = zoom;
     PageInfo* pi = dm->GetPageInfo(pageNo);
     newRequest->loc = pi ? pi->loc : kInvalidLocation;
-    if (tile) {
-        newRequest->pageRect = GetTileRectUser(dm, pageNo, rotation, zoom, *tile);
-        newRequest->tile = *tile;
-    } else if (pageRect) {
-        newRequest->pageRect = *pageRect;
-        newRequest->tile = TilePosition();
-    } else {
-        CrashMe();
-    }
+    newRequest->pageRect = GetTileRectUser(dm, pageNo, rotation, zoom, tile);
+    newRequest->tile = tile;
     newRequest->abort = false;
     newRequest->abortCookie = nullptr;
     newRequest->timestamp = GetTickCount64();
