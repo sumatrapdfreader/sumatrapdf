@@ -395,25 +395,8 @@ static void DestFromFzLinkDest(const fz_link_dest& ldest, RectF* rectOut, float*
     }
 }
 
-static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, float* yp, float* zoomp = nullptr,
-                       RectF* rectp = nullptr) {
-    if (len(uri) == 0) {
-        return -1;
-    }
-    int pageNo = -1;
-    fz_link_dest ldest{};
-
-    fz_var(ldest);
-    fz_var(pageNo);
-    fz_try(ctx) {
-        ldest = fz_resolve_link_dest(ctx, doc, CStrTemp(uri));
-        pageNo = fz_page_number_from_location(ctx, doc, ldest.loc);
-    }
-    fz_catch(ctx) {
-        fz_warn(ctx, "fz_resolve_link_dest failed");
-        fz_report_error(ctx);
-        pageNo = -1;
-    }
+// pageNo is 0-based (-1 if unresolved); returns it 1-based, and the coordinates
+static int LinkDestPageNo(const fz_link_dest& ldest, int pageNo, float* xp, float* yp, float* zoomp, RectF* rectp) {
     if (pageNo < 0) {
         return -1;
     }
@@ -437,6 +420,51 @@ static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, fl
         *rectp = rect;
     }
     return pageNo + 1;
+}
+
+static int ResolveLink(fz_context* ctx, fz_document* doc, Str uri, float* xp, float* yp, float* zoomp = nullptr,
+                       RectF* rectp = nullptr) {
+    if (len(uri) == 0) {
+        return -1;
+    }
+    int pageNo = -1;
+    fz_link_dest ldest{};
+
+    fz_var(ldest);
+    fz_var(pageNo);
+    fz_try(ctx) {
+        ldest = fz_resolve_link_dest(ctx, doc, CStrTemp(uri));
+        pageNo = fz_page_number_from_location(ctx, doc, ldest.loc);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "fz_resolve_link_dest failed");
+        fz_report_error(ctx);
+        pageNo = -1;
+    }
+    return LinkDestPageNo(ldest, pageNo, xp, yp, zoomp, rectp);
+}
+
+// For a reflowable document without chapters (HTML, FB2, MOBI, Markdown, text),
+// fz_load_outline() resolved the entries at layout, all in one walk
+// (ext/patches/0094). ResolveLink() gets the same destination, but walks the
+// whole document for each entry.
+static int ResolveHtmlOutlineEntry(fz_context* ctx, fz_document* doc, fz_outline* outline, float* xp, float* yp,
+                                   float* zoomp, RectF* rectp) {
+    if (outline->page.page < 0) {
+        return -1;
+    }
+    int pageNo = -1;
+    fz_var(pageNo);
+    fz_try(ctx) {
+        pageNo = fz_page_number_from_location(ctx, doc, outline->page);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        pageNo = -1;
+    }
+    // what htdoc_resolve_link() makes (fz_make_link_dest_xyz, not exported from libsumatrapdf)
+    fz_link_dest ldest = {outline->page, FZ_LINK_DEST_XYZ, outline->x, outline->y, NAN, NAN, 0};
+    return LinkDestPageNo(ldest, pageNo, xp, yp, zoomp, rectp);
 }
 
 // resolves just the chapter a uri targets, without laying it out. epub only
@@ -602,7 +630,11 @@ static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, 
             loc = {chapter, 0};
         }
     } else {
-        pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z, &destRect);
+        if (outline && e->isReflowable) {
+            pageNo = ResolveHtmlOutlineEntry(ctx, doc, outline, &x, &y, &z, &destRect);
+        } else {
+            pageNo = ResolveLink(ctx, doc, uri, &x, &y, &z, &destRect);
+        }
         if (pageNo > 0) {
             resolvedInternal = true;
             loc = LocFromPageNo(pageNo);

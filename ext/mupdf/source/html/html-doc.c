@@ -59,20 +59,31 @@ htdoc_drop_document(fz_context *ctx, fz_document *doc_)
 }
 
 static fz_link_dest
+htdoc_dest_for_target(html_document *doc, float y)
+{
+	if (y >= 0)
+	{
+		int page = y / doc->html->page_h;
+		return fz_make_link_dest_xyz(0, page, 0, y - page * doc->html->page_h, 0);
+	}
+	return fz_make_link_dest_none();
+}
+
+/* the target id of a "#id" uri, or NULL */
+static const char *
+htdoc_uri_target(const char *uri)
+{
+	const char *s = uri ? strchr(uri, '#') : NULL;
+	return s && s[1] != 0 ? s + 1 : NULL;
+}
+
+static fz_link_dest
 htdoc_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
 {
 	html_document *doc = (html_document*)doc_;
-	const char *s = strchr(dest, '#');
-	if (s && s[1] != 0)
-	{
-		float y = fz_find_html_target(ctx, doc->html, s+1);
-		if (y >= 0)
-		{
-			int page = y / doc->html->page_h;
-			return fz_make_link_dest_xyz(0, page, 0, y - page * doc->html->page_h, 0);
-		}
-	}
-
+	const char *id = htdoc_uri_target(dest);
+	if (id)
+		return htdoc_dest_for_target(doc, fz_find_html_target(ctx, doc->html, id));
 	return fz_make_link_dest_none();
 }
 
@@ -85,18 +96,67 @@ htdoc_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 	return 1;
 }
 
-static void
-htdoc_update_outline(fz_context *ctx, fz_document *doc, fz_outline *node)
+static int
+htdoc_count_outline(fz_outline *node)
 {
-	while (node)
+	int n = 0;
+	for (; node; node = node->next)
+		n += 1 + htdoc_count_outline(node->down);
+	return n;
+}
+
+static void
+htdoc_collect_outline(fz_outline *node, fz_outline **nodes, const char **ids, int *n)
+{
+	for (; node; node = node->next)
 	{
-		fz_link_dest dest = htdoc_resolve_link(ctx, doc, node->uri);
-		node->page = dest.loc;
-		node->x = dest.x;
-		node->y = dest.y;
-		htdoc_update_outline(ctx, doc, node->down);
-		node = node->next;
+		nodes[*n] = node;
+		ids[*n] = htdoc_uri_target(node->uri);
+		(*n)++;
+		htdoc_collect_outline(node->down, nodes, ids, n);
 	}
+}
+
+/* SumatraPDF: resolve all entries in one walk of the tree
+ * (fz_find_html_targets), not one walk per entry. */
+static void
+htdoc_update_outline(fz_context *ctx, fz_document *doc_, fz_outline *outline)
+{
+	html_document *doc = (html_document*)doc_;
+	int i, n = htdoc_count_outline(outline);
+	fz_outline **nodes = NULL;
+	const char **ids = NULL;
+	float *ys = NULL;
+
+	if (n == 0)
+		return;
+	fz_var(nodes);
+	fz_var(ids);
+	fz_var(ys);
+	fz_try(ctx)
+	{
+		nodes = fz_malloc_array(ctx, n, fz_outline *);
+		ids = fz_malloc_array(ctx, n, const char *);
+		ys = fz_malloc_array(ctx, n, float);
+		n = 0;
+		htdoc_collect_outline(outline, nodes, ids, &n);
+		fz_find_html_targets(ctx, doc->html, n, ids, ys);
+		for (i = 0; i < n; i++)
+		{
+			fz_link_dest dest = htdoc_dest_for_target(doc, ys[i]);
+			nodes[i]->page = dest.loc;
+			nodes[i]->x = dest.x;
+			nodes[i]->y = dest.y;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, nodes);
+		fz_free(ctx, ids);
+		fz_free(ctx, ys);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void

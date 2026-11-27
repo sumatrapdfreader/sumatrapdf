@@ -1,0 +1,258 @@
+An HTML / FB2 / MOBI / Markdown / text document's outline is resolved in one
+walk of the tree, not one walk per entry.
+
+htdoc_update_outline() called fz_find_html_target() for every outline entry,
+on every layout, and each call walks the whole box tree: entries x boxes. A
+book with thousands of chapters took seconds to open and to re-layout.
+fz_find_html_targets() sorts the entries' ids and walks the tree once, giving
+each the first match in tree order, as fz_find_html_target() does.
+(Idea from Vira Reader's mupdf-html-outline-targets.patch; written anew.)
+
+diff --git a/source/html/html-doc.c b/source/html/html-doc.c
+index 58365a475..f8d343f82 100644
+--- a/source/html/html-doc.c
++++ b/source/html/html-doc.c
+@@ -59,20 +59,31 @@ htdoc_drop_document(fz_context *ctx, fz_document *doc_)
+ }
+ 
+ static fz_link_dest
+-htdoc_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
++htdoc_dest_for_target(html_document *doc, float y)
+ {
+-	html_document *doc = (html_document*)doc_;
+-	const char *s = strchr(dest, '#');
+-	if (s && s[1] != 0)
++	if (y >= 0)
+ 	{
+-		float y = fz_find_html_target(ctx, doc->html, s+1);
+-		if (y >= 0)
+-		{
+-			int page = y / doc->html->page_h;
+-			return fz_make_link_dest_xyz(0, page, 0, y - page * doc->html->page_h, 0);
+-		}
++		int page = y / doc->html->page_h;
++		return fz_make_link_dest_xyz(0, page, 0, y - page * doc->html->page_h, 0);
+ 	}
++	return fz_make_link_dest_none();
++}
++
++/* the target id of a "#id" uri, or NULL */
++static const char *
++htdoc_uri_target(const char *uri)
++{
++	const char *s = uri ? strchr(uri, '#') : NULL;
++	return s && s[1] != 0 ? s + 1 : NULL;
++}
+ 
++static fz_link_dest
++htdoc_resolve_link(fz_context *ctx, fz_document *doc_, const char *dest)
++{
++	html_document *doc = (html_document*)doc_;
++	const char *id = htdoc_uri_target(dest);
++	if (id)
++		return htdoc_dest_for_target(doc, fz_find_html_target(ctx, doc->html, id));
+ 	return fz_make_link_dest_none();
+ }
+ 
+@@ -85,20 +96,69 @@ htdoc_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
+ 	return 1;
+ }
+ 
++static int
++htdoc_count_outline(fz_outline *node)
++{
++	int n = 0;
++	for (; node; node = node->next)
++		n += 1 + htdoc_count_outline(node->down);
++	return n;
++}
++
+ static void
+-htdoc_update_outline(fz_context *ctx, fz_document *doc, fz_outline *node)
++htdoc_collect_outline(fz_outline *node, fz_outline **nodes, const char **ids, int *n)
+ {
+-	while (node)
++	for (; node; node = node->next)
+ 	{
+-		fz_link_dest dest = htdoc_resolve_link(ctx, doc, node->uri);
+-		node->page = dest.loc;
+-		node->x = dest.x;
+-		node->y = dest.y;
+-		htdoc_update_outline(ctx, doc, node->down);
+-		node = node->next;
++		nodes[*n] = node;
++		ids[*n] = htdoc_uri_target(node->uri);
++		(*n)++;
++		htdoc_collect_outline(node->down, nodes, ids, n);
+ 	}
+ }
+ 
++/* SumatraPDF: resolve all entries in one walk of the tree
++ * (fz_find_html_targets), not one walk per entry. */
++static void
++htdoc_update_outline(fz_context *ctx, fz_document *doc_, fz_outline *outline)
++{
++	html_document *doc = (html_document*)doc_;
++	int i, n = htdoc_count_outline(outline);
++	fz_outline **nodes = NULL;
++	const char **ids = NULL;
++	float *ys = NULL;
++
++	if (n == 0)
++		return;
++	fz_var(nodes);
++	fz_var(ids);
++	fz_var(ys);
++	fz_try(ctx)
++	{
++		nodes = fz_malloc_array(ctx, n, fz_outline *);
++		ids = fz_malloc_array(ctx, n, const char *);
++		ys = fz_malloc_array(ctx, n, float);
++		n = 0;
++		htdoc_collect_outline(outline, nodes, ids, &n);
++		fz_find_html_targets(ctx, doc->html, n, ids, ys);
++		for (i = 0; i < n; i++)
++		{
++			fz_link_dest dest = htdoc_dest_for_target(doc, ys[i]);
++			nodes[i]->page = dest.loc;
++			nodes[i]->x = dest.x;
++			nodes[i]->y = dest.y;
++		}
++	}
++	fz_always(ctx)
++	{
++		fz_free(ctx, nodes);
++		fz_free(ctx, ids);
++		fz_free(ctx, ys);
++	}
++	fz_catch(ctx)
++		fz_rethrow(ctx);
++}
++
+ static void
+ htdoc_drop_page(fz_context *ctx, fz_page *page_)
+ {
+diff --git a/source/html/html-imp.h b/source/html/html-imp.h
+index 880a8bd40..00dff5c9a 100644
+--- a/source/html/html-imp.h
++++ b/source/html/html-imp.h
+@@ -644,6 +644,9 @@ void fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html,
+ fz_outline *fz_load_html_outline(fz_context *ctx, fz_html *node);
+ 
+ float fz_find_html_target(fz_context *ctx, fz_html *html, const char *id);
++/* SumatraPDF: fz_find_html_target() for n ids at once, in one walk of the
++ * tree. A NULL id gets -1. */
++void fz_find_html_targets(fz_context *ctx, fz_html *html, int n, const char **ids, float *ys);
+ fz_link *fz_load_html_links(fz_context *ctx, fz_html *html, int page, const char *base_uri);
+ fz_html *fz_keep_html(fz_context *ctx, fz_html *html);
+ void fz_drop_html(fz_context *ctx, fz_html *html);
+diff --git a/source/html/html-outline.c b/source/html/html-outline.c
+index ccda934c1..ae0526551 100644
+--- a/source/html/html-outline.c
++++ b/source/html/html-outline.c
+@@ -24,6 +24,7 @@
+ #include "html-imp.h"
+ 
+ #include <string.h>
++#include <stdlib.h>
+ 
+ enum { T, R, B, L };
+ 
+@@ -233,6 +234,97 @@ fz_find_html_target(fz_context *ctx, fz_html *html, const char *id)
+ 	return find_box_target(html->tree.root, id);
+ }
+ 
++/* SumatraPDF: fz_find_html_targets() resolves many ids in one walk of the
++ * tree; calling fz_find_html_target() per outline entry walked it once per
++ * entry, and that ran on every layout. */
++typedef struct
++{
++	const char *id;
++	int idx;
++} html_target_query;
++
++typedef struct
++{
++	html_target_query *queries;
++	int n;
++	float *ys;
++} html_target_search;
++
++static int
++cmp_target_query(const void *a, const void *b)
++{
++	return strcmp(((const html_target_query *)a)->id, ((const html_target_query *)b)->id);
++}
++
++/* Sets the result of every query for id that has none yet. Like
++ * fz_find_html_target(), the first match in tree order wins. */
++static void
++record_target(html_target_search *s, const char *id, float y)
++{
++	int lo = 0, hi = s->n;
++	if (!id || y < 0)
++		return;
++	while (lo < hi)
++	{
++		int mid = lo + (hi - lo) / 2;
++		if (strcmp(s->queries[mid].id, id) < 0)
++			lo = mid + 1;
++		else
++			hi = mid;
++	}
++	for (; lo < s->n && !strcmp(s->queries[lo].id, id); lo++)
++	{
++		float *dst = &s->ys[s->queries[lo].idx];
++		if (*dst < 0)
++			*dst = y;
++	}
++}
++
++/* The same order as find_box_target(). */
++static void
++find_box_targets(html_target_search *s, fz_html_box *box)
++{
++	for (; box; box = box->next)
++	{
++		if (box->id)
++		{
++			fz_html_flow *flow = find_first_content(box);
++			record_target(s, box->id, flow ? find_flow_top(flow) : box->s.layout.y);
++		}
++		if (box->type == BOX_FLOW)
++		{
++			fz_html_flow *flow;
++			for (flow = box->u.flow.head; flow; flow = flow->next)
++				if (flow->box->id)
++					record_target(s, flow->box->id, find_flow_top(flow));
++		}
++		else
++			find_box_targets(s, box->down);
++	}
++}
++
++void
++fz_find_html_targets(fz_context *ctx, fz_html *html, int n, const char **ids, float *ys)
++{
++	html_target_search s = { NULL, 0, ys };
++	int i;
++
++	for (i = 0; i < n; i++)
++		ys[i] = -1;
++	s.queries = fz_malloc_array(ctx, n, html_target_query);
++	for (i = 0; i < n; i++)
++	{
++		if (!ids[i])
++			continue;
++		s.queries[s.n].id = ids[i];
++		s.queries[s.n].idx = i;
++		s.n++;
++	}
++	qsort(s.queries, s.n, sizeof(*s.queries), cmp_target_query);
++	find_box_targets(&s, html->tree.root);
++	fz_free(ctx, s.queries);
++}
++
+ static fz_html_flow *
+ make_flow_bookmark(fz_context *ctx, fz_html_flow *flow, float y, fz_html_flow **candidate)
+ {

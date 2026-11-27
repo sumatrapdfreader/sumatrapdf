@@ -644,6 +644,9 @@ void fz_draw_html(fz_context *ctx, fz_device *dev, fz_matrix ctm, fz_html *html,
 fz_outline *fz_load_html_outline(fz_context *ctx, fz_html *node);
 
 float fz_find_html_target(fz_context *ctx, fz_html *html, const char *id);
+/* SumatraPDF: fz_find_html_target() for n ids at once, in one walk of the
+ * tree. A NULL id gets -1. */
+void fz_find_html_targets(fz_context *ctx, fz_html *html, int n, const char **ids, float *ys);
 fz_link *fz_load_html_links(fz_context *ctx, fz_html *html, int page, const char *base_uri);
 fz_html *fz_keep_html(fz_context *ctx, fz_html *html);
 void fz_drop_html(fz_context *ctx, fz_html *html);

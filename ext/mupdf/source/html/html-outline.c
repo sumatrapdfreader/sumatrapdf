@@ -24,6 +24,7 @@
 #include "html-imp.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 enum { T, R, B, L };
 
@@ -231,6 +232,97 @@ float
 fz_find_html_target(fz_context *ctx, fz_html *html, const char *id)
 {
 	return find_box_target(html->tree.root, id);
+}
+
+/* SumatraPDF: fz_find_html_targets() resolves many ids in one walk of the
+ * tree; calling fz_find_html_target() per outline entry walked it once per
+ * entry, and that ran on every layout. */
+typedef struct
+{
+	const char *id;
+	int idx;
+} html_target_query;
+
+typedef struct
+{
+	html_target_query *queries;
+	int n;
+	float *ys;
+} html_target_search;
+
+static int
+cmp_target_query(const void *a, const void *b)
+{
+	return strcmp(((const html_target_query *)a)->id, ((const html_target_query *)b)->id);
+}
+
+/* Sets the result of every query for id that has none yet. Like
+ * fz_find_html_target(), the first match in tree order wins. */
+static void
+record_target(html_target_search *s, const char *id, float y)
+{
+	int lo = 0, hi = s->n;
+	if (!id || y < 0)
+		return;
+	while (lo < hi)
+	{
+		int mid = lo + (hi - lo) / 2;
+		if (strcmp(s->queries[mid].id, id) < 0)
+			lo = mid + 1;
+		else
+			hi = mid;
+	}
+	for (; lo < s->n && !strcmp(s->queries[lo].id, id); lo++)
+	{
+		float *dst = &s->ys[s->queries[lo].idx];
+		if (*dst < 0)
+			*dst = y;
+	}
+}
+
+/* The same order as find_box_target(). */
+static void
+find_box_targets(html_target_search *s, fz_html_box *box)
+{
+	for (; box; box = box->next)
+	{
+		if (box->id)
+		{
+			fz_html_flow *flow = find_first_content(box);
+			record_target(s, box->id, flow ? find_flow_top(flow) : box->s.layout.y);
+		}
+		if (box->type == BOX_FLOW)
+		{
+			fz_html_flow *flow;
+			for (flow = box->u.flow.head; flow; flow = flow->next)
+				if (flow->box->id)
+					record_target(s, flow->box->id, find_flow_top(flow));
+		}
+		else
+			find_box_targets(s, box->down);
+	}
+}
+
+void
+fz_find_html_targets(fz_context *ctx, fz_html *html, int n, const char **ids, float *ys)
+{
+	html_target_search s = { NULL, 0, ys };
+	int i;
+
+	for (i = 0; i < n; i++)
+		ys[i] = -1;
+	s.queries = fz_malloc_array(ctx, n, html_target_query);
+	for (i = 0; i < n; i++)
+	{
+		if (!ids[i])
+			continue;
+		s.queries[s.n].id = ids[i];
+		s.queries[s.n].idx = i;
+		s.n++;
+	}
+	qsort(s.queries, s.n, sizeof(*s.queries), cmp_target_query);
+	find_box_targets(&s, html->tree.root);
+	fz_free(ctx, s.queries);
 }
 
 static fz_html_flow *
