@@ -66,6 +66,9 @@ using Microsoft::WRL::WinRtClassicComMix;
 // the cap keeps the bitmap of a large page within reason
 constexpr float kMaxRasterDpi = 300.f;
 
+// grays out a previewed page that is not going to be printed
+static const D2D1_COLOR_F kUnprintedPageVeil = {0.8f, 0.8f, 0.8f, 0.75f};
+
 // peak bytes of a rendered band, matching the GDI print path. Bounds what the
 // engine has to allocate for one render, whatever the page size and print DPI
 constexpr i64 kMaxBandBytes = 16LL * 1024 * 1024;
@@ -501,16 +504,23 @@ class PrintDocumentSource final
 
   private:
     EngineBase* engine = nullptr;
-    int currentPage = 1;
+    // the page the preview shows, at first the one the user is looking at
+    int previewPage = 1;
     Print_Advanced_Data advanced;
     // CmdToggleMirror: print as shown
     bool mirror = false;
     float previewDpi = 96.f;
     Mutex mutex;
+    // the pages to print, in the order of the job. The preview shows the whole
+    // document under its own page numbers instead: the dialog reports "Current
+    // page" as the number of the page its preview shows, which only means the
+    // same page to both of us if the preview is never renumbered (#6609)
     Vec<int> pages;
     ComPtr<Printing::IPrintTaskOptionsCore> previewOptions;
     ComPtr<IPrintPreviewDxgiPackageTarget> previewTarget;
     PrintGraphics graphics;
+
+    int FirstPage() const { return len(pages) > 0 ? pages[0] : 0; }
 
     int DocumentPage(UINT32 jobPage) const {
         if (jobPage < 1 || jobPage > (UINT32)len(pages)) {
@@ -519,15 +529,14 @@ class PrintDocumentSource final
         return pages[(int)jobPage - 1];
     }
 
-    // the preview asks for JOB_PAGE_APPLICATION_DEFINED to let us pick the page
-    // it opens on: the one the user is looking at. It's also what "Current page"
-    // in the dialog prints, since that's the page the preview is showing.
-    UINT32 FirstJobPage() const {
-        int idx = VecFind(pages, currentPage);
-        if (idx < 0) {
-            return 1;
+    // the preview asks for JOB_PAGE_APPLICATION_DEFINED after every pagination
+    // to let us pick the page it shows: the one it showed before if that prints,
+    // else the first one that does
+    int PreviewStartPage() const {
+        if (VecFind(pages, previewPage) >= 0) {
+            return previewPage;
         }
-        return (UINT32)idx + 1;
+        return FirstPage();
     }
 
     void UseAllPages() {
@@ -713,7 +722,7 @@ class PrintDocumentSource final
         }
         engine = sourceEngine;
         engine->AddRef();
-        this->currentPage = currentPage;
+        previewPage = currentPage;
         advanced = Print_Advanced_Data(PrintRangeAdv::All, scale);
         SetPrintAdvancedDefaults(&advanced);
         mirror = mirrorPages;
@@ -761,9 +770,9 @@ class PrintDocumentSource final
             hr = previewTarget->InvalidatePreview();
         }
         if (SUCCEEDED(hr)) {
-            hr = previewTarget->SetJobPageCount(PageCountType::FinalPageCount, (UINT32)len(pages));
+            hr = previewTarget->SetJobPageCount(PageCountType::FinalPageCount, (UINT32)engine->PageCount());
         }
-        logf("Win11 print: Paginate pages=%d hr=0x%08x\n", len(pages), (uint)hr);
+        logf("Win11 print: Paginate pages=%d first=%d hr=0x%08x\n", len(pages), FirstPage(), (uint)hr);
         return hr;
     }
 
@@ -772,11 +781,12 @@ class PrintDocumentSource final
             return E_INVALIDARG;
         }
         ScopedMutex lock(&mutex);
-        UINT32 jobPage = desiredJobPage == JOB_PAGE_APPLICATION_DEFINED ? FirstJobPage() : desiredJobPage;
-        int pageNo = DocumentPage(jobPage);
-        if (!pageNo || !previewOptions) {
+        // a page of the preview is that page of the document
+        int pageNo = desiredJobPage == JOB_PAGE_APPLICATION_DEFINED ? PreviewStartPage() : (int)desiredJobPage;
+        if (pageNo < 1 || pageNo > engine->PageCount() || !previewOptions) {
             return E_INVALIDARG;
         }
+        UINT32 jobPage = (UINT32)pageNo;
 
         Printing::PrintPageDescription description{};
         HRESULT hr = previewOptions->GetPageDescription(jobPage, &description);
@@ -797,6 +807,13 @@ class PrintDocumentSource final
         context->Clear(D2D1::ColorF(D2D1::ColorF::White));
         context->SetTransform(D2D1::Matrix3x2F::Scale(scale, scale));
         hr = DrawPage(context.Get(), pageNo, description, renderDpi);
+        ComPtr<ID2D1SolidColorBrush> veil;
+        bool isPrinted = VecFind(pages, pageNo) >= 0;
+        if (SUCCEEDED(hr) && !isPrinted && SUCCEEDED(context->CreateSolidColorBrush(kUnprintedPageVeil, &veil))) {
+            // the preview also shows the pages outside of the picked range
+            D2D1_RECT_F paper = D2D1::RectF(0, 0, description.PageSize.Width, description.PageSize.Height);
+            context->FillRectangle(paper, veil.Get());
+        }
         HRESULT drawHr = context->EndDraw();
         if (SUCCEEDED(hr)) {
             hr = drawHr;
@@ -806,7 +823,9 @@ class PrintDocumentSource final
         }
         if (FAILED(hr)) {
             logf("Win11 print: MakePage %d failed: 0x%08x\n", (int)jobPage, (uint)hr);
+            return hr;
         }
+        previewPage = pageNo;
         return hr;
     }
 
@@ -817,6 +836,7 @@ class PrintDocumentSource final
         ScopedMutex lock(&mutex);
         ReadAdvancedOptions(options);
         ReadPageRanges(options);
+        logf("Win11 print: MakeDocument pages=%d first=%d\n", len(pages), FirstPage());
         ComPtr<Printing::IPrintTaskOptionsCore> optionCore;
         HRESULT hr = options->QueryInterface(IID_PPV_ARGS(&optionCore));
         if (FAILED(hr)) {

@@ -606,6 +606,7 @@ import { testit as issue6596 } from "./issue-6596.ts";
 import { testit as issue6597 } from "./issue-6597.ts";
 import { testit as issue6602 } from "./issue-6602.ts";
 import { testit as issue6608 } from "./issue-6608.ts";
+import { testit as issue6609 } from "./issue-6609.ts";
 import { testit as issue6603 } from "./issue-6603.ts";
 
 async function annotationClipboardTests(): Promise<void> {
@@ -633,6 +634,7 @@ export const tests: NamedTest[] = orderForReuse([
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6609", issue6609],
   ["issue-6608", issue6608],
   ["issue-6259", issue6259],
   ["background-tab-reload", backgroundTabReload],
