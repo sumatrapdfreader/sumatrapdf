@@ -24,11 +24,38 @@ async function invoke(client: ControlClient, command: string): Promise<void> {
 
 async function barLayout(client: ControlClient, visible: boolean): Promise<LayoutInfo> {
   const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
+  // the line of the step that waited, for the error
+  const caller = (new Error().stack ?? "").split("\n")[2]?.trim() ?? "";
   for (;;) {
     const layout = await client.layout();
     if (layout.items.tabs?.visible === visible) return layout;
-    if (Date.now() > deadline) throw new Error(`issue-6355: caption did not become ${visible}\n${layout.raw}`);
+    if (Date.now() > deadline)
+      throw new Error(`issue-6355: caption did not become ${visible} (${caller})\n${layout.raw}`);
     await sleep(40);
+  }
+}
+
+// The caption overlay shows while the real cursor is over the frame's top
+// edge, and only when the frame is the window under it. Hold the cursor there
+// and the frame on top until the caption's visibility is `visible`: something
+// else on the desktop can move the cursor or cover a window launched in the
+// background.
+async function hoverLayout(
+  client: ControlClient,
+  pid: number,
+  pt: { x: number; y: number },
+  visible: boolean,
+): Promise<LayoutInfo> {
+  const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
+  const caller = (new Error().stack ?? "").split("\n")[2]?.trim() ?? "";
+  for (;;) {
+    raiseProcessWindows(pid);
+    setCursorPos(pt.x, pt.y);
+    await sleep(40);
+    const layout = await client.layout();
+    if (layout.items.tabs?.visible === visible) return layout;
+    if (Date.now() > deadline)
+      throw new Error(`issue-6355: hovered caption did not become ${visible} (${caller})\n${layout.raw}`);
   }
 }
 
@@ -84,13 +111,13 @@ export async function testit(): Promise<void> {
     const beforeHover = await barLayout(first.client, false);
     if (hover) {
       const top = clientToScreen(first.frame, Math.floor(beforeHover.items.frame.rect.dx / 2), 4);
-      setCursorPos(top.x, top.y);
-      const overlay = await barLayout(first.client, true);
+      const overlay = await hoverLayout(first.client, first.proc.pid!, top, true);
       if (JSON.stringify(overlay.items.canvas.rect) !== JSON.stringify(beforeHover.items.canvas.rect))
         throw new Error("issue-6355: caption overlay resized the document");
-      setCursorPos(top.x, top.y + Math.floor(overlay.items.tabs.rect.y));
+      const onTabs = { x: top.x, y: top.y + Math.floor(overlay.items.tabs.rect.y) };
+      setCursorPos(onTabs.x, onTabs.y);
       await sleep(150);
-      await barLayout(first.client, true);
+      await hoverLayout(first.client, first.proc.pid!, onTabs, true);
       setCursorPos(0, 0);
       await barLayout(first.client, false);
     }
@@ -141,6 +168,7 @@ export async function testit(): Promise<void> {
     if (hidden.items.canvas.rect.dy <= pinned.items.canvas.rect.dy)
       throw new Error("issue-6355: native caption space was not reclaimed");
     if (hover) {
+      raiseProcessWindows(noTabs.proc.pid!);
       const top = clientToScreen(noTabs.frame, Math.floor(hidden.items.frame.rect.dx / 2), 4);
       setCursorPos(top.x, top.y);
       const hoverDeadline = Date.now() + 5_000;
@@ -189,10 +217,8 @@ export async function testit(): Promise<void> {
     }
     const hidden = await barLayout(browser.client, false);
     if (hover) {
-      raiseProcessWindows(browser.proc.pid);
       const top = clientToScreen(browser.frame, Math.floor(hidden.items.frame.rect.dx / 2), 4);
-      setCursorPos(top.x, top.y);
-      const overlay = await barLayout(browser.client, true);
+      const overlay = await hoverLayout(browser.client, browser.proc.pid!, top, true);
       if (JSON.stringify(overlay.items.canvas.rect) !== JSON.stringify(hidden.items.canvas.rect))
         throw new Error("issue-6355: caption overlay resized the browser");
       const button = clientToScreen(browser.frame, 12, 12);
