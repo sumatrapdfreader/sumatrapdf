@@ -47,6 +47,20 @@ pdf_find_font_resource(fz_context *ctx, pdf_document *doc, int type, int encodin
 
 	memset(key, 0, sizeof(*key));
 	fz_font_digest(ctx, item, key->digest);
+	/* SumatraPDF: the faces of a font collection (.ttc: msgothic, simsun,
+	 * cambria) share one file and so one digest; mix in the face index, or
+	 * the second face added gets the first one's resource (idea from Vira
+	 * Reader). */
+	if (item->subfont != 0)
+	{
+		unsigned char identity[20];
+		fz_md5 md5;
+		memcpy(identity, key->digest, 16);
+		fz_pack_uint32(identity + 16, (uint32_t)item->subfont);
+		fz_md5_init(&md5);
+		fz_md5_update(&md5, identity, sizeof(identity));
+		fz_md5_final(&md5, key->digest);
+	}
 
 	key->type = type;
 	key->encoding = encoding;
