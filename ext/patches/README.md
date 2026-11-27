@@ -102,6 +102,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0099-pdf-combo-display-text` | a combo box with [export, display] options shows the display text; it showed the export value ("2") |
 | `0100-dirname-backslash` | `fz_dirname` splits on `\` too on Windows; a document opened by its Windows path got `.` as its folder, so an HTML page's relative images weren't found |
 | `0101-pdf-font-resource-ttc-face` | two faces of a `.ttc` added to a PDF are two fonts; the second got the first one's glyphs |
+| `0102-pdf-tounicode-surrogates` | an embedded font's ToUnicode gives emoji / rare CJK as UTF-16 surrogate pairs, not `<1f600>` |
 | `backport-ab37474fc-redact-actualtext` | redaction rewrites a tagged element's `/ActualText`, not `/Alt`; the redacted words stayed in the file (mupdf bug 709973) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.6` plus these

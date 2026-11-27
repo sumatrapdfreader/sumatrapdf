@@ -417,10 +417,31 @@ static int next_range(int *table, int size, int k)
 	{
 		if ((k & 0xFF00) != ((k+n) & 0xFF00)) /* high byte changes */
 			break;
+		/* SumatraPDF: a bfrange increments only the last UTF-16 code unit,
+		 * so a range stays in the BMP, or in one high surrogate */
+		if ((table[k] < 0x10000) != (table[k+n] < 0x10000))
+			break;
+		if (table[k] >= 0x10000 && ((table[k] - 0x10000) >> 10) != ((table[k+n] - 0x10000) >> 10))
+			break;
 		if (table[k] + n != table[k+n])
 			break;
 	}
 	return n;
+}
+
+/* SumatraPDF: a ToUnicode value is UTF-16: a character outside the BMP is a
+ * surrogate pair, not its code point in 5 or 6 hex digits (idea from Vira
+ * Reader). */
+static void
+append_to_unicode(fz_context *ctx, fz_buffer *buf, int ucs)
+{
+	if (ucs < 0x10000)
+		fz_append_printf(ctx, buf, "%04x", ucs);
+	else
+	{
+		ucs -= 0x10000;
+		fz_append_printf(ctx, buf, "%04x%04x", 0xd800 + (ucs >> 10), 0xdc00 + (ucs & 0x3ff));
+	}
 }
 
 /* Create the ToUnicode CMap. */
@@ -520,7 +541,9 @@ pdf_add_to_unicode(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, fz_font *f
 							fz_append_printf(ctx, buf, "%d beginbfrange\n", num_seq);
 						count = 0;
 					}
-					fz_append_printf(ctx, buf, "<%04x> <%04x> <%04x>\n", k, k+n-1, table[k]);
+					fz_append_printf(ctx, buf, "<%04x> <%04x> <", k, k+n-1);
+					append_to_unicode(ctx, buf, table[k]);
+					fz_append_string(ctx, buf, ">\n");
 					++count;
 				}
 			}
@@ -555,7 +578,9 @@ pdf_add_to_unicode(fz_context *ctx, pdf_document *doc, pdf_obj *fobj, fz_font *f
 							fz_append_printf(ctx, buf, "%d beginbfchar\n", num_chr);
 						count = 0;
 					}
-					fz_append_printf(ctx, buf, "<%04x> <%04x>\n", k, table[k]);
+					fz_append_printf(ctx, buf, "<%04x> <", k);
+					append_to_unicode(ctx, buf, table[k]);
+					fz_append_string(ctx, buf, ">\n");
 					++count;
 				}
 			}
