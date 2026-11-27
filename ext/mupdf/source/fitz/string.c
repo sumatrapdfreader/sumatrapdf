@@ -246,6 +246,19 @@ fz_strlcat(char *dst, const char *src, size_t siz)
 	return dlen + (s - src);	/* count does not include NUL */
 }
 
+/* SumatraPDF: on Windows a path also separates with '\', as in fz_basename();
+ * fz_dirname("D:\\books\\a.html") was ".", so an HTML page opened by its
+ * Windows path didn't find its relative images. */
+static int
+is_dir_sep(char c)
+{
+#ifdef _WIN32
+	return c == '/' || c == '\\';
+#else
+	return c == '/';
+#endif
+}
+
 void
 fz_dirname(char *dir, const char *path, size_t n)
 {
@@ -260,9 +273,9 @@ fz_dirname(char *dir, const char *path, size_t n)
 	fz_strlcpy(dir, path, n);
 
 	i = strlen(dir);
-	for(; dir[i] == '/'; --i) if (!i) { fz_strlcpy(dir, "/", n); return; }
-	for(; dir[i] != '/'; --i) if (!i) { fz_strlcpy(dir, ".", n); return; }
-	for(; dir[i] == '/'; --i) if (!i) { fz_strlcpy(dir, "/", n); return; }
+	for(; is_dir_sep(dir[i]); --i) if (!i) { fz_strlcpy(dir, "/", n); return; }
+	for(; !is_dir_sep(dir[i]); --i) if (!i) { fz_strlcpy(dir, ".", n); return; }
+	for(; is_dir_sep(dir[i]); --i) if (!i) { fz_strlcpy(dir, "/", n); return; }
 	dir[i+1] = 0;
 }
 
