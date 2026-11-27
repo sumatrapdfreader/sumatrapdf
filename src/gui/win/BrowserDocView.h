@@ -1,7 +1,7 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct HtmlWindowCallback;
+struct BrowserViewCallback;
 struct WebViewResourceResult;
 struct BrowserWebviewWnd;
 
@@ -23,7 +23,8 @@ class BrowserDocView {
     bool canGoBack = false;
     bool canGoForward = false;
 
-    static BrowserDocView* Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix = {});
+    // The caller keeps cb alive until the view is destroyed.
+    static BrowserDocView* Create(HWND hwndParent, BrowserViewCallback* cb, Str virtualHostPrefix = {});
     ~BrowserDocView();
 
     // show/hide without destroying the browser (tab switch). Creating a WebView2
@@ -67,7 +68,7 @@ class BrowserDocView {
 
     Backend backend = Backend::None;
     HWND hwndParent = nullptr;
-    HtmlWindowCallback* cb = nullptr;
+    BrowserViewCallback* cb = nullptr;
     class HtmlWindow* ie = nullptr;
     struct WebviewWnd* wv = nullptr;
     UINT_PTR subclassId = 0;

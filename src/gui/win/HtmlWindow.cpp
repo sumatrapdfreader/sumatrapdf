@@ -12,6 +12,7 @@
 #include <mshtmhst.h>
 #include <exdispid.h>
 
+#include "gui/BrowserView.h"
 #include "gui/win/HtmlWindow.h"
 
 // An important (to Sumatra) use case is displaying CHM documents. First we used
@@ -1095,7 +1096,7 @@ void HtmlWindow::UnsubclassHwnd() {
     subclassId = 0;
 }
 
-HtmlWindow::HtmlWindow(HWND parent, HtmlWindowCallback* cb) {
+HtmlWindow::HtmlWindow(HWND parent, BrowserViewCallback* cb) {
     ReportIf(!parent);
     hwndParent = parent;
     htmlWinCb = cb;
@@ -1215,7 +1216,7 @@ static bool IsUrlmonUsable() {
     return cached == 1;
 }
 
-HtmlWindow* HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback* cb) {
+HtmlWindow* HtmlWindow::Create(HWND hwndParent, BrowserViewCallback* cb) {
     if (!IsUrlmonUsable()) {
         return nullptr;
     }
@@ -1311,7 +1312,7 @@ void HtmlWindow::SetVisible(bool visible) {
     }
 }
 
-// Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
+// Use for URLs served by BrowserViewCallback::GetDataForUrl().
 // (will be called from OnBeforeNavigate())
 void HtmlWindow::NavigateToDataUrl(Str url) {
     TempStr fullUrl = fmt("its://%d/%s", windowId, url);

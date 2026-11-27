@@ -9,6 +9,7 @@
 #include "base/UITask.h"
 #include "base/Win.h"
 
+#include "gui/BrowserView.h"
 #include "gui/UIModels.h"
 #include "gui/win/HtmlWindow.h"
 
@@ -84,7 +85,7 @@ void SaveThumbnail(FileState* fs) {
     }
 }
 
-struct ChmThumbnailTask : HtmlWindowCallback {
+struct ChmThumbnailTask : BrowserViewCallback {
     ChmFile* doc = nullptr;
     HWND hwnd = nullptr;
     HtmlWindow* hw = nullptr;

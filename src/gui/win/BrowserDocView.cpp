@@ -380,7 +380,7 @@ void SetHtmlBackend(HtmlBackend backend) {
     gHtmlBackend = backend;
 }
 
-BrowserDocView* BrowserDocView::Create(HWND hwndParent, HtmlWindowCallback* cb, Str virtualHostPrefix) {
+BrowserDocView* BrowserDocView::Create(HWND hwndParent, BrowserViewCallback* cb, Str virtualHostPrefix) {
     if (!hwndParent || !cb) {
         return nullptr;
     }
@@ -706,22 +706,9 @@ LRESULT BrowserDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-struct BrowserViewCallbackAdapter : HtmlWindowCallback {
-    BrowserViewCallback* cb = nullptr;
-
-    bool OnBeforeNavigate(Str url, bool newWindow) override { return cb->OnBeforeNavigate(url, newWindow); }
-    void OnDocumentComplete(Str url) override { cb->OnDocumentComplete(url); }
-    Str GetDataForUrl(Str url) override { return cb->GetDataForUrl(url); }
-    void OnLButtonDown() override { cb->OnLButtonDown(); }
-    void DownloadData(Str url, Str data) override { cb->DownloadData(url, data); }
-    void OnFindResult(int gen, int current, int total) override { cb->OnFindResult(gen, current, total); }
-    void OnFindAllResult(Str payload) override { cb->OnFindAllResult(payload); }
-};
-
 struct BrowserView {
     MainWindow* win = nullptr;
     BrowserDocView* view = nullptr;
-    BrowserViewCallbackAdapter adapter;
 };
 
 bool BrowserViewAvailable() {
@@ -735,8 +722,7 @@ BrowserView* BrowserViewCreate(MainWindow* win, HWND hwndParent, BrowserViewCall
 
     auto* res = new BrowserView();
     res->win = win;
-    res->adapter.cb = cb;
-    res->view = BrowserDocView::Create(hwndParent, &res->adapter, virtualHost);
+    res->view = BrowserDocView::Create(hwndParent, cb, virtualHost);
     if (!res->view) {
         delete res;
         return nullptr;
