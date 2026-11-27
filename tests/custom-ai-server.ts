@@ -2,7 +2,16 @@
 // on macOS a control request blocks the test's thread until the app replies,
 // and TestAIChat replies only after this server has answered.
 
+import { isMainThread } from "node:worker_threads";
+
 declare const self: Worker;
+
+// Run on its own (bun tests/custom-ai-server.ts, or a loop over tests/*.ts) the
+// server would wait for a test that never comes.
+if (isMainThread) {
+  console.log("custom-ai-server: the server tests/custom-ai.ts starts in a worker; run that test");
+  process.exit(0);
+}
 
 let secret = "";
 let unexpected = 0;
