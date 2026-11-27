@@ -15802,9 +15802,16 @@ static bool ExtractAndLoadLibsumatrapdfRobust(Str dir, bool extract) {
         }
         if (!ExtractLibsumatrapdfToDir(dir)) {
             logf("ExtractAndLoadLibsumatrapdfRobust: ExtractLibsumatrapdfToDir failed for '%s'\n", dir);
-            return false;
+            // the size check above can fail for a moment while the dll is there and
+            // loaded by other instances, which then makes the write fail
+            realSize = file::GetSize(path);
+            if (realSize != expectedSize) {
+                return false;
+            }
+            logf("ExtractAndLoadLibsumatrapdfRobust: '%s' has the expected size, loading it\n", path);
+        } else {
+            justWritten = true;
         }
-        justWritten = true;
     }
     return LoadLibsumatrapdfFromFileRobust(path, expectedSize, justWritten);
 }
