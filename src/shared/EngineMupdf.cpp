@@ -4993,7 +4993,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     fz_var(dir);
     // a synthesized name for the stream (e.g. "<path>.html"), never a directory
     const char* nameHintZ = CStrTemp(nameHint);
-    if (kind == FileType::Markdown) {
+    // the file's folder, for its relative images (<img src="pic.png">); an HTML
+    // file opened without it showed none
+    if (webDoc) {
         TempStr parentDir = path::GetDirTemp(nameHint);
         if (len(parentDir) > 0) {
             fz_try(ctx) {

@@ -119,6 +119,7 @@ import { testit as pdfSignWidgetError } from "./pdf-sign-widget-error.ts";
 import { testit as svgImageSubarea } from "./svg-image-subarea.ts";
 import { testit as pdfPasswordField } from "./pdf-password-field.ts";
 import { testit as pdfComboDisplay } from "./pdf-combo-display.ts";
+import { testit as htmlRelativeImages } from "./html-relative-images.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
@@ -758,6 +759,7 @@ export const tests: NamedTest[] = orderForReuse([
   ["svg-image-subarea", svgImageSubarea],
   ["pdf-password-field", pdfPasswordField],
   ["pdf-combo-display", pdfComboDisplay],
+  ["html-relative-images", htmlRelativeImages],
   parallelTest("issue-6434"),
   ["issue-6407", issue6407],
   ["issue-6435", issue6435],
