@@ -18,6 +18,5 @@ void DrainQueue();
 void SetWakeupFn(void (*fn)());
 
 bool Post(const Func0& fn, Kind kind = nullptr);
-void PostOptimized(const Func0& fn, Kind kind = nullptr);
 
 } // namespace uitask

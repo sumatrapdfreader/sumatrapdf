@@ -23,10 +23,6 @@ SumatraUIAutomationPageProvider::SumatraUIAutomationPageProvider(int pageNum, HW
 
 SumatraUIAutomationPageProvider::~SumatraUIAutomationPageProvider() = default;
 
-int SumatraUIAutomationPageProvider::GetPageNum() const {
-    return pageNum;
-}
-
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(REFIID riid, void** ppv) {
     static const QITAB qit[] = {QITABENT(SumatraUIAutomationPageProvider, IRawElementProviderSimple),
                                 QITABENT(SumatraUIAutomationPageProvider, IRawElementProviderFragment),

@@ -1932,16 +1932,6 @@ TempStr CpuFeaturesTemp() {
 
 //--- environment / errors / paths
 
-Str GetLastErrorAsStr(Arena* arena) {
-    DWORD err = GetLastError();
-    if (!err) {
-        return str::Dup(arena, StrL("no error"));
-    }
-    TempStr msg = GetLastErrorStrTemp(err);
-    str::TrimSuffixWhitespace(msg);
-    return str::Dup(arena, fmt("0x%08lX '%s'", err, msg));
-}
-
 // empty if not set
 TempStr GetEnvVariableTemp(Str name) {
     WCHAR bufStatic[256];
@@ -2700,34 +2690,10 @@ bool ReadRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD& value) {
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-static LSTATUS WriteRegDWORDStatus(HKEY keySub, Str keyName, Str valName, DWORD value) {
+bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
     WCHAR* keyNameW = CWStrTemp(keyName);
     WCHAR* valNameW = CWStrTemp(valName);
-    return SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
-}
-
-bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
-    return ERROR_SUCCESS == WriteRegDWORDStatus(keySub, keyName, valName, value);
-}
-
-static LSTATUS WriteRegNoneStatus(HKEY hkey, Str key, Str valName) {
-    WCHAR* keyW = CWStrTemp(key);
-    WCHAR* valNameW = CWStrTemp(valName);
-    return SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
-}
-
-bool LoggedWriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value) {
-    LSTATUS res = WriteRegDWORDStatus(keySub, keyName, valName, value);
-    bool ok = ERROR_SUCCESS == res;
-    LogRegCall(ok, res, fmt("WriteRegDWORD(%s, %s, %s, %d)", RegKeyNameTemp(keySub), keyName, valName, (int)value));
-    return ok;
-}
-
-bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName) {
-    LSTATUS res = WriteRegNoneStatus(hkey, key, valName);
-    bool ok = ERROR_SUCCESS == res;
-    LogRegCall(ok, res, fmt("WriteRegNone(%s, %s, %s)", RegKeyNameTemp(hkey), key, valName));
-    return ok;
+    return ERROR_SUCCESS == SHSetValueW(keySub, keyNameW, valNameW, REG_DWORD, &value, sizeof(value));
 }
 
 bool CreateRegKey(HKEY keySub, Str keyName) {

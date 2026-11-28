@@ -31,7 +31,6 @@ constexpr int kHideCursorTimerID = 3;
 constexpr int kHideCursorDelayInMs = 3000;
 
 constexpr int kRepaintTimerID = 1;
-constexpr int kRepaintMessageDelayInMs = 1000;
 
 constexpr int kAutoReloadTimerID = 5;
 
@@ -54,7 +53,6 @@ constexpr u64 kAutoReloadMaxWaitMs = 5000;
 #include "Permissions.h"
 #include "SidebarMetrics.h"
 
-struct Favorites;
 struct FileHistory;
 struct MainWindow;
 extern Func1<MainWindow*> gAfterLayout;
@@ -84,8 +82,6 @@ extern Flags* gCli;
 
 extern Str gPluginURL;
 extern bool gMyWindowWasEmbedded;
-extern Favorites gFavorites;
-extern WNDPROC DefWndProcCloseButton;
 extern RenderCache* gRenderCache;
 extern AtomicInt gTestLoadDelayMs;
 

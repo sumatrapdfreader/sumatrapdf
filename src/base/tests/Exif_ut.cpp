@@ -9,7 +9,6 @@
 
 constexpr u16 kTiffShort = 3;
 constexpr u16 kTiffLong = 4;
-constexpr int kIfdEntryLen = 12;
 
 // file-local: LitDoc_ut.cpp has its own LeWriter
 namespace {

@@ -1550,13 +1550,6 @@ void DeleteFileState(FileState* fs) {
     FreeStruct(&gFileStateInfo, fs);
 }
 
-void DeleteFileStates(Vec<FileState*>* a) {
-    for (auto* fs : *a) {
-        DeleteFileState(fs);
-    }
-    delete a;
-}
-
 Favorite* NewFavorite(Str pageNo, Str name, Str pageLabel) {
     Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, {});
     str::ReplaceWithCopy(&fav->pageNo, pageNo);

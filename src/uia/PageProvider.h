@@ -25,8 +25,6 @@ class SumatraUIAutomationPageProvider : public IRawElementProviderFragment,
     SumatraUIAutomationPageProvider& operator=(const SumatraUIAutomationPageProvider&) = delete;
     ~SumatraUIAutomationPageProvider();
 
-    int GetPageNum() const;
-
     // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**) override;
     ULONG STDMETHODCALLTYPE AddRef() override;

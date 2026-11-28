@@ -6568,12 +6568,6 @@ TempStr AnsiToUtf8Temp(Str src) {
     return res;
 }
 
-Str AnsiToUtf8(Str src) {
-    TempWStr ws = StrCPToWStrTemp(src, CP_ACP);
-    Str res = ToUtf8(ws);
-    return res;
-}
-
 } // namespace strconv
 
 // short names because frequently used

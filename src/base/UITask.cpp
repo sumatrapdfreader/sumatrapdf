@@ -258,14 +258,4 @@ bool Post(const Func0& f, Kind kind) {
 bool IsMainUIThread() {
     return GetCurrentThreadId() == gMainUIThreadId;
 }
-
-void PostOptimized(const Func0& f, Kind kind) {
-    if (IsMainUIThread()) {
-        // if we're already on ui thread, execute immediately
-        // faster and easier to debug
-        f.Call();
-        return;
-    }
-    Post(f, kind);
-}
 } // namespace uitask

@@ -102,7 +102,6 @@ struct StubTextRender : PlatformTextRender {
     }
 
     void SetTextColor(Color) override {}
-    void SetTextBgColor(Color) override {}
     void Lock() override {}
     void Unlock() override {}
     void Draw(Str, RectF, bool) override {}
@@ -166,7 +165,6 @@ struct PangoTextRender : PlatformTextRender {
     }
 
     void SetTextColor(Color col) override { textColor = col; }
-    void SetTextBgColor(Color) override {}
     void Lock() override {}
     void Unlock() override {}
 
@@ -221,7 +219,6 @@ struct CoreTextRender : PlatformTextRender {
     }
 
     void SetTextColor(Color col) override { textColor = col; }
-    void SetTextBgColor(Color) override {}
     void Lock() override {}
     void Unlock() override {}
 
@@ -485,7 +482,6 @@ struct WinTextRender : PlatformTextRender {
     PlatformFont* currFont = nullptr;
     // black, like the Gdiplus::Color these used to default to
     Color textColor = 0;
-    Color textBgColor = 0;
 
     ~WinTextRender() override {
         if (ownsGfx) {
@@ -516,7 +512,6 @@ struct TextRenderGdi : WinTextRender {
     void SetFont(PlatformFont* font) override;
     RectF Measure(Str s) override;
     void SetTextColor(Color col) override;
-    void SetTextBgColor(Color col) override;
     void Lock() override;
     void Unlock() override;
     // note: ignores any transformation set on gfx
@@ -581,16 +576,6 @@ void TextRenderGdi::SetTextColor(Color col) {
     }
 }
 
-void TextRenderGdi::SetTextBgColor(Color col) {
-    if (textBgColor == col) {
-        return;
-    }
-    textBgColor = col;
-    if (hdcGfxLocked) {
-        ::SetBkColor(hdcGfxLocked, textBgColor);
-    }
-}
-
 void TextRenderGdi::Lock() {
     ReportIf(hdcGfxLocked);
     Region r;
@@ -606,7 +591,7 @@ void TextRenderGdi::Lock() {
         SelectFont(hdcGfxLocked, currFont->GetHFont());
     }
     ::SetTextColor(hdcGfxLocked, textColor);
-    ::SetBkColor(hdcGfxLocked, textBgColor);
+    ::SetBkColor(hdcGfxLocked, RGB(0, 0, 0));
 }
 
 void TextRenderGdi::Unlock() {
@@ -636,7 +621,6 @@ struct TextRenderGdiplus : WinTextRender {
     void SetFont(PlatformFont* font) override;
     RectF Measure(Str s) override;
     void SetTextColor(Color col) override;
-    void SetTextBgColor(Color) override {}
     void Lock() override {}
     void Unlock() override {}
     void Draw(Str s, RectF bb, bool isRtl) override;

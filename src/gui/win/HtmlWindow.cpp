@@ -1112,10 +1112,6 @@ bool HtmlWindow::CreateBrowser() {
     if (!p.Create(CLSID_WebBrowser)) {
         return false;
     }
-    hr = p->QueryInterface(&viewObject);
-    if (FAILED(hr)) {
-        return false;
-    }
     hr = p->QueryInterface(&oleObject);
     if (FAILED(hr)) {
         return false;
@@ -1233,12 +1229,10 @@ HtmlWindow::~HtmlWindow() {
     auto* inPlaceObj = oleInPlaceObject;
     auto* cp = connectionPoint;
     auto* obj = oleObject;
-    auto* view = viewObject;
     auto* browser = webBrowser;
     oleInPlaceObject = nullptr;
     connectionPoint = nullptr;
     oleObject = nullptr;
-    viewObject = nullptr;
     webBrowser = nullptr;
 
     if (inPlaceObj) {
@@ -1259,9 +1253,6 @@ HtmlWindow::~HtmlWindow() {
         obj->Release();
     }
 
-    if (view) {
-        view->Release();
-    }
     if (browser) {
         browser->Release();
     }

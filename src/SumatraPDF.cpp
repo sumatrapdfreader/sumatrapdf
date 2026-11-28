@@ -8140,8 +8140,7 @@ static void ScheduleDpiChromeRefresh(MainWindow* win) {
         return;
     }
     win->dpiChromeRefreshPosted = true;
-    // Post, not PostOptimized: we are already on the UI thread inside
-    // WM_DPICHANGED; running now would re-enter on this stack.
+    // Defer the refresh so it does not re-enter WM_DPICHANGED.
     PostForWindow(win, RunPostedDpiChromeRefresh, "DpiChromeRefresh");
 }
 
@@ -16680,7 +16679,6 @@ int pdfbake_main(int argc, char* argv[]);
 int mubar_main(int argc, char* argv[]);
 int mugrep_main(int argc, char* argv[]);
 
-int cmapdump_main(int argc, char* argv[]);
 int pdfaudit_main(int argc, char* argv[]);
 
 char** fz_argv_from_wargv(int argc, wchar_t** wargv);

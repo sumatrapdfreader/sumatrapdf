@@ -360,24 +360,6 @@ void UpdateDeltaPerLine() {
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-__unused static Str scrollMsgStr(USHORT msg) {
-    switch (msg) {
-        case SB_LINEDOWN:
-            return StrL("SB_LINEDOWN");
-        case SB_LINEUP:
-            return StrL("SB_LINEUP");
-        case kSbHalfPageDown:
-            return StrL("kSbHalfPageDown");
-        case kSbHalfPageUp:
-            return StrL("kSbHalfPageUp");
-        case SB_PAGEDOWN:
-            return StrL("SB_PAGEDOWN");
-        case SB_PAGEUP:
-            return StrL("SB_PAGEUP");
-    }
-    return fmt("%d", (int)msg);
-}
-
 static void OnVScroll(MainWindow* win, WPARAM wp) {
     if (ReportIf(!win->AsFixed())) {
         return;
@@ -413,9 +395,6 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
         lineHeight = 1;
     }
-    // logf("OnVscroll: msg=%s, min: %d, max: %d, nPage: %d, pos: %d, fit page: %d, lineHeight: %d,
-    // singlePageWithScrollbar: %d\n", scrollMsgStr(msg), si.nMin,
-    //      si.nMax, si.nPage, si.nPos, isFitPage ? 1 : 0, lineHeight, singlePageWithScrollbar);
 
     if (singlePageWithScrollbar) {
         // In SinglePage mode, scrollbar position directly corresponds to page number
@@ -4017,22 +3996,6 @@ static u32 LowerU64(ULONGLONG v) {
     return res;
 }
 
-__unused static Str GiFlagsToStr(DWORD flags) {
-    switch (flags) {
-        case 0:
-            return StrL("");
-        case GF_BEGIN:
-            return StrL("GF_BEGIN");
-        case GF_INERTIA:
-            return StrL("GF_INERTIA");
-        case GF_END:
-            return StrL("GF_END");
-        case GF_INERTIA | GF_END:
-            return StrL("GF_INERTIA  | GF_END");
-    }
-    return StrL("unknown");
-}
-
 static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
@@ -4146,8 +4109,6 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 // on left / right flick, go to next / prev page
                 // unless we can pan/scroll the document
                 bool isFlickX = (gi.dwFlags & GF_INERTIA) && (abs(deltaX) > abs(deltaY)) && (abs(deltaX) > 26);
-                // logf("OnGesture: GID_PAN, flags: %d (%s), dx: %d, dy: %d, isFlick: %d\n", gi.dwFlags,
-                // GiFlagsToStr(gi.dwFlags), deltaX, deltaY, (int)isFlickX);
                 bool flipPage = false;
                 if (!dm->NeedHScroll()) {
                     // if the page is fully visible

@@ -13,7 +13,6 @@ class HtmlWindow {
     IWebBrowser2* webBrowser = nullptr;
     IOleObject* oleObject = nullptr;
     IOleInPlaceObject* oleInPlaceObject = nullptr;
-    IViewObject* viewObject = nullptr;
     IConnectionPoint* connectionPoint = nullptr;
     FrameSite* frameSite = nullptr;
     HWND oleObjectHwnd = nullptr;

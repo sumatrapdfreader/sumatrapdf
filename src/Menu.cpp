@@ -62,8 +62,6 @@
 #include "MenuCommon.h"
 #include "MenuDefs.h"
 
-static bool gAddCrashMeMenu = false;
-
 // clang-format off
 static MenuDef menuDefZoomShort[] = {
     {

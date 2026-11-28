@@ -83,7 +83,6 @@ u8* SettingFieldPtr(int offset);
 
 FileState* NewFileState(Str);
 void DeleteFileState(FileState*);
-void DeleteFileStates(Vec<FileState*>*);
 
 // a document's per-file ebook settings are read on the thread that loads it,
 // so a load that doesn't run on the UI thread needs its own copy (#4600).

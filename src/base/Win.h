@@ -335,7 +335,6 @@ TempStr CpuFeaturesTemp();
 
 TempStr GetLastErrorStrTemp(DWORD& err);
 void LogLastError(DWORD err = 0);
-Str GetLastErrorAsStr(Arena* arena);
 TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing = false);
 // initialCch is only a starting guess; tests pass a tiny value to force the retry
 TempStr GetTempDirTemp(int initialCch = MAX_PATH);
@@ -386,8 +385,6 @@ bool WriteRegStr(HKEY keySub, Str keyName, Str valName, Str value);
 bool LoggedWriteRegStr(HKEY keySub, Str keyName, Str valName, Str value);
 bool ReadRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD& value);
 bool WriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value);
-bool LoggedWriteRegDWORD(HKEY keySub, Str keyName, Str valName, DWORD value);
-bool LoggedWriteRegNone(HKEY hkey, Str key, Str valName);
 bool CreateRegKey(HKEY keySub, Str keyName);
 bool DeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst = false);
 bool LoggedDeleteRegKey(HKEY keySub, Str keyName, bool resetACLFirst = false);

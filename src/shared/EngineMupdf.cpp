@@ -90,10 +90,6 @@ TempStr WebDocMetricsCssTemp(const WebDocStyle& style, float fontSizePt) {
 static float layoutA5DxPt = 420.F;
 static float layoutA5DyPt = 595.F;
 
-// A4
-static float layoutA4DxPt = 595.F;
-static float layoutA4DyPt = 842.F;
-
 static float layoutFontEm = 11.F;
 
 // Shape of the window a reflowable ebook should be laid out for, as

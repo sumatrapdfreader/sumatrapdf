@@ -68,9 +68,6 @@ struct FindMatch {
     Str snippet; // UTF-8, owned (freed when findMatches is rebuilt)
 };
 
-// factor by how large the non-maximized caption should be in relation to the tabbar
-constexpr float kCaptionTabBarDyFactor = 1.0f;
-
 // gap in pixels between top of caption and tabs; this area allows dragging the window
 constexpr int kCaptionTopPadding = 8;
 

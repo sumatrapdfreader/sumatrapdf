@@ -61,7 +61,6 @@ bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
 
 // Defined in Win.cpp; avoid pulling all of Win.h into this file.
 void LogLastError(DWORD err = 0);
-Str GetLastErrorAsStr(Arena* arena);
 
 // Same value as HINSTANCE in WinMain for this image (exe or DLL).
 // Using __ImageBase (not GetModuleHandle(nullptr)) so DLL builds report the

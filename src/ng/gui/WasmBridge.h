@@ -12,8 +12,6 @@
 // sample documents live
 constexpr const char* kWasmUploadDir = "/uploads";
 constexpr const char* kWasmDocsDir = "/docs";
-// loaded from OPFS by src/ng/gui/WasmShell.js; GetAppDataDirTemp() answers it
-constexpr const char* kWasmSettingsDir = "/settings";
 
 // Opens the browser's file picker. The file is written to kWasmUploadDir and
 // the callback runs on the main thread with its path; it is not called if the

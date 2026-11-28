@@ -69,7 +69,6 @@ constexpr int kAdvFaintShift = 25;
 constexpr float kAdvHeaderPadB = 4;
 constexpr float kAdvSwatchDx = 12;
 constexpr float kAdvDotDx = 6;
-constexpr float kAdvValueDx = 240;
 constexpr float kAdvListDy = 360; // the list in a frame dialog
 
 struct AdvancedSettingsDlg {
